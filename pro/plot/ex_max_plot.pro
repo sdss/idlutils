@@ -266,7 +266,7 @@ for id2=ydimen-1,0L,-1 do begin
 ; set plot range and make axes
             !X.RANGE= range[*,d1]
             !Y.RANGE= range[*,d2]
-            nticks=8/axis_char_scale
+            nticks=6/axis_char_scale
             xinterval= hogg_interval(!X.RANGE,nticks=nticks)
             yinterval= hogg_interval(!Y.RANGE,nticks=nticks)
             if d1 EQ d2 then begin
