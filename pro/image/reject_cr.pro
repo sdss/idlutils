@@ -78,11 +78,12 @@ if(max(rejected) eq 0) then return
 
 
 for k=0L, niter-1L do begin
-; interpolate the crs
     rejects=where(rejected,nrejects)
-    tmp_ivar=image_ivar
-    tmp_ivar[rejects]=0.
-    tmp_image = djs_maskinterp(image, tmp_ivar LE 0, iaxis=0)
+    if(nrejects eq 0) then return
+; interpolate the crs ??? this is too slow and not much better
+    ;tmp_ivar=image_ivar
+    ;tmp_ivar[rejects]=0.
+    ;tmp_image = djs_maskinterp(image, tmp_ivar LE 0, iaxis=0)
 
 ; Now check neighbors with tough conditions
     tmp_ivar=0.*image_ivar
@@ -98,16 +99,8 @@ for k=0L, niter-1L do begin
         endfor
     endfor
     tmp_ivar[rejects]=0.
-    if((k mod 2) eq 0) then begin
-        tmp_image=transpose(tmp_image)
-        tmp_ivar=transpose(tmp_ivar)
-        ignoremask=transpose(ignoremask)
-    endif
     reject_cr_single, tmp_image, tmp_ivar, psfvals, newrejected, nsig=nsig, $
       cfudge=0., c2fudge=1., ignoremask=ignoremask
-    if((k mod 2) eq 0) then begin
-        newrejected=transpose(newrejected)
-    endif
     rejected=rejected OR newrejected
     
 ; interpolate them???
