@@ -28,10 +28,10 @@ OBJECTS = \
 	p_qromo.o \
 	p_polint.o \
 	p_utils.o 
-#	idl_interp_profmean.o \
-#	ppvalu.o \
-#	tautsp.o \
-#	interv.o \
+#	idl_interp_profmean.o
+#	ppvalu.o
+#	tautsp.o
+#	interv.o
 
 all : $(LIB)/libimage.$(SO_EXT)
 
