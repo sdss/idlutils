@@ -4,15 +4,17 @@
 ; PURPOSE:
 ;   Is an xyz (or radec) position in a given cap?
 ; CALLING SEQUENCE:
-;   result=is_in_cap(xyz, cap [, /radec]
+;   result=is_in_cap(ra=, dec=, xyz=, cap )
 ; INPUTS:
-;   xyz - xyz value(s) (or radec if /radec is set)
+;   ra - set of ra values
+;   dec - set of dec values
+;   xyz - xyz value(s) (overrides ra and dec)
 ;   cap - single cap to check
 ; OPTIONAL INPUTS:
-;   /radec - if set, assume xyz actually holds array [ra,dec]
 ; OUTPUTS:
 ; OPTIONAL INPUT/OUTPUTS:
 ; COMMENTS:
+;   Either ra and dec, or xyz must be set; xyz overrides ra and dec
 ; EXAMPLES:
 ; BUGS:
 ; PROCEDURES CALLED:

@@ -4,16 +4,18 @@
 ; PURPOSE:
 ;   Is an xyz (or radec) position in a given polygon?
 ; CALLING SEQUENCE:
-;   result=is_in_polygon(xyz, polygon [, /radec, ncaps=ncaps]
+;   result=is_in_polygon(xyz=, ra=, dec= , polygon)
 ; INPUTS:
-;   xyz - xyz value (or radec if /radec is set)
+;   ra - set of ra values
+;   dec - set of dec values
+;   xyz - xyz value(s) (overrides ra and dec)
 ;   polygon - polygon with caps to check
 ; OPTIONAL INPUTS:
-;   /radec - if set, assume xyz actually holds array [ra,dec]
 ;   ncaps - override polygon.ncaps (if ncaps < polygon.ncaps)
 ; OUTPUTS:
 ; OPTIONAL INPUT/OUTPUTS:
 ; COMMENTS:
+;   Either ra and dec, or xyz must be set; xyz overrides ra and dec
 ; EXAMPLES:
 ; BUGS:
 ; PROCEDURES CALLED:

@@ -4,16 +4,18 @@
 ; PURPOSE:
 ;   Is an xyz (or radec) position in any of a given list of polygons?
 ; CALLING SEQUENCE:
-;   result=is_in_window(xyz, polygons [, /radec, ncaps=ncaps]
+;   result=is_in_window(xyz=, ra=, dec= , polygons)
 ; INPUTS:
-;   xyz - xyz value (or radec if /radec is set)
 ;   polygons - polygons with caps to check
 ; OPTIONAL INPUTS:
-;   /radec - if set, assume xyz actually holds array [ra,dec]
+;   ra - set of ra values
+;   dec - set of dec values
+;   xyz - xyz value(s) (overrides ra and dec)
 ;   ncaps - override polygon.ncaps (if ncaps < polygon.ncaps)
 ; OUTPUTS:
 ; OPTIONAL INPUT/OUTPUTS:
 ; COMMENTS:
+;   Either ra and dec, or xyz must be set; xyz overrides ra and dec
 ; EXAMPLES:
 ; BUGS:
 ; PROCEDURES CALLED:
