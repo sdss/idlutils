@@ -126,6 +126,15 @@ maskbits RESOLVE  12 FULL_MARGINAL
 
 #------------------------------------------------------------------------------
 
+maskbits CALIB_STATUS  0 DEFAULT
+maskbits CALIB_STATUS  1 PT_CLOUDY
+maskbits CALIB_STATUS  2 PT_CLEAR
+maskbits CALIB_STATUS  3 GLOBAL_EXTRAP
+maskbits CALIB_STATUS  4 GLOBAL_MJD
+maskbits CALIB_STATUS  5 GLOBAL_RUN
+
+#------------------------------------------------------------------------------
+
 maskbits VAGC_SELECT  0 TILED
 maskbits VAGC_SELECT  1 PLATEHOLE
 maskbits VAGC_SELECT  2 MAIN
