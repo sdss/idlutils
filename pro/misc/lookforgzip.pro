@@ -9,14 +9,15 @@
 ;   thisfile = lookforgzip( filename, count= )
 ;
 ; INPUTS:
-;   filename   - Input file name w/out any ".gzip" extension
+;   filename   - Input file name w/out any ".gz" or ".Z" extension
 ;
 ; OPTIONAL KEYWORDS:
 ;
 ; OUTPUTS:
-;   thisfile   - Returns input file name with a ".gzip" extension if it
-;                exists, or w/out that extension if it exists, or '' if
-;                neither exists.
+;   thisfile   - Returns input file name with no extension if it exists,
+;                otherwise a ".gz" extension if that exists,
+;                otherwise a ".Z" extension if that exists,
+;                otherwise '' if none of the above exist.
 ;
 ; OPTIONAL OUTPUTS:
 ;   count      - Number of files that matched
@@ -40,6 +41,9 @@ function lookforgzip, filename, count=ct
    if (ct GT 0) then return, thisfile
 
    thisfile = findfile(filename+'.gz', count=ct)
+   if (ct GT 0) then return, thisfile
+
+   thisfile = findfile(filename+'.Z', count=ct)
    if (ct GT 0) then return, thisfile
 
    return, ''
