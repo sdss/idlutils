@@ -34,8 +34,10 @@ splog, cmd
 spawn, cmd,output,stderr
 splog, output
 output= strsplit(output,/extract)
-ra= double(output[2])
-dec= double(output[3])
+if (n_elements(output) GT 3) then begin
+    ra= double(output[2])
+    dec= double(output[3])
+endif
 splog, ra,dec
 return
 end
