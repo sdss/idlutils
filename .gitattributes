@@ -1,6 +1,7 @@
 * text=auto !eol
 /Makefile -text
 bin/Makefile -text
+bin/evilinstall -text
 bin/evilmake -text
 doc/Makefile -text
 doc/mk_doc -text
