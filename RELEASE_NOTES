@@ -1,5 +1,9 @@
 
 DJS_BATCH     - Fix bug introduced when SELECTHOST option was added.
+FINDOPFILE    - This routine was hard-wired to a 5-digit MJD, but
+                we need it to work for numbers with any number of digits.
+                For example, for the photoop product, we use this routine
+                to select from 6-digit run numbers (like for flat files).
 TNMIN         - Two loop variables (lines 559 and 601) changed from "0"
                 to "0L".
 YANNY_READ:   - Don't crash when FILENAME is a 1-element array!
