@@ -1,0 +1,2 @@
+* text=auto !eol
+pro/astrom/usno_read.pro -text
