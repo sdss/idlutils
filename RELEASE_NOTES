@@ -35,6 +35,8 @@ HOGG_NAME2RADEC: New proc to convert IAU name in "J" format to RA,DEC (Hogg).
 HOGG_OPLOT_COVAR: Add support for a vectorized THICK keyword.
 HOGG_PLOTHIST: Change in behviour for setting X range when using /OVERPLOT.
 HOGG_SCATTERPLOT: Added IOUTLIERS keyword, to plot the outliers differently.
+LABELLOC: simple utility for xyouts plotting to get positions relative to 
+          plot frame
 LG_TO_HELIO: Inverse function to HELIO_TO_LG.
 MRDFITS:       LONG64 stuff, handle degenerate excess NAXIS keywords
 MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
@@ -53,6 +55,7 @@ TRACE_CRUDE: Allow XSTART to be set to exactly zero as an input.
                Bug fix, where the arrays were cast incorrectly if IMAGE
                was not type float, and INVVAR was not specified.
 USNOB2FITS: Compress files locally, then copy to target.
+WRITE_FITS_POLYGONS: allow it to propagate a header to the FITS file
 
 mangle1.4/src/mrb_balkanize.c: Add QA print statement for number of caps.
 src/mangle1.4/src/manglefn.h, mrb_balkanize.c, new_poly.c:
