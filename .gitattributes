@@ -584,6 +584,7 @@ pro/yanny/yanny_free.pro -text
 pro/yanny/yanny_par.pro -text
 pro/yanny/yanny_read.pro -text
 pro/yanny/yanny_write.pro -text
+src/math/.cvsignore -text
 src/math/arravsigclip.c -text
 src/math/arravsigmask.c -text
 src/math/arrmedian.c -text
@@ -592,6 +593,7 @@ src/math/nr.h -text
 src/math/nrecipes.c -text
 src/math/nrutil.c -text
 src/math/nrutil.h -text
+src/slatec/.cvsignore -text
 src/slatec/bint4.f -text
 src/slatec/bndacc.f -text
 src/slatec/bndsol.f -text
