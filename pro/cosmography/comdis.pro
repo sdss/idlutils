@@ -1,15 +1,27 @@
 ;+
-;------------------------------------------------------------------------------
-;  comdis
-;------------------------------------------------------------------------------
-;  output:
-;    the line-of-sight comoving distance with c=H_0=1.
-;  input:
-;    z       redshift, a scalar or vector
-;    OmegaM  Omega_Matter, scalar only
-;    OmegaL  Omega_Lambda, scalar only
-;------------------------------------------------------------------------------
+; NAME:
+;   comdis
+; PURPOSE:
+;   Compute comoving line-of-sight distances (c/H_0=1).
+; CALLING SEQUENCE:
+;   D= comdis(z,OmegaM,OmegaL)
+; INPUTS:
+;   z       - redshift or vector of redshifts
+;   OmegaM  - Omega-matter at z=0
+;   OmegaL  - Omega-Lambda at z=0
+; OPTIONAL INPUTS:
+; KEYWORDS
+; OUTPUTS:
+;   comoving line-of-sight distance in units of the Hubble length c/H_0.
+; COMMENTS:
+; BUGS:
+; EXAMPLES:
+; PROCEDURES CALLED:
+;   dcomdisdz()
+; REVISION HISTORY:
+;   25-Jun-2000  Written by Hogg (IAS)
 ;-
+;------------------------------------------------------------------------------
 function comdis, z,OmegaM,OmegaL
   stepsize=0.01 ; minimum stepsize
   nsteps= long(z/stepsize)+1
