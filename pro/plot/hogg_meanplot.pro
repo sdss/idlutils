@@ -28,7 +28,9 @@
 ;   nodata      - don't plot anything other than axes
 ;   maskonly    - plot only the minnum mask
 ;   nocontourlabels  - don't label the contours
+; OUTPUTS:
 ; BUGS:
+;   many undocumented outputs
 ; REVISION HISTORY:
 ;   2003-01-08  written - Hogg
 ;-
@@ -37,7 +39,7 @@ pro hogg_meanplot, x,y,z,weight=weight, $
                    levels=levels,c_colors=c_colors,c_thick=c_thick, $
                    minnum=minnum, nodata=nodata, $
                    noperimeter=noperimeter,nobox=nobox,nolines=nolines, $
-                   maskonly=maskonly, bin_mean=bin_mean, $
+                   maskonly=maskonly, xbin=xbin, ybin=ybin, bin_mean=bin_mean, $
                    bin_scatter=bin_scatter, bin_weight=bin_weight, $
                    bin_number=bin_number, input_mean=input_mean, $
                    axis_char_scale=axis_char_scale, $
