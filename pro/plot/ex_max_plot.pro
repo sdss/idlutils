@@ -163,7 +163,7 @@ for id2=ydimen-1,0L,-1 do begin
 
         if(d1 lt 0 or d2 lt 0) then begin
             !P.MULTI[0]=!P.MULTI[0]-1L
-        endif else begin
+        endif else begin 
             
             if(keyword_set(paneluse)) then begin
                 paneluse=reform(paneluse,ndata,xdimen,ydimen)
@@ -209,17 +209,17 @@ for id2=ydimen-1,0L,-1 do begin
             leftside= 0B
             if (!P.MULTI[0] EQ 0) OR $
               (((!P.MULTI[0]-1) MOD xdimen) EQ (xdimen-1) OR $
-              xprevblank eq 1) then leftside= 1B
+               xprevblank eq 1) then leftside= 1B
             topside= 0B
             if (!P.MULTI[0] EQ 0) OR $
               (floor(float(!P.MULTI[0]-1)/xdimen) EQ (ydimen-1) OR $
-              yprevblank eq 1) then topside= 1B
+               yprevblank eq 1) then topside= 1B
             rightside= 0B
             if (((!P.MULTI[0]-1) MOD xdimen) EQ 0 OR $
                 xnextblank eq 1) then rightside= 1B
             bottomside= 0B
             if (floor(float(!P.MULTI[0]-1)/xdimen) EQ 0 OR $
-               ynextblank eq 1) then bottomside= 1B
+                ynextblank eq 1) then bottomside= 1B
 
 ; set axis label properties
             !X.CHARSIZE= tiny
@@ -526,87 +526,90 @@ for id2=ydimen-1,0L,-1 do begin
                 
 ; put on extra text labels, if asked
 
-      if keyword_set(textlabel) AND keyword_set(textpos) AND d1 NE d2 then begin
-        ilabel= where((textpos[d1,*] GT min(!X.CRANGE)) AND $
-                      (textpos[d1,*] LT max(!X.CRANGE)) AND $
-                      (textpos[d2,*] GT min(!Y.CRANGE)) AND $
-                      (textpos[d2,*] LT max(!Y.CRANGE)),nlabel)
-        if nlabel GT 0 then begin
-          xyouts, textpos[d1,ilabel],textpos[d2,ilabel],$
-           '!D'+textlabel[ilabel],noclip=0,align=0.5,charsize=0.3
-        endif
-      endif
+                if keyword_set(textlabel) AND keyword_set(textpos) AND d1 NE d2 then begin
+                    ilabel= where((textpos[d1,*] GT min(!X.CRANGE)) AND $
+                                  (textpos[d1,*] LT max(!X.CRANGE)) AND $
+                                  (textpos[d2,*] GT min(!Y.CRANGE)) AND $
+                                  (textpos[d2,*] LT max(!Y.CRANGE)),nlabel)
+                    if nlabel GT 0 then begin
+                        xyouts, textpos[d1,ilabel],textpos[d2,ilabel],$
+                          '!D'+textlabel[ilabel],noclip=0,align=0.5,charsize=0.3
+                    endif
+                endif
 
-      if keyword_set(overpoints) AND d1 NE d2 then begin
-          djs_oplot,overpoints[d1,*],overpoints[d2,*],psym=6,color='red', $
-            symsize=0.8
-      endif
+                if keyword_set(overpoints) AND d1 NE d2 then begin
+                    djs_oplot,overpoints[d1,*],overpoints[d2,*],psym=6,color='red', $
+                      symsize=0.8
+                endif
 
 ; plot ellipses
-        if NOT keyword_set(noellipse) then begin
-          var2d= var[[d1,d2],[d1,d2],*]
-          if keyword_set(bw) then begin
-            hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
-              color='white',thick=3.0*!P.THICK
-            hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
-              color='black'
-          endif else begin
-            hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
-              color=colorname[lindgen(ngauss) MOD ncolor]
-          endelse
-        endif
+                if NOT keyword_set(noellipse) then begin
+                    var2d= var[[d1,d2],[d1,d2],*]
+                    if keyword_set(bw) then begin
+                        hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
+                          color='white',thick=3.0*!P.THICK
+                        hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
+                          color='black'
+                    endif else begin
+                        hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
+                          color=colorname[lindgen(ngauss) MOD ncolor]
+                    endelse
+                endif
 
 ; plot superimposed box, if asked
-        if keyword_set(box) then begin
-          box_x= [box[0,d1],box[1,d1],box[1,d1],box[0,d1],box[0,d1]]
-          box_y= [box[0,d2],box[0,d2],box[1,d2],box[1,d2],box[0,d2]]
-          djs_oplot,box_x,box_y,color='white',thick=3.0*!P.THICK
-          djs_oplot,box_x,box_y,color='black'
-        endif
-      endif
-
-; if we are on the diagonal...
-      if (d1 EQ d2) then begin
-
-; plot data and model histograms
-        djs_oplot,!X.CRANGE,[0,0],psym=0,xstyle=5,ystyle=5,color='grey'
-        if NOT keyword_set(nodata) then begin
-            if(keyword_set(conditional)) then begin
-                scale=abs(delta_y)/abs(delta_x)
-            endif else begin
-                scale=abs(delta_y)
-            endelse
-            if(keyword_set(image2)) then begin
-                yhist2= total(image2,2)*scale
-                djs_oplot,ximg,yhist2,psym=10,thick=2*!P.THICK,color='grey'
+                if keyword_set(box) then begin
+                    box_x= [box[0,d1],box[1,d1],box[1,d1],box[0,d1],box[0,d1]]
+                    box_y= [box[0,d2],box[0,d2],box[1,d2],box[1,d2],box[0,d2]]
+                    djs_oplot,box_x,box_y,color='white',thick=3.0*!P.THICK
+                    djs_oplot,box_x,box_y,color='black'
+                endif
             endif
 
-        endelse
+; if we are on the diagonal...
+            if (d1 EQ d2) then begin
 
-        if(keyword_set(panellabels)) then begin
-            panellabels=reform(panellabels,xdimen,ydimen)
-            if(NOT keyword_set(panellabelpos)) then begin
-                xlabelpos=!X.CRANGE[0]+0.1*(!X.CRANGE[1]-!X.CRANGE[0])
-                ylabelpos=!Y.CRANGE[1]-0.1*(!Y.CRANGE[1]-!Y.CRANGE[0])
-            endif else begin
-                xlabelpos=!X.CRANGE[0]+panellabelpos[0]* $
-                  (!X.CRANGE[1]-!X.CRANGE[0])
-                ylabelpos=!Y.CRANGE[0]+panellabelpos[1]* $
-                  (!Y.CRANGE[1]-!Y.CRANGE[0])
-            endelse
-            xyouts, xlabelpos, ylabelpos, panellabels[id1,id2], $
-              charsize=1.4, charthick=4, color=255
-            xyouts, xlabelpos, ylabelpos, panellabels[id1,id2], $
-              charsize=1.4, charthick=1
+; plot data and model histograms
+                djs_oplot,!X.CRANGE,[0,0],psym=0,xstyle=5,ystyle=5,color='grey'
+                if NOT keyword_set(nodata) then begin
+                    if(keyword_set(conditional)) then begin
+                        scale=abs(delta_y)/abs(delta_x)
+                    endif else begin
+                        scale=abs(delta_y)
+                    endelse
+                    if(keyword_set(image2)) then begin
+                        yhist2= total(image2,2)*scale
+                        djs_oplot,ximg,yhist2,psym=10,thick=2*!P.THICK,color='grey'
+                    endif
+
+                endif
+            endif               ; end if d1 EQ d2  
+            
+            if(keyword_set(panellabels)) then begin
+                panellabels=reform(panellabels,xdimen,ydimen)
+                if(NOT keyword_set(panellabelpos)) then begin
+                    xlabelpos=!X.CRANGE[0]+0.1*(!X.CRANGE[1]-!X.CRANGE[0])
+                    ylabelpos=!Y.CRANGE[1]-0.1*(!Y.CRANGE[1]-!Y.CRANGE[0])
+                endif else begin
+                    xlabelpos=!X.CRANGE[0]+panellabelpos[0]* $
+                      (!X.CRANGE[1]-!X.CRANGE[0])
+                    ylabelpos=!Y.CRANGE[0]+panellabelpos[1]* $
+                      (!Y.CRANGE[1]-!Y.CRANGE[0])
+                endelse
+                xyouts, xlabelpos, ylabelpos, panellabels[id1,id2], $
+                  charsize=1.4, charthick=4, color=255
+                xyouts, xlabelpos, ylabelpos, panellabels[id1,id2], $
+                  charsize=1.4, charthick=1
+            endif
                                 ; end loops and close file
-        endfor
+        endelse 
     endfor
-    device, /close
-    
+endfor
+device, /close
+
                                 ; restore system plotting parameters
-    !P= bangP
-    !X= bangX
-    !Y= bangY
+!P= bangP
+!X= bangX
+!Y= bangY
     
-    return
+return
 end
