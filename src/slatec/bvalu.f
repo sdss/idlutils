@@ -152,6 +152,7 @@ C
      +   'IDERIV DOES NOT SATISFY 0.LE.IDERIV.LT.K', 2, 1)
       RETURN
   120 CONTINUE
+	print *, x, t(k)
       CALL XERMSG ('SLATEC', 'BVALU',
      +   'X IS N0T GREATER THAN OR EQUAL TO T(K)', 2, 1)
       RETURN
