@@ -434,9 +434,10 @@ pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
 
       if (nidle GT 0 AND nunassign GT 0) then begin
          for j=0, nidle-1 do begin ; Loop over available hosts
+            ; k indexes the jobs that could be assigned to host index iidle[j]
             k = (where(proglist.status EQ 'UNASSIGNED' $
              AND (proglist.selecthost EQ '' $
-                  OR proglist.selecthost EQ hostlist.remotehost)))
+                  OR proglist.selecthost EQ hostlist[iidle[j]].remotehost)))
             if (k[0] NE -1) then begin
                junk = max(proglist[k].priority, kmax)
                kbest = k
