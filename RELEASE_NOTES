@@ -38,7 +38,8 @@ MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
 NMF_SPARSE, MMEVAL, MMSPARSE: New procedure (and utility procedures) for 
                nonnegative PCA on sparse data matrices. 
 NW_RGB_MAKE: Trivial bug fixes; change SPLOG statements to PRINT.
-               Change default quality to 100.  Other changes???
+               Change default quality to 100, add dpitiff keyword.
+               Other changes???
 POLYWARP_SHIFT: Wrapper on polywarp to do a simple shift.
 USNOB2FITS: Compress files locally, then copy to target.
 
