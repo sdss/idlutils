@@ -129,7 +129,7 @@ pro tyc_rdindex, tyc_dir=tyc_dir
 
 ;   nline = numlines(indfile) ; NUMLINES fails if the index file is compressed
    nline = 9538
-   splog, 'Reading Tycho index file ' + indfile
+;   splog, 'Reading Tycho index file ' + indfile
    barr = bytarr(43,nline)
    tmpString = ''
    get_lun, ilun
@@ -216,7 +216,7 @@ function tyc_readascii, filename, range=range1, columns=columns
    if (keyword_set(range1)) then range = range1 $
     else range = [0L, expectlines-1]
    nline = range[1] - range[0] + 1
-   splog, 'Reading Tycho data file ' + thisfile + ' RANGE=', $
+;   splog, 'Reading Tycho data file ' + thisfile + ' RANGE=', $
     range[0], range[1]
    barr = bytarr(207,nline)
    tmpString = ''
@@ -381,7 +381,7 @@ function tyc_readfile, filename, range=range, columns=columns
 
    thisfile = tyc_readfits(filename)
    if (keyword_set(thisfile)) then begin
-      splog, 'Reading FITS file ' + thisfile + ' RANGE=', range[0], range[1]
+;      splog, 'Reading FITS file ' + thisfile + ' RANGE=', range[0], range[1]
       bigdat = mrdfits(thisfile, 1, range=range, columns=columns, /silent)
    endif else begin
       bigdat = tyc_readascii(filename, range=range, columns=columns)
