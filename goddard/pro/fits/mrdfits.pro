@@ -307,8 +307,252 @@
 ;       V2.7a September  2003 Convert dimensions to long64 to handle huge files
 ;       V2.8 October 2003 Use IDL_VALIDNAME() function to ensure valid tag names
 ;                         Removed OLD_STRUCT and TEMPDIR keywords W. Landsman
-;
+;       V2.9 February 2004 Added internal MRD_FXPAR procedure for faster
+;                     processing of binary table headers E. Sheldon
+;       V2.9a March 2004 Restore ability to read empty binary table W. Landsman
+;             Swallow binary tables with more columns than given in TFIELDS
+;       V2.9b Fix to ensure order of TFORMn doesn't matter
 ;-
+PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
+;
+;  Check for valid header.  Check header for proper attributes.
+;
+  S = SIZE(HDR)
+  IF ( S[0] NE 1 ) OR ( S[2] NE 7 ) THEN $
+    MESSAGE,'FITS Header (first parameter) must be a string array'
+
+  xten = fxpar(hdr, 'XTENSION')
+  nfld = fxpar(hdr, 'TFIELDS')
+  nrow = fxpar(hdr, 'NAXIS2')
+  rsize = fxpar(hdr, 'NAXIS1')
+
+  ;; will extract these for each
+  names = ['TTYPE','TFORM', 'TSCAL', 'TZERO']
+  nnames = n_elements(names)
+
+;  Start by looking for the required TFORM keywords.    Then try to extract it 
+;  along with names (TTYPE), scales (TSCAL), and offsets (TZERO)
+   
+ keyword = STRMID( hdr, 0, 8)
+
+;
+;  Find all instances of 'TFORM' followed by
+;  a number.  Store the positions of the located keywords in mforms, and the
+;  value of the number field in n_mforms
+;
+
+  mforms = WHERE(STRPOS(keyword,'TFORM') GE 0, n_mforms)
+  if n_mforms GT nfld then begin
+        message,/CON, $
+        'WARNING - More columns found in binary table than specified in TFIELDS'
+        n_mforms = nfld
+        mforms = mforms[0:nfld-1]
+  endif
+
+
+  IF ( n_mforms GT 0 ) THEN BEGIN
+      numst= STRMID(hdr[mforms], 5 ,3)      
+      number = INTARR(n_mforms)-1
+
+      FOR i = 0, n_mforms-1 DO         $
+        IF VALID_NUM( numst[i], num) THEN number[i] = num
+
+      igood = WHERE(number GE 0, n_mforms)
+      IF n_mforms GT 0 THEN BEGIN
+          mforms = mforms[igood]
+          number = number[igood]
+          numst = numst[igood]
+      ENDIF
+
+  ENDIF ELSE RETURN              ;No fields in binary table
+
+  ;; The others
+  fnames = strarr(n_mforms)
+  fforms = strarr(n_mforms) 
+  scales = dblarr(n_mforms)
+  offsets = dblarr(n_mforms)
+
+  ;;comments = strarr(n_mnames)
+
+  fnames_names  = 'TTYPE'+numst
+  scales_names  = 'TSCAL'+numst
+  offsets_names = 'TZERO'+numst
+  number = number -1    ;Make zero-based
+
+
+  match, keyword, fnames_names, mkey_names, mnames, count = N_mnames
+
+  match, keyword, scales_names, mkey_scales, mscales, count = N_mscales
+
+  match, keyword, offsets_names, mkey_offsets, moffsets,count = N_moffsets
+
+  FOR in=0L, nnames-1 DO BEGIN 
+
+      CASE names[in] OF
+          'TTYPE': BEGIN 
+              tmatches = mnames 
+              matches = mkey_names
+              nmatches = n_mnames
+              result = fnames
+          END 
+          'TFORM': BEGIN 
+              tmatches = lindgen(n_mforms)
+              matches = mforms
+              nmatches = n_mforms
+              result = fforms
+          END 
+          'TSCAL': BEGIN 
+              tmatches = mscales
+              matches = mkey_scales
+              nmatches = n_mscales
+              result = scales
+          END 
+          'TZERO': BEGIN 
+              tmatches = moffsets
+              matches = mkey_offsets
+              nmatches = n_moffsets
+              result = offsets
+          END 
+          ELSE: message,'What?'
+      ENDCASE 
+
+      ;;help,matches,nmatches
+
+;
+;  Extract the parameter field from the specified header lines.  If one of the
+;  special cases, then done.
+;
+      IF nmatches GT 0 THEN BEGIN 
+          
+          ;; "matches" is a subscript for hdr and keyword.
+          ;; get just the matches in line
+          
+          line = hdr[matches]
+          svalue = STRTRIM( STRMID(line,9,71),2)
+          
+          FOR i = 0, nmatches-1 DO BEGIN
+              IF ( STRMID(svalue[i],0,1) EQ "'" ) THEN BEGIN
+
+                  ;; Its a string
+                  test = STRMID( svalue[i],1,STRLEN( svalue[i] )-1)
+                  next_char = 0
+                  off = 0
+                  value = ''
+;
+;  Find the next apostrophe.
+;
+NEXT_APOST:
+                  endap = STRPOS(test, "'", next_char)
+                  IF endap LT 0 THEN MESSAGE,         $
+                    'WARNING: Value of '+nam+' invalid in '+ " (no trailing ')", /info
+                  value = value + STRMID( test, next_char, endap-next_char )
+;
+;  Test to see if the next character is also an apostrophe.  If so, then the
+;  string isn't completed yet.  Apostrophes in the text string are signalled as
+;  two apostrophes in a row.
+;
+                  IF STRMID( test, endap+1, 1) EQ "'" THEN BEGIN    
+                      value = value + "'"
+                      next_char = endap+2      
+                      GOTO, NEXT_APOST
+                  ENDIF
+
+;
+; CM 19 Sep 1997
+; This is a string that could be continued on the next line.  Check this
+; possibility with the following four criteria: *1) Ends with '&'
+; (2) Next line is CONTINUE  (3) LONGSTRN keyword is present (recursive call to
+;  FXPAR) 4. /NOCONTINE is not set
+                  
+;
+;  If not a string, then separate the parameter field from the comment field.
+;
+              ENDIF ELSE BEGIN
+                  ;; not a string
+                  test = svalue[I]
+                  slash = STRPOS(test, "/")
+                  IF slash GT 0 THEN BEGIN
+                      test = STRMID(test, 0, slash)
+                  END 
+;
+;  Find the first word in TEST.  Is it a logical value ('T' or 'F')?
+;
+                  test2 = test
+                  value = GETTOK(test2,' ')
+                  test2 = STRTRIM(test2,2)
+                  IF ( value EQ 'T' ) THEN BEGIN
+                      value = 1
+                  END ELSE IF ( value EQ 'F' ) THEN BEGIN
+                      value = 0
+                  END ELSE BEGIN
+;
+;  Test to see if a complex number.  It's a complex number if the value and the
+;  next word, if any, both are valid numbers.
+;
+                      IF STRLEN(test2) EQ 0 THEN GOTO, NOT_COMPLEX
+                      test2 = GETTOK(test2,' ')
+                      IF VALID_NUM(value,val1) AND VALID_NUM(value2,val2) $
+                        THEN BEGIN
+                          value = COMPLEX(val1,val2)
+                          GOTO, GOT_VALUE
+                      ENDIF
+;
+;  Not a complex number.  Decide if it is a floating point, double precision,
+;  or integer number.  If an error occurs, then a string value is returned.
+;  If the integer is not within the range of a valid long value, then it will 
+;  be converted to a double.  
+;
+NOT_COMPLEX:
+                      ON_IOERROR, GOT_VALUE
+                      value = test
+                      IF NOT VALID_NUM(value) THEN GOTO, GOT_VALUE
+
+                      IF (STRPOS(value,'.') GE 0) OR (STRPOS(value,'E') $
+                                                      GE 0) OR (STRPOS(value,'D') GE 0) THEN BEGIN
+                          IF ( STRPOS(value,'D') GT 0 ) OR $
+                            ( STRLEN(value) GE 8 ) THEN BEGIN
+                              value = DOUBLE(value)
+                          END ELSE value = FLOAT(value)
+                      ENDIF ELSE BEGIN
+                          lmax = 2.0D^31 - 1.0D
+                          lmin = -2.0D31
+                          value = DOUBLE(value)
+                          if (value GE lmin) and (value LE lmax) THEN $
+                            value = LONG(value)
+                      ENDELSE
+                      
+;
+GOT_VALUE:
+                      ON_IOERROR, NULL
+                  ENDELSE
+              ENDELSE           ; if string
+;
+;  Add to vector if required.
+;
+              
+              result[tmatches[i]] = value
+             
+          ENDFOR
+
+          CASE names[in] OF
+              'TTYPE': fnames[number] = strtrim(result, 2)
+              'TFORM': fforms[number] = strtrim(result, 2)
+              'TSCAL': scales[number] = result
+              'TZERO': offsets[number] = result
+              ELSE: message,'What?'
+          ENDCASE 
+
+;
+;  Error point for keyword not found.
+;
+      ENDIF
+;
+
+
+
+  ENDFOR 
+END
+  
 
 ; Get a tag name give the column name and index
 function  mrd_dofn, name, index, use_colnum, alias=alias
@@ -394,7 +638,7 @@ function mrd_chkfn, name, namelist, index
     ; 
     ; 
 
-    if float(!version.release) ge 5 then maxlen = 127 else maxlen=15
+    maxlen = 127
 
     if strlen(name) gt maxlen then name = strmid(name, 0, maxlen) 
     w = where(name eq strmid(namelist, 0, maxlen) )
@@ -432,9 +676,6 @@ function mrd_chkunsigned, bitpix, scale, zero, unsigned=unsigned
 
     if not keyword_set(unsigned) then return, 0
     
-    ; Only allow unsigned for versions >= 5.2
-    if float(!version.release) + .01 lt 5.2 then return, 0
-
     ; This is correct but we should note that
     ; FXPAR returns a double rather than a long.
     ; Since the offset is a power of two
@@ -470,7 +711,7 @@ end
     
 ; Return the currrent version string for MRDFITS
 function mrd_version
-    return, '2.8'
+    return, '2.9b'
 end
 ;=====================================================================
 ; END OF GENERAL UTILITY FUNCTIONS ===================================
@@ -1958,16 +2199,28 @@ pro mrd_table, header, structyp, use_colnum,           $
 
     status = 0 
 
-    xten = strmid(fxpar(header, 'XTENSION'),0,8)
+; NEW WAY: E.S.S.
+
+    ;; get info from header. Using vectors is much faster
+    ;; when there are many columns
+
+    mrd_fxpar, header, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
+    nnames = n_elements(fnames)
+
+    ;; nrow will change later
+    nrows = nrow
+
+    ;; Use scale=1 if not found
+    if nnames GT 0 then begin
+      wsc=where(scales EQ 0.0d,nwsc)
+      IF nwsc NE 0 THEN scales[wsc] = 1.0d
+    endif
+
     if xten ne 'BINTABLE' and xten ne 'A3DTABLE' then begin 
         print, 'MRDFITS: ERROR - Header is not from binary table.' 
         nfld = 0 & status = -1 
         return 
     endif 
- 
-    nfld = fxpar(header, 'TFIELDS') 
-    nrow = fxpar(header, 'NAXIS2')
-    nrows = nrow
  
     if range[0] ge 0 then begin 
         range[0] = range[0] < (nrow-1) 
@@ -1996,39 +2249,56 @@ pro mrd_table, header, structyp, use_colnum,           $
            endif
            nrowp = N_elements(rows)
     endelse
-    rsize = fxpar(header, 'NAXIS1') 
+;    rsize = fxpar(header, 'NAXIS1') 
  
     ; 
     ;  Loop over the columns           
  
     typarr   = strarr(nfld) 
-    fnames   = strarr(nfld)
+;    fnames   = strarr(nfld)
     
     fvalues  = strarr(nfld) 
     dimfld   = strarr(nfld)
-    scales   = dblarr(nfld)
-    offsets  = dblarr(nfld)
+;    scales   = dblarr(nfld)
+;    offsets  = dblarr(nfld)
     
     vcls     = intarr(nfld)
     vtpes    = strarr(nfld)
  
+    fnames2 = strarr(nfld)
+
     for i=0, nfld-1 do begin
 	
         istr = strcompress(string(i+1), /remo)
+
+        fname = fnames[i]
+
+        ;; check for a name conflict
+        fname = mrd_dofn(fname, i+1, use_colnum, alias=alias)
 	
-        fname = fxpar(header, 'TTYPE' +  istr) 
-        fform = strtrim( fxpar(header, 'TFORM' +   istr),2)
-	
-        scales[i] = fxpar(header, 'TSCAL'+istr)
-        if scales[i] eq 0.d0 then scales[i] = 1.d0
-	
-        offsets[i] = fxpar(header, 'TZERO'+istr)
-	
-        fname = mrd_dofn(fname,i+1, use_colnum, alias=alias) 
-        fname = mrd_chkfn(fname, fnames, i)
-	
+        ;; check for a name conflict
+        fname = mrd_chkfn(fname, fnames2, i)
+
+        ;; copy in the valid name
         fnames[i] = fname
+        ;; for checking conflicts
+        fnames2[i] = fname
+
+;        fname = fxpar(header, 'TTYPE' +  istr) 
+;        fform = strtrim( fxpar(header, 'TFORM' +   istr),2)
 	
+;        scales[i] = fxpar(header, 'TSCAL'+istr)
+;        if scales[i] eq 0.d0 then scales[i] = 1.d0
+	
+;        offsets[i] = fxpar(header, 'TZERO'+istr)
+	
+;        fname = mrd_dofn(fname,i+1, use_colnum, alias=alias) 
+;        fname = mrd_chkfn(fname, fnames, i)
+	
+;        fnames[i] = fname
+	
+        fform = fforms[i]
+
         mrd_doff, fform, dim, ftype
         
         ; Treat arrays of length 1 as scalars.
@@ -2073,12 +2343,17 @@ pro mrd_table, header, structyp, use_colnum,           $
 
             vcls[i] = 1
 	    
-	    xscale =fxpar(header,'TSCAL'+istr,count=cnt)
-	    if cnt eq 0 then xscale = 1
+;	    xscale =fxpar(header,'TSCAL'+istr,count=cnt)
+;	    if cnt eq 0 then xscale = 1
 	    
-	    xunsigned = mrd_chkunsigned(bitpix[ppos], xscale,       $
-				       fxpar(header, 'TZERO'+istr), $
+;	    xunsigned = mrd_chkunsigned(bitpix[ppos], xscale,       $
+;				       fxpar(header, 'TZERO'+istr), $
+;				       unsigned=unsigned)
+
+	    xunsigned = mrd_chkunsigned(bitpix[ppos], scales[i],       $
+				       offsets[i], $
 				       unsigned=unsigned)
+
 	    if (xunsigned) then begin
 		
 		if      vf eq 'I' then vf = '1' $
@@ -2097,12 +2372,16 @@ pro mrd_table, header, structyp, use_colnum,           $
 	    
             if ftype eq types[j] then begin
 
-		xscale = fxpar(header, 'TSCAL'+istr, count=cnt)
-		if cnt eq 0 then xscale = 1
+;		xscale = fxpar(header, 'TSCAL'+istr, count=cnt)
+;		if cnt eq 0 then xscale = 1
 		
-		xunsigned = mrd_chkunsigned(bitpix[j], xscale, $
-					   fxpar(header, 'TZERO'+istr), $
-					   unsigned=unsigned)
+;		xunsigned = mrd_chkunsigned(bitpix[j], xscale, $
+;					   fxpar(header, 'TZERO'+istr), $
+;					   unsigned=unsigned)
+
+                xunsigned = mrd_chkunsigned(bitpix[j], scales[i], $
+                                            offsets[i], $
+                                            unsigned=unsigned)
 
 		if xunsigned then begin
 		    fxaddpar, header, 'TZERO'+istr, 0, 'Modified by MRDFITS V'+mrd_version()
@@ -2157,7 +2436,6 @@ pro mrd_table, header, structyp, use_colnum,           $
     endif
 
     zero = where(long(dimfld) LT 0L, N_zero)
-    
     if N_zero GT 0 then begin
 	
         if N_zero Eq nfld then begin
@@ -2219,7 +2497,7 @@ function mrdfits, file, extension, header,      $
     
     ;   Let user know version if MRDFITS being used.
     if keyword_set(version) then begin
-        print,'MRDFITS: Version '+mrd_version()+' Oct 17, 2003'
+        print,'MRDFITS: Version '+mrd_version()+' Mar 02, 2004'
     endif
     
     ;
@@ -2398,7 +2676,6 @@ function mrdfits, file, extension, header,      $
           fnames, fvalues, vcls, vtpes, scales, offsets, scaling, status,   $
           silent=silent, columns=columns, no_tdim=no_tdim, $
           alias=alias, unsigned=unsigned, rows = rows
-
 
         size = nfld*(arange[1] - arange[0] + 1)
         if status ge 0  and  size gt 0  then begin
