@@ -13,7 +13,8 @@
 ; INPUTS:
 ;   filename  - FITS file name; if the name ends in the suffix ".gz",
 ;               then the file is g-unzipped first, modified, then re-g-zipped.
-;   data      - New data array or structure for extension EXTEN_NO
+;   data      - New data array or structure for extension EXTEN_NO;
+;               if this is undefined or zero, then don't modify the data.
 ;
 ; OPTIONAL INPUTS:
 ;   hdr       - New FITS header for extension EXTEN_NO
