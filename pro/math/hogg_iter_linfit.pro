@@ -29,6 +29,14 @@
 ;   ww      - ww values set to zero where data points clipped, and re-
 ;             scaled so that chisq^2 is unity per degree of freedom, unless
 ;             keyword "sacred" is set
+; EXAMPLE:
+;   Linear regression of ydata (with inverse variance ydata_ivar) on
+;   xdata, with 5-sigma clipping:
+;     aa= dblarr(2,n_elements(xdata))
+;     aa[0,*]=1.D0
+;     aa[1,*]=xdata
+;     hogg_iter_linfit, aa, ydata, ydata_ivar, coeffs, covar=covar, nsigma=5
+;   Resulting coefficients are in coeffs[0] and coeffs[1] 
 ; BUGS:
 ;   Covariance matrix is an approximation which assumes that the rms of the
 ;     fit is consistent with the errors in the yy, or something like that.
