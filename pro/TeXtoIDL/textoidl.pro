@@ -38,8 +38,11 @@
 ;       out = textoidl_strtrans(inp,from,to,ned)
 ;       Will produce out='Many bad chars in here', and set ned to 4.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.7  2000/11/19 18:25:00  dfink / Jonathan Swift
 ;       Added \AA option for Anstroms
 ;
@@ -173,8 +176,11 @@ END
 ;       table(0,*).
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
@@ -435,8 +441,11 @@ END
 ;       To D. Linder who wrote GETTOK, part of the goddard library,
 ;       upon which this is based.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
@@ -545,8 +554,11 @@ END
 ;       textoidl_nexttok( 'x^2 + N_j^3', '^_', position=pos ) returns '^' and sets
 ;       pos to 1.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
@@ -677,8 +689,11 @@ END
 ;        textoidl_matchdelim('{one{two}}three') returns 9, the character just
 ;        before 'three'.  
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
@@ -815,8 +830,11 @@ END
 ;       occurance. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
@@ -888,10 +906,10 @@ FUNCTION Textoidl_Strcnt, strn, substrn, startpos, $
         count = n_elements(where(TmpStrn EQ (byte(substrn))(0))) 
     ENDIF ELSE BEGIN 
         count = 0L
-        pos = rstrpos(tmpstrn, substrn)
+        pos = strpos(tmpstrn, substrn, /reverse_search)
         WHILE pos GE 0 DO BEGIN
             count = count + 1
-            pos = rstrpos(tmpstrn, substrn, pos)
+            pos = strpos(tmpstrn, substrn, pos, /reverse_search)
         ENDWHILE
     ENDELSE 
 
@@ -946,8 +964,11 @@ END
 ;       file. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
@@ -1046,8 +1067,11 @@ END
 ;       textoidl_strtok      -- Text/string (mcraig)
 ;       textoidl_sub_sup -- contained in this file
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
@@ -1260,8 +1284,11 @@ END
 ;       exponent of 2, then a plus sign, then an N with the subscript
 ;       ed.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
+;       $Id: textoidl.pro,v 1.8 2004-07-19 16:48:04 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/20 02:27:24  dfink
+;       Added \AA option for Anstroms
+;
 ;       Revision 1.6  2000/07/12 14:31:33  hogg
 ;       fixed another ()/[] bug.
 ;
