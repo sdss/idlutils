@@ -12,11 +12,12 @@ IDL_LONG grow_obj
    IDL_LONG    ny;
    unsigned char *  image;
    IDL_LONG *  mask;
-   IDL_LONG    iloc;
+   IDL_LONG    iloc_in;
    IDL_LONG    putval;
    IDL_LONG    qdiag;
    IDL_LONG *  ilist;
 
+   IDL_LONG    iloc;
    IDL_LONG    jfirst;
    IDL_LONG    jlast;
    IDL_LONG    iloc1;
@@ -27,7 +28,7 @@ IDL_LONG grow_obj
    ny = *((IDL_LONG *)argv[1]);
    image = (unsigned char *)argv[2];
    mask = (IDL_LONG *)argv[3];
-   iloc = *((IDL_LONG *)argv[4]);
+   iloc_in = *((IDL_LONG *)argv[4]);
    putval = *((IDL_LONG *)argv[5]);
    qdiag = *((IDL_LONG *)argv[6]);
    ilist = (IDL_LONG *)argv[7];
@@ -35,6 +36,7 @@ IDL_LONG grow_obj
    /* Only do anything if the starting pixel should be assigned. */
    jfirst = 0;
    jlast = -1;
+   iloc = iloc_in;
    while (image[iloc] != 0 && mask[iloc] <= 0) {
 
       mask[iloc] = putval;
@@ -51,12 +53,12 @@ IDL_LONG grow_obj
          mask[iloc1] = -1;
          ilist[++jlast] = iloc1;
       }
-      iloc1 = iloc - ny;
+      iloc1 = iloc - nx;
       if (image[iloc1] != 0 && mask[iloc1] == 0) {
          mask[iloc1] = -1;
          ilist[++jlast] = iloc1;
       }
-      iloc1 = iloc + ny;
+      iloc1 = iloc + nx;
       if (image[iloc1] != 0 && mask[iloc1] == 0) {
          mask[iloc1] = -1;
          ilist[++jlast] = iloc1;
@@ -90,7 +92,7 @@ IDL_LONG grow_obj
       if (jfirst <= jlast) {
          iloc = ilist[jfirst++];
       } else {
-         iloc = 0;
+         iloc = iloc_in; /* This forces an end */
       }
    }
 
