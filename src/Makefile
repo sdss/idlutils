@@ -26,6 +26,7 @@ install :
 	@ for f in $(SUBDIRS); do \
 		(mkdir $(IDLUTILS_DIR)/src/$$f; cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) install ); \
 	done
+	-@ cp Makefile $(IDLUTILS_DIR)/src
 
 clean :
 	- /bin/rm -f *~ core

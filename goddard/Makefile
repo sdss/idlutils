@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-SUBDIRS = data pro
+SUBDIRS = data pro text
 
 all :;
 
@@ -15,10 +15,14 @@ all :;
 # Install things in their proper places in $(IDLUTILS_DIR)
 #
 install :
+	- cp Makefile $(IDLUTILS_DIR)/goddard
+	- cp README $(IDLUTILS_DIR)/goddard
+	- cp *.txt $(IDLUTILS_DIR)/goddard
 	@ for f in $(SUBDIRS); do \
 		mkdir $(IDLUTILS_DIR)/goddard/$$f; \
 		(cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) install ); \
 	done
+
 
 clean :
 	- /bin/rm -f *~ core

@@ -31,7 +31,10 @@ $(LIB)/libmath.$(SO_EXT): $(OBJECTS)
 #
 # Install things in their proper places in $(IDLUTILS_DIR)
 #
-install :;
+install : 
+	-@ cp *.c $(IDLUTILS_DIR)/src/math
+	-@ cp *.h $(IDLUTILS_DIR)/src/math
+	-@ cp Makefile $(IDLUTILS_DIR)/src/math
 
 clean :
 	- /bin/rm -f *~ core *.o so_locations

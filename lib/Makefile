@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-all :
+all :;
 
 #
 # Install things in their proper places in $(IDLUTILS_DIR)

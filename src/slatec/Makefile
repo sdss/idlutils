@@ -46,7 +46,10 @@ $(LIB)/libslatec.$(SO_EXT) : $(OBJECTS)
 #
 # Install things in their proper places in $(IDLUTILS_DIR)
 #
-install :;
+install :
+	- cp Makefile $(IDLUTILS_DIR)/src/slatec
+	- cp *.f $(IDLUTILS_DIR)/src/slatec
+	- cp *.c $(IDLUTILS_DIR)/src/slatec
 
 clean :
 	- /bin/rm -f *~ core *.o so_locations

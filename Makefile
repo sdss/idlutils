@@ -41,6 +41,8 @@ install :
 	@ for f in $(SUBDIRS); do \
 		(mkdir $(IDLUTILS_DIR)/$$f; cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) install ); \
 	done
+	/bin/cp Makefile $(IDLUTILS_DIR)
+
 
 clean :
 	- /bin/rm -f *~ core

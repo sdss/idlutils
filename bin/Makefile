@@ -7,11 +7,13 @@
 
 SHELL = /bin/sh
 #
-all :
+all :;
 #
 # Install things in their proper places in $(IDLUTILS_DIR)
 #
-install :;
+install :
+	/bin/cp Makefile $(IDLUTILS_DIR)/bin/
+	/bin/cp evilmake $(IDLUTILS_DIR)/bin/
 
 clean :
 	- /bin/rm -f *~ core

@@ -18,6 +18,7 @@ install :
 	@ mkdir $(IDLUTILS_DIR)/doc/www
 	- cp *.txt $(IDLUTILS_DIR)/doc
 	- cp www/*.html $(IDLUTILS_DIR)/doc/www
+	- cp Makefile $(IDLUTILS_DIR)/doc
 
 clean :
 	- /bin/rm -f *~ core www/*~ www/core

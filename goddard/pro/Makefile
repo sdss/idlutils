@@ -20,8 +20,11 @@ install :
 	@ for f in $(SUBDIRS); do \
 		(mkdir $(IDLUTILS_DIR)/goddard/pro/$$f; \
 		echo Copying $$f; \
+		cp $$f/README $(IDLUTILS_DIR)/goddard/pro/$$f \
 		cp $$f/*.pro $(IDLUTILS_DIR)/goddard/pro/$$f ); \
 	done
+	-@ cp Makefile $(IDLUTILS_DIR)/goddard/pro
+	-@ cp README $(IDLUTILS_DIR)/goddard/pro
 
 clean :
 	- /bin/rm -f *~ core
