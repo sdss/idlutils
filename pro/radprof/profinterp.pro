@@ -6,24 +6,24 @@
 ;   Interpolates a radial profile of the sort output by photo
 ;
 ; CALLING SEQUENCE:
-;   profinterp,nprof,profmean,radius,flux, [fluxerr=, profradius= $
-;      proferr=, radiusscale=, fluxscale=]
+;   profinterp,nprof,profmean,radius,maggies, [maggieserr=, profradius= $
+;      proferr=, radiusscale=, maggiesscale=]
 ;
 ; INPUTS:
 ;   nprof - number of measured elements in the profile 
 ;   profmean - values (in maggies) in the profile [15]
 ;   radius - a set of values to interpolate to [N]
-;   flux - calculated flux
+;   maggies - calculated maggies
 ;
 ; OPTIONAL INPUTS:
 ;   proferr - errors in profile
 ;   profradius - boundaries of annuli in profile (set to photo default
 ;                in arcsec)
 ;   radiusscale - asinh scale for radii
-;   fluxscale - asinh scale for fluxes
+;   maggiesscale - asinh scale for maggieses
 ;
 ; OUTPUTS:
-;   fluxerr - calculated error
+;   maggieserr - calculated error
 ;
 ; OPTIONAL INPUT/OUTPUTS:
 ;
@@ -43,12 +43,12 @@
 ;   16-Jan-2002  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-pro profinterp,nprof,profmean,radius,flux,fluxerr=fluxerr, $
+pro profinterp,nprof,profmean,radius,maggies,maggieserr=maggieserr, $
                profradius=profradius, proferr=proferr, $
-               radiusscale=radiusscale, fluxscale=fluxscale
+               radiusscale=radiusscale, maggiesscale=maggiesscale
 
 if(NOT keyword_set(radiusscale)) then radiusscale=0.05
-if(NOT keyword_set(fluxscale)) then fluxscale=1.e-10
+if(NOT keyword_set(maggiesscale)) then maggiesscale=1.e-10
 if(NOT keyword_set(profradius)) then $
   profradius=[0., 0.564190, 1.692569, 2.585442, 4.406462, $
               7.506054, 11.576202, 18.584032, 28.551561, $
@@ -57,19 +57,38 @@ if(NOT keyword_set(profradius)) then $
 
 PI=3.14159265358979d
 
-cumprof=dblarr(nprof+1l)
-indx=lindgen(nprof)
-indxp1=lindgen(nprof)+1l
-cumprof[1l:n_elements(cumprof)-1l]= $
-  total(profmean[indx]*PI*(profradius[indxp1]^2-profradius[indx]^2), $
-        /cumulative)
-stop
+nprofiles=n_elements(nprof)
+nrad=n_elements(profradius)
+if(NOT keyword_set(proferr)) then proferr=dblarr(nrad-1l)
+cumprof=dblarr(nrad,nprofiles)
+cumprofvar=dblarr(nrad,nprofiles)
+indx=lindgen(nrad-1l)
+indxp1=lindgen(nrad-1l)+1l
+profmean=reform(profmean,nrad-1l,nprofiles)
+proferr=reform(proferr,nrad-1l,nprofiles)
+cumprof[1l:nrad-1l,*]= $
+  total(profmean[indx,*]*PI* $
+        ((profradius[indxp1]^2-profradius[indx]^2)#replicate(1,nprofiles)), $
+        1,/cumulative)
+cumprofvar[1l:nrad-1l,*]= $
+  total((proferr[indx,*]*PI* $
+         ((profradius[indxp1]^2-profradius[indx]^2)# $
+          replicate(1,nprofiles)))^2, $
+        1,/cumulative)
 
-aprofradius=asinh(profradius[0:n_elements(cumprof)-1]/radiusscale)
-acumprof=asinh(cumprof/fluxscale)
-stop
+aprofradius=asinh2(profradius[0:nrad-1]/radiusscale)
+acumprof=asinh2(cumprof/maggiesscale)
+acumprofvar=asinh2(cumprofvar/maggiesscale^2)
 
-aflux=spline(aprofradius,acumprof,asinh(radius/radiusscale))
-flux=fluxscale*sinh(aflux)
+amaggies=dblarr(nprofiles)
+avar=dblarr(nprofiles)
+for i=0l, nprofiles-1l do begin
+    amaggies[i]=spline(aprofradius,acumprof[*,i],asinh2(radius[i]/radiusscale))
+    avar[i]=spline(aprofradius,acumprofvar[*,i],asinh2(radius[i]/radiusscale))
+endfor
+
+maggies=maggiesscale*sinh(amaggies)
+var=maggiesscale^2*sinh(avar)
+maggieserr=sqrt(var)
 
 end
