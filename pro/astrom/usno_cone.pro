@@ -48,6 +48,7 @@ PRO usno_cone, catpath, racen, deccen, rad, result, catname=catname
      prefix = 'b'
      swap_if_big_endian = 1B
      zonewidth = 0.1 ; [deg]
+     usnob = 1B
   endif 
 
 ; declination range

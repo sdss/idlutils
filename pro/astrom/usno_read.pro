@@ -56,18 +56,21 @@ end
 function usno_read, racen, deccen, rad, path=path
 
 ; set path
-  IF (NOT keyword_set(path)) THEN path = '/u/schlegel/mt/cdrom'
+  IF (NOT keyword_set(path)) THEN path = getenv('USNO_PATH')
+  IF (NOT keyword_set(path)) THEN path = getenv('USNOA20_PATH')
+  IF (NOT keyword_set(path)) THEN message, 'set environment variables or path keyword'
+
+; which catalogue?
+  testfile = concat_dir(path, 'zone*.cat')
+  flist = findfile(testfile, count=ct)
+  catname = ct ne 0 ? 'USNO-A' : 'USNO-B'
 
 ; Read the stars - loop over pointings
   nstar = n_elements(racen)
   FOR i=0, nstar-1 DO BEGIN 
      radi = i < (n_elements(rad)-1) ; don't require that rad be array
-     usno_cone, path, racen[i], deccen[i], rad[radi], zdata
-;    append to list
-     IF n_elements(data) EQ 0 THEN $
-       data=zdata $
-     ELSE $
-       data=[[data], [zdata]]
+     usno_cone, path, racen[i], deccen[i], rad[radi], zdata, catname=catname
+     data = n_elements(data) EQ 0 ? zdata : [[data], [zdata]]
   ENDFOR 
 
   if n_elements(data) EQ 0 then print, 'NO Data - try a bigger radius.'
