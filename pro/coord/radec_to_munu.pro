@@ -62,13 +62,13 @@ pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl, $
 
    r2d = 180.d / !dpi
 
-   if (n_elements(node) NE 1 OR n_elements(incl) NE 1) then begin
+   if (n_elements(node) LT 1 OR n_elements(incl) LT 1) then begin
       node = 95.d
       incl = stripe_to_incl(stripe)
    endif
 
-   sinra = sin(ra/r2d)
-   cosra = cos(ra/r2d)
+   sinra = sin((ra-node)/r2d)
+   cosra = cos((ra-node)/r2d)
    sindec = sin(dec/r2d)
    cosdec = cos(dec/r2d)
    sini = sin(incl/r2d)
