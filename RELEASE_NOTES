@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v5_0_0 (Feb 19, 2004) running on IDL 5.4 - 6.0
+Tagged for idlspec2d v5_0_0.
+
 BSPLINE_ITERFIT: Set all the SSET.BKMASK=1 (good) for the case that the break
                points are passed through the OLDSET keyword.
 REBIN_SPECTRUM: New function for rebinning 1-D spectra using CIC assignment
