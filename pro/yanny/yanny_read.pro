@@ -66,10 +66,12 @@
 ; PROCEDURES CALLED:
 ;   hogg_strsplit
 ;   mrd_struct
+;   numlines
 ;
 ; INTERNAL SUPPORT ROUTINES:
 ;   yanny_add_comment
 ;   yanny_getwords()
+;   yanny_add_pointer
 ;   yanny_inquotes()
 ;   yanny_strip_brackets()
 ;   yanny_strip_commas()
@@ -247,7 +249,7 @@ end
 ; Append another pointer NEWPTR to the array of pointers PDATA.
 ; Also add its name to PNAME.
 
-pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
+pro yanny_add_pointer, stname, newptr, pcount, pname, pdata, pnumel
 
    if (pcount EQ 0) then begin
       pname = stname
@@ -321,6 +323,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       errcode = -2L
       return
    endif
+
+   maxlen = numlines(filename) > 1
 
    rawline = ''
 
@@ -417,11 +421,15 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
              else stnames = [stnames, stname1]
 
             ; Create the actual structure
+            ; Pre-allocate a large array of length MAXLEN, which is
+            ; the longest it could possibly be (the number of lines
+            ; in the file).  At the end of this proc, we trim this
+            ; to only the actual number of elements.
             if (keyword_set(anonymous)) then structyp='' $
              else structyp = stname1
-            add_pointer, stname1, $
-             ptr_new( mrd_struct(names, values, 1, structyp=structyp) ), $
-             pcount, pname, pdata, pnumel
+            ptr1 = replicate(mrd_struct(names, values, 1, structyp=structyp), maxlen)
+            yanny_add_pointer, stname1, $
+             ptr_new(ptr1), pcount, pname, pdata, pnumel
 
             qdone = 1 ; This last line is still part of the structure def'n
 
@@ -441,11 +449,14 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
             idat = where(strupcase(words[0]) EQ pname[0:pcount-1], ct)
             if (ct EQ 1) then begin
                idat = idat[0]
+
                ; Add an element to the idat-th structure
                ; Note that if this is the first element encountered,
                ; then we already have an empty element defined.
-               if (pnumel[idat] GT 0) then $
-                *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
+               ; (No longer any need to do this, since we pre-allocate
+               ; a large array.)
+;               if (pnumel[idat] GT 0) then $
+;                *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
 
                ; Split this text line into words
                sline = strcompress( yanny_strip_brackets(sline) )
@@ -492,8 +503,18 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
    endwhile
 
+   ;----------
+   ; Close the file
+
    close, ilun
    free_lun, ilun
+
+   ;----------
+   ; Trim the structures from their maximum length to only the actual
+   ; number of elements.
+
+   for icount=0, pcount-1 do $
+    pdata[icount] = ptr_new( (*pdata[icount])[0:(pnumel-1)>0] )
 
    return
 end
