@@ -23,12 +23,9 @@
 ;   ingroup    - group number of each object (N-dimensional array)
 ;
 ; OPTIONAL INPUT/OUTPUTS:
-;   multgroup  - multiplicity of each group (N-dimensional array; must
-;                allocate before input)
-;   firstgroup - first member of each group (N-dimensional array; must
-;                allocate before input)
+;   multgroup  - multiplicity of each group 
+;   firstgroup - first member of each group 
 ;   nextgroup  - index of next member of group for each object
-;                (N-dimensional array; must allocate before input) 
 ;
 ; COMMENTS:
 ;   The code breaks the survey region into chunks which overlap by
@@ -48,7 +45,6 @@
 ;   Group a set of points on a scale of 55'', then step through
 ;   members of the third group:
 ;
-;   > mult=lonarr(n_elements(ra))
 ;   > ingroup=spheregroup(ra,dec,.0152778,multgroup=mult, $
 ;   > firstgroup=first, nextgroup=next)
 ;   > indx=firstgroup[2]
@@ -99,21 +95,6 @@ function spheregroup, ra, dec, linklength, chunksize=chunksize, multgroup=multgr
        return, -1
    endif
    
-   if (keyword_set(multgroup) and n_elements(multgroup) lt npoints) then begin
-       print, 'Please allocate enough memory for multgroup'
-       return, -1
-   endif
-
-   if (keyword_set(firstgroup) and n_elements(firstgroup) lt npoints) then begin
-       print, 'Please allocate enough memory for firstgroup'
-       return, -1
-   endif
-
-   if (keyword_set(nextgroup) and n_elements(nextgroup) lt npoints) then begin
-       print, 'Please allocate enough memory for nextgroup'
-       return, -1
-   endif
-
    ; Allocate memory for the ingroups array
    ingroup=lonarr(npoints)
 
@@ -124,18 +105,15 @@ function spheregroup, ra, dec, linklength, chunksize=chunksize, multgroup=multgr
                           double(dec), double(linklength), double(chunksize), $
                           ingroup)
    
-   ; If desired, make multiplicity, etc.
-   if (keyword_set(multgroup)) then begin
-       for i = 0l, npoints-1l do multgroup[ingroup[i]]=multgroup[ingroup[i]]+1l
-   endif
-   if (keyword_set(firstgroup) or keyword_set(nextgroup)) then begin
-       firstgroup=-1l+firstgroup-firstgroup
-       nextgroup=firstgroup
-       for i = npoints-1l, 0l, -1l do begin 
-           nextgroup[i]=firstgroup[ingroup[i]]
-           firstgroup[ingroup[i]]=i
-       end
-   endif
+   ; Make multiplicity, etc.
+   multgroup=lonarr(npoints)
+   nextgroup=lonarr(npoints)-1L
+   firstgroup=lonarr(npoints)-1L
+   for i = 0l, npoints-1l do multgroup[ingroup[i]]=multgroup[ingroup[i]]+1l
+   for i = npoints-1l, 0l, -1l do begin 
+       nextgroup[i]=firstgroup[ingroup[i]]
+       firstgroup[ingroup[i]]=i
+   end
    
    return, ingroup
 end
