@@ -71,7 +71,6 @@ data/filters/wf2f606wsys.txt -text
 data/filters/wf2f702wsys.txt -text
 data/filters/wf2f814wsys.txt -text
 data/objects/ned-query-clusters-lt0.03.dat -text
-data/objects/ned-query-clusters-lt0.03.dat.~1~ -text
 data/objects/ned-query-clusters-lt0.03.txt -text
 data/objects/process_ned_list -text
 data/sdss/sdssMaskbits.par -text
