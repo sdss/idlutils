@@ -740,6 +740,7 @@ pro/mangle/is_cap_used.pro -text
 pro/mangle/is_in_cap.pro -text
 pro/mangle/is_in_polygon.pro -text
 pro/mangle/is_in_window.pro -text
+pro/mangle/plot_poly.pro -text
 pro/mangle/polygon_overlap.pro -text
 pro/mangle/read_fits_polygons.pro -text
 pro/mangle/read_mangle_polygons.pro -text
@@ -803,6 +804,7 @@ pro/misc/struct_addtags.pro -text
 pro/misc/struct_append.pro -text
 pro/misc/struct_print.pro -text
 pro/misc/struct_trimtags.pro -text
+pro/misc/tag_indx.pro -text
 pro/misc/where_array.pro -text
 pro/misc/which.pro -text
 pro/mpeg/ppmtompeg.pro -text
