@@ -32,6 +32,7 @@
 ;
 ; REVISION HISTORY:
 ;   11-Sep-2000 Written by Scott Burles, FNAL
+;    3-Jul-2001 Fundamental array organization bug fixed, S. Burles 
 ;-
 ;------------------------------------------------------------------------------
 function bspline_action, x, sset, x2=x2, lower=lower, upper=upper
@@ -72,7 +73,6 @@ function bspline_action, x, sset, x2=x2, lower=lower, upper=upper
 
       indx = intrv(x, gb, nord)
 
-
       bf1 = bsplvn(gb, nord, x, indx)
       action = bf1
 
@@ -92,10 +92,8 @@ function bspline_action, x, sset, x2=x2, lower=lower, upper=upper
       ;
       if keyword_set(x2) then begin
 
-         for jj=1,npoly-1 do action = [[action],[bf1]]
 
          x2norm = 2.0 * (x2[*] - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
-
          CASE sset.funcname OF
            'poly' : begin
                    temppoly = (x2norm*0.0 + 1.0) # replicate(1,npoly)
@@ -106,7 +104,14 @@ function bspline_action, x, sset, x2=x2, lower=lower, upper=upper
            else :        temppoly = flegendre(x2norm, npoly)
          ENDCASE
 
-         action = action * reform((temppoly[*] # replicate(1,nord))[*],nx,bw)
+         action = fltarr(nx,bw)
+         counter= -1L
+         for ii=0,nord-1 do begin
+           for jj=0,npoly-1 do begin
+             counter = counter +1
+             action[*, counter] = bf1[*,ii] * temppoly[*,jj]
+           endfor
+         endfor
       endif
 
       return, action
