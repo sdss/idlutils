@@ -8,6 +8,7 @@
 SHELL = /bin/sh
 #
 all :
+	idl mk_doc
 
 #
 # Install things in their proper places in $(IDLUTILS_DIR)
