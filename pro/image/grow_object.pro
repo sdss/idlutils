@@ -70,6 +70,11 @@ function grow_obj1, image, mask, iloc, putval=putval, $
    soname = filepath('libimage.so', $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
+   ; Note that NY is not actually used by the C code, because the code
+   ; quits when it no longer finds any masked pixels.  Because the image
+   ; has been padded around the edges with zeros, we know that condition
+   ; will be met without ever having to explicitly test that we've hit
+   ; the end of the image.
    qdiag = long(keyword_set(diagonal))
    nadd = call_external(soname, 'grow_obj', $
     nx, ny, image, mask, iloc, putval, qdiag, workarray)
