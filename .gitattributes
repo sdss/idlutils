@@ -841,6 +841,7 @@ pro/math/lle_sm_full.pro -text
 pro/math/lle_sm_mult.pro -text
 pro/math/lle_sm_transpose.pro -text
 pro/math/logsum.pro -text
+pro/math/memshift.pro -text
 pro/math/nnls.pro -text
 pro/math/nonneg_mult_update.pro -text
 pro/math/nonneg_mult_update_solve.pro -text
