@@ -660,6 +660,7 @@ pro/bspline/fill_bspline.pro -text
 pro/bspline/intrv.pro -text
 pro/coord/angles_to_xyz.pro -text
 pro/coord/current_mjd.pro -text
+pro/coord/dec2hms.pro -text
 pro/coord/djs_angle_group.pro -text
 pro/coord/djs_angle_match.pro -text
 pro/coord/djs_angle_nmatch.pro -text
@@ -671,6 +672,7 @@ pro/coord/eta_to_stripe.pro -text
 pro/coord/etalambda_to_radec.pro -text
 pro/coord/helio_to_lg.pro -text
 pro/coord/heliocentric.pro -text
+pro/coord/hms2dec.pro -text
 pro/coord/mjd2datelist.pro -text
 pro/coord/moon_zenith.pro -text
 pro/coord/munu_to_radec.pro -text
