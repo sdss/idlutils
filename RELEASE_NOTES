@@ -22,11 +22,16 @@ SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                !p.position is reset to its previous value after any calls
                to SPLOT,SOPLOT,SXYOUTS.
                If in zoom mode, default to zooming/panning in X, or if shift
-               button is pressed then zoom/pan in Y.
+               button is pressed then zoom/pan in Y, or if ShiftLock, then
+               zoom/pan in X+Y.
 TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_FITS_FILES,
 TMASS_READZONE,TMASS_REFORMAT_PSC,TMASS_STRUC:
                New procs for reading the 2MASS catalog.
 
+src/image/idl_photfrac.c, p_cisi.c, p_midpnt.c, p_polint.c, p_qromo.c,
+               p_utils.c, ph.h, photfrac.c, test_photfrac.c:
+               New tools added by Blanton for band-limited aperature
+               photometry (as done by Lupton in PHOTO).
 ups/idlutils.table: Add optional dependencies upon these products: dust,
                first, gsc, twomass, tycho2, ucac, usno.
 
