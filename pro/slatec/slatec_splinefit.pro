@@ -9,7 +9,8 @@
 ;   
 ;    fullbkpt = slatec_splinefit(x, y, coeff, invvar=invvar, $
 ;                  maxIter=maxIter, upper=upper, lower=lower, bkpt=bkpt,$
-;                  secondkludge=secondkludge, _EXTRA = slatec_efc extras)
+;                  secondkludge=secondkludge, mask=mask, rejper=rejper, $
+;                  _EXTRA = slatec_efc extras)
 ;
 ; INPUTS:
 ;   x          - data x values
@@ -31,12 +32,15 @@
 ;   invvar     - inverse variance of y
 ;   EXTRA      - goodies passed to slatec_efc:
 ;   nord       - Order of b-splines (default 4: cubic)
-;   bkpsace    - Spacing of breakpoints in units of x
+;   bkspace    - Spacing of breakpoints in units of x
+;   rejper     - Different rejection algorithm, throwing out worst (rejper)
+;                each iteration
 ;   nbkpts     - Number of breakpoints to span x range
 ;                 minimum is 2 (the endpoints)
 ;
 ; OPTIONAL OUTPUTS:
 ;   bkpt       - breakpoints without padding
+;   mask       - mask array
 ;  
 ;
 ; COMMENTS:
@@ -62,13 +66,14 @@
 ;------------------------------------------------------------------------------
 function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
          lower=lower, maxIter=maxIter, bkpt=bkpt, fullbkpt=fullbkpt, $
-         secondkludge=secondkludge, _EXTRA=KeywordsForEfc
+         secondkludge=secondkludge, mask=mask, rejper=rejper, $
+         _EXTRA=KeywordsForEfc
 
     if N_PARAMS() LT 3 then begin
         print, ' Syntax - fullbkpt = slatec_splinefit(x, y, coeff, '
         print, '         invvar=invvar, maxIter=maxIter, upper=upper, '
         print, '         lower=lower, bkpt=bkpt, secondkludge=secondkludge,'
-        print, '          _EXTRA = slatec_efc extras)'
+        print, '         mask=mask, rejper=rejper, _EXTRA = slatec_efc extras)'
     endif
 
     if n_elements(maxIter) EQ 0 then maxIter = 5
@@ -82,27 +87,42 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
     invsig = sqrt(invvar)
 
     nx = n_elements(x)
-    good = bytarr(nx) + 1
+    mask = bytarr(nx) + 1
     bad = where(invsig LE 0.0)
-    if (bad[0] NE -1) then good[bad] = 0
+    if (bad[0] NE -1) then mask[bad] = 0
    
 
     for iiter=0, maxiter do begin
-       oldgood = good
-       these = where(good)
+       oldmask = mask
+       these = where(mask)
        fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
               coeff, bkpt=bkpt, invsig=invsig[these], $
                  _EXTRA=KeywordsForEfc)
        yfit = slatec_bvalu(x, fullbkpt, coeff)
  
-       diff = (y - yfit)*invsig
-       bad = where(diff LT -lower OR diff GT upper OR invsig LE 0.0)
+       if (NOT keyword_set(rejper)) then begin
+          diff = (y - yfit)*invsig
+          bad = where(diff LT -lower OR diff GT upper OR invsig LE 0.0)
+	  if (bad[0] EQ -1) then iiter = maxiter $
+          else begin
+             mask = bytarr(nx) + 1	
+	     mask[bad]  = 0
+             if total(abs(mask - oldmask)) EQ 0 then iiter=maxiter
+          endelse
+       endif else begin
+          diff = (y[these] - yfit[these])*invsig[these]
+          bad = where(diff LT -lower OR diff GT upper)
+	  negs = where(diff LT 0)
+	  tempdiff = abs(diff)/upper
+          tempdiff[negs] = abs(diff[negs])/lower
 
-	if (bad[0] EQ -1) then iiter = maxiter $
-        else begin
-            good = bytarr(nx) + 1	
-	    good[bad]  = 0
-            if total(abs(good - oldgood)) EQ 0 then iiter=maxiter
+	  worst = reverse(sort(tempdiff))
+	  rejectspot = fix(n_elements(bad)*rejper) 
+	  mask[these[worst[0:rejectspot]]] = 0
+
+	  good = where(diff GT -lower AND diff LT upper AND $
+                        invsig[these] GT 0.0)
+	  if (good[0] NE -1) then mask[these[good]] = 1
         endelse
     endfor
 
@@ -124,7 +144,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
 
 	fullbkpt[nordtemp:nordtemp+nbkptfix-1] = newbkpt
 
-       these = where(good)
+       these = where(mask)
        fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
               coeff, invsig=invsig[these], $
                  _EXTRA=KeywordsForEfc)

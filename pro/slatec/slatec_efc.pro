@@ -8,7 +8,7 @@
 ; CALLING SEQUENCE:
 ;   
 ;    fullbkpt = slatec_efc(x, y, coeff, bkpt=bkpt, nord=nord, $
-;               invsig=invsig, bkspace = bkspace, nbkpts=nbkpts)
+;               invsig=invsig, bkspace = bkspace, nbkpts=nbkpts, /silent)
 ;
 ; INPUTS:
 ;   x          - data x values
@@ -24,9 +24,10 @@
 ; OPTIONAL KEYWORDS:
 ;   nord       - Order of b-splines (default 4: cubic)
 ;   invsig     - Inverse sigma for weighted fit
-;   bkpsace    - Spacing of breakpoints in units of x
+;   bkspace    - Spacing of breakpoints in units of x
 ;   nbkpts     - Number of breakpoints to span x range
 ;                 minimum is 2 (the endpoints)
+;   silent     - Do not produce non-critical messages
 ;
 ; OPTIONAL OUTPUTS:
 ;   bkpt       - breakpoints without padding
@@ -55,7 +56,8 @@
 ;-
 ;------------------------------------------------------------------------------
 function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
-        invsig = invsig, bkspace = bkspace, nbkpts=nbkpts, everyn=everyn
+        invsig = invsig, bkspace = bkspace, nbkpts=nbkpts, everyn=everyn, $
+        silent=silent
 
 
 	if (NOT keyword_set(nord)) then nord = 4L $
@@ -96,13 +98,15 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 	bkpt = float(bkpt)
 
 	if (min(x) LT min(bkpt,spot)) then begin
-	     print, 'lowest breakpoint does not cover lowest x value, changing'
-	    bkpt[spot] = min(x)
+	  if (NOT keyword_set(silent)) then $
+            print, 'lowest breakpoint does not cover lowest x value, changing'
+	  bkpt[spot] = min(x)
 	endif 
 
 	if (max(x) GT max(bkpt,spot)) then begin
-            print, 'highest breakpoint does not cover highest x value'
-	    bkpt[spot] = max(x)
+	  if (NOT keyword_set(silent)) then $
+            print, 'highest breakpoint does not cover highest x value, changing'
+	  bkpt[spot] = max(x)
 	endif
 	 
 	nshortbkpt = n_elements(bkpt) 
