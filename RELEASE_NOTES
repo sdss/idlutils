@@ -16,6 +16,9 @@ TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_READZONE,TMASS_STRUC:
 ups/idlutils.table: Add optional dependencies upon these products: dust,
                first, gsc, twomass, tycho2, ucac, usno.
 
+In the Goddard utitilies:
+MRDFITS: Modified by Wayne Landsman to have the ROWS keyword.
+
 -------------------------------------------------------------------------------
 v4_10_4 (Jul 5, 2003)
 Tagged for photoop v0_12.
