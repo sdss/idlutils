@@ -1,3 +1,5 @@
+
+-------------------------------------------------------------------------------
 v5_0_1 (Apr 15, 2004) running on IDL 5.4 - 6.0
 Tagged for photoop v1_2.
 
@@ -22,11 +24,15 @@ DIERFC: New math function for erfc.
 DJS_BATCH: Add a call to COUNT_FREELUN().  Do not try to use more hosts than
                there are free file pointers (LUNs) due to a limitation in
                executing the SPAWN command.
+DUST_RV_TABLE,WEB_TABLE: Throw-away proc for making table of R_V values for
+               sources with different spectral energy distributions.
 EMBED_STAMP: New procedure to take one image and add it to another, starting
                at an arbitrary position (SSHIFTing appropriately) without 
                rotation. 
 GVERTS: Bug fix for the case of single-cap polygons.
-HELIO_TO_LG: Fixed sign error in correction
+HELIO_TO_LG: Fixed sign error in correction.
+HOGG_IAU_NAME: New proc by Hogg to format astronomical source names to
+               the IAU convention.
 IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
 MULTI_PSF_FIT: New procedure which, given an image and a PSF, finds the
@@ -40,8 +46,10 @@ RADEC_GREATCIRCLE: In the internal function RADEC_GCFN, return the
                This seems to result in much better convergence,
                especially for those runs where we don't have a good
                starting guess.
-SPLOT: add xoffset and yoffset keywords which position splot on the 
-       screen where you want it
+SPLOG: Only call FLUSH if we're not in demo mode (since we cannot call FLUSH
+               from demo mode).
+SPLOT: Add xoffset and yoffset keywords which position splot on the 
+               screen where you want it.
 VMIDC,idl_vmidc.c,vmid.c: New function to return the central vector in
                a polygon.
 XY2TRACESET: A bug was found by Andy Marble (Arizona): The input mask
@@ -50,6 +58,7 @@ UNDEFINE: Fanning procedure to wrap TEMPORARY calls to delete
                variables.  Similar to DELVARX, but only does one at a time.
 WHERE_POLYGONS_OVERLAP: Add optional output AREAMATCH.
 
+data/filters/ogle_I.dat: Approximate OGLE I-band filter from Taka Sumi.
 data/sdss/sdssMaskbits.par: Remove the RESOLVE bits, which have been deprecated
                with the RESOLVE_STATUS mask bits.                            
                Add Q_EYEBALL and T_EYEBALL, eyeball quality and 
