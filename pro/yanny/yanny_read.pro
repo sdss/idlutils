@@ -280,6 +280,19 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    pdata = 0        ; Pointer to each structure
    pnumel = 0       ; Number of elements in each structure
 
+   ;----------
+   ; If the file does not exist, then return with an error
+
+   junk = findfile(filename, count=ct)
+   if (ct EQ 0) then begin
+      errcode = -1L
+      return
+   endif
+
+   ;----------
+   ; Count the number of lines in the file, then open the file for
+   ; reading one line at a time.
+
    shortname = fileandpath(filename)
    ww = strsplit(shortname,'.',/extract)
    nword = n_elements(ww)
@@ -306,13 +319,16 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    endcase
 
    if (err NE 0) then begin
-      close, ilun
-      free_lun, ilun
+      if (keyword_set(ilun)) then begin
+         close, ilun
+         free_lun, ilun
+      endif
       errcode = -2L
       return
    endif
 
-   maxlen = numlines(filename) > 1
+   ;----------
+   ; Loop over all lines in the file
 
    sline = ''
 
@@ -467,7 +483,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                      close, ilun
                      free_lun, ilun
                      yanny_free, pdata
-                     errcode = -1L
+                     errcode = -3L
                      return
                   endif
 
