@@ -147,10 +147,13 @@ float vector_avsigclip_mask
       /* Copy the input mask into the output mask */
       for (i=0; i<nData; i++) pMaskOut[i] = pMaskIn[i];
 
-      /* Reject outliers */
+      /* Reject outliers, but only if the dispersion is greater than 0.
+       * Otherwise, we could get down to only 1 good data point, with
+       * a dispersion of zero, and then reject that point!
+       */
       nbad = nmask;
       for (i=0; i < nData; i++) {
-         if (pMaskIn[i] == 0 &&
+         if (pMaskIn[i] == 0 && mdisp > 0 &&
           (pData[i] <= mval - sigrejlo*mdisp
            || pData[i] >= mval + sigrejhi*mdisp) ) {
             pMaskOut[i] = 1;
@@ -225,7 +228,14 @@ void vector_mean_and_disp_mask
          vdisp = 0.0;
       }
    } else {
-      vdisp = 0.0;
+      /* Compute the mean and dispersion for all points
+       * (even though all are masked)
+       */
+      for (i=0; i<nData; i++) vmean += pData[i];
+      vmean /= nData;
+      for (i=0; i<nData; i++) vdisp += vtemp * vtemp;
+      if (nData > 1) vdisp = sqrt(vdisp / (nData-1));
+      else vdisp = 0.0;
    }
 
    *pMean = vmean;

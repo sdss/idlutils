@@ -22,7 +22,8 @@
 ;
 ; OUTPUTS:
 ;   result     - The output array.
-;   outmask    - Output mask, setting =0 for good elements, =1 for bad
+;   outmask    - Output mask, setting =0 for good elements, =1 for bad.
+;                Any pixels masked in INMASK are also masked in OUTMASK.
 ;
 ; OPTIONAL OUTPUTS:
 ;
@@ -35,7 +36,20 @@
 ;   the image, compute the average of the 10 values, but rejecting 3-sigma
 ;   outliers:
 ;   > array = randomu(123,100,200,10)
-;   > ave = djs_avsigclip(array,sigrej=3)
+;   > ave = djs_avsigclip(array, sigrej=3)
+;
+;
+;   If all points are masked in any given vector or array, a mean and
+;   dispersion are computed for all the points.  Is this the behaviour we want?
+;   If you want to replace those values with zeros instead, look at OUTMASK:
+;   > array = randomu(123,100,200)
+;   > inmask = bytarr(100,200)
+;   > inmask[*,8] = 1 ; mask all of row #8
+;   > ave = djs_avsigclip(array, 1, inmask=inmask, outmask=outmask)
+;   > ibad = where( total(1-outmask, 1) EQ 0)
+;   > if (ibad[0] NE -1) then ave[ibad] = 0 ; zero-out bad rows
+;
+; BUGS:
 ;
 ; PROCEDURES CALLED:
 ;   Dynamic link to arravsigclip.c
@@ -82,7 +96,7 @@ function djs_avsigclip, array, dim, sigrej=sigrej, maxiter=maxiter, $
       retval = call_external(getenv('IDLUTILS_DIR')+'/lib/libmath.so', $
        'arravsigclip_mask', $
        ndim, dimvec, float(array), long(dim), float(sigrej), float(sigrej), $
-       long(maxiter), avearr, fix(inmask), outmask)
+       long(maxiter), avearr, byte(inmask), outmask)
 
    endif else begin
 
