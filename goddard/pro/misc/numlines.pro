@@ -4,6 +4,7 @@ function numlines,file
 ;     NUMLINES() 
 ; PURPOSE:
 ;     Return the number of lines in a file
+;
 ;     This procedures became mostly obsolete in V5.6 with the introduction of
 ;     the FILE_LINES() procedure
 ; CALLING SEQUENCE:
@@ -23,6 +24,7 @@ function numlines,file
 ;     Use /bin/sh shell with wc under Unix     March 1997
 ;     Use EXPAND_TILDE() under Unix         September 1997
 ;     Converted to IDL V5.0   W. Landsman   September 1997
+;     Call intrinsic FILE_LINES() if V5.6 or later   December 2002
 ;-
  On_error,2
 
