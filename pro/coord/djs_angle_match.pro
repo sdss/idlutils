@@ -112,12 +112,12 @@ function djs_angle_1match, raA, decA, dtheta=dtheta, $
    tempdist = dblarr(numA)
 
    ; Sort points by DEC
-print, 'Sorting list A'
+;print, 'Sorting list A'
    indxA = sort(decA)
 
    iStart = 0L
    iEnd = 0L
-print, 'Looking for duplicates'
+;print, 'Looking for duplicates'
    for iA=0L, numA-2 do begin ; Don't loop over the last point
 
       ; Limit search to declination range within "dtheta"
@@ -216,14 +216,14 @@ function djs_angle_2match, raA, decA, raB, decB, dtheta=dtheta, $
    tempdist = dblarr(numB)
 
    ; Sort points by DEC
-print, 'Sorting list A'
+;print, 'Sorting list A'
    indxA = sort(decA)
-print, 'Sorting list B'
+;print, 'Sorting list B'
    indxB = sort(decB)
 
    iStart = 0L
    iEnd = 0L
-print, 'Looking for duplicates'
+;print, 'Looking for duplicates'
    for iA=0L, numA-1 do begin
 
       ; Limit search to declination range within "dtheta"
