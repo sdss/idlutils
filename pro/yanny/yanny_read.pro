@@ -164,7 +164,13 @@ pro yanny_readstring, ilun, sline
 
 ;   sline = string(' ', format='(a2047)') ; This format cannot be larger
                                           ; than 255 characters.
-   for i=0, 2047-1 do strput, sline, sarray[i], i
+
+;   for i=0, 2047-1 do strput, sline, sarray[i], i
+
+   ; The following is faster than the above since IDL loops are so slow.
+   indx = where(sarray NE ' ', ct)
+   lastchar = indx[(ct-1) > 0]
+   for i=0, lastchar do strput, sline, sarray[i], i
 
    lastlinenum = lastlinenum + 1
 end
