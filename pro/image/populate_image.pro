@@ -23,7 +23,9 @@
 ;   image      - (Modified)
 ;
 ; COMMENTS:
-;   IMAGE, X, and Y are treated as floating-point values for the assignment.
+;   If IMAGE is type double, then that image and X and Y are all treated
+;   as double-precision in the assignment code.  Otherwise, all values
+;   are treated as floating-point.
 ;
 ; BUGS:
 ;
@@ -65,6 +67,9 @@ pro populate_image, image, x, y, weights=weights, assign=assign
    if size(image, /tname) EQ 'FLOAT' then begin 
       retval = call_external(soname, 'pop_image', $
         npts, float(x), float(y), float(weights), nx, ny, image, iassign)
+   endif else if size(image, /tname) EQ 'DOUBLE' then begin 
+      retval = call_external(soname, 'pop_image_double', $
+        npts, double(x), double(y), double(weights), nx, ny, image, iassign)
    endif else begin  
       fimage = float(image)
       retval = call_external(soname, 'pop_image', $
