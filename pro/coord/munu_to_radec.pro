@@ -6,7 +6,7 @@
 ;   Convert from SDSS great circle coordinates to equatorial coordinates.
 ;
 ; CALLING SEQUENCE:
-;   munu_to_radec, mu, nu, ra, dec, [ stripe=, node=, incl= ]
+;   munu_to_radec, mu, nu, ra, dec, [ stripe=, node=, incl=, phi= ]
 ;
 ; INPUTS:
 ;   mu         - Mu coordinate, scalar or array (degrees)
@@ -27,6 +27,8 @@
 ; OPTIONAL OUTPUTS:
 ;   ra         - Right ascension (J2000 degrees)
 ;   dec        - Declination (J2000 degrees)
+;   phi        - Counter-clockwise position angle w.r.t. north for an arc
+;                in the +nu direction.
 ;
 ; COMMENTS:
 ;   Either STRIPE or NODE,INCL must be specified.
@@ -44,7 +46,8 @@
 ;   03-Oct-2002  Modified by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl
+pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl, $
+ phi=phi
 
    if (n_params() NE 4) then $
     message, 'Wrong number of parameters'
@@ -77,6 +80,12 @@ pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl
    dec = r2d * asin(zz)
 
    cirrange, ra
+
+   if (arg_present(phi)) then begin
+      cosdec = cos(dec/r2d)
+      phi = r2d $
+       * atan(cosdec^2 * cosmu * sini, cosnu * cosi - sinmu * sinnu * sini)
+   endif
 
    return
 end

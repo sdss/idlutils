@@ -6,7 +6,7 @@
 ;   Convert from equatorial coordinates to SDSS great circle coordinates.
 ;
 ; CALLING SEQUENCE:
-;   radec_to_munu, ra, dec, mu, nu, [ stripe=, node=, incl= ]
+;   radec_to_munu, ra, dec, mu, nu, [ stripe=, node=, incl=, phi= ]
 ;
 ; INPUTS:
 ;   ra         - Right ascension (J2000 degrees)
@@ -25,6 +25,8 @@
 ; OPTIONAL OUTPUTS:
 ;   mu         - Mu coordinate, scalar or array (degrees)
 ;   nu         - Nu coordinate, scalar or array (degrees)
+;   phi        - Counter-clockwise position angle w.r.t. north for an arc
+;                in the +nu direction.
 ;
 ; COMMENTS:
 ;   Either STRIPE or NODE,INCL must be specified.
@@ -42,7 +44,8 @@
 ;   03-Oct-2002  Modified by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl
+pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl, $
+ phi=phi
 
    if (n_params() NE 4) then $
     message, 'Wrong number of parameters'
@@ -58,12 +61,18 @@ pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl
     message, 'Number of elements in RA and DEC must agree'
 
    r2d = 180.d / !dpi
-   d2r = !dpi / 180.d
 
    if (n_elements(node) NE 1 OR n_elements(incl) NE 1) then begin
       node = 95.d
       incl = stripe_to_incl(stripe)
    endif
+
+   sinra = sin(ra/r2d)
+   cosra = cos(ra/r2d)
+   sindec = sin(dec/r2d)
+   cosdec = cos(dec/r2d)
+   sini = sin(incl/r2d)
+   cosi = cos(incl/r2d)
 
    x1 = cosdec * cosra
    y1 = cosdec * sinra
@@ -74,6 +83,15 @@ pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl
    mu = r2d * atan(y2,x2) + node
    nu = r2d * asin(z2)
    cirrange, mu
+
+   if (arg_present(phi)) then begin
+      sinmu = sin(mu/r2d)
+      cosmu = cos(mu/r2d)
+      sinnu = sin(nu/r2d)
+      cosnu = cos(nu/r2d)
+      phi = r2d $
+       * atan(cosdec^2 * cosmu * sini, cosnu * cosi - sinmu * sinnu * sini)
+   endif
 
    return
 end
