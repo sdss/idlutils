@@ -1,4 +1,7 @@
-WHICH:         Tim Robishaw's version of which, he says it is better...
+
+ATV,ATV_JOE_WRITEPS,SPLOT,SXASCII_READ,TEXTOIDL,YANNY_READ:
+               Replace calls to the obsolete function RSTRPOS()
+               with STRPOS(/REVERSE_SEARCH).
 ATV: Fix bug introduced for Healpix when reading non-Healpix files.
 DPF_NEST2RING,DPF_PIX2ANG_RING: Cache lookup table for wicked speed.
 DPF_PIX2ANG_NEST: Added (simply calls dpf_nest2ring and dpf_pix2ang_ring).
@@ -49,6 +52,10 @@ REJECT_CR: A previous error in determining the background for rejection
                has been fixed, so more cosmics are now successfully rejected. 
 SORTINPLACE: New function for sorting arrays in-place.
 SPLOT: Add PLUGIN keyword for coordinate plug-ins.
+WHICH: Replace with Tim Robishaw's version of which, he says it is better.
+               Primarily, it shows which version of a routine has been
+               compiled-in, even if that isn't the first instance of that
+               routine in your path.
 YANNY_WRITE: Make loop variables type LONG.
 
 Makefile: Install the RELEASE_NOTES file.
