@@ -95,6 +95,12 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
     for iiter=0, maxiter do begin
        oldmask = mask
        these = where(mask)
+
+       if (these[0] EQ -1) then begin
+          print, 'Lost all points'
+          return, fullbkpt
+       endif
+
        fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
               coeff, bkpt=bkpt, invsig=invsig[these], $
                  _EXTRA=KeywordsForEfc)
