@@ -32,6 +32,12 @@ SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                to avoid some round-off problems.
                In the proc splot_autoscale_y, bug fix to set the correct
                limits even if the X plot range runs from big X to small X.
+               Change MAXPLOT from 20 thousand to 100 thousand.  Maybe this
+               should be changed dynamically rather than hard-wired??
+               This now works for 16-bit color under the KDE window manager.
+               Get rid of the bit of code that was supposed to make things
+               work under 24-bit color, since it *didn't work on my Mac,
+               which says it has 24-bit color.
 TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_FITS_FILES,
 TMASS_READZONE,TMASS_REFORMAT_PSC,TMASS_STRUC:
                New procs for reading the 2MASS catalog.
