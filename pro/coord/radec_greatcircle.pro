@@ -21,7 +21,7 @@
 ;                also fit along the scan direction, for a total of
 ;                6 fit parameters instead of 5 [NPOINTS].
 ;   start_parms- Initial guess for the great circle fit [NPARM].
-;   maxiter    - Maximum number of iterations for fit; default to 1000
+;   maxiter    - Maximum number of iterations for fit; default to 5000
 ;   fixed      - If set, then fit for each parameter where this is 0,
 ;                and fit for each parameter where this is 1 [NPARM].
 ;   muerr      - Error of each point in MU coordinate; default to 1 arcsec;
@@ -138,7 +138,7 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
    ;----------
    ; Set defaults
 
-   if (NOT keyword_set(maxiter)) then maxiter = 1000
+   if (NOT keyword_set(maxiter)) then maxiter = 5000L
    if (NOT keyword_set(muerr)) then muerr = 1.0
    if (NOT keyword_set(nuerr)) then nuerr = 1.0
 
