@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v4_10_7 (Dec 11, 2003)
+Tagged for idlspec2d v4_10_7.
+
 Directory pro/rgbcolor added to support making color (RGB) images.
 Directory pro/healpix added to support atv display of healpix maps.
 
