@@ -21,6 +21,9 @@ src/idlmangle/Makefile: Add idl_garea.o
                makes no difference under Linux.
 src/idlmangle/where_polygons_overlap.c: Compute and return the overlap area.
 src/image/grow_obj.c: Comment-out "ny" because it isn't actually used.
+src/mangle1.4/src/msg.c: Add the include for <stdarg.h>, since it it needed
+               to build on the IRIX platform (on hecate.princeton).
+               It seems safe to have that include on Linux or Darwin also.
 
 -------------------------------------------------------------------------------
 v5_0_0 (Feb 19, 2004) running on IDL 5.4 - 6.0
