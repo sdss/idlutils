@@ -659,6 +659,7 @@ pro/math/poly_iter.pro -text
 pro/math/sshift.pro -text
 pro/math/sshift2d.pro -text
 pro/math/stdev.pro -text
+pro/math/weighted_quantile.pro -text
 pro/misc/blackbody.pro -text
 pro/misc/catfits.pro -text
 pro/misc/cpbackup.pro -text
