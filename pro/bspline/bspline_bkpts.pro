@@ -39,7 +39,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
-             nbkpts=nbkpts, everyn=everyn, silent=silent, bkptspread=bkptspread
+             nbkpts=nbkpts, everyn=everyn, silent=silent, bkspread=bkspread
 
       nx = n_elements(x)
 
@@ -81,12 +81,12 @@ function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
       nshortbkpt = n_elements(bkpt)
       fullbkpt = bkpt
 
-      if (NOT keyword_set(bkptspread)) then bkptspread = 0.1
-      bkptspace = (bkpt[1] - bkpt[0]) * bkptspread
+      if (NOT keyword_set(bkspread)) then bkspread = 0.1
+      bkspace = (bkpt[1] - bkpt[0]) * bkspread
 
       for i=1, nord-1 do $
-       fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
-        bkpt[nshortbkpt - 1] + bkptspace*i]
+       fullbkpt = [bkpt[0]-bkspace*i, fullbkpt, $
+        bkpt[nshortbkpt - 1] + bkspace*i]
  
    return, fullbkpt
 end 
