@@ -12,6 +12,7 @@
 ;
 ; INPUTS:
 ;   bkpt       - Breakpoint vector returned by efc
+;   nord       - Order for spline fit
 ;
 ; RETURNS:
 ;   fullbkpt   - The fullbkpt vector required by evaluations with bvalu
