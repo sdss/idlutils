@@ -34,6 +34,7 @@
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
 ;   grid        - the greyscale grid [xnpix,ynpix] that was plotted
 ;   cumimage    - the cumulated grid [xnpix,ynpix] that was contoured
+;   outquantiles - the plotted quantiles (when /conditional is set)
 ; COMMENTS:
 ;   When output, the grid is in units of unit_weight, not in 
 ;   unit_weight per unit_x per unit_y (as you would want to do if 
@@ -64,7 +65,7 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       conditional=conditional, $
                       labelcont=labelcont,nogreyscale=nogreyscale, $
                       xvec=xvec,yvec=yvec,grid=grid, $
-                      cumimage=cumimage, $
+                      cumimage=cumimage,outquantiles=outquantiles, $
                       _EXTRA=KeywordsForPlot
 
 if(n_params() lt 2) then begin
@@ -127,11 +128,11 @@ endif
 ; compute quantiles, if necessary
 xgrid= floor(xnpix*(x-xrange[0])/(xrange[1]-xrange[0]))
 if keyword_set(conditional) then begin
-    qq= dblarr(xnpix,nquantiles)
+    outquantiles= dblarr(xnpix,nquantiles)
     for ii=0L,xnpix-1 do begin
         inii= where(xgrid EQ ii,ninii)
         if ninii GT 0 then begin
-            qq[ii,*]= weighted_quantile(y[inii],weight[inii],quant=quantiles)
+            outquantiles[ii,*]= weighted_quantile(y[inii],weight[inii],quant=quantiles)
         endif
     endfor
 
@@ -165,7 +166,7 @@ endif
 ; plot quantiles, if necessary
 if keyword_set(conditional) then begin
     for ii=0L,nquantiles-1 do begin
-        oplot, xvec,qq[*,ii],psym=10,thick=cthick
+        oplot, xvec,outquantiles[*,ii],psym=10,thick=cthick
     endfor
 
 ; otherwise overplot contours
