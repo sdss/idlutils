@@ -15,7 +15,9 @@
 ; OPTIONAL INPUTS:
 ;   filename   - Output file name; open and close this file
 ;   lun        - LUN number for an output file if one is already open
-;   no_head    - Do not print the header lines that label the columns
+;   no_head    - Do not print the header lines that label the columns,
+;                and do not increase the width of a column to occomodate
+;                the column name.
 ;   html       - If set, then output as an HTML table
 ;   fdigit     - Number of digits for type FLOAT numbers; default to 5.
 ;   ddigit     - Number of digits for type DOUBLE numbers; default to 7.
@@ -122,6 +124,9 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
          thisname = struct_checktype(tags[itag], alias=alias)
          if (narr GT 1) then thisname = thisname + strtrim(string(iarr),2)
 
+         if (keyword_set(no_head)) then namelen = 1 $
+          else namelen = strlen(thisname)
+
          tname = size(struct[0].(itag),/tname)
          if (tname EQ 'BYTE' OR tname EQ 'INT' OR tname EQ 'LONG' $
           OR tname EQ 'LONG64' OR tname EQ 'UINT' OR tname EQ 'ULONG' $
@@ -131,24 +136,24 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
 
             nchar = strlen(strtrim(string(minval),2)) $
              > strlen(strtrim(string(maxval),2))
-            nchar = nchar > strlen(thisname)
+            nchar = nchar > namelen
             thiscode = 'I' + strtrim(string(nchar),2)
          endif else if (tname EQ 'FLOAT') then begin
             minval = min( struct.(itag)[iarr] )
             if (minval LT 0) then nchar = fdigit + 7 $
              else nchar = fdigit + 6
-            nchar = nchar > strlen(thisname)
+            nchar = nchar > namelen
             thiscode = 'G' + strtrim(string(nchar),2) + '.' $
              + strtrim(string(fdigit),2)
          endif else if (tname EQ 'DOUBLE') then begin
             minval = min( struct.(itag)[iarr] )
             if (minval LT 0) then nchar = ddigit + 7 $
              else nchar = ddigit + 6
-            nchar = nchar > strlen(thisname)
+            nchar = nchar > namelen
             thiscode = 'G' + strtrim(string(nchar),2) + '.' $
              + strtrim(string(ddigit),2)
          endif else if (tname EQ 'STRING') then begin
-            nchar = max(strlen( struct.(itag)[iarr] )) > strlen(thisname)
+            nchar = max(strlen( struct.(itag)[iarr] )) > namelen
             thiscode = 'A' + strtrim(string(nchar),2)
          endif else begin
             message, 'Unsupported type code: ' + tname
