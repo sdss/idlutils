@@ -24,7 +24,7 @@
 ;------------------------------------------------------------------------------
 function is_in_cap, ra=ra, dec=dec, xyz=xyz, cap
 
-if(keyword_set(xyz)) then $
+if(n_elements(xyz) gt 0) then $
   usexyz=xyz $
 else $
   usexyz=angles_to_x(ra,(90.D)-dec)

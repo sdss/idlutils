@@ -28,7 +28,7 @@ function is_in_polygon, ra=ra, dec=dec, xyz=xyz, polygon, ncaps=ncaps
 usencaps=polygon.ncaps
 if(keyword_set(ncaps)) then usencaps=ncaps < polygon.ncaps
 
-if(keyword_set(ra)) then $
+if(n_elements(ra) gt 0) then $
   nxyz=n_elements(ra) $ 
 else $
   nxyz=n_elements(xyz)/3
