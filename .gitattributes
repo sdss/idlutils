@@ -892,6 +892,7 @@ pro/math/stdev.pro -text
 pro/math/weighted_quantile.pro -text
 pro/misc/blackbody.pro -text
 pro/misc/catfits.pro -text
+pro/misc/count_freelun.pro -text
 pro/misc/cpbackup.pro -text
 pro/misc/djs_batch.pro -text
 pro/misc/djs_filepath.pro -text
