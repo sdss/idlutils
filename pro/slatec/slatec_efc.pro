@@ -13,13 +13,9 @@
 ; INPUTS:
 ;   x          - data x values
 ;   y          - data y values
-;   bkpt       - Breakpoint vector returned by efc
 ;
-; RETURNS:
-;   fullbkpt   - The fullbkpt vector required by evaluations with bvalu
-;
-; OUTPUTS:
-;   coeff      - B-spline coefficients calculated by efc
+; OPTIONAL INPUTS:
+;   bkpt       - Breakpoint vector returned by efc (without padding)
 ;
 ; OPTIONAL KEYWORDS:
 ;   nord       - Order of b-splines (default 4: cubic)
@@ -30,8 +26,12 @@
 ;                 minimum is 2 (the endpoints)
 ;   silent     - Do not produce non-critical messages
 ;
+; OUTPUTS:
+;   coeff      - B-spline coefficients calculated by efc
+;   fullbkpt   - The fullbkpt vector required by evaluations with bvalu
+;
 ; OPTIONAL OUTPUTS:
-;   bkpt       - breakpoints without padding
+;   bkpt       - Breakpoints without padding
 ;
 ; COMMENTS:
 ;   If both bkspace and nbkpts are passed, bkspace is used.
