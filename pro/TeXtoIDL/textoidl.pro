@@ -1,5 +1,6 @@
 ; Repacked into one routine - D. Finkbeiner 23 Feb 2000
 ; Fixed () -> [] bugs here and there - Hogg 15 Jun 2000
+; Fixed one more () -> [] bug - Hogg 12 Jul 2000
 ;
 ;+
 ; NAME:
@@ -37,8 +38,11 @@
 ;       out = textoidl_strtrans(inp,from,to,ned)
 ;       Will produce out='Many bad chars in here', and set ned to 4.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -163,8 +167,11 @@ END
 ;       table(0,*).
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -401,8 +408,11 @@ END
 ;       To D. Linder who wrote GETTOK, part of the goddard library,
 ;       upon which this is based.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -505,8 +515,11 @@ END
 ;       textoidl_nexttok( 'x^2 + N_j^3', '^_', position=pos ) returns '^' and sets
 ;       pos to 1.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -631,8 +644,11 @@ END
 ;        textoidl_matchdelim('{one{two}}three') returns 9, the character just
 ;        before 'three'.  
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -763,8 +779,11 @@ END
 ;       occurance. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -888,8 +907,11 @@ END
 ;       file. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -982,8 +1004,11 @@ END
 ;       textoidl_strtok      -- Text/string (mcraig)
 ;       textoidl_sub_sup -- contained in this file
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -1190,8 +1215,11 @@ END
 ;       exponent of 2, then a plus sign, then an N with the subscript
 ;       ed.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
+;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.5  2000/06/15 18:21:23  hogg
+;       fixed tiny () -> [] bugs
+;
 ;       Revision 1.4  2000/06/03 17:12:42  dfink
 ;       Fink's new textoidl - all procedures in one file; avoid name conflict
 ;
@@ -1286,7 +1314,7 @@ FUNCTION Textoidl, InputString, $
     strn = textoidl_strtrans(strn, table(0, *), table(1, *))
 
     FOR i = 0L, n_elements(strn)-1 DO $
-      strn(i) = textoidl_trans_sub_super(strn(i)) ; Take care of sub/superscripts
+      strn[i] = textoidl_trans_sub_super(strn[i]) ; Take care of sub/superscripts
 
     return,strn
 END 
