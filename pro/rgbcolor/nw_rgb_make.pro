@@ -22,7 +22,7 @@
 ;                of pixels in each direction and quarters the total
 ;                number of pixels in the image.
 ;  quality     - quality input for WRITE_JPEG
-;  overlay     - [3,nx,ny] image to overlay on the input images
+;  overlay     - [nx,ny,3] image to overlay on the input images
 ;OPTIONAL KEYWORDS:
 ;  saturatetowhite
 ;              - choose whether to saturate high-value pixels to white
@@ -79,9 +79,10 @@ ENDIF
 
 colors = nw_scale_rgb(colors,scales=scales)
 colors = nw_arcsinh(colors,nonlinearity=nonlinearity)
+IF keyword_set(overlay1) THEN colors= colors+overlay1
 IF (NOT n_elements(saturatetowhite)) THEN $
   colors = nw_cut_to_box(colors,origin=origin)
-IF keyword_set(overlay1) THEN colors= colors > overlay1
+IF keyword_set(overlay1) THEN colors= (colors+overlay1) < 1.0
 colors = nw_float_to_byte(colors)
 
 WRITE_JPEG,name,colors,TRUE=3,QUALITY=quality
