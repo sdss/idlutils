@@ -2052,7 +2052,7 @@ endelse
 if (cancelled EQ 1) then return
 
 ; -------- reproject healpix file
-if ishealpix(main_image) then begin 
+if ishealpix(main_image) AND (size(main_image, /n_dimen) EQ 1) then begin 
    nest = strupcase(strmid(sxpar(head, 'ORDERING'), 0, 4)) eq 'NEST'
    ind = atv_healcart_ind(main_image, nest=nest, head=head)
    main_image = main_image[ind]
