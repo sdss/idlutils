@@ -714,6 +714,7 @@ pro/slatec/slatec_splinefit.pro -text
 pro/spheregroup/spheregroup.pro -text
 pro/spheregroup/spherematch.pro -text
 pro/yanny/sxascii_read.pro -text
+pro/yanny/yanny_diff.pro -text
 pro/yanny/yanny_free.pro -text
 pro/yanny/yanny_par.pro -text
 pro/yanny/yanny_read.pro -text
