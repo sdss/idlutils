@@ -1,4 +1,4 @@
-
+WHICH:         Tim Robishaw's version of which, he says it is better...
 ATV: Fix bug introduced for Healpix when reading non-Healpix files.
 DPF_NEST2RING,DPF_PIX2ANG_RING: Cache lookup table for wicked speed.
 DPF_PIX2ANG_NEST: Added (simply calls dpf_nest2ring and dpf_pix2ang_ring).
