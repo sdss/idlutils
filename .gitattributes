@@ -784,6 +784,7 @@ pro/fits/modfitscard.pro -text
 pro/fits/mwrfits_chunks.pro -text
 pro/fits/rdss_fits.pro -text
 pro/fits/sxcombinepar.pro -text
+pro/healpix/healcart_ind.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
 pro/image/exact_photfrac.pro -text
