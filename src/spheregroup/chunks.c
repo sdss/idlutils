@@ -605,6 +605,7 @@ getchunkbounds(double ra,
 			 <marginSize)
 			(*raChunkMax)[i-(*decChunkMin)]++;
 		
+#if 0
 		/* if the ra range is such that objects can link over the 
 		 * 0/360 border, allow -1 and nRa[i] to be included; if not,
 		 * fix it here. */
@@ -614,6 +615,7 @@ getchunkbounds(double ra,
 			if((*raChunkMax)[i-(*decChunkMin)]>nRa[i]-1)
 				(*raChunkMax)[i-(*decChunkMin)]=nRa[i]-1;
 		} /* end if */
+#endif
 	} /* end for i */
 
 	return(CH_OK);
