@@ -33,7 +33,7 @@ cmd= 'wget -O - "'+url+'" | grep "Equatorial" | grep "J2000.0"'
 splog, cmd
 spawn, cmd,output,stderr
 splog, output
-output= strsplit(output,/extract)
+output= strsplit(output[0],/extract)
 if (n_elements(output) GT 3) then begin
     ra= double(output[2])
     dec= double(output[3])
