@@ -25,6 +25,8 @@ bin/evilmake: For compiling on the Mac (Darwin) platform, add the following
                 "-lg2c  -L/usr/lib/gcc-lib/i386-redhat-linux/`gcc -dumpversion
                I've commented this out, since it fails on all our machines,
                and compiles just fine without it.
+data/sdss/sdssMaskbits.par: Add SURVEY_BADFIELD mask bit to RESOLVE_STATUS.
+               Add all the IMAGE_STATUS mask bits.
 pro/Makefile: Remove radprof from the SUBDIRS list, since there is nothing
                left in that directory.
 src/idlmangle/Makefile: Build idl_vmid.c.
