@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   sxcombinepar, hdrarr, cardname, outhdr, [ func=, weights=, /zeros, $
-;    outcard= ]
+;    outcard=, _EXTRA=KeywordsForSxaddpar ]
 ;
 ; INPUTS:
 ;   hdrarr     - Array of pointers to FITS headers
@@ -30,6 +30,7 @@
 ;                altogether.
 ;   outcard    - Card name(s) in output header; if not specified, then use
 ;                the same name as in CARDNAME.
+;   _EXTRA     - Optional keywords for SXADDPAR (such as BEFORE,AFTER,FORMAT).
 ;
 ; OUTPUTS:
 ;   outhdr     - (Modified.)
@@ -47,7 +48,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro sxcombinepar, hdrarr, cardname, outhdr, func=func, weights=weights, $
- zeros=zeros, outcard=outcard
+ zeros=zeros, outcard=outcard, _EXTRA=KeywordsForSxaddpar
 
    if (n_params() LT 3) then begin
       print, 'Syntax - sxcombinepar, hdrarr, cardname, outhdr, [ func=, /zeros, outcard= ]'
@@ -96,7 +97,7 @@ pro sxcombinepar, hdrarr, cardname, outhdr, func=func, weights=weights, $
          'total'  : outval = total(allval)
          else     : message, 'Invalid FUNCTION'
       endcase
-      sxaddpar, outhdr, outcard[0], outval
+      sxaddpar, outhdr, outcard[0], outval, _EXTRA=KeywordsForSxaddpar
    endif
 
    return
