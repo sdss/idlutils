@@ -8,7 +8,7 @@
 ; CALLING SEQUENCE:
 ;   qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
 ;    sigma=, invvar=, upper=, lower=, maxdev=, $
-;    maxrej=, groupsize=, /sticky ] )
+;    maxrej=, groupsize=, groupdim=, /sticky ] )
 ;
 ; INPUTS:
 ;   ydata      - Data values
@@ -33,9 +33,16 @@
 ;   maxdev     - Reject points with abs(YDATA - YMODEL) > MAXDEV.
 ;   maxrej     - Maximum number of points to reject this iteration.  If /STICKY
 ;                is set, then this number of points can be rejected per
-;                iteration.
+;                iteration.  If either GROUPDIM or GROUPSIZE is a vector,
+;                then this quantity should be as well.
+;   groupdim   - Dimension along which to group the data; set to 1 to group
+;                along the 1st dimension, 2 for the 2nd dimension, etc.
+;                If YDATA has dimensions [100,200], then setting GROUPDIM=2
+;                is equivalent to grouping the data with GROUPSIZE=100.
+;                In either case, there are 200 groups, specified by [*,i].
 ;   groupsize  - If this and MAXREJ are set, then reject a maximum of MAXREJ
-;                points per group of GROUPSIZE points.
+;                points per group of GROUPSIZE points.  If GROUPDIM is also
+;                set, then this specifies sub-groups within that.
 ;   sticky     - If set, then points rejected in OUTMASK are kept rejected.
 ;                Otherwise, if a fit (YMODEL) changes between iterations,
 ;                points can alternate from being rejected to not rejected.
@@ -57,6 +64,9 @@
 ;   worst points are rejected.  The worst points are those with the largest
 ;   deviation in terms of sigma (if UPPER or LOWER are set), or the largest
 ;   number of multiples of MAXDEV from YMODEL (if MAXDEV is set).
+;
+;   For example, if this is a 2-D array with GROUPDIM=1, then loop over each
+;   column of the data.  If GROUPDIM=2, then loop over each row.
 ;
 ;   Note that UPPER, LOWER and MAXDEV can all be set.
 ;
@@ -92,18 +102,19 @@
 ;   (which might confuse keyword_set()). ???
 ;
 ; PROCEDURES CALLED:
+;   djs_laxisnum()
 ;
 ; REVISION HISTORY:
 ;   30-Aug-2000  Written by D. Schlegel, Princeton
 ;------------------------------------------------------------------------------
 function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
  sigma=sigma, invvar=invvar, upper=upper, lower=lower, maxdev=maxdev, $
- maxrej=maxrej, groupsize=groupsize, sticky=sticky
+ maxrej=maxrej, groupsize=groupsize, groupdim=groupdim, sticky=sticky
 
    if (n_params() LT 2 OR NOT arg_present(outmask)) then begin
       print, 'Syntax: qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
       print, ' sigma=, invvar=, upper=, lower=, maxdev=, $'
-      print, ' maxrej=, groupsize=, /sticky ] )'
+      print, ' maxrej=, groupsize=, groupdim=, /sticky ] )'
       return, 1
    endif
 
@@ -116,6 +127,17 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    if (keyword_set(inmask)) then begin
       if (ndata NE n_elements(inmask)) then $
        message, 'Dimensions of YDATA and INMASK do not agree'
+   endif
+
+   if (keyword_set(maxrej)) then begin
+      if (keyword_set(groupdim)) then begin
+         if (n_elements(maxrej) NE n_elements(groupdim)) then $
+          message, 'MAXREJ and GROUPDIM must have same number of elements!'
+      endif
+      if (keyword_set(groupsize)) then begin
+         if (n_elements(maxrej) NE n_elements(groupsize)) then $
+          message, 'MAXREJ and GROUPSIZE must have same number of elements!'
+      endif
    endif
 
    ;----------
@@ -203,20 +225,49 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
 
    ;----------
    ; Reject a maximum of MAXREJ (additional) points in all the data,
-   ; or in each group as specified by GROUPSIZE.
+   ; or in each group as specified by GROUPSIZE, and optionally along
+   ; each dimension specified by GROUPDIM.
 
    if (keyword_set(maxrej)) then begin
-      if (NOT keyword_set(groupsize)) then groupsize = ndata
-      i1 = 0L
-      while (i1 LT ndata) do begin
-         i2 = (i1 + groupsize - 1) < (ndata - 1)
-         ni = i2 - i1 + 1
-         if (total(badness[i1:i2] NE 0) GT maxrej) then begin
-            isort = sort(badness[i1:i2])
-            badness[(i1+isort)[0:ni-maxrej-1]] = 0
-         endif
-         i1 = i1 + groupsize
-      endwhile
+      ; Loop over each dimension of GROUPDIM (or loop once if not set)
+      for iloop=0, (n_elements(groupdim)>1)-1 do begin
+         ; Assign an index number in this dimension to each data point
+         if (n_elements(groupdim) GT 0) then begin
+            yndim = size(ydata, /n_dimen)
+            if (groupdim[iloop] GT yndim) then $
+             message, 'GROUPDIM is larger than number of dimensions for YDATA'
+            dimnum = djs_laxisnum(size(ydata,/dimens), iaxis=groupdim[iloop]-1)
+         endif else begin
+            dimnum = 0
+         endelse
+
+         ; Loop over each vector specified by GROUPDIM.  For ex, if
+         ; this is a 2-D array with GROUPDIM=1, then loop over each
+         ; column of the data.  If GROUPDIM=2, then loop over each row.
+         ; If GROUPDIM is not set, then use all whole image.
+         for ivec=0, max(dimnum) do begin
+            if (keyword_set(dimnum)) then indx = where(dimnum EQ ivec) $
+             else indx = lindgen(ndata)
+
+            ; Within this group of points, break it down into groups
+            ; of points specified by GROUPSIZE (if set).
+            nin = n_elements(indx)
+            if (NOT keyword_set(groupsize)) then groupsize = nin
+            i1 = 0L
+            while (i1 LT nin) do begin
+               i2 = (i1 + groupsize[iloop] - 1) < (nin - 1)
+               nii = i2 - i1 + 1
+               jj = indx[i1:i2]
+               ; Test if too many points rejected in this group...
+               if (total(badness[jj] NE 0) GT maxrej[iloop]) then begin
+                  isort = sort(badness[jj])
+                  ; Make the following points good again...
+                  badness[jj[isort[0:nii-maxrej[iloop]-1]]] = 0
+               endif
+               i1 = i1 + groupsize[iloop]
+            endwhile
+         endfor
+      endfor
    endif
 
    ;----------
