@@ -6,7 +6,7 @@
 ;   Read a FITS file into IDL data and header variables
 ;
 ; CALLING SEQUENCE:
-;   image = rdss_fits( filename, [ hdr, /nofloat ] )
+;   image = rdss_fits( filename, [ hdr, /nofloat, /silent ] )
 ;
 ; INPUTS:
 ;   filename   - Scalar string containing the name of the FITS file  
@@ -17,6 +17,7 @@
 ;
 ; OPTIONAL KEYWORDS:
 ;   nofloat    - If set, then keep data as unsigned integers.
+;   silent     - suppress informational messages
 ;
 ; OUTPUTS:
 ;   image      - FITS data array constructed from designated record.
@@ -40,9 +41,10 @@
 ;
 ; REVISION HISTORY:
 ;   13-May-1999  Written by David Schlegel, Princeton.
+;   07-Jan-2001  Finkbeiner - added /silent because of U16 message
 ;-
 ;------------------------------------------------------------------------------
-function rdss_fits, filename, hdr, nofloat=nofloat, _EXTRA=KeywordsForReadfits
+function rdss_fits, filename, hdr, nofloat=nofloat, _EXTRA=KeywordsForReadfits, silent=silent
 
    ; Need at least 1 parameter
    if (N_params() LT 1) then begin
@@ -53,7 +55,7 @@ function rdss_fits, filename, hdr, nofloat=nofloat, _EXTRA=KeywordsForReadfits
    ;----------
    ; Read the image and header
 
-   image = mrdfits(filename, 0, hdr, _EXTRA=KeywordsForReadfits)
+   image = mrdfits(filename, 0, hdr, _EXTRA=KeywordsForReadfits, silent=silent)
 
    ;----------
    ; Remove extraneous or invalid FITS cards
@@ -74,7 +76,8 @@ function rdss_fits, filename, hdr, nofloat=nofloat, _EXTRA=KeywordsForReadfits
 
       ; Convert from unsigned 16-bit integers to floats
       if (NOT keyword_set(nofloat)) then begin
-         print, 'Converting from U16...'
+         if NOT keyword_set(silent) then $
+           print, 'Converting from U16...'
          sxaddpar, hdr, 'SIMPLE', 'T', 'FITS STANDARD'
          sxdelpar, hdr, 'UNSIGNED' ; Remove UNSIGNED keyword
          ineg = where(image LT 0)
