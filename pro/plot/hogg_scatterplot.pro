@@ -102,7 +102,8 @@ endif
 
 ; make and fill 2-d grid
 ; (this puts the grid in units of the weights, not per unitx per unity)
-grid= hogg_histogram(transpose([[x],[y]]),[[xrange],[yrange]],[xnpix,ynpix])
+grid= hogg_histogram(transpose([[x],[y]]),[[xrange],[yrange]],[xnpix,ynpix], $
+                     weight=weight)
 
 ; renormalize columns, if necessary
 if keyword_set(conditional) then begin
