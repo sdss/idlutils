@@ -130,8 +130,8 @@ noise=1./(sqrt(median(invvar)))
 nstars=0
 nsig=13.
 while(nstars lt npsf and nsig gt 3.) do begin
-    hmin=back+nsig*noise
-    find, image, sx, sy, sflux, sharp, round, hmin, fwhm, [-3.0, 3.], $
+    hmin=nsig*noise
+    find, image-back, sx, sy, sflux, sharp, round, hmin, fwhm, [-3.0, 3.], $
       [0.001, 2.], /silent
     nstars=n_elements(sx)
     nsig=nsig*0.5
