@@ -1,14 +1,18 @@
 
-ATV           - Merged with Aaron Barth's version 1.4 (by Finkbeiner).
-                Merged to include using SPLOT/SOPLOT instead of PLOT,
-                use 5 digit pixel coords, some Healpix support (though
-                the libraries are not yet in idlutils).
-                Fink did not merge in support for reversed CTYPE values
-                in FITS headers, e.g. DEC,RA instead of RA,DEC.
+ATV          - Merged with Aaron Barth's version 1.4 (by Finkbeiner).
+               Merged to include using SPLOT/SOPLOT instead of PLOT,
+               use 5 digit pixel coords, some Healpix support (though
+               the libraries are not yet in idlutils).
+               Fink did not merge in support for reversed CTYPE values
+               in FITS headers, e.g. DEC,RA instead of RA,DEC.
 CAP_DISTANCE: New function, moved from photoop/RESOLVE_RUN_LOCAL.
+MUNU_TO_RADEC,RADEC_TO_MUNU: Computation of PHI now done properly in both
+               routines, and done analytically rather than numerically.
+               Before this, I at least had a correct numerical computation
+               in MUNU_TO_RADEC.
 src/mangle1.2/balkanize.c, harmonize.c, poly2poly.c, ransack.c,
-              snap.c, unify.c - Fixed ransack bug where it wasn't
-              checking for NULL polygons after throwing them away.
+               snap.c, unify.c - Fixed ransack bug where it wasn't
+               checking for NULL polygons after throwing them away.
 
 -------------------------------------------------------------------------------
 v4_10_2 (Jun 20, 2003)
