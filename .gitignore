@@ -1,6 +1,7 @@
 bin/balkanize
 bin/harmonize
 bin/map
+bin/mrb_balkanize
 bin/poly2poly
 bin/polyid
 bin/ransack
