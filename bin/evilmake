@@ -23,6 +23,7 @@ case `uname` in
 		SO_EXT=so
 		X_LD_FLAGS="-S -shared";;
 	"Darwin" )
+		F77=g77
 		SO_EXT=so
 		X_LD_FLAGS="-bundle /usr/lib/bundle1.o -L/usr/lib -lc -lcc_dynamic"
 # The following two lines should be equivalent to the above line
@@ -43,6 +44,6 @@ esac
 # Comment this out since it seems to fail on an SGI platform...
 SDSS_CFLAGS=-O3
 
-export SO_EXT X_CFLAGS X_LD_FLAGS SDSS_CFLAGS LD
+export SO_EXT X_CFLAGS X_LD_FLAGS SDSS_CFLAGS LD F77
 
 make "$@"
