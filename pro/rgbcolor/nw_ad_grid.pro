@@ -37,14 +37,14 @@ PRO nw_ad_grid,rain,decin,hdr,dra=dra,ddec=ddec,nra=nra,ndec=ndec, $
 NX = sxpar(hdr,'NAXIS1')
 NY = sxpar(hdr,'NAXIS2')
 
-IF (NOT keyword_set(dra)) THEN dra=.1
-IF (NOT keyword_set(ddec)) THEN ddec=.1
+IF (NOT keyword_set(dra)) THEN dra= 0.1
+IF (NOT keyword_set(ddec)) THEN ddec= 0.1
 
-IF (NOT keyword_set(linethick)) THEN linethick=2
+IF (NOT keyword_set(linethick)) THEN linethick= 2
 lthick= 2000.*linethick/NX ; empirical HACK
 
-IF (NOT keyword_set(charthick)) THEN charthick=lthick*2.0
-IF (NOT keyword_set(charsize)) THEN charsize=lthick/2.0
+IF (NOT keyword_set(charsize)) THEN charsize= lthick/1.5
+charthick= charsize*3.0
 
 IF (NOT keyword_set(nra)) THEN nra=10
 IF (NOT keyword_set(ndec)) THEN ndec=10
