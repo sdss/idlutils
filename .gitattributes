@@ -765,7 +765,13 @@ src/math/arravsigclip.c -text
 src/math/arravsigmask.c -text
 src/math/arrmedian.c -text
 src/math/ccorrelate.c -text
+src/math/diff.f -text
 src/math/export.h -text
+src/math/g1.f -text
+src/math/g2.f -text
+src/math/h12.f -text
+src/math/idl_nnls.c -text
+src/math/nnls.f -text
 src/math/nr.h -text
 src/math/nrecipes.c -text
 src/math/nrutil.c -text
