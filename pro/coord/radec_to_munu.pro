@@ -87,12 +87,14 @@ pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl, $
    cirrange, mu
 
    if (arg_present(phi)) then begin
-      sinmu = sin(mu/r2d)
-      cosmu = cos(mu/r2d)
+      ; See my notebook on 14 Oct 2002 for this derivation.
+      sinmu = sin((mu-node)/r2d)
+      cosmu = cos((mu-node)/r2d)
       sinnu = sin(nu/r2d)
       cosnu = cos(nu/r2d)
       phi = r2d $
-       * atan(cosdec^2 * cosmu * sini, cosnu * cosi - sinmu * sinnu * sini)
+       * atan(cosmu * sini, (-sinmu * sinnu * sini + cosnu * cosi)*cosnu)
+
    endif
 
    return

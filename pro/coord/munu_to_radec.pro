@@ -84,10 +84,7 @@ pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl, $
    cirrange, ra
 
    if (arg_present(phi)) then begin
-;      cosdec = cos(dec/r2d)
-;      phi = r2d $
-;       * atan(cosdec^2 * cosmu * sini, cosnu * cosi - sinmu * sinnu * sini)
-
+      ; See my notebook on 14 Oct 2002 for this derivation.
       phi = r2d $
        * atan(cosmu * sini, (-sinmu * sinnu * sini + cosnu * cosi)*cosnu)
 
