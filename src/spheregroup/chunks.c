@@ -54,7 +54,10 @@
  * getchunkbounds with marginSize=0 but a bit faster)
  *
  * Michael Blanton
- * 4/2000 */
+ * 4/2000 
+ *
+ * Fixed subtle 0/360 bug -- 12/2002
+ */
 
 #define NRA 6
 #define DEG2RAD .01745329251994
@@ -605,7 +608,7 @@ getchunkbounds(double ra,
 		/* if the ra range is such that objects can link over the 
 		 * 0/360 border, allow -1 and nRa[i] to be included; if not,
 		 * fix it here. */
-		if(raBounds[nRa[i]-1]-raBounds[0]>360.-marginSize/cosDecMin) { 
+		if(raBounds[nRa[i]]-raBounds[0]>360.-marginSize/cosDecMin) { 
 			if((*raChunkMin)[i-(*decChunkMin)]<0)
 				(*raChunkMin)[i-(*decChunkMin)]=0;
 			if((*raChunkMax)[i-(*decChunkMin)]>nRa[i]-1)
