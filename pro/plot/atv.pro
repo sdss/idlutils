@@ -356,7 +356,7 @@ state.max_text_id = cw_field(state.info_base_id, $
                              xsize = 12)
 
 tmp_string = string(1000, 1000, 1.0e-10, $
-                    format = '("(",i4,",",i4,") ",g12.5)' )
+                    format = '("(",i5,",",i5,") ",g12.5)' )
 
 state.location_bar_id = widget_label (state.info_base_id, $
                                       value = tmp_string,  $
@@ -1671,7 +1671,7 @@ loc_string = $
          state.coord[1], $
          main_image[state.coord[0], $
                     state.coord[1]], $
-         format = '("(",i4,",",i4,") ",g12.5)') 
+         format = '("(",i5,",",i5,") ",g12.5)') 
 widget_control, state.location_bar_id, set_value = loc_string
 
 ; Update coordinate display
