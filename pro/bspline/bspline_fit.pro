@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   fill_bspline
+;   bspline_fit
 ;
 ; PURPOSE:
 ;   Calculate a B-spline in the least-squares sense 
@@ -11,16 +11,14 @@
 ;
 ; CALLING SEQUENCE:
 ;   
-;   coeff = fill_bspline(x, y, z, invsig, npoly, nbkptord, fullbkpt)
+;   coeff = bspline_fit(xdata, ydata, invsig, fullbkpt, nord=, bkmask=, $
+;                                    x2=, npoly=, poly=)
 ;
 ; INPUTS:
-;   x          - data x values
-;   y          - data y values
-;   z          - data z values
+;   x          - independent variable
+;   y          - dependent variable
 ;   invsig     - inverse error array of y
-;   npoly      - Order of polynomial (as a function of y)
-;   nbkptord   - Order of b-splines (4 is cubic)
-;   fullbkpt   - Breakpoint vector returned by efc
+;   fullbkpt   - Breakpoint vector 
 ;
 ; RETURNS:
 ;   coeff      - B-spline coefficients calculated by efc
@@ -28,6 +26,10 @@
 ; OUTPUTS:
 ;
 ; OPTIONAL KEYWORDS:
+;   nord       - Order of b-splines (4 is cubic, default)
+;   x2         - Orthogonal dependent variable
+;   npoly      - Order of x2 polynomial fit
+;   bkmask     - mask for unused bkpts
 ;
 ; OPTIONAL OUTPUTS:
 ;
@@ -47,72 +49,55 @@
 ;   20-Aug-2000 Written by Scott Burles, FNAL
 ;-
 ;------------------------------------------------------------------------------
-pro test_bspline, nx, nbkpt
-   x = dindgen(nx)
-   y = randomu(200, nx, /normal)*1.0d
-   zmodel = 10.0*sin(x/10.0) + y
-   z = zmodel + randomu(100,nx,/normal)
-   invsig = fltarr(nx) + 1.0
-   npoly = 2L
-   nbkptord = 4L
-   fullbkpt = (findgen(nbkpt + nbkptord*2-1) - (nbkptord - 1))/nbkpt * nx 
-   stime1 = systime(1)
-   coeff = efcmn(x, z, invsig, nbkptord, fullbkpt)
-   stime2 = systime(1)
-   coeffb = fill_bspline(x, y, z, invsig, 1, nbkptord, fullbkpt)
-   stime3 = systime(1)
-   print, stime2-stime1, stime3-stime2
 
-;   zfit = bvalu2d(x, y, fullbkpt, coeff)
-   zfit = slatec_bvalu(x, fullbkpt, coeff)
+function bspline_fit, xdata, ydata, invsig, fullbkpt, bkmask=bkmask, $
+       x2=x2, npoly=npoly, nord=nord, poly=poly
 
-return
-end
-
-
-
-function fill_bspline, x, y, z, invsig, npoly, nbkptord, fullbkpt, poly=poly
-
+      if NOT keyword_set(nord) then nord=4L
+      if NOT keyword_set(npoly) then npoly=1L
     
-      nx = n_elements(x)
+      nx = n_elements(xdata)
       nbkpt= n_elements(fullbkpt)
-      n = (nbkpt - nbkptord)
+      n = (nbkpt - nord)
       nfull = n*npoly
 
       coeff = fltarr(nfull)
 
-      xmin = min([fullbkpt[nbkptord-1],x])
-      xmax = max([fullbkpt[n],x])
+      xmin = min([fullbkpt[nord-1],xdata])
+      xmax = max([fullbkpt[n],xdata])
 
 ;
 ;	Make sure nord bkpts on each side lie outside [xmin,xmax]
 ;
-	for i=0,nbkptord-1 do fullbkpt[i] = min([fullbkpt[i],xmin])
+	for i=0,nord-1 do fullbkpt[i] = min([fullbkpt[i],xmin])
 	for i=n,nbkpt-1 do fullbkpt[i] = max([fullbkpt[i],xmax]) 
 
 ;
 ;     Loop through data points, and process at every once each breakpoint
 ;     is crossed.
 ;
-      bw = npoly * nbkptord   ; this is the bandwidth
+      bw = npoly * nord   ; this is the bandwidth
 
-      if keyword_set(y) then begin
-         stuff = (y # replicate(1,nbkptord))[*]
-         if keyword_set(poly) then begin
-           temppoly = (stuff*0.0 + 1.0) # replicate(1,npoly)) 
-           for i=1,npoly-1 do temppoly[*,i] = temppoly[*,i-1] * y
-           ypoly = reform(temppoly,nx,bw)
-         endif else ypoly = reform(flegendre(stuff, npoly),nx,bw)
-      endif
+      indx = intrv(xdata, fullbkpt, nord)
 
-     
-      indx = intrv(x, fullbkpt, nbkptord)
- 
-      bf1 = bsplvn(fullbkpt, nbkptord, x, indx)
+      bf1 = bsplvn(fullbkpt, nord, xdata, indx)
       bf = reform(bf1[*] #replicate(1,npoly),nx, bw)
 
-      a = bf * ypoly * (invsig # replicate(1,bw))
-      b = z * invsig
+      if keyword_set(x2) then begin
+         stuff = (x2 # replicate(1,nord))[*]
+         if keyword_set(poly) then begin
+           temppoly = (stuff*0.0 + 1.0) # replicate(1,npoly)
+           for i=1,npoly-1 do temppoly[*,i] = temppoly[*,i-1] * x2
+           ypoly = reform(temppoly,nx,bw)
+         endif else ypoly = reform(flegendre(stuff, npoly),nx,bw)
+      endif 
+
+     
+      if keyword_set(x2) then $
+        a = bf * ypoly * (invsig # replicate(1,bw)) $
+      else a = bf * (invsig # replicate(1,bw))
+
+      b = ydata * invsig
 
       alpha = dblarr(bw,nfull+bw)
       beta = dblarr(nfull+bw)

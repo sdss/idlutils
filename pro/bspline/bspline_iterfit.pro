@@ -68,11 +68,14 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    nx = n_elements(xdata)
    if (n_elements(ydata) NE nx) then $
     message, 'Dimensions of XDATA and YDATA do not agree'
-   if (NOT keyword_set(nord)) then nord = 3L
+
+   if (NOT keyword_set(nord)) then nord = 4L
+
    if (keyword_set(invvar)) then begin
       if (n_elements(invvar) NE nx) then $
        message, 'Dimensions of XDATA and INVVAR do not agree'
-   endif
+   endif 
+
    if (keyword_set(x2)) then begin
       if (n_elements(x2) NE nx) then $
        message, 'Dimensions of X and X2 do not agree'
@@ -91,7 +94,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       if (where(tags EQ 'XMIN') NE -1 AND NOT keyword_set(x2)) then $
        message, 'X2 must be set to be consistent with OLDSET'
    endif else begin
-      fullbkpt = bspline_bkpts(x, nord=nord, _EXTRA=EXTRA) ; ???
+      fullbkpt = bspline_bkpts(xdata, nord=nord, _EXTRA=EXTRA) ; ???
       numbkpt = n_elements(fullbkpt)
       numcoeff = numbkpt - nord
 
@@ -131,22 +134,27 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ; Condition the X2 dependent variable by the XMIN, XMAX values.
    ; This will typically put X2NORM in the domain [-1,1].
 
-   x2norm = 2.0 * (x2 - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
+   if keyword_set(x2) then $
+     x2norm = 2.0 * (x2 - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
 
 
    ;----------
    ; Iterate spline fit
 
-   outmask = make_array(size=size(x), /byte) + 1
+   outmask = make_array(size=size(xdata), /byte) + 1
    bkmask = bytarr(n_elements(fullbkpt)) + 1
    iiter = 0
    while (NOT keyword_set(qdone) AND iiter LE maxiter) do begin
 
-      qdone = djs_reject(y, yfit, invvar=invvar, outmask=outmask, _EXTRA=EXTRA)
+      if (iiter GT 0) then begin
+        qdone = djs_reject(ydata, yfit, invvar=invvar, $
+                           outmask=outmask, _EXTRA=EXTRA)
+      endif
+
 
       qgood = outmask EQ 1
       igood = where(qgood, ngood)
-      ibad = where(NOT qgood, nbad)
+      ibad = where(qgood NE 1, nbad)
 
       if (ngood LE 1) then begin
          coeff = 0
@@ -160,12 +168,19 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 ;            INPUTS: xdata, ydata, x2, invsig, sset.fullbkpt, sset.bkmask,
 ;                    sset.nord, sset.xmin, sset.xmax, sset.npoly
 ;            OUTPUTS: updated bkmask, yfit, coeff
+;
+;	Let's demand invsig to be passed
+;       Coeff is output 
+;       yfit is keyword
+;       Full bkpt is required, not sure how to implement bkptmask yet
+;
+
           if (NOT keyword_set(x2)) then $
-           bspline_fit(xdata, ydata, invsig=invsig, fullbkpt=sset.fullbkpt,
-            bkmask=sset.bkmask, nord=sset.nord) $
+           coeff = bspline_fit(xdata, ydata, invsig, sset.fullbkpt, $
+            bkmask=bkmask, nord=sset.nord) $
           else $
-           bspline_fit(xdata, ydata, invsig=invsig, fullbkpt=sset.fullbkpt,
-            bkmask=sset.bkmask, nord=sset.nord, x2=x2norm, sset.npoly)
+           coeff = bspline_fit(xdata, ydata, invsig, sset.fullbkpt, $
+            bkmask=bkmask, nord=sset.nord, x2=x2norm, npoly=sset.npoly)
       endelse
 
       iiter = iiter + 1

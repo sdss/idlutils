@@ -1,7 +1,6 @@
 
 ;
-;	This is a slow version of slatec_bvalu, needs to be sped
-;       up before using as full replacement.
+;  for now assume ideriv = 0
 ;
 ;
 function bvalu, x, fullbkpt, coeff
@@ -9,25 +8,30 @@ function bvalu, x, fullbkpt, coeff
      n = n_elements(coeff)
      k = n_elements(fullbkpt) - n
      nx = n_elements(x)
-     indx = lonarr(nx)
-     p = sort(x)
+     work = fltarr(nx,k)
+     left = fltarr(nx,k)
+     right = fltarr(nx,k)
 
-     ileft = k - 1L
-     for i=0L, nx-1 do begin
-        while (x[p[i]] GE fullbkpt[ileft+1] AND ileft LT n-1 ) do $
-            ileft = ileft + 1L
-        indx[i] = ileft
-      endfor
+     i = intrv(x, fullbkpt, k)
 
-      bf1 = bsplvn(fullbkpt, k, x, indx[p])
-      answer = x*0.0
+     imk = i-k+1
+     for j=0,k-1 do work[*,j] = coeff[imk+j]
 
-      spot = lindgen(k) - k + 1
-      for i=k-1L,n-1 do begin
-        inside = where(indx EQ i)
-        if inside[0] NE -1 then answer[inside] = bf1[inside,*] # coeff[spot+i]
-      endfor
+     for j=0,k-1 do begin
+       left[*,j] = fullbkpt[i+j+1] - x
+       right[*,j] = x - fullbkpt[i-j] 
+     endfor
+    
+     for j=1,k - 1 do begin
+       ilo = k-j-1
+       for jj=0,k-j-1 do begin
+         work[*,jj] = (work[*,jj+1] * right[*,ilo] + work[*,jj] * left[*,jj]) $
+                        / (right[*,ilo] + left[*,jj])
+         print,ilo
+         ilo = ilo - 1
+       endfor
+     endfor    
 
-      return, answer
+      return, work[*,0]
 end
 

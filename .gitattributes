@@ -555,11 +555,16 @@ pro/TeXtoIDL/FILES -text
 pro/TeXtoIDL/README -text
 pro/TeXtoIDL/textoidl.pro -text
 pro/astrom/usno_read.pro -text
+pro/bspline/bspline_bkpts.pro -text
+pro/bspline/bspline_fit.pro -text
 pro/bspline/bspline_iterfit.pro -text
+pro/bspline/bspline_valu.pro -text
 pro/bspline/bvalu.pro -text
+pro/bspline/bvalu_slow.pro -text
 pro/bspline/cholesky_band.pro -text
 pro/bspline/cholesky_solve.pro -text
 pro/bspline/fill_bspline.pro -text
+pro/bspline/intrv.pro -text
 pro/coord/angles_to_xyz.pro -text
 pro/coord/djs_angle_group.pro -text
 pro/coord/djs_angle_match.pro -text
