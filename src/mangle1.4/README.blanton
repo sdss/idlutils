@@ -30,6 +30,9 @@ Added mrb_balkanize, and changed Makefile for it
 
 changed output to stderr in msg.c
 
+in vmid.c, at vm=0x0 line to take care of static nonNULL address
+problem
+
 ***
 
 fixed ransack bug where it wasn't checking for nULL polygons after

@@ -41,6 +41,7 @@ typedef struct {
     char trunit;	/* angular units of transformation angles */
 	char *linklist;	/* input file with links to check */
 	char *parents;	/* output file with parents of balkans */
+  int dontoutputparents; 
 } format;
 
 #endif	/* FORMAT_H */

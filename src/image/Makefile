@@ -18,6 +18,11 @@ OBJECTS = \
 	grow_obj.o pop_image.o \
 	idl_photfrac.o \
 	photfrac.o \
+	idl_interp_profmean.o \
+	ppvalu.o \
+	tautsp.o \
+	interv.o \
+	interp_profmean.o \
 	p_cisi.o \
 	p_midpnt.o \
 	p_qromo.o \
@@ -27,7 +32,7 @@ OBJECTS = \
 all : $(LIB)/libimage.$(SO_EXT)
 
 $(LIB)/libimage.$(SO_EXT): $(OBJECTS) ph.h export.h
-	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS)
+	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) -lg2c -L/usr/lib/gcc-lib/i386-redhat-linux/2.96
 #	nm -s ../lib/libimage.$(SO_EXT)
 
 #

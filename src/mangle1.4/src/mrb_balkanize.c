@@ -11,7 +11,7 @@
 polygon *polys[NPOLYSMAX];
 
 /* getopt options */
-const char *optstr = "dqm:s:e:v:p:i:o:x:y:";
+const char *optstr = "dqm:s:e:v:p:i:o:x:y:X";
 
 /* local functions */
 void	usage(void);
@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
   FILE *ifp, *ofp;
 
   /* default output format */
+  fmt.dontoutputparents = 0;
   fmt.out = keywords[POLYGON];
   /* default is to renumber output polygons with new id numbers */
   fmt.newid = 'n';
@@ -113,77 +114,79 @@ int main(int argc, char *argv[])
   npolys = mrb_balkanize(npoly, polys, NPOLYSMAX - npoly, &polys[npoly], 
                          links, nlinks, npolylink);
   if (npolys == -1) exit(1);
-
+  
 	/* find parents, output */
-	if(fmt.parents)
-		ofp=fopen(fmt.parents,"w");
-	else 
-		ofp=stdout;
-  total_parents=0;
-	for(i=npoly;i<npoly+npolys;i++) 
-    total_parents+=polys[i]->nparents;
-  fprintf(stderr, 
-          "total number of current parents: %d\n", total_parents);
-	fprintf(ofp,"%d\n",npolys);
-	for(i=npoly;i<npoly+npolys;i++) {
-		/* for each parent who contributed a cap, check all the possibly 
-			 involved parties */
-    if(((i-npoly)%1000)==0) {
-      total_parents=0;
-      for(j=npoly;j<npoly+npolys;j++) 
-        total_parents+=polys[j]->nparents;
-      fprintf(stderr, 
-              "at output poly %d/%d total number of current parents: %d\n", i-npoly, 
-              npolys,total_parents);
-    }
-		test_poly1=new_poly(polys[i]->np);
-		copy_poly(polys[i],test_poly1);
-		for(j=0;j<test_poly1->nparents;j++) {
-			k=test_poly1->parent_polys[j];
-			for(l=0;l<nlinks[k];l++) {
-				test_poly2=new_poly(test_poly1->np+polys[links[k][l]]->np);
-				poly_poly(test_poly1,polys[links[k][l]],test_poly2);
-				itrim = trim_poly(test_poly2);
-				if (itrim<2) {
-					tol = mtol;
-					verb = 1;
-					ier = garea(test_poly2, &tol, verb, &area_tot);
-          if(ier==-1) {
-            fprintf(stderr, 
-                    "mrb_balkanize found garea malloc problem while finding parents.\n");
-            total_parents=0;
-            for(j=npoly;j<npoly+npolys;i++) 
-              total_parents+=polys[j]->nparents;
-            fprintf(stderr, 
-                    "total number of current parents: %d\n", total_parents);
-            exit(666);
+  if(!fmt.dontoutputparents) {
+    if(fmt.parents)
+      ofp=fopen(fmt.parents,"w");
+    else 
+      ofp=stdout;
+    total_parents=0;
+    for(i=npoly;i<npoly+npolys;i++) 
+      total_parents+=polys[i]->nparents;
+    fprintf(stderr, 
+            "total number of current parents: %d\n", total_parents);
+    fprintf(ofp,"%d\n",npolys);
+    for(i=npoly;i<npoly+npolys;i++) {
+      /* for each parent who contributed a cap, check all the possibly 
+         involved parties */
+      if(((i-npoly)%1000)==0) {
+        total_parents=0;
+        for(j=npoly;j<npoly+npolys;j++) 
+          total_parents+=polys[j]->nparents;
+        fprintf(stderr, 
+                "at output poly %d/%d total number of current parents: %d\n", i-npoly, 
+                npolys,total_parents);
+      }
+      test_poly1=new_poly(polys[i]->np);
+      copy_poly(polys[i],test_poly1);
+      for(j=0;j<test_poly1->nparents;j++) {
+        k=test_poly1->parent_polys[j];
+        for(l=0;l<nlinks[k];l++) {
+          test_poly2=new_poly(test_poly1->np+polys[links[k][l]]->np);
+          poly_poly(test_poly1,polys[links[k][l]],test_poly2);
+          itrim = trim_poly(test_poly2);
+          if (itrim<2) {
+            tol = mtol;
+            verb = 1;
+            ier = garea(test_poly2, &tol, verb, &area_tot);
+            if(ier==-1) {
+              fprintf(stderr, 
+                      "mrb_balkanize found garea malloc problem while finding parents.\n");
+              total_parents=0;
+              for(j=npoly;j<npoly+npolys;i++) 
+                total_parents+=polys[j]->nparents;
+              fprintf(stderr, 
+                      "total number of current parents: %d\n", total_parents);
+              exit(666);
+            }
+            if(area_tot>0.) {
+              add_parent(polys[i],links[k][l]);
+            } else  {
+              trim_parent(polys[i],links[k][l]);
+            }
+          } else {
+            trim_parent(polys[i],links[k][l]);
           }
-					if(area_tot>0.) {
-						add_parent(polys[i],links[k][l]);
-					} else  {
-						trim_parent(polys[i],links[k][l]);
-          }
-				} else {
-					trim_parent(polys[i],links[k][l]);
-				}
-				free_poly(test_poly2);
-				test_poly2=0x0;
-			}
-		}
-		free_poly(test_poly1);
-		test_poly1=0x0;
+          free_poly(test_poly2);
+          test_poly2=0x0;
+        }
+      }
+      free_poly(test_poly1);
+      test_poly1=0x0;
     
-		fprintf(ofp,"%d\n",polys[i]->nparents);
-		for(j=0;j<polys[i]->nparents;j++)
-			fprintf(ofp,"%d\n",polys[i]->parent_polys[j]);
-    free(polys[i]->parent_polys);
-    polys[i]->parent_polys=0x0;
-    polys[i]->nparents=0;
-    polys[i]->maxparents=0;
-	}
-	if(fmt.parents)
-		fclose(ofp);
-
+      fprintf(ofp,"%d\n",polys[i]->nparents);
+      for(j=0;j<polys[i]->nparents;j++)
+        fprintf(ofp,"%d\n",polys[i]->parent_polys[j]);
+      free(polys[i]->parent_polys);
+      polys[i]->parent_polys=0x0;
+      polys[i]->nparents=0;
+      polys[i]->maxparents=0;
+    }
+    if(fmt.parents)
+      fclose(ofp);
+  }
+  
   /* write polygons */
   ifile = argc - 1;
   if(nfiles>0) 

@@ -17,6 +17,7 @@ BIN = $(IDLUTILS_DIR)/bin
 RECIPES = 
 OBJECTS = \
 	idl_garea.o \
+	idl_vmid.o \
 	idl_gverts.o 
 
 all : $(LIB)/libidlmangle.$(SO_EXT) 

@@ -58,6 +58,9 @@ int vmid(polygon *poly, double mtol, int nv, int nve, vec ve[/*nv * nve*/], int 
     double *cmvmin, *cmvmax, *cmpmin, *cmpmax;
     vec *vmin, *vmax;
 
+    /* added by mrb 2003-09-17 */
+    vm=0x0;
+
     /* make sure nve is even and >= 2 */
     if (nve < 2 || nve % 2 != 0) {
 	fprintf(stderr, "vmid: nve = %d must be even and >= 2\n", nve);
