@@ -18,6 +18,7 @@ FIRST_READ: Fix possible crash condition if radius > 1 deg, and near RA=0.
 HOGG_MAKE_IMAGE_LABEL,NW_ARCSINH,NW_CUT_TO_BOX,
                NW_FLOAT_TO_BYTE,NW_REBIN_IMAGE,NW_SCALE_RBG:
                Hogg's code for generating color (RGB) images.
+LOOKBACK: New proc in cosmography routines for computing look-back times.
 PLOT_POLY: Use SPLOT routine.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
