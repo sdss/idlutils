@@ -29,13 +29,12 @@
 ; COMMENTS:
 ;   does the same function as intrv, although slower but easier to follow
 ;    sorting is done here
-;   no longer assumes x is monotonically increasing
+;   Again, assumes x is monotonically increasing
 ;
 ; EXAMPLES:
 ;
 ; REVISION HISTORY:
 ;   31-Aug-2000 Written by Scott Burles, FNAL
-;    3-Jul-2001 Sneaky addition added by S. Burles, FNAL
 ;-
 ;------------------------------------------------------------------------------
 function intrv, x, fullbkpt, nbkptord 
@@ -46,22 +45,24 @@ function intrv, x, fullbkpt, nbkptord
 
       indx = lonarr(nx)
 
-;      ileft = nbkptord - 1L
-;      for i=0L, nx-1 do begin
-;        while (x[i] GT fullbkpt[ileft+1] AND ileft LT n-1 ) do $
-;            ileft = ileft + 1L
-;        indx[i] = ileft
-;      endfor
-;      indxold = indx
+      ileft = nbkptord - 1L
+      for i=0L, nx-1 do begin
+        while (x[i] GT fullbkpt[ileft+1] AND ileft LT n-1 ) do $
+            ileft = ileft + 1L
+        indx[i] = ileft
+      endfor
+      indxold = indx
 
 
-     ; here's another sneaky attempt
+     ; here's another sneaky attempt, which takes way too long for
+     ; superflat...
 
-      fullist = [fullbkpt, x]
-      hmm = sort(fullist)
-      back = lonarr(n_elements(hmm))
-      back[hmm] = lindgen(n_elements(hmm))
-      for i=0,n-1 do indx[back[i]-i:nx-1] = i  
+     ; fullist = [fullbkpt, x]
+     ; hmm = sort(fullist)
+     ; back = lonarr(n_elements(hmm))
+     ; back[hmm] = lindgen(n_elements(hmm))
+     ; for i=0,n-1 do indx[back[i]-i:nx-1] = i  
+
       
      return, indx
 end 
