@@ -37,6 +37,9 @@ pro rmfile, filename
       return
    endif
 
+   ; It can be the case that one element of the array is blank.
+   if (NOT keyword_set(filename)) then return
+
    get_lun, ilun
    openr, ilun, filename, /delete, error=err
    if (err NE 0) then message, !err_string, /informational
