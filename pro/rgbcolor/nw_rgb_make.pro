@@ -78,21 +78,26 @@ ENDIF ELSE BEGIN
 ENDELSE
 IF (n_elements(rebinfactor) GT 0) THEN $
   IF (rebinfactor NE 1) THEN $
-  colors = nw_rebin_image(colors,rebinfactor)
+  colors = nw_rebin_image(temporary(colors),rebinfactor)
 
-colors = nw_scale_rgb(colors,scales=scales)
-colors = nw_arcsinh(colors,nonlinearity=nonlinearity, /inplace)
+colors = nw_scale_rgb(temporary(colors),scales=scales)
+splog, 'nw_arcsinh'
+colors = nw_arcsinh(temporary(colors),nonlinearity=nonlinearity, /inplace)
 IF (NOT keyword_set(saturatetowhite)) THEN $
-  colors = nw_cut_to_box(colors,origin=origin)
+  splog, 'nw_cut_to_box'
+  colors = nw_cut_to_box(temporary(colors),origin=origin)
 IF keyword_set(overlay) THEN colors= (colors > overlay) < 1.0
-colors = nw_float_to_byte(colors)
+splog, 'nw_float_to_byte'
+colors = nw_float_to_byte(temporary(colors))
 if(keyword_set(invert)) then colors=255-colors
 
 IF keyword_set(tiff) THEN BEGIN
-    colors = reverse(colors,2)
+    colors = reverse(temporary(colors),2)
+    splog, 'writing tiff'
     WRITE_TIFF,name,planarconfig=2,red=colors[*,*,0],$
       green=colors[*,*,1],blue=colors[*,*,2]
 ENDIF ELSE BEGIN
-    WRITE_JPEG,name,colors,TRUE=3,QUALITY=quality
+    splog, 'writing jpeg'
+    WRITE_JPEG,name,temporary(colors),TRUE=3,QUALITY=quality
 ENDELSE
 END
