@@ -283,7 +283,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    ;----------
    ; If the file does not exist, then return but not with an error
 
-   junk = findfile(filename, count=ct)
+   junk = findfile(filename[0], count=ct)
    if (ct EQ 0) then begin
       errcode = 0
       return
@@ -293,7 +293,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    ; Count the number of lines in the file, then open the file for
    ; reading one line at a time.
 
-   shortname = fileandpath(filename)
+   shortname = fileandpath(filename[0])
    ww = strsplit(shortname,'.',/extract)
    nword = n_elements(ww)
    if (nword GT 1) then uncmps = ww[nword-1] $
@@ -313,7 +313,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
        openr, ilun, filename, error=err, /get_lun, /compress
        end
    else: begin
-       maxlen = numlines(filename) > 1
+       maxlen = numlines(filename[0]) > 1
        openr, ilun, filename, error=err, /get_lun
        end
    endcase
