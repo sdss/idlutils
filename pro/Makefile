@@ -20,7 +20,7 @@ install :
 	@ for f in $(SUBDIRS); do \
 		(mkdir $(IDLUTILS_DIR)/pro/$$f; \
 		echo Copying $$f; \
-		cp $$f/* $(IDLUTILS_DIR)/pro/$$f ); \
+                cp $$f/*.pro $(IDLUTILS_DIR)/pro/$$f ); \
 	done
 	-@ cp Makefile $(IDLUTILS_DIR)/pro
 
