@@ -55,7 +55,7 @@ function tmass_read, racen, deccen, rad
 ; loop over zones
   FOR zone=z0, z1 DO BEGIN 
      
-     print, z0, z1, zonewidth, zone
+;     print, z0, z1, zonewidth, zone
      subdir = string(zone / 10, format='(I3.3)')
      path = concat_dir(fitspath, subdir)
      IF (ra0 LT ra1) THEN BEGIN 
