@@ -110,7 +110,7 @@ endif
 ; make contour plot
 loadct,0,/silent
 if not keyword_set(c_colors) then begin
-    c_colors= double(255)/double(3L*nlevels)* $
+    c_colors= double(255)/(1.5*double(nlevels))* $
       (reverse(dindgen(nlevels))+2L*nlevels+1)
 endif
 contour, bin_mean,xbin,ybin,levels=levels,/cell_fill, $
