@@ -67,7 +67,16 @@ function yanny_par, hdr, keyname, count=count
    ; Locate the first keyword that matches
    indx = where(keyname EQ keylist, ct)
    if (ct EQ 0) then return, ''
-   j = indx[0]
+   if (ct EQ 1) then begin
+      j = indx[0]
+   endif else begin
+      for j=0, ct-1 do begin
+         result1 = yanny_par(hdr[indx[j]], keyname)
+         if (NOT keyword_set(result)) then result = result1 $
+          else result = [result, result1]
+      endfor
+      return, result
+   endelse
 
    ; Find the string after the keyword
    ipos = strpos(hdr[j], keylist[j]) + strlen(keylist[j])
