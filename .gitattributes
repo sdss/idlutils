@@ -652,6 +652,7 @@ pro/math/djsig.pro -text
 pro/math/ex_max.pro -text
 pro/math/gauss_kernel.pro -text
 pro/math/gausspix1d.pro -text
+pro/math/nnls.pro -text
 pro/math/poly_iter.pro -text
 pro/math/sshift.pro -text
 pro/math/sshift2d.pro -text
