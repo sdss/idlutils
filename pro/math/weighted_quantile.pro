@@ -31,6 +31,8 @@ for iquant=0L, n_elements(quant)-1L do begin
     if(ispos gt 0) then quantile[iquant]=svalues[ipos[0]+1]
 endfor
 
+if n_elements(quant) EQ 1 then quantile=quantile[0]
+
 return,quantile
 
 end
