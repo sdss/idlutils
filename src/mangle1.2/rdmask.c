@@ -130,7 +130,7 @@ int rdmask(name, fmt, polys, npolys)
 {
 	static char input[] = "input";
 	char *line_rest, *word;
-	int ird;
+	int ird,maxpolys;
 	int npoly = 0;
 	format in_fmt;
 	polygon *poly = 0x0;
@@ -154,25 +154,31 @@ int rdmask(name, fmt, polys, npolys)
 	file.end = fmt->end;
 
 	/* read data until hit EOF */
-	while (1) {
+	maxpolys=npolys+2;
+	while (npoly<maxpolys) {
 		/* read line of data */
 		ird = rdline(&file);
 		/* serious error */
 		if (ird == -1) goto error;
 		/* EOF */
 		if (ird == 0) break;
-	
+
+		/* treat first line specially */
+		if(npoly==0 && maxpolys==npolys+2) {
+			sscanf(file.line,"%d",&maxpolys);
+		} 
+		
 		/* look for keyword as first word in line */
 		word = get_keyword(file.line, &line_rest);
-
+			
 		/* initialize to new format */
 		if (word) ird = new_fmt(word, &line_rest, fmt);
 		if (ird == -1) goto error;
-
+			
 		/* read polygon */
 		if ((word && fmt->single) || (!word && !fmt->single)) {
-	    poly = get_poly(fmt);
-	    if (poly) {
+			poly = get_poly(fmt);
+			if (poly) {
 				if (npoly >= npolys) {
 					fprintf(stderr, "rdmask: number of polygons exceeds maximum %d\n", npolys);
 					fprintf(stderr, " if you need more space, enlarge NPOLYSMAX in defaults.h, and recompile\n");
@@ -180,16 +186,16 @@ int rdmask(name, fmt, polys, npolys)
 				}
 				polys[npoly] = poly;
 				npoly++;
-	    }
+			}
 		}
 	}
-
+	
 	/* advise */
 	msg("%d polygons read from %s\n", npoly, file.name);
-
+	
 	/* close file */
 	if (file.file != stdin) fclose(file.file);
-
+	
 	/* warn about all blank file */
 	if (npoly == 0 && blankline > 0) {
 		msg("Is format correct?  Maybe check -s<n> -e<n> -i<f>[<n>][u] command line options?\n");

@@ -155,10 +155,9 @@ int main(argc, argv)
 		ofp=stdout;
 	fprintf(ofp,"%d\n",npolys);
 	for(i=npoly;i<npoly+npolys;i++) {
-		fprintf(ofp,"%d ",polys[i]->nparents);
+		fprintf(ofp,"%d\n",polys[i]->nparents);
 		for(j=0;j<polys[i]->nparents;j++)
-			fprintf(ofp,"%d ",polys[i]->parent_polys[j]);
-		fprintf(ofp,"\n");
+			fprintf(ofp,"%d\n",polys[i]->parent_polys[j]);
 	}
 	if(fmt.parents)
 		fclose(ofp);
