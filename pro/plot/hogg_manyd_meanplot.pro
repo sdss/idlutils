@@ -118,11 +118,6 @@ for id2=ydimen-1L,0L,-1 do begin
             !X.TITLE= ''
             !Y.TITLE= ''
 
-; set plot range
-            nticks=6/axis_char_scale
-            !X.TICKINTERVAL= hogg_interval(range[*,d1],nticks=nticks)
-            !Y.TICKINTERVAL= hogg_interval(range[*,d2],nticks=nticks)
-
 ; are we on one of the plot edges?
 ; NB: must run this check before plotting!
             xprevblank=0
@@ -171,7 +166,7 @@ for id2=ydimen-1L,0L,-1 do begin
                     bin_number=*manyd_mean[id1,id2].number
                 endelse
                 hogg_meanplot, point[d1,*],point[d2,*],quantity, $
-                  weight=weight, $
+                  weight=weight, axis_char_scale=axis_char_scale, $
                   dxbin=dxbin,dybin=dybin, bin_mean=bin_mean, $
                   bin_number=bin_number, input_mean=input_mean, $
                   xrange=range[*,d1],yrange=range[*,d2], $
@@ -182,7 +177,26 @@ for id2=ydimen-1L,0L,-1 do begin
                 endif
             endif else begin
 ; HACK: placeholder
-                plot, [0],[0],xrange=range[*,d1],yrange=range[*,d2],/nodata
+                if(NOT keyword_set(input_mean)) then begin
+                    manyd_mean[id1,id2].range[*,0]=range[*,d1]
+                    manyd_mean[id1,id2].range[*,1]=range[*,d2]
+                    manyd_mean[id1,id2].label[0]=label[d1]
+                    manyd_mean[id1,id2].label[1]=label[d2]
+                    manyd_mean[id1,id2].dbin[0]=dxbin
+                    manyd_mean[id1,id2].dbin[1]=dybin
+                endif else begin
+                    bin_mean=*manyd_mean[id1,id2].mean
+                    bin_number=*manyd_mean[id1,id2].number
+                endelse
+                blanton_oned_meanplot, point[d1,*],quantity, $
+                  weight=weight,axis_char_scale=axis_char_scale, dxbin=dxbin, $
+                  bin_mean=bin_mean,bin_number=bin_number, $
+                  input_mean=input_mean, xrange=range[*,d1], $
+                  _EXTRA=KeywordsForHoggMeanplot
+                if(NOT keyword_set(input_mean)) then begin
+                    manyd_mean[id1,id2].mean=ptr_new(bin_mean)
+                    manyd_mean[id1,id2].number=ptr_new(bin_number)
+                endif
             endelse
 
 ; make axis labels afterwards

@@ -35,9 +35,11 @@ pro hogg_meanplot, x,y,z,weight=weight, $
                    minnum=minnum, $
                    noperimeter=noperimeter,nobox=nobox,nolines=nolines, $
                    maskonly=maskonly, bin_mean=bin_mean, $
-                   bin_number=bin_number, input_mean=input_mean
+                   bin_number=bin_number, input_mean=input_mean, $
+                   axis_char_scale=axis_char_scale
 
 if(NOT keyword_set(minnum)) then minnum=1L
+if(NOT keyword_set(axis_char_scale)) then axis_char_scale=1.75
 
 ; take moments
 ndata= n_elements(x)
@@ -111,6 +113,11 @@ if not keyword_set(yrange) then begin
     ybin_image= (dblarr(n_elements(xbin))+1)#ybin
     yrange= minmax(ybin_image[limits_indx])
 endif
+
+; set plot range
+nticks=6/axis_char_scale
+!X.TICKINTERVAL= hogg_interval(xrange,nticks=nticks)
+!Y.TICKINTERVAL= hogg_interval(yrange,nticks=nticks)
 
 ; make contour plot
 loadct,0,/silent
