@@ -1,5 +1,6 @@
 * text=auto !eol
 /Makefile -text
+/RELEASE_NOTES -text
 bin/.cvsignore -text
 bin/Makefile -text
 bin/build_links -text

@@ -1,0 +1,16 @@
+
+-------------------------------------------------------------------------------
+v4_10_0 (Mar 29, 2003)
+Tagged for photoop v0_6, and includes updated Goddard libraries.
+
+data/filters/Makefile - This file is no longer needed, since the Makefile
+           one directory up takes care of copying these filter files.
+pro/Makefile - This was missing several subdirectories.
+goddard      - This library was brought up to the 2003-Mar-21 version
+               of Landsman's library.  There were changes to 192 files
+               in the past 14 months.
+
+-------------------------------------------------------------------------------
+v4_9_14 (Mar 25, 2003)
+Tagged for photoop v0_5.
+
