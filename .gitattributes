@@ -202,6 +202,10 @@ goddard/pro/astrom/hrotate.pro -text
 goddard/pro/astrom/make_astr.pro -text
 goddard/pro/astrom/putast.pro -text
 goddard/pro/astrom/starast.pro -text
+goddard/pro/astrom/wcs_demo.pro -text
+goddard/pro/astrom/wcs_rotate.pro -text
+goddard/pro/astrom/wcssph2xy.pro -text
+goddard/pro/astrom/wcsxy2sph.pro -text
 goddard/pro/astrom/wfpc2_metric.pro -text
 goddard/pro/astrom/xy2ad.pro -text
 goddard/pro/astrom/xyad.pro -text
