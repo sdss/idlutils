@@ -323,8 +323,8 @@ PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 
   xten = fxpar(hdr, 'XTENSION')
   nfld = fxpar(hdr, 'TFIELDS')
-  nrow = fxpar(hdr, 'NAXIS2')
-  rsize = fxpar(hdr, 'NAXIS1')
+  nrow = long64(fxpar(hdr, 'NAXIS2'))
+  rsize = long64(fxpar(hdr, 'NAXIS1'))
 
   ;; will extract these for each
   names = ['TTYPE','TFORM', 'TSCAL', 'TZERO']
@@ -1712,8 +1712,8 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
  
     ; Find the beginning of the heap area. 
  
-    heapoff = fxpar(header, 'THEAP') 
-    sz = fxpar(header, 'NAXIS1')*fxpar(header, 'NAXIS2')
+    heapoff = long64(fxpar(header, 'THEAP'))
+    sz = long64(fxpar(header, 'NAXIS1'))*long64(fxpar(header, 'NAXIS2'))
     
     if heapoff ne 0 and heapoff lt sz then begin 
         print, 'MRDFITS: ERROR Heap begins within data area' 
@@ -1727,7 +1727,7 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
     endif
  
     ; Get the size of the heap. 
-    pc = fxpar(header, 'PCOUNT') 
+    pc = long64(fxpar(header, 'PCOUNT'))
     if heapoff eq 0 then heapoff = sz 
     hpsiz = pc - (heapoff-sz) 
  
@@ -2249,7 +2249,7 @@ pro mrd_table, header, structyp, use_colnum,           $
            endif
            nrowp = N_elements(rows)
     endelse
-;    rsize = fxpar(header, 'NAXIS1') 
+;    rsize = long64(fxpar(header, 'NAXIS1'))
  
     ; 
     ;  Loop over the columns           
@@ -2704,8 +2704,9 @@ function mrdfits, file, extension, header,      $
 	    endif else begin
 
 	        ; Skip remainder of last data block
-	        sz = fxpar(header, 'NAXIS1')*fxpar(header,'NAXIS2') +  $
-		       fxpar(header, 'PCOUNT')
+	        sz = long64(fxpar(header, 'NAXIS1')) $
+                 * long64(fxpar(header,'NAXIS2')) +  $
+		       long64(fxpar(header, 'PCOUNT'))
 	        skipB = 2880 - sz mod 2880
 	        if (skipB ne 2880) then mrd_skip, unit, skipB
             endelse
