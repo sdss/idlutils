@@ -76,8 +76,11 @@ COBJ = add_parent.o advise_fmt.o braktop_.o cmminf.o convert.o copy_format.o cop
 
 FOBJ = azel.s.o azell.s.o braktop.s.o felp.s.o fframe.s.o findtop.s.o garea.s.o gaream.s.o gcmlim.s.o gphi.s.o gphim.s.o gphbv.s.o gptin.s.o gsphera.s.o gspher.s.o gsubs.s.o gvert.s.o gvlim.s.o gvphi.s.o iylm.s.o twodf.o twoqz.o wlm.s.o wrho.s.o
 
+# The following line does not work on an SGI, so I'm commenting it out
+# in favor of the simpler assignment for OBJ.
 # objects not already present (will try to extract them from lib/libmangle.a)
-OBJ := $(strip $(foreach objfile, $(COBJ) $(FOBJ), $(shell if [ ! -r $(objfile) ]; then echo $(objfile); fi)))
+# OBJ := $(strip $(foreach objfile, $(COBJ) $(FOBJ), $(shell if [ ! -r $(objfile) ]; then echo $(objfile); fi)))
+OBJ = $(COBJ) $(FOBJ)
 
 mangle:
 	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.a -a "$(OBJ)" ] ; then \
