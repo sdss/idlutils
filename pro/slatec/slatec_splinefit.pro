@@ -8,9 +8,9 @@
 ; CALLING SEQUENCE:
 ;   
 ;    fullbkpt = slatec_splinefit(x, y, coeff, invvar=invvar, $
-;                  maxIter=maxIter, upper=upper, lower=lower, bkpt=bkpt,$
+;                  maxiter=maxiter, upper=upper, lower=lower, bkpt=bkpt,$
 ;                  secondkludge=secondkludge, mask=mask, rejper=rejper, $
-;                  _EXTRA = slatec_efc extras)
+;                 _EXTRA=KeywordsForEfc)
 ;
 ; INPUTS:
 ;   x          - data x values
@@ -24,27 +24,29 @@
 ;   coeff      - B-spline coefficients calculated by efc
 ;
 ; OPTIONAL KEYWORDS:
-;   maxIter    - maximum number of iterations (default 5)
+;   maxiter    - maximum number of iterations (default 5)
 ;   lower      - rejection threshold for negative deviations 
 ;                        (default 5 sigma)
 ;   upper      - rejection threshold for positive deviations 
 ;                        (default 5 sigma)
 ;   invvar     - inverse variance of y
-;   EXTRA      - goodies passed to slatec_efc:
-;   nord       - Order of b-splines (default 4: cubic)
-;   bkspace    - Spacing of breakpoints in units of x
 ;   rejper     - Different rejection algorithm, throwing out worst (rejper)
 ;                each iteration
-;   nbkpts     - Number of breakpoints to span x range
-;                 minimum is 2 (the endpoints)
+;   secondkludge - ???
+;   eachgroup  - ???
+;
+; KEYWORDS FOR SLATEC_EFC:
+;   nord
+;   bkspace
+;   nbkpts
+;   everyn
 ;
 ; OPTIONAL OUTPUTS:
 ;   bkpt       - breakpoints without padding
 ;   mask       - mask array
-;  
 ;
 ; COMMENTS:
-;	If both bkspace and nbkpts are passed, bkspace is used
+;   If both bkspace and nbkpts are passed, bkspace is used
 ;
 ; EXAMPLES:
 ;
@@ -57,40 +59,44 @@
 ;
 ;
 ; PROCEDURES CALLED:
-;   efc_idl in slatec/src/idlwrapper.c
-;         which wraps to efc.o in libslatecidl.so
+;   slatec_efc()
 ;
 ; REVISION HISTORY:
 ;   15-Oct-1999  Written by Scott Burles, Chicago
 ;-
 ;------------------------------------------------------------------------------
 function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
-         lower=lower, maxIter=maxIter, bkpt=bkpt, fullbkpt=fullbkpt, $
+         lower=lower, maxiter=maxiter, bkpt=bkpt, fullbkpt=fullbkpt, $
          secondkludge=secondkludge, mask=mask, rejper=rejper, $
          eachgroup=eachgroup, _EXTRA=KeywordsForEfc
 
     if N_PARAMS() LT 3 then begin
         print, ' Syntax - fullbkpt = slatec_splinefit(x, y, coeff, '
-        print, '         invvar=invvar, maxIter=maxIter, upper=upper, '
+        print, '         invvar=invvar, maxiter=maxiter, upper=upper, '
         print, '         lower=lower, bkpt=bkpt, secondkludge=secondkludge,'
-        print, '         mask=mask, rejper=rejper, _EXTRA = slatec_efc extras)'
+        print, '         mask=mask, rejper=rejper, _EXTRA=KeywordsForEfc)'
     endif
 
-    if n_elements(maxIter) EQ 0 then maxIter = 5
+    if (n_elements(maxiter) EQ 0) then maxiter = 5
     if (NOT keyword_set(upper)) then upper = 5.0
     if (NOT keyword_set(lower)) then lower = 5.0
     if (NOT keyword_set(invvar)) then begin
-	; cheesey invvariance
-        invvar = y - y + 1.0/(moment(y))[1]	
+	; cheesey inverse variance
+        invvar = y - y + 1.0 / (stddev(y))^2
     endif
 
     invsig = sqrt(invvar > 0)
 
     nx = n_elements(x)
     mask = bytarr(nx) + 1
-    bad = where(invsig LE 0.0)
+    bad = where(invvar LE 0.0)
+    good = where(invvar GT 0.0)
     if (bad[0] NE -1) then mask[bad] = 0
-   
+
+;    ; Note that we don't set any value to the masked elements of VARARR,
+;    ; but that's OK since they are never passed to the routine slatec_efc().
+;    vararr = float(0 * invvar)
+;    if (good[0] NE -1) then vararr[good] = 1. / invvar[good]
 
     for iiter=0, maxiter do begin
        oldmask = mask
@@ -116,7 +122,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
             if (negs[0] NE -1) then tempdiff[negs] = abs(diff[negs])/lower
 
 	    worst = reverse(sort(tempdiff))
-	    rejectspot = fix(n_elements(bad)*rejper) 
+	    rejectspot = long(n_elements(bad)*rejper) 
 	    mask[these[worst[0:rejectspot]]] = 0
 
 	    good = where(diff GT -lower AND diff LT upper AND $
@@ -136,7 +142,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
  	      groups = where(bad[1:nbad-1] - bad[0:nbad-2] NE 1, ngroups)
 	      if (ngroups EQ 0) then groups = [-1,nbad-1] $
 	      else groups = [-1,groups,nbad-1]
-	      for i=0, ngroups do begin
+	      for i=0L, ngroups do begin
 	        groupmax = max(tempdiff[groups[i]+1:groups[i+1]], place)
 	        mask[these[bad[place+groups[i]+1]]] = 0
 	      endfor
@@ -157,6 +163,9 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
           endelse
         endelse
     endfor
+
+    mask = oldmask ; Return the mask that was actually used in the last
+                   ; call to SLATEC_EFC()
 
     if keyword_set(secondkludge) then begin
 	nfullbkpt = n_elements(fullbkpt) 

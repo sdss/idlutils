@@ -3,13 +3,12 @@
 ;   slatec_efc
 ;
 ; PURPOSE:
-;   Calculate a B-spline in the least squares sense
+;   Calculate a B-spline in the least-squares sense
 ;
 ; CALLING SEQUENCE:
 ;   
-;    fullbkpt = slatec_efc(x, y, coeff, bkpt=bkpt, nord=nord, $
-;               invsig=invsig, bkspace = bkspace, nbkpts=nbkpts, $
-;               everyn = everyn, /silent)
+;   fullbkpt = slatec_efc(x, y, coeff, bkpt=bkpt, nord=nord, $
+;    invsig=invsig, bkspace=bkspace, nbkpts=nbkpts, everyn=everyn, /silent)
 ;
 ; INPUTS:
 ;   x          - data x values
@@ -24,7 +23,7 @@
 ;
 ; OPTIONAL KEYWORDS:
 ;   nord       - Order of b-splines (default 4: cubic)
-;   invsig     - Inverse sigma for weighted fit
+;   invsig     - Inverse of sigma for weighted fit
 ;   bkspace    - Spacing of breakpoints in units of x
 ;   everyn     - Spacing of breakpoints in good pixels
 ;   nbkpts     - Number of breakpoints to span x range
@@ -33,24 +32,23 @@
 ;
 ; OPTIONAL OUTPUTS:
 ;   bkpt       - breakpoints without padding
-;  
 ;
 ; COMMENTS:
-;	If both bkspace and nbkpts are passed, bkspace is used
-;	x values must be sorted
+;   If both bkspace and nbkpts are passed, bkspace is used.
+;   X values must be sorted.
 ;
 ; EXAMPLES:
 ;
-;	x = findgen(100)
-;       y = randomu(100,100)
-;       fullbkpt = slatec_efc(x, y, coeff, bkspace = 10.0)
+;   x = findgen(100)
+;   y = randomu(100,100)
+;   fullbkpt = slatec_efc(x, y, coeff, bkspace = 10.0)
 ;
-;	xfit = findgen(10)*10.0
-;       yfit = bvalu(xfit, fullbkpt, coeff)
+;   xfit = findgen(10)*10.0
+;   yfit = bvalu(xfit, fullbkpt, coeff)
 ;
 ;
 ; PROCEDURES CALLED:
-;   efc_idl in slatec/src/idlwrapper.c
+;   efc_idl in src/slatec/idlwrapper.c
 ;         which wraps to efc.o in libslatecidl.so
 ;
 ; REVISION HISTORY:
@@ -58,82 +56,82 @@
 ;-
 ;------------------------------------------------------------------------------
 function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
-        invsig = invsig, bkspace = bkspace, nbkpts=nbkpts, everyn=everyn, $
-        silent=silent
+ invsig=invsig, bkspace=bkspace, nbkpts=nbkpts, everyn=everyn, silent=silent
 
+   if (NOT keyword_set(nord)) then nord = 4L $
+    else if (nord LT 1 or nord GT 20) then $
+    message, 'efc only accepts nord between 1 and 20'
 
-	if (NOT keyword_set(nord)) then nord = 4L $
- 	else if (nord LT 1 or nord GT 20) then $
-          message, 'efc only accepts nord between 1 and 20'
+   ndata = n_elements(x)
+   if (ndata LT 2) then $
+    message, 'Too few data points'
 
-        ndata = n_elements(x)
-	if ndata LT 2 then message, 'need more data points'
+   if (NOT keyword_set(invsig)) then $
+    invsig = fltarr(ndata) + 1.0 $
+   else if (n_elements(invsig) NE ndata) then $
+    message, 'Number of INVSIG elements does not equal NDATA'
 
-        if (NOT keyword_set(invsig)) then begin
-            invsig = fltarr(ndata) + 1.0 
-        endif else if n_elements(invsig) NE ndata then $
-            message, 'number of invsig elements does not equal ndata'
+   good = where(invsig GT 0.0, ngood)
 
-        good = where(invsig GT 0.0, ngood)
+   if (ngood EQ 0) then begin
+      print, 'No good points'
+      return, -1
+   endif
 
-        if (ngood EQ 0) then begin
-          print, 'no good points'
-          return, -1
-        endif
+   if (NOT keyword_set(fullbkpt)) then begin
 
-	if (NOT keyword_set(fullbkpt)) then begin $
-
-	  if (NOT keyword_set(bkpt)) then begin $
+      if (NOT keyword_set(bkpt)) then begin
  
-	   range = (max(x) - min(x)) 	
-           startx = min(x) 
-	   if (keyword_set(bkspace)) then begin
-	     nbkpts = long(range/float(bkspace)) + 1
-	     if (nbkpts LT 2) then nbkpts = 2
-	     tempbkspace = double(range/(float(nbkpts-1)))
-	     bkpt = (findgen(nbkpts))*tempbkspace + startx
-           endif else if keyword_set(nbkpts) then begin
-	     nbkpts = long(nbkpts)
-	     if (nbkpts LT 2) then nbkpts = 2
-	     tempbkspace = double(range/(float(nbkpts-1)))
-	     bkpt = (findgen(nbkpts))*tempbkspace + startx
-	   endif else if keyword_set(everyn) then begin
-             nbkpts = ngood / everyn
-	     xspot = lindgen(nbkpts)*ngood/(nbkpts-1) 
-             bkpt = x[good[xspot]]
-	   endif else message, 'No information for bkpts'
-        endif
+         range = (max(x) - min(x))
+         startx = min(x)
+         if (keyword_set(bkspace)) then begin
+            nbkpts = long(range/float(bkspace)) + 1
+            if (nbkpts LT 2) then nbkpts = 2
+            tempbkspace = double(range/(float(nbkpts-1)))
+            bkpt = (findgen(nbkpts))*tempbkspace + startx
+         endif else if keyword_set(nbkpts) then begin
+            nbkpts = long(nbkpts)
+            if (nbkpts LT 2) then nbkpts = 2
+            tempbkspace = double(range/(float(nbkpts-1)))
+            bkpt = (findgen(nbkpts))*tempbkspace + startx
+         endif else if keyword_set(everyn) then begin
+            nbkpts = ngood / everyn
+            xspot = lindgen(nbkpts)*ngood/(nbkpts-1)
+            bkpt = x[good[xspot]]
+         endif else message, 'No information for bkpts'
+      endif
 
-	bkpt = float(bkpt)
+      bkpt = float(bkpt)
 
-	if (min(x) LT min(bkpt,spot)) then begin
-	  if (NOT keyword_set(silent)) then $
-            print, 'lowest breakpoint does not cover lowest x value, changing'
-	  bkpt[spot] = min(x)
-	endif 
+      if (min(x) LT min(bkpt,spot)) then begin
+         if (NOT keyword_set(silent)) then $
+          print, 'Lowest breakpoint does not cover lowest x value: changing'
+         bkpt[spot] = min(x)
+      endif
 
-	if (max(x) GT max(bkpt,spot)) then begin
-	  if (NOT keyword_set(silent)) then $
-            print, 'highest breakpoint does not cover highest x value, changing'
-	  bkpt[spot] = max(x)
-	endif
-	 
-	nshortbkpt = n_elements(bkpt) 
-	fullbkpt = bkpt
-	bkptspace = (bkpt[1] - bkpt[0])/10.0
-        for i=1,nord-1 do $
-           fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
-                bkpt[nshortbkpt - 1] + bkptspace*i]
+      if (max(x) GT max(bkpt,spot)) then begin
+         if (NOT keyword_set(silent)) then $
+          print, 'highest breakpoint does not cover highest x value, changing'
+         bkpt[spot] = max(x)
+      endif
+
+      nshortbkpt = n_elements(bkpt)
+      fullbkpt = bkpt
+      bkptspace = (bkpt[1] - bkpt[0]) / 10.0
+      for i=1, nord-1 do $
+       fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
+        bkpt[nshortbkpt - 1] + bkptspace*i]
   
-     endif
-	nord = LONG(nord)
+   endif else begin
 
-	nbkpt = n_elements(fullbkpt)
+      fullbkpt = FLOAT(fullbkpt)
 
-	if (nbkpt LT 2*nord) then $
-           message, 'not enough breakpoints?, must have at least 2*nord'
+   endelse
 
+   nbkpt = n_elements(fullbkpt)
 
+   if (nbkpt LT 2*nord) then $
+    message, 'Too few breakpoints: must have at least 2*NORD'
 
    qeval = 1
    while (qeval) do begin
@@ -146,8 +144,8 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 
       test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
        'efc_idl', $
-       ndata, float(x), float(y), float(invsig), nord, $
-       nbkpt,fullbkpt, mdein, mdeout, coeff, lw, w)
+       ndata, FLOAT(x), FLOAT(y), FLOAT(invsig), LONG(nord), $
+       LONG(nbkpt), fullbkpt, mdein, mdeout, coeff, lw, w)
 
       qeval = 0 ; Do not re-evaluate spline unless break points are removed
                 ; below
@@ -157,7 +155,7 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 
          ; Assume that there are two break points without any data in between.
          ; Find them, and remove the second break point in those cases.
-         i = nord ; Don't remove the first NORD or last NORD break points
+         i = nord + 0L ; Don't remove the first NORD or last NORD break points
 print,'remove begin ',nbkpt
          while (i LE nbkpt-nord) do begin
             ; Test to see if there is data between break points #i and #(i-1)
