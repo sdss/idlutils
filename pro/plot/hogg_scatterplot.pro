@@ -12,8 +12,8 @@
 ;   x,y         - data values
 ; OPTIONAL INPUTS:
 ;   weight      - weighting for data points; default unity
-;   xnpix       - width of greyscale grid in pixels; default 32
-;   ynpix       - height of greyscale grid in pixels; default 32
+;   xnpix       - width of greyscale grid in pixels; default to 0.3*sqrt(N)
+;   ynpix       - height of greyscale grid in pixels; same default
 ;   xrange      - x range; default to minmax(x)
 ;   yrange      - y range; default to minmax(y)
 ;   levels      - contour levels; default to [0.5,0.75,0.95,0.99,0.999]
@@ -41,8 +41,8 @@ pro hogg_scatterplot, x,y,weight=weight, $
 ; set defaults
 ndata= n_elements(x)
 if not keyword_set(weight) then weight= dblarr(ndata)+1.0
-if not keyword_set(xnpix) then xnpix= 32
-if not keyword_set(ynpix) then ynpix= 32
+if not keyword_set(xnpix) then xnpix= ceil(0.3*sqrt(ndata))
+if not keyword_set(ynpix) then ynpix= ceil(0.3*sqrt(ndata))
 if not keyword_set(xrange) then xrange= minmax(x)
 if not keyword_set(yrange) then yrange= minmax(y)
 if not keyword_set(levels) then levels= [0.5,0.75,0.95,0.99,0.999]
