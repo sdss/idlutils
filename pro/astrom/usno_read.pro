@@ -233,6 +233,7 @@ end
 ;
 ;   Written  2000 Apr 15 by D. P. Finkbeiner
 ;   Modified 2000 Apr 18 to use dot product in final trim (DPF)
+;   Modified 2001 Jul 17 R & B mags were reversed !  (DPF)
 ;
 ;+------------------------------------------------------------------------  
 ;-
@@ -265,8 +266,8 @@ function usno_read, racen, deccen, rad, path=path
   info   = transpose(data[2, *])
 
 ; unpack B and R magnitudes from info array
-  magbint = (info MOD 1000L)
-  magrint = (info MOD 1000000L) - magbint
+  magrint = (info MOD 1000L)
+  magbint = (info MOD 1000000L) - magrint
   usnostruct.bmag = magbint/10.
   usnostruct.rmag = magrint/10000.
 
