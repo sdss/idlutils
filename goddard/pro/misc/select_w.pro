@@ -1,4 +1,4 @@
-PRO select_w_event, event, GROUP_LEADER=GROUP
+PRO select_w_event, event
 ;
 ;This procedure is the event handler for the XMENU widget below
 COMMON select_w, val, exclusive
@@ -18,7 +18,8 @@ if (value EQ 'DONE') or (exclusive) then begin
  END
 END
 
-PRO select_w, items, iselected, comments, command_line, only_one, Count = count
+PRO select_w, items, iselected, comments, command_line, only_one, $
+	Count = count, GROUP_LEADER=GROUP, selectin = selectin
 ;+
 ; NAME:
 ;	SELECT_W    
@@ -44,6 +45,9 @@ PRO select_w, items, iselected, comments, command_line, only_one, Count = count
 ;	only_one - integer flag. If set to 1 then the user can only select
 ;		one item.  The routine returns immediately after the first
 ;		selection is made.
+; OPTIONAL KEYWORD INPUT
+;       SELECTIN - vector of items to be pre-selected upon input (not used for
+;               only_one option)
 ;
 ; OUTPUT:
 ;	iselected - list of indices in selections giving the selected
@@ -59,6 +63,7 @@ PRO select_w, items, iselected, comments, command_line, only_one, Count = count
 ;	Widgets made MODAL.  M. Greason, Hughes STX, 15 July 1992.
 ;       Changed handling of MODAL keyword for V5.0   W.Thompson  September 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added selectin keyword  D. Lindler 01/12/99 
 ;-
 ;
  On_error,2
@@ -78,7 +83,12 @@ PRO select_w, items, iselected, comments, command_line, only_one, Count = count
        XMENU, items, base, COLUMN=8  $
     else begin 
        donebut = WIDGET_BUTTON( base, VALUE = "DONE", UVALUE = -1) 
-       XMENU, items, base, /NONEXCLUSIVE, COLUMN=8 
+       XMENU, items, base, /NONEXCLUSIVE, COLUMN=8, buttons=buttons
+       if n_elements(selectin) gt 0 then begin
+                for i=0,n_elements(selectin)-1 do $
+                        widget_control,buttons(selectin[i]),set_button=1
+                val = [-1,selectin]
+       endif
  endelse
 
 ; Realize the widgets:
