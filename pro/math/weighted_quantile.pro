@@ -10,6 +10,7 @@
 ;-
 function weighted_quantile,values,weights,quant=quant
 
+if not keyword_set(weights) then weights= dblarr(n_elements(values))+1
 if(n_elements(values) le 1) then return,values[0]
 if(n_elements(quant) eq 0) then quant=[0.5]
 
