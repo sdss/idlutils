@@ -12,12 +12,14 @@ SHELL = /bin/sh
 #.f.o :
 #	$(F77) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.f
 #
-CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(IDLUTILS_DIR)/include
+INC = ../../include
+CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(INC)
 
 LIB = $(IDLUTILS_DIR)/lib
 
 OBJECTS = \
-	grow_obj.o pop_image.o \
+	grow_obj.o \
+	pop_image.o \
 	idl_photfrac.o \
 	idl_reject_cr_psf.o \
 	photfrac.o \

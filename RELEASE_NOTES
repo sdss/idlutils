@@ -5,12 +5,22 @@ REBIN_SPECTRUM: New function for rebinning 1-D spectra using CIC assignment
                and arbitrary pixel boundaries.
 TRACESET_TRIM: New function for trimming trace sets to selected traces.
 
+Makefile: Add include directory.
 bin/Makefile: Should have "-n32" instead of "-32" in the X_FFLAGS
                for the IRIX64 platform, to avoid inconsistencies with
                the other compiler flags.
+include/export.h: This include file used to exist in six places under /src,
+               but now I am consolodating into this one place.
+               Two changes to the file to treat the "sgi" platform like
+               other 64-bit platforms.
+               Remove this file from src/idlmangle, src/image, src/math,
+               src/slatec, src/spheregroup, src/slatec.
+include/Makefile: New directory for IDL<->C include file.
 src/image/Makefile: Change some of the comment lines, since for some bizarre
                reason those comment lines that end in a backslash will crash
                on the SGI IRIX platform.
+src/{idlmangle,image,math,slatec,spheregroup,trace}/Makefile: Changed the
+               location of the include file to "../../include".
 
 -------------------------------------------------------------------------------
 v4_10_8 (Jan 4, 2004)

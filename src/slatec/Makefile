@@ -16,9 +16,9 @@ SHELL = /bin/sh
 	$(F77) -c $(FFLAGS) $(X_CFLAGS) $*.f
 
 #
+INC = ../../include
 CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(INC) 
 
-INC = ../math
 LIB = $(IDLUTILS_DIR)/lib
 
 RECIPES = nrecipes.o nrutil.o

@@ -10,7 +10,8 @@ SHELL = /bin/sh
 .c.o :
 	$(CC) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.c
 #
-CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS
+INC = ../../include
+CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(INC)
 
 LIB = $(IDLUTILS_DIR)/lib
 
