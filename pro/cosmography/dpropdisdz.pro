@@ -2,7 +2,7 @@
 ; NAME:
 ;   dpropdisdz
 ; PURPOSE:
-;   Compute differential proper line-of-sight distances (c/H_0=1).
+;   Compute differential proper line-of-sight distances (for c/H_0=1).
 ; CALLING SEQUENCE:
 ;   dDdz= dpropdisdz(z,OmegaM,OmegaL)
 ; INPUTS:

@@ -2,7 +2,7 @@
 ; NAME:
 ;   propmotdis
 ; PURPOSE:
-;   Compute proper motion distances (c/H_0=1).
+;   Compute proper motion distances (for c/H_0=1).
 ; CALLING SEQUENCE:
 ;   D= propmotdis(z,OmegaM,OmegaL)
 ; INPUTS:
@@ -15,11 +15,10 @@
 ;   proper motion distance in units of the Hubble length c/H_0
 ; COMMENTS:
 ; BUGS:
-;   The integrator is crude and slow, although it is not used when it is not
-;     necessary.
 ;   May not work for pathological parts of the OmegaM-OmegaL plane.
 ; EXAMPLES:
 ; PROCEDURES CALLED:
+;   comdis()
 ; REVISION HISTORY:
 ;   25-Jun-2000  Written by Hogg (IAS)
 ;-

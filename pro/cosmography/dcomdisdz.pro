@@ -2,7 +2,7 @@
 ; NAME:
 ;   dcomdisdz
 ; PURPOSE:
-;   Compute differential comoving line-of-sight distances (c/H_0=1).
+;   Compute differential comoving line-of-sight distances (for c/H_0=1).
 ; CALLING SEQUENCE:
 ;   dDdz= dcomdisdz(z,OmegaM,OmegaL)
 ; INPUTS:
