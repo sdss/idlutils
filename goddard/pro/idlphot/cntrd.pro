@@ -48,6 +48,7 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;		W. Landsman        March, 1993
 ;	Convert byte, integer subimages to float  W. Landsman  May 1995
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Bug fix by Hogg October 2000; search for "Hogg"
 ;-      
  On_error,2                          ;Return to caller
 
@@ -101,6 +102,17 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
  idy = mx_pos / nbig  		;Y coordinate of Max pixel
  xmax = ix[i] - (nhalf+3) + idx  ;X coordinate in original image array
  ymax = iy[i] - (nhalf+3) + idy  ;Y coordinate in original image array
+
+; check *new* center location for range
+; added by Hogg
+
+ if ( (xmax LT nhalf) or ((xmax + nhalf) GT xsize-1) or $
+      (ymax LT nhalf) or ((ymax + nhalf) GT ysize-1) ) then begin
+     if not keyword_set(SILENT) then message,/INF, $
+           'Position '+ pos + ' moved too near edge of image'
+     xcen[i] = -1   & ycen[i] = -1
+     goto, DONE
+ endif
 
 ;  Extract smaller 'STRBOX' sized subimage centered on maximum pixel 
 
