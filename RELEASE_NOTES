@@ -1,4 +1,7 @@
 
+DJS_BATCH     - Fix bug introduced when SELECTHOST option was added.
+TNMIN         - Two loop variables (lines 559 and 601) changed from "0"
+                to "0L".
 YANNY_READ:   - Don't crash when FILENAME is a 1-element array!
 
 src/math/nr.h - Comment-out line 93 which defines "float fmin(float x[]);".
