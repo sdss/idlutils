@@ -6,7 +6,7 @@
 ;   Convert from SDSS great circle coordinates to equatorial coordinates.
 ;
 ; CALLING SEQUENCE:
-;   munu_to_radec, mu, nu, ra, dec, [ stripe=, node=, incl=, phi= ]
+;   munu_to_radec, mu, nu, [ ra, dec, stripe=, node=, incl=, phi= ]
 ;
 ; INPUTS:
 ;   mu         - Mu coordinate, scalar or array (degrees)
