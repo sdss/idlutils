@@ -70,6 +70,10 @@ data/filters/wf2f555wsys.txt -text
 data/filters/wf2f606wsys.txt -text
 data/filters/wf2f702wsys.txt -text
 data/filters/wf2f814wsys.txt -text
+data/objects/ned-query-clusters-lt0.03.dat -text
+data/objects/ned-query-clusters-lt0.03.dat.~1~ -text
+data/objects/ned-query-clusters-lt0.03.txt -text
+data/objects/process_ned_list -text
 data/sdss/sdssMaskbits.par -text
 doc/Makefile -text
 doc/mk_doc -text
@@ -730,6 +734,7 @@ pro/coord/euler_2000_fast.pro -text
 pro/coord/helio_to_lg.pro -text
 pro/coord/heliocentric.pro -text
 pro/coord/hms2dec.pro -text
+pro/coord/local_extragalactic.pro -text
 pro/coord/mjd2datelist.pro -text
 pro/coord/moon_zenith.pro -text
 pro/coord/munu_to_radec.pro -text
