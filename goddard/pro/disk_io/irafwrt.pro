@@ -54,7 +54,7 @@ pro irafwrt, image, hd, filename, PIXDIR = pixdir
 ;       (3)  IRAFWRT has only been tested on Unix and VMS systems.
 ;
 ; PROCEDURES CALLED:
-;       FDECOMP, IS_IEEE_BIG(), REPCHR(), STRN(), SXDELPAR, SXPAR()
+;       FDECOMP, IS_IEEE_BIG(), ISARRAY(), REPCHR(), STRN(), SXDELPAR, SXPAR()
 ; MODIFICATION HISTORY:
 ;       Written K. Venkatakrishna, STX February 1992
 ;       VMS compatibility    W. Landsman      April 1992
@@ -66,6 +66,7 @@ pro irafwrt, image, hd, filename, PIXDIR = pixdir
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Don't apply strlowcase to .pix name   W. Landsman      April 1999
 ;       Work with double precision            W. Landsman      May 1999
+;       Minimize use of obsolete !ERR         W. Landsman      Feb. 2000
 ;-     
  On_error,2
 
@@ -102,12 +103,12 @@ pro irafwrt, image, hd, filename, PIXDIR = pixdir
        openw, lun1, header, 512, /GET_LUN, /NONE   else $
        openw, lun1, header, /GET_LUN
 
- object = sxpar( hd, 'OBJECT')
- if ( !ERR EQ -1 ) or ( object EQ '' ) then object = ' '
- origin = sxpar( hd, 'ORIGIN')
- if ( !ERR EQ -1 ) or ( origin EQ '') then origin = ' '
- date_obs = sxpar( hd, 'DATE-OBS' ) 
- if ( !ERR EQ -1 ) or ( date_obs EQ '')  then date_obs = ' '
+ object = sxpar( hd, 'OBJECT',Count = N_object)
+ if ( N_object EQ 0 ) or ( object EQ '' ) then object = ' '
+ origin = sxpar( hd, 'ORIGIN', Count = N_origin)
+ if ( N_origin EQ 0 ) or ( origin EQ '') then origin = ' '
+ date_obs = sxpar( hd, 'DATE-OBS', Count = N_date ) 
+ if ( N_date EQ 0 ) or ( date_obs EQ '')  then date_obs = ' '
 
  hist_rec = where(strpos(hd,'HISTORY') EQ 0, Nhist)        ; Get history records
  if Nhist GT 0 then history = hd[hist_rec] else $

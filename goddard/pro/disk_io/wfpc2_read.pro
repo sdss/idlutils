@@ -173,6 +173,10 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
 
  FITS_READ, fcb, dtab, htab, /no_pdu
  tf = sxpar(htab,'TFIELDS')
+ name = sxpar(htab,'TTYPE*')
+ fmt = sxpar(htab,'TFORM*')
+ comment = strarr(tf)
+ for j=0,tf-1 do comment[j] = sxpar(htab,name[j])
  
  if fcb.axis[1,0] LT max(num_c) then begin
 	message, /inf,'Image ' + filename + ' contains only PC image'
@@ -180,6 +184,7 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
  endif
  FITS_CLOSE, fcb
 
+ ftinfo,htab,ft_str
  for i = 0, Nout-1 do begin
     cn = num_c[i]
     cn_0 = cn - 1
@@ -193,13 +198,11 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
     sxaddhist,'      WFPC2_READ:  ' + systime(), thishdr
     sxaddhist,'      Header parameters for chip ' + cn_str $
       + ' replaced from table.', thishdr   
- for j=1,tf do begin
-        name = sxpar(htab,'TTYPE'+strtrim(j,2))
-        comment = sxpar(htab,name)
-        fmt = sxpar(htab,'TFORM'+strtrim(j,2))
-        value = ftget(htab,dtab,j,cn_0)
-        sxaddpar, thishdr,name,value[0],comment,format=fmt
+ for j=0,tf-1 do begin
+         value = ftget(ft_str,dtab,j+1,cn_0)
+        sxaddpar, thishdr,name[j],value[0],comment[j],format=fmt[j]
     endfor
+
     if nout GT 1 then begin
 
 	thischp = d[*,*,cn_0] 

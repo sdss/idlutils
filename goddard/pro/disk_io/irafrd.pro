@@ -59,12 +59,13 @@ pro irafrd,im,hd,filename, SILENT=silent    ;Read in IRAF image array and header
 ;       Fixed problem reading V2.11 files with long headers Jan. 1998
 ;       Accept names with multiple extensions    W. Landsman   April 98 
 ;       Test for big endian machine under V2.11 format W. Landsman Feb. 1999
+;       Don't read past the end of file for V5.4 compatilibity  W.L.  Jan. 2001
 ;-
  On_error,2                    ;Return to caller
  npar = N_params() 
 
  if ( npar EQ 0 ) then begin 
-   print,'Syntax - IRAFRD, im, hdr, [filename, /SILENT ]
+   print,'Syntax - IRAFRD, im, hdr, [filename, /SILENT ]'
    return
  endif 
 
@@ -240,7 +241,7 @@ FINDER:
 
         if newformat then nfits = (hdrlen*2l - 2049)/81 else $
                           nfits = (hdrlen*4l - 2054)/162
-        tmp = assoc(lun1,bytarr(hdrlen*4l))
+        tmp = assoc(lun1,bytarr(hdrlen*4l < (fstat(lun1)).size ))
         hdr = tmp(0)
         if not newformat then if not big_endian then byteorder, hdr, /SSWAP 
 SKIP1:  
