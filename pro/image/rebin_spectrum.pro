@@ -72,7 +72,8 @@ function rebin_spectrum, xflux, xwave, ywave
       ; In the case where the central wavelengths are specified,
       ; we need to compute the wavelengths at the edges of the pixels
       xtmp = interpol(xwave, 2*lindgen(npts)+1, 2*lindgen(npts+1))
-      ytmp = interpol(ywave, 2*lindgen(npts)+1, 2*lindgen(npts+1))
+      nnew = n_elements(ywave)
+      ytmp = interpol(ywave, 2*lindgen(nnew)+1, 2*lindgen(nnew+1))
       return, rebin_spectrum(xflux, xtmp, ytmp)
    endif
    if (n_elements(xwave) NE npts+1) then $
