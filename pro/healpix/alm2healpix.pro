@@ -96,7 +96,7 @@ function alm2healpix, nside, alm, lmax=lmax
   for m=0, mmax do begin 
      tt = systime(1)
      mqladvance, xqhalf, m, Mql_1, Mql, lmax=lmax
-     
+
      Mlq = transpose(Mql) ; 5 sec just for transpose!! Can we do this better?
 
      sign = 1-((indgen(lmax+1)+m) mod 2)*2
@@ -108,12 +108,15 @@ function alm2healpix, nside, alm, lmax=lmax
      ; loop over rings and sum on l index
      for iq=0L, nq-1 do begin 
 
+        if check_math() NE 0 then stop
         Ml = Mlq[m:lmax, mlqind[iq]]*lfac[m:lmax]
         if iq GE 2*nside then Ml = Ml*sign[m:lmax]
 
-        for imap=0L, nmap-1 do $
-          Fqn[iq, 0, imap] = total(Ml*aln[*,0,imap])
-
+        for imap=0L, nmap-1 do begin 
+           Fqn[iq, 0, imap] = total(Ml*aln[*,0,imap])
+           cm = check_math()
+           if (cm NE 32) and (cm NE 0) then stop
+        endfor 
      endfor
      ; fill Fqm array
      Fqm[*, m, *] = Fqn
