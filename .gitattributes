@@ -596,6 +596,7 @@ pro/coord/dotproduct_sphere.pro -text
 pro/coord/eta_to_stripe.pro -text
 pro/coord/etalambda_to_radec.pro -text
 pro/coord/helio_to_lg.pro -text
+pro/coord/heliocentric.pro -text
 pro/coord/mjd2datelist.pro -text
 pro/coord/moon_zenith.pro -text
 pro/coord/munu_to_radec.pro -text
