@@ -1,16 +1,18 @@
-function gauss_kernel, sigma, nsub=nsub, exp=exp
+function gauss_kernel, sigma, nsub=nsub, exp=exp, hpix=hpix
 
     if NOT keyword_set(nsub) then nsub = 5
 
 
-    if keyword_set(exp) then npix = 10.0*sigma + 1 $
-    else npix = 5.0*sigma + 1
+    if NOT keyword_set(hpix) then begin
+      if keyword_set(exp) then hpix = 10.0*sigma + 1 $
+      else hpix = 5.0*sigma + 1
+    endif
 
-    x1 = 1.0+findgen(npix)
+    x1 = 1.0+findgen(hpix)
     xl = [reverse(-x1),0.0,x1]
     sneaky = (findgen(nsub) - (nsub-1)/2.0)/nsub
 
-    x = sneaky # replicate(1,2*npix+1) + xl ## replicate(1,nsub)
+    x = sneaky # replicate(1,2*hpix+1) + xl ## replicate(1,nsub)
 
     if keyword_set(exp) then expl = exp(-abs(x)/sigma) $
     else expl = exp(-x^2/(2.0*sigma))
