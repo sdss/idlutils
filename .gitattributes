@@ -815,5 +815,7 @@ src/spheregroup/chunkfriendsoffriends.c -text
 src/spheregroup/chunks.c -text
 src/spheregroup/chunks.h -text
 src/spheregroup/export.h -text
+src/spheregroup/friendsoffriends.c -text
+src/spheregroup/friendsoffriends.h -text
 ups/Makefile -text
 ups/idlutils.table -text
