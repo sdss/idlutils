@@ -654,6 +654,7 @@ goddard/text/structure.readme -text
 goddard/text/tape_io.readme -text
 goddard/text/tv.readme -text
 lib/Makefile -text
+pro/2mass/tmass_ascii2fits.pro -text
 pro/Makefile -text
 pro/TeXtoIDL/COPYRIGHT -text
 pro/TeXtoIDL/DESCRIPTIONS -text
