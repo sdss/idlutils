@@ -38,7 +38,7 @@ pro dpf_pix2ang_nest, nside, ipix, theta, phi, double=double
   if 2L^nlevel NE nside then message, 'bad nside value - must be power of 2.'
 
   dpf_nest2ring, nside, ipix, ipring
-  dpf_pix2ang_ring, nside, ipring, theta, phi
+  dpf_pix2ang_ring, nside, ipring, theta, phi, double=double
 
 ; -------- number in each nest
   print, 'time', systime(1)-t1
