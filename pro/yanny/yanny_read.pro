@@ -33,7 +33,8 @@
 ;                i.e. tag_names(PDATA[0],/structure_name) for the 1st one.
 ;                This keyword is useful for when /ANONYMOUS must be set to
 ;                deal with structures with the same name but different defns.
-;   quick      - This keyword is only for backwards compatability.
+;   quick      - This keyword is only for backwards compatability, and
+;                has no effect.
 ;   errcode    - Returns as non-zero if there was an error reading the file.
 ;
 ; COMMENTS:
@@ -52,19 +53,15 @@
 ; EXAMPLES:
 ;
 ; BUGS:
-;   The IDL procedure READF will fail if the last non-whitespace character
-;   is a backslash.  One can use such backslashes in Yanny files to indicate
-;   a continuation of that line onto the next.  For this reason, I wrote
-;   yanny_readstring as a replacement, though this will only work if all
-;   lines are <= 2047 characters.
-;
 ;   The reading could probably be sped up by setting a format string for
 ;   each structure to use in the read.
 ;
-;   Not set up yet to deal with multi-dimensional arrays.
+;   Not set up yet to deal with multi-dimensional arrays, but neither
+;   is the fTCL-based reader.
 ;
 ; PROCEDURES CALLED:
 ;   hogg_strsplit
+;   hogg_unquoted_regex()
 ;   mrd_struct
 ;   numlines
 ;
@@ -72,9 +69,6 @@
 ;   yanny_add_comment
 ;   yanny_getwords()
 ;   yanny_add_pointer
-;   yanny_inquotes()
-;   yanny_strip_brackets()
-;   yanny_strip_commas()
 ;   yanny_readstring
 ;   yanny_nextline()
 ;
@@ -83,38 +77,12 @@
 ;   18-Jun-2001  Fixed bug to allow semi-colons within double quotes
 ;                C. Tremonti (added yanny_inquotes, modifed yanny_strip_commas,
 ;                yanny_nextline)
+;   11-Oct-2002  Major changes by D. Schlegel and D. Hogg to get rid
+;                of the 2048-char line limit, dramatically speed up the
+;                code when reading large files by pre-allocating the memory,
+;                and use regular-expression matching for speed, robustness,
+;                and clarity.
 ;-
-;------------------------------------------------------------------------------
-; Return an array (1-element / text character) set to 1 where a semi colon is
-; within double quotes, -1 where it is not
-
-function yanny_inquotes, textline, bytetext = bytetext
-
-   ; Turn string to byte array in order to manipulate it as an array
-   bytetext = byte(textline)
-   scinquote = intarr(n_elements(bytetext))
-
-   double_quote = (byte('"'))[0]
-   semi_colon = (byte(';'))[0]
-
-   dquote_index = where(bytetext EQ double_quote, ndquotes)
-   scolon_index = where(bytetext EQ semi_colon, nscolon)
-
-   ; Assume double quotes come in pairs!
-   IF (ndquotes mod 2) NE 0 THEN print, 'ERROR: double quotes not in pairs!'
-
-   IF nscolon GT 0 THEN BEGIN
-     scinquote[scolon_index] = -1
-     FOR ii = 0, ndquotes - 1, 2 do BEGIN
-       inquote = where(scolon_index GT dquote_index[ii] AND $
-                       scolon_index LT dquote_index[ii+1], niq)
-       IF niq GT 0 THEN scinquote[scolon_index[inquote]] = 1
-     ENDFOR
-   ENDIF
-
-   return, scinquote
-end
-
 ;------------------------------------------------------------------------------
 
 pro yanny_add_comment, rawline, comments
@@ -128,58 +96,9 @@ pro yanny_add_comment, rawline, comments
 end
 
 ;------------------------------------------------------------------------------
-; Replace left or right curly brackets with spaces.
-
-function yanny_strip_brackets, sline
-
-   sline = repstr(sline, '{{}}', '""')
-   sline = repstr(sline, '{', ' ')
-   sline = repstr(sline, '}', ' ')
-
-   return, sline
-end
-;------------------------------------------------------------------------------
-; Replace ";" or "," with spaces.  Also get rid of extra whitespace.
-; Also get rid of anything after a hash mark.
-; Modified by C. Tremonti to leave semi-colons inside double quotes
-
-function yanny_strip_commas, rawline
-
-   sline = rawline
-
-   i = strpos(sline, '#')
-   if (i EQ 0) then sline = '' $
-    else if (i GE 0) then sline = strmid(sline, 0, i-1)
-
-   quoted_semi_colon = yanny_inquotes(sline)
-   qsc_index = where(quoted_semi_colon eq 1, niq)
-
-   i = strpos(sline, ',')
-   while (i NE -1) do begin
-      strput, sline, ' ', i
-      i = strpos(sline, ',')
-   endwhile
-
-   i = strpos(sline, ';')
-   while (i NE -1) do begin
-      strput, sline, ' ', i
-      i = strpos(sline, ';')
-   endwhile
-
-   IF niq GT 0 THEN BEGIN 
-     bytesline = byte(sline)
-     bytesline[qsc_index] = (byte(';'))[0]
-     sline = string(bytesline)
-   ENDIF
-
-   sline = strtrim(strcompress(sline),2)
- 
-   return, sline
-end
-;------------------------------------------------------------------------------
-; Procedure to read the next line from a file into a string, but work even
-; if the last non-whitespace character is a backslash (READF will fail on
-; that).  Note that the line cannot be more than 2047 characters long.
+; Procedure to read the next line from a file into a string.
+; This piece of code used to not use READF, since READF used to
+; fail if the last non-whitespace character was a backslash.
 
 pro yanny_readstring, ilun, sline
 
@@ -199,8 +118,10 @@ function yanny_nextline, ilun
 
    common yanny_lastline, lastline
 
+   ;----------
    ; If we had already parsed the last line read into several lines (by
    ; semi-colon separation), then return the next of those.
+
    if (keyword_set(lastline)) then begin
       sline = lastline[0]
       nlast = n_elements(lastline)
@@ -208,6 +129,11 @@ function yanny_nextline, ilun
        else lastline = lastline[1:nlast-1]
       return, sline
    endif
+
+   ;----------
+   ; Read the next line.  If the last non-whitespace character is
+   ; a backslash, then read and append the next line.  Do that
+   ; recursively until there are no more continuation lines.
 
    sline = ''
    yanny_readstring, ilun, sline
@@ -221,27 +147,24 @@ function yanny_nextline, ilun
       nchar = strlen(sline)
    endwhile
 
+   ;----------
    ; Now parse this line into several lines by semi-colon separation,
-   ; but then add the semi-colon back to each of those lines.
-   ; NOTE: The following does not look for semi-colons within strings,
-   ; and will incorrectly split that different input lines!!!???
-   ; lastline = strsplit(sline, ';', /extract, escape='\')
+   ; keeping those semi-colons at the end of each.  Ignore any semi-colons
+   ; inside double-quotes.
 
-   ; Attempt with a 5.2 hack
-
-   lastline = str_sep(strcompress(sline), ';')
-   nonblank = where(lastline NE '')
-   if nonblank[0] NE -1 then lastline = lastline[nonblank]
-   nlast = n_elements(lastline)
-   lastchar = strtrim(sline)
-   lastchar = strmid(lastchar, strlen(lastchar)-1, 1)
-
-   if (lastchar EQ ';') then lastline[nlast-1] = lastline[nlast-1] + ';'
-   if (nlast GT 1) then lastline[0:nlast-2] = lastline[0:nlast-2] + ';'
+   lastline = ''
+   rgx = hogg_unquoted_regex(';')
+   while (strlen(sline) GT 0) do begin
+      pos = strsplit(sline, rgx, /regex, length=len)
+      if (NOT keyword_set(lastline)) then lastline = strmid(sline, 0, len) $
+       else lastline = [lastline, strmid(sline, 0, len)]
+; But add back in the semi-colon!!!???
+      sline = strmid(sline, len+1)
+   endwhile
 
    sline = lastline[0]
-   if (nlast EQ 1) then lastline = '' $
-    else lastline = lastline[1:nlast-1]
+   if (n_elements(lastline) EQ 1) then lastline = '' $
+    else lastline = lastline[1:n_elements(lastline)-1]
 
    return, sline
 end
@@ -271,6 +194,26 @@ end
 ; a single word without the quotes.
 
 function yanny_getwords, sline
+
+   ;----------
+   ; First, we need to replace any empty curly-bracket, like "{}" or "{{}}"
+   ; with a double-quoted empty string.
+; IMPLEMENT THIS!!! ???
+
+   ;----------
+   ; Dispose of any commas, semi-colons, or curly-brackets
+   ; that are not inside double-quotes.  Replace them with spaces.
+
+   rgx = hogg_unquoted_regex('[,;}{]') ; This logic looks for any of these
+   len = 0
+   while (len[0] LT strlen(sline)) do begin
+      pos = strsplit(sline, rgx, /regex, length=len)
+      if (len[0] LT strlen(sline)) then strput, sline, ' ', len[0]
+   endwhile
+
+   ;----------
+   ; Now split this line into words, protecting anything inside
+   ; double-quotes as a single word.
 
    hogg_strsplit, sline, words
    if (NOT keyword_set(words)) then words = ''
@@ -326,16 +269,15 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
    maxlen = numlines(filename) > 1
 
-   rawline = ''
+   sline = ''
 
    while (NOT eof(ilun)) do begin
 
       qdone = 0
 
       ; Read the next line
-      rawline = yanny_nextline(ilun)
-
-      sline = yanny_strip_commas(rawline)
+      sline = yanny_nextline(ilun)
+;      sline = yanny_strip_commas(sline)
       words = yanny_getwords(sline) ; Divide into words and strings
 
       nword = N_elements(words)
@@ -346,12 +288,12 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
          if (words[0] EQ 'typedef' AND words[1] EQ 'enum') then begin
 
             while (strmid(sline,0,1) NE '}') do begin
-               yanny_add_comment, rawline, enums
-               rawline = yanny_nextline(ilun)
-               sline = yanny_strip_commas(rawline)
+               yanny_add_comment, sline, enums
+               sline = yanny_nextline(ilun)
+;               sline = yanny_strip_commas(sline)
             endwhile
 
-            yanny_add_comment, rawline, enums
+            yanny_add_comment, sline, enums
 
             qdone = 1 ; This last line is still part of the enum string
 
@@ -360,9 +302,9 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
           then begin
 
             ntag = 0
-            yanny_add_comment, rawline, structs
-            rawline = yanny_nextline(ilun)
-            sline = yanny_strip_commas(rawline)
+            yanny_add_comment, sline, structs
+            sline = yanny_nextline(ilun)
+;            sline = yanny_strip_commas(sline)
 
             while (strmid(sline,0,1) NE '}') do begin
                sline = strcompress(sline)
@@ -407,12 +349,12 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   ntag = ntag + 1
                endif
 
-               yanny_add_comment, rawline, structs
-               rawline = yanny_nextline(ilun)
-               sline = yanny_strip_commas(rawline)
+               yanny_add_comment, sline, structs
+               sline = yanny_nextline(ilun)
+;               sline = yanny_strip_commas(sline)
             endwhile
 
-            yanny_add_comment, rawline, structs
+            yanny_add_comment, sline, structs
 
             ; Now for the structure name - get from the last line read
             ; Force this to uppercase
@@ -459,7 +401,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 ;                *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
 
                ; Split this text line into words
-               sline = strcompress( yanny_strip_brackets(sline) )
+;               sline = strcompress( yanny_strip_brackets(sline) )
                ww = yanny_getwords(sline)
 
                i = 1 ; Counter for which word we're currently reading
@@ -474,7 +416,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   ; Error-checking code below
                   if (i+sz GT n_elements(ww)) then begin
                      splog, 'Last line number read: ', lastlinenum
-                     splog, 'Last line read: "' + rawline + '"'
+                     splog, 'Last line read: "' + sline + '"'
                      splog, 'ABORT: Invalid Yanny file ' + filename $
                       + ' at line number ' $
                       + strtrim(string(lastlinenum),2) + ' !!'
@@ -499,7 +441,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       endif
 
       if (qdone EQ 0) then $
-       yanny_add_comment, rawline, hdr
+       yanny_add_comment, sline, hdr
 
    endwhile
 
