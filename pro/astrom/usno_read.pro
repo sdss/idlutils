@@ -56,9 +56,11 @@ end
 function usno_read, racen, deccen, rad, path=path, catname=catname
 
 ; -------- Set path: first check for catalogue name and environment var
-  if catname eq 'USNO-A2.0' then path = getenv('USNOA20_PATH')
-  if catname eq 'USNO-SA2.0' then path = getenv('USNOSA20_PATH')
-  if catname eq 'USNO-B1.0' then path = getenv('USNOB10_PATH')
+  if keyword_set(catname) then begin 
+     if strupcase(catname) eq 'USNO-A2.0' then path = getenv('USNOA20_PATH')
+     if strupcase(catname) eq 'USNO-SA2.0' then path = getenv('USNOSA20_PATH')
+     if strupcase(catname) eq 'USNO-B1.0' then path = getenv('USNOB10_PATH')
+  endif 
 
 ; -------- If catname not set, or those envvars not set, then default
 ;          to usno_path
@@ -67,8 +69,7 @@ function usno_read, racen, deccen, rad, path=path, catname=catname
 
 ; which catalogue?
   testfile = concat_dir(path, 'zone*.cat')
-  flist = findfile(testfile, count=ct)
-  cattype = ct ne 0 ? 'USNO-A' : 'USNO-B'
+  cattype = file_test(testfile) ? 'USNO-A' : 'USNO-B'
 
 ; Read the stars - loop over pointings
   nstar = n_elements(racen)

@@ -12,7 +12,7 @@
 ;   rad       - radius of region               [degrees]
 ;
 ; OPTIONAL INPUTS:
-;   catname   - Either 'USNO-A' or 'USNO-B'
+;   cattype   - Either 'USNO-A' or 'USNO-B'
 ;
 ;+------------------------------------------------------------------------  
 ; OUTPUTS:
@@ -30,12 +30,12 @@
 ;                  and modified to work with USNO-B1.0 - DPF
 ;+------------------------------------------------------------------------  
 ;-
-PRO usno_cone, catpath, racen, deccen, rad, result, catname=catname
+PRO usno_cone, catpath, racen, deccen, rad, result, cattype=cattype
 
-  if NOT keyword_set(catname) then catname = 'USNO-A'
+  if NOT keyword_set(cattype) then cattype = 'USNO-A'
 
 ; -------- For USNO-A (or SA)
-  if strupcase(catname) eq 'USNO-A' then begin 
+  if strupcase(cattype) eq 'USNO-A' then begin 
      rec_len = 12L
      prefix = 'zone'
      swap_if_little_endian = 1B
@@ -43,7 +43,7 @@ PRO usno_cone, catpath, racen, deccen, rad, result, catname=catname
   endif 
 
 ; -------- For USNO-B
-  if strupcase(catname) eq 'USNO-B' then begin 
+  if strupcase(cattype) eq 'USNO-B' then begin 
      rec_len = 80L
      prefix = 'b'
      swap_if_big_endian = 1B
