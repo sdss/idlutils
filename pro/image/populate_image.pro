@@ -62,10 +62,15 @@ pro populate_image, image, x, y, weights=weights, assign=assign
    soname = filepath('libimage.so', $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
-   fimage = float(image)
-   retval = call_external(soname, 'pop_image', $
-    npts, float(x), float(y), float(weights), nx, ny, fimage, iassign)
-   image[*] = fimage[*]
+   if size(image, /tname) EQ 'FLOAT' then begin 
+      retval = call_external(soname, 'pop_image', $
+        npts, float(x), float(y), float(weights), nx, ny, image, iassign)
+   endif else begin  
+      fimage = float(image)
+      retval = call_external(soname, 'pop_image', $
+        npts, float(x), float(y), float(weights), nx, ny, fimage, iassign)
+      image[*] = fimage[*]
+   endelse 
 
 end
 ;------------------------------------------------------------------------------
