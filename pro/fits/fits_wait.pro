@@ -50,6 +50,13 @@ function fits_wait, filename, deltat=deltat, tmax=tmax
    if (NOT keyword_set(deltat)) then deltat = 10.0
    if (NOT keyword_set(tmax)) then tmax = 300.0
 
+   ;----------
+   ; If there is a ".gz" extension, then assume that the file is OK
+   ; and return 1, since I don't know how to test the validity of
+   ; a gzipped FITS file w/out crashing.
+
+   if (strmid(filename,(strlen(filename)-3)>0,3) EQ '.gz') then return, 1
+
    qdone = 0 ; =0 for not done, =1 for done
 
    tsum = 0.0
