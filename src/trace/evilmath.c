@@ -25,7 +25,6 @@ void recenter_fweight
    float       x1;
    float       x2;
    float       sumxw;
-   float       sumf;
    float       sumsxsx;
    float       sumw;
    float       xdiff;
@@ -57,7 +56,6 @@ void recenter_fweight
       convol = (float *) malloc(sizeof(float) * npix);
       sumw = 0.0;
       sumxw = 0.0;
-      sumf = 0.0;
       qbad = 0;
       for (ii=0; ii < npix; ii++) {
          /* Determine the weight of a boxcar window function (convol) for this
