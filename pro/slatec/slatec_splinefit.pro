@@ -67,7 +67,7 @@
 function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
          lower=lower, maxIter=maxIter, bkpt=bkpt, fullbkpt=fullbkpt, $
          secondkludge=secondkludge, mask=mask, rejper=rejper, $
-         _EXTRA=KeywordsForEfc
+         eachgroup=eachgroup, _EXTRA=KeywordsForEfc
 
     if N_PARAMS() LT 3 then begin
         print, ' Syntax - fullbkpt = slatec_splinefit(x, y, coeff, '
@@ -106,7 +106,47 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
                  _EXTRA=KeywordsForEfc)
        yfit = slatec_bvalu(x, fullbkpt, coeff)
 
-       if (NOT keyword_set(rejper)) then begin
+       if (keyword_set(rejper)) then begin
+          diff = (y[these] - yfit[these])*invsig[these]
+          bad = where(diff LE -lower OR diff GE upper)
+	  if (nbad EQ 0) then iiter = maxiter $
+          else begin
+	    negs = where(diff LT 0)
+	    tempdiff = abs(diff)/upper
+            if (negs[0] NE -1) then tempdiff[negs] = abs(diff[negs])/lower
+
+	    worst = reverse(sort(tempdiff))
+	    rejectspot = fix(n_elements(bad)*rejper) 
+	    mask[these[worst[0:rejectspot]]] = 0
+
+	    good = where(diff GT -lower AND diff LT upper AND $
+                        invsig[these] GT 0.0)
+	    if (good[0] NE -1) then mask[these[good]] = 1
+          endelse
+       endif else if (keyword_set(eachgroup)) then begin
+	  diff = (y[these] - yfit[these])*invsig[these]
+          bad = where(diff LE -lower OR diff GE upper, nbad)
+	  if (nbad EQ 0) then iiter = maxiter $
+          else begin
+	    negs = where(diff[bad] LT 0)
+	    tempdiff = abs(diff[bad])/upper
+            if (negs[0] NE -1) then tempdiff[negs] = abs(diff[bad[negs]])/lower
+	    if (nbad EQ 1) then mask[these[bad]] = 0 $
+            else begin
+ 	      groups = where(bad[1:nbad-1] - bad[0:nbad-2] NE 1, ngroups)
+	      if (ngroups EQ 0) then groups = [-1,nbad-1] $
+	      else groups = [-1,groups,nbad-1]
+	      for i=0, ngroups do begin
+	        groupmax = max(tempdiff[groups[i]+1:groups[i+1]], place)
+	        mask[these[bad[place+groups[i]+1]]] = 0
+	      endfor
+            endelse 
+
+	    good = where(diff GT -lower AND diff LT upper AND $
+                        invsig[these] GT 0.0)
+	    if (good[0] NE -1) then mask[these[good]] = 1
+	  endelse
+       endif else begin
           diff = (y - yfit)*invsig
           bad = where(diff LT -lower OR diff GT upper OR invsig LE 0.0)
 	  if (bad[0] EQ -1) then iiter = maxiter $
@@ -115,20 +155,6 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
 	     mask[bad]  = 0
              if total(abs(mask - oldmask)) EQ 0 then iiter=maxiter
           endelse
-       endif else begin
-          diff = (y[these] - yfit[these])*invsig[these]
-          bad = where(diff LT -lower OR diff GT upper)
-	  negs = where(diff LT 0)
-	  tempdiff = abs(diff)/upper
-          tempdiff[negs] = abs(diff[negs])/lower
-
-	  worst = reverse(sort(tempdiff))
-	  rejectspot = fix(n_elements(bad)*rejper) 
-	  mask[these[worst[0:rejectspot]]] = 0
-
-	  good = where(diff GT -lower AND diff LT upper AND $
-                        invsig[these] GT 0.0)
-	  if (good[0] NE -1) then mask[these[good]] = 1
         endelse
     endfor
 
