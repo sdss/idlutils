@@ -24,6 +24,11 @@ SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                If in zoom mode, default to zooming/panning in X, or if shift
                button is pressed then zoom/pan in Y, or if ShiftLock, then
                zoom/pan in X+Y.
+               Add SPOLYFILL command, analogous to POLYFILL.
+               Make state.xrange,state.yrange,state.position double-precision
+               to avoid some round-off problems.
+               In the proc splot_autoscale_y, bug fix to set the correct
+               limits even if the X plot range runs from big X to small X.
 TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_FITS_FILES,
 TMASS_READZONE,TMASS_REFORMAT_PSC,TMASS_STRUC:
                New procs for reading the 2MASS catalog.
