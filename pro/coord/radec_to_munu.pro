@@ -47,7 +47,7 @@
 pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl, $
  phi=phi
 
-   if (n_params() NE 2) then begin
+   if (n_params() LT 2) then begin
        print, 'Syntax - radec_to_munu, ra, dec, [ mu, nu, stripe=, node=, incl=]'
        return
    endif
