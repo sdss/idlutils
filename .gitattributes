@@ -812,5 +812,7 @@ src/slatec/xgetua.f -text
 src/slatec/xsetf.f -text
 src/spheregroup/Makefile -text
 src/spheregroup/chunkfriendsoffriends.c -text
+src/spheregroup/chunks.c -text
+src/spheregroup/chunks.h -text
 ups/Makefile -text
 ups/idlutils.table -text
