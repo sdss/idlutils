@@ -60,9 +60,6 @@ fi
    elif [ -e /usr/local/etc/sdssfue.sh ] ; then
       echo source /usr/local/etc/sdssfue.sh
       source /usr/local/etc/sdssfue.sh
-   elif [ -e /local/ups/etc/sdssfue.sh ] ; then
-      echo source /local/ups/etc/sdssfue.sh
-      source /local/ups/etc/sdssfue.sh
    else
       echo "Unable to find sdssfue.sh script to set up UPS."
       exit
