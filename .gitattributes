@@ -749,6 +749,7 @@ pro/yanny/yanny_diff.pro -text
 pro/yanny/yanny_free.pro -text
 pro/yanny/yanny_par.pro -text
 pro/yanny/yanny_read.pro -text
+pro/yanny/yanny_readone.pro -text
 pro/yanny/yanny_write.pro -text
 src/Makefile -text
 src/image/Makefile -text
