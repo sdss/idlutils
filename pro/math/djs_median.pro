@@ -175,22 +175,26 @@ function djs_median, array, dim, width=width, boundary=boundary
 
    endif else if (NOT keyword_set(width)) then begin
 
-      if (ndim LE 1) then begin
-         message, 'ARRAY must be multi-dimensional if DIM is specified'
-      endif
+;      if (ndim LE 1) then begin
+;         message, 'ARRAY must be multi-dimensional if DIM is specified'
+;      endif
       if (dim GT ndim OR dim LT 1) then begin
          message, 'DIM must be between 1 and '+string(ndim)+' inclusive'
       endif
 
-      ; Allocate memory for the output array
-      newdimvec = dimvec[ where(lindgen(ndim)+1 NE dim) ]
-      newsize = N_elements(array) / dimvec[dim-1]
-      medarr = reform(fltarr(newsize), newdimvec)
+      if (ndim EQ 1) then begin
+         medarr = median(array)
+      endif else begin
+         ; Allocate memory for the output array
+         newdimvec = dimvec[ where(lindgen(ndim)+1 NE dim) ]
+         newsize = N_elements(array) / dimvec[dim-1]
+         medarr = reform(fltarr(newsize), newdimvec)
 
-      soname = filepath('libmath.so', $
-       root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-      retval = call_external(soname, 'arrmedian', $
-       ndim, dimvec, float(array), long(dim), medarr)
+         soname = filepath('libmath.so', $
+          root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+         retval = call_external(soname, 'arrmedian', $
+          ndim, dimvec, float(array), long(dim), medarr)
+      endelse
 
    endif else begin
       message, 'Invalid to specify both DIMENSION and WIDTH'
