@@ -22,6 +22,7 @@
 ;   c_colors    - fill colors
 ;   c_thick     - contour line thicknesses
 ; KEYWORDS:
+;   nofill      - don't fill the contours with color
 ;   noperimeter - don't plot contour at minnum
 ;   nobox       - don't plot box
 ;   nolines     - don't plot lines between contours
@@ -43,8 +44,10 @@ pro hogg_meanplot, x,y,z,weight=weight, $
                    bin_scatter=bin_scatter, bin_weight=bin_weight, $
                    bin_number=bin_number, input_mean=input_mean, $
                    axis_char_scale=axis_char_scale, $
-                   nocontourlabels=nocontourlabels
+                   nocontourlabels=nocontourlabels, overplot=overplot, $
+                   nofill=nofill
 
+if(NOT keyword_set(nofill)) then cell_fill=1L
 if(NOT keyword_set(minnum)) then minnum=1L
 if(NOT keyword_set(axis_char_scale)) then axis_char_scale=1.75
 
@@ -129,12 +132,12 @@ nticks=6/axis_char_scale
 
 ; make contour plot
 loadct,0,/silent
-if not keyword_set(c_colors) then begin
+if NOT keyword_set(c_colors) then begin
     c_colors= double(255)/(1.5*double(nlevels))* $
       (reverse(dindgen(nlevels))+2L*nlevels+1)
 endif
-contour, bin_mean,xbin,ybin,levels=levels,/cell_fill, $
-  c_colors=c_colors, $
+contour, bin_mean,xbin,ybin,levels=levels,cell_fill=cell_fill, $
+  c_colors=c_colors, overplot=overplot, $
   xstyle=1,xrange=xrange,ystyle=1,yrange=yrange, nodata=nodata
 if NOT keyword_set(nolines) then begin
     if NOT keyword_set(nocontourlabels) then begin
