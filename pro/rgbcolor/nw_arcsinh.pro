@@ -24,20 +24,21 @@
 FUNCTION nw_arcsinh,colors,nonlinearity=nonlinearity, radius=radius
 ;set default nonlinearity
 IF NOT n_elements(nonlinearity) THEN nonlinearity=3
+IF (nonlinearity eq 0.) THEN BEGIN 
+    return, colors
+ENDIF
 
 dim = size(colors,/dimensions)
 NX = LONG(dim[0])
 NY = LONG(dim[1])
 
 radius = total(colors,3)
-IF (nonlinearity eq 0.) THEN BEGIN 
-    val = radius
-ENDIF ELSE BEGIN
-    val = asinh(radius*nonlinearity)/nonlinearity
-ENDELSE
-
 radius = radius+(radius eq 0)
-fitted_colors = fltarr(NX,NY,3)
-for bb= 0,2 do fitted_colors[*,*,bb] = (colors[*,*,bb]*val)/radius
+
+; -------- asinh returns type double by default
+fac = float(asinh(radius*nonlinearity)/nonlinearity)/radius
+
+fitted_colors = fltarr(NX, NY, 3, /nozero)
+for bb= 0,2 do fitted_colors[*,*,bb] = colors[*,*,bb]*fac
 RETURN,fitted_colors
 END
