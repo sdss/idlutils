@@ -906,6 +906,7 @@ src/mangle1.2/HELP.unformatted -text
 src/mangle1.2/Makefile -text
 src/mangle1.2/Makefile.linux -text
 src/mangle1.2/Makefile.sun -text
+src/mangle1.2/README -text
 src/mangle1.2/advise_fmt.c -text
 src/mangle1.2/angunit.h -text
 src/mangle1.2/azel.dat -text
