@@ -108,7 +108,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
 
        if (keyword_set(rejper)) then begin
           diff = (y[these] - yfit[these])*invsig[these]
-          bad = where(diff LE -lower OR diff GE upper)
+          bad = where(diff LE -lower OR diff GE upper,nbad)
 	  if (nbad EQ 0) then iiter = maxiter $
           else begin
 	    negs = where(diff LT 0)
