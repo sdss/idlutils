@@ -60,6 +60,9 @@ fi
    elif [ -e /usr/local/etc/sdssfue.sh ] ; then
       echo source /usr/local/etc/sdssfue.sh
       source /usr/local/etc/sdssfue.sh
+   elif [ -e /local/ups/etc/sdssfue.sh ] ; then
+      echo source /local/ups/etc/sdssfue.sh
+      source /local/ups/etc/sdssfue.sh
    else
       echo "Unable to find sdssfue.sh script to set up UPS."
       exit
@@ -103,6 +106,11 @@ fi
 # Set up "sdsscvs" if it exists as a product.
 
 setup sdsscvs
+if [ -z "$CVSROOT" ] ; then
+   echo "Setting CVSROOT and CVS_RSH to default locations at Fermi"
+   CVSROOT=cvsuser@sdss.fnal.gov:/cvs/sdss
+   CVS_RSH=ssh
+fi
 
 # Set up "sdsstools" if it exists as a product.
 # If it exists, use "sdssmake" to build code.
