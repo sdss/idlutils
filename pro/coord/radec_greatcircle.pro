@@ -115,7 +115,8 @@ function radec_gcfn, value, ralist=ralist, declist=declist, $
 
    muchi = muresid / muerr
    nuchi = nuresid / nuerr
-   chivec = sqrt(muchi^2 + nuchi^2)
+;   chivec = sqrt(muchi^2 + nuchi^2)
+   chivec = [muchi, nuchi]
 
    if (keyword_set(debug)) then begin
       !p.multi = [0,1,3]
