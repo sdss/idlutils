@@ -21,10 +21,11 @@
 ;   25-Sep-2003  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-pro where_polygons_overlap, origpoly, matchpoly, matches, nmatches
+pro where_polygons_overlap, origpoly, matchpoly, matches, nmatches, $
+                            areamatch=areamatch
 
 ; Call grouping software
-soname = filepath('libidlmangle.so', $
+soname = filepath('libidlmangle.'+idlutils_so_ext(), $
                   root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 area=0.D
 x=reform((*origpoly.caps).x[*],3,origpoly.ncaps)
@@ -37,11 +38,12 @@ for i=0L, n_elements(matchpoly)-1L do begin
     cmmatch[0:matchpoly[i].ncaps-1,i]=(*matchpoly[i].caps).cm
 endfor
 ismatch=lonarr(n_elements(matchpoly))
+areamatch=dblarr(n_elements(matchpoly))
 retval = call_external(soname, 'idl_where_polygons_overlap', $
                        double(x), double(cm),long(origpoly.ncaps), $
                        double(xmatch), double(cmmatch),long(maxncaps), $
                        long(n_elements(matchpoly)), long(matchpoly.ncaps), $
-                       long(ismatch))
+                       long(ismatch),double(areamatch))
 matches=where(ismatch,nmatches)
 return
 end
