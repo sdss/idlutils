@@ -17,6 +17,7 @@
 ;   xrange      - x range; default minmax(x)
 ;   yrange      - y range; default minmax(y)
 ;   levels      - contour levels; default in source code
+;   cthick      - thickness for contours
 ;   quantiles   - quantiles to plot on conditional plot; default [0.25,0.5,0.75]
 ;   satfrac     - fraction of pixels to saturate in greyscale; default 0
 ;   exponent    - stretch greyscale at exponent power; default 1.0
@@ -47,6 +48,7 @@
 pro hogg_scatterplot, x,y,weight=weight, $
                       xrange=xrange,yrange=yrange,xnpix=xnpix,ynpix=ynpix, $
                       levels=levels,satfrac=satfrac, $
+                      cthick=cthick, $
                       xvec=xvec,yvec=yvec,grid=grid, $
                       cumimage=cumimage, $
                       exponent=exponent, $
@@ -141,14 +143,14 @@ tv, tvgrid,xrange[0],yrange[0],/data, $
 ; plot quantiles, if necessary
 if keyword_set(conditional) then begin
     for ii=0L,nquantiles-1 do begin
-        oplot, xvec,qq[*,ii],psym=10
+        oplot, xvec,qq[*,ii],psym=10,thick=cthick
     endfor
 
 ; otherwise overplot contours
 endif else begin
     if NOT keyword_set(labelcont) then labelcont=0
     contour, cumimage,xvec,yvec,levels=levels,/overplot, $
-      c_labels=lonarr(n_elements(levels))+labelcont
+      c_labels=lonarr(n_elements(levels))+labelcont,c_thick=cthick
 endelse
 
 ; re-plot axes (yes, this is a HACK)
