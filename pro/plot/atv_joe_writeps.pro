@@ -105,7 +105,7 @@ pro atv_joe_writeps, filename, aspect=aspect, _EXTRA=KeywordsForTV
       mesg = strarr(2)
       mesg[0] = 'Overwrite existing file:'
       tmp_string = strmid(forminfo.filename, $
-       rstrpos(forminfo.filename, '/') + 1)
+       strpos(forminfo.filename, '/', /reverse_search) + 1)
       mesg[1] = strcompress(tmp_string + '?', /remove_all)
       result = dialog_message(mesg, /default_no, $
        dialog_parent=state.base_id, /question)                 

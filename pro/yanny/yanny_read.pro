@@ -379,7 +379,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   ; length.  For example, change "char foo[20]" to "char foo",
                   ; or change "char foo[10][20]" to "char foo[10]".
                   if (i EQ 0) then begin
-                     j1 = rstrpos(ww[1], '[')
+                     j1 = strpos(ww[1], '[', /reverse_search)
                      if (j1 NE -1) then ww[1] = strmid(ww[1], 0, j1)
                   endif
 

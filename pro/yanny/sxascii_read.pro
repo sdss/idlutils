@@ -171,7 +171,7 @@ pro sxascii_read, filename, pstr, hdr=hdr
              brack = strpos(junk,'.') & $
           endwhile & $
           brack = strpos(junk,'[') & $
-          brack2 = rstrpos(junk,']') - brack - 1 & $
+          brack2 = strpos(junk,']',/reverse_search) - brack - 1 & $
           if brack NE -1 AND brack2 GT 0 then $
              junk = strmid(junk,0,brack) + strmid(junk,brack+1,brack2) & $
           cleantags2[i] = junk & $
