@@ -8,7 +8,7 @@
 ; CALLING SEQUENCE:
 ;   qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
 ;    sigma=, invvar=, upper=, lower=, maxdev=, $
-;    maxrej=, groupsize=, groupdim=, /sticky ] )
+;    maxrej=, groupsize=, groupdim=, grow=, /sticky ] )
 ;
 ; INPUTS:
 ;   ydata      - Data values
@@ -46,6 +46,7 @@
 ;   sticky     - If set, then points rejected in OUTMASK are kept rejected.
 ;                Otherwise, if a fit (YMODEL) changes between iterations,
 ;                points can alternate from being rejected to not rejected.
+;   grow       - Also nearest neighbors of rejected points (default 0)
 ;
 ; OUTPUTS:
 ;   qdone      - Set to 0 if YMODEL is not set (usually the first call to
@@ -106,15 +107,17 @@
 ;
 ; REVISION HISTORY:
 ;   30-Aug-2000  Written by D. Schlegel, Princeton
+;   11-Dec-2001  Slight changes to groupsize algorithm and add grow
 ;------------------------------------------------------------------------------
 function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
  sigma=sigma, invvar=invvar, upper=upper, lower=lower, maxdev=maxdev, $
- maxrej=maxrej, groupsize=groupsize, groupdim=groupdim, sticky=sticky
+ maxrej=maxrej, groupsize=groupsize, groupdim=groupdim, sticky=sticky, $
+ sequential=sequential, grow=grow
 
    if (n_params() LT 2 OR NOT arg_present(outmask)) then begin
       print, 'Syntax: qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
-      print, ' sigma=, invvar=, upper=, lower=, maxdev=, $'
-      print, ' maxrej=, groupsize=, groupdim=, /sticky ] )'
+      print, ' sigma=, invvar=, upper=, lower=, maxdev=, grow= $'
+      print, ' maxrej=, groupsize=, groupdim=, /sticky, /sequential ] )'
       return, 1
    endif
 
@@ -137,7 +140,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
       if (keyword_set(groupsize)) then begin
          if (n_elements(maxrej) NE n_elements(groupsize)) then $
           message, 'MAXREJ and GROUPSIZE must have same number of elements!'
-      endif
+      endif else groupsize = ndata
    endif
 
    ;----------
@@ -252,20 +255,39 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
             ; Within this group of points, break it down into groups
             ; of points specified by GROUPSIZE (if set).
             nin = n_elements(indx)
-            if (NOT keyword_set(groupsize)) then groupsize = nin
-            i1 = 0L
-            while (i1 LT nin) do begin
-               i2 = (i1 + groupsize[iloop] - 1) < (nin - 1)
+
+            if keyword_set(sequential) then begin
+              groups_lower = where([1,badness] - badness EQ 1)
+              groups_upper = where([badness[1:*],1] - badness EQ 1)
+              ngroups = n_elements(groups_lower)
+            endif else begin
+              if (NOT keyword_set(groupsize)) then begin
+                ngroups = 1L 
+                groups_lower = 0
+                groups_upper = nin - 1L
+              endif else begin
+                ngroups = nin/groupsize + 1L
+                groups_lower = lindgen(ngroups) * groupsize
+                groups_upper = ((lindgen(ngroups)+1) * groupsize < nin) - 1L
+              endelse
+            endelse
+
+            for igroup=0,ngroups-1 do begin
+               i1 = groups_lower[igroup]
+               i2 = groups_upper[igroup]
                nii = i2 - i1 + 1
-               jj = indx[i1:i2]
-               ; Test if too many points rejected in this group...
-               if (total(badness[jj] NE 0) GT maxrej[iloop]) then begin
-                  isort = sort(badness[jj])
-                  ; Make the following points good again...
-                  badness[jj[isort[0:nii-maxrej[iloop]-1]]] = 0
+               
+               if nii GT 0 then begin 
+                 jj = indx[i1:i2]
+                 ; Test if too many points rejected in this group...
+                 if (total(badness[jj] NE 0) GT maxrej[iloop]) then begin
+                    isort = sort(badness[jj])
+                    ; Make the following points good again...
+                    badness[jj[isort[0:nii-maxrej[iloop]-1]]] = 0
+                 endif
+                 i1 = i1 + groupsize[iloop]
                endif
-               i1 = i1 + groupsize[iloop]
-            endwhile
+            endfor
          endfor
       endfor
    endif
@@ -275,6 +297,16 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    ; OUTMASK=0 (if /STICKY is set), or BADNESS>0.
 
    newmask = (badness EQ 0)
+   if keyword_set(grow) then begin
+      rejects = where(newmask EQ 0)
+      if rejects[0] NE -1 then begin
+        for jj=1,grow do begin
+          newmask[(rejects - jj) > 0] = 0
+          newmask[(rejects + jj) < (ndata - 1)] = 0
+        endfor
+      endif
+   endif
+
    if (keyword_set(inmask)) then newmask = newmask AND inmask
    if (keyword_set(sticky)) then newmask = newmask AND outmask
 
