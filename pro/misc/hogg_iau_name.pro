@@ -12,6 +12,7 @@
 ; COMMENTS:
 ;   Defaults to SDSS name conventions.
 ; BUGS:
+;   Inherits all the stupid bugs in stupid adstring!!
 ;   Enforces J2000 "J".
 ;   Doesn't deal properly with precision<0 names, which *can* exist.
 ; REVISION HISTORY:
