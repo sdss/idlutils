@@ -1,3 +1,7 @@
+-------------------------------------------------------------------------------
+v5_0_3 (August 18, 2004) running on IDL 5.4 - 6.0
+Tagged for photoop v1_6 (for the SDSS Orion data release)
+
 ATV,ATV_JOE_WRITEPS,SPLOT,SXASCII_READ,TEXTOIDL,YANNY_READ:
                Replace calls to the obsolete function RSTRPOS()
                with STRPOS(/REVERSE_SEARCH).
