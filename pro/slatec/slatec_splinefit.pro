@@ -69,7 +69,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
         print, '         lower=lower, bkpt=bkpt, _EXTRA = slatec_efc extras)'
     endif
 
-    if (NOT keyword_set(maxIter)) then maxIter = 5
+    if n_elements(maxIter) EQ 0 then maxIter = 5
     if (NOT keyword_set(upper)) then upper = 5.0
     if (NOT keyword_set(lower)) then lower = 5.0
     if (NOT keyword_set(invvar)) then begin
@@ -77,18 +77,20 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
         invvar = y - y + 1.0/(moment(y))[1]	
     endif
 
+    invsig = sqrt(invvar)
+
     nx = n_elements(x)
     good = bytarr(nx) + 1
 
     for iiter=0, maxiter do begin
        oldgood = good
        these = where(good)
-       fullbkpt = slatec_efc(x[these], y[these], $
-              coeff, invvar=invvar[where(good)], bkpt=bkpt, $
+       fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
+              coeff, invsig=invsig[these], $
                  _EXTRA=KeywordsForEfc)
        yfit = slatec_bvalu(x[these], fullbkpt, coeff)
  
-       diff = (y[these] - yfit)*sqrt(invvar)
+       diff = (y[these] - yfit)*invsig
        bad = where(diff LT -lower OR diff GT upper)
 
 	if (bad[0] EQ -1) then iiter = maxiter $

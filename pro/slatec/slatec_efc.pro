@@ -8,7 +8,7 @@
 ; CALLING SEQUENCE:
 ;   
 ;    fullbkpt = slatec_efc(x, y, coeff, bkpt=bkpt, nord=nord, $
-;               invvar=invvar, bkspace = bkspace, nbkpts=nbkpts)
+;               invsig=invsig, bkspace = bkspace, nbkpts=nbkpts)
 ;
 ; INPUTS:
 ;   x          - data x values
@@ -23,7 +23,7 @@
 ;
 ; OPTIONAL KEYWORDS:
 ;   nord       - Order of b-splines (default 4: cubic)
-;   invvar     - Inverse variance for weighted fit
+;   invsig     - Inverse sigma for weighted fit
 ;   bkpsace    - Spacing of breakpoints in units of x
 ;   nbkpts     - Number of breakpoints to span x range
 ;                 minimum is 2 (the endpoints)
@@ -34,6 +34,7 @@
 ;
 ; COMMENTS:
 ;	If both bkspace and nbkpts are passed, bkspace is used
+;	x values must be sorted
 ;
 ; EXAMPLES:
 ;
@@ -53,21 +54,26 @@
 ;   15-Oct-1999  Written by Scott Burles, Chicago
 ;-
 ;------------------------------------------------------------------------------
-function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, $
-        invvar=invvar, bkspace = bkspace, nbkpts=nbkpts, everyn=everyn
+function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
+        invsig = invsig, bkspace = bkspace, nbkpts=nbkpts, everyn=everyn
 
-        sortx = sort(x)
-	tempx = x[sortx]
-	tempy = y[sortx]
 
 	if (NOT keyword_set(nord)) then nord = 4L $
  	else if (nord LT 1 or nord GT 20) then $
           message, 'efc only accepts nord between 1 and 20'
 
-        ndata = n_elements(tempx)
+        ndata = n_elements(x)
 	if ndata LT 2 then message, 'need more data points'
 
-	if (NOT keyword_set(bkpt)) then begin $
+        if (NOT keyword_set(invsig)) then begin
+            invsig = fltarr(ndata) + 1.0 
+            good = lindgen(ndata)
+        endif else if n_elements(invsig) NE ndata then $
+            message, 'number of invsig elements does not equal ndata'
+
+	if (NOT keyword_set(fullbkpt)) then begin $
+
+	  if (NOT keyword_set(bkpt)) then begin $
 	   range = (max(x) - min(x)) 	
            startx = min(x) 
 	   if (keyword_set(bkspace)) then begin
@@ -80,26 +86,15 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, $
 
 	   if keyword_set(everyn) then begin
 	     xspot = lindgen(nbkpts)*ndata/(nbkpts-1) 
-             bkpt = tempx[xspot]
+             bkpt = x[xspot]
            endif else begin
 	     tempbkspace = double(range/(float(nbkpts-1)))
 	     bkpt = (findgen(nbkpts))*tempbkspace + startx
 	   endelse
         endif
 
-        if (NOT keyword_set(invvar)) then begin
-            sigma = fltarr(ndata) + 1.0 
-            good = lindgen(ndata)
-        endif else begin
-            good = where(invvar GT 0.0)
-	    if (good[0] EQ -1) then $
-               message, 'All points have zero inverse variance'
-            sigma = 1.0/sqrt(invvar[sortx[good]])
-        endelse
-	
 	nord = LONG(nord)
 	bkpt = float(bkpt)
-
 
 	if (min(x) LT min(bkpt,spot)) then begin
 	     print, 'lowest breakpoint does not cover lowest x value, changing'
@@ -112,13 +107,14 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, $
 	endif
 	 
 	nshortbkpt = n_elements(bkpt) 
-	tempbkpt = bkpt
+	fullbkpt = bkpt
 	bkptspace = (bkpt[1] - bkpt[0])/100.0
         for i=1,nord-1 do $
-           tempbkpt = [bkpt[0]-bkptspace*i, tempbkpt, $
+           fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
                 bkpt[nshortbkpt - 1] + bkptspace*i]
+     endif
 
-	nbkpt = n_elements(tempbkpt)
+	nbkpt = n_elements(fullbkpt)
 
 	if (nbkpt LT 2*nord) then $
            message, 'not enough breakpoints?, must have at least 2*nord'
@@ -132,8 +128,8 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, $
 	w = fltarr(lw)
 
 	test = call_external(getenv('IDL_EVIL')+'libslatecidl.so','efc_idl', $
-	         ndata, tempx[good], tempy[good], sigma, $
-                 nord, nbkpt, tempbkpt, mdein, mdeout, coeff, lw, w)
+	         ndata, x, y, invsig, nord, nbkpt, fullbkpt, $
+                 mdein, mdeout, coeff, lw, w)
 
-	return, tempbkpt
+	return, fullbkpt
 end

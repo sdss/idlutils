@@ -1,5 +1,5 @@
 *DECK EFCMN
-      SUBROUTINE EFCMN (NDATA, XDATA, YDATA, SDDATA, NORD, NBKPT,
+      SUBROUTINE EFCMN (NDATA, XDATA, YDATA, INVSDDATA, NORD, NBKPT,
      +   BKPTIN, MDEIN, MDEOUT, COEFF, BF, XTEMP, PTEMP, BKPT, G, MDG,
      +   W, MDW, LW)
 C***BEGIN PROLOGUE  EFCMN
@@ -29,7 +29,7 @@ C   900510  Convert XERRWV calls to XERMSG calls.  (RWC)
 C***END PROLOGUE  EFCMN
       INTEGER LW, MDEIN, MDEOUT, MDG, MDW, NBKPT, NDATA, NORD
       REAL             BF(NORD,*), BKPT(*), BKPTIN(*), COEFF(*),
-     *   G(MDG,*), PTEMP(*), SDDATA(*), W(MDW,*), XDATA(*), XTEMP(*),
+     *   G(MDG,*), PTEMP(*), INVSDDATA(*), W(MDW,*), XDATA(*), XTEMP(*),
      *   YDATA(*)
 C
       EXTERNAL BNDACC, BNDSOL, BSPLVN, SCOPY, SSCAL, SSORT, XERMSG
@@ -178,8 +178,13 @@ C
 C
 C        Scale data if uncertainty is nonzero.
 C
-         IF (SDDATA(L).NE.0.E0) CALL SSCAL (NORDP1, 1.E0/SDDATA(L),
-     +                               G(IROW,1), MDG)
+C
+C	SMB: I'm switching sddata to inverse sddata
+C
+         CALL SSCAL (NORDP1, INVSDDATA(L), G(IROW,1), MDG)
+
+C         IF (SDDATA(L).NE.0.E0) CALL SSCAL (NORDP1, 1.E0/SDDATA(L),
+C     +                               G(IROW,1), MDG)
 C
 C        When staging work area is exhausted, process rows.
 C

@@ -1,5 +1,5 @@
 *DECK EFC
-      SUBROUTINE EFC (NDATA, XDATA, YDATA, SDDATA, NORD, NBKPT, BKPT,
+      SUBROUTINE EFC (NDATA, XDATA, YDATA, INVSDDATA, NORD, NBKPT, BKPT,
      +   MDEIN, MDEOUT, COEFF, LW, W)
 C***BEGIN PROLOGUE  EFC
 C***PURPOSE  Fit a piecewise polynomial curve to discrete data.
@@ -39,7 +39,7 @@ C
 C  Input..
 C      NDATA,XDATA(*),
 C      YDATA(*),
-C      SDDATA(*)
+C      INVSDDATA(*)
 C                         The NDATA discrete (X,Y) pairs and the Y value
 C                         standard deviation or uncertainty, SD, are in
 C                         the respective arrays XDATA(*), YDATA(*), and
@@ -229,7 +229,7 @@ C
 C                         WRITTEN BY R. HANSON, SANDIA NATL. LABS.,
 C                         ALB., N. M., AUGUST-SEPTEMBER, 1980.
 C
-      REAL BKPT(*),COEFF(*),SDDATA(*),W(*),XDATA(*),YDATA(*)
+      REAL BKPT(*),COEFF(*),INVSDDATA(*),W(*),XDATA(*),YDATA(*)
       INTEGER LW, MDEIN, MDEOUT, NBKPT, NDATA, NORD
 C
       EXTERNAL EFCMN
@@ -258,7 +258,7 @@ C
       LPTEMP = LXTEMP + MAX(NDATA,NBKPT)
       LBKPT  = LPTEMP + MAX(NDATA,NBKPT)
       LBF = LBKPT + NBKPT
-      CALL EFCMN(NDATA,XDATA,YDATA,SDDATA,
+      CALL EFCMN(NDATA,XDATA,YDATA,INVSDDATA,
      1         NORD,NBKPT,BKPT,
      2         MDEIN,MDEOUT,
      3         COEFF,
