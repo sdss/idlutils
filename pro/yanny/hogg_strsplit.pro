@@ -6,18 +6,18 @@
 ; REVISION HISTORY:
 ;   2002-10-10  written - Hogg
 ;-
-pro hogg_strsplit, string, output, count, recurse=recurse
+pro hogg_strsplit, string, output, count, recurse=recurse, verbose=verbose
 
-   ; Initialize unset variables
-   if (NOT keyword_set(recurse)) then output = ''
-   if (NOT keyword_set(output)) then count = 0
+   ; Initialize unset variables, putting in first-element dummy value
+   if (NOT keyword_set(recurse)) then output = 'NULL'
+   if (n_elements(output) EQ 1) then count = 0
 
    ; Do the dumbest thing, if possible
    if (strcompress(string,/remove_all) EQ '') then return
 
    if stregex(string,'\"') LT 0 then begin
       word = strsplit(strcompress(string), ' ', /extract)
-      if (NOT keyword_set(output)) then output= word else output = [output, word]
+      output= [output, word]
       count = count + n_elements(word)
    endif else begin
       ; split on quotation marks and operate recursively
@@ -30,9 +30,8 @@ pro hogg_strsplit, string, output, count, recurse=recurse
         ; Now add to that the quoted string, but excluding the quotation
         ; marks themselves.
         word = strmid(string,pos+1,len-2)
+        output= [output, word]
         count = count + 1
-        if (NOT keyword_set(output)) then output = word $
-         else output= [output, word]
 
         ; Finally, split everything after the quoted part,
         ; which might contain more quoted strings.
@@ -40,5 +39,8 @@ pro hogg_strsplit, string, output, count, recurse=recurse
       endif
    endelse
 
+   ; Remove first-element dummy value
+   if keyword_set(verbose) then for i=0,count do print, i,'>'+output[i]+'<'
+   if (NOT keyword_set(recurse)) AND (count GT 0) then output= output[1:count]
    return
 end
