@@ -43,6 +43,7 @@
 ;   grid        - the greyscale grid [xnpix,ynpix] that was plotted
 ;   cumimage    - the cumulated grid [xnpix,ynpix] that was contoured
 ;   outquantiles - the plotted quantiles (when /conditional is set)
+;   ioutliers   - indices of outlier points
 ; COMMENTS:
 ;   When output, the grid is in units of unit_weight, not in 
 ;   unit_weight per unit_x per unit_y (as you would want to do if 
@@ -76,6 +77,7 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       cumimage=cumimage,outquantiles=outquantiles, $
                       outliers=outliers, outpsym=outliers_psym, $
                       outcolor=outliers_color, outsymsize=outliers_symsize, $
+                      ioutliers=ioutliers, $
                       meanweight=meanweight, $
                       _EXTRA=KeywordsForPlot
 
@@ -218,7 +220,8 @@ if keyword_set(outliers) then begin
                          float(ynpix-1L))
         ioutliers=where(pval gt max(levels), noutliers)
         if(noutliers gt 0) then begin
-            djs_oplot, x[iin[ioutliers]], y[iin[ioutliers]], $
+            ioutliers= iin[ioutliers]
+            djs_oplot, x[ioutliers], y[ioutliers], $
               psym=outliers_psym, color=outliers_color, $
               symsize=outliers_symsize
         endif
