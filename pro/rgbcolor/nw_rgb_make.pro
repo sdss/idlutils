@@ -55,7 +55,7 @@ PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
 ;set defaults
 IF (keyword_set(tiff)) THEN suffix='tif' ELSE suffix='jpg'
 IF (NOT keyword_set(name)) THEN name = 'nw_rgb_make.'+suffix
-IF (NOT keyword_set(quality)) THEN quality = 75
+IF (NOT keyword_set(quality)) THEN quality = 100
 
 ;assume Rim,Gim,Bim same type, same size
 IF size(rim,/tname) eq 'STRING' THEN BEGIN
