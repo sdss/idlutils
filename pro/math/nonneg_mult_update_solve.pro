@@ -73,7 +73,8 @@ end
 ;
 function nonneg_mult_update_solve,start,avfunc,b,matrix=matrix,tol=tol, $
                                   verbose=verbose,offset=offset,value=value, $
-                                  maxiter=maxiter,niter=niter,skip=skip
+                                  maxiter=maxiter,niter=niter,skip=skip, $
+                                  chi2tol=chi2tol
 
 common nnmus_com
 
@@ -119,6 +120,9 @@ while(abs(diff) gt tol) do begin
     if(keyword_set(maxiter)) then $
       if(niter ge maxiter) then $
       diff=0.D
+    if(keyword_set(chi2tol)) then $
+       if(oldval lt chi2tol) then $
+       diff=0.D
 endwhile
 
 value=oldval
