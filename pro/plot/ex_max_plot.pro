@@ -251,7 +251,19 @@ for id2=ydimen-1,0L,-1 do begin
             !X.RANGE= range[*,d1]
             !Y.RANGE= range[*,d2]
             if d1 EQ d2 then begin
-                !Y.RANGE= 5d0*[-0.1,1.1]*amp1/abs(range[1,d1]-range[0,d1])
+                xfrac=(panelpoint[d1,*]-!X.RANGE[0])/(!X.RANGE[1]-!X.RANGE[0])
+                indxra=where(xfrac gt 0. and xfrac le 1.,countra)
+                if(countra eq 0) then begin
+                    !Y.RANGE=[-0.1,1.1]
+                endif else begin
+                    totweight=total(panelweight[indxra])
+                    totmean=total(panelweight[indxra]*panelpoint[d1,indxra])/ $
+                      totweight
+                    totdelta=panelpoint[d1,indxra]-totmean
+                    totsig=sqrt(total(totdelta^2*panelweight[indxra]) $
+                                /totweight)
+                    !Y.RANGE= 1.0d0*[-0.1,1.1]*totweight/(totsig)
+                endelse
             endif
             xinterval= hogg_interval(!X.RANGE*axis_char_scale)
             yinterval= hogg_interval(!Y.RANGE*axis_char_scale)
@@ -324,18 +336,10 @@ for id2=ydimen-1,0L,-1 do begin
                         endfor
                     endif 
                 endif
-                if(keyword_set(conditional)) then begin
-                    image= image/abs(delta_y)
-                endif else begin 
-                    image= image/abs(delta_x*delta_y)
-                endelse
+                image= image/abs(delta_x*delta_y)
                 
                 if(keyword_set(image2)) then begin
-                    if(keyword_set(conditional)) then begin
-                        image2= image2/abs(delta_y)
-                    endif else begin 
-                        image2= image2/abs(delta_x*delta_y)
-                    endelse
+                    image2= image2/abs(delta_x*delta_y)
                     if(d2 lt d1) then image=image2
                 endif
             endif
@@ -386,8 +390,8 @@ for id2=ydimen-1,0L,-1 do begin
                         endif
                         for ii=0L, usenpix_x-1L do begin
                             indx=where(xx eq ii, countin)
-                            if(countin gt 1 and total(image[ii,*] gt 0) $
-                               then begin
+                            if(countin gt 0 and total(image[ii,*]) gt 0) $
+                              then begin
                                 amp1col[ii]=total(image[ii,*]^2)/ $
                                   total(image[ii,*]*avgcol)
                                 image[ii,*]=image[ii,*]/amp1col[ii]
@@ -578,11 +582,7 @@ for id2=ydimen-1,0L,-1 do begin
 ; plot data and model histograms
                 djs_oplot,RANGE[*,d1],[0,0],psym=0,xstyle=5,ystyle=5,color='grey'
                 if NOT keyword_set(nodata) then begin
-                    if(keyword_set(conditional)) then begin
-                        scale=abs(delta_y)/abs(delta_x)
-                    endif else begin
-                        scale=abs(delta_y)
-                    endelse
+                    scale=abs(delta_y)
                     if(keyword_set(image2)) then begin
                         yhist2= total(image2,2)*scale
                         djs_oplot,ximg,yhist2,psym=10,thick=2*!P.THICK, $
