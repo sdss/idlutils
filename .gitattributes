@@ -590,6 +590,7 @@ pro/math/djs_mean.pro -text
 pro/math/djs_median.pro -text
 pro/math/djs_posmod.pro -text
 pro/math/djsig.pro -text
+pro/math/gausspix1d.pro -text
 pro/math/stdev.pro -text
 pro/misc/blackbody.pro -text
 pro/misc/cpbackup.pro -text
