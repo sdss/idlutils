@@ -3,7 +3,11 @@
 ------------------------------------------------------------------------------*/
 #include <stdio.h>
 #include "manglefn.h"
+#include <stdarg.h>
 
+#if defined(irix64)
+# include <stdarg.h>
+#endif
 #ifdef GCC
 # include <stdarg.h>
 #endif
