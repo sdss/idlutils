@@ -54,6 +54,9 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
    if (NOT keyword_set(sigrej)) then sigrej = 3.0
    if (NOT keyword_set(maxiter)) then maxiter = 10
 
+   ;----------
+   ; Special cases of 0 or 1 data points
+
    ngood = N_elements(image)
    if (ngood EQ 0) then begin
       print, 'No data points'
@@ -70,19 +73,24 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       return
    endif
 
+   ;----------
+   ; Compute the mean + stdev of the entire image.
+   ; These values will be returned if there are fewer than 2 good points.
 
-   ; Compute the mean + stdev of the entire image
    fmean = (moment(image, sdev=fsig))[0]
+   fmedian = fmean
    iiter = 1
 
+   ;----------
    ; Iteratively compute the mean + stdev, updating the sigma-rejection
    ; thresholds each iteration.
+
    nlast = -1
    while (iiter LT maxiter AND nlast NE ngood AND ngood GE 2) do begin
       loval = fmean - sigrej * fsig
       hival = fmean + sigrej * fsig
       nlast = ngood
-      igood = where(image GT loval AND image LT hival, ngood)
+      igood = where(image GE loval AND image LE hival, ngood)
       if (ngood GE 2) then begin
          fmean = (moment(image[igood], sdev=fsig))[0]
          fmedian = median(image[igood])
