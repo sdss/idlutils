@@ -6,12 +6,12 @@
 ;   Read the UCAC data files for a great circle on the sky.
 ;
 ; CALLING SEQUENCE:
-;   outdat = ucac_readgc(node, incl, gcwidth)
+;   outdat = ucac_readgc(node=node, incl=incl, hwidth=hwidth)
 ;
 ; INPUTS:
 ;   node       - Node of great circle [degrees]
 ;   incl       - Inclination of great circle [degrees]
-;   gcwidth    - Width of great circle [degrees]
+;   hwidth     - Half-width of great circle for selecting a stripe [deg]
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -24,11 +24,10 @@
 ; COMMENTS:
 ;
 ; EXAMPLES:
-;   a=ucac_readgc(95.,40.,2.5)
-;   a=ucac_readgc(95.,10.,1.0)
+;   a=ucac_readgc(node=95.,incl=40.,hwidth=2.5)
+;   a=ucac_readgc(node=95.,incl=10.,hwidth=1.0)
 ;
 ; BUGS:
-;   This is slightly wrong: a=ucac_readgc(95.,1.25,0.1)
 ;
 ; PROCEDURES CALLED:
 ;   radec_to_munu
@@ -66,13 +65,13 @@ function ucac_readgc_add, outdat, thiszone, ravec
    return, [outdat, newdat]
 end
 ;------------------------------------------------------------------------------
-function ucac_readgc1, node, incl, gcwidth, thiszone, decmin, decmax
+function ucac_readgc1, node, incl, hwidth, thiszone, decmin, decmax
 
    ; These are the declinations of the great circle
-   dec1max = incl - 0.5d0 * gcwidth
-   dec2max = incl + 0.5d0 * gcwidth
-   dec1min = -incl - 0.5d0 * gcwidth ; = -dec2max
-   dec2min = -incl + 0.5d0 * gcwidth ; = -dec1max
+   dec1max = incl - hwidth
+   dec2max = incl + hwidth
+   dec1min = -incl - hwidth ; = -dec2max
+   dec2min = -incl + hwidth ; = -dec1max
 
    ; CASE: Zone is completely above the great circle
    if (dec2max LE decmin) then return, 0
@@ -124,7 +123,7 @@ print,'RA: ',ravec
    return, outdat
 end
 ;------------------------------------------------------------------------------
-function ucac_readgc, node, incl, gcwidth
+function ucac_readgc, node=node, incl=incl, hwidth=hwidth
 
    common com_ucac, uindex
 
@@ -133,7 +132,8 @@ function ucac_readgc, node, incl, gcwidth
    ;----------
    ; Check inputs
 
-   if (n_params() LT 3) then begin
+   if (n_elements(node) NE 1 OR n_elements(incl) NE 1 $
+    OR n_elements(hwidth) NE 1) then begin
       print, 'Wrong number of parameters!'
       return, 0
    endif
@@ -152,7 +152,7 @@ print,'ZONE ',thiszone,n_elements(outdat) ; ???
       if (ct GT 0) then begin
          decmax = uindex[jj].dcmax
          decmin = decmax - 0.5d0
-         moredat = ucac_readgc1(node, incl, gcwidth, thiszone, decmin, decmax)
+         moredat = ucac_readgc1(node, incl, hwidth, thiszone, decmin, decmax)
          if (keyword_set(moredat)) then $
           outdat = keyword_set(outdat) ? [outdat,moredat] : moredat
       endif
@@ -162,10 +162,8 @@ print,'ZONE ',thiszone,n_elements(outdat) ; ???
    ; Now trim to objects exactly within the great circle bounds
 
    if (keyword_set(outdat)) then begin
-      convfac = 1d0 / 3600d0 / 1000d0
-      radec_to_munu, outdat.ra*convfac, outdat.dec*convfac, mu, nu, $
-       node=node, incl=incl
-      ikeep = where(abs(nu) LE 0.5d0 * gcwidth, nkeep)
+      radec_to_munu, outdat.ramdeg, outdat.demdeg, mu, nu, node=node, incl=incl
+      ikeep = where(abs(nu) LE hwidth, nkeep)
       if (nkeep EQ 0) then outdat = 0 $
        else outdat = outdat[ikeep]
    endif

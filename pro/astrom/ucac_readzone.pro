@@ -11,8 +11,8 @@
 ;
 ; INPUTS:
 ;   zone       - UCAC zone number (corresponding to a particular declination)
-;   ra_min     - Minimum RA
-;   ra_max     - Maximum RA
+;   ra_min     - Minimum RA [deg]
+;   ra_max     - Maximum RA [deg]
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -23,10 +23,13 @@
 ; OPTIONAL OUTPUTS:
 ;
 ; COMMENTS:
+;   Quantities are de-coded to meaningful units, e.g. converting RA to degrees.
 ;
 ; EXAMPLES:
 ;
 ; BUGS:
+;   The values of TWOMASS_PH,TWOMASS_CC do not appear to make any
+;   sense relative to the UCAC documentation.
 ;
 ; PROCEDURES CALLED:
 ;   ucac_readindex()
@@ -107,24 +110,75 @@ function ucac_readzone, thiszone, ra_min, ra_max
     'E_PMDE', 0B, $
     'Q_PMRA', 0B, $
     'Q_PMDE', 0B, $
-    'TM_ID' , 0L, $
-    'TM_J'  , 0 , $
-    'TM_H'  , 0 , $
-    'TM_KS' , 0 , $
-    'TM_PH' , 0B, $
-    'TM_CC' , 0B)
-   outdat = replicate(blankdat, nrecord)
+    'TWOMASS_ID' , 0L, $
+    'TWOMASS_J'  , 0 , $
+    'TWOMASS_H'  , 0 , $
+    'TWOMASS_KS' , 0 , $
+    'TWOMASS_PH' , 0B, $
+    'TWOMASS_CC' , 0B)
+   rawdat = replicate(blankdat, nrecord)
    openr, ilun, thisfile, /get_lun, /swap_if_big_endian
    point_lun, ilun, i1 * n_tags(blankdat, /length)
-   readu, ilun, outdat
+   readu, ilun, rawdat
    close, ilun
    free_lun, ilun
 
    ;----------
+   ; Convert to rational units
+
+   outdat = replicate( create_struct( $
+    'RAMDEG' , 0d, $
+    'DEMDEG' , 0d, $
+    'RMAG'   , 0., $
+    'E_RAM'  , 0., $
+    'E_DEM'  , 0., $
+    'NOBS'   , 0 , $
+    'RFLAG'  , 0B, $
+    'NCAT'   , 0 , $
+    'CFLAG'  , 0B, $
+    'EPRAM'  , 0., $
+    'EPDEM'  , 0., $
+    'PMRA'   , 0., $
+    'PMDE'   , 0., $
+    'E_PMRA' , 0., $
+    'E_PMDE' , 0., $
+    'Q_PMRA' , 0., $
+    'Q_PMDE' , 0., $
+    'TWOMASS_ID' , 0L, $
+    'TWOMASS_J'  , 0., $
+    'TWOMASS_H'  , 0., $
+    'TWOMASS_KS' , 0., $
+    'TWOMASS_PH' , 0, $
+    'TWOMASS_CC' , 0), nrecord)
+
+   outdat.ramdeg = rawdat.ra / (3600d0*1000d0) ; Mean RA, ICRS, epoch=J2000 [deg]
+   outdat.demdeg = rawdat.dec / (3600d0*1000d0) ; Mean DEC, ICRS, epoch=J2000 [deg]
+   outdat.rmag = rawdat.rmag / 100. ; R-band magnitude
+   outdat.e_ram = rawdat.e_ram - 127. ; Err of RA*cos(dec) at mean epoch [mas]
+   outdat.e_dem = rawdat.e_dem - 127. ; Err of DEC at mean epoch [mas]
+   outdat.nobs = rawdat.nobs
+   outdat.rflag = rawdat.rflag
+   outdat.ncat = rawdat.ncat
+   outdat.cflag = rawdat.cflag
+   outdat.epram = rawdat.epram / 1000. + 1975. ; Mean epoch of RA [yr]
+   outdat.epdem = rawdat.epdem / 1000. + 1975. ; Mean epoch of DEC [yr]
+   outdat.pmra = rawdat.pmra / 10. ; Proper motion in RA (no cos(dec)) [mas/yr]
+   outdat.pmde = rawdat.pmde / 10. ; Proper motion in DEC [mas/yr]
+   outdat.e_pmra = (rawdat.e_pmra - 127.) / 10. ; Error of prop. mot. in RA*cosd [mas/yr]
+   outdat.e_pmde = (rawdat.e_pmde - 127.) / 10. ; Error of prop. mot. in DEC [mas/yr]
+   outdat.q_pmra = (rawdat.q_pmra - 127.) / 20. ; Goodness of fit for pmra
+   outdat.q_pmde = (rawdat.q_pmde - 127.) / 20. ; Goodness of fit for pmde
+   outdat.twomass_id = rawdat.twomass_id ; 2MASS pts_key star identifier
+   outdat.twomass_j = rawdat.twomass_j / 1000. ; 2MASS J magnitude
+   outdat.twomass_h = rawdat.twomass_h / 1000. ; 2MASS H magnitude
+   outdat.twomass_ks = rawdat.twomass_ks / 1000. ; 2MASS Ks magnitude
+   outdat.twomass_ph = rawdat.twomass_ph - 127 ; 2MASS modified ph_qual flag
+   outdat.twomass_cc = rawdat.twomass_cc - 127 ; 2MASS modified cc_flg
+
+   ;----------
    ; Trim to the RA range requested
 
-   ikeep = where(outdat.ra GE ra_min*3600.d0*1000.d0 $
-    AND outdat.ra LE ra_max*3600.d0*1000.d0, nkeep)
+   ikeep = where(outdat.ramdeg GE ra_min AND outdat.ramdeg LE ra_max, nkeep)
    if (nkeep EQ 0) then begin
       return, 0
    endif
