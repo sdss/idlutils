@@ -98,7 +98,7 @@
 ;------------------------------------------------------------------------------
 function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
  sigma=sigma, invvar=invvar, upper=upper, lower=lower, maxdev=maxdev, $
- maxrej=maxrej, groupsize=groupsize, sticky=sticky, rejper=rejper
+ maxrej=maxrej, groupsize=groupsize, sticky=sticky
 
    if (n_params() LT 2 OR NOT arg_present(outmask)) then begin
       print, 'Syntax: qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
@@ -205,11 +205,6 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    ; Reject a maximum of MAXREJ (additional) points in all the data,
    ; or in each group as specified by GROUPSIZE.
 
-   if keyword_set(rejper) then begin
-      uhoh = where(badness NE 0, nbad)
-      maxrej = nbad * rejper
-   endif
-
    if (keyword_set(maxrej)) then begin
       if (NOT keyword_set(groupsize)) then groupsize = ndata
       i1 = 0L
@@ -222,8 +217,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
          endif
          i1 = i1 + groupsize
       endwhile
-   endif 
-      
+   endif
 
    ;----------
    ; Now modify OUTMASK, rejecting points specified by INMASK=0,
