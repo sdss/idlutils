@@ -40,8 +40,8 @@ endif else begin
     image=dblarr(nx,ny)
     write_mangle_polygons,'tmp_poly.ply',polygons
     for i=0L, nrandom/1000000L do begin 
-        cmdstr='ransack -r'+strtrim(string(1000000L),2)+ $
-          ' tmp_poly.ply tmp_wi_radec.dat'
+        cmdstr='ransack -c'+strtrim(string(i),2)+' -r'+ $
+          strtrim(string(1000000L),2)+' tmp_poly.ply tmp_wi_radec.dat'
         splog,cmdstr
         spawn,cmdstr
         openr,unit,'tmp_wi_radec.dat',/get_lun
