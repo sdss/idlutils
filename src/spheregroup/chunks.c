@@ -338,18 +338,21 @@ assignchunks(double ra[],        /* degrees */
 					return(CH_OUTOFRANGE);
 				} /* end if */
 				
-				/* go through each chunk in slice */
-				for(raChunk=raChunkMin[decChunk-decChunkMin];
-						raChunk<=raChunkMax[decChunk-decChunkMin];
+				/* go through each chunk in slice; be conservative and 
+				 * include buffers when allocating memory */
+				for(raChunk=raChunkMin[decChunk-decChunkMin]-1;
+						raChunk<=raChunkMax[decChunk-decChunkMin]+1;
 						raChunk++) {
 					/* handle edge cases if necessary; setchunkbounds is
 					 * supposed to decide if raChunk can be -1 or nra[decChunk] */
 					if(raChunk<0) {
 						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
-						(*nChunk)[decChunk][currRaChunk]++;
+						if(currRaChunk>=0) 
+							(*nChunk)[decChunk][currRaChunk]++;
 					} else if (raChunk>nRa[decChunk]-1) {
 						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
-						(*nChunk)[decChunk][currRaChunk]++;
+						if(currRaChunk<=nRa[decChunk]-1)
+							(*nChunk)[decChunk][currRaChunk]++;
 					} else {
 						(*nChunk)[decChunk][raChunk]++;
 					} /* end if */
@@ -458,7 +461,7 @@ assignchunks(double ra[],        /* degrees */
 						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
 						(*chunkList)[decChunk][currRaChunk]
 							[(*nChunk)[decChunk][currRaChunk]]=i;
-						(*nChunk)[decChunk][raChunk+nRa[decChunk]]++;
+						(*nChunk)[decChunk][currRaChunk]++;
 					} else if (raChunk>nRa[decChunk]-1) {
 						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
 						(*chunkList)[decChunk][currRaChunk]
