@@ -20,7 +20,11 @@
 # This script requires the "ups" product.  It will try to build code and
 # install it using the utilities in the "sdsstools" product.  If those do
 # not exist, then it tries using the "evilmake" and "install_ups_table"
-# scripts in the "idlutils" product.
+# scripts in the "idlutils" product.  In that case, the following files
+# must exist:
+#   $IDLUTILS_DIR/bin/evilmake
+#   $IDLUTILS_DIR/bin/install_ups_table
+# so set $IDLUTILS_DIR appropriately.
 #
 # Note: This script tries to set-up products using the table file in the /ups
 # subdirectory of the product.  I can't say with certainty that it works
@@ -107,16 +111,15 @@ setup sdsscvs
 #   of the script "install_ups_table".
 
 setup sdsstools
-if [ -n "$SDSSTOOLS_DIR" ] ; then
-   if [ -n `which \sdssmake` ] ; then
-      MAKECOMMAND='sdssmake -idl -opt -debug'
-      MAKEINSTALLCOMMAND='sdssmake install'
-   fi
+if { [ -n "$SDSSTOOLS_DIR" ] && [ -e "$SDSSTOOLS_DIR/bin/sdssmake" ] } ; then
+   MAKECOMMAND='sdssmake -idl -opt -debug'
+   MAKEINSTALLCOMMAND='sdssmake install'
 else
-   setup idlutils
+#   setup idlutils
    SDSSTOOLS_DIR=$IDLUTILS_DIR
-   if [ -n `which \evilmake` ] ; then
-      MAKECOMMAND=evilmake
+#   if [ -n `which \evilmake` ] ; then
+   if [ -e "$IDLUTILS_DIR/bin/evilmake" ] ; then
+      MAKECOMMAND=$IDLUTILS_DIR/bin/evilmake
       MAKEINSTALLCOMMAND='make install'
    fi
 fi
@@ -131,7 +134,8 @@ if [ -e $SDSSTOOLS_DIR/bin/install_ups_table ] ; then
    # Save where this script lives, in case this environment variable changes.
    MYSDSSTOOLS_DIR=$SDSSTOOLS_DIR
 else
-   echo "Unable to find the command \$SDSSTOOLS_DIR/bin/install_ups_table."
+   echo "Unable to find the command \$SDSSTOOLS_DIR/bin/install_ups_table"
+   echo "or \$IDLUTILS_DIR/bin/install_ups_table."
    exit
 fi
 if [ -e /usr/local/bin/perl ] ; then
@@ -191,6 +195,7 @@ $MAKECOMMAND
 # The following nasty line is simply to set up the environment
 # variable {$PRODNAME}_DIR so that the code can be installed.
 eval export `echo $PRODNAME | perl -pe 'y/a-z/A-Z/'`_DIR=$MYSDSS_ROOT/$PRODNAME/$PRODVERS
+eval export `echo $PRODNAME | perl -pe 'y/a-z/A-Z/'`_INSTALL_DIR=$MYSDSS_ROOT/$PRODNAME/$PRODVERS
 if [ $PRODVERS = "cvs" ] ; then
    echo cp -r $TEMPDIR/$TEMPSUBDIR $MYSDSS_ROOT/$PRODNAME/$PRODVERS
    cp -r $TEMPDIR/$TEMPSUBDIR $MYSDSS_ROOT/$PRODNAME/$PRODVERS
@@ -198,6 +203,11 @@ else
    echo $MAKEINSTALLCOMMAND
    # Reset this environment variable to where we found "install_ups_table"
    export SDSSTOOLS_DIR=$MYSDSSTOOLS_DIR
+   # It appears that sometimes we need to create the install directory ???
+   # This is a hack!!!
+   if [ $PRODNAME = "sdsstools" ] ; then
+      mkdir $MYSDSS_ROOT/$PRODNAME/$PRODVERS
+   fi
    $MAKEINSTALLCOMMAND
 fi
 
