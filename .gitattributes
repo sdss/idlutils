@@ -648,6 +648,23 @@ pro/misc/struct_addtags.pro -text
 pro/misc/struct_append.pro -text
 pro/misc/struct_print.pro -text
 pro/misc/which.pro -text
+pro/mpfit/INSTALL -text
+pro/mpfit/MPREADME -text
+pro/mpfit/fakedata.sav -text svneol=unset#unset
+pro/mpfit/fitqa.html -text
+pro/mpfit/gauss1.pro -text
+pro/mpfit/gauss1p.pro -text
+pro/mpfit/gauss2.pro -text
+pro/mpfit/mpcurvefit.pro -text
+pro/mpfit/mpfit.pro -text
+pro/mpfit/mpfit2dfun.pro -text
+pro/mpfit/mpfit2dpeak.pro -text
+pro/mpfit/mpfitexpr.pro -text
+pro/mpfit/mpfitfun.pro -text
+pro/mpfit/mpfitpeak.pro -text
+pro/mpfit/mpfittut.html -text
+pro/mpfit/setfitparm.pro -text
+pro/mpfit/tnmin.pro -text
 pro/plot/atv.pro -text
 pro/plot/cmps_form.pro -text
 pro/plot/dfpsclose.pro -text
