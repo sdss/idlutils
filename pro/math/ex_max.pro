@@ -68,39 +68,6 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
 ; Hogg is not sure about the following formula:
   entropy1= total(weight*alog(probability1/amp1))/alog(2D)
 
-; setup postscript file, if necessary
-  if keyword_set(qa) AND dimen GT 1 then begin
-    !P.FONT= -1 & !P.BACKGROUND= 255 & !P.COLOR= 0
-    set_plot, "PS"
-    xsize= 7.5 & ysize= 10.0
-    device, file=qa,/inches,xsize=xsize,ysize=ysize, $
-      xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color
-    !P.THICK= 4.0
-    !P.CHARTHICK= !P.THICK & !X.THICK= !P.THICK & !Y.THICK= !P.THICK
-    !P.CHARSIZE= 1.2
-    !P.PSYM= 0
-    !P.TITLE= ''
-    !X.STYLE= 3
-    !X.TITLE= ''
-    !X.RANGE= 0
-    !X.MARGIN= [6,0]
-    !X.OMARGIN= [0,0]
-    !X.CHARSIZE= 1.0
-    !Y.STYLE= 3
-    !Y.TITLE= ''
-    !Y.RANGE= 0
-    !Y.MARGIN= [3,0]
-    !Y.OMARGIN= [0,0]
-    !Y.CHARSIZE= 1.0
-    !P.MULTI= [0,4,6]
-    if dimen EQ 4 then !P.MULTI= [0,3,5]
-    if dimen EQ 6 then !P.MULTI= [0,5,7]
-    xyouts, 0,0,'!3'
-    colorname= ['red','green','blue','grey','magenta','cyan','orange', $
-      'purple','light red','navy','light magenta','yellow green']
-    ncolor= n_elements(colorname)
-  endif
-
 ; allocate space for probabilities and updated parameters
   probability= reform(dblarr(ndata*ngauss),ndata,ngauss)
   newamp= amp
@@ -161,35 +128,8 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
        (iteration GE maxiterate) then stopflag= 1B
 
 ; plot
-    if keyword_set(qa) AND (iteration GT (lastplot*1.49)) then begin
-      lastplot= iteration
-      for d=0L,dimen-2 do begin
-        djs_plot,point[d,*],point[dimen-1,*],psym=3
-        theta= 2.0D *double(!PI)*dindgen(101)/100.0D
-        x= cos(theta)
-        y= sin(theta)
-        djs_xyouts,!X.CRANGE[0],!Y.CRANGE[1]+0.1*(!Y.CRANGE[0]-!Y.CRANGE[1]), $
-          string(iteration),alignment=0.0,charsize=0.75
-        for j=0L,ngauss-1 do begin
-          matrix= invert(var[*,*,j],/double)
-          trace= matrix[d,d]+matrix[dimen-1,dimen-1]
-          det= matrix[d,d]*matrix[dimen-1,dimen-1]-matrix[dimen-1,d]* $
-            matrix[d,dimen-1]
-          eval1= trace/2.0+sqrt(trace^2/4.0-det)
-          eval2= trace/2.0-sqrt(trace^2/4.0-det)
-          evec1= [matrix[dimen-1,d],eval1-matrix[d,d]]
-          evec1= evec1/(sqrt(transpose(evec1)#evec1))[0]
-          evec2= [evec1[1],-evec1[0]]
-          evec1= evec1*2.0/sqrt(eval1)
-          evec2= evec2*2.0/sqrt(eval2)
-          xx= mean[d,j]+x*evec1[0]+y*evec2[0]
-          yy= mean[dimen-1,j]+x*evec1[1]+y*evec2[1]
-          djs_oplot,xx,yy,color=colorname[j MOD ncolor],thick=8
-          youts=!Y.CRANGE[0]+0.075*(j+0.5)*(!Y.CRANGE[1]-!Y.CRANGE[0])
-          djs_xyouts,!X.CRANGE[1],youts,string(round(amp[j],/L64))+' ', $
-            color=colorname[j MOD ncolor],alignment=1.0,charsize=0.75
-        endfor
-      endfor
+    if keyword_set(qa) AND stopflag then begin
+      ex_max_plot, weight,point,amp,mean,var,qa
     endif
 
 ; stop
