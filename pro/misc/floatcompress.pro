@@ -11,7 +11,7 @@
 ;   the passed array (with 5 sigma outlier rejection). 
 ;
 ; CALLING SEQUENCE:
-;   out = floatcompress(data, ndig=ndig)
+;   out = floatcompress(data, ndig=ndig, nsig=nsig)
 ;
 ; INPUTS:
 ;   data       - input data (type float or double)
@@ -84,10 +84,10 @@ FUNCTION floatcompress, data, ndig=ndig, nsig=nsig
         sy = (size(data))[2]
 
         IF ((sx/8)*8 EQ sx) AND ((sy/8)*8 EQ sy) THEN $
-          sig = djsig(rebin(data, sx/8, sy/8), sigrej=5) ELSE $
-          sig = djsig(data, sigrej=5)
+          sig = djsig(rebin(data, sx/8, sy/8), sigrej=3.0, maxiter= 100) ELSE $
+          sig = djsig(data, sigrej=3.0, maxiter= 100)
      ENDIF ELSE BEGIN 
-        sig = djsig(data, sigrej=5)
+        sig = djsig(data, sigrej=3.0, maxiter= 100)
      ENDELSE 
     
 
