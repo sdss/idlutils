@@ -91,7 +91,8 @@ function djs_median, array, dim, width=width, boundary=boundary
    endif else if (NOT keyword_set(dim)) then begin
 
       if (boundary EQ 'none') then begin
-         medarr = median(array, width, /even)
+         if (n_elements(array) EQ 1) then medarr = array[0] $
+          else medarr = median(array, width, /even)
       endif else begin
          padsize = ceil(width/2)
          zero = array[0] - array[0] ; Zero in the type of ARRAY
@@ -169,6 +170,9 @@ function djs_median, array, dim, width=width, boundary=boundary
 
    endif else if (NOT keyword_set(width)) then begin
 
+      if (ndim LE 1) then begin
+         message, 'ARRAY must be multi-dimensional if DIM is specified'
+      endif
       if (dim GT ndim OR dim LT 1) then begin
          message, 'DIM must be between 1 and '+string(ndim)+' inclusive'
       endif
