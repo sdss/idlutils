@@ -93,6 +93,9 @@
 ;               pixels [NOBJ].
 ;   peakval:    Peak pixel value (before sky-subtraction)
 ;
+; BUGS:
+;   if /exact keyword is set, input xcen, ycen should be integers
+;
 ; COMMENTS:
 ;   Sub-pixel sampling of the circular apertures is handled exactly.
 ;
