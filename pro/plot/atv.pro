@@ -73,6 +73,21 @@
 ;       and further information, go to:
 ;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
 ;
+;  new features since last release:
+;  made crosshair in tracking image green
+;  changed mode selection to a droplist
+;  added color mode for dragging mouse on main draw window
+;  completely changed brightness/contrast algorithm
+;  added stern special color table
+;  fixed problem where unblink image should have been set in 
+;    atv_getdisplay
+;  removed color sliders
+;  made min and max text boxes bigger
+;  changed base structure
+;  lowered maximum numbers of text and contour plots
+;  changed startup image
+;
+;  added SYMSIZE keyword to ATVPLOT command
 ;-
 ;----------------------------------------------------------------------
 
@@ -104,15 +119,18 @@ state = {                   $
           location_bar_id: 0L, $         ; id of (x,y,value) label
           min_text_id: 0L,  $            ; id of min= widget
           max_text_id: 0L, $             ; id of max= widget
-          menu_ids: lonarr(24), $        ; list of top menu items
-          brightness_slider_id: 0L, $    ; id of brightness widget
-          contrast_slider_id: 0L, $      ; id of contrast widget
+          menu_ids: lonarr(25), $        ; list of top menu items
+;          brightness_slider_id: 0L, $    ; id of brightness widget
+;          contrast_slider_id: 0L, $      ; id of contrast widget
+          brightness: 500L, $           
+          contrast: 500L, $
+          slidermax: 1000L, $            ; max val for sliders (min=1)
           keyboard_text_id: 0L, $        ; id of keyboard input widget
           image_min: 0.0, $              ; min(main_image)
           image_max: 0.0, $              ; max(main_image)
           min_value: 0.0, $              ; min data value mapped to colors
           max_value: 0.0, $              ; max data value mapped to colors
-          mode: 'zoom', $                ; zoom or blink
+          mode: 'color', $                ; Zoom, Blink, or Color
           draw_window_size: [512L, 512L], $    ; size of main draw window
           track_window_size: 121L, $     ; size of tracking window
           pan_window_size: 121L, $       ; size of pan window
@@ -127,7 +145,8 @@ state = {                   $
           zoom_level: 0L, $              ; integer zoom level, 0=normal
           zoom_factor: 1.0, $            ; magnification factor = 2^zoom_level
           centerpix: [0L, 0L], $         ; pixel at center of viewport
-          pan_track: 0L, $               ; flag=1 while mouse dragging
+          pan_track: 0B, $               ; flag=1 while mouse dragging
+          cstretch: 0B, $                ; flag = 1 while stretching colors
           pan_offset: [0L, 0L], $        ; image offset in pan window
           lineplot_widget_id: 0L, $      ; id of lineplot widget
           lineplot_window_id: 0L, $      ; id of lineplot window
@@ -158,10 +177,11 @@ pdata = {                               $
           y: replicate(ptr_new(),nmax), $ ; Y vector
           color: lonarr(nmax),          $ ; COLOR for PLOT
           psym: lonarr(nmax),           $ ; PSYM for PLOT
+          symsize: fltarr(nmax),        $ ; PSYM for PLOT
           thick: fltarr(nmax)           $ ; THICK for PLOT
         }
 
-nmax = 5000L
+nmax = 500L
 ptext = {                               $
           nplot: 0L,                    $ ; Number of text plots
           nmax:  nmax,                  $ ; Maximum number of text plots
@@ -176,7 +196,7 @@ ptext = {                               $
           orientation: fltarr(nmax)     $ ; ORIENTATION for XYOUTS
         }
 
-nmax = 500L
+nmax = 10L
 pcon = {                                $
           nplot: 0L,                    $ ; Number of contour plots
           nmax:  nmax,                  $ ; Maximum number of contour plots
@@ -236,6 +256,7 @@ top_menu_desc = [ $
                   {cw_pdmenu_s, 0, 'Red-Orange'}, $
                   {cw_pdmenu_s, 0, 'Rainbow'}, $
                   {cw_pdmenu_s, 0, 'BGRY'}, $
+                  {cw_pdmenu_s, 0, 'Stern Special'}, $
                   {cw_pdmenu_s, 2, 'ATV Special'}, $
                   {cw_pdmenu_s, 1, 'Scaling'}, $      ; scaling menu
                   {cw_pdmenu_s, 0, 'Linear'}, $
@@ -258,14 +279,15 @@ top_menu = cw_pdmenu(top_menu, top_menu_desc, $
                      uvalue = 'top_menu')
 
 track_base =    widget_base(base, /row)
-track_base_1 =  widget_base(track_base, /column, /align_right)
-track_base_1a = widget_base(track_base_1, /row, /align_bottom)
-slider_base =   widget_base(track_base_1a, /column, /align_right)
-minmax_base =   widget_base(track_base_1a, /column, /align_right)
-track_base_2 =  widget_base(track_base, /row, /base_align_bottom)
+info_base = widget_base(track_base, /column, /base_align_right)
+;track_base_1 =  widget_base(track_base, /column, /align_right)
+;track_base_1a = widget_base(track_base_1, /row, /align_bottom)
+;slider_base =   widget_base(track_base_1a, /column, /align_right)
+;minmax_base =   widget_base(track_base_1a, /column, /align_right)
+;track_base_2 =  widget_base(track_base, /row, /base_align_bottom)
 button_base1 =  widget_base(base, /row, /base_align_bottom)
 button_base2 =  widget_base(base, /row, /base_align_bottom)
-mode_base =     widget_base(button_base1, /row, /base_align_bottom, /exclusive)
+;mode_base =     widget_base(button_base1, /row, /base_align_bottom, /exclusive)
 
 state.draw_base_id = $
   widget_base(base, $
@@ -274,36 +296,85 @@ state.draw_base_id = $
               uvalue = 'draw_base', $
               frame = 2)
 
-state.brightness_slider_id = $
-  widget_slider(slider_base, $
-                /drag, $
-                minimum = 0, $
-                maximum = 2 * (!d.table_size-8) - 1, $
-                title = 'Brightness', $
-                uvalue = 'brightness', $
-                value = (!d.table_size-8), $
-                /suppress_value)
+state.min_text_id = $
+  cw_field(info_base, $
+           uvalue = 'min_text', $
+           /floating,  $
+           title = 'Min=', $
+           value = state.min_value,  $
+           /return_events, $
+           xsize = 12)
+
+state.max_text_id = $
+  cw_field(info_base, $
+           uvalue = 'max_text', $
+           /floating,  $
+           title = 'Max=', $
+           value = state.max_value, $
+           /return_events, $
+           xsize = 12)
+
+tmp_string = string(1000, 1000, 1.0e-10, $
+                    format = '("(",i4,",",i4,") ",g12.5)' )
+
+state.location_bar_id = $
+  widget_label (info_base, $
+                value = tmp_string,  $
+                uvalue = 'location_bar',  frame = 1)
 
 
-state.contrast_slider_id = $
-  widget_slider(slider_base, $
-                /drag, $
-                minimum = 0, $
-                maximum = 100, $
-                title = 'Contrast', $
-                uvalue = 'contrast', $
-                value = 50, $
-                /suppress_value)
 
-zoommode_button = $
-  widget_button(mode_base, $
-                value = 'ZoomMode', $
-                uvalue = 'zoom_mode')
+pan_window = $
+  widget_draw(track_base, $
+              xsize = state.pan_window_size, $
+              ysize = state.pan_window_size, $
+              frame = 2, uvalue = 'pan_window', $
+              /button_events, /motion_events)
 
-blinkmode_button = $
-  widget_button(mode_base, $
-                value = 'BlinkMode', $
-                uvalue = 'blink_mode')
+track_window = $
+  widget_draw(track_base, $
+              xsize=state.track_window_size, $
+              ysize=state.track_window_size, $
+              frame=2, uvalue='track_window')
+
+
+;state.brightness_slider_id = $
+;  widget_slider(slider_base, $
+;                /drag, $
+;                minimum = 1, $
+;                maximum = state.slidermax, $
+;                title = 'Brightness', $
+;                uvalue = 'brightness', $
+;                value = state.slidermax/2, $
+;                /suppress_value)
+
+
+;state.contrast_slider_id = $
+;  widget_slider(slider_base, $
+;                /drag, $
+;                minimum = 1, $
+;                maximum = state.slidermax, $
+;                title = 'Contrast', $
+;                uvalue = 'contrast', $
+;                value = state.slidermax/2, $
+;                /suppress_value)
+
+modelist = ['Color', 'Zoom', 'Blink']
+mode_droplist_id = widget_droplist(button_base1, $
+                                   frame = 1, $
+                                   title = 'MouseMode:', $
+                                   uvalue = 'mode', $
+                                   value = modelist)
+
+;zoommode_button = $
+;  widget_button(mode_base, $
+;                value = 'ZoomMode', $
+;                uvalue = 'zoom_mode')
+;
+;blinkmode_button = $
+;  widget_button(mode_base, $
+;                value = 'BlinkMode', $
+;                uvalue = 'blink_mode')
 
 invert_button = $
   widget_button(button_base1, $
@@ -364,45 +435,6 @@ done_button = $
                 value = 'Done', $
                 uvalue = 'done')
 
-state.min_text_id = $
-  cw_field(minmax_base, $
-           uvalue = 'min_text', $
-           /floating,  $
-           title = 'Min=', $
-           value = state.min_value,  $
-           /return_events, $
-           xsize = 8)
-
-state.max_text_id = $
-  cw_field(minmax_base, $
-           uvalue = 'max_text', $
-           /floating,  $
-           title = 'Max=', $
-           value = state.max_value, $
-           /return_events, $
-           xsize = 8)
-
-tmp_string = string(1000, 1000, 1.0e-10, $
-                    format = '("(",i4,",",i4,") ",g12.5)' )
-
-state.location_bar_id = $
-  widget_label (track_base_1, $
-                value = tmp_string,  $
-                uvalue = 'location_bar',  frame = 1)
-
-pan_window = $
-  widget_draw(track_base_2, $
-              xsize = state.pan_window_size, $
-              ysize = state.pan_window_size, $
-              frame = 2, uvalue = 'pan_window', $
-              /button_events, /motion_events)
-
-track_window = $
-  widget_draw(track_base_2, $
-              xsize=state.track_window_size, $
-              ysize=state.track_window_size, $
-              frame=2, uvalue='track_window')
-
 state.draw_widget_id = $
   widget_draw(state.draw_base_id, $
               uvalue = 'draw_window', $
@@ -414,7 +446,7 @@ state.draw_widget_id = $
 
 widget_control, base, /realize
 
-widget_control, zoommode_button, /set_button
+;widget_control, zoommode_button, /set_button
 
 ; get the window ids for the draw widgets
 
@@ -446,14 +478,9 @@ state.base_min_size = [state.base_pad[0] + 512, state.base_pad[1] + 100]
 ; Initialize the vectors that hold the current color table.
 ; See the routine atv_stretchct to see why we do it this way.
 
-r_vector = bytarr((!d.table_size-8) * 3)
-g_vector = bytarr((!d.table_size-8) * 3)
-b_vector = bytarr((!d.table_size-8) * 3)
-
-tmp_array = replicate(255, (!d.table_size-8))
-r_vector[(!d.table_size-8) * 2] = tmp_array
-g_vector[(!d.table_size-8) * 2] = tmp_array
-b_vector[(!d.table_size-8) * 2] = tmp_array
+r_vector = bytarr(!d.table_size-8)
+g_vector = bytarr(!d.table_size-8)
+b_vector = bytarr(!d.table_size-8)
 
 atv_getct, 0
 state.invert_colormap = 0
@@ -798,11 +825,11 @@ if (state.invert_colormap EQ 1) then begin
     b = abs (b - 255)
 endif
 
-r_vector(!d.table_size-8) = r
-g_vector(!d.table_size-8) = g
-b_vector(!d.table_size-8) = b
+r_vector = temporary(r)
+g_vector = temporary(g)
+b_vector = temporary(b)
     
-atv_stretchct
+atv_stretchct, state.brightness, state.contrast
 
 end
 
@@ -870,10 +897,11 @@ tv, track_image
 ; Overplot an X on the central pixel in the track window, to show the
 ; current mouse position
 
-device, set_graphics = 10
-plots, [0.46, 0.54], [0.46, 0.54], /normal
-plots, [0.46, 0.54], [0.54, 0.46], /normal
-device, set_graphics = 3
+; Changed central x to be green always
+;device, set_graphics = 10
+plots, [0.46, 0.54], [0.46, 0.54], /normal, color = 2
+plots, [0.46, 0.54], [0.54, 0.46], /normal, color = 2
+;device, set_graphics = 3
 
 ; update location bar with x, y, and pixel value
 
@@ -896,14 +924,21 @@ pro atv_event, event
 
 common atv_state
 common atv_images
-common atv_color, r_vector, g_vector, b_vector
+common atv_color
 
 widget_control, event.id, get_uvalue = uvalue
 
 case uvalue of
 
-    'zoom_mode': state.mode = 'zoom'
-    'blink_mode': state.mode = 'blink'
+;    'zoom_mode': state.mode = 'zoom'
+;    'blink_mode': state.mode = 'blink'
+
+    'mode': case event.index of
+        0: state.mode = 'color'
+        1: state.mode = 'zoom'
+        2: state.mode = 'blink'
+        else: print, 'Unknown mouse mode!'
+    endcase
 
     'atv_base': begin  ; main window resize: preserve display center
         atv_resize, event
@@ -927,6 +962,7 @@ case uvalue of
             'Red-Orange': atv_getct, 3
             'BGRY': atv_getct, 4
             'Rainbow': atv_getct, 13
+            'Stern Special': atv_getct, 15
             'ATV Special': atv_makect, event_name
 ; Scaling options:
             'Linear': begin
@@ -979,59 +1015,59 @@ case uvalue of
     end
 
     'draw_window': begin  ; mouse movement or button press
+        
+        if (event.type EQ 2) then begin   ; motion event
+            case state.cstretch of
+                0: begin           ;update tracking image and status bar
+                    tmp_event = [event.x, event.y]            
+                    state.mouse = round( (0.5 > $
+                         ((tmp_event / state.zoom_factor) + state.offset) $
+                         < (state.image_size - 0.5) ) - 0.5)
+                    atv_gettrack
+                end
+                1: begin           ; update color table
+                    atv_stretchct, event.x, event.y, /getmouse
+                end
 
-        if (event.type EQ 2) then begin      ; motion event
-            tmp_event = [event.x, event.y]
-            state.mouse = $
-              round( (0.5 > $
-                      ((tmp_event / state.zoom_factor) + state.offset) $
-                      < (state.image_size - 0.5) ) - 0.5)
-            atv_gettrack
-        endif
-               
-
-        case state.mode of                   ; button events
-
-            'blink': begin  ; button press or release in blink mode
-                case event.type of                    
-                    0: begin                     ; button press: blink
-                        wset, state.draw_window_id
-                        if n_elements(blink_image) GT 1 then $
-                          tv, blink_image
-                    end
-
-                    1: begin                     ; button release: unblink
-                        wset, state.draw_window_id
-;                        tv, display_image        modified AJB 7/26/99
-                          tv, unblink_image
-                        
-                    end
-                    else:
-                endcase
-            end
-
-            
-            'zoom': begin   ; button press in zoom mode
-                if (event.type EQ 0) then begin 
-
-                    case event.press of
-                        1: atv_zoom, 'in', /recenter
-                        2: atv_zoom, 'none', /recenter
-                        4: atv_zoom, 'out', /recenter
-                        else: print,  'trouble in atv_event, mouse zoom'
-                    endcase
-                    
-                endif
+            endcase
                 
-            end
+        endif
 
-        endcase
+        if (state.mode EQ 'blink' AND event.type EQ 0) then begin
+            wset, state.draw_window_id
+            if n_elements(blink_image) GT 1 then $
+              tv, blink_image
+        endif
+
+        if (state.mode EQ 'blink' AND event.type EQ 1) then begin
+            wset, state.draw_window_id
+;           tv, display_image        modified AJB 7/26/99
+            tv, unblink_image
+        endif            
+ 
+        if (state.mode EQ 'zoom' and event.type EQ 0) then begin
+            case event.press of
+                1: atv_zoom, 'in', /recenter
+                2: atv_zoom, 'none', /recenter
+                4: atv_zoom, 'out', /recenter
+                else: print,  'trouble in atv_event, mouse zoom'
+            endcase
+            
+        endif
+                
+        if (state.mode EQ 'color' AND event.type EQ 0) then begin
+            state.cstretch = 1
+            atv_stretchct, event.x, event.y, /getmouse
+        endif
+        if (state.mode EQ 'color' AND event.type EQ 1) then $
+          state.cstretch = 0
+
         widget_control, state.keyboard_text_id, /input_focus
                     
     end
 
-    'brightness': atv_stretchct      ; brightness slider move
-    'contrast'  : atv_stretchct      ; contrast slider move
+;    'brightness': atv_stretchct      ; brightness slider move
+;    'contrast'  : atv_stretchct      ; contrast slider move
 
     'invert': begin                  ; invert the color table
         state.invert_colormap = abs(state.invert_colormap - 1)
@@ -1050,11 +1086,13 @@ case uvalue of
     end
 
     'reset_color': begin   ; set color sliders to default positions
-        widget_control, $
-          state.brightness_slider_id, set_value = !d.table_size-8
-        widget_control, $
-          state.contrast_slider_id, set_value = 50
-        atv_stretchct
+;        widget_control, $
+;          state.brightness_slider_id, set_value = state.slidermax / 2
+;        widget_control, $
+;          state.contrast_slider_id, set_value = state.slidermax / 2
+        state.brightness = state.slidermax / 2
+        state.contrast = state.slidermax / 2
+        atv_stretchct, state.brightness, state.contrast
         atv_cleartext
     end
 
@@ -1228,6 +1266,7 @@ main_image = 0
 display_image = 0
 scaled_image = 0
 blink_image = 0
+unblink_image = 0
 pan_image = 0
 r_vector = 0
 g_vector = 0
@@ -1379,7 +1418,7 @@ widget_control, /hourglass
 
 oplot, *(pdata.x[iplot]), *(pdata.y[iplot]), $
  color=pdata.color[iplot], psym=pdata.psym[iplot], $
- thick=pdata.thick[iplot]
+ symsize=pdata.symsize[iplot], thick=pdata.thick[iplot]
 
 return
 end
@@ -1518,7 +1557,7 @@ end
 
 ;----------------------------------------------------------------------
 
-pro atvplot, x, y, color=color, psym=psym, thick=thick
+pro atvplot, x, y, color=color, psym=psym, symsize=symsize, thick=thick
 common atv_pdata
 common atv_state
 
@@ -1543,6 +1582,8 @@ if (pdata.nplot LT pdata.nmax) then begin
    pdata.color[iplot] = atv_icolor(color)
    if (keyword_set(psym)) then pdata.psym[iplot] = psym $
     else pdata.psym[iplot] = 0
+   if (keyword_set(symsize)) then pdata.symsize[iplot] = symsize $
+    else pdata.symsize[iplot] = 1.0
    if (keyword_set(thick)) then pdata.thick[iplot] = thick $
     else pdata.thick[iplot] = 1.0
 
@@ -1771,6 +1812,9 @@ tv, display_image
 ; Overplot x,y plots from atvplot
 atv_plotall
 
+wset, state.draw_window_id
+unblink_image = tvrd()     ; moved here by AJB 8/11/99
+
 end
 
 ;--------------------------------------------------------------------
@@ -1919,9 +1963,6 @@ atv_drawbox
 wset, state.track_window_id
 atv_gettrack
 
-wset, state.draw_window_id
-unblink_image = tvrd()     ; added AJB 7/26/99
-
 ; Added by AJB 7/26/99 to prevent unwanted mouse clicks
 widget_control, state.draw_base_id, /clear_events   
 
@@ -1929,39 +1970,69 @@ end
 
 ;--------------------------------------------------------------------
 
-pro atv_stretchct
+pro atv_stretchct, brightness, contrast,  getmouse = getmouse
 
-; Change brightness and contrast according to slider values.
-; For contrast, use same algorithm as IDL 'stretch' routine.
-; For brightness, want a linear 'slide' of color table.
-; Store the current color table in 3 vectors of length 
-; (3 * (!d.table_size-8)), and when brightness slider moves,
-; just 'slide' the color table along these larger vectors.
+; modified by AJB 8/18/99
+; routine to change color stretch for given values of 
+; brightness and contrast.
+; Brightness and contrast range from 1 up to state.slidermax
 
 common atv_state
-common atv_color, r_vector, g_vector, b_vector
+common atv_color
 
-widget_control, state.brightness_slider_id, $
-  get_value = brightness
+if (keyword_set(getmouse)) then begin
+    contrast = 0 > (contrast / float(state.draw_window_size[1]) * $
+                    state.slidermax) < (state.slidermax-1)
+    contrast = long(abs(state.slidermax - contrast))
 
-widget_control, state.contrast_slider_id, $
-  get_value = contrast
+    brightness = 0 > $
+      (brightness / float(state.draw_window_size[0]) * state.slidermax) < $
+      (state.slidermax - 1)
+    brightness = long(abs(brightness-state.slidermax))
+endif
 
-gamma = 10^( (contrast/50.) - 1 )
+d = byte(!d.table_size - 8)
 
-case gamma of
-    1.0: p = lindgen(!d.table_size-8)
-    else: $
-      p = long( ((findgen(!d.table_size-8) / (!d.table_size-8) ) ^ gamma) $
-                * (!d.table_size-8))
-endcase
+maxdp = 600
+mindp = 4
 
-; use brightness slider value as zero-point of color table mapping.
+if (contrast LT (state.slidermax / 2)) then begin
+    dp = ((d - maxdp) / float((state.slidermax / 2) - 1)) * contrast + $
+      ((maxdp * state.slidermax / 2) - d) / float(state.slidermax / 2)
+endif else begin
+    dp = ((mindp - d) / float(state.slidermax / 2)) * contrast + $
+      ((d * state.slidermax) - (mindp * state.slidermax / 2)) / $
+      float(state.slidermax / 2)
+endelse
 
-r = r_vector[p + brightness]
-g = g_vector[p + brightness]
-b = b_vector[p + brightness]
-tvlct, r, g, b, 8
+dp =  fix(dp)
+
+r = replicate(r_vector(d-1), 2*d + dp)
+g = replicate(g_vector(d-1), 2*d + dp)
+b = replicate(b_vector(d-1), 2*d + dp)
+
+r[0:d-1] = r_vector(0)
+g[0:d-1] = g_vector(0)
+b[0:d-1] = b_vector(0)
+
+a = findgen(d)
+
+r[d] = congrid(r_vector, dp)
+g[d] = congrid(g_vector, dp)
+b[d] = congrid(b_vector, dp)
+
+bshift = round(brightness * (d+dp) / float(state.slidermax))
+
+rr = r[a + bshift] 
+gg = g[a + bshift]
+bb = b[a + bshift]
+
+tvlct, rr, gg, bb, 8
+
+;atv_cleartext
+
+state.brightness = brightness
+state.contrast = contrast
 
 end
 
@@ -1972,7 +2043,7 @@ pro atv_getct, tablenum
 
 ; Read in a pre-defined color table, and invert if necessary.
 
-common atv_color, r_vector, g_vector, b_vector
+common atv_color
 common atv_state
 
 ; Load a simple color table with the basic 8 colors in the lowest 8 entries
@@ -1991,11 +2062,11 @@ if (state.invert_colormap EQ 1) then begin
     b = abs (b - 255)
 endif
 
-r_vector(!d.table_size-8) = r
-g_vector(!d.table_size-8) = g
-b_vector(!d.table_size-8) = b
+r_vector = r
+g_vector = g
+b_vector = b
 
-atv_stretchct
+atv_stretchct, state.brightness, state.contrast
 
 end
 
@@ -2843,8 +2914,8 @@ if ( (n_params() NE 0) AND (size(image, /tname) EQ 'STRING') ) then begin
 endif
 
 if ( (n_params() EQ 0) AND (not (xregistered('atv')))) then begin
-    main_image = bytscl(dist(500,500)^2 * sin(dist(500,500)/2.)^2)
-
+;    main_image = bytscl(dist(500,500)^2 * sin(dist(500,500)/2.)^2)
+    main_image = byte((findgen(500)*2-200) # (findgen(500)*2-200))
 endif else begin
     scaled_image = 0
     display_image = 0
@@ -2884,6 +2955,4 @@ state.zoom_factor = 1.0
 atv_displayall
 
 end
-
-
 
