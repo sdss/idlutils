@@ -8,6 +8,7 @@ IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
 VMIDC,idl_vmidc.c,vmid.c: New function to return the central vector in
                a polygon.
+UNDEFINE: Fanning procedure to wrap TEMPORARY calls to delete variables
 WHERE_POLYGONS_OVERLAP: Add optional output AREAMATCH.
 
 src/idlmangle/Makefile: Add idl_garea.o

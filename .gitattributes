@@ -922,6 +922,7 @@ pro/misc/struct_print.pro -text
 pro/misc/struct_selecttags.pro -text
 pro/misc/struct_trimtags.pro -text
 pro/misc/tag_indx.pro -text
+pro/misc/undefine.pro -text
 pro/misc/where_array.pro -text
 pro/misc/which.pro -text
 pro/mpeg/ppmtompeg.pro -text
