@@ -281,11 +281,11 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    pnumel = 0       ; Number of elements in each structure
 
    ;----------
-   ; If the file does not exist, then return with an error
+   ; If the file does not exist, then return but not with an error
 
    junk = findfile(filename, count=ct)
    if (ct EQ 0) then begin
-      errcode = -1L
+      errcode = 0
       return
    endif
 
