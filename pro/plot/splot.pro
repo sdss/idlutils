@@ -182,6 +182,11 @@ pro splot_startup
    plot_ptr = ptrarr(maxplot)
 
    ; Load a simple color table with the basic 8 colors
+   loadct, 0, /silent
+   if (!d.n_colors LE 16777216 AND !d.table_size LT 12) then $
+    message, 'Too few colors available for color table'
+   if (!d.n_colors GT 256) then device, decomposed=0
+   loadct, 0, /silent, bottom=8
    red   = [0, 1, 0, 0, 0, 1, 1, 1]
    green = [0, 0, 1, 0, 1, 0, 1, 1]
    blue  = [0, 0, 0, 1, 1, 1, 0, 1]
