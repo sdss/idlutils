@@ -61,14 +61,13 @@ model=fltarr(nx,ny)
 for i=0L, npsf-1L do $
   model=model+psfmodel[*,*,i]*psfflux[i]
 deviates=(image-model)*sqrt(invvar)
-chi2=total(deviates^2)
 
 return, reform(deviates,nx*ny)
 
 end
 ;
 pro multi_psf_fit, image1, invvar1, psf1, x=x, y=y, flux=flux, model=model1, $
-                   chi2=chi2, npsf=npsf1
+                   chi2=chi2, npsf=npsf1, silent=silent
 
 common com_mpf
 
@@ -122,38 +121,52 @@ xx=(findgen(np)-float(np/2L))#replicate(1.,np)
 yy=transpose(xx)
 r2=xx^2+yy^2
 sigma=sqrt(0.5*total(r2*psf,/double)/total(psf,/double))
-fwhm=0.8*sigma*sqrt(2.*alog(2.))  ; underestimate to be a bit pushy
+fwhm=0.3*sigma*sqrt(2.*alog(2.))  ; underestimate to be pushy
 ;    - determine noise and back
 back=median(image)
 noise=1./(sqrt(median(invvar)))
 ;    - run daofind and take top two fluxes
 ;      (reduce threshold until there are two ...)
 nstars=0
-nsig=10.
-while(nstars lt npsf and nsig gt 0.1) do begin
+nsig=13.
+while(nstars lt npsf and nsig gt 3.) do begin
     hmin=back+nsig*noise
-    find, image, sx, sy, sflux, sharp, round, hmin, fwhm, [-1.0, 1.], $
-      [0.2, 1.], /silent
+    find, image, sx, sy, sflux, sharp, round, hmin, fwhm, [-3.0, 3.], $
+      [0.001, 2.], /silent
     nstars=n_elements(sx)
     nsig=nsig*0.5
 endwhile
-if(nstars lt npsf) then begin
-    message, 'image just does not have '+string(npsf)+' peaks', /continue
+if(nstars eq 0) then begin
+    message, 'no stars at all ... oh well, aborting', /continue
     return
 endif
-sx=sx[0:npsf-1L]
-sy=sy[0:npsf-1L]
-sflux=sflux[0:npsf-1L]
+if(nstars lt npsf) then begin
+    message, 'image just does not have '+string(npsf)+' peaks, adding some randomly', /continue
+    sxnew=fltarr(npsf)
+    synew=fltarr(npsf)
+    sfluxnew=fltarr(npsf)
+    sfluxnew[0:nstars-1]=sflux
+    sxnew[0:nstars-1]=sx
+    synew[0:nstars-1]=sy
+    sxnew[nstars:npsf-1]=sxnew[0]+sigma*randomn(seed,npsf-nstars)
+    synew[nstars:npsf-1]=synew[0]+sigma*randomn(seed,npsf-nstars)
+    sx=sxnew
+    sy=synew
+    sflux=sfluxnew
+endif
+isort=reverse(sort(sflux))
+sx=sx[isort[0:npsf-1L]]
+sy=sy[isort[0:npsf-1L]]
+sflux=sflux[isort[0:npsf-1L]]
 
 ; now use mpfit to do fit
 inpars=[sx, sy]
-pi1={step:0.1, $
-     mpmaxstep:2., $
-     limited:[1,1], $
+pi1={limited:[1,1], $
      limits:[0.,float(nx)-1.]}
 pi=replicate(pi1, npsf*2L)
 outpars=mpfit('multi_psf_fit_func', inpars, /auto, parinfo=pi, quiet=silent)
-chi2=multi_psf_fit_func(outpars)
+deviates=multi_psf_fit_func(outpars)
+chi2=float(total(deviates^2,/double))
 x=outpars[0:npsf-1L]
 y=outpars[npsf:2.*npsf-1L]
 flux=psfflux
