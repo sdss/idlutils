@@ -1,6 +1,7 @@
 
 COUNT_FREELUN: New function to count the number of logical file pointers
                (LUNs) that are available.  This is to be called by DJS_BATCH.
+DIERFC: New math function for erfc.
 DJS_BATCH: Add a call to COUNT_FREELUN().  Do not try to use more hosts than
                there are free file pointers (LUNs) due to a limitation in
                executing the SPAWN command.
