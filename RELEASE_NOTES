@@ -1,4 +1,8 @@
 
+src/image/Makefile: Change some of the comment lines, since for some bizarre
+               reason those comment lines that end in a backslash will crash
+               on the SGI IRIX platform.
+
 -------------------------------------------------------------------------------
 v4_10_8 (Jan 4, 2004)
 Tagged for sirtf v0_0_2
