@@ -229,12 +229,14 @@
 ;               Exit gracefully if write priveleges unavailable
 ;       Version 1.3 Wayne Landsman 2003-10-24
 ;               Don't use EXECUTE() statement if on a virtual machine
+;       Version 1.3a Wayne Landsman 2004-5-21
+;               Fix for variable type arrays
 ;              
 ;-
 
 ; What is the current version of this program.
 function mwr_version
-    return, '1.3'
+    return, '1.3a'
 end
     
 
@@ -629,7 +631,7 @@ function mwr_validptr, vtypes, nfld, index, array
             offset:offset }
     
        vtypes = replicate(vtype, nfld)
-       
+
     endif else begin
        ; This ensures compatible structures without
        ; having to used named structures.
@@ -1073,6 +1075,7 @@ function mwr_writeheap, lun, vtypes
                   if (unsigned gt 0) then begin
                      *ptrs[j] = *ptrs[j] + unsigned
                   endif
+
                   if flip then begin
                      x = *ptrs[j]
                      host_to_ieee,x
@@ -1082,12 +1085,13 @@ function mwr_writeheap, lun, vtypes
                   endelse
                   
                   sz = size(*ptrs[j])
-                  xsz = 1 > sz[0]
+                  xsz = 1 > sz[1]
                   offset = offset + xsz * vtypes[i].ilen
               endif
            endfor
        endif
     endfor
+
     return, offset
     
 end
@@ -1147,7 +1151,6 @@ pro mwr_tabledat, lun, input, header, vtypes
     endif
 
     siz   = nbyte*nrow + heap
-
     padding = 2880 - (siz mod 2880)
     if padding eq 2880 then padding = 0
 
