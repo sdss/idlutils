@@ -635,6 +635,7 @@ pro/astrom/gsc_read_table.pro -text
 pro/astrom/ll2uv.pro -text
 pro/astrom/offset_from_pairs.pro -text
 pro/astrom/usno_cone.pro -text
+pro/astrom/usno_parse_epoch_file.pro -text
 pro/astrom/usno_read.pro -text
 pro/astrom/usno_readzone.pro -text
 pro/astrom/usnob10_extract.pro -text
