@@ -560,7 +560,6 @@ pro/TeXtoIDL/FILES -text
 pro/TeXtoIDL/README -text
 pro/TeXtoIDL/str_sep.pro -text
 pro/TeXtoIDL/textoidl.pro -text
-pro/astrom/usno_read.pro -text
 pro/bspline/bspline_action.pro -text
 pro/bspline/bspline_bkpts.pro -text
 pro/bspline/bspline_fit.pro -text
