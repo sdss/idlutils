@@ -657,6 +657,7 @@ lib/Makefile -text
 pro/2mass/tmass_ascii2fits.pro -text
 pro/2mass/tmass_cone.pro -text
 pro/2mass/tmass_decslice.pro -text
+pro/2mass/tmass_read.pro -text
 pro/2mass/tmass_readzone.pro -text
 pro/2mass/tmass_reformat_psc.pro -text
 pro/2mass/tmass_struc.pro -text
