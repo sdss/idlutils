@@ -27,9 +27,16 @@
 ; EXAMPLES:
 ;
 ; BUGS:
+;   Move around widgets to be more compact above plotting window.
+;   Write splot_readfits.
+;   Make POSITION= changeable based upon CHARSIZE.
+;   Gaussian fitting or integrated gaussian fitting.
+;   Allow one to step through an image row at a time? Or link to ATV?
+;   Use the WCS in splot_gettrack.
+;   Add widget button option to fix Y range or let it float, or fix YMIN=0.
 ;
 ; PROCEDURES CALLED:
-;   readfits
+;   fits_read
 ;
 ; INTERNAL SUPPORT ROUTINES:
 ;   gausspix
@@ -37,7 +44,6 @@
 ;   splot_clearkeylist
 ;   splot_displayall
 ;   splot_readfits
-;   splot_writetiff
 ;   splot_writeeps
 ;   splot_cleartext
 ;   splot_zoom
@@ -46,6 +52,9 @@
 ;   splot_shutdown
 ;   splot_resize
 ;   splot_icolor()
+;   splot_setheader
+;   splot_headinfo
+;   splot_headinfo_event
 ;   splot_plot1plot
 ;   splot_plot1text
 ;   splot_plotwindow
@@ -90,62 +99,44 @@ end
 pro splot_startup
 
    common splot_state, state
-   common splot_pdata, pdata, ptext, phistory
+   common splot_images, main_image
+   common splot_pdata, nplot, maxplot, plot_ptr
+   common splot_wcs, astr, equinox
 
    keylist = { key:' ', x:0.0, y:0.0 }
 
-   state = {                     $
-    base_id: 0L,                 $ ; ID of top-level base
-    base_min_size: [512L, 512L], $ ; min size for top-level base
-    draw_base_id: 0L           , $ ; ID of base holding draw window
-    draw_window_id: 0L         , $ ; window ID of draw window
-    draw_widget_id: 0L         , $ ; widget ID of draw widget
-    location_bar_id: 0L        , $ ; ID of (x,y,value) label
-    xrange_text_id: 0L         , $ ; ID of XRANGE= widget
-    yrange_text_id: 0L         , $ ; ID of YRANGE= widget
-    comments_text_id: 0L       , $ ; ID of comments output widget
-    keyboard_text_id: 0L       , $ ; ID of keyboard input widget
-    nkey: 0                    , $ ; Number of elements in keylist
-    keylist: replicate(keylist,5), $ ; Record of keystrokes + cursor in plot
-    xrange: [0.0,1.0]          , $ ; X range of plot window
-    yrange: [0.0,1.0]          , $ ; Y range of plot window
+   state = {                         $
+    version: '0.9'                 , $ ; Version number of this release
+    head_ptr: ptr_new()            , $ ; Pointer to FITS image header
+    imagename: ''                  , $ ; FITS image file name
+    base_id: 0L                    , $ ; ID of top-level base
+    base_min_size: [512L, 512L]    , $ ; Min size for top-level base
+    draw_base_id: 0L               , $ ; ID of base holding draw window
+    draw_window_id: 0L             , $ ; Window ID of draw window
+    draw_widget_id: 0L             , $ ; Widget ID of draw widget
+    location_bar_id: 0L            , $ ; ID of (x,y) label
+    wcs_bar_id: 0L                 , $ ; ID of WCS label
+    xrange_text_id: 0L             , $ ; ID of XRANGE= widget
+    yrange_text_id: 0L             , $ ; ID of YRANGE= widget
+    comments_text_id: 0L           , $ ; ID of comments output widget
+    keyboard_text_id: 0L           , $ ; ID of keyboard input widget
+    nkey: 0                        , $ ; Number of elements in keylist
+    keylist: replicate(keylist,5)  , $ ; Record of keystrokes + cursor in plot
+    xrange: [0.0,1.0]              , $ ; X range of plot window
+    yrange: [0.0,1.0]              , $ ; Y range of plot window
     position: [0.15,0.15,0.95,0.95], $ ; POSITION for PLOT procedure
-    draw_window_size: [512L, 512L], $    ; size of main draw window
-    menu_ids: lonarr(25)       , $ ; list of top menu items
-    mouse: [0L, 0L]            , $ ; cursor position in device coords
-    mphys: [0.0, 0.0]          , $ ; cursor position in data coordinates
-    base_pad: [0L, 0L]         , $ ; padding around draw base
-    pad: [0L, 0L]                $ ; padding around draw widget
+    draw_window_size: [512L, 512L] , $ ; Size of main draw window
+    menu_ids: lonarr(25)           , $ ; List of top menu items
+    mouse: [0L, 0L]                , $ ; Cursor position in device coords
+    mphys: [0.0, 0.0]              , $ ; Cursor position in data coordinates
+    base_pad: [0L, 0L]             , $ ; Padding around draw base
+    pad: [0L, 0L]                  , $ ; Padding around draw widget
+    headinfo_base_id: 0L             $ ; headinfo base widget id
    }
 
-   nmax = 5000L
-   pdata = {                      $
-    nplot: 0L,                    $ ; Number of line plots
-    nmax:  nmax,                  $ ; Maximum number of line plots
-    x: replicate(ptr_new(),nmax), $ ; X vector
-    y: replicate(ptr_new(),nmax), $ ; Y vector
-    color: lonarr(nmax),          $ ; COLOR for PLOT
-    psym: lonarr(nmax),           $ ; PSYM for PLOT
-    symsize: fltarr(nmax),        $ ; PSYM for PLOT
-    thick: fltarr(nmax)           $ ; THICK for PLOT
-   }
-
-   nmax = 500L
-   ptext = {                      $
-    nplot: 0L,                    $ ; Number of text plots
-    nmax:  nmax,                  $ ; Maximum number of text plots
-    x: fltarr(nmax),              $ ; X position
-    y: fltarr(nmax),              $ ; Y position
-    string: replicate(ptr_new(),nmax), $ ; Text string
-    alignment: fltarr(nmax),      $ ; ALIGNMENT for XYOUTS
-    charsize: fltarr(nmax),       $ ; CHARSIZE for XYOUTS
-    charthick: fltarr(nmax),      $ ; CHARTHICK for XYOUTS
-    color: lonarr(nmax),          $ ; COLOR for XYOUTS
-    font: lonarr(nmax),           $ ; FONT for XYOUTS
-    orientation: fltarr(nmax)     $ ; ORIENTATION for XYOUTS
-   }
-
-   phistory = intarr(pdata.nmax + ptext.nmax)
+   nplot = 0
+   maxplot = 5000
+   plot_ptr = ptrarr(maxplot)
 
    ; Load a simple color table with the basic 8 colors
    red   = [0, 1, 0, 0, 0, 1, 1, 1]
@@ -166,11 +157,12 @@ pro splot_startup
                   {cw_pdmenu_s, 1, 'File'}, $         ; file menu
                   {cw_pdmenu_s, 0, 'ReadFits'}, $
                   {cw_pdmenu_s, 0, 'WriteEPS'},  $
-                  {cw_pdmenu_s, 0, 'WriteTiff'}, $
                   {cw_pdmenu_s, 2, 'Quit'}, $
                   {cw_pdmenu_s, 1, 'Erase'}, $        ; erase menu
                   {cw_pdmenu_s, 0, 'EraseLast'}, $
                   {cw_pdmenu_s, 2, 'EraseAll'}, $
+                  {cw_pdmenu_s, 1, 'ImageInfo'}, $    ;info menu
+                  {cw_pdmenu_s, 2, 'ImageHeader'}, $
                   {cw_pdmenu_s, 1, 'Help'}, $         ; help menu
                   {cw_pdmenu_s, 2, 'SPLOT Help'} $
                 ]
@@ -182,43 +174,50 @@ pro splot_startup
                      /return_id, $
                      uvalue = 'top_menu')
 
-   track_base =    widget_base(base, /row)
-   info_base = widget_base(track_base, /column, /base_align_right)
 
-   state.xrange_text_id = cw_field(info_base, $
+   button_base1 =  widget_base(base, /row, /base_align_right)
+   button_base2 =  widget_base(base, /row, /base_align_right)
+   button_base3 =  widget_base(base, /row, /base_align_right)
+
+   state.xrange_text_id = cw_field(button_base1, $
            uvalue = 'xrange_text', /string,  $
            title = 'XRANGE=', $
            value = string(state.xrange[0])+' '+string(state.xrange[1]),  $
            /return_events, $
            xsize = 25)
 
-   state.yrange_text_id = cw_field(info_base, $
+   state.yrange_text_id = cw_field(button_base2, $
            uvalue = 'yrange_text', /string,  $
            title = 'YRANGE=', $
            value = string(state.yrange[0])+' '+string(state.yrange[1]),  $
            /return_events, $
            xsize = 25)
 
-   button_base2 =  widget_base(base, /row, /base_align_bottom)
-
-   state.draw_base_id = widget_base(base, $
-              /column, /base_align_left, $
-              /tracking_events, $
-              uvalue = 'draw_base', $
-              frame = 2)
-
    tmp_string = string('',format='(a30)')
-   state.location_bar_id = widget_label(info_base, $
+   state.location_bar_id = widget_label(button_base1, $
                 value = tmp_string,  $
                 uvalue = 'location_bar', frame=1)
 
-   state.comments_text_id = widget_label(info_base, $
+   tmp_string = string('',format='(a30)')
+   state.wcs_bar_id = widget_label(button_base2, $
+                value = tmp_string,  $
+                uvalue = 'wcs_bar', frame=1)
+
+   state.comments_text_id = widget_label(button_base3, $
 ;           value = '', $
            value = tmp_string, $
            uvalue='comments_text', $
-           xsize=state.draw_window_size[0]-20, frame=1)
+           xsize=state.draw_window_size[0]-90, frame=1)
 
-   state.keyboard_text_id =  widget_text(button_base2, $
+   zoomone_button = widget_button(button_base3, $
+              value = 'Zoom1', $
+              uvalue = 'zoom_one')
+
+   done_button = widget_button(button_base3, $
+              value = 'Done', $
+              uvalue = 'done')
+
+   state.keyboard_text_id =  widget_text(button_base3, $
               /all_events, $
               scr_xsize = 1, $
               scr_ysize = 1, $
@@ -226,13 +225,11 @@ pro splot_startup
               uvalue = 'keyboard_text', $
               value = '')
 
-   zoomone_button = widget_button(button_base2, $
-              value = 'Zoom1', $
-              uvalue = 'zoom_one')
-
-   done_button = widget_button(button_base2, $
-              value = 'Done', $
-              uvalue = 'done')
+   state.draw_base_id = widget_base(base, $
+              /column, /base_align_left, $
+              /tracking_events, $
+              uvalue = 'draw_base', $
+              frame = 2)
 
    state.draw_widget_id = widget_draw(state.draw_base_id, $
               uvalue = 'draw_window', $
@@ -262,6 +259,7 @@ pro splot_startup
 
    xmanager, 'splot', state.base_id, /no_block
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -274,6 +272,7 @@ pro splot_clearkeylist
    state.keylist.key = ' '
    state.keylist.x = 0.0
    state.keylist.y = 0.0
+
    return
 end
 
@@ -281,6 +280,7 @@ end
 
 pro splot_displayall
    splot_refresh
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -291,14 +291,57 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro splot_writetiff
-; ???
-end
-
-;------------------------------------------------------------------------------
-
 pro splot_writeeps
-; ???
+
+   common splot_state
+
+   widget_control, /hourglass
+
+   filename = dialog_pickfile(filter = '*.eps', $ 
+               file = 'splot.eps', $
+               group =  state.base_id, $
+               /write)
+   tmp_result = findfile(filename, count = nfiles)
+
+   result = ''
+   if (nfiles GT 0 and filename NE '') then begin
+      mesg = strarr(2)
+      mesg[0] = 'Overwrite existing file:'
+      tmp_string = strmid(filename, rstrpos(filename, '/') + 1)
+      mesg[1] = strcompress(tmp_string + '?', /remove_all)
+      result =  dialog_message(mesg, $
+                 /default_no, $
+                 dialog_parent = state.base_id, $
+                 /question)                 
+   endif
+
+   if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
+
+      screen_device = !d.name
+      wset, state.draw_window_id
+
+      aspect_ratio = $
+       state.draw_window_size[1] / float(state.draw_window_size[0])
+    
+      set_plot, 'ps'
+      device, $
+       filename = filename, $
+       /color, $
+       bits_per_pixel = 8, $
+       /encapsul, $
+       /inches, $
+       xsize = 6.0, $
+       ysize = 6.0 * aspect_ratio
+    
+      splot_plotall
+
+      device, /close
+      set_plot, screen_device
+   endif
+
+   splot_cleartext
+
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -352,6 +395,7 @@ end
 pro splot_gettrack
 
    common splot_state
+   common splot_wcs
 
    ; Update location bar with x, y
 
@@ -400,12 +444,14 @@ pro splot_event, event
          ; File menu options:
          'ReadFits'  : splot_readfits
          'WriteEPS'  : splot_writeeps
-         'WriteTiff' : splot_writetiff
          'Quit'      : splot_shutdown
 
          ; Erase options:
          'EraseLast' : serase, 1
          'EraseAll'  : serase
+
+         ; Info options:
+         'ImageHeader': splot_headinfo
 
          ; Help options:
          'SPLOT Help': splot_help
@@ -470,7 +516,9 @@ pro splot_event, event
          state.keylist[state.nkey].x = state.mphys[0]
          state.keylist[state.nkey].y = state.mphys[1]
          state.nkey = state.nkey + 1
-      endif
+      endif else begin
+         splot_clearkeylist
+      endelse
 
       case eventchar of
          '1': splot_move_cursor, eventchar
@@ -507,21 +555,26 @@ pro splot_shutdown
    ; of space.  Also clear the state and the color map vectors.
 
    common splot_state
+   common splot_images
    common splot_pdata
 
    if (xregistered ('splot')) then begin
       widget_control, state.base_id, /destroy
    endif
 
-   if (n_elements(phistory) GT 1) then begin
+   if (nplot GT 0) then begin
       serase, /norefresh
-      pdata = 0
-      ptext = 0
-      phistory = 0
+      plot_ptr = 0
    endif
 
-   state = 0
+   if (size(state, /tname) EQ 'STRUCT') then begin
+      if (size(state.head_ptr, /tname) EQ 'POINTER') then $
+       ptr_free, state.head_ptr
+      main_image = 0
+      state = 0
+   endif
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -582,7 +635,128 @@ function splot_icolor, color
    return, icolor
 end
 
-;----------------------------------------------------------------------
+;------------------------------------------------------------------------------
+
+pro splot_setheader, head
+
+   ; Routine to set the image header using a pointer to a 
+   ; heap variable.  If there is no header (i.e. if SPLOT has just been
+   ; passed a data array rather than a filename), then make the
+   ; header pointer a null pointer.
+   ; The reason for doing it this way is that we don't know in advance
+   ; how many lines the header will have, so we can't just save the
+   ; header itself as an array in the state structure.  So instead,
+   ; save a pointer to the header in the state structure.
+
+   common splot_state
+   common splot_wcs
+
+   ; Kill the header info window when a new image is read in
+
+   if (xregistered('splot_headinfo')) then begin
+      widget_control, state.headinfo_base_id, /destroy
+   endif
+
+   if (n_elements(head) GT 1) then begin
+      ptr_free, state.head_ptr
+      state.head_ptr = ptr_new(head)
+
+      ; Get astrometry information from header, if it exists
+      extast, head, astr, noparams
+      if (noparams EQ -1) then astr = 0
+    
+      equ = get_equinox(head, code)
+      if (code EQ -1) then begin
+         astr = 0
+         equinox = 'J2000'
+      endif else begin
+         if (equ EQ 2000.0) then equinox = 'J2000'
+         if (equ EQ 1950.0) then equinox = 'B1950'
+         if (equ NE 2000.0 and equ NE 1950.0) then $
+          equinox = string(equ, format = '(f6.4)')
+      endelse
+
+   endif else begin
+      ; If there's no image header...
+      ptr_free, state.head_ptr
+      state.head_ptr = ptr_new()
+      astr = 0
+    
+      widget_control, state.wcs_bar_id, set_value = $
+       '---No WCS Info---'
+   endelse
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
+pro splot_headinfo
+
+   common splot_state
+
+   ; If there's no header, kill the headinfo window and exit this routine.
+   if (NOT ptr_valid(state.head_ptr)) then begin
+      if (xregistered('splot_headinfo')) then begin
+         widget_control, state.headinfo_base_id, /destroy
+      endif
+
+      mesg = 'No header information available for this image!'
+      junk = dialog_message(mesg, /error, $
+                          dialog_parent = state.base_id)
+      return
+   endif
+
+   ; If there is header information but not headinfo window,
+   ; create the headinfo window.
+   if (NOT xregistered('splot_headinfo')) then begin
+
+      headinfo_base = $
+       widget_base(/floating, $
+                  /base_align_right, $
+                  group_leader = state.base_id, $
+                  /column, $
+                  title = 'SPLOT image header information', $
+                  uvalue = 'headinfo_base')
+      state.headinfo_base_id = headinfo_base
+
+      h = *(state.head_ptr)
+
+      headinfo_text = widget_text(headinfo_base, $
+                            /scroll, $
+                            value = h, $
+                            xsize = 85, $
+                            ysize = 24)
+    
+      headinfo_done = widget_button(headinfo_base, $
+                              value = 'Done', $
+                              uvalue = 'headinfo_done')
+
+      widget_control, headinfo_base, /realize
+      xmanager, 'splot_headinfo', headinfo_base, /no_block
+
+   endif
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
+pro splot_headinfo_event, event
+
+   common splot_state
+
+   widget_control, event.id, get_uvalue=uvalue
+
+   case uvalue of
+      'headinfo_done': widget_control, event.top, /destroy
+      else:
+   endcase
+
+   return
+end
+
+;------------------------------------------------------------------------------
 
 pro splot_plot1plot, iplot
 
@@ -591,11 +765,14 @@ pro splot_plot1plot, iplot
 
    widget_control, /hourglass
 
-   plot, *(pdata.x[iplot]), *(pdata.y[iplot]), $
-    color=pdata.color[iplot], psym=pdata.psym[iplot], $
-    symsize=pdata.symsize[iplot], thick=pdata.thick[iplot], $
-    /noerase, xstyle=5, ystyle=5, $
-    xrange=!x.crange, yrange=!y.crange
+   ; Convert color names to index numbers
+   options = (*(plot_ptr[iplot])).options
+   c = where(tag_names(options) EQ 'COLOR', ct)
+   if (ct EQ 1) then options.color = splot_icolor(options.color)
+
+   plot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
+    /noerase, xstyle=5, ystyle=5, xrange=!x.crange, yrange=!y.crange, $
+    _EXTRA=options
 
    return
 end
@@ -608,15 +785,19 @@ pro splot_plot1text, iplot
 
    widget_control, /hourglass
 
-   xyouts, ptext.x[iplot], ptext.y[iplot], *(ptext.string[iplot]), $
-    alignment=ptext.alignment[iplot], charsize=ptext.charsize[iplot], $
-    charthick=ptext.charthick[iplot], color=ptext.color[iplot], $
-    font=ptext.font[iplot], orientation=ptext.orientation[iplot]
+   ; Convert color names to index numbers
+   options = (*(plot_ptr[iplot])).options
+   c = where(tag_names(options) EQ 'COLOR', ct)
+   if (ct EQ 1) then options.color = splot_icolor(options.color)
+
+   xyouts, (*(plot_ptr[iplot])).x, (*(plot_ptr[iplot])).y, $
+    (*(plot_ptr[iplot])).text, _EXTRA=options
 
    return
 end
 
 ;----------------------------------------------------------------------
+
 pro splot_plotwindow
 
    common splot_state
@@ -625,9 +806,17 @@ pro splot_plotwindow
    ; Set plot window - draw box
 
    !p.position = state.position ; ???
-   if (pdata.nplot GT 0) then begin
-      plot, *(pdata.x[0]), *(pdata.y[0]), /nodata, $
-       xrange=state.xrange, yrange=state.yrange, xstyle=1, ystyle=1
+   if (nplot GT 0) then begin
+
+      ; Convert color names to index numbers
+      iplot = 0
+      options = (*(plot_ptr[iplot])).options
+      c = where(tag_names(options) EQ 'COLOR', ct)
+      if (ct EQ 1) then options.color = splot_icolor(options.color)
+
+      plot, (*(plot_ptr[iplot])).x, (*(plot_ptr[iplot])).y, /nodata, $
+       xrange=state.xrange, yrange=state.yrange, xstyle=1, ystyle=1, $
+       _EXTRA=options
    endif else begin
       plot, [0], [0], /nodata, $
        xrange=state.xrange, yrange=state.yrange, xstyle=1, ystyle=1
@@ -637,6 +826,7 @@ pro splot_plotwindow
 end
 
 ;----------------------------------------------------------------------
+
 pro splot_plotall
    common splot_state
    common splot_pdata
@@ -644,59 +834,64 @@ pro splot_plotall
    ; Routine to overplot line plots from SPLOT and text from SXYOUTS
    splot_plotwindow
 
-   if (pdata.nplot GT 0 OR ptext.nplot GT 0) then begin
+   for iplot=0, nplot-1 do begin
+      case (*(plot_ptr[iplot])).type of
+        'points'  : splot_plot1plot, iplot
+        'text'    : splot_plot1text, iplot
+        else      : print, 'Problem in splot_plotall!'
+      endcase
+   endfor
 
-      for iplot=0, pdata.nplot-1 do $
-       splot_plot1plot, iplot
-
-      for iplot=0, ptext.nplot-1 do $
-       splot_plot1text, iplot
-   endif
-
+   return
 end
 
 ;------------------------------------------------------------------------------
 
-pro sxyouts, x, y, string, alignment=alignment, charsize=charsize, $
- charthick=charthick, color=color, font=font, orientation=orientation
+pro sxyouts, x, y, text, _EXTRA=options
 
    common splot_pdata
    common splot_state
 
    ; Routine to overplot text
 
+   if (NOT xregistered('splot')) then begin
+      print, 'You need to start SPLOT first!'
+      return
+   endif
+
    if (N_params() LT 3) then begin
       print, 'Too few parameters for SXYOUTS'
       return
    endif
 
-   if (ptext.nplot LT ptext.nmax) then begin
-      iplot = ptext.nplot
+   if (nplot LT maxplot) then begin
 
-      ptext.x[iplot] = x
-      ptext.y[iplot] = y
-      ptext.string[iplot] = ptr_new(string)
-      if (keyword_set(alignment)) then ptext.alignment[iplot] = alignment $
-       else ptext.alignment[iplot] = 0.0
-      if (keyword_set(charsize)) then ptext.charsize[iplot] = charsize $
-       else ptext.charsize[iplot] = 1.0
-      if (keyword_set(charthick)) then ptext.charthick[iplot] = charthick $
-       else ptext.charthick[iplot] = 1.0
-      ptext.color[iplot] = splot_icolor(color)
-      if (keyword_set(font)) then ptext.font[iplot] = font $
-       else ptext.font[iplot] = 1
-      if (keyword_set(orientation)) then ptext.orientation[iplot] = orientation $
-       else ptext.orientation[iplot] = 0.0
+      ; Set default font to 1
+      if (N_elements(options) EQ 0) then begin
+         options = {font: 1}
+      endif else begin
+         c = where(tag_names(options) EQ 'FONT', ct)
+         if (ct EQ 0) then options = create_struct(options, 'font', 1)
+      endelse
+
+      pstruct = { $
+       type: 'text',   $       ; type of plot
+       x: x,             $     ; x coordinate
+       y: y,             $     ; y coordinate
+       text: text,       $     ; text to plot
+       options: options  $     ; plot keyword options
+      }
+
+      plot_ptr[nplot] = ptr_new(pstruct)
+      nplot = nplot + 1
 
       wset, state.draw_window_id
-      splot_plot1text, ptext.nplot
-      ptext.nplot = ptext.nplot + 1
+      splot_plot1text, nplot-1
    endif else begin
       print, 'Too many calls to SXYOUTS'
    endelse
 
-   phistory[pdata.nplot + ptext.nplot - 1] = 2 ; text
-
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -711,34 +906,31 @@ pro splot_move_cursor, direction
    i = 1L
 
    case direction of
-      '2': state.mouse[1] = max([state.mouse[1] - i, 0])
-      '4': state.mouse[0] = max([state.mouse[0] - i, 0])
-      '8': state.mouse[1] = min([state.mouse[1] + i, state.image_size[1] - i])
-      '6': state.mouse[0] = min([state.mouse[0] + i, state.image_size[0] - i])
+      '2': state.mouse[1] = (state.mouse[1] - i) > 0
+      '4': state.mouse[0] = (state.mouse[0] - i) > 0
+      '8': state.mouse[1] = (state.mouse[1] + i) < (state.draw_window_size[1]-1)
+      '6': state.mouse[0] = (state.mouse[0] + i) < (state.draw_window_size[0]-1)
       '7': begin
-         state.mouse[1] = min([state.mouse[1] + i, state.image_size[1] - i])
-         state.mouse[0] = max([state.mouse[0] - i, 0])
+         state.mouse[1] = (state.mouse[1] + i) < (state.draw_window_size[1]-1)
+         state.mouse[0] = (state.mouse[0] - i) > 0
       end
       '9': begin
-         state.mouse[1] = min([state.mouse[1] + i, state.image_size[1] - i])
-         state.mouse[0] = min([state.mouse[0] + i, state.image_size[0] - i])
+         state.mouse[1] = (state.mouse[1] + i) < (state.draw_window_size[1]-1)
+         state.mouse[0] = (state.mouse[0] + i) < (state.draw_window_size[0]-1)
       end
       '3': begin
-         state.mouse[1] = max([state.mouse[1] - i, 0])
-         state.mouse[0] = min([state.mouse[0] + i, state.image_size[0] - i])
+         state.mouse[1] = (state.mouse[1] - i) > 0
+         state.mouse[0] = (state.mouse[0] + i) < (state.draw_window_size[0]-1)
       end
       '1': begin
-         state.mouse[1] = max([state.mouse[1] - i, 0])
-         state.mouse[0] = max([state.mouse[0] - i, 0])
+         state.mouse[1] = (state.mouse[1] - i) > 0
+         state.mouse[0] = (state.mouse[0] - i) > 0
       end
 
    endcase
 
-;   newpos = (state.mouse - state.offset + 0.5) * state.zoom_factor
-   newpos = state.mouse + 0.5 ; ???
-
    wset,  state.draw_window_id
-   tvcrs, newpos[0], newpos[1], /device
+   tvcrs, state.mouse[0], state.mouse[1], /device
 
    splot_gettrack
 
@@ -794,6 +986,7 @@ end
 ;------------------------------------------------------------------------------
 
 pro splot_refresh
+
    common splot_state
 
    widget_control, /hourglass
@@ -807,11 +1000,123 @@ pro splot_refresh
    ; prevent unwanted mouse clicks
    widget_control, state.draw_base_id, /clear_events
 
+   return
 end
 ;------------------------------------------------------------------------------
 
 pro splot_help
-; ???
+
+   common splot_state
+
+   h = strarr(70)
+   i = 0
+   h[i] =  'SPLOT HELP'
+   i = i + 2
+   h[i] =  'MENU BAR:'
+   i = i + 1
+   h[i] =  'File->ReadFits:         Read in a new fits image from disk'
+   i = i + 1
+   h[i] =  'File->WritePS:          Write a PostScript file of the current display'
+   i = i + 1
+   h[i] =  'File->Quit:             Quits SPLOT'
+   i = i + 1
+   h[i] =  'Erase->EraseLast:       Erases the most recent plot label'
+   i = i + 1
+   h[i] =  'Erase->EraseAll:        Erases all plot labels'
+   i = i + 1
+   h[i] =  'ImageInfo->ImageHeader: Display the FITS header, if there is one.'
+   i = i + 2
+   h[i] =  'CONTROL PANEL ITEMS:'
+   i = i + 1
+   h[i] = 'XRANGE:          Shows X range for display; click to modify'
+   i = i + 1
+   h[i] = 'YRANGE:          Shows Y range for display; click to modify'
+   i = i + 2
+   h[i] = 'MOUSE:'
+   i = i + 1
+   h[i] = '                 Button1 = Zoom in & center'
+   i = i + 1 
+   h[i] = '                 Button2 = Center on current position'
+   i = i + 1
+   h[i] = '                 Button3 = Zoom out & center'
+   i = i + 1
+   h[i] = 'BUTTONS:'
+   i = i + 1
+   h[i] = 'Zoom1:           Sets XRANGE and YRANGE to show all data'
+   i = i + 1
+   h[i] = 'Done:            Quits SPLOT'
+   i = i + 2
+   h[i] = 'Keyboard commands in display window:'
+   i = i + 1
+   h[i] = '    Numeric keypad (with NUM LOCK on) moves cursor'
+   i = i + 1
+   h[i] = '    g: gaussian fit (gaussian integrated over each pixel)'
+   i = i + 2
+   h[i] = 'IDL COMMAND LINE HELP:'
+   i = i + 1
+   h[i] = 'To plot a 1-D array:'
+   i = i + 1
+   h[i] = '    splot, xvector, yvector [, options]'
+   i = i + 1
+   h[i] = 'To plot a 1-D array from a FITS file:'
+   i = i + 1
+   h[i] = '    splot, filename [, options] (enclose file name in single quotes)'
+   i = i + 1
+   h[i] = 'To overplot text on the draw window: '
+   i = i + 1
+   h[i] = '    sxyouts, x, y, text_string [, options]  (enclose string in single quotes)'
+   i = i + 2
+   h[i] = 'The options for SPLOT and SXYOUTS are essentially'
+   i = i + 1
+   h[i] =  'the same as those for the IDL PLOT and XYOUTS commands.'
+   i = i + 1
+   h[i] = 'The default color is red for overplots done from the IDL command line.'
+   i = i + 2
+   h[i] = 'Other commands:'
+   i = i + 1
+   h[i] = 'serase [, N]:       erases all (or last N) plots and text'
+   i = i + 1
+   h[i] = 'splot_shutdown:   quits SPLOT'
+   i = i + 1
+   h[i] = 'NOTE: If SPLOT should crash, type splot_shutdown at the IDL prompt.'
+   i = i + 5
+   h[i] = strcompress('SPLOT.PRO version '+state.version+' by D. Schlegel')
+   i = i + 1
+   h[i] = 'For full instructions, or to download the most recent version, go to:'
+   i = i + 1
+   h[i] = 'http://www.astro.princeton.edu/~schlegel/index.html'
+   i = i + 2
+   h[i] = 'For the companion program ATV, go to:'
+   i = i + 1
+   h[i] = 'http://cfa-www.harvard.edu/~abarth/atv/atv.html'
+
+   if (NOT xregistered('splot_help')) then begin
+
+      helptitle = strcompress('splot v' + state.version + ' help')
+
+      help_base =  widget_base(/floating, $
+       group_leader = state.base_id, $
+       /column, $
+       /base_align_right, $
+       title = helptitle, $
+       uvalue = 'help_base')
+
+      help_text = widget_text(help_base, $
+                            /scroll, $
+                            value = h, $
+                            xsize = 85, $
+                            ysize = 24)
+    
+      help_done = widget_button(help_base, $
+                              value = 'Done', $
+                              uvalue = 'help_done')
+
+      widget_control, help_base, /realize
+      xmanager, 'splot_help', help_base, /no_block
+
+   endif
+
+   return 
 end
 
 ;------------------------------------------------------------------------------
@@ -824,11 +1129,14 @@ pro splot_help_event, event
       'help_done': widget_control, event.top, /destroy
       else:
    endcase
+
+   return
 end
 
 ;------------------------------------------------------------------------------
 
 pro serase, nerase, norefresh=norefresh
+
    common splot_pdata
 
    ; Routine to erase line plots from SPLOT and text from SXYOUTS.
@@ -836,23 +1144,15 @@ pro serase, nerase, norefresh=norefresh
    ; The norefresh keyword is used  when a new image
    ; has just been read in, and by splot_shutdown.
 
-   nplotall = pdata.nplot + ptext.nplot
-   if (N_params() LT 1) then nerase = nplotall $
-   else if (nerase GT nplotall) then nerase = nplotall
+   if (N_params() LT 1) then nerase = nplot $
+   else if (nerase GT nplot) then nerase = nplot
 
-   for ihistory=nplotall-nerase, nplotall-1 do begin
-      if (phistory[ihistory] EQ 1) then begin
-         ; Erase a point plot
-         pdata.nplot = pdata.nplot - 1
-         iplot = pdata.nplot
-         ptr_free, pdata.x[iplot], pdata.y[iplot]
-      endif else if (phistory[ihistory] EQ 2) then begin
-         ; Erase a text plot
-         ptext.nplot = ptext.nplot - 1
-         iplot = ptext.nplot
-         ptr_free, ptext.string[iplot]
-      endif
+   for iplot=nplot-nerase, nplot-1 do begin
+      ptr_free, plot_ptr[iplot]
+      plot_ptr[iplot] = ptr_new()
    endfor
+
+   nplot = nplot - nerase
 
    if (NOT keyword_set(norefresh) ) then splot_refresh
 
@@ -874,10 +1174,11 @@ pro splot_gaussfit
       ; selected X boundaries.
       xmin = min([state.keylist[i].x, state.keylist[i].x])
       xmax = max([state.keylist[i].x, state.keylist[i].x])
-      j = where(*(pdata.x[0]) GE xmin AND *(pdata.x[0]) LE xmax)
+      j = where((*(plot_ptr[0])).x GE xmin $
+       AND (*(plot_ptr[0])).x LE xmax)
       if (N_elements(j) GT 3) then begin
-         xtemp = (*(pdata.x[0]))[j]
-         ytemp = (*(pdata.y[0]))[j]
+         xtemp = (*(plot_ptr[0])).x[j]
+         ytemp = (*(plot_ptr[0])).y[j]
          ymin = min(ytemp)
          ymax = max(ytemp, imax)
 
@@ -920,22 +1221,22 @@ pro splot_autoscale
    state.yrange[0] = 0.0
    state.yrange[1] = 1.0
 
-   nplotall = pdata.nplot + ptext.nplot
-   if (nplotall GT 0) then begin
-      idat = where(phistory[0:nplotall-1] EQ 1)
+   if (nplot GT 0) then begin
 
       ; Set plotting limits for first SPLOT
-      state.xrange[0] = min( *(pdata.x[idat[0]]) )
-      state.xrange[1] = max( *(pdata.x[idat[0]]) )
-      state.yrange[0] = min( *(pdata.y[idat[0]]) )
-      state.yrange[1] = max( *(pdata.y[idat[0]]) )
+      state.xrange[0] = min( (*plot_ptr[0]).x )
+      state.xrange[1] = max( (*plot_ptr[0]).x )
+      state.yrange[0] = min( (*plot_ptr[0]).y )
+      state.yrange[1] = max( (*plot_ptr[0]).y )
 
       ; Enlarge plotting limits if necessary for other calls to SOPLOT
-      for i=0, N_elements(idat)-1 do begin
-         state.xrange[0] = min( [state.xrange[0], *(pdata.x[idat[i]])] )
-         state.xrange[1] = max( [state.xrange[1], *(pdata.x[idat[i]])] )
-         state.yrange[0] = min( [state.yrange[0], *(pdata.y[idat[i]])] )
-         state.yrange[1] = max( [state.yrange[1], *(pdata.y[idat[i]])] )
+      for i=1, nplot-1 do begin
+         if ((*plot_ptr[i]).type EQ 'points') then begin
+            state.xrange[0] = min( [state.xrange[0], (*plot_ptr[i]).x] )
+            state.xrange[1] = max( [state.xrange[1], (*plot_ptr[i]).x] )
+            state.yrange[0] = min( [state.yrange[0], (*plot_ptr[i]).y] )
+            state.yrange[1] = max( [state.yrange[1], (*plot_ptr[i]).y] )
+         endif
       endfor
    endif
 
@@ -946,8 +1247,7 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro soplot, x, y, autoscale=autoscale, $
- color=color, psym=psym, symsize=symsize, thick=thick
+pro soplot, x, y, autoscale=autoscale, _EXTRA=options
 
    common splot_state
    common splot_pdata
@@ -957,37 +1257,39 @@ pro soplot, x, y, autoscale=autoscale, $
       return
    endif
 
-   if (NOT (xregistered('splot'))) then begin
+   if (NOT xregistered('splot')) then begin
       print, 'Must use SPLOT before SOPLOT'
    endif
 
-   if (pdata.nplot LT pdata.nmax) then begin
-      iplot = pdata.nplot
+   if (nplot LT maxplot) then begin
+
+      if (N_elements(options) EQ 0) then $
+       options = create_struct('color', 'default')
 
       if (N_params() EQ 1) then begin
-         pdata.x[iplot] = ptr_new(lindgen(N_elements(x)))
-         pdata.y[iplot] = ptr_new(x)
+         pstruct = { $
+          type: 'points',   $     ; points
+          x: lindgen(N_elelements(x)),      $     ; x coordinate
+          y: x,             $     ; y coordinate
+          options: options  $     ; plot keyword options
+         }
       endif else begin
-         pdata.x[iplot] = ptr_new(x)
-         pdata.y[iplot] = ptr_new(y)
+         pstruct = { $
+          type: 'points',   $     ; points
+          x: x,             $     ; x coordinate
+          y: y,             $     ; y coordinate
+          options: options  $     ; plot keyword options
+         }
       endelse
-
-      pdata.color[iplot] = splot_icolor(color)
-      if (keyword_set(psym)) then pdata.psym[iplot] = psym $
-       else pdata.psym[iplot] = 0
-      if (keyword_set(symsize)) then pdata.symsize[iplot] = symsize $
-       else pdata.symsize[iplot] = 1.0
-      if (keyword_set(thick)) then pdata.thick[iplot] = thick $
-       else pdata.thick[iplot] = 1.0
+      plot_ptr[nplot] = ptr_new(pstruct)
+      nplot = nplot + 1
 
       wset, state.draw_window_id
-      pdata.nplot = pdata.nplot + 1
-      phistory[pdata.nplot + ptext.nplot - 1] = 1 ; points
       if (keyword_set(autoscale)) then begin
          splot_autoscale
          splot_plotall
       endif else begin
-         splot_plot1plot, pdata.nplot-1
+         splot_plot1plot, nplot-1
       endelse
    endif else begin
       print, 'Too many calls to SPLOT'
@@ -1001,6 +1303,7 @@ end
 pro splot, x, y, _EXTRA=KeywordsForSOPLOT
 
    common splot_state
+   common splot_images
    common splot_pdata
 
    if (N_params() LT 1) then begin
@@ -1008,7 +1311,20 @@ pro splot, x, y, _EXTRA=KeywordsForSOPLOT
       return
    endif
 
-   if (not (xregistered('splot'))) then splot_startup
+   imagename = ''
+   head = ''
+
+   ; If X is a filename, read in the file
+   if ((N_params() NE 0) AND (size(x, /tname) EQ 'STRING') ) then begin
+      imagename = x
+      fits_read, imagename, main_image, head
+      x = main_image[*,0] ; Set X equal to the first row of the image ???
+   endif
+
+   if (NOT xregistered('splot')) then splot_startup
+
+   state.imagename = imagename
+   splot_setheader, head
 
    if (N_params() EQ 1) then begin
       xplot = lindgen(N_elements(x))
