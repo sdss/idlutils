@@ -11,6 +11,8 @@ PLOT_POLY: Add /AITOFF flag to plot on Aitoff projections.
 POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
                poly_2d to perform a rotation of an imaging using the 
                cubic approximation to the sinc shift.
+MAKE_RA_CAP, MAKE_DEC_CAP: Functions moved from photoop; make mangle
+                           caps along ra and dec lines. 
 
 Makefile: Install the RELEASE_NOTES file.
 bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
