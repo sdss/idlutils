@@ -107,7 +107,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
 
 
    ; Call matching software, to get lengths
-   soname = filepath('libspheregroup.so', $
+   soname = filepath('libspheregroup.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
    onmatch=0l
    omatch1=lonarr(1)

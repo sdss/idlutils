@@ -72,7 +72,7 @@ function djs_correlate, x, y, lags, xweight=xweight, yweight=yweight
    ; Allocate memory for the output array
    result = fltarr(n_elements(lags))
 
-   soname = filepath('libmath.so', $
+   soname = filepath('libmath.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
    retval = call_external(soname, 'ccorrelate', $
     nx, float(x), float(xweight), ny, float(y), float(yweight), $

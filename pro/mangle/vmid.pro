@@ -29,7 +29,7 @@ if(n_elements(polygons) eq 0) then begin
 endif
 
 ; Call software
-soname = filepath('libidlmangle.so', $
+soname = filepath('libidlmangle.'+idlutils_so_ext(), $
                   root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
 vec=dblarr(3,n_elements(polygons))

@@ -148,7 +148,7 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
    xset = fltarr(ny, ntrace)
    xerr = fltarr(ny, ntrace)
 
-   soname = filepath('libtrace.so', $
+   soname = filepath('libtrace.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
    result = call_external(soname, 'trace_crude', $
     nx, ny, imgtemp, invtemp, float(radius), ntrace, float(xstart), ypass, $

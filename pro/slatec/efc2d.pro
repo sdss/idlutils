@@ -111,7 +111,8 @@ function efc2d, x, y, z, invsig, npolyin, nbkptordin, fullbkptin
         ypoly = yval[i] ^ findgen(npoly)
 
         if (xval[i] GE fullbkpt[ileft]) then begin
-          test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+          test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                               idlutils_so_ext(), $
            'bndacc_idl', g, mdg, nord, ip, ir, mt, npoly*(ileft-nbkptord)+1)
 
 	  mt = 0L
@@ -133,21 +134,25 @@ function efc2d, x, y, z, invsig, npolyin, nbkptordin, fullbkptin
         g[irow-1,*] = [bfall[*],zval[i]] * invsigval[i]
 
         if (irow EQ mdg-1) then begin 
-           test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+           test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                                idlutils_so_ext(), $
              'bndacc_idl', g, mdg, nord, ip, ir, mt, npoly*(ileft-nbkptord)+1)
            mt = 0L
         endif
     endfor
  
-    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                         idlutils_so_ext(), $
              'bndacc_idl', g, mdg, nord, ip, ir, 1L, npoly*(ileft-nbkptord)+1)
 
     g[ir-1,*] = 0.0
-    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                         idlutils_so_ext(), $
                 'bndacc_idl', g, mdg, nord, ip, ir, 1L, npoly*(n+1))
 
     rnorm = 1.0
-    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                         idlutils_so_ext(), $
                 'bndsol_idl', 1L, g, mdg, nord, ip, ir, coeff, npoly*n, rnorm)
    
     return, reform(coeff,npoly,n)

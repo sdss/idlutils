@@ -61,7 +61,7 @@ pro populate_image, image, x, y, weights=weights, assign=assign
    if (NOT keyword_set(y)) then y = fltarr(npts) + 0
    if (NOT keyword_set(weights)) then weights = fltarr(npts) + 1.0
 
-   soname = filepath('libimage.so', $
+   soname = filepath('libimage.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
    if size(image, /tname) EQ 'FLOAT' then begin 

@@ -100,7 +100,7 @@ function spheregroup, ra, dec, linklength, chunksize=chunksize, multgroup=multgr
    ingroup=lonarr(npoints)
 
    ; Call grouping software
-   soname = filepath('libspheregroup.so', $
+   soname = filepath('libspheregroup.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
    retval = call_external(soname, 'spheregroup', long(npoints), double(ra), $
                           double(dec), double(linklength), double(chunksize), $

@@ -67,7 +67,7 @@ function grow_obj1, image, mask, iloc, putval=putval, $
 
    if (putval LT 0) then message, 'PUTVAL cannot be negative'
 
-   soname = filepath('libimage.so', $
+   soname = filepath('libimage.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
    ; Note that NY is not actually used by the C code, because the code

@@ -58,7 +58,7 @@ function trace_gweight, fimage, xcen, ycen, sigma=sigma, xerr=xerr, $
 ;    nx, ny, float(fimage), float(invvar), $
 ;    float(sigma), ncen, xnew, long(ycen), xerr)
 
-   soname = filepath('libtrace.so', $
+   soname = filepath('libtrace.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
    result = call_external(soname, 'trace_gweight', $
     nx, ny, float(fimage), float(invvar), $

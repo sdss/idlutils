@@ -69,7 +69,7 @@ if(NOT keyword_set(proferr)) then proferr=dblarr(nrad-1l,nprofiles)
 
 ; Set source object name
 if(NOT keyword_set(soname)) then $
-  soname=filepath('libimage.so', $
+  soname=filepath('libimage.'+idlutils_so_ext(), $
                   root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
 counts=0.

@@ -46,7 +46,7 @@ if(n_elements(nsig) eq 0) then nsig=6.
 if(n_elements(cfudge) eq 0) then cfudge=3.
 if(n_elements(c2fudge) eq 0) then c2fudge=0.8
 
-soname=filepath('libimage.so', $
+soname=filepath('libimage.'+idlutils_so_ext(), $
                 root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 xnpix=(size(image,/dim))[0]
 ynpix=(size(image,/dim))[1]

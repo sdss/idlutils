@@ -70,7 +70,7 @@ pro memshift, array, isrc1, idest1, nmove1
    else : return ; All other types are unsupported
    endcase
 
-   soname = filepath('libmath.so', $
+   soname = filepath('libmath.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
    retval = call_external(soname, 'memshift', array, $
     isrc*nper, idest*nper, nmove*nper)

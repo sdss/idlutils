@@ -64,7 +64,7 @@ function djs_avsigclip, array, dim, sigrej=sigrej, maxiter=maxiter, $
    ; Need at least 1 parameter
    if (N_params() LT 1) then begin
       print, 'Syntax - result = djs_avsigclip( array, [ dimension, sigrej=, maxiter=, $'
-      print, ' inmask=, outmask= ] );
+      print, ' inmask=, outmask= ] ); '
       return, -1
    endif
 
@@ -88,7 +88,7 @@ function djs_avsigclip, array, dim, sigrej=sigrej, maxiter=maxiter, $
    newsize = N_elements(array) / dimvec[dim-1]
    avearr = reform(fltarr(newsize), newdimvec)
 
-   soname = filepath('libmath.so', $
+   soname = filepath('libmath.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
    if (arg_present(inmask) OR arg_present(outmask)) then begin

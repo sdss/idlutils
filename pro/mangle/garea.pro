@@ -40,7 +40,7 @@ nused_caps=n_elements(used_caps)
 if(nused_caps eq 0) then return,0.D
 
 ; Call grouping software
-soname = filepath('libidlmangle.so', $
+soname = filepath('libidlmangle.'+idlutils_so_ext(), $
                   root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 area=0.D
 x=reform((*polygon.caps)[used_caps].x[*],3,nused_caps)

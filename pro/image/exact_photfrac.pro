@@ -47,7 +47,7 @@ common com_exact_photfrac, exact_fracs, soname
 
 ; Set source object name
 if(NOT keyword_set(soname)) then $
-  soname=filepath('libimage.so', $
+  soname=filepath('libimage.'+idlutils_so_ext(), $
                   root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
 for i=0L, n_elements(exact_fracs)-1L do $

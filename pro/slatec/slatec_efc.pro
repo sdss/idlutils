@@ -93,7 +93,7 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
    if (nbkpt LT 2*nord) then $
     message, 'Too few breakpoints: must have at least 2*NORD'
 
-   soname = filepath('libslatec.so', $
+   soname = filepath('libslatec.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
    qeval = 1

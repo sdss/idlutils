@@ -18,7 +18,7 @@ pro nnls, a,mda,m,n,b,x,resnorm,w,zz,indx,mde
   zz= fltarr(m)
   indx= intarr(n)
   mde= fix(1)
-  soname = filepath('libmath.so', $
+  soname = filepath('libmath.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
   retval= call_external(soname,'idl_nnls', $
     a,mda,m,n,b,x,resnorm,w,zz,indx,mde)

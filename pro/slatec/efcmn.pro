@@ -101,7 +101,8 @@ function efcmn, x, y, invsig, nordin, fullbkptin
       for i=0L, nx-1 do begin
 
         if (xval[i] GE fullbkpt[ileft]) then begin
-          test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+          test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                               idlutils_so_ext(), $
            'bndacc_idl', g, mdg, nord, ip, ir, mt, ileft-nordm1)
 
 	  mt = 0L
@@ -121,22 +122,26 @@ function efcmn, x, y, invsig, nordin, fullbkptin
         g[irow-1,*] = [bf[*],yval[i]] * invsigval[i]
 
         if (irow EQ mdg-1) then begin 
-           test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+           test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                                idlutils_so_ext(), $
                 'bndacc_idl', g, mdg, nord, ip, ir, mt, ileft-nordm1)
            mt = 0L
         endif
     endfor
  
-    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                         idlutils_so_ext(), $
                 'bndacc_idl', g, mdg, nord, ip, ir, 1L, ileft-nordm1)
 
     g[ir-1,*] = 0.0
-    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                         idlutils_so_ext(), $
                 'bndacc_idl', g, mdg, nord, ip, ir, 1L, n+1)
 
 
     rnorm = 1.0
-    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+    test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.'+ $
+                         idlutils_so_ext(), $
                 'bndsol_idl', 1L, g, mdg, nord, ip, ir, coeff, n, rnorm)
    
     return, coeff

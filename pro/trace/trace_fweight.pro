@@ -56,7 +56,7 @@ function trace_fweight, fimage, xcen, ycen, radius=radius, xerr=xerr, $
 
    if (NOT keyword_set(invvar)) then invvar = 0.0 * fimage + 1.0
 
-   soname = filepath('libtrace.so', $
+   soname = filepath('libtrace.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
    result = call_external(soname, 'trace_fweight', $
     nx, ny, float(fimage), float(invvar), $

@@ -21,14 +21,14 @@
 ;   30-Nov-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-pro read_fits_polygons, infile, polygons
+pro read_fits_polygons, infile, polygons, _EXTRA=extra_for_mrdfits
 
 if(n_params() ne 2) then begin
     print, 'Syntax - read_fits_polygons, infile, polygons'
     return
 endif
 
-inpoly=mrdfits(infile,1,/unsigned,/silent)
+inpoly=mrdfits(infile,1,/unsigned,/silent,_EXTRA=extra_for_mrdfits)
 intags=tag_names(inpoly)
 for i=0L, n_elements(intags)-1L do begin
     if(intags[i] ne 'XCAPS' and $

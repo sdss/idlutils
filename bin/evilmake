@@ -53,7 +53,7 @@ case $UNAME in
 	"Darwin" )
 		F77=g77
 		LDF77=ld
-		SO_EXT=so
+		SO_EXT=dylib
 		X_LD_FLAGS="-bundle /usr/lib/bundle1.o -L/usr/lib -lc -lcc_dynamic -flat_namespace -undefined suppress"
 # The following two lines should be equivalent to the above line
 #		LD=libtool

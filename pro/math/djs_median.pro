@@ -190,7 +190,7 @@ function djs_median, array, dim, width=width, boundary=boundary
          newsize = N_elements(array) / dimvec[dim-1]
          medarr = reform(fltarr(newsize), newdimvec)
 
-         soname = filepath('libmath.so', $
+         soname = filepath('libmath.'+idlutils_so_ext(), $
           root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
          retval = call_external(soname, 'arrmedian', $
           ndim, dimvec, float(array), long(dim), medarr)
