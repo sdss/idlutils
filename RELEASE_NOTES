@@ -20,6 +20,7 @@ HOGG_MEANPLOT, HOGG_WEIGHTED_MEAN_SURFACE: Added NEAREST option to smooth
 HOGG_MRDFITS,MWRFITS_CHUNKS: Declare all internal variables as long64,
                just to be sure that files larger than 2Gb will be handled
                correctly.
+               Make robust to file not existing (return 0 instead of crashing).
 HOGG_NAME2RADEC: New proc to convert IAU name in "J" format to RA,DEC (Hogg).
 HOGG_OPLOT_COVAR: Add support for a vectorized THICK keyword.
 HOGG_PLOTHIST: Change in behviour for setting X range when using /OVERPLOT.
