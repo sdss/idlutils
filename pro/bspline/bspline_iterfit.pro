@@ -16,7 +16,7 @@
 ;   invvar     - Inverse variance of y; if not set, then set to be
 ;                consistent with the standard deviation.  This only matters
 ;                if rejection is being done.
-;   nord       - Order for spline fit; default to 4 (cubic).
+;   nord       - Order for spline fit; default to 4.
 ;   x2         - 2nd dependent variable for 2-D spline fitting.
 ;   npoly      - Polynomial order to fit over 2nd variable (X2); default to 2.
 ;   xmin       - Normalization minimum for X2; default to MIN(XDATA).
