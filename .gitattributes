@@ -558,6 +558,7 @@ pro/math/djs_iterstat.pro -text
 pro/math/djs_mean.pro -text
 pro/math/djs_median.pro -text
 pro/math/djs_posmod.pro -text
+pro/math/djsig.pro -text
 pro/misc/blackbody.pro -text
 pro/misc/djs_laxisgen.pro -text
 pro/misc/djs_locate_file.pro -text
