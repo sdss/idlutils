@@ -15,12 +15,18 @@ CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(IDLUTILS_DIR)/i
 LIB = $(IDLUTILS_DIR)/lib
 
 OBJECTS = \
-	grow_obj.o pop_image.o
+	grow_obj.o pop_image.o \
+	idl_photfrac.o \
+	photfrac.o \
+	p_cisi.o \
+	p_midpnt.o \
+	p_qromo.o \
+	p_polint.o \
+	p_utils.o 
 
 all : $(LIB)/libimage.$(SO_EXT)
 
-
-$(LIB)/libimage.$(SO_EXT): $(OBJECTS)
+$(LIB)/libimage.$(SO_EXT): $(OBJECTS) ph.h export.h
 	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS)
 #	nm -s ../lib/libimage.$(SO_EXT)
 

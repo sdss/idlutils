@@ -43,6 +43,7 @@
 ;               If srejalg="pclip", then fraction of high pixels to clip
 ;               (default to 0.05).
 ;   quick:      Set to use quick_photfrac (much faster)
+;   exact:      Set to use exact_photfrac (slower)
 ;
 ; OUTPUTS:
 ;   skyval:     Sky value in counts per pixel.
@@ -130,13 +131,14 @@ end
 ;------------------------------------------------------------------------------
 function djs_photsky, xcen, ycen, skyrad, image, $
  salg=salg, srejalg=srejalg, smaxiter=smaxiter, $
- lorej=lorej, hirej=hirej, skyrms=skyrms, skyerr=skyerr, quick=quick
+ lorej=lorej, hirej=hirej, skyrms=skyrms, skyerr=skyerr, quick=quick, $
+                      exact=exact
  
    ; Need at least 3 parameters
    if (N_params() LT 3) then begin
       print, 'Syntax - result = djs_photsky( xcen, ycen, skyrad, image, $'
       print, ' [ salg=, srejalg=, smaxiter=, $'
-      print, ' lorej=, hirej=, skyrms=, skyerr=, /quick ] )'
+      print, ' lorej=, hirej=, skyrms=, skyerr=, /quick, /exact ] )'
       return, -1
    endif
 
@@ -177,8 +179,11 @@ function djs_photsky, xcen, ycen, skyrad, image, $
    ydimen = N_elements(image(0,*))
 
    if keyword_set(quick) then begin 
-      quick_photfrac, xcen, ycen, skyrad, xdimen=xdimen, ydimen=ydimen, $
-        pixnum=pixnum, fracs=fracs, /ragged
+       quick_photfrac, xcen, ycen, skyrad, xdimen=xdimen, ydimen=ydimen, $
+         pixnum=pixnum, fracs=fracs, /ragged
+   endif else if keyword_set(exact) then begin 
+      exact_photfrac, xcen, ycen, skyrad, xdimen=xdimen, ydimen=ydimen, $
+        pixnum=pixnum, fracs=fracs
    endif else begin 
       djs_photfrac, xcen, ycen, skyrad, xdimen=xdimen, ydimen=ydimen, $
         pixnum=pixnum, fracs=fracs

@@ -13,7 +13,7 @@
 ;    fwhm=, fixfw=, ceps=, $
 ;    salg=, srejalg=, smaxiter=, $
 ;    lorej=, hirej=, $
-;    flerr=, skyval=, skyrms=, skyerr=, peakval=, /quick ] )
+;    flerr=, skyval=, skyrms=, skyerr=, peakval=, /quick, /exact ] )
 ;
 ; INPUTS:
 ;   xcen:       X center(s)
@@ -71,6 +71,7 @@
 ;               (default to 0.05).
 ; 
 ; KEYWORDS:
+;   exact       Use slow photo-based photfrac algorithm (Not thoroughly tested)
 ;   quick       Use faster photfrac algorithm (Not thoroughly tested)
 ;
 ; OUTPUTS:
@@ -114,7 +115,7 @@ function djs_phot, xcen, ycen, objrad, skyrad, image, invvar, $
  salg=salg, srejalg=srejalg, smaxiter=smaxiter, $
  lorej=lorej, hirej=hirej, $
  flerr=flerr, skyval=skyval, skyrms=skyrms, skyerr=skyerr, peakval=peakval, $
- quick=quick
+ quick=quick, exact=exact
 
    ; Need 5 parameters
    if (N_params() LT 5) then begin
@@ -152,7 +153,7 @@ function djs_phot, xcen, ycen, objrad, skyrad, image, invvar, $
       skyval[iobj] = djs_photsky( xcen1, ycen1, skyrad+0.0, image, $
        salg=salg, srejalg=srejalg, smaxiter=smaxiter, $
        lorej=lorej, hirej=hirej, $
-       skyrms=tmprms, skyerr=tmperr, quick=quick)
+       skyrms=tmprms, skyerr=tmperr, quick=quick, exact=exact)
       skyrms[iobj] = tmprms
       skyerr[iobj] = tmperr
 
@@ -162,6 +163,10 @@ function djs_phot, xcen, ycen, objrad, skyrad, image, invvar, $
          if (onerad GT 0) then begin
             if keyword_set(quick) then begin 
                quick_photfrac, xcen1, ycen1, onerad, $
+                 xdimen=xdimen, ydimen=ydimen, $
+                 pixnum=pixnum, fracs=fracs
+           endif else if keyword_set(exact) then begin 
+               exact_photfrac, xcen1, ycen1, onerad, $
                  xdimen=xdimen, ydimen=ydimen, $
                  pixnum=pixnum, fracs=fracs
             endif else begin 

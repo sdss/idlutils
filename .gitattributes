@@ -779,6 +779,7 @@ pro/fits/rdss_fits.pro -text
 pro/fits/sxcombinepar.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
+pro/image/exact_photfrac.pro -text
 pro/image/fastconv.pro -text
 pro/image/grow_object.pro -text
 pro/image/hogg_histogram.pro -text
@@ -981,7 +982,16 @@ src/idlmangle/idl_gverts.c -text
 src/image/Makefile -text
 src/image/export.h -text
 src/image/grow_obj.c -text
+src/image/idl_photfrac.c -text
+src/image/p_cisi.c -text
+src/image/p_midpnt.c -text
+src/image/p_polint.c -text
+src/image/p_qromo.c -text
+src/image/p_utils.c -text
+src/image/ph.h -text
+src/image/photfrac.c -text
 src/image/pop_image.c -text
+src/image/test_photfrac.c -text
 src/mangle1.2/.cvsignore -text
 src/mangle1.2/HELP.unformatted -text
 src/mangle1.2/Makefile -text
