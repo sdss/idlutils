@@ -39,11 +39,12 @@ pro usnob2fits
   hash = fltarr(10000)
   hash[ep.field] = ep.epoch
 
-  subdir = 90
-  for i=0, 9 do begin 
-     fname = 'b'+string(subdir*10+i, format='(I4.4)')
-     usnob2fits_1, path, subdir, fname, outpath, hash
-  endfor
-
+  for subdir = 80, 100 do begin 
+     for i=0, 9 do begin 
+        fname = 'b'+string(subdir*10+i, format='(I4.4)')
+        print, fname
+        usnob2fits_1, path, subdir, fname, outpath, hash
+     endfor
+  endfor 
   return
 end
