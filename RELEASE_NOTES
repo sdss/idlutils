@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v4_10_1 (Jun 18, 2003)
+Tagged for photoop v0_9.  Also ATV bug fixes for IDL 5.5 and later.
+
 ATV           - Call PSCONFIG instead of CMPS_FORM for making PostScript
                 plots.  This change was necessary to work with IDL 5.5.
 ATV_JOE_WRITEPS - Write a PostScript file of the current ATV display
