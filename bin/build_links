@@ -19,7 +19,7 @@ if [ $# != 2 ] ; then
 fi
 PATH1=$1
 PATH2=$2
-if { [ "$PATH1" = "$PATH2" ] } ; then
+if [ "$PATH1" = "$PATH2" ] ; then
    echo "The source and destination directories cannot be the same!"
    exit
 fi
