@@ -33,7 +33,7 @@ for i=0L, n_elements(poly)-1L do begin
         if(count gt 0) then ramoffset[indx]=ramoffset[indx]+360.
         dec=90.-theta
         if(keyword_set(fill)) then $
-          polyfill,ramoffset,dec,color=use_color[i]
+          polyfill,ramoffset,dec,color=use_color[i],noclip=0
         if(NOT keyword_set(nooutline)) then $
           oplot,ramoffset,dec,thick=0.001,color=use_color[i]
     endif
