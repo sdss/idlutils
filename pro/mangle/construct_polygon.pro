@@ -33,12 +33,13 @@ polygon1={polystr, $
           weight:0.D, $
           str:0.D, $
           use_caps:ulong64(0), $
-          caps:ptr_new(cap)}
+          caps:ptr_new()}
 if(n_tags(extra) gt 0) then $
   polygon1=create_struct(extra,polygon1)
 polygon=replicate(polygon1,nelem)
 for i=0L, nelem-1L do $
   polygon[i].caps=ptr_new(cap)
+destruct_polygon,polygon1
 
 return,polygon
 

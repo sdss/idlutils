@@ -40,19 +40,19 @@ for i=0L, npoly-1L do begin
     readf,unit, tmp_line
     tmp_words=strsplit(tmp_line,/extract)
     id[i]=long64(tmp_words[1])
-    tmp_polygon=construct_polygon()
-    tmp_polygon.weight=double(tmp_words[5])
-    tmp_polygon.str=double(tmp_words[7])
-    tmp_polygon.ncaps=long(tmp_words[3])
-    tmp_polygon.caps=ptr_new(replicate(construct_cap(),tmp_polygon.ncaps))
-    for j=0L, tmp_polygon.ncaps-1L do begin
+    ptr_free,polygons[i].caps
+    polygons[i].weight=double(tmp_words[5])
+    polygons[i].str=double(tmp_words[7])
+    polygons[i].ncaps=long(tmp_words[3])
+    polygons[i].caps=ptr_new(replicate(construct_cap(),polygons[i].ncaps))
+    for j=0L, polygons[i].ncaps-1L do begin
        readf,unit,tmp_line
        tmp_words=strsplit(tmp_line,/extract)
-       (*tmp_polygon.caps)[j].x[0:2]=double(tmp_words[0:2])
-       (*tmp_polygon.caps)[j].cm=double(tmp_words[3])
+       (*(polygons[i].caps))[j].x[0:2]=double(tmp_words[0:2])
+       (*(polygons[i].caps))[j].cm=double(tmp_words[3])
     endfor
-    set_use_caps,tmp_polygon,lindgen(tmp_polygon.ncaps)
-    polygons[i]=tmp_polygon
+    set_use_caps,polygons[i],lindgen(polygons[i].ncaps), use_caps=use_caps
+    polygons[i].use_caps=use_caps
 endfor
 if(NOT arg_present(unit)) then $
   free_lun,unit
