@@ -22,8 +22,9 @@
 # not exist, then it tries using the "evilmake" and "install_ups_table"
 # scripts in the "idlutils" product.
 #
-# Note: This script will only work if there is a table file in the /ups
-# subdirectory of the product.
+# Note: This script tries to set-up products using the table file in the /ups
+# subdirectory of the product.  I can't say with certainty that it works
+# w/out that table file.
 #
 # D. Schlegel, Princeton, 1 March 2001
 #------------------------------------------------------------------------------
@@ -87,16 +88,17 @@ echo "Setting MYSDSS_ROOT=$MYSDSS_ROOT"
 if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
    echo "This installation already appears to exist in " $MYSDSS_ROOT/$PRODNAME/$PRODVERS
    echo "Now declaring this version current."
+   # Find the table file if it exists...
    if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table ] ; then
-      echo
+      TABLEPARAM="-m $PRODNAME.table"
    else
-      echo "Cannot find table file " $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table
-      exit
+      echo "WARNING: Cannot find table file " $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table
+      TABLEPARAM=""
    fi
 # We could set this up too, but that information is not passed outside
 # of this script so don't bother ???
 #   ups setup $PRODNAME $PRODVERS
-   ups declare -f $FLAVOR -m $PRODNAME.table \
+   ups declare -f $FLAVOR $TABLEPARAM \
     -r $MYSDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
    exit
 fi
@@ -175,13 +177,14 @@ else
 fi
 # The following ups commands are to set up any dependencies needed
 # to build the code.
+# Find the table file if it exists...
 if [ -e $TEMPDIR/$TEMPSUBDIR/ups/$PRODNAME.table ] ; then
-   echo
+   TABLEPARAM="-m $PRODNAME.table"
 else
-   echo "Cannot find table file " $TEMPDIR/$TEMPSUBDIR/ups/$PRODNAME.table
-   exit
+   echo "WARNING: Cannot find table file " $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table
+   TABLEPARAM=""
 fi
-ups declare -f $FLAVOR -m $PRODNAME.table \
+ups declare -f $FLAVOR $TABLEPARAM \
  -r $TEMPDIR/$TEMPSUBDIR -c $PRODNAME $PRODVERS
 ups setup -r $TEMPDIR/$TEMPSUBDIR $PRODNAME
 # The following nasty line is simply to set up the environment
@@ -204,7 +207,7 @@ fi
 
 # Declare this version and make it current.
 ups undeclare -f $FLAVOR $PRODNAME $PRODVERS
-ups declare -f $FLAVOR -m $PRODNAME.table \
+ups declare -f $FLAVOR $TABLEPARAM \
  -r $MYSDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
 
 # Finally, delete the temporary directory used to build the code.
