@@ -29,6 +29,7 @@
 ;              - choose whether to saturate high-value pixels to white
 ;                or to color
 ;  tiff        - make tiff instead of jpeg
+;  dpitiff     - set TIFF "dots per inch" resolution (only if /tiff set)
 ;  invert      - ???
 ;OPTIONAL OUTPUTS:
 ;  
@@ -50,7 +51,8 @@
 PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
                 nonlinearity,origin=origin,rebinfactor=rebinfactor, $
                 saturatetowhite=saturatetowhite,quality=quality, $
-                overlay=overlay,colors=colors,tiff=tiff,invert=invert
+                overlay=overlay,colors=colors,tiff=tiff,invert=invert, $
+                dpitiff=dpitiff
 
 ;set defaults
 IF (keyword_set(tiff)) THEN suffix='tif' ELSE suffix='jpg'
@@ -89,13 +91,13 @@ IF (NOT keyword_set(saturatetowhite)) THEN $
 IF keyword_set(overlay) THEN colors= (colors > overlay) < 1.0
 splog, 'nw_float_to_byte'
 colors = nw_float_to_byte(temporary(colors))
-if(keyword_set(invert)) then colors=255-colors
+if(keyword_set(invert)) then colors=255B-colors
 
 IF keyword_set(tiff) THEN BEGIN
     colors = reverse(temporary(colors),2)
     splog, 'writing tiff'
     WRITE_TIFF,name,planarconfig=2,red=colors[*,*,0],$
-      green=colors[*,*,1],blue=colors[*,*,2]
+      green=colors[*,*,1], blue=colors[*,*,2], xresol=dpitiff, yresol=dpitiff
 ENDIF ELSE BEGIN
     splog, 'writing jpeg'
     if(NOT arg_present(colors)) then $
