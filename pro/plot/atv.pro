@@ -11,7 +11,7 @@
 ; CALLING SEQUENCE:
 ;       atv [,array_name OR fits_file] [,min = min_value] [,max=max_value] 
 ;           [,/linear] [,/log] [,/histeq] [,/block]
-;           [,/align] [,/stretch] [,/header]
+;           [,/align] [,/stretch] [,header = header]
 ;
 ; REQUIRED INPUTS:
 ;       None.  If atv is run with no inputs, the window widgets
@@ -65,10 +65,11 @@
 ;       Douglas Finkbeiner, Michael Liu, David Schlegel, and
 ;       Wesley Colley.  First released 17 December 1998.
 ;
-;       This version is 1.3, last modified 28 November 2000.
+;       This version is 1.4, last modified 23 June 2003.
+;
 ;       For the most current version, revision history, instructions,
 ;       list of known bugs, and further information, go to:
-;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
+;              http://www.astro.caltech.edu/~barth/atv
 ;
 ;-
 ;----------------------------------------------------------------------
@@ -95,7 +96,7 @@ common atv_images, $
 
 
 state = {                   $
-          version: '1.3', $              ; version # of this release
+          version: '1.4', $              ; version # of this release
           head_ptr: ptr_new(), $         ; pointer to image header
           astr_ptr: ptr_new(), $         ; pointer to astrometry info structure
           wcstype: 'none', $             ; coord info type (none/angle/lambda)
@@ -480,13 +481,13 @@ widget_control, state.pan_widget_id, event_pro = 'atv_pan_event'
 basegeom = widget_info(state.base_id, /geometry)
 drawbasegeom = widget_info(state.draw_base_id, /geometry)
 
-state.base_pad[0] = basegeom.xsize - drawbasegeom.xsize $
-  + (2 * basegeom.margin)
-state.base_pad[1] = basegeom.ysize - drawbasegeom.ysize + 30 $
-  + (2 * basegeom.margin)
-
-state.base_min_size = [state.base_pad[0] + state.base_min_size[0], $
-                       state.base_pad[1] + 100]
+;state.base_pad[0] = basegeom.xsize - drawbasegeom.xsize $
+;  + (2 * basegeom.margin)
+;state.base_pad[1] = basegeom.ysize - drawbasegeom.ysize + 30 $
+;  + (2 * basegeom.margin)
+;
+;state.base_min_size = [state.base_pad[0] + state.base_min_size[0], $
+;                       state.base_pad[1] + 100]
 
 ; Initialize the vectors that hold the current color table.
 ; See the routine atv_stretchct to see why we do it this way.
@@ -505,6 +506,12 @@ state.pan_pixmap = !d.window
 atv_resetwindow
 
 atv_colorbar
+
+; improvements as of v1.4:
+
+widget_control, state.base_id, tlb_get_size=tmp_event
+state.base_pad = tmp_event - state.draw_window_size
+
 
 end
 
@@ -694,9 +701,7 @@ case event_name of
     END 
     'Native': BEGIN 
        IF (state.wcstype EQ 'angle') THEN BEGIN 
-                          ; Check if coordinates are reversed (i.e. dec, RA)
-          rev = atv_fits_ctype_reversed(astr.ctype)
-          state.display_coord_sys = strmid((*state.astr_ptr).ctype[rev], 0, 4)
+          state.display_coord_sys = strmid((*state.astr_ptr).ctype[0], 0, 4)
           state.display_equinox = state.equinox
           atv_gettrack          ; refresh coordinate window
        ENDIF 
@@ -875,22 +880,10 @@ if (!d.name NE state.graphicsdevice) then return
 
 if (event.type EQ 0) then begin
     case event.press of
-       1: begin 
-          if (state.wcstype EQ 'angle') then begin
-             xy2ad, state.coord[0], state.coord[1], *(state.astr_ptr), lon, lat
-             
-             wcsstring = atv_wcsstring(lon, lat, (*state.astr_ptr).ctype,  $
-                              state.equinox, state.display_coord_sys, $
-                              state.display_equinox, state.display_base60)
-             print, state.coord, wcsstring, format='("x =",I5,"  y =",I5,5X,A)'
-          endif else begin 
-             print, state.coord, format='("x =",I5,"  y =",I5)'
-          endelse
-          atv_apphot
-       end
-       2: atv_zoom, 'none', /recenter
-       4: atv_showstats
-       else: 
+        1: atv_apphot
+        2: atv_zoom, 'none', /recenter
+        4: atv_showstats
+        else: 
     endcase
 endif
 
@@ -959,9 +952,7 @@ case eventchar of
     '8': atv_move_cursor, eventchar
     '9': atv_move_cursor, eventchar
     'r': atv_rowplot
-    'R': atv_rowplot, /overplot
     'c': atv_colplot
-    'C': atv_colplot, /overplot
     's': atv_surfplot
     't': atv_contourplot
     'p': atv_apphot
@@ -1512,22 +1503,8 @@ endelse
 
 end
 
-; Contributed by D. Finkbeiner, August 2001.
-; Sense reversal of coordsys names in CTYPE.  This must be done to
-; comply with the FITS standard. 
-; OUTPUT: 1 if coordinates are reversed (i.e. (dec, RA)) .
 ;---------------------------------------------------------------------
-function atv_fits_ctype_reversed, ctype
-  csys = strmid(ctype, 0, 4)
-  reverse = ((csys[0] EQ 'DEC-') and (csys[1] EQ 'RA--')) or $
-    ((csys[0] EQ 'GLAT') and (csys[1] EQ 'GLON')) or $
-    ((csys[0] EQ 'ELON') and (csys[1] EQ 'GLAT'))
-  
-  return, reverse
-end
 
-
-;---------------------------------------------------------------------
 function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox, $
             disp_base60
 
@@ -1539,10 +1516,7 @@ function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox, $
 ; ctype - coord system in header
 ; disp_type - type of coords to display
 
-
-; Check for reversed (RA,dec) etc. 
-reverse = atv_fits_ctype_reversed(ctype)
-headtype = strmid(ctype[reverse], 0, 4)
+headtype = strmid(ctype[0], 0, 4)
 
 ; need numerical equinox values
 IF (equinox EQ 'J2000') THEN num_equinox = 2000.0 ELSE $
@@ -1564,14 +1538,7 @@ CASE headtype OF
         ra = lon
         dec = lat
         IF num_equinox NE 2000.0 THEN precess, ra, dec, num_equinox, 2000.0
-    END
-    ELSE: BEGIN
-       message, string('Unsupported FITS CTYPE  ', ctype, format='(2A,X,A)'), $
-         /informational
-       ra = 0.
-       dec = 0.
-       wcsstring = 'Unsupported'
-    END
+    END 
 ENDCASE  
 
 ; Now convert RA,dec (J2000) to desired display coordinates:  
@@ -1795,40 +1762,33 @@ end
 pro atv_resize
 
 ; Routine to resize the draw window when a top-level resize event
-; occurs.
+; occurs.  Completely overhauled by AB for v1.4.
 
 common atv_state
 
-widget_control, state.base_id, tlb_get_size=tmp_event
 
-drawpad = (widget_info(state.draw_base_id,/geometry)).xsize - $
-  state.draw_window_size[0]
+widget_control, state.base_id, tlb_get_size=tmp_event
 
 window = (state.base_min_size > tmp_event)
 
 newbase = window - state.base_pad
 
-; Note: don't know why the (-4) is needed below, but it seems
-; to work... without it the base becomes the wrong size when the
-; colorbar draw widget is resized.
-
-widget_control, state.colorbar_base_id, $
-  xsize = newbase[0]-4, ysize = state.colorbar_height + 6
-
-widget_control, state.draw_base_id, $
-  xsize = newbase[0], ysize = newbase[1]
-
-newxsize = (widget_info(state.draw_base_id,/geometry)).xsize - drawpad
-newysize = (widget_info(state.draw_base_id,/geometry)).ysize - drawpad
+newxsize = (tmp_event[0] - state.base_pad[0]) > $
+  (state.base_min_size[0] - state.base_pad[0]) 
+newysize = (tmp_event[1] - state.base_pad[1]) > $
+  (state.base_min_size[1] - state.base_pad[1])
 
 widget_control, state.draw_widget_id, $
-  xsize = newxsize, ysize = newysize
+  scr_xsize = newxsize, scr_ysize = newysize
 widget_control, state.colorbar_widget_id, $
-  xsize = newxsize, ysize = state.colorbar_height
+  scr_xsize = newxsize, scr_ysize = state.colorbar_height
 
 state.draw_window_size = [newxsize, newysize]
 
 atv_colorbar
+
+widget_control, state.base_id, /clear_events
+
 
 end
 
@@ -2364,21 +2324,16 @@ aspect = float(ysize) / float(xsize)
 fname = strcompress(state.current_dir + 'atv.ps', /remove_all)
 
 tvlct, rr, gg, bb, 8, /get
+forminfo = cmps_form(cancel = canceled, create = create, $
+                     aspect = aspect, parent = state.base_id, $
+                     /preserve_aspect, $
+                     xsize = 6.0, ysize = 6.0 * aspect, $
+                     /color, /encapsulated, $
+                     /nocommon, papersize='Letter', $
+                     bits_per_pixel=8, $
+                     filename = fname, $
+                     button_names = ['Create PS File'])
 
-;psObject = Obj_New("FSC_PSCONFIG")
-;psObject->GUI
-;psKeywords = psObject -> GetKeywords()
-;forminfo = cmps_form(cancel = canceled, create = create, $
-;                     aspect = aspect, parent = state.base_id, $
-;                     /preserve_aspect, $
-;                     xsize = 6.0, ysize = 6.0 * aspect, $
-;                     /color, /encapsulated, $
-;                     /nocommon, papersize='Letter', $
-;                     bits_per_pixel=8, $
-;                     filename = fname, $
-;                     button_names = ['Create PS File'])
-canceled = 0
-forminfo = PSConfig(Cancel = canceled)
 if (canceled) then return
 if (forminfo.filename EQ '') then return
 tvlct, rr, gg, bb, 8
@@ -2453,6 +2408,7 @@ tvlct, temporary(rr), temporary(gg), temporary(bb), 8
 
 device, /close
 set_plot, screen_device
+
 
 end
 
@@ -2786,9 +2742,7 @@ endelse
 
 ; Set default display to native system in header
 state.display_equinox = state.equinox
-; Check if coordinates are reversed (i.e. dec, RA)
-reverse = atv_fits_ctype_reversed(astr.ctype)
-state.display_coord_sys = strmid(astr.ctype[reverse], 0, 4)
+state.display_coord_sys = strmid(astr.ctype[0], 0, 4)
 
 end
 
@@ -2817,8 +2771,7 @@ endif
 if (not(xregistered('atv_headinfo', /noshow))) then begin
 
     headinfo_base = $
-      widget_base(/floating, $
-                  /base_align_right, $
+      widget_base(/base_align_right, $
                   group_leader = state.base_id, $
                   /column, $
                   title = 'atv image header information', $
@@ -3482,14 +3435,14 @@ common atv_pdata
 
 if (nplot GE maxplot) then begin
     atv_message, 'Total allowed number of overplots exceeded.', $
-      mesgtype = 'error', /window
+      msgtype = 'error', /window
     return
 endif
     
 
 if (state.wcstype NE 'angle') then begin 
     atv_message, 'Cannot get coordinate info for this image!', $
-      mesgtype = 'error', /window
+      msgtype = 'error', /window
     return
 endif
 
@@ -3563,8 +3516,7 @@ pro atv_lineplot_init
 common atv_state
 
 state.lineplot_base_id = $
-  widget_base(/floating, $
-              group_leader = state.base_id, $
+  widget_base(group_leader = state.base_id, $
               /column, $
               /base_align_right, $
               title = 'atv plot', $
@@ -3605,61 +3557,55 @@ end
 
 ;--------------------------------------------------------------------
 
-pro atv_rowplot, overplot=overplot
+pro atv_rowplot
 
 common atv_state
 common atv_images
 
-view_min = round(state.centerpix - $
-                  (0.5 * state.draw_window_size / state.zoom_factor))
-view_max = round(view_min + state.draw_window_size / state.zoom_factor)
+if (not (xregistered('atv_lineplot', /noshow))) then begin
+    atv_lineplot_init
+endif
 
-  if keyword_set(overplot) then begin 
-     soplot, main_image[*, state.coord[1]], $
-       psym = 10, $
-       title = strcompress('Plot of row ' + $
-                           string(state.coord[1])), $
-       xtitle = 'Column', $
-       ytitle = 'Pixel Value', $
-       xrange = [view_min[0], view_max[0]]
-     color = 7
-  endif else begin 
-     splot, main_image[*, state.coord[1]], $
-       psym = 10, $
-       title = strcompress('Plot of row ' + $
-                           string(state.coord[1])), $
-       xtitle = 'Column', $
-       ytitle = 'Pixel Value', $
-       xrange = [view_min[0], view_max[0]]
-     color = 7
-  end 
+atv_setwindow, state.lineplot_window_id
+erase
+
+plot, main_image[*, state.coord[1]], $
+  xst = 3, yst = 3, psym = 10, $
+  title = strcompress('Plot of row ' + $
+                      string(state.coord[1])), $
+  xtitle = 'Column', $
+  ytitle = 'Pixel Value', $
+  color = 7 
+
+widget_control, state.lineplot_base_id, /clear_events
+
+atv_resetwindow
 end
 
 ;--------------------------------------------------------------------
 
-pro atv_colplot, overplot=overplot
+pro atv_colplot
 
 common atv_state
 common atv_images
 
-  if keyword_set(overplot) then begin 
-     soplot, main_image[state.coord[0], *], $
-       xst = 3, yst = 3, psym = 10, $
-       title = strcompress('Plot of column ' + $
-                           string(state.coord[0])), $
-       xtitle = 'Row', $
-       ytitle = 'Pixel Value', $
-       color = 7
-  endif else begin 
-     splot, main_image[state.coord[0], *], $
-       xst = 3, yst = 3, psym = 10, $
-       title = strcompress('Plot of column ' + $
-                           string(state.coord[0])), $
-       xtitle = 'Row', $
-       ytitle = 'Pixel Value', $
-       color = 7
-  endelse 
-  
+if (not (xregistered('atv_lineplot', /noshow))) then begin
+    atv_lineplot_init
+endif
+
+atv_setwindow, state.lineplot_window_id
+erase
+
+plot, main_image[state.coord[0], *], $
+  xst = 3, yst = 3, psym = 10, $
+  title = strcompress('Plot of column ' + $
+                      string(state.coord[0])), $
+  xtitle = 'Row', $
+  ytitle = 'Pixel Value', $
+  color = 7
+widget_control, state.lineplot_base_id, /clear_events
+        
+atv_resetwindow
 end
 
 ;--------------------------------------------------------------------
@@ -3894,11 +3840,7 @@ h[i] = '    Numeric keypad (with NUM LOCK on) moves cursor'
 i = i + 1
 h[i] = '    r: row plot'
 i = i + 1
-h[i] = '    R: row over-plot'
-i = i + 1
 h[i] = '    c: column plot'
-i = i + 1
-h[i] = '    C: column over-plot'
 i = i + 1
 h[i] = '    s: surface plot'
 i = i + 1
@@ -3978,15 +3920,14 @@ h[i] = strcompress('ATV.PRO version '+state.version)
 i = i + 1
 h[i] = 'For full instructions, or to download the most recent version, go to:'
 i = i + 1
-h[i] = 'http://cfa-www.harvard.edu/~abarth/atv/atv.html'
+h[i] = 'http://www.astro.caltech.edu/~barth/atv/atv.html'
 
 
 if (not (xregistered('atv_help', /noshow))) then begin
 
 helptitle = strcompress('atv v' + state.version + ' help')
 
-    help_base =  widget_base(/floating, $
-                             group_leader = state.base_id, $
+    help_base =  widget_base(group_leader = state.base_id, $
                              /column, $
                              /base_align_right, $
                              title = helptitle, $
@@ -4145,8 +4086,7 @@ state.cursorpos = state.coord
 if (not (xregistered('atv_stats', /noshow))) then begin
 
     stats_base = $
-      widget_base(/floating, $
-                  group_leader = state.base_id, $
+      widget_base(group_leader = state.base_id, $
                   /column, $
                   /base_align_center, $
                   title = 'atv image statistics', $
@@ -5019,8 +4959,7 @@ state.cursorpos = state.coord
 if (not (xregistered('atv_apphot', /noshow))) then begin
 
     apphot_base = $
-      widget_base(/floating, $
-                  /base_align_center, $
+      widget_base(/base_align_center, $
                   group_leader = state.base_id, $
                   /column, $
                   title = 'atv aperture photometry', $
