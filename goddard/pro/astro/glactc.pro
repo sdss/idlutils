@@ -58,6 +58,7 @@ pro glactc,ra,dec,year,gl,gb,j, degree=degree, fk4 = fk4, $
 ;       Major rewrite, default now FK5 coordinates, added /FK4 keyword
 ;       use external precession routines    W. Landsman   April 2002
 ;       Add /Supergalactic keyword W. Landsman  September 2002
+;       Fix major bug when year not 2000 and /FK4 not set W. Landsman July 2003
 ;-
 if N_params() lt 6 then begin
      print,'Syntax -  glactc, ra, dec, year, gl, gb, j, [/DEGREE, /FK4]'
@@ -119,8 +120,8 @@ case j of
         ra = ra*15.0d
          if not keyword_set(fk4) then begin
                     ras = ra & decs = dec
-                  if year NE 2000 then precess,ras,decs,year,2000, /fk4
                   jprecess,ras,decs,ra,dec
+                  if year NE 2000 then precess,ra,dec,2000,year
         endif else if year NE 1950 then begin
                   precess,ra,dec,1950,year,/fk4
         endif 
