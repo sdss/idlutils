@@ -51,7 +51,8 @@ pro tmass_decslice, inpath, outpath
   fileind = 0
   print, 'Reading ', flist[fileind]
   a = mrdfits(flist[fileind], 1)
-  ind = fix((a.decl+90)*10)
+  ind = ceil((a.decl+90)*10)-1  ; this is how they did it...
+  if min(ind) lt 0 then stop
   i = min(ind, max=mx)
   while (i lt 1800) do begin 
      w = where(ind eq i, ngood)
@@ -68,7 +69,7 @@ pro tmass_decslice, inpath, outpath
         if fileind lt n_elements(flist) then begin 
            print, 'Reading ', flist[fileind]
            a = [aw, mrdfits(flist[fileind], 1)]
-           ind = fix((a.decl+90)*10)
+           ind = ceil((a.decl+90)*10)-1
            mn = min(ind, max=mx)
            if i ne mn then stop ; assert i=mn
         endif else a = aw
