@@ -15,6 +15,9 @@
 ;   xdims,ydims  indices of data dimensions to use on each x and y axis
 ;   axis_char_scale size of characters on labels
 ;   default_font font command to send to set font for plotting
+;   extrafun     name of procedure to call after each plot for overplotting
+;                (procedure takes two inputs: d1 and d2 indicating
+;                x and y dimensions of the current plot)
 ;   title        puts string title on top of page
 ; KEYWORDS:
 ;   nodata       don't plot anything at all, just axes!
@@ -38,6 +41,7 @@ pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
                             default_font=default_font, $
                             xnpix=xnpix,ynpix=ynpix, $
                             nodata=nodata, manyd=manyd, title=title, $
+                            extrafun=extrafun, $
                             _EXTRA=KeywordsForHoggScatterplot
 
 if(n_params() lt 2) then begin
@@ -61,8 +65,8 @@ if NOT keyword_set(nsig) then nsig= 5d
 if NOT keyword_set(axis_char_scale) then axis_char_scale= 1.75
 
 ; which dimensions should we look at?
-if(NOT keyword_set(xdims)) then xdims=lindgen(dimen)
-if(NOT keyword_set(ydims)) then ydims=lindgen(dimen)
+if(n_elements(xdims) eq 0 ) then xdims=lindgen(dimen)
+if(n_elements(ydims) eq 0 ) then ydims=lindgen(dimen)
 if(NOT keyword_set(default_font)) then default_font='!3'
 xdimen=n_elements(xdims) 
 ydimen=n_elements(ydims)
@@ -195,6 +199,10 @@ for id2=ydimen-1L,0L,-1 do begin
                   ytitle=label[d2],ycharsize=axis_char_scale
             endif
 
+            if(keyword_set(extrafun)) then begin
+                call_procedure, extrafun, d1, d2
+            endif
+
 ; end loops and close file
         endelse 
     endfor
@@ -217,5 +225,7 @@ if keyword_set(psfilename) then device, /close
 !P= bangP
 !X= bangX
 !Y= bangY
+set_plot,'x'
+
 return
 end
