@@ -66,9 +66,9 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
   endif
 
    if (NOT keyword_set(maxmatch)) then begin
-       maxmatch=1
+       maxmatch=1l
    end else begin
-       if (maxmatch lt 0) then begin
+       if (maxmatch lt 0l) then begin
            print,'illegal maxmatch value: '+maxmatch 
            return
        endif
@@ -77,7 +77,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
    chunksize=max([4.*matchlength,0.1])
 
    npoints1 = N_elements(ra1)
-   if (npoints1 le 0) then begin
+   if (npoints1 le 0l) then begin
        print, 'Need array with > 0 elements'
        return
    endif
@@ -85,21 +85,17 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
        print, 'ra1 and dec1 must have same length'
        return
    endif
-   if (N_elements(ra2) le 0) then begin
+   if (N_elements(ra2) le 0l) then begin
        print, 'Need array with > 0 elements'
        return
    endif
    npoints2=N_elements(ra2)
-   if (npoints2 lt npoints1) then begin
-       npoints=N_elements(ra2)
-       return
-   endif
    if (npoints2 ne N_elements(dec2)) then begin
        print, 'ra2 and dec2 must have same length'
        return
    endif
 
-   if (matchlength le 0) then begin
+   if (matchlength le 0l) then begin
        print, 'Need matchlength > 0'
        return
    endif
@@ -118,7 +114,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
                           double(odistance12), long(onmatch))
 
    ; Call matching software for real
-   if (onmatch gt 0) then begin
+   if (onmatch gt 0l) then begin
        omatch1=lonarr(onmatch)
        omatch2=lonarr(onmatch)
        odistance12=dblarr(onmatch)
@@ -138,7 +134,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
    if (maxmatch gt 0l) then begin
        gotten1=lonarr(npoints1)
        gotten2=lonarr(npoints2)
-       nmatch=0
+       nmatch=0l
        for i = 0l, onmatch-1l do begin
            if ((gotten1[omatch1[sorted[i]]] lt maxmatch) and $
                (gotten2[omatch2[sorted[i]]] lt maxmatch)) then begin
@@ -152,7 +148,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
        match1=lonarr(nmatch)
        match2=lonarr(nmatch)
        distance12=dblarr(nmatch)
-       nmatch=0
+       nmatch=0l
        for i = 0l, onmatch-1l do begin
            if ((gotten1[omatch1[sorted[i]]] lt maxmatch) and $
                (gotten2[omatch2[sorted[i]]] lt maxmatch)) then begin
