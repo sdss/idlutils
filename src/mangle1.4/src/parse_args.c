@@ -386,6 +386,7 @@ void parse_args(int argc, char *argv[])
 	    sscanf(optarg, " %c", &out);
 	    switch (out) {
 	    case 'a':	fmt.out = keywords[AREA];	break;
+	    case 'b':	fmt.out = keywords[BINARY];	break;
 	    case 'c':	fmt.out = keywords[CIRCLE];	break;
 	    case 'e':
         fmt.out = keywords[EDGES];

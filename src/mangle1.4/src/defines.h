@@ -97,5 +97,6 @@
 #define SPOLYGON	9
 #define	VERTICES	10
 #define	WEIGHT		11
+#define BINARY		15
 
 #endif	/* DEFINES_H */

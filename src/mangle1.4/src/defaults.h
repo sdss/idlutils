@@ -114,6 +114,7 @@ char *keywords[] = {
     "skip",
     "end",
     "unit",
+    "binary",
     '\0'
 };
 

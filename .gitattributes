@@ -806,6 +806,7 @@ pro/mangle/is_in_polygon.pro -text
 pro/mangle/is_in_window.pro -text
 pro/mangle/plot_poly.pro -text
 pro/mangle/polygon_overlap.pro -text
+pro/mangle/read_binary_polygons.pro -text
 pro/mangle/read_fits_polygons.pro -text
 pro/mangle/read_mangle_polygons.pro -text
 pro/mangle/read_mangle_vertices.pro -text

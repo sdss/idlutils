@@ -42,6 +42,7 @@ typedef struct {
 	char *linklist;	/* input file with links to check */
 	char *parents;	/* output file with parents of balkans */
   int dontoutputparents; 
+  int outputbin; 
 } format;
 
 #endif	/* FORMAT_H */
