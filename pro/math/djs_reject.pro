@@ -165,7 +165,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
 
    if (keyword_set(lower)) then begin
       qbad = ydiff LT (- lower * sigma)
-      badness = ((ydiff / (sigma + (sigma EQ 0)) > 0) * qbad) > badness
+      badness = ((-ydiff / (sigma + (sigma EQ 0)) > 0) * qbad) > badness
    endif
 
    ;----------
