@@ -66,6 +66,8 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       labelcont=labelcont,nogreyscale=nogreyscale, $
                       xvec=xvec,yvec=yvec,grid=grid, $
                       cumimage=cumimage,outquantiles=outquantiles, $
+                      outliers=outliers, outpsym=outliers_psym, $
+                      outcolor=outliers_color, outsymsize=outliers_symsize, $
                       _EXTRA=KeywordsForPlot
 
 if(n_params() lt 2) then begin
@@ -132,7 +134,8 @@ if keyword_set(conditional) then begin
     for ii=0L,xnpix-1 do begin
         inii= where(xgrid EQ ii,ninii)
         if ninii GT 0 then begin
-            outquantiles[ii,*]= weighted_quantile(y[inii],weight[inii],quant=quantiles)
+            outquantiles[ii,*]= weighted_quantile(y[inii],weight[inii], $
+                                                  quant=quantiles)
         endif
     endfor
 
@@ -148,6 +151,12 @@ endif else begin
     else $
       cumimage= cumimage/total(grid)
 endelse
+
+if keyword_set(outliers) then begin
+    ilow=where(cumimage gt max(levels), nlow)
+    if(nlow gt 0) then $
+      grid[ilow]=0.
+endif
 
 ; scale greyscale
 if NOT keyword_set(nogreyscale) then begin
@@ -175,6 +184,32 @@ endif else begin
     contour, cumimage,xvec,yvec,levels=levels,/overplot, $
       c_labels=lonarr(n_elements(levels))+labelcont,c_thick=cthick
 endelse
+
+if keyword_set(outliers) then begin
+    if(n_elements(outliers_psym) eq 0) then $
+      outliers_psym=6
+    if(n_elements(outliers_color) eq 0) then $
+      outliers_color='red'
+    if(n_elements(outliers_symsize) eq 0) then $
+      outliers_symsize=0.13
+    iin=where((x-xrange[0])/(xrange[1]-xrange[0]) gt 0 and $
+              (x-xrange[1])/(xrange[1]-xrange[0]) lt 0 and $
+              (y-yrange[0])/(yrange[1]-yrange[0]) gt 0 and $
+              (y-yrange[1])/(yrange[1]-yrange[0]) lt 0, nin)
+    if(nin gt 0) then begin
+        pval=interpolate(cumimage, $
+                         (x[iin]-xvec[0])/(xvec[xnpix-1L]-xvec[0])* $
+                         float(xnpix-1L), $
+                         (y[iin]-yvec[0])/(yvec[ynpix-1L]-yvec[0])* $
+                         float(ynpix-1L))
+        ioutliers=where(pval gt max(levels), noutliers)
+        if(noutliers gt 0) then begin
+            djs_oplot, x[iin[ioutliers]], y[iin[ioutliers]], $
+              psym=outliers_psym, color=outliers_color, $
+              symsize=outliers_symsize
+        endif
+    endif
+endif
 
 ; re-plot axes (yes, this is a HACK)
 !P.MULTI[0]= !P.MULTI[0]+1

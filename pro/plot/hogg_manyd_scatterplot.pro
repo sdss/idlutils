@@ -95,7 +95,7 @@ xsize= 7.5 & ysize= 7.5
 if keyword_set(psfilename) then begin
     set_plot, "PS"
     device, file=psfilename,/inches,xsize=xsize,ysize=ysize, $
-      xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color
+      xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color, bits=8
 endif
 hogg_plot_defaults, axis_char_scale=axis_char_scale
 tiny= 1.d-4
