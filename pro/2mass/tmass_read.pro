@@ -65,8 +65,8 @@ function tmass_read, racen, deccen, rad
   ENDFOR 
 
 ; strip extra dec (works for both TMASS-A and B)
-  racat  = data.ra
-  deccat = data.decl
+  racat  = data.tmass_ra
+  deccat = data.tmass_dec
   good = where((deccat GE dec0) AND (deccat LE dec1), ct)
 
   IF ct GT 0 THEN BEGIN 
@@ -76,8 +76,8 @@ function tmass_read, racen, deccen, rad
   ENDELSE 
   
 ; Now use dot products to strip extras
-  racat  = dtrim.ra
-  deccat = dtrim.decl
+  racat  = dtrim.tmass_ra
+  deccat = dtrim.tmass_dec
   uvobj = ll2uv(double([[racat], [deccat]]), /double) ; (n,3) array
   uvcen = ll2uv(double([[racen], [deccen]]), /double) ; (1,3) array
   dot   = uvobj#transpose(uvcen)
