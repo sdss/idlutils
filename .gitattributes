@@ -531,6 +531,7 @@ goddard/pro/tv/tvlaser.pro -text
 goddard/pro/tv/tvlist.pro -text
 goddard/pro/tv/unzoom_xy.pro -text
 goddard/pro/tv/zoom_xy.pro -text
+goddard/text/Makefile -text
 goddard/text/README -text
 goddard/text/astro.readme -text
 goddard/text/astrom.readme -text
