@@ -604,6 +604,7 @@ pro/coord/heliocentric.pro -text
 pro/coord/mjd2datelist.pro -text
 pro/coord/moon_zenith.pro -text
 pro/coord/munu_to_radec.pro -text
+pro/coord/radec_greatcircle.pro -text
 pro/coord/radec_to_etalambda.pro -text
 pro/coord/radec_to_munu.pro -text
 pro/coord/recenter.pro -text
