@@ -11,7 +11,6 @@ Pro	Display, image, $
 		ASPECT=aspect, $
 		INTERPOLATE=interp, $
 		MASKVALUE=maskvalue, $
-		AUTOSTRETCH=as, $
 		PSFINE=psfine, $
 		NO_EXPAND=no_expand, $
 		NOERASE=noerase, $
@@ -124,8 +123,6 @@ SccsId = '@(#)display.pro 3.9 95/08/31 14:42:48 '
 ; SUBORDINATE ROUTINES:
 ;	IMGSCL()
 ;	IMGEXP()
-;	COMP_DIST
-;	    SIMP_HIST()
 ;
 ; RESTRICTIONS:
 ;	This routine may work for other devices, but it has only been tested
@@ -163,7 +160,8 @@ SccsId = '@(#)display.pro 3.9 95/08/31 14:42:48 '
 ; 950801 - PS_FINE= value read from keyword.
 ; 950816 - Empty subtitle passed to PLOT if SUBTITLE= not defined.
 ; 950831 - Add pass-thru support for IMGSCL() keywords WRAP= and BREAKS=.
-
+; 030125 - Autostretch feature removed - it depends on comp_dist which
+;            cannot be found - DPF
 
     On_Error, 0
 
@@ -206,7 +204,7 @@ SccsId = '@(#)display.pro 3.9 95/08/31 14:42:48 '
         Else: Begin
             Message, 'Usage: DISPLAY, image [,xs [,ys]] [,TITLE=] [,XTITLE=] [,YTITLE=]', /Info
 	    Message, '           [,MIN=] [,MAX=] [,/LOG] [,LEVELS=]', /Info
-            Message, '           [,ASPECT=] [,/INTERPOLATE] [MASKVALUE=] [,AUTOSTRETCH=]', /Info
+            Message, '           [,ASPECT=] [,/INTERPOLATE] [MASKVALUE=]', /Info
 	    Message, '           [,/NO_EXPAND] [,/NOERASE] [,/PSFINE]', /Info
             Return
         End
@@ -297,40 +295,6 @@ SccsId = '@(#)display.pro 3.9 95/08/31 14:42:48 '
 ;	Message, '<Image> is already byte type. No scaling done.', /Info
 	byte_im = im
     EndElse
-
-;
-; Determine the percentage range of the byte scaled image over which to
-;	stretch the color table.  If <as> is 1, 100% is assumed rather
-;	than 1% and the hole range is histogram equlized.
-;
-    If ( Keyword_Set(as) ) Then Begin
-	good = Where((im GE minval) And (im LE maxval), count)
-	If ( count LT 1 ) Then Begin
-	    Message, "No values within MIN/MAX range."
-	EndIf Else Begin
-	    b_im_good = byte_im(good)
-	    If ( as(0) EQ 1 ) Then Begin
-		per = [0.0, 100.0]
-	    EndIf Else Begin
-		half = as(0) / 2.0
-		per = [50.0-half,50.0+half]
-	    EndElse
-	    Print, "Computing the stretch range ..."
-	    Comp_Dist, b_im_good, hist, bin_cent, cum_dist, cum_frac, $
-			Bin_Size=0.5, Percent=per, /NoPlot
-	    in_range = Where((cum_frac GE per(0)/100.0) And $
-			(cum_frac LE per(1)/100.0), count)
-	    If ( count GT 1 ) Then Begin
-		in_stretch = Where((b_im_good GE bin_cent(in_range(0))) And $
-			(b_im_good LE bin_cent(in_range(count-1))))
-		im_stretch = b_im_good(in_stretch)
-		H_Eq_CT, im_stretch
-		Print, "Color table altered."
-	    EndIf Else Begin
-		Message, "Color range too small to stretch."
-	    EndElse
-	EndElse
-    EndIf
 
 ;
 ; Put the image on the TV.
