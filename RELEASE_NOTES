@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v4_10_8 (Jan 4, 2004)
+Tagged for sirtf v0_0_2
+
 GAUSS_OVERLAP: New function to calculate log integral, covariance, and
                mean of product of two gaussians.
 NW_RGB_MAKE: Top-level routine for making color images from 3 color images.
