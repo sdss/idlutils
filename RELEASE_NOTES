@@ -11,11 +11,16 @@ VMIDC,idl_vmidc.c,vmid.c: New function to return the central vector in
 UNDEFINE: Fanning procedure to wrap TEMPORARY calls to delete variables
 WHERE_POLYGONS_OVERLAP: Add optional output AREAMATCH.
 
-src/idlmangle/Makefile: Add idl_garea.o
-src/idlmangle/where_polygons_overlap.c: Compute and return the overlap area.
-
 data/sdss/sdssMaskbits.par: Remove the RESOLVE bits, which have been deprecated
                with the RESOLVE_STATUS mask bits.
+src/idlmangle/Makefile: Add idl_garea.o
+               Change the order of the line that does linking from
+               "-lmangle -L$(IDLUTILS_DIR)/lib" to
+               "-L$(IDLUTILS_DIR)/lib -lmangle".  This seems to make a
+               difference on the SGI platform (hecate.princeton), but
+               makes no difference under Linux.
+src/idlmangle/where_polygons_overlap.c: Compute and return the overlap area.
+src/image/grow_obj.c: Comment-out "ny" because it isn't actually used.
 
 -------------------------------------------------------------------------------
 v5_0_0 (Feb 19, 2004) running on IDL 5.4 - 6.0
