@@ -1,4 +1,5 @@
 
+ATV: Fix bug introduced for Healpix when reading non-Healpix files.
 DPF_NEST2RING,DPF_PIX2ANG_RING: Cache lookup table for wicked speed.
 DPF_PIX2ANG_NEST: Added (simply calls dpf_nest2ring and dpf_pix2ang_ring).
 HEALGEN        Updated to use dpf* routines and break dependence on HEALPIX
@@ -13,9 +14,11 @@ EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
                TRACE_CRUDE,TRACE_FWEIGHT,TRACE_GWEIGHT:
                Call IDLUTILS_SO_EXT() to get the suffix for dynamically
                loaded libraries (rather than assuming ".so").
+HOGG_MANYD_SCATTERPLOT: Fix xdim=0 bug, add EXTRAFUN parameter,
+               send plotting back to X.
 HOGG_SCATTERPLOT: Add /outliers keyword to show points outside last contour
                as points (and don't show greyscale there).
-IS_IN_CAP, IS_INPOLYGON: Fix ra=0 bug (changing keyword_set to n_elements)
+IS_IN_CAP, IS_INPOLYGON: Fix ra=0 bug (changing keyword_set to n_elements).
 LOCAL_EXTRAGALACTIC: Code added by Blanton for returning the locations of
                nearby clusters, using the data files in data/objects.
 MAKE_RA_CAP,MAKE_DEC_CAP: Functions moved from photoop; make mangle
@@ -39,7 +42,7 @@ REJECT_CR: A previous error in determining the background for rejection
                has been fixed, so more cosmics are now successfully rejected. 
 SORTINPLACE: New function for sorting arrays in-place.
 SPLOT: Add PLUGIN keyword for coordinate plug-ins.
-YANNY_WRITE: Fixed bug in loop variable typing
+YANNY_WRITE: Make loop variables type LONG.
 
 Makefile: Install the RELEASE_NOTES file.
 bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
