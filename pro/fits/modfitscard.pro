@@ -109,8 +109,12 @@ pro modfitscard, filename, card, value, comment, delete=delete, $
             endfor
          endif else begin
             for icard=0, ncard-1 do begin
-               sxaddpar, hdr, card[icard], value[icard], comment[icard], $
-                _EXTRA=KeywordsForSxaddpar
+               if (keyword_set(comment)) then $
+                sxaddpar, hdr, card[icard], value[icard], comment[icard], $
+                 _EXTRA=KeywordsForSxaddpar $
+               else $
+                sxaddpar, hdr, card[icard], value[icard], $
+                 _EXTRA=KeywordsForSxaddpar
             endfor
          endelse
 
