@@ -553,7 +553,6 @@ pro/TeXtoIDL/DESCRIPTIONS -text
 pro/TeXtoIDL/DISCLAIMER -text
 pro/TeXtoIDL/FILES -text
 pro/TeXtoIDL/README -text
-pro/TeXtoIDL/textoidl.bak -text
 pro/TeXtoIDL/textoidl.pro -text
 pro/astrom/usno_read.pro -text
 pro/coord/angles_to_xyz.pro -text
