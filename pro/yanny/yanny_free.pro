@@ -36,6 +36,8 @@ pro yanny_free, pdata
       return
    endif
 
+   if (NOT keyword_set(pdata)) then return
+
    for i=0, N_elements(pdata)-1 do begin
       ptr_free, pdata[i]
    endfor
