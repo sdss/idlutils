@@ -58,7 +58,8 @@ case $UNAME in
 		SO_EXT=so
 		X_CFLAGS="-fPIC -g -Wall"
 		X_FFLAGS="-ffixed-line-length-none"
-    MAKE_FTNLIB="-lg2c  -L/usr/lib/gcc-lib/i386-redhat-linux/`gcc -dumpversion`"
+    MAKE_FTNLIB="-lg2c"
+#    MAKE_FTNLIB="-lg2c  -L/usr/lib/gcc-lib/i386-redhat-linux/`gcc -dumpversion`"
 		X_LD_FLAGS=-shared
 		SDSS_CFLAGS="-O3 -DSDSS_LITTLE_ENDIAN"
 	;;
