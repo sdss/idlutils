@@ -81,6 +81,7 @@ function ucac_readzone, thiszone, ra_min, ra_max
     else i1 = uindex[jj[j1-1]].naz
    i2 = uindex[jj[j2]].naz - 1L
    nrecord = i2 - i1 + 1L
+   if (nrecord EQ 0) then return
 
    ;----------
    ; Read the binary format data
