@@ -72,6 +72,8 @@ data/filters/wf2f814wsys.txt -text
 doc/Makefile -text
 doc/mk_doc -text
 doc/www/.cvsignore -text
+doc/www/binary -text
+doc/www/binary2 -text svneol=unset#application/octet-stream
 doc/www/test -text
 goddard/Makefile -text
 goddard/README -text
