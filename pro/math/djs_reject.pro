@@ -98,7 +98,7 @@
 ;------------------------------------------------------------------------------
 function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
  sigma=sigma, invvar=invvar, upper=upper, lower=lower, maxdev=maxdev, $
- maxrej=maxrej, groupsize=groupsize, sticky=sticky
+ maxrej=maxrej, groupsize=groupsize, sticky=sticky, rejper=rejper
 
    if (n_params() LT 2 OR NOT arg_present(outmask)) then begin
       print, 'Syntax: qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
@@ -135,9 +135,8 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
 
    if (keyword_set(sigma) AND keyword_set(invvar)) then $
     message, 'Cannot set both SIGMA and INVVAR'
-   if (keyword_set(invvar)) then begin
-      sigma = 1. / sqrt(invvar + (invvar EQ 0)) ; Set to 1 where INVVAR=0
-   endif else if (NOT keyword_set(sigma)) then begin
+
+   if ((NOT keyword_set(sigma)) AND (NOT keyword_set(invvar))) then begin
       if (keyword_set(inmask)) then igood = where(inmask AND outmask, ngood) $
        else igood = where(outmask, ngood)
       if (ngood GT 1) then $
@@ -146,8 +145,8 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
        sigma = 0
    endif
 
-   if (n_elements(sigma) NE 1 AND n_elements(sigma) NE ndata) then $
-    message, 'Invalid number of elements for SIGMA'
+;   if (n_elements(sigma) NE 1 AND n_elements(sigma) NE ndata) then $
+;    message, 'Invalid number of elements for SIGMA'
 
    ydiff = ydata - ymodel
 
@@ -164,16 +163,26 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    ; Decide how bad a point is according to LOWER
 
    if (keyword_set(lower)) then begin
-      qbad = ydiff LT (- lower * sigma)
-      badness = ((-ydiff / (sigma + (sigma EQ 0)) > 0) * qbad) > badness
+      if keyword_set(sigma) then begin
+          qbad = ydiff LT (- lower * sigma) 
+          badness = (((-ydiff / (sigma + (sigma EQ 0))) > 0) * qbad) > badness
+      endif else begin
+          qbad = ydiff  * sqrt(invvar) LT (- lower)
+          badness = (((-ydiff * sqrt(invvar)) > 0) * qbad) > badness
+      endelse
    endif
 
    ;----------
    ; Decide how bad a point is according to UPPER
 
    if (keyword_set(upper)) then begin
-      qbad = ydiff GT (upper * sigma)
-      badness = ((ydiff / (sigma + (sigma EQ 0)) > 0) * qbad) > badness
+      if keyword_set(sigma) then begin
+        qbad = ydiff GT (upper * sigma) 
+        badness = (((ydiff / (sigma + (sigma EQ 0))) > 0) * qbad) > badness
+      endif else begin
+        qbad = ydiff  * sqrt(invvar) GT upper
+        badness = (((ydiff * sqrt(invvar)) > 0) * qbad) > badness
+      endelse
    endif
 
    ;----------
@@ -196,6 +205,11 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    ; Reject a maximum of MAXREJ (additional) points in all the data,
    ; or in each group as specified by GROUPSIZE.
 
+   if keyword_set(rejper) then begin
+      uhoh = where(badness NE 0, nbad)
+      maxrej = nbad * rejper
+   endif
+
    if (keyword_set(maxrej)) then begin
       if (NOT keyword_set(groupsize)) then groupsize = ndata
       i1 = 0L
@@ -208,7 +222,8 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
          endif
          i1 = i1 + groupsize
       endwhile
-   endif
+   endif 
+      
 
    ;----------
    ; Now modify OUTMASK, rejecting points specified by INMASK=0,
