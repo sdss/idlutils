@@ -9,7 +9,7 @@ Common:
    Action=setup
       setupOptional("-f ${UPS_PROD_FLAVOR} idl")
       setupOptional("-f ${UPS_PROD_FLAVOR} dust")
-#      setupOptional("-f ${UPS_PROD_FLAVOR} first")
+      setupOptional("-f ${UPS_PROD_FLAVOR} first")
       setupOptional("-f ${UPS_PROD_FLAVOR} gsc")
       setupOptional("-f ${UPS_PROD_FLAVOR} twomass")
       setupOptional("-f ${UPS_PROD_FLAVOR} tycho2")
