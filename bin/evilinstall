@@ -87,7 +87,7 @@ else
 fi
 echo "Setting MYSDSS_ROOT=$MYSDSS_ROOT"
 
-# Make sure this product+version isn't already delcared.
+# Make sure this product+version isn't already declared.
 
 if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
    echo "This installation already appears to exist in " $MYSDSS_ROOT/$PRODNAME/$PRODVERS
