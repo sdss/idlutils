@@ -46,6 +46,11 @@ function yanny_par, hdr, keyname, count=count
    nhead = N_elements(hdr)
    if (nhead EQ 0) then return, -1
 
+   if (size(keyname, /tname) EQ 'UNDEFINED') then begin
+      print, 'keyname is undefined, pass a string'
+      return, ''
+   endif
+
    keylist = strarr(nhead)
    keystring = strarr(nhead)
    for i=0, nhead-1 do begin
