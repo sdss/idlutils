@@ -608,6 +608,7 @@ pro/plot/djs_oplot.pro -text
 pro/plot/djs_oploterr.pro -text
 pro/plot/djs_plot.pro -text
 pro/plot/djs_plotlimitbox.pro -text
+pro/plot/djs_xyouts.pro -text
 pro/plot/s_plotdev.pro -text
 pro/plot/splot.pro -text
 pro/slatec/bsplvn.pro -text
