@@ -13,7 +13,7 @@
 ;      Result = MRDFITS( Filename/FileUnit,[Extension, Header],
 ;                       /FSCALE , /DSCALE , /UNSIGNED,
 ;                       ALIAS=strarr[2,n], /USE_COLNUM,
-;                       /NO_TDIM, /OLD_STRUCT, $
+;                       /NO_TDIM, /OLD_STRUCT, ROWS = [a,b,...], $
 ;                       /POINTER_VAR, /FIXED_VAR,
 ;                       RANGE=[a,b], COLUMNS=[a,b,...]), ERROR_ACTION=x,
 ;                       COMPRESS=comp_prog, STATUS=status, /VERSION )
@@ -143,6 +143,10 @@
 ;                So that the first row is row 0.
 ;                If only a single value, x, is given in the range,
 ;                the range is assumed to be [0,x-1].
+;       ROWS -  For binary or ASCII tables only, a vector specifying specific 
+;               rows to read (first row is 0).   For example to read rows 0,
+;               12 and 23 only, set ROWS=[0,12,23].   Cannot be used at the
+;               same time as the RANGE keyword
 ;       /SILENT - Suppress informative messages.
 ;       STRUCTYP - The structyp keyword specifies the name to be used
 ;                for the structure defined when reading ASCII or binary
@@ -301,6 +305,7 @@
 ;                           and 64 bit unsigneds. (Thanks to Stephane Beland)
 ;       V2.6a September 2, 2002 Fix possible conflicting data structure for
 ;                          variable length arrays (W. Landsman)
+;       V2.7 July, 2003  Added Rows keyword (W. Landsman)
 ;
 ;       Note to users of IDL prior to V5.0:  This version is compiled
 ;       with the [] array syntax.  To convert this version to run under
@@ -605,11 +610,11 @@ end
 
 ; Read in the table information.
 pro mrd_read_ascii, unit, range, nbytes, nrows, nfld, typarr, posarr,   $
-     lenarr, nullarr, table, old_struct=old_struct
+     lenarr, nullarr, table, old_struct=old_struct, rows=rows
 
     ;
     ; Unit          Unit to read data from.
-    ; Range         Range of rows to be read
+    ; Range         Range of  to be read
     ; Nbytes        Number of bytes per row.
     ; Nrows         Number of rows.
     ; Nfld          Number of fields in structure.
@@ -624,6 +629,7 @@ pro mrd_read_ascii, unit, range, nbytes, nrows, nfld, typarr, posarr,   $
 
     if range[0] gt 0 then mrd_skip, unit, nbytes*range[0]
     readu,unit, bigstr
+    if N_elements(rows) GT 0 then bigstr = bigstr[*,rows-range[0]] 
 
     ; Skip to the end of the data area.
 
@@ -704,7 +710,7 @@ end
 pro mrd_ascii, header, structyp, use_colnum,   $
     range, table, $
     nbytes, nrows, nfld, typarr, posarr, lenarr, nullarr, $
-    fnames, fvalues, scales, offsets, scaling, status, $
+    fnames, fvalues, scales, offsets, scaling, status, rows = rows, $
     silent=silent, tempdir=tempdir, columns=columns, old_struct=old_struct, $
     alias=alias
 
@@ -743,7 +749,7 @@ pro mrd_ascii, header, structyp, use_colnum,   $
     nfld = fxpar(header, 'TFIELDS')
     nrows = fxpar(header, 'NAXIS2')
     nbytes = fxpar(header, 'NAXIS1')
-
+ 
     if range[0] ge 0 then begin
         range[0] = range[0] < (nrows-1)
         range[1] = range[1] < (nrows-1)
@@ -752,7 +758,8 @@ pro mrd_ascii, header, structyp, use_colnum,   $
         range[1] = nrows-1
     endelse
 
-    nrows = range[1] - range[0] + 1
+    if N_elements(rows) EQ 0 then nrows = range[1] - range[0] + 1 $
+                             else nrows = N_elements(rows)
 
     if nrows le 0 then begin
         if not keyword_set(silent) then begin
@@ -1553,7 +1560,7 @@ end
 ; length arrays. 
 pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $ 
    structyp, scaling, scales, offsets, status, silent=silent,                $
-   tempdir=tempdir, columns=columns,                                         $
+   tempdir=tempdir, columns=columns, rows = rows, $                                        $
    old_struct=old_struct, pointer_var=pointer_var, fixed_var=fixed_var
 
     ; 
@@ -1775,7 +1782,8 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
     endelse
 
 
-    nrow = range[1]-range[0]+1
+    if N_elements(rows) EQ 0 then nrow = range[1]-range[0]+1 $
+                             else nrow = N_elements(rows)
     is_ieee = is_ieee_big()
     
     ; I loops over the new table columns, col loops over the old table.
@@ -1815,7 +1823,6 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
                 endelse
 		
                 if (nrow eq 1) then curr_col = reform(curr_col,2,1)
-                        
                 siz = curr_col[0,*] 
                 off = curr_col[1,*] 
                     
@@ -1878,7 +1885,7 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
                     sz = size(curr_colx)
                     if sz[1] eq 1 then begin
                          sz_tablex = size(tablex.(i))
-                         sdimen = sz_tablex(1:sz_tablex[0])
+                         sdimen = sz_tablex[1:sz_tablex[0]]
                          tablex.(i) = reform(curr_colx,sdimen)
                     endif else begin
                         tablex.(i) = curr_colx
@@ -1913,7 +1920,7 @@ end
 
 ; Read in the binary table information. 
 pro mrd_read_table, unit, range, rsize, structyp, nrows, nfld, typarr, table, $
-                                      old_struct=old_struct
+                                      old_struct=old_struct, rows = rows
  
     ; 
     ; 
@@ -1929,6 +1936,7 @@ pro mrd_read_table, unit, range, rsize, structyp, nrows, nfld, typarr, table, $
 
     if range[0] gt 0 then mrd_skip, unit, rsize*range[0]
     readu,unit, table
+    if N_elements(rows) GT 0 then table = table[rows- range[0]]
 
     ; Move to the beginning of the heap -- we may have only read some rows of
     ; the data.
@@ -2092,7 +2100,7 @@ end
 ; Define a structure to hold a FITS binary table. 
 pro mrd_table, header, structyp, use_colnum,           $ 
     range, rsize, table, nrows, nfld, typarr, fnames, fvalues,   $ 
-    vcls, vtpes, scales, offsets, scaling, status, $
+    vcls, vtpes, scales, offsets, scaling, status, rows = rows, $
     silent=silent, tempdir=tempdir, columns=columns, no_tdim=no_tdim, $
     old_struct=old_struct, alias=alias, unsigned=unsigned
  
@@ -2142,7 +2150,6 @@ pro mrd_table, header, structyp, use_colnum,           $
     endelse
     
     nrow = range[1] - range[0] + 1 
-
     if nrow le 0 then begin
         if not keyword_set(silent) then begin
             print, 'MRDFITS: Binary table. ', $
@@ -2150,6 +2157,7 @@ pro mrd_table, header, structyp, use_colnum,           $
         endif
         return
     endif
+    if N_elements(rows) EQ 0 then nrowp  = nrow else nrowp = N_elements(rows)
 
     rsize = fxpar(header, 'NAXIS1') 
  
@@ -2344,7 +2352,7 @@ pro mrd_table, header, structyp, use_colnum,           $
 
     if not keyword_set(silent) then begin
         print, 'MRDFITS: Binary table. ',strcompress(string(nfld)), ' columns by ',  $
-          strcompress(string(nrow)), ' rows.'
+          strcompress(string(nrowp)), ' rows.'
         if n_elements(vcls) gt 0 then begin
                 print, 'MRDFITS: Uses variable length arrays'
         endif
@@ -2368,6 +2376,7 @@ function mrdfits, file, extension, header,      $
         old_struct=old_struct,                  $
 	compress=compress,                      $
 	alias=alias,                            $
+        rows = rows,                        $
 	unsigned=unsigned,                      $
 	version=version,                        $
 	pointer_var=pointer_var,                $
@@ -2428,6 +2437,10 @@ function mrdfits, file, extension, header,      $
     if not keyword_set(use_colnum) then use_colnum = 0
 
     ;  *** Get only a part of the FITS file.
+    if N_elements(rows) GT 0 then begin
+        range1 = min(rows,max=range2)
+        range = [range1,range2]
+    endif
     if keyword_set(range) then begin
         if n_elements(range) eq 2 then arange = range $
         else if n_elements(range) eq 1 then arange = [0,range[0]-1] $
@@ -2526,7 +2539,7 @@ function mrdfits, file, extension, header,      $
         ;*** ASCII tables.
         
         mrd_ascii, header, structyp, use_colnum,                              $
-            arange, table, nbytes, nrows, nfld,                               $
+            arange, table, nbytes, nrows, nfld, rows=rows,                    $
             typarr, posarr, lenarr, nullarr, fnames, fvalues,                 $
             scales, offsets, scaling, status, silent=silent, tempdir=tempdir, $
             columns=columns,old_struct=old_struct, alias=alias
@@ -2537,7 +2550,7 @@ function mrdfits, file, extension, header,      $
             ;*** Read data.
             mrd_read_ascii, unit,  arange, nbytes, nrows,   $
               nfld, typarr, posarr, lenarr, nullarr, table, $
-              old_struct=old_struct
+              old_struct=old_struct, rows= rows
               
             ;*** Extract desired columns.
             if status ge 0 and keyword_set(columns) then                  $
@@ -2562,7 +2575,7 @@ function mrdfits, file, extension, header,      $
         if status ge 0  and  size gt 0  then begin
      
             ;*** Read data.
-            mrd_read_table, unit, arange, rsize,  $
+            mrd_read_table, unit, arange, rsize,  rows = rows, $
               structyp, nrows, nfld, typarr, table, old_struct=old_struct
 
             if status ge 0 and keyword_set(columns) then begin
@@ -2581,7 +2594,7 @@ function mrdfits, file, extension, header,      $
                 mrd_read_heap, unit, header, arange, fnames, fvalues,             $
                   vcls, vtpes, table, structyp, scaling, scales, offsets, status, $
                   silent=silent, tempdir=tempdir, old_struct=old_struct,          $
-		  pointer_var=pointer_var, fixed_var=fixed_var
+		  pointer_var=pointer_var, fixed_var=fixed_var, rows= rows
 		
 	    endif else begin
 
