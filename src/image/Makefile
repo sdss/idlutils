@@ -15,7 +15,7 @@ CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(IDLUTILS_DIR)/i
 LIB = $(IDLUTILS_DIR)/lib
 
 OBJECTS = \
-	pop_image.o
+	grow_obj.o pop_image.o
 
 all : $(LIB)/libimage.$(SO_EXT)
 

@@ -954,6 +954,7 @@ src/idlmangle/idl_garea.c -text
 src/idlmangle/idl_gverts.c -text
 src/image/Makefile -text
 src/image/export.h -text
+src/image/grow_obj.c -text
 src/image/pop_image.c -text
 src/mangle1.2/.cvsignore -text
 src/mangle1.2/HELP.unformatted -text
