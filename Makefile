@@ -1,3 +1,10 @@
+###############################################################################
+# Sloan Digital Sky Survey (SDSS)
+# IDL support code for products: idlmapper, idlspec2d
+#
+# S. Burles & D. Schlegel
+###############################################################################
+
 #
 # IDL support utilities for spectro2d and the fibermapper
 #
@@ -8,7 +15,7 @@ SHELL = /bin/sh
 #
 CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
 
-SUBDIRS = doc goddard lib pro src ups
+SUBDIRS = bin doc goddard lib pro src ups
 
 all :
 	@ for f in $(SUBDIRS); do \

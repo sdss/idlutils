@@ -69,7 +69,7 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
    inbv = 1L
    xtemp = float(x < maxbkpt)
    xtemp = (xtemp > minbkpt)
-   rr = call_external(getenv('IDLUTILS_DIR/lib/')+'libslatec.so', $
+   rr = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
     'bvalu_idl', $
     float(bkpt), float(coeff), n, k, ideriv, xtemp, nx, inbv, work, y)
 

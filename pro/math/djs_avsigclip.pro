@@ -79,14 +79,14 @@ function djs_avsigclip, array, dim, sigrej=sigrej, maxiter=maxiter, $
       if (NOT keyword_set(inmask)) then inmask = reform(bytarr(sz), dimvec)
       outmask = reform(bytarr(sz), dimvec)
 
-      retval = call_external(getenv('IDLUTILS_DIR/lib/')+'libmath.so', $
+      retval = call_external(getenv('IDLUTILS_DIR')+'/lib/libmath.so', $
        'arravsigclip_mask', $
        ndim, dimvec, float(array), long(dim), float(sigrej), float(sigrej), $
        long(maxiter), avearr, fix(inmask), outmask)
 
    endif else begin
 
-      retval = call_external(getenv('IDLUTILS_DIR/lib/')+'libmath.so', $
+      retval = call_external(getenv('IDLUTILS_DIR')+'/lib/libmath.so', $
        'arravsigclip', $
        ndim, dimvec, float(array), long(dim), float(sigrej), float(sigrej), $
        long(maxiter), avearr)

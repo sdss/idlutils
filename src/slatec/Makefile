@@ -1,6 +1,12 @@
+###############################################################################
+# Sloan Digital Sky Survey (SDSS)
+# IDL support code for products: idlmapper, idlspec2d
 #
-# slatec for idl spectro2d
+# Slatec code in Fortran with C wrappers for calling from IDL
 #
+# S. Burles & D. Schlegel
+###############################################################################
+
 SHELL = /bin/sh
 #
 .c.o :

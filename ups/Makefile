@@ -1,3 +1,10 @@
+###############################################################################
+# Sloan Digital Sky Survey (SDSS)
+# IDL support code for products: idlmapper, idlspec2d
+#
+# S. Burles & D. Schlegel
+###############################################################################
+
 SHELL = /bin/sh
 #
 default :
