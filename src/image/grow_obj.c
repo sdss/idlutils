@@ -10,7 +10,7 @@ IDL_LONG grow_obj
 {
    IDL_LONG    nx;
    IDL_LONG    ny;
-   IDL_LONG *  image;
+   unsigned char *  image;
    IDL_LONG *  mask;
    IDL_LONG    iloc;
    IDL_LONG    putval;
@@ -25,7 +25,7 @@ IDL_LONG grow_obj
    /* Allocate pointers from IDL */
    nx = *((IDL_LONG *)argv[0]);
    ny = *((IDL_LONG *)argv[1]);
-   image = (IDL_LONG *)argv[2];
+   image = (unsigned char *)argv[2];
    mask = (IDL_LONG *)argv[3];
    iloc = *((IDL_LONG *)argv[4]);
    putval = *((IDL_LONG *)argv[5]);

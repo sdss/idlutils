@@ -6,7 +6,7 @@
 ;   Identify objects as the contiguous non-zero pixels in an image.
 ;
 ; CALLING SEQUENCE:
-;   grow_object, image, [ mask, xstart=, ystart=, putval=, /diagonal, nadd= ]
+;   mask = grow_object( image, [ xstart=, ystart=, putval=, /diagonal, nadd= ]
 ;
 ; INPUTS:
 ;   image      - Integer-valued image vector or array, where non-zero pixel
@@ -41,6 +41,9 @@
 ;   in the image and assigned unique object IDs in MASK starting at 1.
 ;   Note that in this case, max(MASK) is the number of objects.
 ;
+;   The memory usage is 9*(nx+2)*(ny+2) bytes in addition to the input
+;   image, where [nx,ny] are the dimensions of the input image.
+;
 ; EXAMPLES:
 ;   Create a random image of 0s and 1s, and identify all contiguous pixels
 ;   as objects:
@@ -74,7 +77,7 @@ function grow_obj1, image, mask, iloc, putval=putval, $
    return, nadd
 end
 ;------------------------------------------------------------------------------
-pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
+function grow_object, image, xstart=xstart1, ystart=ystart1, putval=putval1, $
  diagonal=diagonal, nadd=nadd
 
    ndim = size(image, /n_dimen)
@@ -91,7 +94,7 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
    nadd = 0L
 
    ; Pad everything by 1, which was necessary to make the C code fast.
-   image_pad = lonarr(nx+2,ny+2)
+   image_pad = bytarr(nx+2,ny+2)
    image_pad[1:nx,1:ny] = image
    mask_pad = lonarr(nx+2,ny+2)
    workarray = lonarr(nx+2,ny+2)
@@ -117,7 +120,6 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
       if (keyword_set(putval1)) then objid = long(putval1[0]) $
        else objid = 1L
       while (jj LT ct) do begin
-print,objid,ct,indx[jj]
          nadd1 = grow_obj1(image_pad, mask_pad, indx[jj], $
           putval=objid, diagonal=diagonal, $
           nx=nx+2, ny=ny+2, workarray=workarray)
@@ -136,6 +138,6 @@ print,objid,ct,indx[jj]
    ; Un-pad the output image by 1
    mask = mask_pad[1:nx,1:ny]
 
-   return
+   return, mask
 end
 ;------------------------------------------------------------------------------
