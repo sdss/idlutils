@@ -50,6 +50,7 @@ function bspline_radial_valu, r, theta,  sset, mode=mode
       filler = replicate(1,sset.nord)
 
       tempset = create_bsplineset(sset.fullbkpt, sset.nord)
+      tempset.bkmask = sset.bkmask
 
       if n_elements(mode) EQ 1 then begin
         if (mode GE 0 AND mode LT npoly) then begin
