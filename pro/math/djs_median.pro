@@ -87,7 +87,8 @@ function djs_median, array, dim, width=width
       newsize = N_elements(array) / dimvec[dim-1]
       medarr = reform(fltarr(newsize), newdimvec)
 
-      retval = call_external(getenv('IDL_EVIL')+'libmath.so', 'arrmedian', $
+      retval = call_external(getenv('IDLUTILS_DIR/lib/')+'libmath.so', $
+       'arrmedian', $
        ndim, dimvec, float(array), long(dim), medarr)
 
    endif else begin

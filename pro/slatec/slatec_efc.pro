@@ -144,7 +144,8 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
       lw = 10*nbkpt*nord + 2*max([ndata,nbkpt])
       w = fltarr(lw)
 
-      test = call_external(getenv('IDL_EVIL')+'libslatecidl.so','efc_idl', $
+      test = call_external(getenv('IDLUTILS_DIR/lib/')+'libslatec.so', $
+       'efc_idl', $
        ndata, float(x), float(y), float(invsig), nord, $
        nbkpt,fullbkpt, mdein, mdeout, coeff, lw, w)
 

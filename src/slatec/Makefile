@@ -32,10 +32,10 @@ OBJECTS = \
 	sscal.o ssort.o sswap.o xercnt.o xerhlt.o xermsg.o xerprn.o xersve.o \
 	xgetua.o xsetf.o 
 
-all : $(LIB)/libslatecidl.$(SO_EXT)
+all : $(LIB)/libslatec.$(SO_EXT)
 
-$(LIB)/libslatecidl.$(SO_EXT) : $(OBJECTS)
-	$(LD) $(X_LD_FLAGS) -o $(LIB)/libslatecidl.$(SO_EXT) $(OBJECTS)
+$(LIB)/libslatec.$(SO_EXT) : $(OBJECTS)
+	$(LD) $(X_LD_FLAGS) -o $(LIB)/libslatec.$(SO_EXT) $(OBJECTS)
 
 #
 # Install things in their proper places in $(IDLUTILS_DIR)
