@@ -12,7 +12,7 @@ pro hogg_plot_defaults, axis_char_scale=axis_char_scale, $
                         xold=xold, yold=yold, pold=pold, $
                         default_font=default_font
 if not keyword_set(axis_char_scale) then axis_char_scale=1.0
-if not keyword_set(default_font) then default_font='!6'
+if not keyword_set(default_font) then default_font='!3'
 pold=!P
 xold=!X
 yold=!Y
