@@ -94,18 +94,13 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
    if (NOT keyword_set(invvar)) then begin
       var = variance(ydata)
-      if (var EQ 0) then return, -1
+      if (var EQ 0) then var = 1
       invvar = 0.0 * ydata + 1.0/var
    endif
 
    outmask = invvar GT 0
    these = where(outmask, nthese)
  
-   if nthese LT nord then begin
-      message, 'Number of good data points fewer the nord', /continue
-      return, -1
-   endif
-
    ;----------
    ; Determine the break points and create output structure
 
@@ -121,6 +116,11 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
       fullbkpt = bspline_bkpts(xdata[these], nord=nord, bkpt=bkpt, _EXTRA=EXTRA)
       sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
+
+      if (nthese LT nord) then begin
+         message, 'Number of good data points fewer the nord', /continue
+         return, sset
+      endif
 
       ;----------
       ; Condition the X2 dependent variable by the XMIN, XMAX values.
@@ -167,11 +167,10 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
          sset.coeff = 0
          iiter = maxiter + 1; End iterations
       endif else begin
-        ; Do the fit.  
-        ;  returns 0 if fit is good
-        ;         -1 if bkpts are masked
-        ;      or -2 if everything is screwed
-        ;
+        ; Do the fit.  Return values for ERROR are as follows:
+        ;    0 if fit is good
+        ;   -1 if all break points are masked
+        ;   -2 if everything is screwed
         error = bspline_fit(xwork, ywork, invwork*outmask, sset, $
          x2=x2work, yfit=yfit, nord=nord, mask=mask)
       endelse
