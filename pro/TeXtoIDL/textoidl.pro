@@ -38,8 +38,11 @@
 ;       exponent of 2, then a plus sign, then an N with the subscript
 ;       ed.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.1 1999-07-09 20:31:17 schlegel Exp $
+;       $Id: textoidl.pro,v 1.2 1999-07-27 21:09:49 schlegel Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.1  1999/07/09 20:31:17  schlegel
+;       Added TeXtoIDL directory.
+;
 ;       Revision 1.4  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -70,7 +73,7 @@ FUNCTION Textoidl, InputString, $
                    TEX_SEQUENCES=tex_seq
 
 ;  Return with 0 if the input string is not defined (DJS 21jan98)
-if (djs_typecode(InputString) EQ 0) then return, 0
+if (size(InputString,/tname) EQ 'UNDEFINED') then return, 0
 
 ;  Return to caller if there is an error.
     On_error, 2
