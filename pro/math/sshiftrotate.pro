@@ -44,14 +44,12 @@
 ;     IDL> newimg = sshiftrotate(image,30)
 ;
 ; BUGS:
-;   Currently only good for rotations +/- 45 deg --> Need to transpose first
-;     for other angles!???
 ;   The sinc shifts need not do all pixels in each row each time, only
 ;     the "active" area!???  This will just be for a speed improvement.
 ;   Special-case rotations of 0,90,180,270 !???
 ;   Optionally return a mask of the illuminated region???
 ;   Optionally fill in missing regions with some value???
-;   Allow double-precision.
+;   Allow double-precision for the image, or for the arithmatic???
 ;
 ; PROCEDURES CALLED:
 ;   cirrange
@@ -115,7 +113,7 @@ function sshiftrotate, image, theta1, xshift=xshift1, yshift=yshift1, $
       ; Trim image to original size if /BIGGER not set.
       if (NOT keyword_set(bigger)) then begin
          thisdim = size(thisimg, /dimens)
-         trimimg = make_array(size=size(image))
+         trimimg = make_array(size=size(image)) ; Same var type as for IMAGE
          ix = -xoffset * (xoffset LT 0)
          jx = xoffset * (xoffset GT 0)
          iy = -yoffset * (yoffset LT 0)
