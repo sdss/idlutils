@@ -41,8 +41,8 @@ for i=0L, n_elements(polygons)-1L do begin
       (*polygons[i].caps)[0:outpoly[i].ncaps-1].cm
 endfor
 
-sxaddpar,hdr,'SDSSGA_T',systime(),'Time of creation of polygon fits file'
-sxaddpar,hdr,'VAGC_VER',vagc_version(),'Version of vagc used'
+sxaddpar,hdr,'DATE',systime(),'Time of creation of polygon fits file'
+sxaddpar,hdr,'IDLUTILS',idlutils_version(),'Version of idlutils used'
 mwrfits,0,outfile,hdr,/create
 mwrfits,outpoly,outfile
 
