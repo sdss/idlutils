@@ -2293,7 +2293,7 @@ if (filename EQ '') then return
 if (nfiles GT 0) then begin
     mesg = strarr(2)
     mesg[0] = 'Overwrite existing file:'
-    tmp_string = strmid(filename, rstrpos(filename, '/') + 1)
+    tmp_string = strmid(filename, strpos(filename, '/', /reverse_search) + 1)
     mesg[1] = strcompress(tmp_string + '?', /remove_all)
     result =  dialog_message(mesg, $
                              /default_no, $
@@ -2402,7 +2402,7 @@ result = ''
 if (nfiles GT 0) then begin
     mesg = strarr(2)
     mesg[0] = 'Overwrite existing file:'
-    tmp_string = strmid(forminfo.filename, rstrpos(forminfo.filename, '/') + 1)
+    tmp_string = strmid(forminfo.filename, strpos(forminfo.filename, '/', /reverse_search) + 1)
     mesg[1] = strcompress(tmp_string + '?', /remove_all)
     result =  dialog_message(mesg, $
                              /default_no, $
@@ -2687,10 +2687,10 @@ common atv_state
 if (state.imagename EQ '') then begin
     widget_control, state.base_id, tlb_set_title = 'atv'
 endif else begin
-    slash = rstrpos(state.imagename, '/')
+    slash = strpos(state.imagename, '/', /reverse_search)
     ; inserted untested code for MacOS and Windows delimiters
-    if (slash EQ -1) then slash = rstrpos(state.imagename, '\')
-    if (slash EQ -1) then slash = rstrpos(state.imagename, ':')
+    if (slash EQ -1) then slash = strpos(state.imagename, '\', /reverse_search)
+    if (slash EQ -1) then slash = strpos(state.imagename, ':', /reverse_search)
 
     if (slash NE -1) then name = strmid(state.imagename, slash+1) $
       else name = state.imagename
