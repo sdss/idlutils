@@ -29,7 +29,7 @@
 pro djs_xyouts, x, y, s, color=color, charsize=charsize, $
  _EXTRA=KeywordsForXyouts
 
-   if (NOT keyword_set(color)) then color = !p.color
+   if (n_elements(color) EQ 0) then color = !p.color
    if (NOT keyword_set(charsize)) then charsize = !p.charsize
 
    ncolor = N_elements(color)
@@ -42,7 +42,7 @@ pro djs_xyouts, x, y, s, color=color, charsize=charsize, $
         _EXTRA=KeywordsForXyouts
    endif else begin
       for ipt=0L, npt-1 do begin
-         color1 = icolor(ipt MOD ncolor)
+         color1 = icolor[ipt MOD ncolor]
          charsize1 = charsize[ipt MOD nsize]
          xyouts, x, y, TeXtoIDL(s), color=color1, _EXTRA=KeywordsForXyouts
       endfor
