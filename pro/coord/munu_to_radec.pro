@@ -49,8 +49,10 @@
 pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl, $
  phi=phi
 
-   if (n_params() NE 4) then $
-    message, 'Wrong number of parameters'
+   if (n_params() NE 4) then begin
+       print, 'Syntax - munu_to_radec, mu, nu, ra, dec [, stripe=, node=, incl=]'
+       return
+   endif
 
    if (keyword_set(stripe)) then begin
       node = 95.d
