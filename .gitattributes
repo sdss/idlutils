@@ -766,6 +766,7 @@ pro/fits/sxcombinepar.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
 pro/image/fastconv.pro -text
+pro/image/grow_object.pro -text
 pro/image/populate_image.pro -text
 pro/image/qzap.pro -text
 pro/mangle/angles_to_x.pro -text
