@@ -59,7 +59,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
                  distance12, maxmatch=maxmatch, chunksize=chunksize
 
    ; Need at least 3 parameters
-   if (N_params() LT 8) then begin
+   if (N_params() LT 7) then begin
       print, 'Syntax - spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $'
       print, ' distance12, [maxmatch=]'
       return
@@ -168,9 +168,13 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
        end
    endif else begin
        nmatch=onmatch[sorted]
+       onmatch=0
        match1=omatch1[sorted]
+       omatch1=0
        match2=omatch2[sorted]
-       distance12=odistance12[sorted]
+       omatch2=0
+       if(arg_present(distance12)) then distance12=odistance12[sorted]
+       odistance12=0
    endelse
 
    return
