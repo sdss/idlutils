@@ -1,5 +1,4 @@
 ;+
-; Doug
 ; NAME:
 ;       ATV
 ; 
@@ -11,7 +10,8 @@
 ;
 ; CALLING SEQUENCE:
 ;       atv [,array_name OR fits_file] [,min = min_value] [,max=max_value] 
-;           [,/autoscale] [,/linear] [,/log] [,/histeq] 
+;           [,/linear] [,/log] [,/histeq] [,/block]
+;           [,/align] [,/stretch] [,/header]
 ;
 ; REQUIRED INPUTS:
 ;       None.  If atv is run with no inputs, the window widgets
@@ -26,11 +26,13 @@
 ; KEYWORDS:
 ;       min:        minimum data value to be mapped to the color table
 ;       max:        maximum data value to be mapped to the color table
-;       autoscale:  set min and max to show a range of data values
-;                      around the median value
 ;       linear:     use linear stretch
 ;       log:        use log stretch 
 ;       histeq:     use histogram equalization
+;       block:      block IDL command line until ATV terminates
+;       align:      align image with previously displayed image
+;       stretch:    keep same min and max as previous image
+;       header:     FITS image header (string array) for use with data array
 ;       
 ; OUTPUTS:
 ;       None.  
@@ -44,11 +46,8 @@
 ; RESTRICTIONS:
 ;       Requires IDL version 5.1 or greater.
 ;       Requires Craig Markwardt's cmps_form.pro routine.
-;       Requires the GSFC IDL astronomy library routines,
-;         for fits input and world coordinate system information.
+;       Requires the GSFC IDL astronomy user's library routines.
 ;       Some features may not work under all operating systems.
-;       For a current list of atv's bugs and weirdnesses, go to
-;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
 ;
 ; SIDE EFFECTS:
 ;       Modifies the color table.
@@ -62,11 +61,13 @@
 ;       the pre-existing atv window.
 ;
 ; MODIFICATION HISTORY:
-;       Written by Aaron J. Barth, first release 17 December 1998.
+;       Written by Aaron J. Barth, with contributions by 
+;       Douglas Finkbeiner, Michael Liu, David Schlegel, and
+;       Wesley Colley.  First released 17 December 1998.
 ;
-;       This version is 1.0b9, last modified 14 April 2000.
+;       This version is 1.3, last modified 28 November 2000.
 ;       For the most current version, revision history, instructions,
-;       and further information, go to:
+;       list of known bugs, and further information, go to:
 ;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
 ;
 ;-
@@ -94,13 +95,18 @@ common atv_images, $
 
 
 state = {                   $
-          version: '1.0b9', $            ; version # of this release
+          version: '1.3', $              ; version # of this release
           head_ptr: ptr_new(), $         ; pointer to image header
           astr_ptr: ptr_new(), $         ; pointer to astrometry info structure
+          wcstype: 'none', $             ; coord info type (none/angle/lambda)
           equinox: 'J2000', $            ; equinox of coord system
           display_coord_sys: 'RA--', $   ; coord system displayed
           display_equinox: 'J2000', $    ; equinox of displayed coords
+          display_base60: 1B, $          ; Display RA,dec in base 60?
           imagename: '', $               ; image file name
+          title_extras: '', $            ; extras for image title
+          bitdepth: 8, $                 ; 8 or 24 bit color mode?
+          screen_ysize: 1000, $          ; vertical size of screen
           base_id: 0L, $                 ; id of top-level base
           base_min_size: [512L, 300L], $ ; min size for top-level base
           draw_base_id: 0L, $            ; id of base holding draw window
@@ -115,15 +121,15 @@ state = {                   $
           wcs_bar_id: 0L, $              ; id of WCS label widget
           min_text_id: 0L,  $            ; id of min= widget
           max_text_id: 0L, $             ; id of max= widget
-          menu_ids: lonarr(30), $        ; list of top menu items
+          menu_ids: lonarr(35), $        ; list of top menu items
           colorbar_base_id: 0L, $        ; id of colorbar base widget
           colorbar_widget_id: 0L, $      ; widget id of colorbar draw widget
           colorbar_window_id: 0L, $      ; window id of colorbar
           colorbar_height: 6L, $         ; height of colorbar in pixels
-          ncolors: 0B, $                 ; image colors (!d.table_size - 8)
-          brightness: 500L, $            ; initial brightness setting
-          contrast: 500L, $              ; initial contrast setting
-          maxbright: 1000L, $            ; max for bright and contrast (min=1)
+          ncolors: 0B, $                 ; image colors (!d.table_size - 9)
+          box_color: 2, $                ; color for pan box and zoom x
+          brightness: 0.5, $             ; initial brightness setting
+          contrast: 0.5, $               ; initial contrast setting
           keyboard_text_id: 0L, $        ; id of keyboard input widget
           image_min: 0.0, $              ; min(main_image)
           image_max: 0.0, $              ; max(main_image)
@@ -145,6 +151,7 @@ state = {                   $
           cstretch: 0B, $                ; flag = 1 while stretching colors
           pan_offset: [0L, 0L], $        ; image offset in pan window
           frame: 1L, $                   ; put frame around ps output?
+          framethick: 6, $               ; thickness of frame
           lineplot_widget_id: 0L, $      ; id of lineplot widget
           lineplot_window_id: 0L, $      ; id of lineplot window
           lineplot_base_id: 0L, $        ; id of lineplot top-level base
@@ -158,17 +165,20 @@ state = {                   $
           radius_id: 0L, $               ; id of radius widget
           innersky_id: 0L, $             ; id of inner sky widget
           outersky_id: 0L, $             ; id of outer sky widget
+          magunits: 0, $                 ; 0=counts, 1=magnitudes
+          skytype: 0, $                  ; 0=idlphot,1=median,2=no sky subtract
+          photzpt: 25.0, $               ; magnitude zeropoint
           skyresult_id: 0L, $            ; id of sky widget
           photresult_id: 0L, $           ; id of photometry result widget
           fwhm_id: 0L, $                 ; id of fwhm widget
           radplot_widget_id: 0L, $       ; id of radial profile widget
           radplot_window_id: 0L, $       ; id of radial profile window
           photzoom_window_id: 0L, $      ; id of photometry zoom window
-          photzoom_size: 200L, $         ; size in pixels of photzoom window
+          photzoom_size: 190L, $         ; size in pixels of photzoom window
           showradplot_id: 0L, $          ; id of button to show/hide radplot
           photwarning_id: 0L, $          ; id of photometry warning widget
           photwarning: ' ', $            ; photometry warning text
-          centerboxsize: 7L, $           ; centering box size
+          centerboxsize: 5L, $           ; centering box size
           r: 5L, $                       ; aperture photometry radius
           innersky: 10L, $               ; inner sky radius
           outersky: 20L, $               ; outer sky radius
@@ -191,6 +201,8 @@ state = {                   $
           pan_pixmap: 0L, $              ; window id of pan pixmap
           default_autoscale: 1, $        ; autoscale images by default?
           current_dir: '', $             ; current readfits directory
+          graphicsdevice: '', $          ; screen device
+          newrefresh: 0, $               ; refresh since last blink?
           blinks: 0B $                   ; remembers which images are blinked
         }
 
@@ -220,7 +232,7 @@ common atv_color
 ; plus 2 more for a color map.
 
 loadct, 0, /silent
-if (!d.table_size LT 10) then begin
+if (!d.table_size LT 12) then begin
     message, 'Too few colors available for color table'
     atv_shutdown
 endif
@@ -228,10 +240,21 @@ endif
 ; Initialize the common blocks
 atv_initcommon
 
-state.ncolors = !d.table_size - 8
+state.ncolors = !d.table_size - 9
+if (!d.n_colors LE 256) then begin
+    state.bitdepth = 8 
+endif else begin
+    state.bitdepth = 24
+    device, decomposed=0
+endelse
+
+state.graphicsdevice = !d.name
+
+state.screen_ysize = (get_screen_size())[1]
 
 ; Get the current window id
 atv_getwindow
+
 
 ; Define the widgets.  For the widgets that need to be modified later
 ; on, save their widget ids in state variables
@@ -240,31 +263,31 @@ base = widget_base(title = 'atv', $
                    /column, /base_align_right, $
                    app_mbar = top_menu, $
                    uvalue = 'atv_base', $
-                   /tlb_size_events, /tracking_events)
+                   /tlb_size_events)
 state.base_id = base
 
 tmp_struct = {cw_pdmenu_s, flags:0, name:''}
 
 top_menu_desc = [ $
-                  {cw_pdmenu_s, 1, 'File'}, $         ; file menu
+                  {cw_pdmenu_s, 1, 'File'}, $ ; file menu
                   {cw_pdmenu_s, 0, 'ReadFits'}, $
                   {cw_pdmenu_s, 0, 'WritePS'},  $
                   {cw_pdmenu_s, 0, 'WriteTiff'}, $
                   {cw_pdmenu_s, 2, 'Quit'}, $
-                  {cw_pdmenu_s, 1, 'ColorMap'}, $     ; color menu
+                  {cw_pdmenu_s, 1, 'ColorMap'}, $ ; color menu
                   {cw_pdmenu_s, 0, 'Grayscale'}, $
                   {cw_pdmenu_s, 0, 'Blue-White'}, $
                   {cw_pdmenu_s, 0, 'Red-Orange'}, $
+                  {cw_pdmenu_s, 0, 'Green-White'}, $
                   {cw_pdmenu_s, 0, 'Rainbow'}, $
                   {cw_pdmenu_s, 0, 'BGRY'}, $
                   {cw_pdmenu_s, 0, 'Stern Special'}, $
-;                  {cw_pdmenu_s, 0, 'STD Gamma-II'}, $
                   {cw_pdmenu_s, 2, 'ATV Special'}, $
-                  {cw_pdmenu_s, 1, 'Scaling'}, $      ; scaling menu
+                  {cw_pdmenu_s, 1, 'Scaling'}, $ ; scaling menu
                   {cw_pdmenu_s, 0, 'Linear'}, $
                   {cw_pdmenu_s, 0, 'Log'}, $
                   {cw_pdmenu_s, 2, 'HistEq'}, $
-                  {cw_pdmenu_s, 1, 'Labels'}, $       ; labels menu
+                  {cw_pdmenu_s, 1, 'Labels'}, $ ; labels menu
                   {cw_pdmenu_s, 0, 'TextLabel'}, $
                   {cw_pdmenu_s, 0, 'Contour'}, $
                   {cw_pdmenu_s, 0, 'Compass'}, $
@@ -282,6 +305,8 @@ top_menu_desc = [ $
                   {cw_pdmenu_s, 0, '--------------'}, $
                   {cw_pdmenu_s, 0, 'RA,dec (J2000)'}, $
                   {cw_pdmenu_s, 0, 'RA,dec (B1950)'}, $
+                  {cw_pdmenu_s, 0, '--------------'}, $
+                  {cw_pdmenu_s, 0, 'RA,dec (J2000) deg'}, $
                   {cw_pdmenu_s, 0, 'Galactic'}, $
                   {cw_pdmenu_s, 0, 'Ecliptic (J2000)'}, $
                   {cw_pdmenu_s, 2, 'Native'}, $
@@ -300,65 +325,59 @@ track_base =    widget_base(base, /row)
 state.info_base_id = widget_base(track_base, /column, /base_align_right)
 buttonbar_base = widget_base(base, column=2, /base_align_center)
 
-state.draw_base_id = $
-  widget_base(base, $
-              /column, /base_align_left, $
-              /tracking_events, $
-              uvalue = 'draw_base', $
-              frame = 2)
+state.draw_base_id = widget_base(base, $
+                                 /column, /base_align_left, $
+                                 uvalue = 'draw_base', $
+                                 frame = 2, /tracking_events)
 
-state.colorbar_base_id = $
-  widget_base(base, $
-              uvalue = 'colorbar_base', $
-              /column, /base_align_left, $
-              frame = 2)
+state.colorbar_base_id = widget_base(base, $
+                                     uvalue = 'cqolorbar_base', $
+                                     /column, /base_align_left, $
+                                     frame = 2)
 
-state.min_text_id = $
-  cw_field(state.info_base_id, $
-           uvalue = 'min_text', $
-           /floating,  $
-           title = 'Min=', $
-           value = state.min_value,  $
-           /return_events, $
-           xsize = 12)
+min_base = widget_base(state.info_base_id, /row)
 
-state.max_text_id = $
-  cw_field(state.info_base_id, $
-           uvalue = 'max_text', $
-           /floating,  $
-           title = 'Max=', $
-           value = state.max_value, $
-           /return_events, $
-           xsize = 12)
+
+state.min_text_id = cw_field(min_base, $
+                             uvalue = 'min_text', $
+                             /floating,  $
+                             title = 'Min=', $
+                             value = state.min_value,  $
+                             /return_events, $
+                             xsize = 12)
+
+state.max_text_id = cw_field(state.info_base_id, $
+                             uvalue = 'max_text', $
+                             /floating,  $
+                             title = 'Max=', $
+                             value = state.max_value, $
+                             /return_events, $
+                             xsize = 12)
 
 tmp_string = string(1000, 1000, 1.0e-10, $
                     format = '("(",i4,",",i4,") ",g12.5)' )
 
-state.location_bar_id = $
-  widget_label (state.info_base_id, $
-                value = tmp_string,  $
-                uvalue = 'location_bar',  frame = 1)
+state.location_bar_id = widget_label (state.info_base_id, $
+                                      value = tmp_string,  $
+                                      uvalue = 'location_bar',  frame = 1)
 
 tmp_string = string(12, 12, 12.001, -60, 60, 60.01, ' J2000', $
         format = '(i2,":",i2,":",f6.3,"  ",i3,":",i2,":",f5.2," ",a6)' )
     
-state.wcs_bar_id = $
-  widget_label (state.info_base_id, $
-                value = tmp_string,  $
-                uvalue = 'wcs_bar',  frame = 1)
+state.wcs_bar_id = widget_label (state.info_base_id, $
+                                 value = tmp_string,  $
+                                 uvalue = 'wcs_bar',  frame = 1)
 
-state.pan_widget_id = $
-  widget_draw(track_base, $
-              xsize = state.pan_window_size, $
-              ysize = state.pan_window_size, $
-              frame = 2, uvalue = 'pan_window', $
-              /button_events, /motion_events)
+state.pan_widget_id = widget_draw(track_base, $
+                                  xsize = state.pan_window_size, $
+                                  ysize = state.pan_window_size, $
+                                  frame = 2, uvalue = 'pan_window', $
+                                  /button_events, /motion_events)
 
-track_window = $
-  widget_draw(track_base, $
-              xsize=state.track_window_size, $
-              ysize=state.track_window_size, $
-              frame=2, uvalue='track_window')
+track_window = widget_draw(track_base, $
+                           xsize=state.track_window_size, $
+                           ysize=state.track_window_size, $
+                           frame=2, uvalue='track_window')
 
 modebase = widget_base(buttonbar_base, /row, /base_align_center)
 modelist = ['Color', 'Zoom', 'Blink', 'ImExam']
@@ -370,79 +389,69 @@ mode_droplist_id = widget_droplist(modebase, $
 
 button_base = widget_base(buttonbar_base, row=2, /base_align_right)
 
-invert_button = $
-  widget_button(button_base, $
-                value = 'Invert', $
-                uvalue = 'invert')
+invert_button = widget_button(button_base, $
+                              value = 'Invert', $
+                              uvalue = 'invert')
 
-reset_button = $
-  widget_button(button_base, $
-                value = 'ResetColor', $
-                uvalue = 'reset_color')
+restretch_button = widget_button(button_base, $
+                             value = 'Restretch', $
+                             uvalue = 'restretch_button')
 
-autoscale_button = $
-  widget_button(button_base, $
-                uvalue = 'autoscale_button', $
-                value = 'AutoScale')
+autoscale_button = widget_button(button_base, $
+                                 uvalue = 'autoscale_button', $
+                                 value = 'AutoScale')
 
-fullrange_button = $
-  widget_button(button_base, $
-                uvalue = 'full_range', $
-                value = 'FullRange')
+fullrange_button = widget_button(button_base, $
+                                 uvalue = 'full_range', $
+                                 value = 'FullRange')
 
-state.keyboard_text_id = $
-  widget_text(button_base, $
-              /all_events, $
-              scr_xsize = 1, $
-              scr_ysize = 1, $
-              units = 0, $
-              uvalue = 'keyboard_text', $
-              value = '')
+state.keyboard_text_id = widget_text(button_base, $
+                                     /all_events, $
+                                     scr_xsize = 1, $
+                                     scr_ysize = 1, $
+                                     units = 0, $
+                                     uvalue = 'keyboard_text', $
+                                     value = '')
 
-zoomin_button = $
-  widget_button(button_base, $
-                value = 'ZoomIn', $
-                uvalue = 'zoom_in')
+zoomin_button = widget_button(button_base, $
+                              value = 'ZoomIn', $
+                              uvalue = 'zoom_in')
 
-zoomout_button = $ 
-  widget_button(button_base, $
-                value = 'ZoomOut', $
-                uvalue = 'zoom_out')
+zoomout_button = widget_button(button_base, $
+                               value = 'ZoomOut', $
+                               uvalue = 'zoom_out')
 
-zoomone_button = $
-  widget_button(button_base, $
-                value = 'Zoom1', $
-                uvalue = 'zoom_one')
+zoomone_button = widget_button(button_base, $
+                               value = 'Zoom1', $
+                               uvalue = 'zoom_one')
 
-center_button = $
-  widget_button(button_base, $
-                value = 'Center', $
-                uvalue = 'center')
+center_button = widget_button(button_base, $
+                              value = 'Center', $
+                              uvalue = 'center')
 
-done_button = $
-  widget_button(button_base, $
-                value = 'Done', $
-                uvalue = 'done')
+done_button = widget_button(button_base, $
+                            value = 'Done', $
+                            uvalue = 'done')
 
-state.draw_widget_id = $
-  widget_draw(state.draw_base_id, $
-              uvalue = 'draw_window', $
-              /motion_events,  /button_events, $
-              scr_xsize = state.draw_window_size[0], $
-              scr_ysize = state.draw_window_size[1]) 
+; Set widget y size for small screens
+state.draw_window_size[1] = state.draw_window_size[1] < $
+  (state.screen_ysize - 300)
 
-state.colorbar_widget_id = $
-  widget_draw(state.colorbar_base_id, $
-              uvalue = 'colorbar', $
-              scr_xsize = state.draw_window_size[0], $
-              scr_ysize = state.colorbar_height)
+state.draw_widget_id = widget_draw(state.draw_base_id, $
+                                   uvalue = 'draw_window', $
+                                   /motion_events,  /button_events, $
+                                   scr_xsize = state.draw_window_size[0], $
+                                   scr_ysize = state.draw_window_size[1]) 
+
+state.colorbar_widget_id = widget_draw(state.colorbar_base_id, $
+                                       uvalue = 'colorbar', $
+                                       scr_xsize = state.draw_window_size[0], $
+                                       scr_ysize = state.colorbar_height)
 
 ; Create the widgets on screen
 
 widget_control, base, /realize
 widget_control, state.pan_widget_id, draw_motion_events = 0
-xmanager, 'atv', state.base_id, /no_block, $
-  cleanup = 'atv_shutdown'
 
 ; get the window ids for the draw widgets
 
@@ -454,7 +463,6 @@ widget_control, state.pan_widget_id, get_value = tmp_value
 state.pan_window_id = tmp_value
 widget_control, state.colorbar_widget_id, get_value = tmp_value
 state.colorbar_window_id = tmp_value
-
 
 ; set the event handlers
 
@@ -527,10 +535,9 @@ end
 pro atv_shutdown, windowid
 
 ; routine to kill the atv window(s) and clear variables to conserve
-; memory when quitting atv.  Since we can't delvar the atv internal
-; variables, just set them equal to zero so they don't take up a lot
-; of space. The windowid parameter is used when atv_shutdown is called
-; automatically by the xmanager.
+; memory when quitting atv.  The windowid parameter is used when
+; atv_shutdown is called automatically by the xmanager, if atv is
+; killed by the window manager.
 
 common atv_images
 common atv_state
@@ -543,29 +550,27 @@ if (xregistered ('atv')) then widget_control, state.base_id, /destroy
 ; Destroy all pointers to plots and their heap variables
 if (nplot GT 0) then begin
     atverase, /norefresh
-    plot_ptr = 0
 endif
 
-; Destroy state structure, images, and color vectors
 if (size(state, /tname) EQ 'STRUCT') then begin
-    if (size(state.head_ptr, /tname) EQ 'POINTER') then begin
-        ptr_free, state.head_ptr
-        ptr_free, state.astr_ptr
-    endif
-    wdelete, state.pan_pixmap
-    main_image = 0
-    display_image = 0
-    scaled_image = 0
-    blink_image1 = 0
-    blink_image2 = 0
-    blink_image3 = 0
-    unblink_image = 0
-    pan_image = 0
-    r_vector = 0
-    g_vector = 0
-    b_vector = 0
-    state = 0
+    if (!d.name EQ state.graphicsdevice) then wdelete, state.pan_pixmap
+    if (ptr_valid(state.head_ptr)) then ptr_free, state.head_ptr
+    if (ptr_valid(state.astr_ptr)) then ptr_free, state.astr_ptr
 endif
+
+delvarx, plot_ptr
+delvarx, main_image
+delvarx, display_image
+delvarx, scaled_image
+delvarx, blink_image1
+delvarx, blink_image2
+delvarx, blink_image3
+delvarx, unblink_image
+delvarx, pan_image
+delvarx, r_vector
+delvarx, g_vector
+delvarx, b_vector
+delvarx, state
 
 return    
 end
@@ -583,6 +588,9 @@ common atv_images
 
 widget_control, event.id, get_uvalue = event_name
 
+if (!d.name NE state.graphicsdevice and event_name NE 'Quit') then return
+if (state.bitdepth EQ 24) then true = 1 else true = 0
+
 ; Need to get active window here in case mouse goes to menu from top
 ; of atv window without entering the main base
 atv_getwindow
@@ -590,7 +598,18 @@ atv_getwindow
 case event_name of
     
 ; File menu options:
-    'ReadFits': atv_readfits
+    'ReadFits': begin
+        atv_readfits, newimage=newimage
+        if (newimage EQ 1) then begin
+            atv_getstats
+            atv_settitle
+            state.zoom_level =  0
+            state.zoom_factor = 1.0
+            if (state.default_autoscale EQ 1) then atv_autoscale
+            atv_set_minmax
+            atv_displayall
+        endif
+    end
     'WritePS' : atv_writeps
     'WriteTiff': atv_writetiff
     'Quit':     atv_shutdown
@@ -601,24 +620,23 @@ case event_name of
     'BGRY': atv_getct, 4
     'Rainbow': atv_getct, 13
     'Stern Special': atv_getct, 15
-;    'STD Gamma-II': atv_getct, 5
+    'Green-White': atv_getct, 8
     'ATV Special': atv_makect, event_name
 ; Scaling options:
     'Linear': begin
         state.scaling = 0
         atv_displayall
-        atv_cleartext
     end
     'Log': begin
         state.scaling = 1
         atv_displayall
-        atv_cleartext
     end
+
     'HistEq': begin
         state.scaling = 2
         atv_displayall
-        atv_cleartext
     end
+
 ; Label options:
     'TextLabel': atv_textlabel
     'Contour': atv_oplotcontour
@@ -629,19 +647,19 @@ case event_name of
 ; Blink options:
     'SetBlink1': begin   
         atv_setwindow, state.draw_window_id
-        blink_image1 = tvrd()
+        blink_image1 = tvrd(true = true) 
     end
     'SetBlink2': begin   
         atv_setwindow, state.draw_window_id
-        blink_image2 = tvrd()
+        blink_image2 = tvrd(true = true)
     end
     'SetBlink3': begin   
         atv_setwindow, state.draw_window_id
-        blink_image3 = tvrd()
+        blink_image3 = tvrd(true = true)
     end
 
 ; Info options:
-    'Photometry': atv_mapphot
+    'Photometry': atv_apphot
     'ImageHeader': atv_headinfo
     'Statistics': atv_showstats
 
@@ -650,13 +668,21 @@ case event_name of
     'RA,dec (J2000)': BEGIN 
        state.display_coord_sys = 'RA--'
        state.display_equinox = 'J2000'
+       state.display_base60 = 1B
        atv_gettrack             ; refresh coordinate window
     END 
     'RA,dec (B1950)': BEGIN 
        state.display_coord_sys = 'RA--'
        state.display_equinox = 'B1950'
+       state.display_base60 = 1B
        atv_gettrack             ; refresh coordinate window
     END
+    'RA,dec (J2000) deg': BEGIN 
+       state.display_coord_sys = 'RA--'
+       state.display_equinox = 'J2000'
+       state.display_base60 = 0B
+       atv_gettrack             ; refresh coordinate window
+    END 
     'Galactic': BEGIN 
        state.display_coord_sys = 'GLON'
        atv_gettrack             ; refresh coordinate window
@@ -667,7 +693,7 @@ case event_name of
        atv_gettrack             ; refresh coordinate window
     END 
     'Native': BEGIN 
-       IF ptr_valid(state.astr_ptr) THEN BEGIN 
+       IF (state.wcstype EQ 'angle') THEN BEGIN 
           state.display_coord_sys = strmid((*state.astr_ptr).ctype[0], 0, 4)
           state.display_equinox = state.equinox
           atv_gettrack          ; refresh coordinate window
@@ -694,28 +720,36 @@ pro atv_draw_color_event, event
 ; Event handler for color mode
 
 common atv_state
+common atv_images
+
+if (!d.name NE state.graphicsdevice) then return
 
 case event.type of
     0: begin           ; button press
         if (event.press EQ 1) then begin
             state.cstretch = 1
             atv_stretchct, event.x, event.y, /getmouse
+            atv_colorbar
         endif else begin
             atv_zoom, 'none', /recenter
         endelse
     end
     1: begin
         state.cstretch = 0  ; button release
+        if (state.bitdepth EQ 24) then atv_refresh
         atv_draw_motion_event, event
     end
     2: begin                ; motion event
-        if (state.cstretch EQ 1) then $
-          atv_stretchct, event.x, event.y, /getmouse $
-        else atv_draw_motion_event, event
+        if (state.cstretch EQ 1) then begin
+            atv_stretchct, event.x, event.y, /getmouse 
+            if (state.bitdepth EQ 24) then atv_refresh, /fast
+        endif else begin 
+            atv_draw_motion_event, event
+        endelse
     end 
 endcase
 
-widget_control, state.keyboard_text_id, /input_focus
+widget_control, state.keyboard_text_id, /sensitive, /input_focus
 
 end
 
@@ -724,6 +758,10 @@ end
 pro atv_draw_zoom_event, event
 
 ; Event handler for zoom mode
+
+common atv_state
+ 
+if (!d.name NE state.graphicsdevice) then return
 
 if (event.type EQ 0) then begin 
     case event.press of
@@ -734,6 +772,8 @@ if (event.type EQ 0) then begin
 endif
 
 if (event.type EQ 2) then atv_draw_motion_event, event
+
+widget_control, state.keyboard_text_id, /sensitive, /input_focus
 
 end
 
@@ -746,59 +786,76 @@ pro atv_draw_blink_event, event
 common atv_state
 common atv_images
 
+if (!d.name NE state.graphicsdevice) then return
+if (state.bitdepth EQ 24) then true = 1 else true = 0
+
 case event.type of
     0: begin                    ; button press
         atv_setwindow, state.draw_window_id
+                                ; define the unblink image if needed
+        if ((state.newrefresh EQ 1) AND (state.blinks EQ 0)) then begin
+            unblink_image = tvrd(true = true)
+            state.newrefresh = 0
+        endif
+        
         case event.press of
-            1: if n_elements(blink_image1) GT 1 then tv, blink_image1
-            2: if n_elements(blink_image2) GT 1 then tv, blink_image2
-            4: if n_elements(blink_image3) GT 1 then tv, blink_image3  
-            else: event.press = 0   ; in case of errors
+            1: if n_elements(blink_image1) GT 1 then $
+              tv, blink_image1, true = true
+            2: if n_elements(blink_image2) GT 1 then $
+              tv, blink_image2, true = true
+            4: if n_elements(blink_image3) GT 1 then $
+              tv, blink_image3, true = true  
+            else: event.press = 0 ; in case of errors
         endcase
         state.blinks = (state.blinks + event.press) < 7
     end
     
     1: begin                    ; button release
+        if (n_elements(unblink_image) EQ 0) then return ; just in case
         atv_setwindow, state.draw_window_id
         state.blinks = (state.blinks - event.release) > 0
         case state.blinks of
-            0: tv, unblink_image
-            1: if n_elements(blink_image1) GT 1 then tv, blink_image1 $
-            else tv, unblink_image
-            2: if n_elements(blink_image2) GT 1 then tv, blink_image2 $
-            else tv, unblink_image
+            0: tv, unblink_image, true = true
+            1: if n_elements(blink_image1) GT 1 then $
+              tv, blink_image1, true = true else $
+              tv, unblink_image, true = true
+            2: if n_elements(blink_image2) GT 1 then $
+              tv, blink_image2, true = true else $
+              tv, unblink_image, true = true
             3: if n_elements(blink_image1) GT 1 then begin
-                tv, blink_image1 
+                tv, blink_image1, true = true
             endif else if n_elements(blink_image2) GT 1 then begin
-                tv, blink_image2
+                tv, blink_image2, true = true
             endif else begin
-                tv, unblink_image
+                tv, unblink_image, true = true
             endelse
-            4: if n_elements(blink_image3) GT 1 then tv, blink_image3 $
-            else tv, unblink_image
+            4: if n_elements(blink_image3) GT 1 then $
+              tv, blink_image3, true = true $
+            else tv, unblink_image, true = true
             5: if n_elements(blink_image1) GT 1 then begin
-                tv, blink_image1 
+                tv, blink_image1, true = true 
             endif else if n_elements(blink_image3) GT 1 then begin
-                tv, blink_image3
+                tv, blink_image3, true = true
             endif else begin
-                tv, unblink_image
+                tv, unblink_image, true = true
             endelse 
             6: if n_elements(blink_image2) GT 1 then begin
-                tv, blink_image2 
+                tv, blink_image2, true = true
             endif else if n_elements(blink_image4) GT 1 then begin
-                tv, blink_image4
+                tv, blink_image4, true = true
             endif else begin
-                tv, unblink_image
+                tv, unblink_image, true = true
             endelse
-            else: begin          ; check for errors
+            else: begin         ; check for errors
                 state.blinks = 0
-                tv, unblink_image
+                tv, unblink_image, true = true
             end
         endcase
     end
-    2: atv_draw_motion_event, event    ; motion event
+    2: atv_draw_motion_event, event ; motion event
 endcase
 
+widget_control, state.keyboard_text_id, /sensitive, /input_focus
 atv_resetwindow
 
 end
@@ -812,17 +869,21 @@ pro atv_draw_phot_event, event
 common atv_state
 common atv_images
 
+if (!d.name NE state.graphicsdevice) then return
+
 if (event.type EQ 0) then begin
     case event.press of
-        1: atv_mapphot
-        2: atv_showstats
+        1: atv_apphot
+        2: atv_zoom, 'none', /recenter
         4: atv_showstats
         else: 
     endcase
-    widget_control, state.draw_widget_id, /clear_events
 endif
 
 if (event.type EQ 2) then atv_draw_motion_event, event
+
+widget_control, state.draw_widget_id, /clear_events
+widget_control, state.keyboard_text_id, /sensitive, /input_focus
 
 end
 
@@ -833,6 +894,8 @@ pro atv_draw_motion_event, event
 ; Event handler for motion events in draw window
 
 common atv_state
+
+if (!d.name NE state.graphicsdevice) then return
 
 tmp_event = [event.x, event.y]            
 state.coord = $
@@ -846,31 +909,20 @@ end
 
 pro atv_draw_base_event, event
 
-; If the mouse enters the main draw base, set the input focus to
-; the invisible text widget, for keyboard input.
-; When the mouse leaves the main draw base, de-allocate the input
-; focus by setting the text widget value.
+; event handler for exit events of main draw base.  There's no need to
+; define enter events, since as soon as the pointer enters the draw
+; window the motion event will make the text widget sensitive again.
+; Enter/exit events are often generated incorrectly, anyway.
 
 common atv_state
 
-case event.enter of
-    0: begin
-        widget_control, state.draw_base_id, /clear_events
-        atv_resetwindow
-        widget_control, state.keyboard_text_id, set_value = ''
-    end
-    
-    1: begin
-        widget_control, state.keyboard_text_id, /input_focus
-        atv_getwindow
-    end
-endcase      
-
-atv_resetwindow
+if (event.enter EQ 0) then begin
+    widget_control, state.keyboard_text_id, sensitive = 0
+endif
 
 end
 
-;--------------------------------------------------------------------
+;----------------------------------------------------------------------
 
 pro atv_keyboard_event, event
 
@@ -880,6 +932,9 @@ pro atv_keyboard_event, event
 common atv_state
 
 eventchar = string(event.ch)
+
+if (!d.name NE state.graphicsdevice and eventchar NE 'q') then return
+
 case eventchar of
     '1': atv_move_cursor, eventchar
     '2': atv_move_cursor, eventchar
@@ -893,11 +948,14 @@ case eventchar of
     'c': atv_colplot
     's': atv_surfplot
     't': atv_contourplot
-    'p': atv_mapphot
+    'p': atv_apphot
     'i': atv_showstats
+    'q': atv_shutdown
     else:  ;any other key press does nothing
 endcase
-widget_control, state.keyboard_text_id, /clear_events
+
+if (xregistered('atv', /noshow)) then $
+  widget_control, state.keyboard_text_id, /clear_events
 
 end
 
@@ -909,6 +967,8 @@ pro atv_pan_event, event
 
 common atv_state
 
+if (!d.name NE state.graphicsdevice) then return
+
 case event.type of
     0: begin                     ; button press
         widget_control, state.pan_widget_id, draw_motion_events = 1
@@ -918,7 +978,7 @@ case event.type of
         widget_control, state.pan_widget_id, draw_motion_events = 0
         widget_control, state.pan_widget_id, /clear_events
         atv_pantrack, event
-        atv_getdisplay
+        atv_refresh
     end
     2: begin
         atv_pantrack, event     ; motion event
@@ -939,8 +999,9 @@ common atv_state
 common atv_images
 common atv_color
 
-
 widget_control, event.id, get_uvalue = uvalue
+
+if (!d.name NE state.graphicsdevice and uvalue NE 'done') then return
 
 ; Get currently active window
 atv_getwindow
@@ -952,7 +1013,6 @@ case uvalue of
         if (count EQ 0) then begin       ; resize event
             atv_resize
             atv_refresh
-            atv_cleartext
         endif
     end
 
@@ -976,17 +1036,10 @@ case uvalue of
         b_vector = reverse(b_vector)
 
         atv_stretchct, state.brightness, state.contrast
-       
-        atv_cleartext
+        if (state.bitdepth EQ 24) then atv_refresh
     end
-
-    'reset_color': begin   ; set color sliders to default positions
-        state.brightness = state.maxbright / 2
-        state.contrast = state.maxbright / 2
-        atv_stretchct, state.brightness, state.contrast
-        atv_cleartext
-    end
-
+    
+    'restretch_button': atv_restretch
 
     'min_text': begin     ; text entry in 'min = ' box
         atv_get_minmax, uvalue, event.value
@@ -1001,7 +1054,6 @@ case uvalue of
     'autoscale_button': begin   ; autoscale the image
         atv_autoscale
         atv_displayall
-        atv_cleartext
     end
 
     'full_range': begin    ; display the full intensity range
@@ -1013,7 +1065,6 @@ case uvalue of
         endif
         atv_set_minmax
         atv_displayall
-        atv_cleartext
     end
     
     'zoom_in':  atv_zoom, 'in'         ; zoom buttons
@@ -1021,11 +1072,8 @@ case uvalue of
     'zoom_one': atv_zoom, 'one'
 
     'center': begin   ; center image and preserve current zoom level
-        atv_drawbox
         state.centerpix = round(state.image_size / 2.)
-        atv_getoffset
-        atv_drawbox
-        atv_getdisplay
+        atv_refresh
     end
 
     'done':  atv_shutdown
@@ -1033,6 +1081,35 @@ case uvalue of
     else:  print, 'No match for uvalue....'  ; bad news if this happens
 
 endcase
+end
+
+;----------------------------------------------------------------------
+
+pro atv_message, msg_txt, msgtype=msgtype, window=window
+
+; Routine to display an error or warning message.  Message can be
+; displayed either to the IDL command line or to a popup window,
+; depending on whether /window is set.
+; msgtype must be 'warning', 'error', or 'information'.
+
+common atv_state
+
+if (n_elements(window) EQ 0) then window = 0
+
+if (window EQ 1) then begin  ; print message to popup window
+    case msgtype of
+        'warning': t = dialog_message(msg_txt, dialog_parent = state.base_id)
+        'error': t = $
+          dialog_message(msg_txt,/error,dialog_parent=state.base_id)
+        'information': t = $
+          dialog_message(msg_txt,/information,dialog_parent=state.base_id)
+        else: 
+    endcase
+endif else begin           ;  print message to IDL console
+    message = strcompress(strupcase(msgtype) + ': ' + msg_txt)
+    print, message
+endelse
+
 end
 
 ;-----------------------------------------------------------------------
@@ -1056,18 +1133,27 @@ end
 
 ;---------------------------------------------------------------------
 
-
-pro atv_refresh
+pro atv_refresh, fast = fast
 
 ; Make the display image from the scaled_image, and redisplay the pan
 ; image and tracking image. 
+; The /fast option skips the steps where the display_image is
+; recalculated from the main_image.  The /fast option is used in 24
+; bit color mode, when the color map has been stretched but everything
+; else stays the same.
 
 common atv_state
 common atv_images
 
 atv_getwindow
-atv_getoffset
-atv_getdisplay
+if (not(keyword_set(fast))) then begin
+    atv_getoffset
+    atv_getdisplay
+    atv_displaymain
+    atv_plotall
+endif else begin
+    atv_displaymain
+endelse
 
 ; redisplay the pan image and plot the boundary box
 atv_setwindow, state.pan_pixmap
@@ -1076,19 +1162,19 @@ tv, pan_image, state.pan_offset[0], state.pan_offset[1]
 atv_resetwindow
 
 atv_setwindow, state.pan_window_id
+if (not(keyword_set(fast))) then erase
 tv, pan_image, state.pan_offset[0], state.pan_offset[1]
 atv_resetwindow
-atv_drawbox
+atv_drawbox, /norefresh
 
+if (state.bitdepth EQ 24) then atv_colorbar
 
 ; redisplay the tracking image
-atv_gettrack
-
-; Prevent rapid-fire mouse clicks
-widget_control, state.draw_base_id, /clear_events   
+if (not(keyword_set(fast))) then atv_gettrack
 
 atv_resetwindow
 
+state.newrefresh = 1
 end
 
 ;--------------------------------------------------------------------
@@ -1123,21 +1209,22 @@ tmp_image = congrid(scaled_image[view_min[0]:view_max[0], $
 xmax = newsize[0] < (state.draw_window_size[0] - startpos[0])
 ymax = newsize[1] < (state.draw_window_size[1] - startpos[1])
 
-display_image[startpos[0], startpos[1]] = $
-  temporary(tmp_image[0:xmax-1, 0:ymax-1])
+display_image[startpos[0], startpos[1]] = tmp_image[0:xmax-1, 0:ymax-1]
+delvarx, tmp_image
 
-; Display the image
+end
+
+;-----------------------------------------------------------------------
+
+pro atv_displaymain
+
+; Display the main image and overplots
+
+common atv_state
+common atv_images
+
 atv_setwindow, state.draw_window_id
-erase
 tv, display_image
-atv_resetwindow
-
-; Overplot x,y plots from atvplot
-atv_plotall
-
-atv_setwindow, state.draw_window_id
-unblink_image = tvrd()  
-
 atv_resetwindow
 
 end
@@ -1231,7 +1318,6 @@ atv_resetwindow
 atv_gettrack
 
 ; Prevent the cursor move from causing a mouse event in the draw window
-
 widget_control, state.draw_widget_id, /clear_events
 
 atv_resetwindow
@@ -1282,25 +1368,11 @@ end
 
 ;--------------------------------------------------------------------
 
-pro atv_cleartext
-
-; Routine to clear the widget for keyboard input when the cursor is not
-; in the main draw window.  This deallocates the input focus from the
-; text input widget.
-
-common atv_state
-
-widget_control, state.draw_base_id, /clear_events
-widget_control, state.keyboard_text_id, set_value = ''
-
-end
-
-;----------------------------------------------------------------------
-
 pro atv_zoom, zchange, recenter = recenter
 common atv_state
 
-; Routine to do zoom in/out and recentering of image
+; Routine to do zoom in/out and recentering of image.  The /recenter
+; option sets the new display center to the current cursor position.
 
 case zchange of
     'in':    state.zoom_level = (state.zoom_level + 1) < 6
@@ -1335,22 +1407,33 @@ end
 
 pro atv_autoscale
 
-; Routine to auto-scale the image.
+; Routine to auto-scale the image.  
 
 common atv_state 
 common atv_images
 
 widget_control, /hourglass
 
-med = median(main_image)
-sig = stddev(main_image)
+if (n_elements(main_image) LT 5.e5) then begin
+    med = median(main_image)
+    sig = stddev(main_image)
+endif else begin   ; resample big images before taking median, to save memory
+    boxsize = 10
+    rx = state.image_size[0] mod boxsize
+    ry = state.image_size[1] mod boxsize
+    nx = state.image_size[0] - rx
+    ny = state.image_size[1] - ry
+    tmp_img = rebin(main_image[0: nx-1, 0: ny-1], $
+                    nx/boxsize, ny/boxsize, /sample)
+    med = median(tmp_img)
+    sig = stddev(temporary(tmp_img))
+endelse
 
-state.max_value = (med + (10 * sig)) < max(main_image)
+state.max_value = (med + (10 * sig)) < state.image_max
+state.min_value = (med - (2 * sig))  > state.image_min
 
-state.min_value = (med - (2 * sig))  > min(main_image)
-if (state.min_value LT 0 AND med GT 0) then begin
-  state.min_value = 0.0
-endif
+if (finite(state.min_value) EQ 0) then state.min_value = state.image_min
+if (finite(state.max_value) EQ 0) then state.max_value = state.image_max
 
 if (state.min_value GE state.max_value) then begin
     state.min_value = state.min_value - 1
@@ -1363,11 +1446,65 @@ end
 
 ;--------------------------------------------------------------------
 
-function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox
+pro atv_restretch
+
+; Routine to restretch the min and max to preserve the display
+; visually but use the full color map linearly.  Written by DF, and
+; tweaked and debugged by AJB.  It doesn't always work exactly the way
+; you expect (especially in log-scaling mode), but mostly it works fine.
+
+common atv_state
+
+sx = state.brightness
+sy = state.contrast
+
+if state.scaling EQ 2 then return ; do nothing for hist-eq mode
+
+IF state.scaling EQ 0 THEN BEGIN 
+    sfac = (state.max_value-state.min_value)
+    state.max_value = sfac*(sx+sy)+state.min_value
+    state.min_value = sfac*(sx-sy)+state.min_value
+ENDIF 
+
+IF state.scaling EQ 1 THEN BEGIN
+
+    offset = state.min_value - $
+      (state.max_value - state.min_value) * 0.01
+
+    sfac = alog10((state.max_value - offset) / (state.min_value - offset))
+    state.max_value = 10.^(sfac*(sx+sy)+alog10(state.min_value - offset)) $
+      + offset
+    state.min_value = 10.^(sfac*(sx-sy)+alog10(state.min_value - offset)) $
+      + offset
+    
+ENDIF 
+
+; do this differently for 8 or 24 bit color, to prevent flashing
+if (state.bitdepth EQ 8) then begin
+    atv_set_minmax
+    atv_displayall
+    state.brightness = 0.5      ; reset these
+    state.contrast = 0.5
+    atv_stretchct, state.brightness, state.contrast
+endif else begin
+    state.brightness = 0.5      ; reset these
+    state.contrast = 0.5
+    atv_stretchct, state.brightness, state.contrast
+    atv_set_minmax
+    atv_displayall
+endelse
+
+end
+
+;---------------------------------------------------------------------
+
+function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox, $
+            disp_base60
 
 ; Routine to return a string which displays cursor coordinates.
 ; Allows choice of various coordinate systems.
 ; Contributed by D. Finkbeiner, April 2000.
+; 29 Sep 2000 - added degree (RA,dec) option DPF
 
 ; ctype - coord system in header
 ; disp_type - type of coords to display
@@ -1399,22 +1536,31 @@ ENDCASE
 
 ; Now convert RA,dec (J2000) to desired display coordinates:  
 
-IF disp_type[0] EQ 'RA--' THEN BEGIN ; generate (RA,dec) string
-    
-    disp_ra = ra
-    disp_dec = dec
-    IF num_disp_equinox NE 2000.0 THEN precess, disp_ra, disp_dec, $
-      2000.0, num_disp_equinox
-    
-    radec, disp_ra, disp_dec, ihr, imin, xsec, ideg, imn, xsc
-    
-    wcsstring = string(ihr, imin, xsec, ideg, imn, xsc, disp_equinox, $
-                       format = '(i2.2,":",i2.2,":",f6.3,"  ",i3,":",i2.2,":",f5.2," ",a6)' )
-    if (strmid(wcsstring, 6, 1) EQ ' ') then $
-      strput, wcsstring, '0', 6
-    if (strmid(wcsstring, 21, 1) EQ ' ') then $
-      strput, wcsstring, '0', 21
+IF (disp_type[0] EQ 'RA--') THEN BEGIN ; generate (RA,dec) string 
+   disp_ra  = ra
+   disp_dec = dec
+   IF num_disp_equinox NE 2000.0 THEN precess, disp_ra, disp_dec, $
+     2000.0, num_disp_equinox
+
+   IF disp_base60 THEN BEGIN ; (hh:mm:ss) format
+      
+      neg_dec  = disp_dec LT 0
+      radec, disp_ra, abs(disp_dec), ihr, imin, xsec, ideg, imn, xsc
+      wcsstring = string(ihr, imin, xsec, ideg, imn, xsc, disp_equinox, $
+         format = '(i2.2,":",i2.2,":",f6.3,"   ",i2.2,":",i2.2,":",f5.2," ",a6)' )
+      if (strmid(wcsstring, 6, 1) EQ ' ') then $
+        strput, wcsstring, '0', 6
+      if (strmid(wcsstring, 21, 1) EQ ' ') then $
+        strput, wcsstring, '0', 21
+      IF neg_dec THEN strput, wcsstring, '-', 14
+
+   ENDIF ELSE BEGIN ; decimal degree format
+
+      wcsstring = string(disp_ra, disp_dec, disp_equinox, $
+                         format='("Deg ",F9.5,",",F9.5,a6)')
+   ENDELSE 
 ENDIF 
+     
 
 IF disp_type[0] EQ 'GLON' THEN BEGIN ; generate (l,b) string
     euler, ra, dec, l, b, 1
@@ -1436,6 +1582,37 @@ ENDIF
 return, wcsstring
 END
 
+;----------------------------------------------------------------------
+
+function atv_wavestring
+
+; function to return string with wavelength info for spectral images
+
+common atv_state
+
+cd = (*state.astr_ptr).cd[0,0]
+crpix = (*state.astr_ptr).crpix[0]
+crval = (*state.astr_ptr).crval[0]
+
+cunit = sxpar(*state.head_ptr, 'cunit1')
+cunit = strcompress(string(cunit), /remove_all)
+if (cunit NE '0') then begin
+    cunit = strcompress(strupcase(strmid(cunit,0,1)) + strmid(cunit,1), $
+                        /remove_all)
+endif else begin
+    cunit = ''
+endelse
+
+shifta = float(sxpar(*state.head_ptr, 'SHIFTA1'))
+
+wavelength = crval + ((state.coord[0] - crpix) * cd) + (shifta * cd)
+wstring = string(wavelength, format='(F8.2)')
+
+wavestring = strcompress('Wavelength:  ' + wstring + ' ' + cunit)
+
+return, wavestring
+
+end
 
 ;--------------------------------------------------------------------
 
@@ -1443,7 +1620,8 @@ END
 pro atv_gettrack
 
 ; Create the image to display in the track window that tracks
-; cursor movements.
+; cursor movements.  Also update the coordinate display and the
+; (x,y) and pixel value.
 
 common atv_state
 common atv_images
@@ -1474,8 +1652,8 @@ tv, track_image
 ; current mouse position
 
 ; Changed central x to be green always
-plots, [0.46, 0.54], [0.46, 0.54], /normal, color = 2, psym=0
-plots, [0.46, 0.54], [0.54, 0.46], /normal, color = 2, psym=0
+plots, [0.46, 0.54], [0.46, 0.54], /normal, color = state.box_color, psym=0
+plots, [0.46, 0.54], [0.54, 0.46], /normal, color = state.box_color, psym=0
 
 ; update location bar with x, y, and pixel value
 
@@ -1487,16 +1665,23 @@ loc_string = $
          format = '("(",i4,",",i4,") ",g12.5)') 
 widget_control, state.location_bar_id, set_value = loc_string
 
-if (ptr_valid(state.astr_ptr)) then begin
+; Update coordinate display
+
+if (state.wcstype EQ 'angle') then begin
     xy2ad, state.coord[0], state.coord[1], *(state.astr_ptr), lon, lat
-    
 
     wcsstring = atv_wcsstring(lon, lat, (*state.astr_ptr).ctype,  $
-                 state.equinox, state.display_coord_sys, state.display_equinox)
+                              state.equinox, state.display_coord_sys, $
+                              state.display_equinox, state.display_base60)
 
     widget_control, state.wcs_bar_id, set_value = wcsstring
 
 endif    
+
+if (state.wcstype EQ 'lambda') then begin
+    wavestring = atv_wavestring()
+    widget_control, state.wcs_bar_id, set_value = wavestring
+endif
 
 atv_resetwindow
 
@@ -1504,7 +1689,7 @@ end
 
 ;----------------------------------------------------------------------
 
-pro atv_drawbox
+pro atv_drawbox, norefresh=norefresh
 
 ; routine to draw the box on the pan window, given the current center
 ; of the display image.
@@ -1533,11 +1718,11 @@ box_y = float((([view_min[1], $
                  view_min[1]]) * state.pan_scale) + state.pan_offset[1]) 
 
 ; Redraw the pan image and overplot the box
-device, copy=[0,0,state.pan_window_size, state.pan_window_size, 0, 0, $
-              state.pan_pixmap]
-;tv, pan_image, state.pan_offset[0], state.pan_offset[1]
+if (not(keyword_set(norefresh))) then $
+    device, copy=[0,0,state.pan_window_size, state.pan_window_size, 0, 0, $
+                  state.pan_pixmap]
 
-plots, box_x, box_y, /device, color = 2, psym=0
+plots, box_x, box_y, /device, color = state.box_color, psym=0
 
 atv_resetwindow
 
@@ -1550,9 +1735,6 @@ pro atv_pantrack, event
 ; routine to track the view box in the pan window during cursor motion
 
 common atv_state
-
-; erase the old box
-atv_drawbox
 
 ; get the new box coords and draw the new box
 
@@ -1574,9 +1756,6 @@ pro atv_resize
 
 ; Routine to resize the draw window when a top-level resize event
 ; occurs.
-
-; modified 8/29/99 so that the event structure is not passed to this
-; routine as an argument.
 
 common atv_state
 
@@ -1631,36 +1810,45 @@ common atv_images
 
 widget_control, /hourglass
 
+delvarx, scaled_image 
+
 case state.scaling of
-    0: tmp_image = $                 ; linear stretch
-      bytscl(main_image, $                           
+    0: scaled_image = $                 ; linear stretch
+      bytscl(main_image, $
+             /nan, $
              min=state.min_value, $
              max=state.max_value, $
              top = state.ncolors - 1) + 8
     
-    1: tmp_image = $                 ; log stretch
-      bytscl( alog10 (bytscl(main_image, $                       
-                             min=state.min_value, $
-                             max=state.max_value) + 1),  $
-            top = state.ncolors - 1) + 8
+    1: begin                            ; log stretch
+        offset = state.min_value - $
+          (state.max_value - state.min_value) * 0.01
+
+        scaled_image = $        
+          bytscl( alog10(main_image - offset), $
+                  min=alog10(state.min_value - offset), /nan, $
+                  max=alog10(state.max_value - offset),  $
+                  top=state.ncolors - 1) + 8   
+    end
     
-    2: tmp_image = $                 ; histogram equalization
+
+    2: scaled_image = $                 ; histogram equalization
       bytscl(hist_equal(main_image, $
                         minv = state.min_value, $    
                         maxv = state.max_value), $
-             top = state.ncolors - 1) + 8
+             /nan, top = state.ncolors - 1) + 8
     
 endcase
 
-scaled_image = temporary(tmp_image)
 
 end
 
 ;----------------------------------------------------------------------
 
-pro atv_getstats
+pro atv_getstats, align=align
 
 ; Get basic image stats: min and max, and size.
+; set slign keyword to preserve alignment of previous image
 
 common atv_state
 common atv_images
@@ -1672,21 +1860,19 @@ widget_control, /hourglass
 
 state.image_size = [ (size(main_image))[1], (size(main_image))[2] ]
 
-state.image_min = min(main_image)
-state.image_max = max(main_image)
-
-state.min_value = state.image_min
-state.max_value = state.image_max
+state.image_min = min(main_image, max=maxx, /nan)
+state.image_max = maxx
 
 if (state.min_value GE state.max_value) then begin
     state.min_value = state.min_value - 1
     state.max_value = state.max_value + 1
 endif
 
-; zero the current display position on the center of the image
+; zero the current display position on the center of the image,
+; unless user selected /align keyword
 
 state.coord = round(state.image_size / 2.)
-state.centerpix = round(state.image_size / 2.)
+IF NOT keyword_set(align) THEN state.centerpix = round(state.image_size / 2.)
 atv_getoffset
 
 ; Clear all plot annotations
@@ -1698,7 +1884,13 @@ end
 
 pro atv_setwindow, windowid
 
-; replacement for atv_setwindow.  Reads the current active window first.
+; replacement for wset.  Reads the current active window first.
+; This should be used when the currently active window is an external
+; (i.e. non-atv) idl window.  Use atv_setwindow to set the window to
+; one of the atv window, then display something to that window, then
+; use atv_resetwindow to set the current window back to the currently
+; active external window.  Make sure that device is not set to
+; postscript, because if it is we can't display anything.
 
 common atv_state
 
@@ -1743,120 +1935,272 @@ endif
 end
 
 ;--------------------------------------------------------------------
-;     file I/O routines: readfits, postscript output, etc. 
+;    Fits file reading routines
 ;--------------------------------------------------------------------
-pro atv_readfits
+
+pro atv_readfits, fitsfilename=fitsfilename, newimage=newimage
 
 ; Read in a new image when user goes to the File->ReadFits menu.
-; Modified 9/16/99 by AJB to use mrdfits for fits extension files.
+; Do a reasonable amount of error-checking first, to prevent unwanted
+; crashes. 
 
 common atv_state
 common atv_images
 
-fitsfile = $
-  dialog_pickfile(filter = '*.fits', $
-                  group = state.base_id, $
-                  /must_exist, $
-                  /read, $
-                  path = state.current_dir, $
-                  get_path = tmp_dir, $
-                  title = 'Select Fits Image')        
-if (tmp_dir NE '') then state.current_dir = tmp_dir
-if (fitsfile EQ '') then return  ; 'cancel' button returns empty string
+newimage = 0
+cancelled = 0
+if (n_elements(fitsfilename) EQ 0) then window = 1 else window = 0
+
+; If fitsfilename hasn't been passed to this routine, get filename
+; from dialog_pickfile.
+if (n_elements(fitsfilename) EQ 0) then begin
+    fitsfile = $
+      dialog_pickfile(filter = '*.fits', $
+                      group = state.base_id, $
+                      /must_exist, $
+                      /read, $
+                      path = state.current_dir, $
+                      get_path = tmp_dir, $
+                      title = 'Select Fits Image')        
+    if (tmp_dir NE '') then state.current_dir = tmp_dir
+    if (fitsfile EQ '') then return ; 'cancel' button returns empty string
+endif else begin
+    fitsfile = fitsfilename
+endelse
+
+; Get fits header so we know what kind of image this is.
+head = headfits(fitsfile)
+
+; Check validity of fits file header 
+if (n_elements(strcompress(head, /remove_all)) LT 2) then begin
+    atv_message, 'File does not appear to be a valid fits image!', $
+      window = window, msgtype = 'error'
+    return
+endif
+if (!ERR EQ -1) then begin
+    atv_message, $
+      'Selected file does not appear to be a valid FITS image!', $
+      msgtype = 'error', window = window
+    return
+endif
 
 ; Two system variable definitions are needed in order to run fits_info
 defsysv,'!TEXTOUT',1
 defsysv,'!TEXTUNIT',0
+
 ; Find out if this is a fits extension file, and how many extensions
 fits_info, fitsfile, n_ext = numext, /silent
-if numext EQ 0 then extension = 0
-head = headfits(fitsfile)
 instrume = strcompress(string(sxpar(head, 'INSTRUME')), /remove_all)
+origin = strcompress(sxpar(head, 'ORIGIN'), /remove_all)
+naxis = sxpar(head, 'NAXIS')
 
-if ((numext GT 0) AND (instrume NE 'WFPC2')) then begin
-; If there are extensions, bring up a dialog box for the user to 
-; select the extension to load.
-    numlist = ''
-    for i = 1, numext do begin
-        numlist = strcompress(numlist + string(i) + '|', /remove_all)
-    endfor
-
-    numlist = strmid(numlist, 0, strlen(numlist)-1)
-    
-    droptext = strcompress('0, droplist, ' + numlist + $
-                           ', label_left=Select Extension:, set_value=0')
-    
-    formdesc = ['0, button, Read Primary Image, quit', $
-                '0, label, OR:', $
-                droptext, $
-                '0, button, Read Fits Extension, quit', $
-                '0, button, Cancel, quit']
-    
-    textform = cw_form(formdesc, /column, $
-                       title = 'Fits Extension Selector')
-    if (textform.tag4 EQ 1) then return  ; cancelled    
-
-    if (textform.tag3 EQ 1) then begin    ;extension selected
-        extension = long(textform.tag2) + 1
-    endif else begin
-        extension = 0   ; primary image selected
-    endelse
-
-endif else begin
-    extension = 0   ; plain fits file with no extensions, or wfpc2
-endelse
-
-tmp_image = mrdfits(fitsfile, extension, head, /silent, /fscale) 
-
-; Check for wfpc2 4-panel image: if yes, read in new tmp_image
-if ( ((size(tmp_image))[0] EQ 3) AND instrume EQ 'WFPC2') then begin
-
-    droptext = strcompress('0, droplist, 1 | 2 | 3 | 4 | Mosaic,' + $
-                           'label_left = Select WFPC2 CCD:, set_value=0')
-    
-    formdesc = [droptext, $
-                '0, button, Read WFPC2 Image, quit', $
-                '0, button, Cancel, quit']
-    
-    textform = cw_form(formdesc, /column, title = 'WFPC2 Chip Selector')
-    
-    if (textform.tag2 EQ 1) then return ; cancelled
-    
-    ccd = long(textform.tag0) + 1
-
-    widget_control, /hourglass
-    if (ccd LE 4) then begin
-        wfpc2_read, fitsfile, tmp_image, head, num_chip = ccd
-    endif
-    
-    if (ccd EQ 5) then begin
-        wfpc2_read, fitsfile, tmp_image, head, /batwing
-    endif
-        
-endif
-
-if ( (size(tmp_image))[0] NE 2 ) then begin
-    mesg = 'Warning-- selected file is not a 2-D fits image!'
-    tmp_result = dialog_message(mesg, /error, $
-                                dialog_parent = state.base_id)
+; Make sure it's not a 1-d spectrum
+if (numext EQ 0 AND naxis LT 2) then begin
+    atv_message, 'Selected file is not a 2-d FITS image!', $
+      window = window, msgtype = 'error'
     return
 endif
 
-; If the new image is valid, put it into main_image and display it
-main_image = temporary(tmp_image)
+state.title_extras = ''
+
+; Now call the subroutine that knows how to read in this particular
+; data format:
+
+if ((numext GT 0) AND (instrume NE 'WFPC2')) then begin
+    atv_fitsext_read, fitsfile, numext, head, cancelled
+endif else if ((instrume EQ 'WFPC2') AND (naxis EQ 3)) then begin
+    atv_wfpc2_read, fitsfile, head, cancelled
+endif else if ((naxis EQ 3) AND (origin EQ '2MASS')) then begin
+    atv_2mass_read, fitsfile, head, cancelled
+endif else begin
+    atv_plainfits_read, fitsfile, head, cancelled
+endelse
+
+if (cancelled EQ 1) then return
+
+; Make sure it's a 2-d image
+if ( (size(main_image))[0] NE 2 ) then begin
+    atv_message, 'Selected file is not a 2-D fits image!', $
+      msgtype = 'error', window = window
+    main_image = fltarr(512, 512)
+    newimage = 1
+    return
+endif
+
+widget_control, /hourglass
+
 state.imagename = fitsfile
 atv_setheader, head
-atv_getstats
-atv_settitle
-state.zoom_level =  0
-state.zoom_factor = 1.0
-if (state.default_autoscale EQ 1) then atv_autoscale
-atv_set_minmax
-atv_displayall
-atv_cleartext
+newimage = 1
 
 end
 
+;----------------------------------------------------------
+;  Subroutines for reading specific data formats
+;---------------------------------------------------------------
+
+pro atv_fitsext_read, fitsfile, numext, head, cancelled
+
+; Fits reader for fits extension files
+
+common atv_state
+common atv_images
+
+numlist = ''
+for i = 1, numext do begin
+    numlist = strcompress(numlist + string(i) + '|', /remove_all)
+endfor
+
+numlist = strmid(numlist, 0, strlen(numlist)-1)
+
+droptext = strcompress('0, droplist, ' + numlist + $
+                       ', label_left=Select Extension:, set_value=0')
+
+formdesc = ['0, button, Read Primary Image, quit', $
+            '0, label, OR:', $
+            droptext, $
+            '0, button, Read Fits Extension, quit', $
+            '0, button, Cancel, quit']
+
+textform = cw_form(formdesc, /column, $
+                   title = 'Fits Extension Selector')
+
+if (textform.tag4 EQ 1) then begin  ; cancelled 
+    cancelled = 1
+    return                         
+endif
+
+if (textform.tag3 EQ 1) then begin   ;extension selected
+    extension = long(textform.tag2) + 1
+endif else begin
+    extension = 0               ; primary image selected
+endelse
+
+; Make sure it's not a fits table: this would make mrdfits crash
+head = headfits(fitsfile, exten=extension)
+xten = strcompress(sxpar(head, 'XTENSION'), /remove_all)
+if (xten EQ 'BINTABLE') then begin
+    atv_message, 'File appears to be a FITS table, not an image.', $
+      msgtype='error', /window
+    cancelled = 1
+    return
+endif
+
+if (extension GE 1) then begin
+    state.title_extras = strcompress('Extension ' + string(extension))
+endif else begin
+    state.title_extras = 'Primary Image'
+endelse
+
+; Read in the image
+delvarx, main_image
+main_image = mrdfits(fitsfile, extension, head, /silent, /fscale) 
+
+end
+
+;----------------------------------------------------------------
+
+pro atv_plainfits_read, fitsfile, head, cancelled
+
+common atv_images
+
+; Fits reader for plain fits files, no extensions.
+
+delvarx, main_image
+main_image = mrdfits(fitsfile, 0, head, /silent, /fscale) 
+
+end
+
+;------------------------------------------------------------------
+
+pro atv_wfpc2_read, fitsfile, head, cancelled
+    
+; Fits reader for 4-panel HST WFPC2 images
+
+common atv_state
+common atv_images
+
+droptext = strcompress('0, droplist,PC|WF2|WF3|WF4|Mosaic,' + $
+                       'label_left = Select WFPC2 CCD:, set_value=0')
+
+formdesc = [droptext, $
+            '0, button, Read WFPC2 Image, quit', $
+            '0, button, Cancel, quit']
+
+textform = cw_form(formdesc, /column, title = 'WFPC2 Chip Selector')
+
+if (textform.tag2 EQ 1) then begin ; cancelled
+    cancelled = 1
+    return                      
+endif
+
+ccd = long(textform.tag0) + 1
+
+widget_control, /hourglass
+if (ccd LE 4) then begin
+    delvarx, main_image
+    wfpc2_read, fitsfile, main_image, head, num_chip = ccd
+endif
+
+if (ccd EQ 5) then begin
+    delvarx, main_image
+    wfpc2_read, fitsfile, main_image, head, /batwing
+endif
+        
+case ccd of
+    1: state.title_extras = 'PC1'
+    2: state.title_extras = 'WF2'
+    3: state.title_extras = 'WF3'
+    4: state.title_extras = 'WF4'
+    5: state.title_extras = 'Mosaic'
+    else: state.title_extras = ''
+endcase
+
+end
+
+;----------------------------------------------------------------------
+
+pro atv_2mass_read, fitsfile, head, cancelled
+    
+; Fits reader for 3-plane 2MASS Extended Source J/H/Ks data cube
+common atv_state
+common atv_images
+
+droptext = strcompress('0, droplist,J|H|Ks,' + $
+                       'label_left = Select 2MASS Band:, set_value=0')
+
+formdesc = [droptext, $
+            '0, button, Read 2MASS Image, quit', $
+            '0, button, Cancel, quit']
+
+textform = cw_form(formdesc, /column, title = '2MASS Band Selector')
+
+if (textform.tag2 EQ 1) then begin ; cancelled
+    cancelled = 1
+    return                     
+endif
+
+delvarx, main_image
+main_image = mrdfits(fitsfile, 0, head, /silent, /fscale) 
+
+band = long(textform.tag0) 
+main_image = main_image[*,*,band]    ; fixed 11/28/2000
+
+case textform.tag0 of
+    0: state.title_extras = 'J Band'
+    1: state.title_extras = 'H Band'
+    2: state.title_extras = 'Ks Band'
+    else: state.title_extras = ''
+endcase
+
+; fix ctype2 in header to prevent crashes when running xy2ad routine:
+if (strcompress(sxpar(head, 'CTYPE2'), /remove_all) EQ 'DEC---SIN') then $
+  sxaddpar, head, 'CTYPE2', 'DEC--SIN'
+
+end
+
+;-----------------------------------------------------------------------
+;     Routines for creating output graphics
 ;----------------------------------------------------------------------
 
 pro atv_writetiff
@@ -1882,10 +2226,11 @@ result = ''
 if (strcompress(filename, /remove_all) EQ '') then return   ; cancel
 
 if (filename EQ state.current_dir) then begin
-    mesg = 'Must indicate filename to save.'
-    result = dialog_message(mesg, /error, dialog_parent = state.base_id)
+    atv_message, 'Must indicate filename to save.', msgtype = 'error', /window
     return
 endif
+
+if (filename EQ '') then return
 
 if (nfiles GT 0) then begin
     mesg = strarr(2)
@@ -1898,50 +2243,56 @@ if (nfiles GT 0) then begin
                              /question)                 
 endif
 
-
-if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
+if (strupcase(result) EQ 'NO') then return
  
-    atv_setwindow, state.draw_window_id
+atv_setwindow, state.draw_window_id
 
+if (state.bitdepth EQ 8) then begin
 ; In 8-bit mode, the screen color table will have fewer than 256
 ; colors.  Stretch out the existing color table to a full 256 colors
 ; when writing the tiff image.
- 
+
     tvlct, rr, gg, bb, /get
- 
-    rn = congrid(rr[8:!d.table_size-1], 248)
-    gn = congrid(gg[8:!d.table_size-1], 248)
-    bn = congrid(bb[8:!d.table_size-1], 248)
- 
+   
+    rn = congrid(rr[8:!d.table_size-2], 248)
+    gn = congrid(gg[8:!d.table_size-2], 248)
+    bn = congrid(bb[8:!d.table_size-2], 248)
+    
     rvec = bytarr(256)
     gvec = bytarr(256)
     bvec = bytarr(256)
- 
-    rvec[0] = rr  ; load in the first 8 colors
+    
+    rvec[0] = rr                ; load in the first 8 colors
     gvec[0] = gg
     bvec[0] = bb
- 
+    
     rvec[8] = temporary(rn)
     gvec[8] = temporary(gn)
     bvec[8] = temporary(bn)
- 
+    
     img = tvrd()
     w = where(img GT 7, count)
-
+    
     if (count GT 0) then begin
         tmp_img = img[w]
-        tmp_img = bytscl((img[w]), top = 247) + 8
+        tmp_img = bytscl((img[w]), top = 247, min=8, max=(!d.table_size-1)) + 8
         img[w] = tmp_img
     endif
 
-    write_tiff, filename, img, $
+    img = reverse(img, 2)
+
+    write_tiff, filename, img, 1, $
       red = temporary(rvec), $
       green = temporary(gvec), $
       blue = temporary(bvec)
 
-endif
+endif else begin    ; 24-bit is much easier!
 
-atv_cleartext
+    tmp_img = tvrd(/true)
+    tmp_img = reverse(tmp_img, 3)
+    write_tiff, filename, tmp_img, 1, /planarconfig
+
+endelse
 
 atv_resetwindow
 end
@@ -1955,12 +2306,24 @@ pro atv_writeps
 
 common atv_state
 common atv_images
+common atv_color
 
 widget_control, /hourglass
 
-aspect = float(state.draw_window_size[1]) / state.draw_window_size[0]
+view_min = round(state.centerpix - $
+                  (0.5 * state.draw_window_size / state.zoom_factor))
+view_max = round(view_min + state.draw_window_size / state.zoom_factor)
+
+xsize = (state.draw_window_size[0] / state.zoom_factor) > $
+  (view_max[0] - view_min[0] + 1)
+ysize = (state.draw_window_size[1] / state.zoom_factor) > $
+  (view_max[1] - view_min[1] + 1)
+
+
+aspect = float(ysize) / float(xsize)
 fname = strcompress(state.current_dir + 'atv.ps', /remove_all)
 
+tvlct, rr, gg, bb, 8, /get
 forminfo = cmps_form(cancel = canceled, create = create, $
                      aspect = aspect, parent = state.base_id, $
                      /preserve_aspect, $
@@ -1973,6 +2336,7 @@ forminfo = cmps_form(cancel = canceled, create = create, $
 
 if (canceled) then return
 if (forminfo.filename EQ '') then return
+tvlct, rr, gg, bb, 8
 
 tmp_result = findfile(forminfo.filename, count = nfiles)
 
@@ -1988,7 +2352,7 @@ if (nfiles GT 0) then begin
                              /question)                 
 endif
 
-if (result EQ 'No') then return
+if (strupcase(result) EQ 'NO') then return
     
 widget_control, /hourglass
 
@@ -1998,36 +2362,54 @@ screen_device = !d.name
 ; colors.  Stretch out the existing color table to 256 colors for the
 ; postscript plot.
 
-tvlct, rr, gg, bb, 8, /get
 set_plot, 'ps'
+
 device, _extra = forminfo
+
+tvlct, rr, gg, bb, 8, /get
 
 rn = congrid(rr, 248)
 gn = congrid(gg, 248)
 bn = congrid(bb, 248)
 
 tvlct, temporary(rn), temporary(gn), temporary(bn), 8
-tv, bytscl(display_image, top = 247) + 8
+
+; Make a full-resolution version of the display image, accounting for
+; scalable pixels in the postscript output
+
+newdisplay = bytarr(xsize, ysize)
+
+startpos = abs(round(state.offset) < 0)
+
+view_min = (0 > view_min < (state.image_size - 1)) 
+view_max = (0 > view_max < (state.image_size - 1)) 
+
+dimage = bytscl(scaled_image[view_min[0]:view_max[0], $
+                                 view_min[1]:view_max[1]], $
+                    top = 247, min=8, max=(!d.table_size-1)) + 8
+
+
+newdisplay[startpos[0], startpos[1]] = temporary(dimage)
+
+; if there's blank space around the image border, keep it black
+tv, newdisplay
 atv_plotall
 
-if (state.frame EQ 1) then begin
-    plot, [0], [0], /nodata, /noerase, /normal, $
-      xrange = [0,1], yrange = [0,1], position=[0,0,1,1], $
-      xticks = 1, yticks = 1, ticklen=0, $
-      xtickformat = 'atv_null_string', ytickformat = 'atv_null_string'
+if (state.frame EQ 1) then begin    ; put frame around image
+    plot, [0], [0], /nodata, position=[0,0,1,1], $
+      xrange=[0,1], yrange=[0,1], xstyle=5, ystyle=5, /noerase
+    boxx = [0,0,1,1,0,0]
+    boxy = [0,1,1,0,0,1]
+    oplot, boxx, boxy, color=0, thick=state.framethick
 endif
 
 tvlct, temporary(rr), temporary(gg), temporary(bb), 8
 
+
 device, /close
 set_plot, screen_device
 
-atv_cleartext
 
-end
-
-function atv_null_string,a,b,c
-return, ''
 end
 
 ;----------------------------------------------------------------------
@@ -2038,63 +2420,47 @@ pro atv_stretchct, brightness, contrast,  getmouse = getmouse
 
 ; routine to change color stretch for given values of 
 ; brightness and contrast.
-; Brightness and contrast range from 1 up to state.maxbright
-; A rather brute-force algorithm, but it works well enough.
+; Complete rewrite 2000-Sep-21 - Doug Finkbeiner
+; This routine is now shorter and easier to understand.  
 
 common atv_state
 common atv_color
 
-if (keyword_set(getmouse)) then begin
-    contrast = 0 > (contrast / float(state.draw_window_size[1]) * $
-                    state.maxbright) < (state.maxbright-1)
-    contrast = long(abs(state.maxbright - contrast))
+; if GETMOUSE then assume mouse positoin passed; otherwise ignore
+; inputs
 
-    brightness = 0 > $
-      (brightness / float(state.draw_window_size[0]) * state.maxbright) < $
-      (state.maxbright - 1)
-    brightness = long(abs(brightness-state.maxbright))
+if (keyword_set(getmouse)) then begin 
+   state.brightness = brightness/float(state.draw_window_size[0])
+   state.contrast = contrast/float(state.draw_window_size[1])
 endif
 
-d = state.ncolors
+x = state.brightness*(state.ncolors-1)
+y = state.contrast*(state.ncolors-1) > 2   ; Minor change by AJB 
+high = x+y & low = x-y
+diff = (high-low) > 1
 
-maxdp = 600
-mindp = 4
+slope = float(state.ncolors-1)/diff ;Scale to range of 0 : nc-1
+intercept = -slope*low
+p = long(findgen(state.ncolors)*slope+intercept) ;subscripts to select
+tvlct, r_vector[p], g_vector[p], b_vector[p], 8
 
-if (contrast LT (state.maxbright / 2)) then begin
-    dp = ((d - maxdp) / float((state.maxbright / 2) - 1)) * contrast + $
-      ((maxdp * state.maxbright / 2) - d) / float(state.maxbright / 2)
-endif else begin
-    dp = ((mindp - d) / float(state.maxbright / 2)) * contrast + $
-      ((d * state.maxbright) - (mindp * state.maxbright / 2)) / $
-      float(state.maxbright / 2)
-endelse
+end
 
-dp =  fix(dp)
+;------------------------------------------------------------------
 
-r = replicate(r_vector(d-1), 2*d + dp)
-g = replicate(g_vector(d-1), 2*d + dp)
-b = replicate(b_vector(d-1), 2*d + dp)
+pro atv_initcolors
 
-r[0:d-1] = r_vector(0)
-g[0:d-1] = g_vector(0)
-b[0:d-1] = b_vector(0)
+; Load a simple color table with the basic 8 colors in the lowest 
+; 8 entries of the color table.  Also set top color to white.
 
-a = findgen(d)
+common atv_state
 
-r[d] = congrid(r_vector, dp)
-g[d] = congrid(g_vector, dp)
-b[d] = congrid(b_vector, dp)
+rtiny   = [0, 1, 0, 0, 0, 1, 1, 1]
+gtiny = [0, 0, 1, 0, 1, 0, 1, 1]
+btiny  = [0, 0, 0, 1, 1, 1, 0, 1]
+tvlct, 255*rtiny, 255*gtiny, 255*btiny
 
-bshift = round(brightness * (d+dp) / float(state.maxbright))
-
-rr = r[a + bshift] 
-gg = g[a + bshift]
-bb = b[a + bshift]
-
-tvlct, rr, gg, bb, 8
-
-state.brightness = brightness
-state.contrast = contrast
+tvlct, [255],[255],[255], !d.table_size-1
 
 end
 
@@ -2106,16 +2472,17 @@ pro atv_getct, tablenum
 
 common atv_color
 common atv_state
+common atv_images
 
-; Load a simple color table with the basic 8 colors in the lowest 8 entries
-; of the color table
-rtiny   = [0, 1, 0, 0, 0, 1, 1, 1]
-gtiny = [0, 0, 1, 0, 1, 0, 1, 1]
-btiny  = [0, 0, 0, 1, 1, 1, 0, 1]
-tvlct, 255*rtiny, 255*gtiny, 255*btiny
 
 loadct, tablenum, /silent,  bottom=8
 tvlct, r, g, b, 8, /get
+
+atv_initcolors
+
+r = r[0:state.ncolors-2]
+g = g[0:state.ncolors-2]
+b = b[0:state.ncolors-2]
 
 if (state.invert_colormap EQ 1) then begin
 r = reverse(r)
@@ -2128,6 +2495,8 @@ g_vector = g
 b_vector = b
 
 atv_stretchct, state.brightness, state.contrast
+if (state.bitdepth EQ 24 AND (n_elements(pan_image) GT 10) ) then $
+  atv_refresh
 
 end
 
@@ -2161,18 +2530,13 @@ end
 
 pro atv_makect, tablename
 
-; Define new color tables here, in terms of 5th order polynomials.
-; To define a new color table, first set it up using xpalette,
-; then load current color table into 3 256-element vectors, and
-; do a 5th order poly_fit.  Store the coefficients and name
-; the color table here.  Invert if necessary.
+; Define new color tables here.  Invert if necessary.
 
 common atv_state
 common atv_color
 
 case tablename of
     'ATV Special': begin
- 
         r = atv_polycolor([39.4609, $
                            -5.19434, $
                            0.128174, $
@@ -2193,13 +2557,13 @@ case tablename of
                            0.00108027, $
                            -2.47709e-06, $
                            2.66846e-09])
+
    end
 
 ; add more color table definitions here as needed...
-    else:
+    else: return
 
 endcase
-
 
 if (state.invert_colormap EQ 1) then begin
 r = reverse(r)
@@ -2212,6 +2576,7 @@ g_vector = temporary(g)
 b_vector = temporary(b)
 
 atv_stretchct, state.brightness, state.contrast
+if (state.bitdepth EQ 24) then atv_refresh
 
 end
 
@@ -2222,33 +2587,33 @@ function atv_icolor, color
 ; Routine to reserve the bottom 8 colors of the color table
 ; for plot overlays and line plots.
 
-   if (n_elements(color) EQ 0) then return, 1
+if (n_elements(color) EQ 0) then return, 1
 
-   ncolor = N_elements(color)
+ncolor = N_elements(color)
 
-   ; If COLOR is a string or array of strings, then convert color names
-   ; to integer values
-   if (size(color,/tname) EQ 'STRING') then begin ; Test if COLOR is a string
+; If COLOR is a string or array of strings, then convert color names
+; to integer values
+if (size(color,/tname) EQ 'STRING') then begin ; Test if COLOR is a string
+    
+; Detemine the default color for the current device
+    if (!d.name EQ 'X') then defcolor = 7 $ ; white for X-windows
+    else defcolor = 0           ; black otherwise
+    
+    icolor = 0 * (color EQ 'black') $
+      + 1 * (color EQ 'red') $
+      + 2 * (color EQ 'green') $
+      + 3 * (color EQ 'blue') $
+      + 4 * (color EQ 'cyan') $
+      + 5 * (color EQ 'magenta') $
+      + 6 * (color EQ 'yellow') $
+      + 7 * (color EQ 'white') $
+      + defcolor * (color EQ 'default')
+    
+endif else begin
+    icolor = long(color)
+endelse
 
-      ; Detemine the default color for the current device
-      if (!d.name EQ 'X') then defcolor = 7 $ ; white for X-windows
-       else defcolor = 0 ; black otherwise
-
-      icolor = 0 * (color EQ 'black') $
-             + 1 * (color EQ 'red') $
-             + 2 * (color EQ 'green') $
-             + 3 * (color EQ 'blue') $
-             + 4 * (color EQ 'cyan') $
-             + 5 * (color EQ 'magenta') $
-             + 6 * (color EQ 'yellow') $
-             + 7 * (color EQ 'white') $
-             + defcolor * (color EQ 'default')
-
-   endif else begin
-      icolor = long(color)
-   endelse
-
-   return, icolor
+return, icolor
 end 
  
 ;---------------------------------------------------------------------
@@ -2271,7 +2636,7 @@ endif else begin
 
     if (slash NE -1) then name = strmid(state.imagename, slash+1) $
       else name = state.imagename
-    title = strcompress('atv:  '+name)
+    title = strcompress('atv:  '+ name + '  ' + state.title_extras)
     widget_control, state.base_id, tlb_set_title = title
 endelse
 
@@ -2279,14 +2644,14 @@ end
 
 ;----------------------------------------------------------------------
 
-
 pro atv_setheader, head
 
 ; Routine to keep the image header using a pointer to a 
 ; heap variable.  If there is no header (i.e. if atv has just been
 ; passed a data array rather than a filename), then make the
 ; header pointer a null pointer.  Get astrometry info from the 
-; header if available.
+; header if available.  If there's no astrometry information, set 
+; state.astr_ptr to be a null pointer.
 
 common atv_state
 
@@ -2300,65 +2665,85 @@ if (xregistered('atv_stats')) then begin
     widget_control, state.stats_base_id, /destroy
 endif
 
-if (n_elements(head) GT 1) then begin
-   ptr_free, state.head_ptr
-   state.head_ptr = ptr_new(head)
-   
-; Get astrometry information from header, if it exists
-   ptr_free, state.astr_ptr     ; kill previous astrometry info
-   state.astr_ptr = ptr_new()
-   extast, head, astr, noparams
-   
-   IF (noparams EQ -1) THEN BEGIN 
-      widget_control, state.wcs_bar_id, set_value = '---No WCS Info---'
-   ENDIF ELSE BEGIN 
-      widget_control, state.wcs_bar_id, set_value = '                 '
-      
-; Check for GSS type header  
-      if strmid( astr.ctype[0], 5, 3) EQ 'GSS' then begin
-         hdr1 = head
-         gsss_STDAST, hdr1
-         extast, hdr1, astr, noparams
-      endif
-      
-; Create a pointer to the header info
-; NOTE: bug fix added here 09 Jan 2000
-      state.astr_ptr = ptr_new(astr)
-      
-; Get the equinox of the coordinate system
-      equ = get_equinox(head, code)
-      if (code NE -1) then begin
-         if (equ EQ 2000.0) then state.equinox = 'J2000'
-         if (equ EQ 1950.0) then state.equinox = 'B1950'
-         if (equ NE 2000.0 and equ NE 1950.0) then $
-           state.equinox = string(equ, format = '(f6.1)')
-      endif else begin
-         IF (strmid(astr.ctype[0], 0, 4) EQ 'GLON') THEN BEGIN 
-            state.equinox = 'J2000' ; (just so it is set)
-         ENDIF ELSE BEGIN 
-                                ; clear pointer
-            ptr_free, state.astr_ptr
-            state.astr_ptr = ptr_new()
-            state.equinox = 'J2000'
-            widget_control, state.wcs_bar_id, set_value = '---No WCS Info---'
-         ENDELSE 
-      endelse
-; Set default display to native system in header
-      state.display_equinox = state.equinox
-      state.display_coord_sys = strmid(astr.ctype[0], 0, 4)
-   ENDELSE 
-   
-ENDIF else begin
+if (n_elements(head) LE 1) then begin
 ; If there's no image header...
-   ptr_free, state.head_ptr
-   state.head_ptr = ptr_new()
-   ptr_free, state.astr_ptr
-   state.astr_ptr = ptr_new()
-   
-   widget_control, state.wcs_bar_id, set_value = $
-     '---No WCS Info---'
+    state.wcstype = 'none'
+    ptr_free, state.head_ptr
+    state.head_ptr = ptr_new()
+    ptr_free, state.astr_ptr
+    state.astr_ptr = ptr_new()
+    widget_control, state.wcs_bar_id, set_value = '---No WCS Info---'
+    return
+endif
+
+ptr_free, state.head_ptr
+state.head_ptr = ptr_new(head)
+
+; Get astrometry information from header, if it exists
+ptr_free, state.astr_ptr        ; kill previous astrometry info
+state.astr_ptr = ptr_new()
+extast, head, astr, noparams
+
+; No valid astrometry in header
+if (noparams EQ -1) then begin 
+    widget_control, state.wcs_bar_id, set_value = '---No WCS Info---'
+    state.wcstype = 'none'
+    return
+endif
+
+; coordinate types that we can't use:
+if ( (strcompress(string(astr.ctype[0]), /remove_all) EQ 'PIXEL') $
+     or (strcompress(string(astr.ctype[0]), /remove_all) EQ '') ) then begin
+    widget_control, state.wcs_bar_id, set_value = '---No WCS Info---'
+    state.wcstype = 'none'
+    return
+endif
+
+; Image is a 2-d calibrated spectrum (probably from stis):
+if (astr.ctype[0] EQ 'LAMBDA') then begin
+    state.wcstype = 'lambda'
+    state.astr_ptr = ptr_new(astr)
+    widget_control, state.wcs_bar_id, set_value = '                 '
+    return
+endif
+
+; Good astrometry info in header:
+state.wcstype = 'angle'
+widget_control, state.wcs_bar_id, set_value = '                 '
+
+; Check for GSS type header  
+if strmid( astr.ctype[0], 5, 3) EQ 'GSS' then begin
+    hdr1 = head
+    gsss_STDAST, hdr1
+    extast, hdr1, astr, noparams
+endif
+
+; Create a pointer to the header info
+state.astr_ptr = ptr_new(astr)
+
+; Get the equinox of the coordinate system
+equ = get_equinox(head, code)
+if (code NE -1) then begin
+    if (equ EQ 2000.0) then state.equinox = 'J2000'
+    if (equ EQ 1950.0) then state.equinox = 'B1950'
+    if (equ NE 2000.0 and equ NE 1950.0) then $
+      state.equinox = string(equ, format = '(f6.1)')
+endif else begin
+    IF (strmid(astr.ctype[0], 0, 4) EQ 'GLON') THEN BEGIN 
+        state.equinox = 'J2000' ; (just so it is set)
+    ENDIF ELSE BEGIN                          
+        ptr_free, state.astr_ptr    ; clear pointer
+        state.astr_ptr = ptr_new()
+        state.equinox = 'J2000'
+        state.wcstype = 'none'
+        widget_control, state.wcs_bar_id, set_value = '---No WCS Info---'
+    ENDELSE 
 endelse
- 
+
+; Set default display to native system in header
+state.display_equinox = state.equinox
+state.display_coord_sys = strmid(astr.ctype[0], 0, 4)
+
 end
 
 ;---------------------------------------------------------------------
@@ -2375,9 +2760,8 @@ if (not(ptr_valid(state.head_ptr))) then begin
         widget_control, state.headinfo_base_id, /destroy
     endif
 
-    mesg = 'No header information available for this image!'
-    junk = dialog_message(mesg, /error, $
-                          dialog_parent = state.base_id)
+    atv_message, 'No header information available for this image!', $
+      msgtype = 'error', /window
     return
 endif
 
@@ -2448,6 +2832,7 @@ oplot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
   _extra = (*(plot_ptr[iplot])).options
 
 atv_resetwindow
+state.newrefresh=1
 end
 
 ;----------------------------------------------------------------------
@@ -2465,6 +2850,7 @@ xyouts, (*(plot_ptr[iplot])).x, (*(plot_ptr[iplot])).y, $
   (*(plot_ptr[iplot])).text, _extra = (*(plot_ptr[iplot])).options
 
 atv_resetwindow
+state.newrefresh=1
 end
 
 ;----------------------------------------------------------------------
@@ -2503,9 +2889,9 @@ endif else begin
       _extra = (*(plot_ptr[iplot])).options
           
 endelse
-;tv_setsamewindow
 
 atv_resetwindow
+state.newrefresh=1
 end
 
 ;---------------------------------------------------------------------
@@ -2532,6 +2918,7 @@ arrows, *(state.head_ptr), $
   /data
 
 atv_resetwindow
+state.newrefresh=1
 end
 
 ;---------------------------------------------------------------------
@@ -2562,6 +2949,7 @@ atv_arcbar, *(state.head_ptr), $
   /data
 
 atv_resetwindow
+state.newrefresh=1
 end
 
 ;----------------------------------------------------------------------
@@ -2572,21 +2960,15 @@ pro atv_arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, $
 
 common atv_state
 
-; This is a copy of the GSFC arcbar routine, abbreviated for atv and 
-; modified to work with zoomed images.
-; REVISION HISTORY:
-;       written by L. Taylor (STX) from ARCBOX (Boothman)
-;       modified for Version 2 IDL,                     B. Pfarr, STX, 4/91
-;       New ASTROMETRY structures               W.Landsman,  HSTX, Jan 94
-;       Recognize a GSSS header                 W. Landsman June 94
-;       Added /NORMAL keyword                   W. Landsman Feb. 96
-;       Use NAXIS1 for postscript if data coords not set,  W. Landsman Aug 96
-;       Fixed typo for postscript W. Landsman   Oct. 96
-;       Account for zeropoint offset in postscript  W. Landsman   Apr 97
-;       Converted to IDL V5.0   W. Landsman   September 1997
-;       Added /DATA, /SECONDS keywords   W. Landsman    July 1998
-;       Modified to work with zoomed ATV images,           AJB  Jan. 2000
-;       Moved text label upwards a bit for better results, AJB  Jan. 2000
+; This is a copy of the IDL Astronomy User's Library routine 'arcbar',
+; abbreviated for atv and modified to work with zoomed images.  For
+; the revision history of the original arcbar routine, look at
+; arcbar.pro in the pro/astro subdirectory of the IDL Astronomy User's
+; Library.
+
+; Modifications for atv:
+; Modified to work with zoomed ATV images, AJB Jan. 2000 
+; Moved text label upwards a bit for better results, AJB Jan. 2000
 
 On_error,2                      ;Return to caller
  
@@ -2653,8 +3035,8 @@ if not keyword_set( LABEL) then begin
     label = strtrim(arcstr,2) + arcsym 
 endif
 
-; AJB modified this to move the numerical label upward by 10%
-xyouts,(xi+xf)/2, (yi+5), label, SIZE = size,COLOR=color,$
+; AJB modified this to move the numerical label upward a bit: 5/8/2000
+xyouts,(xi+xf)/2, (yi+(dmini2/10)), label, SIZE = size,COLOR=color,$
   /DEV, alignment=.5, CHARTHICK=thick
 
 return
@@ -2877,7 +3259,7 @@ endfor
 
 nplot = nplot - nerase
 
-if (NOT keyword_set(norefresh) ) then atv_refresh
+if (NOT keyword_set(norefresh)) then atv_refresh
 
 end
 
@@ -2975,22 +3357,25 @@ common atv_images
 common atv_pdata
 
 if (nplot GE maxplot) then begin
-    mesg = 'Total allowed number of overplots exceeded.'
-    tmp_result = dialog_message(mesg, /error, $
-                                dialog_parent = state.base_id)
+    atv_message, 'Total allowed number of overplots exceeded.', $
+      msgtype = 'error', /window
     return
 endif
     
 
-if (not(ptr_valid(state.astr_ptr))) then begin 
-    mesg = 'There is no WCS information for this image!'
-    tmp_result = dialog_message(mesg, /error, $
-                                dialog_parent = state.base_id)
+if (state.wcstype NE 'angle') then begin 
+    atv_message, 'Cannot get coordinate info for this image!', $
+      msgtype = 'error', /window
     return
 endif
 
-xpos = string(round(state.image_size[0] / 4))
-ypos = string(round(state.image_size[1] / 4))
+view_min = round(state.centerpix - $
+        (0.5 * state.draw_window_size / state.zoom_factor)) 
+view_max = round(view_min + state.draw_window_size / state.zoom_factor) - 1
+
+xpos = string(round(view_min[0] + 0.15 * (view_max[0] - view_min[0])))
+ypos = string(round(view_min[1] + 0.15 * (view_max[1] - view_min[1])))
+
 xposstring = strcompress('0,integer,'+xpos+',label_left=XCenter: ')
 yposstring = strcompress('0,integer,'+ypos+',label_left=YCenter: ')
 
@@ -3050,29 +3435,32 @@ common atv_images
 common atv_pdata
 
 if (nplot GE maxplot) then begin
-    mesg = 'Total allowed number of overplots exceeded.'
-    tmp_result = dialog_message(mesg, /error, $
-                                dialog_parent = state.base_id)
+    atv_message, 'Total allowed number of overplots exceeded.', $
+      mesgtype = 'error', /window
     return
 endif
     
 
-if (not(ptr_valid(state.astr_ptr))) then begin 
-    mesg = 'There is no WCS information for this image!'
-    tmp_result = dialog_message(mesg, /error, $
-                                dialog_parent = state.base_id)
+if (state.wcstype NE 'angle') then begin 
+    atv_message, 'Cannot get coordinate info for this image!', $
+      mesgtype = 'error', /window
     return
 endif
 
-xpos = string(round(state.image_size[0] * 0.75))
-ypos = string(round(state.image_size[1] * 0.25))
+view_min = round(state.centerpix - $
+        (0.5 * state.draw_window_size / state.zoom_factor)) 
+view_max = round(view_min + state.draw_window_size / state.zoom_factor) - 1
+
+xpos = string(round(view_min[0] + 0.75 * (view_max[0] - view_min[0])))
+ypos = string(round(view_min[1] + 0.15 * (view_max[1] - view_min[1])))
+
 xposstring = strcompress('0,integer,'+xpos+',label_left=X (left end of bar): ')
 yposstring = strcompress('0,integer,'+ypos+',label_left=Y (center of bar): ')
 
 formdesc = [ $
              xposstring, $
              yposstring, $
-             '0, integer, 5, label_left=BarLength: ', $
+             '0, float, 5.0, label_left=BarLength: ', $
              '0, droplist, arcsec|arcmin, label_left=Units:,set_value=0', $
              '0, droplist, red|black|green|blue|cyan|magenta|yellow|white,label_left=Color:, set_value=0 ', $
              '0, integer, 1, label_left=LineThickness: ', $
@@ -3098,8 +3486,11 @@ cform.tag0 = 0 > cform.tag0 < (state.image_size[0] - 1)
 cform.tag1 = 0 > cform.tag1 < (state.image_size[1] - 1)
 cform.tag3 = abs(cform.tag3 - 1)  ; set default to be arcseconds
 
+arclen = cform.tag2
+if (float(round(arclen)) EQ arclen) then arclen = round(arclen)
+
 pstruct = {type: 'scalebar',  $  ; type of plot
-           arclen: cform.tag2, $
+           arclen: arclen, $
            seconds: cform.tag3, $
            position: [cform.tag0,cform.tag1], $ 
            color: labelcolor, $
@@ -3177,8 +3568,20 @@ common atv_images
 ;    atv_lineplot_init
 ;endif
 ;
-;wset, state.lineplot_window_id
+;atv_setwindow, state.lineplot_window_id
 ;erase
+;
+;plot, main_image[*, state.coord[1]], $
+;  xst = 3, yst = 3, psym = 10, $
+;  title = strcompress('Plot of row ' + $
+;                      string(state.coord[1])), $
+;  xtitle = 'Column', $
+;  ytitle = 'Pixel Value', $
+;  color = 7 
+;
+;widget_control, state.lineplot_base_id, /clear_events
+;
+;atv_resetwindow
 
 view_min = round(state.centerpix - $
                   (0.5 * state.draw_window_size / state.zoom_factor))
@@ -3193,8 +3596,6 @@ splot, main_image[*, state.coord[1]], $
   xrange = [view_min[0], view_max[0]]
   color = 7
 
-;widget_control, state.lineplot_base_id, /clear_events
-
 end
 
 ;--------------------------------------------------------------------
@@ -3208,8 +3609,19 @@ common atv_images
 ;    atv_lineplot_init
 ;endif
 ;
-;wset, state.lineplot_window_id
+;atv_setwindow, state.lineplot_window_id
 ;erase
+;
+;plot, main_image[state.coord[0], *], $
+;  xst = 3, yst = 3, psym = 10, $
+;  title = strcompress('Plot of column ' + $
+;                      string(state.coord[0])), $
+;  xtitle = 'Row', $
+;  ytitle = 'Pixel Value', $
+;  color = 7
+;widget_control, state.lineplot_base_id, /clear_events
+;        
+;atv_resetwindow
 
 splot, main_image[state.coord[0], *], $
   xst = 3, yst = 3, psym = 10, $
@@ -3218,8 +3630,6 @@ splot, main_image[state.coord[0], *], $
   xtitle = 'Row', $
   ytitle = 'Pixel Value', $
   color = 7
-
-;widget_control, state.lineplot_base_id, /clear_events
 
 end
 
@@ -3339,7 +3749,7 @@ end
 pro atv_help
 common atv_state
 
-h = strarr(100)
+h = strarr(110)
 i = 0
 h[i] =  'ATV HELP'
 i = i + 1
@@ -3387,9 +3797,9 @@ h[i] =  ''
 i = i + 1
 h[i] =  'CONTROL PANEL ITEMS:'
 i = i + 1
-h[i] = 'Min:             shows minimum data value displayed; click to modify'
+h[i] = 'Min:             shows minimum data value displayed; enter new min value here'
 i = i + 1
-h[i] = 'Max:             shows maximum data value displayed; click to modify'
+h[i] = 'Max:             shows maximum data value displayed; enter new max value here'
 i = i + 1
 h[i] = 'Pan Window:      use mouse to drag the image-view box around'
 i = i + 1
@@ -3405,7 +3815,7 @@ h[i] = '                    Move vertically to change contrast, and'
 i = i + 1
 h[i] = '                         horizontally to change brightness.'
 i = i + 1 
-h[i] = '                    button2: center on current position'
+h[i] = '                    button 2 or 3: center on current position'
 i = i + 1
 h[i] = 'Zoom:           sets zoom mode:' 
 i = i + 1 
@@ -3421,15 +3831,19 @@ h[i] = '                    press mouse button in main window to show blink imag
 i = i + 1
 h[i] = 'ImExam:          sets ImageExamine mode:'
 i = i + 1
-h[i] = '                    mouse button 1 for photometry, button 2 for statistics'
+h[i] = '                    button 1: photometry'
+i = i + 1
+h[i] = '                    button 2: center on current position'
+i = i + 1
+h[i] = '                    button 3: image statistics'
 i = i + 2
 h[i] = 'BUTTONS:'
 i = i + 1
 h[i] = 'Invert:          inverts the current color table'
 i = i + 1
-h[i] = 'ResetColor:      sets brightness and contrast back to default values'
+h[i] = 'Restretch:       sets min and max to preserve display colors while linearizing the color table'
 i = i + 1
-h[i] = 'AutoScale:       sets min and max to show data values around histogram peak'
+h[i] = 'AutoScale:       sets min and max to show data values around image median'
 i = i + 1
 h[i] = 'FullRange:       sets min and max to show the full data range of the image'
 i = i + 1
@@ -3460,6 +3874,8 @@ i = i + 1
 h[i] = '    p: aperture photometry at current position'
 i = i + 1
 h[i] = '    i: image statistics at current position'
+i = i + 1
+h[i] = '    q: quits atv'
 i = i + 2
 h[i] = 'IDL COMMAND LINE HELP:'
 i = i + 1
@@ -3471,6 +3887,12 @@ h[i] = 'To pass a fits filename to atv:'
 i = i + 1
 h[i] = '    atv, fitsfile_name [, options] (enclose filename in single quotes) '
 i = i + 1
+h[i] = 'Command-line options are: '
+i = i + 1
+h[i]  = '   [,min = min_value] [,max=max_value] [,/linear] [,/log] [,/histeq]'
+i = i + 1
+h[i]  = '   [,/block] [,/align] [,/stretch] [,header=header]'
+i = i + 2
 h[i] = 'To overplot a contour plot on the draw window:'
 i = i + 1
 h[i] = '    atvcontour, array_name [, options...]'
@@ -3489,7 +3911,27 @@ h[i] =  'the same as those for the idl contour, xyouts, and plot commands,'
 i = i + 1
 h[i] = 'except that data coordinates are always used.' 
 i = i + 1
-h[i] = 'The default color is red for overplots done from the idl command line.'
+h[i] = 'The default color for overplots is red.'
+i = i + 2
+h[i] = 'The lowest 8 entries in the color table are:'
+i = i + 1
+h[i] = '    0 = black'
+i = i + 1
+h[i] = '    1 = red'
+i = i + 1
+h[i] = '    2 = green'
+i = i + 1
+h[i] = '    3 = blue'
+i = i + 1
+h[i] = '    4 = cyan'
+i = i + 1
+h[i] = '    5 = magenta'
+i = i + 1
+h[i] = '    6 = yellow'
+i = i + 1
+h[i] = '    7 = white'
+i = i + 1
+h[i] = '    The top entry in the color table is also reserved for white. '
 i = i + 2
 h[i] = 'Other commands:'
 i = i + 1
@@ -3499,7 +3941,7 @@ h[i] = 'atv_shutdown:   quits atv'
 i = i + 1
 h[i] = 'NOTE: If atv should crash, type atv_shutdown at the idl prompt.'
 i = i + 5
-h[i] = strcompress('ATV.PRO version '+state.version+' by Aaron J. Barth')
+h[i] = strcompress('ATV.PRO version '+state.version)
 i = i + 1
 h[i] = 'For full instructions, or to download the most recent version, go to:'
 i = i + 1
@@ -3573,9 +4015,9 @@ ymax = round(ymax)
 cut = float(main_image[xmin:xmax, ymin:ymax])
 npix = (xmax - xmin + 1) * (ymax - ymin + 1)
 
-cutmin = min(cut)
-cutmax = max(cut)
-cutmean = mean(cut)
+cutmin = min(cut, max=maxx, /nan)
+cutmax = maxx
+cutmean = mean(cut, /nan)
 cutmedian = median(cut)
 cutstddev = stddev(cut)
 
@@ -3868,7 +4310,8 @@ MINSHIFT = 0.3
 ; max possible x or y direction shift
 MAXSHIFT = 3
 
-bigbox=1.5*state.centerboxsize
+; Bug fix 4/16/2000: added call to round to make sure bigbox is an integer
+bigbox=round(1.5*state.centerboxsize)
 
 sz = size(main_image)
 
@@ -3881,9 +4324,7 @@ db = (bigbox-1)/2
 xx = state.cursorpos[0]
 yy = state.cursorpos[1]
 
-;
 ; first find max pixel in box around the cursor
-;
 x0 = (xx-db) > 0
 x1 = (xx+db) < (sz(1)-1)
 y0 = (yy-db) > 0
@@ -3900,10 +4341,7 @@ yy = my + y0
 xcen = xx
 ycen = yy
 
-;
 ; then find centroid 
-;
-
 if  (n_elements(xcen) gt 1) then begin
     xx = round(total(xcen)/n_elements(xcen)) 
     yy = round(total(ycen)/n_elements(ycen)) 
@@ -3915,9 +4353,9 @@ niter = 1
 ;	cut out relevant portion
 sz = size(main_image)
 x0 = round((xx-dc) > 0)		; need the ()'s
-x1 = round((xx+dc) < (sz(1)-1))
+x1 = round((xx+dc) < (sz[1]-1))
 y0 = round((yy-dc) > 0)
-y1 = round((yy+dc) < (sz(2)-1))
+y1 = round((yy+dc) < (sz[2]-1))
 xs = x1 - x0 + 1
 ys = y1 - y0 + 1
 cut = float(main_image[x0:x1, y0:y1])
@@ -3962,7 +4400,7 @@ nrad = n_elements(rad)
 ; check the peak
 w = where(prof eq max(prof))
 if float(rad(w[0])) ne min(rad) then begin
-state.photwarning = 'Warning: Profile peak not at object center!'
+state.photwarning = 'Warning: Profile peak is off-center!'
   return,-1
 endif
 
@@ -4004,7 +4442,6 @@ pro atv_radplotf, x, y, fwhm
 ; median.
 ; 
 ; original version by M. Liu, adapted for inclusion in ATV by AJB
-
 
 common atv_state
 common atv_images
@@ -4062,17 +4499,20 @@ for i = 0L,(ny-1) do $          ; row loop
 
 ; get sky level by masking and then medianing remaining pixels
 ; note use of "gt" to avoid picking same pixels as flux aperture
-;  (checked graphically and there is no overlap between the 2 regions)
-;  can disable sky subtraction then by setting insky=outsky
 ns = 0
 msky = 0.0
 errsky = 0.0
 
 in2 = insky^(2.0)
 out2 = outsky^(2.0)
-w = where((distsq gt in2) and (distsq le out2),ns)
-
-skyann = img[w]
+if (in2 LT max(distsq)) then begin
+    w = where((distsq gt in2) and (distsq le out2),ns)
+    skyann = img[w] 
+endif else begin
+    w = where(distsq EQ distsq)
+    skyann = img[w]
+    state.photwarning = 'Not enough pixels in sky!'
+endelse
 
 msky = median(skyann)
 errsky = stddev(skyann)
@@ -4164,119 +4604,32 @@ end
 
 ;-----------------------------------------------------------------------
 
-pro atv_mapphot_refresh
+pro atv_apphot_refresh
 
-; Aperture photometry routine by W. Colley, adapted for 
-; inclusion in ATV by AJB
+; Do aperture photometry using idlastro daophot routines.
 
 common atv_state
 common atv_images
 
 state.photwarning = 'Warnings: None.'
 
-atv_imcenterf, x, y
+; Center on the object position nearest to the cursor
+if (state.centerboxsize GT 0) then begin
+    atv_imcenterf, x, y
+endif else begin   ; no centering
+    x = state.cursorpos[0]
+    y = state.cursorpos[1]
+endelse
 
+; Make sure that object position is on the image
 x = 0 > x < (state.image_size[0] - 1)
 y = 0 > y < (state.image_size[1] - 1)
-
-; calculate the sky
-
-xmin = (x - state.outersky) > 0
-xmax = (xmin + (2 * state.outersky + 1)) < (state.image_size[0] - 1)
-ymin = (y - state.outersky) > 0
-ymax = (ymin + (2 * state.outersky + 1)) < (state.image_size[1] - 1)
-
-small_image = main_image[xmin:xmax, ymin:ymax]
-nx = (size(small_image))[1]
-ny = (size(small_image))[2]
-i = lindgen(nx)#(lonarr(ny)+1)
-j = (lonarr(nx)+1)#lindgen(ny)
-xc = x - xmin
-yc = y - ymin
-
-w = where( (((i - xc)^2 + (j - yc)^2) GE state.innersky^2) AND $
-           (((i - xc)^2 + (j - yc)^2) LE state.outersky^2),  nw)
 
 if ((x - state.outersky) LT 0) OR $
   ((x + state.outersky) GT (state.image_size[0] - 1)) OR $
   ((y - state.outersky) LT 0) OR $
   ((y + state.outersky) GT (state.image_size[1] - 1)) then $
   state.photwarning = 'Warning: Sky apertures fall outside image!'
-
-if nw EQ 0 then begin
-;    print, 'No pixels in sky!!!!'
-    state.photwarning = 'Warning: No pixels in sky!'
-;    xcent = -1.
-;    ycent = -1.
-    sky = -1.
-    flux = -1.
-    goto, BADSKIP
-endif
-
-if nw GT 0 then sky = median(small_image(w))
-
-
-; do the photometry
-
-mag = 1.
-
-s = size(main_image)
-nxi = s[1]
-nyi = s[2]
-
-instr = string(0)
-
-nx = ceil(state.r*2.)+4
-pi = !pi
-twopi = pi*2.
-
-flux = float(x-x)
-xcent = flux
-ycent = flux
-s = size(x)
-
-i = findgen(nx)-float(nx)*0.5
-ii0 = i # (i-i+1)
-jj0 = (i-i+1) # i
-
-i = (findgen(nx*mag)-(float(nx)*0.5)*mag - mag*0.5 + 0.5) / mag
-ii1 = i # (i-i+1)
-jj1 = (i-i+1) # i
-
-str = string(0)
-    
-xcent = 0.
-ycent = 0.
-
-ix = floor(x)
-iy = floor(y)
-
-xi = (x-float(ix))
-yi = (y-float(iy))
-
-rx = ii0-xi
-ry = jj0-yi
-
-mask0 = (rx*rx + ry*ry le (state.r-0.5)^2)
-clipmask = (rx*rx + ry*ry le (state.r+0.5)^2)
-
-rx = ii1-xi
-ry = jj1-yi
-
-mask1 = (rx*rx + ry*ry le state.r^2)
-
-bm0 = rebin(mask0,nx*mag,nx*mag,/sample)
-mask2 = (mask1 eq 1) * (bm0 eq 0)
-
-norm = total(mask1)
-
-ix = floor(x)
-iy = floor(y)
-
-i1 = (ix-nx/2) > 0
-i2 = (ix+nx/2-1) < (state.image_size[0] - 1)
-j1 = (iy-nx/2) > 0
-j2 = (iy+nx/2-1) < (state.image_size[1] - 1)
 
 ; Condition to test whether phot aperture is off the image
 if (x LT state.r) OR $
@@ -4285,23 +4638,69 @@ if (x LT state.r) OR $
   ((state.image_size[1] - y) LT state.r) then begin
     flux = -1.
     state.photwarning = 'Warning: Aperture Outside Image Border!'
-    goto, BADSKIP
+endif
     
-endif else begin
-    
-    marr_sml = main_image[i1:i2,j1:j2] - sky
-    marr = marr_sml
-    t = marr*mask2+rebin(mask0*marr_sml,nx*mag,nx*mag,/sample)
-    
-    xcent = total(ii1*t)/total(t) + float(i1+nx/2)
-    ycent = total(jj1*t)/total(t) + float(j1+nx/2)
-    
-    flux = total(marr_sml*mask0) + total(marr*mask2)
-        
-endelse
+phpadu = 1.0                    ; don't convert counts to electrons
+apr = [state.r]
+skyrad = [state.innersky, state.outersky]
+; Assume that all pixel values are good data
+badpix = [state.image_min-1, state.image_max+1]  
 
-BADSKIP: begin
-end
+if (state.skytype EQ 1) then begin    ; calculate median sky value
+
+    xmin = (x - state.outersky) > 0
+    xmax = (xmin + (2 * state.outersky + 1)) < (state.image_size[0] - 1)
+    ymin = (y - state.outersky) > 0
+    ymax = (ymin + (2 * state.outersky + 1)) < (state.image_size[1] - 1)
+    
+    small_image = main_image[xmin:xmax, ymin:ymax]
+    nx = (size(small_image))[1]
+    ny = (size(small_image))[2]
+    i = lindgen(nx)#(lonarr(ny)+1)
+    j = (lonarr(nx)+1)#lindgen(ny)
+    xc = x - xmin
+    yc = y - ymin
+    
+    w = where( (((i - xc)^2 + (j - yc)^2) GE state.innersky^2) AND $
+               (((i - xc)^2 + (j - yc)^2) LE state.outersky^2),  nw)
+    
+    if ((x - state.outersky) LT 0) OR $
+      ((x + state.outersky) GT (state.image_size[0] - 1)) OR $
+      ((y - state.outersky) LT 0) OR $
+      ((y + state.outersky) GT (state.image_size[1] - 1)) then $
+      state.photwarning = 'Warning: Sky apertures fall outside image!'
+    
+    if (nw GT 0) then  begin
+        skyval = median(small_image(w)) 
+    endif else begin
+        skyval = -1
+        state.photwarning = 'Warning: No pixels in sky!'
+    endelse
+endif
+
+; Do the photometry now
+case state.skytype of
+    0: aper, main_image, [x], [y], flux, errap, sky, skyerr, phpadu, apr, $
+      skyrad, badpix, flux=abs(state.magunits-1), /silent
+    1: aper, main_image, [x], [y], flux, errap, sky, skyerr, phpadu, apr, $
+      skyrad, badpix, flux=abs(state.magunits-1), /silent, $
+      setskyval = skyval
+    2: aper, main_image, [x], [y], flux, errap, sky, skyerr, phpadu, apr, $
+      skyrad, badpix, flux=abs(state.magunits-1), /silent, $
+      setskyval = 0
+endcase
+
+flux = flux[0]
+sky = sky[0]
+
+if (flux EQ 99.999) then begin
+    state.photwarning = 'Warning: Error in computing flux!'
+    flux = -1.0
+endif
+
+if (state.magunits EQ 1) then begin    ; apply zeropoint
+    flux = flux + state.photzpt - 25.0
+endif
 
 ; Run atv_radplotf and plot the results
 
@@ -4311,19 +4710,29 @@ atv_radplotf, x, y, fwhm
 ; overplot the phot apertures on radial plot
 plots, [state.r, state.r], !y.crange, line = 1, color=2, thick=2, psym=0
 xyouts, /data, state.r, !y.crange(1)*0.92, ' aprad', $
-  color=2, charsize=1.3
-plots, [state.innersky,state.innersky], !y.crange, $
-  line = 1, color=4, thick=2, psym=0
-xyouts, /data, state.innersky, !y.crange(1)*0.85, ' insky', $
-  color=4, charsize=1.3
-plots, [state.outersky,state.outersky], !y.crange, $
-  line = 1, color=5, thick=2, psym=0
-xyouts, /data, state.outersky * 0.82, !y.crange(1)*0.75, ' outsky', $
-  color=5, charsize=1.3
+  color=2, charsize=1.5
+if (state.skytype NE 2) then begin
+    plots, [state.innersky,state.innersky], !y.crange, $
+      line = 1, color=4, thick=2, psym=0
+    xyouts, /data, state.innersky, !y.crange(1)*0.85, ' insky', $
+      color=4, charsize=1.5
+    plots, [state.outersky,state.outersky], !y.crange, $
+      line = 1, color=5, thick=2, psym=0
+    xyouts, /data, state.outersky * 0.82, !y.crange(1)*0.75, ' outsky', $
+      color=5, charsize=1.5
+endif
+plots, !x.crange, [sky, sky], color=1, thick=2, psym=0, line = 2
+xyouts, /data, state.innersky + (0.1*(state.outersky-state.innersky)), $
+  sky+0.06*(!y.crange[1] - sky), 'sky level', color=1, charsize=1.5
 
 atv_resetwindow
 
 ; output the results
+
+case state.magunits of
+    0: fluxstr = 'Object counts: '
+    1: fluxstr = 'Magnitude: '
+endcase
   
 state.centerpos = [x, y]
 
@@ -4331,7 +4740,7 @@ tmp_string = string(state.cursorpos[0], state.cursorpos[1], $
                     format = '("Cursor position:  x=",i4,"  y=",i4)' )
 tmp_string1 = string(state.centerpos[0], state.centerpos[1], $
                     format = '("Object centroid:  x=",f6.1,"  y=",f6.1)' )
-tmp_string2 = string(flux, format = '("Object counts: ",g12.6)' )
+tmp_string2 = strcompress(fluxstr+string(flux, format = '(g12.6)' ))
 tmp_string3 = string(sky, format = '("Sky level: ",g12.6)' )
 tmp_string4 = string(fwhm, format='("FWHM (pix): ",g7.3)' )
 
@@ -4345,6 +4754,16 @@ widget_control, state.skyresult_id, set_value = tmp_string3
 widget_control, state.photresult_id, set_value = tmp_string2
 widget_control, state.fwhm_id, set_value = tmp_string4
 widget_control, state.photwarning_id, set_value=state.photwarning
+
+; Uncomment next lines if you want atv to output the WCS coords of 
+; the centroid for the photometry object:
+;if (state.wcstype EQ 'angle') then begin
+;    xy2ad, state.centerpos[0], state.centerpos[1], *(state.astr_ptr), $
+;      clon, clat
+;    wcsstring = atv_wcsstring(clon, clat, (*state.astr_ptr).ctype,  $
+;                state.equinox, state.display_coord_sys, state.display_equinox)
+;    print, 'Centroid WCS coords: ', wcsstring
+;endif
 
 atv_tvphot
 
@@ -4366,7 +4785,6 @@ erase
 
 x = round(state.centerpos[0])
 y = round(state.centerpos[1])
-
 
 boxsize = round(state.outersky * 1.2)
 xsize = (2 * boxsize) + 1
@@ -4428,16 +4846,21 @@ plot, [0, 1], /noerase, /nodata, xstyle = 1, ystyle = 1, $
   /device, position = dev_pos, color=7, $
   xrange = x_ran, yrange = y_ran
 
-tvcircle, /data, state.r, x, y, color=2, thick=2, psym=0
-tvcircle, /data, state.innersky, x, y, color=4, thick=2, psym=0
-tvcircle, /data, state.outersky, x, y, color=5, thick=2, psym=0
+tvcircle, /data, state.r, state.centerpos[0], state.centerpos[1], $
+  color=2, thick=2, psym=0
+if (state.skytype NE 2) then begin
+    tvcircle, /data, state.innersky, state.centerpos[0], state.centerpos[1], $
+      color=4, thick=2, psym=0
+    tvcircle, /data, state.outersky, state.centerpos[0], state.centerpos[1], $
+      color=5, thick=2, psym=0
+endif
 
 atv_resetwindow
 end
 
 ;----------------------------------------------------------------------
 
-pro atv_mapphot_event, event
+pro atv_apphot_event, event
 
 common atv_state
 common atv_images
@@ -4447,34 +4870,42 @@ widget_control, event.id, get_uvalue = uvalue
 case uvalue of
 
     'centerbox': begin
-        state.centerboxsize = long(event.value) > 3
-        if ( (state.centerboxsize / 2 ) EQ $
-             round(state.centerboxsize / 2.)) then $
-          state.centerboxsize = state.centerboxsize + 1
-        atv_mapphot_refresh
+        if (event.value EQ 0) then begin
+            state.centerboxsize = 0
+        endif else begin
+            state.centerboxsize = long(event.value) > 3
+            if ( (state.centerboxsize / 2 ) EQ $
+                 round(state.centerboxsize / 2.)) then $
+              state.centerboxsize = state.centerboxsize + 1
+        endelse
+        atv_apphot_refresh
     end
         
     'radius': begin
         state.r = 1 > long(event.value) < state.innersky
-        atv_mapphot_refresh
+        atv_apphot_refresh
     end
 
     'innersky': begin
         state.innersky = state.r > long(event.value) < (state.outersky - 1)
-        atv_mapphot_refresh
+        state.innersky = 2 > state.innersky
+        if (state.outersky EQ state.innersky + 1) then $
+          state.outersky = state.outersky + 1
+        atv_apphot_refresh
     end
 
     'outersky': begin
-        state.outersky = long(event.value) > (state.innersky + 1)
-        atv_mapphot_refresh
+        state.outersky = long(event.value) > (state.innersky + 2)
+        atv_apphot_refresh
     end
 
     'showradplot': begin
         widget_control, state.showradplot_id, get_value=val
         case val of
             'Show Radial Profile': begin
+                ysize = 350 < (state.screen_ysize - 350)
                 widget_control, state.radplot_widget_id, $
-                  xsize=500, ysize=350
+                  xsize=500, ysize=ysize
                 widget_control, state.showradplot_id, $
                   set_value='Hide Radial Profile'
             end
@@ -4485,10 +4916,17 @@ case uvalue of
                   set_value='Show Radial Profile'
              end
          endcase
-         atv_mapphot_refresh
+         atv_apphot_refresh
     end
 
-    'mapphot_done': widget_control, event.top, /destroy
+    'magunits': begin
+        state.magunits = event.value
+        atv_apphot_refresh
+    end
+
+    'photsettings': atv_apphot_settings
+
+    'apphot_done': widget_control, event.top, /destroy
     else:
 endcase
 
@@ -4496,7 +4934,48 @@ end
 
 ;----------------------------------------------------------------------
 
-pro atv_mapphot
+pro atv_apphot_settings
+
+; Routine to get user input on various photometry settings
+
+common atv_state
+
+skyline = strcompress('0, button, IDLPhot Sky|Median Sky|No Sky Subtraction,'+$
+                      'exclusive,' + $
+                      'label_left=Select Sky Algorithm: , set_value = ' + $
+                      string(state.skytype))
+
+magline = strcompress('0, button, Counts|Magnitudes, exclusive,' + $
+                      'label_left = Select Output Units: , set_value =' + $
+                      string(state.magunits))
+
+zptline = strcompress('0, float,'+string(state.photzpt) + $
+                      ',label_left = Magnitude Zeropoint:,' + $
+                      'width = 12')
+
+formdesc = [skyline, $
+            magline, $
+            zptline, $
+            '0, label, [Magnitude = zeropoint - 2.5 log (counts)]', $
+            '0, button, Apply Settings, quit', $
+            '0, button, Cancel, quit']
+
+textform = cw_form(formdesc, /column, $
+                   title = 'atv photometry settings')
+
+if (textform.tag5 EQ 1) then return ; cancelled
+
+state.skytype = textform.tag0
+state.magunits = textform.tag1
+state.photzpt = textform.tag2
+
+atv_apphot_refresh
+
+end
+
+;----------------------------------------------------------------------
+
+pro atv_apphot
 
 ; aperture photometry front end
 
@@ -4504,41 +4983,39 @@ common atv_state
 
 state.cursorpos = state.coord
 
-if (not (xregistered('atv_mapphot', /noshow))) then begin
+if (not (xregistered('atv_apphot', /noshow))) then begin
 
-    mapphot_base = $
+    apphot_base = $
       widget_base(/floating, $
                   /base_align_center, $
                   group_leader = state.base_id, $
                   /column, $
                   title = 'atv aperture photometry', $
-                  uvalue = 'mapphot_base')
+                  uvalue = 'apphot_base')
     
-    mapphot_top_base = widget_base(mapphot_base, /row, /base_align_center)
+    apphot_top_base = widget_base(apphot_base, /row, /base_align_center)
 
-    mapphot_data_base1 = widget_base( $
-            mapphot_top_base, /column, frame=0)
+    apphot_data_base1 = widget_base( $
+            apphot_top_base, /column, frame=0)
 
-    mapphot_data_base2 = widget_base( $
-            mapphot_top_base, /column, frame=0)
+    apphot_data_base2 = widget_base( $
+            apphot_top_base, /column, frame=0)
 
-    mapphot_zoom_base = widget_base(mapphot_data_base2, /row, $
-                           frame=1, /base_align_center)
-    mapphot_draw_base = widget_base( $
-            mapphot_base, /row, /base_align_center, frame=0)
+    apphot_draw_base = widget_base( $
+            apphot_base, /row, /base_align_center, frame=0)
 
-    mapphot_data_base1a = widget_base(mapphot_data_base1, /column, frame=1)
+    apphot_data_base1a = widget_base(apphot_data_base1, /column, frame=1)
     tmp_string = $
       string(1000, 1000, $
              format = '("Cursor position:  x=",i4,"  y=",i4)' )
 
     state.cursorpos_id = $
-      widget_label(mapphot_data_base1a, $
+      widget_label(apphot_data_base1a, $
                    value = tmp_string, $
                    uvalue = 'cursorpos')
 
     state.centerbox_id = $
-      cw_field(mapphot_data_base1a, $
+      cw_field(apphot_data_base1a, $
                /long, $
                /return_events, $
                title = 'Centering box size (pix):', $
@@ -4551,12 +5028,12 @@ if (not (xregistered('atv_mapphot', /noshow))) then begin
              format = '("Object centroid:  x=",f7.1,"  y=",f7.1)' )
     
     state.centerpos_id = $
-      widget_label(mapphot_data_base1a, $
+      widget_label(apphot_data_base1a, $
                    value = tmp_string1, $
                    uvalue = 'centerpos')
 
     state.radius_id = $
-      cw_field(mapphot_data_base1a, $
+      cw_field(apphot_data_base1a, $
                /long, $
                /return_events, $
                title = 'Aperture radius:', $
@@ -4565,7 +5042,7 @@ if (not (xregistered('atv_mapphot', /noshow))) then begin
                xsize = 5)
     
     state.innersky_id = $
-      cw_field(mapphot_data_base1a, $
+      cw_field(apphot_data_base1a, $
                /long, $
                /return_events, $
                title = 'Inner sky radius:', $
@@ -4574,7 +5051,7 @@ if (not (xregistered('atv_mapphot', /noshow))) then begin
                xsize = 5)
     
     state.outersky_id = $
-      cw_field(mapphot_data_base1a, $
+      cw_field(apphot_data_base1a, $
                /long, $
                /return_events, $
                title = 'Outer sky radius:', $
@@ -4582,8 +5059,12 @@ if (not (xregistered('atv_mapphot', /noshow))) then begin
                value = state.outersky, $
                xsize = 5)
     
+    photzoom_widget_id = widget_draw( $
+         apphot_data_base2, $
+         scr_xsize=state.photzoom_size, scr_ysize=state.photzoom_size)
+
     tmp_string4 = string(0.0, format='("FWHM (pix): ",g7.3)' )
-    state.fwhm_id = widget_label(mapphot_data_base2, $
+    state.fwhm_id = widget_label(apphot_data_base2, $
                                  value=tmp_string4, $
                                  uvalue='fwhm')
 
@@ -4591,7 +5072,7 @@ if (not (xregistered('atv_mapphot', /noshow))) then begin
                          format = '("Sky level: ",g12.6)' )
     
     state.skyresult_id = $
-      widget_label(mapphot_data_base2, $
+      widget_label(apphot_data_base2, $
                    value = tmp_string3, $
                    uvalue = 'skyresult')
     
@@ -4599,46 +5080,48 @@ if (not (xregistered('atv_mapphot', /noshow))) then begin
                          format = '("Object counts: ",g12.6)' )
     
     state.photresult_id = $
-      widget_label(mapphot_data_base2, $
+      widget_label(apphot_data_base2, $
                    value = tmp_string2, $
                    uvalue = 'photresult', $
                    /frame)
 
     state.photwarning_id = $
-      widget_label(mapphot_data_base1, $
-                   value='Warnings: None.', $
-                   /dynamic_resize, frame=1)
+      widget_label(apphot_data_base1, $
+                   value='-------------------------', $
+                   /dynamic_resize, $
+                   frame=1)
+
+    photsettings_id = $
+      widget_button(apphot_data_base1, $
+                    value = 'Photometry Settings...', $
+                    uvalue = 'photsettings')
 
     state.showradplot_id = $
-      widget_button(mapphot_data_base1, $
+      widget_button(apphot_data_base1, $
                     value = 'Show Radial Profile', $
                     uvalue = 'showradplot')
-
-    mapphot_done = $
-      widget_button(mapphot_data_base1, $
-                    value = 'Done', $
-                    uvalue = 'mapphot_done')
     
     state.radplot_widget_id = widget_draw( $
-         mapphot_draw_base, scr_xsize=1, scr_ysize=1)
+         apphot_draw_base, scr_xsize=1, scr_ysize=1)
 
-    photzoom_widget_id = widget_draw( $
-         mapphot_zoom_base, $
-         scr_xsize=state.photzoom_size, scr_ysize=state.photzoom_size)
+    apphot_done = $
+      widget_button(apphot_data_base2, $
+                    value = 'Done', $
+                    uvalue = 'apphot_done')
 
-    widget_control, mapphot_base, /realize
+    widget_control, apphot_base, /realize
 
     widget_control, photzoom_widget_id, get_value=tmp_value
     state.photzoom_window_id = tmp_value
     widget_control, state.radplot_widget_id, get_value=tmp_value
     state.radplot_window_id = tmp_value
 
-    xmanager, 'atv_mapphot', mapphot_base, /no_block
+    xmanager, 'atv_apphot', apphot_base, /no_block
     
     atv_resetwindow
 endif
 
-atv_mapphot_refresh
+atv_apphot_refresh
 
 end
 
@@ -4651,97 +5134,152 @@ end
 ; then display the new image to the current ATV window.
 
 pro atv, image, $
-             min = minimum, $
-             max = maximum, $
-             autoscale = autoscale,  $
-             linear = linear, $
-             log = log, $
-             histeq = histeq
+         min = minimum, $
+         max = maximum, $
+         autoscale = autoscale,  $
+         linear = linear, $
+         log = log, $
+         histeq = histeq, $
+         block = block, $
+         align = align, $
+         stretch = stretch, $
+         header = header
 
 common atv_state
 common atv_images
 
+if (not(keyword_set(block))) then block = 0 else block = 1
+
+newimage = 0
+
 if ( (n_params() EQ 0) AND (xregistered('atv', /noshow))) then begin
     print, 'USAGE: atv, array_name OR fitsfile'
-    print, '            [,min = min_value] [,max=max_value]'
-    print, '            [,/autoscale] [,/linear] [,/log] [,/histeq]'
+    print, '         [,min = min_value] [,max=max_value] '
+    print, '         [,/linear] [,/log] [,/histeq] [,/block]'
+    print, '         [,/align] [,/stretch] [,header=header]'
+    return
+endif
+
+if (!d.name NE 'X' AND !d.name NE 'WIN' AND !d.name NE 'MAC') then begin
+    print, 'Graphics device must be set to X, WIN, or MAC for ATV to work.'
     retall
 endif
 
-if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') ) then begin
-    if ( (size(image))[0] NE 2) then begin
-        print, 'Input data must be a 2-d array!'
-        retall
-    endif
+; Before starting up atv, get the user's external window id.  We can't
+; use the atv_getwindow routine yet because we haven't run atv
+; startup.  A subtle issue: atv_resetwindow won't work the first time
+; through because xmanager doesn't get called until the end of this
+; routine.  So we have to deal with the external window explicitly in
+; this routine.
+if (not (xregistered('atv', /noshow))) then begin
+   userwindow = !d.window
+   atv_startup
+   align = 0B     ; align, stretch keywords make no sense if we are
+   stretch = 0B   ; just starting up. 
 endif
+
 
 ; If image is a filename, read in the file
-if ( (n_params() NE 0) AND (size(image, /tname) EQ 'STRING') ) then begin
-    fits_read, image, tmp_image, head
-    if ( (size(tmp_image))[0] NE 2 ) then begin
-        print, 'Error-- selected file is not a 2-D fits image!'
-        junk = size( temporary(tmp_image))
-        retall
-    endif
-    main_image = temporary(tmp_image)
-    imagename = image
+if ( (n_params() NE 0) AND (size(image, /tname) EQ 'STRING')) then begin
+    ifexists = findfile(image, count=count)
+    if (count EQ 0) then begin
+        print, 'ERROR: File not found!'
+    endif else begin
+        atv_readfits, fitsfilename=image, newimage=newimage
+    endelse
 endif
 
-if ( (n_params() EQ 0) AND (not (xregistered('atv', /noshow)))) then begin
-;   Define default startup image 
-    main_image = byte((findgen(500)*2-200) # (findgen(500)*2-200))
-    imagename = ''
-    head = ''
-endif else begin
-    scaled_image = 0
-    display_image = 0
-    if (size(image, /tname) NE 'STRING') then begin
+; Check for existence of array
+if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') AND $
+   (size(image, /tname) EQ 'UNDEFINED')) then begin
+    print, 'ERROR: Data array does not exist!'
+endif
+
 ; If user has passed atv a data array, read it into main_image.
-; In this case, the file name and header are blank.
+if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') AND $
+   (size(image, /tname) NE 'UNDEFINED')) then begin
+; Make sure it's a 2-d array
+    if ( (size(image))[0] NE 2) then begin
+        print, 'ERROR: Input data must be a 2-d array!'    
+    endif else begin
         main_image = image
-        imagename = ''
-        head = ''
+        newimage = 1
+        state.imagename = ''
+        state.title_extras = ''
+        atv_setheader, header
+    endelse
+endif
+
+;   Define default startup image 
+if (n_elements(main_image) LE 1) then begin
+    main_image = cos(((findgen(500)- 250)*2) # ((findgen(500)-250)))
+    imagename = ''
+    newimage = 1
+    atv_setheader, ''
+endif
+
+
+if (newimage EQ 1) then begin  
+; skip this part if new image is invalid or if user selected 'cancel'
+; in dialog box
+    atv_settitle
+    atv_getstats, align=align
+    
+    delvarx, display_image
+
+    if n_elements(minimum) GT 0 then begin
+        state.min_value = minimum
     endif
-endelse
+    
+    if n_elements(maximum) GT 0 then begin 
+        state.max_value = maximum
+    endif
+    
+    if state.min_value GE state.max_value then begin
+        state.min_value = state.max_value - 1.
+    endif
+    
+    if (keyword_set(linear)) then state.scaling = 0
+    if (keyword_set(log))    then state.scaling = 1
+    if (keyword_set(histeq)) then state.scaling = 2
+    
+; Only perform autoscale if current stretch invalid or stretch keyword
+; not set
+    IF (state.min_value EQ state.max_value) OR $
+      (keyword_set(stretch) EQ 0) THEN BEGIN 
 
-if (not (xregistered('atv', /noshow))) then atv_startup
-state.imagename = imagename
+       if (keyword_set(autoscale) OR $
+           ((state.default_autoscale EQ 1) AND (n_elements(minimum) EQ 0) $
+            AND (n_elements(maximum) EQ 0)) ) $
+         then atv_autoscale
+    ENDIF 
+    atv_set_minmax
+    
+    IF NOT keyword_set(align) THEN BEGIN 
+       state.zoom_level = 0
+       state.zoom_factor = 1.0
+    ENDIF 
 
-atv_setheader, head
-atv_settitle
-atv_getstats
-
-; check for command line keywords
-
-if n_elements(minimum) GT 0 then begin
-    state.min_value = minimum
+    atv_displayall
+    
+    atv_resetwindow
 endif
 
-if n_elements(maximum) GT 0 then begin 
-    state.max_value = maximum
+; Register the widget with xmanager if it's not already registered
+if (not(xregistered('atv', /noshow))) then begin
+    nb = abs(block - 1)
+    xmanager, 'atv', state.base_id, no_block = nb, cleanup = 'atv_shutdown'
+    wset, userwindow
+    ; if blocking mode is set, then when the procedure reaches this
+    ; line atv has already been terminated.  If non-blocking, then
+    ; the procedure continues below.  If blocking, then the state
+    ; structure doesn't exist any more so don't set active window.
+    if (block EQ 0) then state.active_window_id = userwindow
 endif
 
-if state.min_value GE state.max_value then begin
-    state.min_value = state.max_value - 1.
-endif
-
-atv_set_minmax
-
-if (keyword_set(autoscale) OR $
-    ((state.default_autoscale EQ 1) AND (n_elements(minimum) EQ 0) $
-     AND (n_elements(maximum) EQ 0)) ) $
-  then atv_autoscale
-
-if (keyword_set(linear)) then state.scaling = 0
-if (keyword_set(log))    then state.scaling = 1
-if (keyword_set(histeq)) then state.scaling = 2
-
-state.zoom_level = 0
-state.zoom_factor = 1.0
-
-atv_displayall
-
-atv_resetwindow
 end
+
+
+
 
 
