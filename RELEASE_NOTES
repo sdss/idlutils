@@ -5,9 +5,15 @@ DIERFC: New math function for erfc.
 DJS_BATCH: Add a call to COUNT_FREELUN().  Do not try to use more hosts than
                there are free file pointers (LUNs) due to a limitation in
                executing the SPAWN command.
+EMBED_STAMP: New procedure to take one image and add it to another, starting
+             at an arbitrary position (SSHIFTing appropriately) without 
+             rotation. 
 GVERTS: Bug fix for the case of single-cap polygons.
 IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
+MULTI_PSF_FIT: New procedure which, given an image and a PSF, finds the
+               best fit combination of N PSFs which explains the image
+               (user supplies number of desired PSFs N)  
 NW_RGB_MAKE: add new keyword COLORS to pass back final colors used for jpg
 RADEC_GREATCIRCLE: In the internal function RADEC_GCFN, return the
                concatenation of all the chi values in both mu+nu,
