@@ -22,7 +22,7 @@
 ;   mean:       Computed mean
 ;   median:     Computed median
 ;   sigma:      Computed sigma
-;   mask:       Mask set to 0 for good points, and 1 for rejected points
+;   mask:       Mask set to 1 for good points, and 0 for rejected points
 ;
 ; PROCEDURES CALLED:
 ;
@@ -36,12 +36,11 @@
 ;       then the returned values are based upon the previous iteration.
 ;
 ; BUGS:
-;   Raw IDL routines are WAY too slow; this would be much faster if it
-;     was cast into C - Hogg
 ;
 ; REVISION HISTORY:
 ;   16-Jun-1999  Written by David Schlegel, Princeton
 ;   11-Sep-2000  Speeded up by Hogg and Eisenstein
+;   18-Sep-2000  Note change in MASK values to =1 for good (unrejected) points.
 ;-
 ;------------------------------------------------------------------------------
 pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
@@ -82,7 +81,7 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
    ; Compute the mean + stdev of the entire image.
    ; These values will be returned if there are fewer than 2 good points.
 
-   mask = fltarr(ngood)+1.0
+   mask = bytarr(ngood) + 1
    fmean = total(image*mask) / ngood
    fsig = sqrt(total((image-fmean)^2*mask) / (ngood-1))
    iiter = 1
