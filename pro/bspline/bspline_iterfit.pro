@@ -70,7 +70,8 @@
 function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
  x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, $
  bkpt=bkpt, oldset=oldset, maxiter=maxiter, upper=upper, lower=lower, $
- outmask=outmask, fullbkpt=fullbkpt, funcname=funcname, _EXTRA=EXTRA
+ inmask=inmask, outmask=outmask, fullbkpt=fullbkpt, $
+ funcname=funcname, _EXTRA=EXTRA
 
    if (n_params() LT 2) then begin
       print, 'Syntax -  sset = bspline_iterfit( )'
@@ -107,6 +108,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    endif
 
    outmask = invvar GT 0
+   if keyword_set(inmask) then outmask = outmask * inmask
    these = where(outmask, nthese)
  
    ;----------
@@ -167,6 +169,8 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ywork = ydata[xsort]
    invwork = invvar[xsort]
    if (keyword_set(x2)) then x2work = x2[xsort]
+   if (keyword_set(inmask)) then inmaskwork = inmask[xsort] $
+   else inmaskwork = 0
 
    ;----------
    ; Iterate spline fit
@@ -174,7 +178,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    iiter = 0
    error = 0
    outmask = invwork GT 0
-   inmask = invwork GT 0
+   if (keyword_set(inmask)) then outmask = outmask * inmaskwork
 
    while (((error[0] NE 0) OR (keyword_set(qdone) EQ 0)) $
     AND iiter LE maxiter) do begin
@@ -201,8 +205,8 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
          return, sset
       endif else if (error[0] EQ 0) then begin
          ; Iterate the fit -- next rejection iteration.
-         inmask = outmask
-         qdone = djs_reject(ywork, yfit, invvar=invwork, inmask=inmask, $
+         inmaskwork = outmask
+         qdone = djs_reject(ywork, yfit, invvar=invwork, inmask=inmaskwork, $
           outmask=outmask, upper=upper, lower=lower, _EXTRA=EXTRA)
       endif
 
