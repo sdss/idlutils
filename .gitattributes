@@ -1,1 +1,16 @@
 * text=auto !eol
+pro/TeXtoIDL/COPYRIGHT -text
+pro/TeXtoIDL/DESCRIPTIONS -text
+pro/TeXtoIDL/DISCLAIMER -text
+pro/TeXtoIDL/FILES -text
+pro/TeXtoIDL/README -text
+pro/TeXtoIDL/matchdelim.pro -text
+pro/TeXtoIDL/nexttok.pro -text
+pro/TeXtoIDL/showtex.pro -text
+pro/TeXtoIDL/strcnt.pro -text
+pro/TeXtoIDL/strtok.pro -text
+pro/TeXtoIDL/strtrans.pro -text
+pro/TeXtoIDL/textable.pro -text
+pro/TeXtoIDL/textoidl.bak -text
+pro/TeXtoIDL/textoidl.pro -text
+pro/TeXtoIDL/translate_sub_super.pro -text
