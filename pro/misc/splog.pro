@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   splog, v1, v2 ..., [, _EXTRA=extra, /noname, prelog=, filename=, $
-;    /append, /close ]
+;    /append, /close, /no_stdout ]
 ;
 ; INPUTS:
 ;   v1, v2 ... - The expressions to be passed to PRINT or PRINTF
@@ -21,6 +21,7 @@
 ;   append     - If set at the same time as FILENAME, then append to this file;
 ;                default is to overwrite file
 ;   close      - If set, then close the output file
+;   no_stdout  - If set, then do not print anything to the standard output.
 ;
 ; OUTPUTS:
 ;
@@ -66,7 +67,7 @@ end
 
 ;------------------------------------------------------------------------------
 pro splog, noname=noname, prelog=prelog, $
- filename=filename, append=append, close=close, $
+ filename=filename, append=append, close=close, no_stdout=no_stdout, $
  v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, _EXTRA=extra
 
    ; Declare LOGLUN in a common block so that it is remembered between calls.
@@ -141,7 +142,8 @@ pro splog, noname=noname, prelog=prelog, $
    ;----------
    ; Write to standard out
 
-   if (nv GT 0 OR keyword_set(extra)) then begin
+   if (NOT keyword_set(no_stdout) $
+    AND (nv GT 0 OR keyword_set(extra))) then begin
       if (NOT keyword_set(noname)) then print, fname, format='(a,$)'
       if (keyword_set(fullprelog)) then $
        print, fullprelog+': ', format='(a,$)'
@@ -174,3 +176,4 @@ pro splog, noname=noname, prelog=prelog, $
 
    return
 end
+;------------------------------------------------------------------------------
