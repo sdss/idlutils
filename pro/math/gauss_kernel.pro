@@ -1,4 +1,4 @@
-function gauss_kernel, sigma, nsub=nsub, exp=exp, hpix=hpix
+function gauss_kernel, sigma, nsub=nsub, exp=exp, hpix=hpix, xl=xl
 
     if NOT keyword_set(nsub) then nsub = 5
 
@@ -15,7 +15,7 @@ function gauss_kernel, sigma, nsub=nsub, exp=exp, hpix=hpix
     x = sneaky # replicate(1,2*hpix+1) + xl ## replicate(1,nsub)
 
     if keyword_set(exp) then expl = exp(-abs(x)/sigma) $
-    else expl = exp(-x^2/(2.0*sigma))
+    else expl = exp(-x^2/(2.0*sigma^2))
 
     kernel = total(expl,1)/ total(expl)
 
