@@ -54,13 +54,26 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
    if (NOT keyword_set(sigrej)) then sigrej = 3.0
    if (NOT keyword_set(maxiter)) then maxiter = 10
 
+   ngood = N_elements(image)
+   if (ngood EQ 0) then begin
+      print, 'no data points'
+      return
+   endif
+   if (ngood EQ 1) then begin
+      print, 'Only 1 data point'
+      fmean = image[0]
+      fmedian = fmean
+      fsig = 0.0
+      return
+   endif
+
+
    ; Compute the mean + stdev of the entire image
    fmean = (moment(image, sdev=fsig))[0]
    iiter = 1
 
    ; Iteratively compute the mean + stdev, updating the sigma-rejection
    ; thresholds each iteration.
-   ngood = N_elements(image)
    nlast = -1
    while (iiter LT maxiter AND nlast NE ngood AND ngood GE 2) do begin
       loval = fmean - sigrej * fsig
