@@ -1,12 +1,17 @@
 
-pro/healpix added to support atv display of healpix maps.
+Directory pro/rgbcolor added to support making color (RGB) images.
+Directory pro/healpix added to support atv display of healpix maps.
 
 CMP_FITS_FILES: New proc for comparing the contents of two FITS files.
 DJS_READILINES: Minor bug fix reported by John Moustakes; need to
                allow setting INDX=[0] and return that first line.
+DPF_NEST2RING,HEAL_REBIN,HEALCART_IND,HEALGEN,HEALGEN_LB,
+               MAP_NEST2RING,MAP_RING2NEST: healpix routines added to
+               support using ATV to view healpix-format images.
 DUSTPLOT: Checking in this old proc for making SFD map figures.
 FIRST_READ: Fix possible crash condition if radius > 1 deg, and near RA=0.
-HEALCART_IND, HEALGEN, HEALGEN_LB: healpix routines added to support atv
+NW_ARCSINH,NW_CUT_TO_BOX,NW_FLOAT_TO_BYTE,NW_REBIN_IMAGE,NW_SCALE_RBG:
+               Hogg's code for generating color (RGB) images.
 PLOT_POLY: Use SPLOT routine.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
@@ -16,6 +21,7 @@ STRUCT_SELECTTAGS: New proc for trimming structures to specified tags.
                This is code broken out of SDSS_READOBJ().
 
 data/sdss/sdssMaskbits.par: Change IMAGE_STATUS bit from "CLOUDS" to "CLOUDY".
+pro/Makfile: Add reference to healpix,rgbcolor directories.
 src/image/Makefile: Add CR code.
 src/image/idl_reject_cr_psf.c,reject_cr_psf.c: Code called by REJECT_CR.
 src/image/pop_image.c: A double-precision version of the code has been
