@@ -47,7 +47,8 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;       Improve speed processing binary tables  W. Landsman   March 2000
 ;       Use new FTINFO calling sequence  W. Landsman   May 2000  
 ;       Don't call fits_close if fcb supplied W. Landsman May 2001 
-;       Use STRSPLIT to parse column string  W. Landsman July 2002 
+;       Use STRSPLIT to parse column string  W. Landsman July 2002
+;       Cleanup pointers in TBINFO structure  W. Landsman November 2003 
 ;-
 ;---------------------------------------------------------------------
  FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
@@ -105,6 +106,10 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
         command = 'v'+strtrim(i+1,2)+'=v'
         istat = execute(command)
         endfor
+ if binary then begin 
+        ptr_free, tb_str.tscal
+        ptr_free, tb_str.tzero
+ endif
  return
  end 
 
