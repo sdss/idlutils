@@ -261,9 +261,9 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
             nin = n_elements(indx)
 
             if keyword_set(groupbadpix) then begin
-              badtemp = badness GT 0
-              groups_lower = where([1,badtemp] - badtemp EQ 1)
-              groups_upper = where([badtemp[1:*],1] - badtemp EQ 1)
+              goodtemp = badness EQ 0
+              groups_lower = where([1,goodtemp] - goodtemp EQ 1)
+              groups_upper = where([goodtemp[1:*],1] - goodtemp EQ 1)
               ngroups = n_elements(groups_lower)
             endif else begin
               if (NOT keyword_set(groupsize)) then begin
