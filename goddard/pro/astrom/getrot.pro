@@ -1,4 +1,4 @@
-pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor from header
+pro getrot, hdr, rot, cdelt, DEBUG = debug, SILENT = silent      ;GET ROTation 
 ;+
 ; NAME:
 ;    GETROT
@@ -11,9 +11,9 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;     obtained by EXTAST.PRO)
 ;
 ; CALLING SEQUENCE:
-;     GETROT, Hdr, [ Rot, CDelt, DEBUG =  ]   
+;     GETROT, Hdr, [ Rot, CDelt, /SILENT, DEBUG =  ]   
 ;             or 
-;     GETROT, Astr, Rot, CDelt, DEBUG = ]       
+;     GETROT, Astr, Rot, CDelt, /SILENT, DEBUG = ]       
 ;
 ; INPUT PARAMETERS:
 ;     HDR - FITS Image header (string array).  Program will extract the 
@@ -26,17 +26,21 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;       ROT - Scalar giving the counterclockwise rotation of NORTH in DEGREES 
 ;               from the +Y axis of the image.
 ;       CDELT- 2 element vector giving the scale factors in DEGREES/PIXEL in 
-;               the X and Y directions.  Values correspond to the FITS 
-;               parameters CDELT1 and CDELT2 
+;               the X and Y directions.   CDELT[1] is always positive, whereas
+;               CDELT[0] is negative for a normal left-handed coordinate system,
+;               and positive for a right-handed system. 
 ;
 ;       If no output variables are supplied (or /DEBUG is set), then GETROT 
 ;       will display the rotation and plate scale at the terminal.
 ;
 ; OPTIONAL INPUT KEYWORD
+; 
 ;       DEBUG - if DEBUG is set, GETROT will print the rotation for both the 
-;       X and Y axis when these values are unequal.  If DEBUG is set to 2, 
-;       then the output parameter ROT will contain both X and Y rotations.
+;           X and Y axis when these values are unequal.  If DEBUG is set to 2, 
+;           then the output parameter ROT will contain both X and Y rotations.
 ;
+;       /SILENT - if set, then do not provide a warning about a right-handed
+;           coordinate system
 ; PROCEDURE:
 ;       If the FITS header already contains CDELT (and CD or CROTA) keyword,
 ;       (as suggested by the Calabretta & Greisen (2002, A&A, 395, 1077) FITS 
@@ -57,6 +61,7 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;       Correct rotation determination with unequal CDELT values WL October 1998
 ;       Consistent conversion between CROTA and CD matrix  WL  October 2000
 ;       Correct CDELT computations for rotations near 90 deg WL November 2002
+;       Preserve sign in the CDELT output  WL June 2003
 ;-
  On_error,2
 
@@ -99,7 +104,7 @@ endif else $
 
  det = cd[0,0]*cd[1,1] - cd[0,1]*cd[1,0]
  if det LT 0 then sgn = -1 else sgn = 1
- if det GT 0 then $
+ if not keyword_set(SILENT) then if det GT 0 then $
    message,'WARNING - Astrometry is for a right-handed coordinate system',/INF
  cdelt = fltarr(2)
  if (cd[1,0] eq 0) and (cd[0,1] eq 0) then begin ;Unrotated coordinates?
@@ -111,7 +116,6 @@ endif else $
    rot  = atan(  sgn*cd[0,1],  sgn*cd[0,0] ) 
    rot2 = atan( -cd[1,0],  cd[1,1] )
   
- endelse
 
  if (abs(rot) NE  abs(rot2)) then begin
       if keyword_set(debug) then $
@@ -120,8 +124,9 @@ endif else $
       if (rot - rot2)*!RADEG LT 2 then rot = (rot + rot2)/2.
  endif
 
-  cdelt[0] =   sqrt(cd[0,0]^2 + cd[0,1]^2)
+  cdelt[0] =   sgn*sqrt(cd[0,0]^2 + cd[0,1]^2)
   cdelt[1] =   sqrt(cd[1,1]^2 + cd[1,0]^2)
+ endelse
 
  rot = float(rot*RADEG)
  cdelt = float(cdelt*RADEG)
