@@ -34,9 +34,8 @@
 ;                deal with structures with the same name but different defns.
 ;                Note that this will contain all of the structure names, even
 ;                though this routine only returns that data from one of them.
-;   quick      - Quicker read using READF, but fails if continuation lines
-;                are present.  However, /QUICK must be used if there are any
-;                lines longer than 2047 characters (see bug section below).
+;   quick      - This keyword is only for backwards compatability, and
+;                has no effect.
 ;   errcode    - Returns as non-zero if there was an error reading the file.
 ;
 ; COMMENTS:
