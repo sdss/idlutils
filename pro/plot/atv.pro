@@ -68,7 +68,7 @@
 ;       The arguments C_ORIENTATION and C_SPACING are not supported.
 ;       The default color for all overplots is 'red'.
 ;
-;       This version is 1.0b4, last modified 29 July 1999.
+;       This version is 1.0b4, last modified 02 August 1999.
 ;       For the most current version, revision history, instructions,
 ;       and further information, go to:
 ;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
@@ -556,7 +556,8 @@ if (nfiles GT 0 and filename NE '') then begin
                              /question)                 
 endif
 
-; Modified by AJB 7/29/99
+; Modified by AJB 7/29/99 to do a screen capture with tvrd()
+; and stretch the screen color table to 256 colors
 if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
 
     wset, state.draw_window_id
@@ -646,7 +647,7 @@ if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
     bn = congrid(bb, 248)
     
     tvlct, temporary(rn), temporary(gn), temporary(bn), 8
-    
+; AJB added atv_plotall below 7/28/99 to do plot overlays    
 ;    tv, temporary(tmp_image)
     tv, bytscl(display_image, top = 247) + 8
     atv_plotall
@@ -1208,9 +1209,19 @@ pro atv_shutdown
 common atv_images
 common atv_state
 common atv_color
+common atv_pdata
 
 if (xregistered ('atv')) then begin
     widget_control, state.base_id, /destroy
+endif
+
+; Added 8/2/99 by AJB
+if (n_elements(phistory) GT 1) then begin
+    atverase, /norefresh
+    pdata = 0
+    ptext = 0
+    pcon = 0
+    phistory = 0
 endif
 
 main_image = 0
@@ -1362,6 +1373,10 @@ end
 pro atv_plot1plot, iplot
 common atv_pdata
 
+; Added hourglass cursor here and in other plot1 routines
+; AJB 8/2/99
+widget_control, /hourglass
+
 oplot, *(pdata.x[iplot]), *(pdata.y[iplot]), $
  color=pdata.color[iplot], psym=pdata.psym[iplot], $
  thick=pdata.thick[iplot]
@@ -1372,6 +1387,8 @@ end
 ;----------------------------------------------------------------------
 pro atv_plot1text, iplot
 common atv_pdata
+
+widget_control, /hourglass
 
 xyouts, ptext.x[iplot], ptext.y[iplot], *(ptext.string[iplot]), $
  alignment=ptext.alignment[iplot], charsize=ptext.charsize[iplot], $
@@ -1384,6 +1401,8 @@ end
 ;----------------------------------------------------------------------
 pro atv_plot1contour, iplot
 common atv_pdata
+
+widget_control, /hourglass
 
 xrange = !x.crange
 yrange = !y.crange
@@ -1486,9 +1505,6 @@ if (pdata.nplot GT 0 OR ptext.nplot GT 0 OR pcon.nplot GT 0) then begin
 
    for iplot=0, pcon.nplot-1 do $
     atv_plot1contour, iplot
-
-; AJB moved the following blocks here, so that text is always
-; plotted on top of contours and lines/points.  7/27/99
 
    for iplot=0, pdata.nplot-1 do $
     atv_plot1plot, iplot
@@ -1673,7 +1689,7 @@ common atv_pdata
 
 ; keyword norefresh added AJB 7/27/99
 ; The norefresh keyword is used by atv_getstats, when a new image
-;   has just been read in.
+;   has just been read in, and by atv_shutdown.
 
 nplotall = pdata.nplot + ptext.nplot + pcon.nplot
 if (N_params() LT 1) then nerase = nplotall $
@@ -1694,8 +1710,11 @@ for ihistory=nplotall-nerase, nplotall-1 do begin
       ; Erase a contour plot
       pcon.nplot = pcon.nplot - 1
       iplot = pcon.nplot
-      ptr_free, pcon.z, pcon.x, pcon.y, pcon.c_annotation, pcon.c_colors, $
-       pcon.c_labels, pcon.c_linestyle, pcon.c_thick, pcon.levels
+; AJB fixed following line by adding [iplot] below, 8/2/99
+      ptr_free, pcon.z[iplot], pcon.x[iplot], pcon.y[iplot], $
+        pcon.c_annotation[iplot], pcon.c_colors[iplot], $
+        pcon.c_labels[iplot], pcon.c_linestyle[iplot], $
+        pcon.c_thick[iplot], pcon.levels[iplot]
    endif
 endfor
 
@@ -2343,11 +2362,9 @@ h[i] =  'the same as those for the idl contour, xyouts, and plot commands,'
 i = i + 1
 h[i] = 'except that data coordinates are always used.' 
 i = i + 1
-h[i] = 'The default color for all overplots is red.'
+h[i] = 'The default color is red for overplots done from the idl command line.'
 i = i + 2
 h[i] = 'Other commands:'
-i = i + 1
-h[i] = 'atveraselast:   erases the most recent plot or text'
 i = i + 1
 h[i] = 'atverase [, N]:       erases all (or last N) plots and text'
 i = i + 1
@@ -2867,5 +2884,6 @@ state.zoom_factor = 1.0
 atv_displayall
 
 end
+
 
 
