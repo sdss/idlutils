@@ -7,6 +7,7 @@ bin/evilmake -text
 bin/eviltarball -text
 bin/install_ups_table -text
 bin/memtrack -text
+bin/pstogif -text
 doc/Makefile -text
 doc/mk_doc -text
 doc/www/.cvsignore -text
