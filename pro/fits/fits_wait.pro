@@ -49,8 +49,8 @@ function fits_wait, filename, deltat=deltat, tmax=tmax, $
       return, 0
    endif
 
-   if (NOT keyword_set(deltat)) then deltat = 10.0
-   if (NOT keyword_set(tmax)) then tmax = 300.0
+   if (n_elements(deltat) EQ 0) then deltat = 10.0
+   if (n_elements(tmax) EQ 0) then tmax = 300.0
 
    ;----------
    ; If there is a ".gz" extension, then assume that the file is OK
