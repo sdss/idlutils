@@ -62,7 +62,7 @@ soname=filepath('libimage.so', $
 
 ; define region to cut out
 if(keyword_set(safefactor)) then begin
-    safedistance=long(max(radius)*safefactor)+10L
+    safedistance=(long(max(radius)*safefactor))>10L
     xstart=(xcen-safedistance)>0L
     xend=(xcen+safedistance)<(xdimen-1L)
     ystart=(ycen-safedistance)>0L
