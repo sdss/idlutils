@@ -11,8 +11,11 @@ MRDFITS: Re-cast the argument to POINT_LUN to be type LONG64, to allow
                large files.  Basically, do this to all NAXIS*,THEAP,PCOUNT
                header keywords.
 POLYGON_OVERLAP: Added /allow_neg_doubles to call to SET_USE_CAPS.
+QU_TO_BAPHI: New proc to transform Q/U values to B/A and PHI.
 SET_USE_CAPS: New (undocumented) keyword of /ALLOW_NEG_DOUBLES.
 VMID: New proc to return vector within a given balkan polygon.
+WHERE_POLYGONS_OVERLAP: New proc to check which polygons overlap a given
+               polygon.
 
 bin/evilmake: For compiling on the Mac (Darwin) platform, add the following
                to the X_LD_FLAGS flags: "-flat_namespace -undefined suppress".
@@ -29,8 +32,10 @@ data/sdss/sdssMaskbits.par: Add SURVEY_BADFIELD mask bit to RESOLVE_STATUS.
                Add all the IMAGE_STATUS mask bits.
 pro/Makefile: Remove radprof from the SUBDIRS list, since there is nothing
                left in that directory.
-src/idlmangle/Makefile: Build idl_vmid.c.
-src/idlmangle/idl_vmid.c: Called by VMID.
+src/idlmangle/Makefile: Build idl_vmid.c,where_polygons_overlap.c
+src/idlmangle/idl_vmid.c: New code called by VMID.
+src/idlmangle/where_polygons_overlap.c: New code called by
+               WHERE_POLYGONS_OVERLAP.
 src/image/Makefile: Include $(MAKE_FTNLIB) options in $(LD) build step.
                Also, build the new Fortran (.f) files, and idl_profmean,
                ppvalu, tautsp, interv, interp_profmean.
