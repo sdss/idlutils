@@ -61,6 +61,7 @@ function djs_icolor, color
              + 9 * (color EQ 'dark blue') $
              + 9 * (color EQ 'navy') $
              + 10 * (color EQ 'dark magenta') $
+             + 10 * (color EQ 'purple') $ 
              + 11 * (color EQ 'magenta red') $
              + 12 * (color EQ 'dark cyan') $
              + 13 * (color EQ 'grey') $
@@ -72,7 +73,6 @@ function djs_icolor, color
              + 17 * (color EQ 'light yellow') $
              + 18 * (color EQ 'blue') $
              + 19 * (color EQ 'magenta blue') $
-             + 19 * (color EQ 'purple') $ 
              + 20 * (color EQ 'magenta') $
              + 21 * (color EQ 'cyan blue') $
              + 22 * (color EQ 'light blue') $
