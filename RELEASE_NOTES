@@ -1,6 +1,12 @@
 
+-------------------------------------------------------------------------------
+v4_10_6 (Oct 15, 2003)
+Mostly debugging of mangle Fortran code.
+Tagged for idlspec2d v4_10_6.
+
 ASINH: Modified this Goddard routine so that it works for scalars
                as well as arrays.
+CCM_FITRV,FUNC_CCM_FITRV: New proc for fitting R_V extinction parameter.
 EXTRACT_PROFMEAN,FRAC_PROFMEAN,INTERP_PROFMEAN: Blanton's routines
                for dealing with PHOTO aperature photometry.
 MEMSHIFT: New proc for doing raw memory copies within arrays or
