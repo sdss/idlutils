@@ -28,7 +28,7 @@
 ;   a=ucac_readgc(95.,10.,1.0)
 ;
 ; BUGS:
-;   This fails: a=ucac_readgc(95.,1.25,3)
+;   This is slightly wrong: a=ucac_readgc(95.,1.25,0.1)
 ;
 ; PROCEDURES CALLED:
 ;   radec_to_munu
@@ -106,7 +106,6 @@ function ucac_readgc1, node, incl, gcwidth, thiszone, decmin, decmax
    ; Now read the data, but watch for wrapping at RA=360 degrees!
    outdat = 0
 print,'RA: ',ravec
-if (total(1-finite(ravec)) GT 0) then stop ; ???
    if (ravec[0] LE ravec[1]) then begin
       outdat = ucac_readgc_add(outdat, thiszone, ravec[0:1])
    endif else begin
@@ -166,7 +165,7 @@ print,'ZONE ',thiszone,n_elements(outdat) ; ???
       convfac = 1d0 / 3600d0 / 1000d0
       radec_to_munu, outdat.ra*convfac, outdat.dec*convfac, mu, nu, $
        node=node, incl=incl
-      ikeep = where(abs(nu) LE gcwidth, nkeep)
+      ikeep = where(abs(nu) LE 0.5d0 * gcwidth, nkeep)
       if (nkeep EQ 0) then outdat = 0 $
        else outdat = outdat[ikeep]
    endif
