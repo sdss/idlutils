@@ -1,21 +1,31 @@
 ;+
-;------------------------------------------------------------------------------
-;  propmotdis
-;------------------------------------------------------------------------------
-;  output:
-;    the proper motion distance with c=H_0=1.
-;  input:
-;    z       redshift, a scalar or vector
-;    OmegaM  Omega_Matter, scalar only
-;    OmegaL  Omega_Lambda, scalar only
-;------------------------------------------------------------------------------
+; NAME:
+;   propmotdis
+; PURPOSE:
+;   Compute proper motion distances (c/H_0=1).
+; CALLING SEQUENCE:
+;   D= propmotdis(z,OmegaM,OmegaL)
+; INPUTS:
+;   z       - redshift or vector of redshifts
+;   OmegaM  - Omega-matter at z=0
+;   OmegaL  - Omega-Lambda at z=0
+; OPTIONAL INPUTS:
+; KEYWORDS
+; OUTPUTS:
+;   proper motion distance in units of the Hubble length c/H_0.
+; COMMENTS:
+; BUGS:
+; EXAMPLES:
+; PROCEDURES CALLED:
+; REVISION HISTORY:
+;   25-Jun-2000  Written by Hogg (IAS)
 ;-
 function propmotdis, z,OmegaM,OmegaL
   TINY= double(1.0e-16)
-  if (OmegaM LT TINY) AND (OmegaL LT TINY) then begin
+  if (abs(OmegaM) LT TINY) AND (abs(OmegaL) LT TINY) then begin
     dM= (z+0.5*z*z)/(1.0+z)
   endif else begin
-    if OmegaL LT TINY then begin
+    if abs(OmegaL) LT TINY then begin
       q0= 0.5*OmegaM-OmegaL
       dM= (z*q0+(q0-1.0)*(sqrt(2.0*q0*z+1.0)-1.0))/(q0*q0*(1.0+z))
     endif else begin
