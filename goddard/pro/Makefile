@@ -9,7 +9,7 @@ SHELL = /bin/sh
 #
 SUBDIRS = database fits_bintable image misc sdas_table tv \
 	astro disk_io fits_table jhuapl plot structure \
-	astrom fits idlphot math sdas tape_io
+	astrom fits idlphot math sdas
 
 all :;
 
