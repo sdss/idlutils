@@ -70,7 +70,7 @@ function struct_trimtags, instruct, select_tags=select_tags, $
          endif
       endfor
    endif else begin
-      indx = lingden(ntag)
+      indx = lindgen(ntag)
    endelse
 
    if (indx[0] EQ -1) then return, 0
