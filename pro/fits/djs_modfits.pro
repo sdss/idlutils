@@ -80,12 +80,23 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
 
    if (keyword_set(data)) then begin
       data1 = mrdfits(filename, exten_no)
-      nbytes1 = n_elements(data1) * bitsperpix(size(data1,/type))
-      nbytes = n_elements(data) * bitsperpix(size(data,/type))
-      if ((nbytes+2879)/2880 GT (nbytes1+2879)/2880) then qbigger = 1
+      qstruct = size(data, /tname) EQ 'STRUCT'
+      if (qstruct) then begin
+         nbytes1 = n_tags(data1, /length)
+         nbytes = n_tags(data, /length)
+      endif else begin
+         nbytes1 = n_elements(data1) * bitsperpix(size(data1,/type))
+         nbytes = n_elements(data) * bitsperpix(size(data,/type))
+      endelse
+      if (NOT keyword_set(data1) OR $
+       (nbytes+2879)/2880 GT (nbytes1+2879)/2880) then qbigger = 1
    endif
 
-   if (qbigger EQ 0) then begin
+   ;----------
+   ; For now, the Goddard routine MODFITS does not work with structures.
+   ; So don't use it in that case.
+
+   if ((qbigger EQ 0) AND qstruct EQ 0) then begin
       modfits, filename, data, hdr, exten_no=exten_no
       return
    endif
