@@ -48,7 +48,7 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 ;               ASCII or Binary Table extension header.   Instead use
 ;
 ;               SXHMAKE - to create a minimal STSDAS header
-;               FXHMAKE - to create a minimal FITS binary table header
+;               FXBHMAKE - to create a minimal FITS binary table header
 ;               FTCREATE - to create a minimal FITS ASCII table header
 ;
 ;       (2)  Any data already in the header before calling MKHDR
