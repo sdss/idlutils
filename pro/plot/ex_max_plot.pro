@@ -18,19 +18,20 @@
 ;   textlabel    [q] vector of text labels
 ;   textpos      [d,q] array of text label positions
 ;   box          [2,d] array of coordinates for d-dimensional box
-;   xdims,ydims  BLANTON -- COMMENT YOUR CODE
-;   npix_x,npix_y  BLANTON -- COMMENT YOUR CODE
-;   sqrt         BLANTON -- COMMENT YOUR CODE
-;   log          BLANTON -- COMMENT YOUR CODE
-;   axis_char_scale  BLANTON -- COMMENT YOUR CODE
-;   overpoints   BLANTON -- COMMENT YOUR CODE
-;   model_npix_factor  BLANTON -- COMMENT YOUR CODE
+;   xdims,ydims  indices of data dimensions to use on each x and y axis
+;   npix_x,npix_y  number of pixels in x and y dimensions of each ;   panel
+;   sqrt         sqrt stretch on image
+;   log          logarithmic stretch on image
+;   axis_char_scale  size of characters on labels
+;   overpoints   [d,P] set of points to overplot a red box on each ;   panel
+;   model_npix_factor  for gaussians, use this factor to scale model
+;   panellabels  label string for each panel (size of xdims, ydims arrays)
 ; KEYWORDS:
 ;   nomodel      don't show model fits as greyscales or histograms
 ;   nodata       don't show data as greyscales or histograms
 ;   noellipse    don't show ellipses on 2-d plots
 ;   bw           show ellipses in b/w
-;   conditional  BLANTON -- COMMENT YOUR CODE
+;   conditional  plot the conditional distribution of y on x 
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
 ; BUGS:
@@ -51,7 +52,9 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  conditional=conditional, xdims=xdims, ydims=ydims, $
                  axis_char_scale=axis_char_scale, npix_x=npix_x, $
                  npix_y=npix_y,overpoints=overpoints, $
-                 model_npix_factor=model_npix_factor
+                 model_npix_factor=model_npix_factor, $
+                 panellabels=panellabels, panellabelpos=panellabelpos, $
+                 sigrejimage=sigrejimage, paneluse=paneluse
 
 ; set defaults
   if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
@@ -153,7 +156,31 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
     for id1=0L,xdimen-1 do begin
         d1=xdims[id1]
         d2=ydims[id2]
-
+        
+        if(keyword_set(paneluse)) then begin
+            paneluse=reform(paneluse,ndata,xdimen,ydimen)
+            panelindx=where(paneluse[*,id1,id2] gt 0)
+            panelweight=weight[panelindx]
+            panelpoint=point[*,panelindx]
+        endif else begin
+            panelweight=weight
+            panelpoint=point
+        endelse
+        
+        if(keyword_set(paneluse2)) then begin
+            if(keyword_set(weight2) and keyword_set(point2)) then begin
+                paneluse2=reform(paneluse2,ndata,xdimen,ydimen)
+                panelindx2=where(paneluse2[*,id1,id2] gt 0)
+                panelweight2=weight2[panelindx]
+                panelpoint2=point2[*,panelindx]
+            endif
+        endif else begin
+            if(keyword_set(weight2) and keyword_set(point2)) then begin
+                panelweight2=weight2
+                panelpoint2=point2
+            endif
+        endelse
+            
 ; are we on one of the plot edges?
       leftside= 0B
       if (!P.MULTI[0] EQ 0) OR $
@@ -226,39 +253,48 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
         if ((d2 GE d1) OR $
             (keyword_set(nomodel))) then begin
             xx= floor(double(usenpix_x)* $
-                      (point[d1,*]-!X.CRANGE[0])/ $
+                      (panelpoint[d1,*]-!X.CRANGE[0])/ $
                       (!X.CRANGE[1]-!X.CRANGE[0]))
             yy= floor(double(usenpix_y)* $
-                      (point[d2,*]-!Y.CRANGE[0])/ $
+                      (panelpoint[d2,*]-!Y.CRANGE[0])/ $
                       (!Y.CRANGE[1]-!Y.CRANGE[0]))
             if d1 EQ d2 then yy= xx
-            for i=0L,ndata-1 do begin
+            for i=0L,n_elements(panelweight)-1 do begin
                 if xx[i] GE 0 AND xx[i] LT usenpix_x AND $
                   yy[i] GE 0 AND yy[i] LT usenpix_y then $
-                  image[xx[i],yy[i]]= image[xx[i],yy[i]]+weight[i]
+                  image[xx[i],yy[i]]= image[xx[i],yy[i]]+panelweight[i]
             endfor
 
 ; if we are in the lower quadrant and
 ; there is a second set of data, use it
-            if((d2 le d1) AND keyword_set(weight2)) then begin
+            if((d2 le d1) AND keyword_set(panelweight2)) then begin
                 xx= floor(double(usenpix_x)* $
-                          (point2[d1,*]-!X.CRANGE[0])/ $
+                          (panelpoint2[d1,*]-!X.CRANGE[0])/ $
                           (!X.CRANGE[1]-!X.CRANGE[0]))
                 yy= floor(double(usenpix_y)* $
-                          (point2[d2,*]-!Y.CRANGE[0])/ $
+                          (panelpoint2[d2,*]-!Y.CRANGE[0])/ $
                           (!Y.CRANGE[1]-!Y.CRANGE[0]))
                 image2= dblarr(usenpix_x,usenpix_y)
                 if d1 EQ d2 then yy= xx
-                for i=0L,ndata2-1 do begin
+                for i=0L,n_elements(panelweight2)-1 do begin
                     if xx[i] GE 0 AND xx[i] LT usenpix_x AND $
                       yy[i] GE 0 AND yy[i] LT usenpix_y then $
-                      image2[xx[i],yy[i]]= image2[xx[i],yy[i]]+weight2[i]
+                      image2[xx[i],yy[i]]= image2[xx[i],yy[i]]+panelweight2[i]
                 endfor
             endif 
         endif
-        image= image/abs(delta_x*delta_y)
+        if(keyword_set(conditional)) then begin
+            image= image/abs(delta_y)
+        endif else begin 
+            image= image/abs(delta_x*delta_y)
+        endelse
+        
         if(keyword_set(image2)) then begin
-            image2= image2/abs(delta_x*delta_y)
+            if(keyword_set(conditional)) then begin
+                image2= image2/abs(delta_y)
+            endif else begin 
+                image2= image2/abs(delta_x*delta_y)
+            endelse
             if(d2 lt d1) then image=image2
         endif
     endif
@@ -293,17 +329,29 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
       	if (NOT keyword_set(nodata) OR NOT keyword_set(nomodel)) then begin
           loadct,0,/silent
           if(keyword_set(conditional)) then begin
-              avgydist=total(image,1,/double)/double(usenpix_x)
+              xx= floor(double(usenpix_x)* $
+                        (panelpoint[d1,*]-!X.CRANGE[0])/ $
+                        (!X.CRANGE[1]-!X.CRANGE[0]))
+              yy= floor(double(usenpix_y)* $
+                        (panelpoint[d2,*]-!Y.CRANGE[0])/ $
+                        (!Y.CRANGE[1]-!Y.CRANGE[0]))
+              amp1col=dblarr(usenpix_x)
               for ii=0L, usenpix_x-1L do begin
-                  norm=image[ii,*]#transpose(image[ii,*])
-                  if(norm[0] gt 0.d) then begin
-                      scale=(transpose(avgydist)#transpose(image[ii,*]))/norm
-                      image[ii,*]=image[ii,*]*scale[0]
+                  indx=where(xx eq ii, countin)
+                  if(countin gt 0) then begin
+                      amp1col[ii]=total(panelweight[indx],/double)
+                      image[ii,*]=image[ii,*]/amp1col[ii]
                   endif
               endfor
-              image=amp1*image/(total(image)*abs(delta_x*delta_y))
           endif
           outimage=image
+          if(keyword_set(sigrejimage)) then begin
+              sig=djsig(outimage,sigrej=100)
+              indx=where(outimage gt sigrejimage*sig,count)
+              if(count gt 0) then begin
+                  outimage[indx]=sigrejimage*sig
+              endif
+          endif
           if(keyword_set(sqrt)) then outimage=sqrt(outimage)
           if(keyword_set(log)) then begin
               notzero=where(outimage ne 0.d,nzcount)
@@ -335,12 +383,74 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
           cumimage= 1.0-cumimage*abs(delta_x*delta_y)/amp1
 
 ; contour
-          contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
-            thick=3,/overplot,color=255
-          contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
-            thick=1,/overplot
-        endif
-
+          if(NOT keyword_set(conditional)) then begin
+              contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
+                thick=3,/overplot,color=255
+              contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
+                thick=1,/overplot
+          endif else begin
+              ylineupper=dblarr(usenpix_x)
+              ylinelower=dblarr(usenpix_x)
+              xline=dblarr(usenpix_x)
+              for c=0, n_elements(contlevel)-1L do begin
+                  for ii=0L, usenpix_x-1L do begin
+                      xline[ii]=!X.CRANGE[0]+ $
+                        (ii+0.5)*(!X.CRANGE[1]-!X.CRANGE[0])/ $
+                        double(usenpix_x)
+                      ;column=smooth(image[ii,*],3,/edge_truncate)
+                      column=image[ii,*]
+                      if(total(column) gt 0.) then begin
+                          cumindex=reverse(sort(column))
+                          cumimage=dblarr(usenpix_y)
+                          cumimage[cumindex]= total(column[cumindex], $
+                                                    /cumulative) 
+                          cumimage=1.-cumimage*abs(delta_y)
+                          maximage=max(cumimage,imaximage)
+                          ilower=imaximage-lindgen(imaximage+1L)
+                          nlower=n_elements(ilower)
+                          contindx=where(cumimage[ilower] gt contlevel[c] and $
+                                         cumimage[ilower-1L] lt contlevel[c], $
+                                         ncont)
+                          if(ncont gt 0) then begin
+                              sp=(contlevel[c]- $
+                                  cumimage[ilower[contindx[0]]-1L])/ $
+                                (cumimage[ilower[contindx[0]]]- $
+                                 cumimage[ilower[contindx[0]]-1L])
+                              poslower=ilower[contindx[0]]-1L+sp
+                              ylinelower[ii]=!Y.CRANGE[0]+ $
+                                poslower*(!Y.CRANGE[1]-!Y.CRANGE[0])/ $
+                                double(usenpix_y)
+                          endif else begin
+                              if(ii gt 0) then ylinelower[ii]=!Y.CRANGE[0]
+                          endelse
+                          iupper=imaximage+lindgen(usenpix_y-imaximage)
+                          nupper=n_elements(iupper)
+                          contindx=where(cumimage[iupper] gt contlevel[c] and $
+                                         cumimage[iupper+1L] lt contlevel[c], $
+                                         ncont)
+                          if(ncont gt 0) then begin
+                              sp=(contlevel[c]- $
+                                  cumimage[iupper[contindx[0]]])/ $
+                                (cumimage[iupper[contindx[0]]+1L]- $
+                                 cumimage[iupper[contindx[0]]])
+                              posupper=iupper[contindx[0]]+sp
+                              ylineupper[ii]=!Y.CRANGE[0]+ $
+                                posupper*(!Y.CRANGE[1]-!Y.CRANGE[0])/ $
+                                double(usenpix_y)
+                          endif else begin
+                              if(ii gt 0) then ylineupper[ii]=!Y.CRANGE[1]
+                          endelse
+                      endif
+                      
+                  endfor
+                  djs_oplot, xline, ylinelower,thick=4,color=255
+                  djs_oplot, xline, ylineupper,thick=4,color=255
+                  djs_oplot, xline, ylinelower,thick=1
+                  djs_oplot, xline, ylineupper,thick=1
+              endfor
+          endelse
+      endif
+      
 ; put on extra text labels, if asked
       if keyword_set(textlabel) AND keyword_set(textpos) AND d1 NE d2 then begin
         ilabel= where((textpos[d1,*] GT min(!X.CRANGE)) AND $
@@ -398,13 +508,18 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
 
 ; plot data and model histograms
         djs_oplot,!X.CRANGE,[0,0],psym=0,xstyle=5,ystyle=5,color='grey'
-	if NOT keyword_set(nodata) then begin
-          if(keyword_set(image2)) then begin
-              yhist2= total(image2,2)*abs(delta_y)
-              djs_oplot,ximg,yhist2,psym=10,thick=2*!P.THICK,color='grey'
-          endif
-          yhist= total(image,2)*abs(delta_y)
-          djs_oplot,ximg,yhist,psym=10,thick=2*!P.THICK
+        if NOT keyword_set(nodata) then begin
+            if(keyword_set(conditional)) then begin
+                scale=abs(delta_y)/abs(delta_x)
+            endif else begin
+                scale=abs(delta_y)
+            endelse
+            if(keyword_set(image2)) then begin
+                yhist2= total(image2,2)*scale
+                djs_oplot,ximg,yhist2,psym=10,thick=2*!P.THICK,color='grey'
+            endif
+            yhist= total(image,2)*scale
+            djs_oplot,ximg,yhist,psym=10,thick=2*!P.THICK
         endif
 
 
@@ -421,12 +536,24 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
             djs_oplot,xhist,yhist1,color=colorname[j MOD ncolor]
           endfor
           djs_oplot,xhist,yhist,color='grey',thick=1
-	endif
+      endif
 
         !P.MULTI[0]= !P.MULTI[0]+1
         djs_plot,[0],[0],/nodata,xstyle=1,ystyle=5, $
           xtickinterval=xinterval,ytickinterval=yinterval
       endif
+
+    if(keyword_set(panellabels)) then begin
+        panellabels=reform(panellabels,xdimen,ydimen)
+        if(NOT keyword_set(panellabelpos)) then begin
+            xlabelpos=!X.CRANGE[0]+0.1*(!X.CRANGE[1]-!X.CRANGE[0])
+            ylabelpos=!Y.CRANGE[1]-0.1*(!Y.CRANGE[1]-!Y.CRANGE[0])
+        endif else begin
+            xlabelpos=!X.CRANGE[0]+panellabelpos[0]*(!X.CRANGE[1]-!X.CRANGE[0])
+            ylabelpos=!Y.CRANGE[0]+panellabelpos[1]*(!Y.CRANGE[1]-!Y.CRANGE[0])
+        endelse
+        xyouts, xlabelpos, ylabelpos, panellabels[id1,id2]
+    endif
 
 ; end loops and close file
     endfor
