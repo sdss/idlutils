@@ -2,8 +2,7 @@
 ; NAME:
 ;   read_fits_polygons
 ; PURPOSE:
-;   Read a "polygon" format fits file written by vagc, and return
-;   in the IDL structure format
+;   Read a "polygon" format fits file 
 ; CALLING SEQUENCE:
 ;   read_fits_polygons, infile, polygons
 ; INPUTS:

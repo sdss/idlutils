@@ -41,7 +41,7 @@ if(nused_caps eq 0) then return,0.D
 
 ; Call grouping software
 soname = filepath('libidlmangle.so', $
-                  root_dir=getenv('VAGC_DIR'), subdirectory='lib')
+                  root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 area=0.D
 x=reform((*polygon.caps)[used_caps].x[*],3,nused_caps)
 cm=reform([(*polygon.caps)[used_caps].cm],nused_caps)

@@ -18,7 +18,6 @@
 ;     print, newpoly.str
 ; EXAMPLES:
 ; BUGS:
-;  depends on vagc
 ; PROCEDURES CALLED:
 ; REVISION HISTORY:
 ;   31-Jan-2003  Written by MRB (NYU)
