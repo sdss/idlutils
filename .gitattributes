@@ -599,6 +599,7 @@ pro/misc/djs_selectlines.pro -text
 pro/misc/idlutils_version.pro -text
 pro/misc/rmfile.pro -text
 pro/plot/atv.pro -text
+pro/plot/cmps_form.pro -text
 pro/plot/djs_arrow.pro -text
 pro/plot/djs_axis.pro -text
 pro/plot/djs_contourpts.pro -text
