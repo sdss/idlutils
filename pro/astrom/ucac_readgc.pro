@@ -31,6 +31,7 @@
 ;   This fails: a=ucac_readgc(95.,1.25,3)
 ;
 ; PROCEDURES CALLED:
+;   radec_to_munu
 ;   ucac_readindex()
 ;   ucac_readzone()
 ;
@@ -147,7 +148,7 @@ function ucac_readgc, node, incl, gcwidth
    ; Loop over all zones
 
    for thiszone=min(uindex.zn), max(uindex.zn) do begin
-print,'ZONE ',thiszone,n_elements(outdat)
+print,'ZONE ',thiszone,n_elements(outdat) ; ???
       jj = (where(uindex.zn EQ thiszone, ct))[0]
       if (ct GT 0) then begin
          decmax = uindex[jj].dcmax
@@ -157,6 +158,18 @@ print,'ZONE ',thiszone,n_elements(outdat)
           outdat = keyword_set(outdat) ? [outdat,moredat] : moredat
       endif
    endfor
+
+   ;----------
+   ; Now trim to objects exactly within the great circle bounds
+
+   if (keyword_set(outdat)) then begin
+      convfac = 1d0 / 3600d0 / 1000d0
+      radec_to_munu, outdat.ra*convfac, outdat.dec*convfac, mu, nu, $
+       node=node, incl=incl
+      ikeep = where(abs(nu) LE gcwidth, nkeep)
+      if (nkeep EQ 0) then outdat = 0 $
+       else outdat = outdat[ikeep]
+   endif
 
    return, outdat
 end
