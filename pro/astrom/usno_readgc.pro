@@ -114,14 +114,14 @@ function usno_readgc1, node, incl, hwidth, thiszone, decmin, decmax
 
    ; Now read the data, but watch for wrapping at RA=360 degrees!
    outdat = 0
-   if (ravec[0] LE ravec[1]) then begin
+   if (ravec[0] LT ravec[1]) then begin
       outdat = usno_readgc_add(outdat, thiszone, ravec[0:1])
    endif else begin
       outdat = usno_readgc_add(outdat, thiszone, [ravec[0], 360])
       outdat = usno_readgc_add(outdat, thiszone, [0, ravec[1]])
    endelse
    if (n_elements(ravec) GT 2) then begin
-      if (ravec[2] LE ravec[3]) then begin
+      if (ravec[2] LT ravec[3]) then begin
          outdat = usno_readgc_add(outdat, thiszone, ravec[2:3])
       endif else begin
          outdat = usno_readgc_add(outdat, thiszone, [ravec[2], 360])
@@ -132,20 +132,33 @@ function usno_readgc1, node, incl, hwidth, thiszone, decmin, decmax
    return, outdat
 end
 ;------------------------------------------------------------------------------
-function usno_readgc, node=node, incl=incl, hwidth=hwidth, decrange=decrange1
+function usno_readgc, node=node1, incl=incl1, hwidth=hwidth, decrange=decrange1
 
    outdat = 0
 
    ;----------
    ; Check inputs
 
-   if (n_elements(node) NE 1 OR n_elements(incl) NE 1 $
+   if (n_elements(node1) NE 1 OR n_elements(incl1) NE 1 $
     OR n_elements(hwidth) NE 1) then begin
       print, 'Wrong number of parameters!'
       return, 0
    endif
    if (keyword_set(decrange1)) then decrange = decrange1 $
     else decrange = [-90,90]
+
+   ; For all our case statements to work, we need the node to be
+   ; in the range [0,+90] degrees, so just transform the higher-inclination
+   ; great circles.  This means that the mu values along the great circle
+   ; are incorrect, but we don't care since we're returning the full circle.
+   if (node1 LE 90) then begin
+      node = node1
+      incl = incl1
+   endif else begin
+      node = node1 + 180
+      cirrange, node
+      incl = 180 - incl1
+   endelse
 
    ;----------
    ; Loop over all zones
