@@ -47,7 +47,7 @@ pro mrd_skip, unit, nskip
  	  on_ioerror, byte_read
 	  point_lun, -unit, curr_pos
 	  on_ioerror, null
-          if curr_pos NE -1 then point_lun, unit, curr_pos+nskip
+          if curr_pos NE -1 then point_lun, unit, long64(curr_pos)+nskip
            return
         endif 
 
@@ -64,7 +64,7 @@ byte_read:
 		readu, unit, buf
 		nleft = nleft - chunk
 	        if (nleft gt 0 and nleft lt chunk) then begin
-		    buf = buf(0:nleft-1)
+		    buf = buf[0:nleft-1]
 		endif
 	endwhile
 	return
