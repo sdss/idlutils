@@ -58,6 +58,12 @@ function nonneg_mult_update_solve,start,avfunc,b,matrix=matrix,tol=tol, $
 
 common nnmus_com
 
+if(n_params() ne 3) then begin
+    print,'Syntax - result=nonneg_mult_update_solve(start, avfunc, b [, /matrix, tol=, $'
+    print,'             /verbose, offset=, value=])'
+    return,-1
+endif
+
 if(NOT keyword_set(tol)) then tol=1.D-7
 b=reform(b,n_elements(b))
 start=reform(start,n_elements(start))

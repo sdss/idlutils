@@ -32,6 +32,11 @@
 ;-
 function nonneg_mult_update,old,avfunc,b,factor=factor
 
+if(n_params() ne 3) then begin
+    print,'Syntax - new=nonneg_mult_update(old, avfunc, b [, factor=])'
+    return,-1
+endif 
+
 avpos=call_function(avfunc,old,1.)
 avneg=call_function(avfunc,old,-1.)
 
