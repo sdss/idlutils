@@ -189,6 +189,7 @@ goddard/pro/astrom/gsssxyad.pro -text
 goddard/pro/astrom/hastrom.pro -text
 goddard/pro/astrom/hboxave.pro -text
 goddard/pro/astrom/hcongrid.pro -text
+goddard/pro/astrom/heuler.pro -text
 goddard/pro/astrom/hextract.pro -text
 goddard/pro/astrom/hprecess.pro -text
 goddard/pro/astrom/hrebin.pro -text
