@@ -16,6 +16,7 @@ FSC_PSCONFIG__DEFINE,PSCONFIG - New routines downloaded from David Fanning
                 "http://www.dfanning.com/documents/programs.html#FSCPSCONFIG"
 TNMIN         - Two loop variables (lines 559 and 601) changed from "0"
                 to "0L".
+WCSXY2SPH:    - Add HealCart projection.
 YANNY_READ:   - Don't crash when FILENAME is a 1-element array!
 
 bin/Makefile  - Take out "evilinstall" which has now moved to evilups product.
