@@ -9,7 +9,18 @@
 ;  machines" (UPenn Tech Report MS-CIS-02-19), apply a multiplicative
 ;  update to an attempted solution to a nonnegative quadratic problem
 ;  (QP with box constraints):
+;
 ;     F(v) = (1/2) v^T.A.v + b^T.v for v_i >= 0 for all i.
+;
+;  It requires the user to supply a function avfunc(vec,sign) which returns
+;  A+.v if sign>0. and A-.v if sign<0, where:
+;  
+;     A+_ij = A_ij for A_ij>0.
+;             0.   otherwise
+;
+;     A-_ij = |A_ij|  for A_ij<0.
+;             0.      otherwise
+; 
 ; CATEGORY:
 ;       Numerical
 ; CALLING SEQUENCE:

@@ -6,7 +6,25 @@
 ; DESCRIPTION:
 ;  From some starting point, iterates to convergence a
 ;  box-constrained QP problem: 
+;
 ;     F(v) = (1/2) v^T.A.v + b^T.v for v_i >= 0 for all i.
+;
+;  Uses the method of Sha, Saul, & Lee (2002), "Multiplicative
+;  updates for nonnegative quadratic programming in support vector
+;  machines" (UPenn Tech Report MS-CIS-02-19).
+;
+;  It requires the user to supply a function avfunc(vec,sign) which returns
+;  A+.v if sign>0. and A-.v if sign<0, where:
+;  
+;     A+_ij = A_ij for A_ij>0.
+;             0.   otherwise
+;
+;     A-_ij = |A_ij|  for A_ij<0.
+;             0.      otherwise
+; 
+;  Alternatively, if /matrix is set, nonneg_mult_update_solve will
+;  interpret the input avfunc as a matrix and construct the
+;  appropriate functions. 
 ; CATEGORY:
 ;       Numerical
 ; CALLING SEQUENCE:
