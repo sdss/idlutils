@@ -1,5 +1,5 @@
 ; Repacked into one routine - D. Finkbeiner 23 Feb 2000
-
+; Fixed () -> [] bugs here and there - Hogg 15 Jun 2000
 ;
 ;+
 ; NAME:
@@ -37,8 +37,11 @@
 ;       out = textoidl_strtrans(inp,from,to,ned)
 ;       Will produce out='Many bad chars in here', and set ned to 4.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.3  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -116,13 +119,13 @@ FUNCTION textoidl_strtrans, InputString, from, to, ned,  $
 ; with '@' inserted instead.  Do this for all elements of strn, and
 ; all elements of from.
     FOR i = 0L, NStrings-1 DO BEGIN
-        ned(i) = 0L
+        ned[i] = 0L
         FOR j=0L, NFrom-1 DO BEGIN
-            SepStr = str_sep(strn(i), from(j))
+            SepStr = str_sep(strn[i], from[j])
             NSubs = n_elements(SepStr) - 1
-            strn(i) = SepStr(0)
-            FOR k=1L, NSubs DO strn(i) = strn(i) + To(j) + SepStr(k)
-            ned(i) =  ned(i) + NSubs
+            strn[i] = SepStr[0]
+            FOR k=1L, NSubs DO strn[i] = strn[i] + To[j] + SepStr[k]
+            ned[i] =  ned[i] + NSubs
         ENDFOR 
     ENDFOR
 
@@ -160,8 +163,11 @@ END
 ;       table(0,*).
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.7  1996/07/22 23:56:08  mcraig
 ;       Added \vartheta.
 ;
@@ -395,8 +401,11 @@ END
 ;       To D. Linder who wrote GETTOK, part of the goddard library,
 ;       upon which this is based.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.3  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -496,8 +505,11 @@ END
 ;       textoidl_nexttok( 'x^2 + N_j^3', '^_', position=pos ) returns '^' and sets
 ;       pos to 1.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.3  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -619,8 +631,11 @@ END
 ;        textoidl_matchdelim('{one{two}}three') returns 9, the character just
 ;        before 'three'.  
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.3  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -748,8 +763,11 @@ END
 ;       occurance. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.3  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -870,8 +888,11 @@ END
 ;       file. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.4  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -961,8 +982,11 @@ END
 ;       textoidl_strtok      -- Text/string (mcraig)
 ;       textoidl_sub_sup -- contained in this file
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.4  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
@@ -1166,8 +1190,11 @@ END
 ;       exponent of 2, then a plus sign, then an N with the subscript
 ;       ed.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.4 2000-06-03 17:12:42 dfink Exp $
+;       $Id: textoidl.pro,v 1.5 2000-06-15 18:21:23 hogg Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.4  2000/06/03 17:12:42  dfink
+;       Fink's new textoidl - all procedures in one file; avoid name conflict
+;
 ;       Revision 1.4  1996/06/14 20:00:27  mcraig
 ;       Updated Copyright info.
 ;
