@@ -3,7 +3,7 @@
 ;   rebin_spectrum
 ;
 ; PURPOSE:
-;   Rebin a 1-D spectrum
+;   Rebin a 1-D spectrum using CIC assignment onto arbitrary pixel boundaries.
 ;
 ; CALLING SEQUENCE:
 ;   yflux = rebin_spectrum( xflux, xwave, ywave )
