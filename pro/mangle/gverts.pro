@@ -126,7 +126,7 @@ if(keyword_set(continuous)) then begin
         currsep=sep[0]
         useverts=lonarr(nve*nv+1)
         useverts[lindgen(nv+1)*nve]=1
-        for i=1, nve*nv-1L do begin
+        for i=1L, nve*nv-1L do begin
             if(currsep gt dangle) then begin
                 useverts[i]=1
                 currsep=sep[i]
