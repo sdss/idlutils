@@ -1,6 +1,8 @@
 
-function cholesky_band, lower
+function cholesky_band, lower, mininf=mininf
 
+
+    if NOT keyword_set(mininf) then mininf=0.0
     ; compute cholesky decomposition of banded matrix
     ;   lower[bandwidth, n]  n is the number of linear equations
  
@@ -12,7 +14,7 @@ function cholesky_band, lower
     kd = bw - 1
 
 
-    negative = where(lower[0,0:n-1] LE 0)
+    negative = where(lower[0,0:n-1] LE mininf)
     if negative[0] NE -1 then begin
        message, 'you have negative diagonals, difficult to root', /continue
        return, negative
@@ -28,11 +30,15 @@ function cholesky_band, lower
          lower[0,j] = sqrt(lower[0,j])
          lower[spot,j] = lower[spot,j] / lower[0,j]
          x = lower[spot,j]
+
+         if (where(finite(x) EQ 0))[0] NE -1 then $
+ 	    message, 'NaN found in cholesky_band'
+
          hmm = x # transpose(x)
          here = bi+(j+1)*bw
          lower[here] = lower[here] - hmm[bi]
     endfor
 
-  return,0
+  return,-1L
 end
             

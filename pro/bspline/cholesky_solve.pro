@@ -19,5 +19,5 @@ function cholesky_solve, a, b
    for j=n-1,0,-1 do $
      b[j] = (b[j] - total(a[spot,j] * b[j+spot]))/a[0,j] 
 
-return, 0
+return, -1L
 end

@@ -81,7 +81,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
        message, 'Dimensions of X and X2 do not agree'
       if (NOT keyword_set(npoly)) then npoly = 2L
    endif
-   if (NOT keyword_set(maxiter)) then maxiter = 0
+   if (NOT keyword_set(maxiter)) then maxiter = 10
 
    ;----------
    ; Determine the break points and create output structure
@@ -91,33 +91,20 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       sset.bkmask = 0
       sset.coeff = 0
       tags = tag_names(oldset)
-      if (where(tags EQ 'XMIN') NE -1 AND NOT keyword_set(x2)) then $
+      if ((where(tags EQ 'XMIN'))[0] NE -1 AND NOT keyword_set(x2)) then $
        message, 'X2 must be set to be consistent with OLDSET'
    endif else begin
       fullbkpt = bspline_bkpts(xdata, nord=nord, _EXTRA=EXTRA) ; ???
-      numbkpt = n_elements(fullbkpt)
-      numcoeff = numbkpt - nord
+      sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
 
-      if (NOT keyword_set(x2)) then begin
-         sset = $
-         { fullbkpt: fullbkpt         , $
-           bkmask  : bytarr(numbkpt)  , $
-           nord    : long(nord)       , $
-           coeff   : fltarr(numcoeff) }
-      endif else begin
+      if keyword_set(x2) then begin
          if (NOT keyword_set(xmin)) then xmin = min(x2)
          if (NOT keyword_set(xmax)) then xmax = max(x2)
          if (xmin EQ xmax) then xmax = xmin + 1
+         sset.xmin = xmin
+         sset.xmax = xmax
+      endif
 
-         sset = $
-         { fullbkpt: fullbkpt         , $
-           bkmask  : bytarr(numbkpt)  , $
-           nord    : long(nord)       , $
-           xmin    : xmin             , $
-           xmax    : xmax             , $
-           npoly   : long(npoly)      , $
-           coeff   : fltarr(npoly,numcoeff) }
-      endelse
    endelse
 
    ;----------
@@ -134,63 +121,58 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ; Condition the X2 dependent variable by the XMIN, XMAX values.
    ; This will typically put X2NORM in the domain [-1,1].
 
-   if keyword_set(x2) then $
-     x2norm = 2.0 * (x2 - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
-
+   if NOT keyword_set(invvar) then begin
+       var = variance(ydata)
+       if var EQ 0 then return, -1
+       invvar = 0.0 * ydata + 1.0/var
+   endif
 
    ;----------
    ; Iterate spline fit
 
    outmask = make_array(size=size(xdata), /byte) + 1
-   bkmask = bytarr(n_elements(fullbkpt)) + 1
    iiter = 0
-   while (NOT keyword_set(qdone) AND iiter LE maxiter) do begin
+   error = -1L
+   while (((error[0] NE -1) OR (keyword_set(qdone) EQ 0)) $
+           AND iiter LE maxiter) do begin
 
       if (iiter GT 0) then begin
-        qdone = djs_reject(ydata, yfit, invvar=invvar, $
+        print, error
+        if (error[0] NE -1) then sset.bkmask[error+nord-1L] = 0 $
+        else qdone = djs_reject(ydata, yfit, invvar=invvar, $
                            outmask=outmask, _EXTRA=EXTRA)
       endif
-
 
       qgood = outmask EQ 1
       igood = where(qgood, ngood)
       ibad = where(qgood NE 1, nbad)
 
-      if (ngood LE 1) then begin
+      goodbk = where(sset.bkmask NE 0)
+
+      if (ngood LE 1 OR goodbk[0] EQ -1) then begin
          coeff = 0
          iiter = maxiter + 1 ; End iterations
       endif else begin
-         if (keyword_set(invvar)) then invsig = sqrt(invvar) $
-          else invsig = 0.0 * ydata + stddev(ydata[igood])
-         if (nbad GT 0) then invsig[ibad] = 0
 
 ;         DO THE FIT ???
-;            INPUTS: xdata, ydata, x2, invsig, sset.fullbkpt, sset.bkmask,
+;            INPUTS: xdata, ydata, x2, invvar, sset.fullbkpt, sset.bkmask,
 ;                    sset.nord, sset.xmin, sset.xmax, sset.npoly
 ;            OUTPUTS: updated bkmask, yfit, coeff
 ;
-;	Let's demand invsig to be passed
-;       Coeff is output 
+;	Let's demand invvar, fullbkpt, and coeff to be passed
+;       ill constrained entries are returned
 ;       yfit is keyword
 ;       Full bkpt is required, not sure how to implement bkptmask yet
 ;
 
-          if (NOT keyword_set(x2)) then $
-           coeff = bspline_fit(xdata, ydata, invsig, sset.fullbkpt, $
-            bkmask=bkmask, nord=sset.nord) $
-          else $
-           coeff = bspline_fit(xdata, ydata, invsig, sset.fullbkpt, $
-            bkmask=bkmask, nord=sset.nord, x2=x2norm, npoly=sset.npoly)
+
+        error = bspline_fit(xdata, ydata, invvar*qgood, sset, $
+               x2=x2, yfit=yfit)
+
       endelse
 
       iiter = iiter + 1
    endwhile
-
-   ;----------
-   ; Assign data in output structure
-
-   sset.bkmask = bkmask
-   sset.coeff = coeff
 
    return, sset
 end
