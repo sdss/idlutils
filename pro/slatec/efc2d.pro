@@ -105,8 +105,8 @@ function efc2d, x, y, z, invsig, npolyin, nbkptordin, fullbkptin
       zval = float(z[ptemp])
       invsigval = float(invsig[ptemp])
 
- 
-      for i=0, nx-1 do begin
+
+      for i=0L, nx-1 do begin
 
         ypoly = yval[i] ^ findgen(npoly)
 
@@ -146,7 +146,6 @@ function efc2d, x, y, z, invsig, npolyin, nbkptordin, fullbkptin
     test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
                 'bndacc_idl', g, mdg, nord, ip, ir, 1L, npoly*(n+1))
 
-  
     rnorm = 1.0
     test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
                 'bndsol_idl', 1L, g, mdg, nord, ip, ir, coeff, npoly*n, rnorm)

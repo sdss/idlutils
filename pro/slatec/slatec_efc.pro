@@ -25,6 +25,9 @@
 ;   nbkpts     - Number of breakpoints to span x range
 ;                 minimum is 2 (the endpoints)
 ;   silent     - Do not produce non-critical messages
+;   x2         - 2nd dependent variable for 2d fitting
+;   npoly      - polynomial order to fit over 2nd variable, default 2
+;
 ;
 ; OUTPUTS:
 ;   coeff      - B-spline coefficients calculated by efc
@@ -58,7 +61,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
- invsig=invsig, idlver=idlver, _EXTRA=KeywordsForBkpts
+ invsig=invsig, idlver=idlver, x2=x2, npoly=npoly, _EXTRA=KeywordsForBkpts
 
    if (NOT keyword_set(nord)) then nord = 4L $
     else if (nord LT 1 or nord GT 20) then $
@@ -96,7 +99,11 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
    qeval = 1
    while (qeval) do begin
 
-      if (keyword_set(idlver)) then $
+      if (keyword_set(x2)) then begin
+        ;calling special 2d version of efc
+        if (NOT keyword_set(npoly)) then npoly = 2L
+        coeff = efc2d(x,x2,y,invsig, npoly, nord, fullbkpt)
+      endif else if (keyword_set(idlver)) then $
         coeff = efcmn(x,y,invsig, nord, fullbkpt) $
       else begin
         coeff = fltarr(nbkpt-nord)

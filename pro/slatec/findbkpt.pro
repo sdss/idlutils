@@ -39,7 +39,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function findbkpt, x, good, bkpt, nord, bkspace=bkspace, nbkpts=nbkpts, $
-                   everyn=everyn, silent=silent
+                   everyn=everyn, silent=silent, bkptspread=bkptspread
 
       ngood = n_elements(good)
 
@@ -80,7 +80,10 @@ function findbkpt, x, good, bkpt, nord, bkspace=bkspace, nbkpts=nbkpts, $
 
       nshortbkpt = n_elements(bkpt)
       fullbkpt = bkpt
-      bkptspace = (bkpt[1] - bkpt[0]) / 10.0
+
+      if (NOT keyword_set(bkptspread)) then bkptspread = 0.1
+      bkptspace = (bkpt[1] - bkpt[0]) * bkptspread
+
       for i=1, nord-1 do $
        fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
         bkpt[nshortbkpt - 1] + bkptspace*i]

@@ -34,6 +34,8 @@
 ;                each iteration
 ;   secondkludge - ???
 ;   eachgroup  - ???
+;   x2         - 2nd dependent variable for 2d fitting 
+;   npoly      - polynomial order to fit over 2nd variable, default 2
 ;
 ; KEYWORDS FOR SLATEC_EFC:
 ;   nord
@@ -68,7 +70,7 @@
 function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
          lower=lower, maxiter=maxiter, bkpt=bkpt, fullbkpt=fullbkpt, $
          secondkludge=secondkludge, mask=mask, rejper=rejper, $
-         eachgroup=eachgroup, _EXTRA=KeywordsForEfc
+         eachgroup=eachgroup, x2=x2, npoly=npoly, _EXTRA=KeywordsForEfc
 
     if N_PARAMS() LT 3 then begin
         print, ' Syntax - fullbkpt = slatec_splinefit(x, y, coeff, '
@@ -112,10 +114,17 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
           return, -1
        endif
 
-       fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
+       if (NOT keyword_set(x2)) then begin
+         fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
               coeff, bkpt=bkpt, invsig=invsig[these], $
                  _EXTRA=KeywordsForEfc)
-       yfit = slatec_bvalu(x, fullbkpt, coeff)
+         yfit = slatec_bvalu(x, fullbkpt, coeff)
+       endif else begin
+         fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
+              coeff, bkpt=bkpt, invsig=invsig[these], x2=x2[these], $
+              npoly=npoly, _EXTRA=KeywordsForEfc)
+         yfit = bvalu2d(x, x2, fullbkpt, coeff)
+       endelse
 
        if (keyword_set(rejper)) then begin
           diff = (y[these] - yfit[these])*invsig[these]
