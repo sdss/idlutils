@@ -17,6 +17,10 @@
 #   % evilinstall idlutils v4_5_0
 #   % evilinstall idlspec2d v4_5_0
 #
+# The CVS repository can be specified by setting the $CVSROOT environment
+# variable.  If not set, then set up the "sdsscvs" product if it exists,
+# or explicitly set to the Fermi CVS location.
+#
 # This script requires the "ups" product.  It will try to build code and
 # install it using the utilities in the "sdsstools" product.  If those do
 # not exist, then it tries using the "evilmake" and "install_ups_table"
@@ -100,9 +104,15 @@ if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
    exit
 fi
 
-# Set up "sdsscvs" if it exists as a product.
+# If $CVSROOT is not set, then set it either by setting up the "sdsscvs"
+# product or explicitly setting to the Fermi CVS location.  This allows
+# the option of installing from a different repository (i.e., Princeton
+# or NYU) by setting $CVSROOT first.
 
-setup sdsscvs
+if [ -z "$CVSROOT" ] ; then
+   setup sdsscvs
+fi
+
 if [ -z "$CVSROOT" ] ; then
    echo "Setting CVSROOT and CVS_RSH to default locations at Fermi"
    CVSROOT=cvsuser@sdss.fnal.gov:/cvs/sdss
