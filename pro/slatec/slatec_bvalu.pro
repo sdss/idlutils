@@ -7,16 +7,15 @@
 ;
 ; CALLING SEQUENCE:
 ;   
-;    y = slatec_bvalu(x, bkpt, coeff, ideriv=ideriv)
+;    y = slatec_bvalu(x, fullbkpt, coeff, ideriv=ideriv)
 ;
 ; INPUTS:
-;   x          - vector of positions to evaluate
-;   bkpt       - Breakpoint vector returned by efc
-;   coeff      - B-spline coefficients calculated by efc
+;   x          - Vector of positions to evaluate
+;   fullbkpt   - Breakpoint vector returned by SLATEC_EFC()
+;   coeff      - B-spline coefficients calculated by SLATEC_EFC()
 ;
 ; OPTIONAL KEYWORDS:
-;
-;   ideriv     - Derivative to evaluate at x (default 0)
+;   ideriv     - Derivative to evaluate at x; default to 0
 ;
 ; OUTPUTS:
 ;   y          - Evaluations corresponding to x positions
@@ -27,39 +26,36 @@
 ;
 ; EXAMPLES:
 ;
-;
-;
 ; PROCEDURES CALLED:
-;   bvalu_idl in slatec/src/idlwrapper.c
-;      which calls bvalu.f in libslatecidl.so
+;   Dynamic link to bvalu_idl in slatec/src/idlwrapper.c,
+;   which calls bvalu.f in the library "libslatecidl.so".
 ;
 ; REVISION HISTORY:
 ;   15-Oct-1999  Written by Scott Burles, Chicago
 ;-
 ;------------------------------------------------------------------------------
 
-function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
+function slatec_bvalu, x, fullbkpt, coeff, ideriv=ideriv
 
-   if (NOT keyword_set(ideriv)) then ideriv=0L
+   if (NOT keyword_set(ideriv)) then ideriv = 0L
 
    ideriv = long(ideriv)
 
-   nbkpt = n_elements(bkpt)
+   nbkpt = n_elements(fullbkpt)
    ncoeff = n_elements(coeff)
 
    k = nbkpt - ncoeff
    n = nbkpt - k
    if (ideriv LT 0 OR ideriv GE k) then begin
-         print, 'ideriv is ', ideriv
-         message, 'ideriv must be >= 0 and < nord'
+      print, 'IDERIV is ', ideriv
+      message, 'IDERIV must be >= 0 and < NORD'
    endif
 
+   if (k LT 1) then message, 'NORD must be > 0'
+   if (n LT k) then message, 'NBKPT must be >= 2*NORD'
 
-   if k LT 1 then message, 'nord must be > 0'
-   if n LT k then message, 'nbkpt must be >= 2*nord'
-
-   minbkpt = bkpt[k-1]
-   maxbkpt = bkpt[n]
+   minbkpt = fullbkpt[k-1]
+   maxbkpt = fullbkpt[n]
 
 ;   if (min(x) LT minbkpt) then $
 ;       message, 'x values fall below the first breakpoint'
@@ -79,7 +75,7 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
    rr = call_external(soname, 'bvalu_idl', $
-    float(bkpt), float(coeff), n, k, ideriv, xtemp, nx, inbv, work, y)
+    float(fullbkpt), float(coeff), n, k, ideriv, xtemp, nx, inbv, work, y)
 
    return, y
 end
