@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   airmass = tai2airmass( ra, dec, [ equinox, jd=, tai=, mjd=, $
-;    longitude=, latitude=, altitude=, ipa= ] )
+;    longitude=, latitude=, altitude=, ha=, ipa= ] )
 ;
 ; INPUTS:
 ;   ra             - Right ascension [degrees]
