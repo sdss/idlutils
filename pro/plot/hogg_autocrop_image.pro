@@ -14,7 +14,6 @@ ximage= total(timage,2)
 nx= n_elements(ximage)
 yimage= total(timage,1)
 ny= n_elements(yimage)
-help, ximage,yimage
 xl= 0L
 while ximage[xl] EQ 0.0 do xl= xl+1L
 xh= nx-1
