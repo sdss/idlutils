@@ -492,13 +492,11 @@ goddard/pro/misc/select_w.pro -text
 goddard/pro/misc/spec_dir.pro -text
 goddard/pro/misc/store_array.pro -text
 goddard/pro/misc/str_index.pro -text
-goddard/pro/misc/strebcasc.pro -text
 goddard/pro/misc/strn.pro -text
 goddard/pro/misc/strnumber.pro -text
 goddard/pro/misc/textclose.pro -text
 goddard/pro/misc/textopen.pro -text
 goddard/pro/misc/to_hex.pro -text
-goddard/pro/misc/trim.pro -text
 goddard/pro/misc/valid_num.pro -text
 goddard/pro/misc/vect.pro -text
 goddard/pro/misc/where_negzero.pro -text
