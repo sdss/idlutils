@@ -168,10 +168,6 @@ goddard/pro/astro/ticpos.pro -text
 goddard/pro/astro/tics.pro -text
 goddard/pro/astro/uvbybeta.pro -text
 goddard/pro/astro/vactoair.pro -text
-goddard/pro/astro/wcs_demo.pro -text
-goddard/pro/astro/wcs_rotate.pro -text
-goddard/pro/astro/wcssph2xy.pro -text
-goddard/pro/astro/wcsxy2sph.pro -text
 goddard/pro/astro/xyz.pro -text
 goddard/pro/astro/ydn2md.pro -text
 goddard/pro/astro/zang.pro -text
