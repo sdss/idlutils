@@ -784,6 +784,7 @@ pro/fits/modfitscard.pro -text
 pro/fits/mwrfits_chunks.pro -text
 pro/fits/rdss_fits.pro -text
 pro/fits/sxcombinepar.pro -text
+pro/healpix/alm2healpix.pro -text
 pro/healpix/atv_healcart_ind.pro -text
 pro/healpix/dpf_nest2ring.pro -text
 pro/healpix/heal_rebin.pro -text
