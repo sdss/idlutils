@@ -109,6 +109,7 @@ maskbits RESOLVE_STATUS  5 RUN_DUPLICATE
 maskbits RESOLVE_STATUS  8 SURVEY_PRIMARY
 maskbits RESOLVE_STATUS  9 SURVEY_BEST
 maskbits RESOLVE_STATUS 10 SURVEY_SECONDARY
+maskbits RESOLVE_STATUS 11 SURVEY_BADFIELD
 
 # The following are probably deprecated in favour of the RESOLVE_STATUS flag.
 maskbits RESOLVE  0 SET_RUN
@@ -124,6 +125,19 @@ maskbits RESOLVE  9 PSEGMENT
 maskbits RESOLVE  10 SET_FULL
 maskbits RESOLVE  11 FULL
 maskbits RESOLVE  12 FULL_MARGINAL
+
+#------------------------------------------------------------------------------
+
+maskbits IMAGE_STATUS  0 CLEAR
+maskbits IMAGE_STATUS  1 CLOUDS      # Unphotometric score
+maskbits IMAGE_STATUS  2 UNKNOWN     # Unphotometric score
+maskbits IMAGE_STATUS  3 BAD_ROTATOR # Set score=0
+maskbits IMAGE_STATUS  4 BAD_ASTROM  # Set score=0
+maskbits IMAGE_STATUS  5 BAD_FOCUS   # Set score=0
+maskbits IMAGE_STATUS  6 SHUTTERS    # Set score=0
+maskbits IMAGE_STATUS  7 FF_PETALS   # Unphotometric score
+maskbits IMAGE_STATUS  8 DEAD_CCD    # Unphotometric score
+maskbits IMAGE_STATUS  9 NOISY_CCD   # Unphotometric score
 
 #------------------------------------------------------------------------------
 
