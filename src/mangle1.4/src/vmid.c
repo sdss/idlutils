@@ -1,6 +1,6 @@
 /*------------------------------------------------------------------------------
-© A J S Hamilton 2001
-------------------------------------------------------------------------------*/
+  © A J S Hamilton 2001
+  ------------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -27,155 +27,163 @@
 
   Designed to be called after gverts().
 
-   Input: poly = pointer to polygon.
-	  mtol = initial angular tolerance in radians
-		 within which to merge multiple intersections.
-	  nv = number of vertices of polygon, as output by gverts().
-	  nve = number of points per edge, as input to gverts();
-		must be even and >= 2.
-	  ve = points on edges of polygon, as output by gverts().
-	  ipv = cap numbers of edges, as output by gverts().
-	  ev = end indices of connected sequences, as output by gverts().
+  Input: poly = pointer to polygon.
+  mtol = initial angular tolerance in radians
+  within which to merge multiple intersections.
+  nv = number of vertices of polygon, as output by gverts().
+  nve = number of points per edge, as input to gverts();
+  must be even and >= 2.
+  ve = points on edges of polygon, as output by gverts().
+  ipv = cap numbers of edges, as output by gverts().
+  ev = end indices of connected sequences, as output by gverts().
   Output: *nvm = number of middle points in *vm
-	       = max(nev, 1).
-	  *vm_p = pointer to unit vectors giving middle points;
-		  the required memory is allocated.
-		  If the algorithm failed to find a point inside the polygon,
-		  then the vector for that point is {0.,0.,0.}.
+  = max(nev, 1).
+  *vm_p = pointer to unit vectors giving middle points;
+  the required memory is allocated.
+  If the algorithm failed to find a point inside the polygon,
+  then the vector for that point is {0.,0.,0.}.
   Return value: 0 if ok (even if no inside point was found);
-		-1 if failed to allocate memory.
+  -1 if failed to allocate memory.
 */
 int vmid(polygon *poly, double mtol, int nv, int nve, vec ve[/*nv * nve*/], int ipv[/*nv*/], int ev[/*nv*/], int *nvm, vec **vm_p)
 {
-    const int do_vcirc = 1;
-    static int nvmmax = 0;
-    static vec *vm = 0x0;
+  const int do_vcirc = 1;
+  static int nvmmax = 0;
+  static vec *vm = 0x0;
 
-    int i, ier, iev, ip, iv, ivl, ivm, ivu, neva, nev0, nva, scm;
-    double angle, cm, cmbest, s, tol;
-    vec  rp, vc, vi;
-    int *ipva, *gpa, *eva;
-    double *cmvmin, *cmvmax, *cmpmin, *cmpmax;
-    vec *vmin, *vmax;
+  int i, ier, iev, ip, iv, ivl, ivm, ivu, neva, nev0, nva, scm;
+  double angle, cm, cmbest, s, tol;
+  vec  rp, vc, vi;
+  int *ipva, *gpa, *eva;
+  double *cmvmin, *cmvmax, *cmpmin, *cmpmax;
+  vec *vmin, *vmax;
 
-    /* added by mrb 2003-09-17 */
-    vm=0x0;
+  /* added by mrb 2003-09-17 */
+  vm=0x0;
 
-    /* make sure nve is even and >= 2 */
-    if (nve < 2 || nve % 2 != 0) {
-	fprintf(stderr, "vmid: nve = %d must be even and >= 2\n", nve);
-	fprintf(stderr, "STOP\n");
-	exit(1);
-    }
+  /* make sure nve is even and >= 2 */
+  if (nve < 2 || nve % 2 != 0) {
+    fprintf(stderr, "vmid: nve = %d must be even and >= 2\n", nve);
+    fprintf(stderr, "STOP\n");
+    exit(1);
+  }
 
-    /* number of midpoints */
-    for (ivm = 0; ev[ivm] != nv; ivm++);
-    *nvm = ivm + 1;
+  /* number of midpoints */
+  for (ivm = 0; ev[ivm] != nv; ivm++);
+  *nvm = ivm + 1;
 
-    /* make sure that vm contains enough space */
-    if (!vm || *nvm > nvmmax) {
-	if (vm) free(vm);
-	vm = (vec *) malloc(sizeof(vec) * (*nvm + DNV));
-	if (!vm) {
+  /* make sure that vm contains enough space */
+  if (!vm || *nvm > nvmmax) {
+    if (vm) free(vm);
+    vm = (vec *) malloc(sizeof(vec) * (*nvm + DNV));
+    if (!vm) {
 	    fprintf(stderr, "vmid: failed to allocate memory for %d vecs\n", *nvm + DNV);
 	    return(-1);
-	}
-	nvmmax = *nvm + DNV;
     }
+    nvmmax = *nvm + DNV;
+  }
 
-    /* polygon is whole sphere: choose point to be north pole */
-    if (poly->np == 0) {
-	vm[0][0] = 0.;
-	vm[0][1] = 0.;
-	vm[0][2] = 1.;
+  /* polygon is whole sphere: choose point to be north pole */
+  if (poly->np == 0) {
+    vm[0][0] = 0.;
+    vm[0][1] = 0.;
+    vm[0][2] = 1.;
 
     /* polygon has 1 cap: choose point at centre of circle */
-    } else if (poly->np == 1) {
-	scm = (poly->cm[0] >= 0.)? 1 : -1;
-	for (i = 0; i < 3; i++) vm[0][i] = scm * poly->rp[0][i];
+  } else if (poly->np == 1) {
+    scm = (poly->cm[0] >= 0.)? 1 : -1;
+    for (i = 0; i < 3; i++) vm[0][i] = scm * poly->rp[0][i];
 
     /* polygon has >= 2 caps */
-    } else {
+  } else {
 
-	/* index of central point of edge */
-	iev = nve / 2;
+    /* index of central point of edge */
+    iev = nve / 2;
 
-	/* no vertices implies each boundary is a disjoint circle */
-	if (nv == 0) {
+    /* no vertices implies each boundary is a disjoint circle */
+    if (nv == 0) {
 	    /* set `edge points' equal to centres of circles */
 	    for (ip = 0; ip < poly->np; ip++) {	/* gverts allocated enough memory for this */
-		scm = (poly->cm[ip] >= 0.)? 1 : -1;
-		for (i = 0; i < 3; i++) ve[ip * nve + iev][i] = scm * poly->rp[ip][i];
+        scm = (poly->cm[ip] >= 0.)? 1 : -1;
+        for (i = 0; i < 3; i++) ve[ip * nve + iev][i] = scm * poly->rp[ip][i];
 	    }
-	}
+    }
 
-	/* do each connected boundary */
-	for (ivm = 0; ivm < *nvm; ivm++) {
+    /* do each connected boundary */
+    for (ivm = 0; ivm < *nvm; ivm++) {
 
 	    /* initialize the midpoint to zero */
 	    for (i = 0; i < 3; i++) vm[ivm][i] = 0.;
 
 	    /* vertices on boundary */
 	    if (nv > 0) {
-		ivl = (ivm == 0)? 0 : ev[ivm - 1];
-		ivu = ev[ivm];
+        ivl = (ivm == 0)? 0 : ev[ivm - 1];
+        ivu = ev[ivm];
 	    } else {		/* nv = 0 */
-		ivl = 0;
-		ivu = poly->np;	/* gverts allocated enough memory for this */
+        ivl = 0;
+        ivu = poly->np;	/* gverts allocated enough memory for this */
 	    }
 
 	    /* central vector is summed vector of points at centres of edges of connected boundary */
 	    for (i = 0; i < 3; i++) vc[i] = 0.;
 	    for (iv = ivl; iv < ivu; iv++) {
-		for (i = 0; i < 3; i++) vc[i] += ve[iv * nve + iev][i];
+        for (i = 0; i < 3; i++) vc[i] += ve[iv * nve + iev][i];
 	    }
 	    /* length of central vector */
 	    s = sqrt(vc[0]*vc[0] + vc[1]*vc[1] + vc[2]*vc[2]);
 	    /* s = 0 can happen, though hardly ever */
 	    if (s == 0.) {
-		ip = ipv[ivl];
-		scm = (poly->cm[ip] >= 0.)? 1 : -1;
-		for (i = 0; i < 3; i++) vc[i] = scm * poly->rp[ip][i];
-	    /* normalize central vector to unit length */
+        ip = ipv[ivl];
+        scm = (poly->cm[ip] >= 0.)? 1 : -1;
+        for (i = 0; i < 3; i++) vc[i] = scm * poly->rp[ip][i];
+        /* normalize central vector to unit length */
 	    } else {
-		for (i = 0; i < 3; i++) vc[i] /= s;
+        for (i = 0; i < 3; i++) vc[i] /= s;
 	    }
 
 	    /* try several possible central points, and choose the best */
 	    cmbest = -1.;
 	    for (iv = ivl; iv < ivu; iv++) {
-		/* great circle joining centre of edge of connected boundary to central vector vc */
-		rp_to_gc(ve[iv * nve + iev], vc, rp, &cm);
-		/* central point vi of that part of the great circle inside the polygon, one end of which is the centre of the edge of the connected boundary */
-		tol = mtol;
-		ier = gvphi(poly, rp, cm, ve[iv * nve + iev], &tol, &angle, vi);
-		if (ier == -1) return(-1);
-		/* distance of central point to edges */
-		ier = gvlims(poly, do_vcirc, &tol, vi, &nva, &vmin, &vmax, &cmvmin, &cmvmax, &cmpmin, &cmpmax, &ipva, &gpa, &neva, &nev0, &eva);
-		if (ier == -1) return(-1);
-		if (ier) continue;
-		/* closest distance of central point to edges */
-		cm = 2.;
-		for (i = 0; i < nv; i++) {
-		    if (cmvmin[i] < cm) cm = cmvmin[i];
-		}
-		/* best bet so far is the point farthest from any edge */
-		if (cm > cmbest) {
-		    cmbest = cm;
-		    for (i = 0; i < 3; i++) {
-			vm[ivm][i] = vi[i];
-		    }
-		}
+        /* great circle joining centre of edge of connected boundary to central vector vc */
+        rp_to_gc(ve[iv * nve + iev], vc, rp, &cm);
+        /* central point vi of that part of the great circle inside the polygon, one end of which is the centre of the edge of the connected boundary */
+        tol = mtol;
+        ier = gvphi(poly, rp, cm, ve[iv * nve + iev], &tol, &angle, vi);
+        if (ier == -1) return(-1);
+        /* distance of central point to edges */
+        ier = gvlims(poly, do_vcirc, &tol, vi, &nva, &vmin, &vmax, &cmvmin, &cmvmax, &cmpmin, &cmpmax, &ipva, &gpa, &neva, &nev0, &eva);
+        if (ier == -1) return(-1);
+        if (ier) continue;
+        /* closest distance of central point to edges */
+        cm = 2.;
+        for (i = 0; i < nv; i++) {
+          if (cmvmin[i] < cm) cm = cmvmin[i];
+        }
+        /* best bet so far is the point farthest from any edge */
+        if (cm > cmbest) {
+          cmbest = cm;
+          for (i = 0; i < 3; i++) {
+            vm[ivm][i] = vi[i];
+          }
+        }
 	    }
 
-	}
-
+#if 0
+some code mrb wsa playying with 
+      /* if nothing is found, at least try the center? */
+      if(vm[ivm][0]==0. && vm[ivm][1]==0. && vm[ivm][2]==0.) 
+        for (i = 0; i < 3; i++) 
+          vm[ivm][i] = vc[i];
+#endif
+      
     }
 
-    /* point vm_p at vm array */
-    *vm_p = vm;
+  }
 
-    return(0);
+  /* point vm_p at vm array */
+  *vm_p = vm;
+
+  return(0);
 }
 
 /*------------------------------------------------------------------------------
@@ -189,67 +197,70 @@ int vmid(polygon *poly, double mtol, int nv, int nve, vec ve[/*nv * nve*/], int 
 
   Designed to be called after gverts().
 
-   Input: poly = pointer to polygon.
-	  nv = number of vertices of polygon, as output by gverts().
-	  nve = number of points per edge, as input to gverts();
-	  ve = points at centres of edges of polygon, as output by gverts().
-	  ipv = cap numbers of edges, as output by gverts().
-	  ev = end indices of connected sequences, as output by gverts().
+  Input: poly = pointer to polygon.
+  nv = number of vertices of polygon, as output by gverts().
+  nve = number of points per edge, as input to gverts();
+  ve = points at centres of edges of polygon, as output by gverts().
+  ipv = cap numbers of edges, as output by gverts().
+  ev = end indices of connected sequences, as output by gverts().
   Output: *nvm = number of middle points in *vm
-	       = max(nev, 1).
-	  *vm = pointer to unit vectors giving barycentres;
-		the required memory is allocated.
-		If the algorithm failed to find a point inside the polygon,
-		then the vector for that point is {0.,0.,0.}.
+  = max(nev, 1).
+  *vm = pointer to unit vectors giving barycentres;
+  the required memory is allocated.
+  If the algorithm failed to find a point inside the polygon,
+  then the vector for that point is {0.,0.,0.}.
   Return value: 0 if ok (even if no inside point was found);
-		-1 if failed to allocate memory.
+  -1 if failed to allocate memory.
 */
 int vmidc(polygon *poly, int nv, int nve, vec ve[/*nv * nve*/], int ipv[/*nv*/], int ev[/*nv*/], int *nvm, vec **vm_p)
 {
-    static int nvmmax = 0;
-    static vec *vm = 0x0;
+  static int nvmmax = 0;
+  static vec *vm = 0x0;
 
-    int i, iev, ip, iv, ivl, ivm, ivu;
-    double s;
+  int i, iev, ip, iv, ivl, ivm, ivu;
+  double s;
 
-    /* number of midpoints */
-    for (ivm = 0; ev[ivm] != nv; ivm++);
-    *nvm = ivm + 1;
+  /* added by mrb 2004-02-21 */
+  vm=0x0;
 
-    /* make sure that vm contains enough space */
-    if (!vm || *nvm > nvmmax) {
-	if (vm) free(vm);
-	vm = (vec *) malloc(sizeof(vec) * (*nvm + DNV));
-	if (!vm) {
+  /* number of midpoints */
+  for (ivm = 0; ev[ivm] != nv; ivm++);
+  *nvm = ivm + 1;
+
+  /* make sure that vm contains enough space */
+  if (!vm || *nvm > nvmmax) {
+    if (vm) free(vm);
+    vm = (vec *) malloc(sizeof(vec) * (*nvm + DNV));
+    if (!vm) {
 	    fprintf(stderr, "vmidc: failed to allocate memory for %d vecs\n", *nvm + DNV);
 	    return(-1);
-	}
-	nvmmax = *nvm + DNV;
     }
+    nvmmax = *nvm + DNV;
+  }
 
-    /* polygon is whole sphere: choose point to be north pole */
-    if (poly->np == 0) {
-	vm[0][0] = 0.;
-	vm[0][1] = 0.;
-	vm[0][2] = 1.;
+  /* polygon is whole sphere: choose point to be north pole */
+  if (poly->np == 0) {
+    vm[0][0] = 0.;
+    vm[0][1] = 0.;
+    vm[0][2] = 1.;
 
     /* polygon has 1 cap: choose point at centre of circle */
-    } else if (poly->np == 1) {
-	for (i = 0; i < 3; i++) vm[0][i] = poly->rp[0][i];
+  } else if (poly->np == 1) {
+    for (i = 0; i < 3; i++) vm[0][i] = poly->rp[0][i];
 
     /* no vertices implies each boundary is a disjoint circle */
-    } else if (nv == 0) {
-	/* choose point at centre of 1st circle */
-	for (i = 0; i < 3; i++) vm[0][i] = poly->rp[0][i];
+  } else if (nv == 0) {
+    /* choose point at centre of 1st circle */
+    for (i = 0; i < 3; i++) vm[0][i] = poly->rp[0][i];
 
     /* polygon has >= 2 caps */
-    } else {
+  } else {
 
-	/* index of central point of edge */
-	iev = nve / 2;
+    /* index of central point of edge */
+    iev = nve / 2;
 
-	/* do each connected sequence of vertices */
-	for (ivm = 0; ivm < *nvm; ivm++) {
+    /* do each connected sequence of vertices */
+    for (ivm = 0; ivm < *nvm; ivm++) {
 
 	    /* vertices in connected sequence */
 	    ivl = (ivm == 0)? 0 : ev[ivm - 1];
@@ -258,27 +269,27 @@ int vmidc(polygon *poly, int nv, int nve, vec ve[/*nv * nve*/], int ipv[/*nv*/],
 	    /* central vector is summed vector of points at centres of edges */
 	    for (i = 0; i < 3; i++) vm[ivm][i] = 0.;
 	    for (iv = ivl; iv < ivu; iv++) {
-		for (i = 0; i < 3; i++) {
-		    vm[ivm][i] += ve[iv * nve + iev][i];
-		}
+        for (i = 0; i < 3; i++) {
+          vm[ivm][i] += ve[iv * nve + iev][i];
+        }
 	    }
 	    /* length of central vector */
 	    s = sqrt(vm[ivm][0]*vm[ivm][0] + vm[ivm][1]*vm[ivm][1] + vm[ivm][2]*vm[ivm][2]);
 	    /* s = 0 can happen, though hardly ever */
 	    if (s == 0.) {
-		ip = ipv[ivl];
-		for (i = 0; i < 3; i++) vm[ivm][i] = poly->rp[ip][i];
-	    /* normalize central vector to unit length */
+        ip = ipv[ivl];
+        for (i = 0; i < 3; i++) vm[ivm][i] = poly->rp[ip][i];
+        /* normalize central vector to unit length */
 	    } else {
-		for (i = 0; i < 3; i++) vm[ivm][i] /= s;
+        for (i = 0; i < 3; i++) vm[ivm][i] /= s;
 	    }
-
-	}
 
     }
 
-    /* point vm_p at vm array */
-    *vm_p = vm;
+  }
 
-    return(0);
+  /* point vm_p at vm array */
+  *vm_p = vm;
+
+  return(0);
 }
