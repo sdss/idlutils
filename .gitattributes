@@ -932,6 +932,7 @@ pro/misc/floatcompress.pro -text
 pro/misc/group_indx.pro -text
 pro/misc/hogg_iau_name.pro -text
 pro/misc/hogg_name2radec.pro -text
+pro/misc/hogg_ned_name2radec.pro -text
 pro/misc/idlutils_so_ext.pro -text
 pro/misc/idlutils_version.pro -text
 pro/misc/lookforgzip.pro -text
