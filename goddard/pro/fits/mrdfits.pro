@@ -108,7 +108,7 @@
 ;                to 2).
 ;       /FIXED_VAR- Translate variable length columns into fixed length columns
 ;                and provide a length column for truly varying columns.
-;                This was only behavior prior to V2.5 or MRDFITS and remains
+;                This was only behavior prior to V2.5 for MRDFITS and remains
 ;                the default (see /POINTER_VAR)
 ;       /FSCALE - If present and non-zero then scale data to float
 ;                numbers for arrays and columns which have either
@@ -138,7 +138,7 @@
 ;                So that the first row is row 0.
 ;                If only a single value, x, is given in the range,
 ;                the range is assumed to be [0,x-1].
-;       ROWS -  A scalr or vector specifying a  specific row or rows to read 
+;       ROWS -  A scalar or vector specifying a  specific row or rows to read 
 ;               (first row is 0).   For example to read rows 0,
 ;               12 and 23 only, set ROWS=[0,12,23].   Valid for images, ASCII 
 ;               and binary tables, but not GROUPed data.   For images
@@ -312,6 +312,7 @@
 ;       V2.9a March 2004 Restore ability to read empty binary table W. Landsman
 ;             Swallow binary tables with more columns than given in TFIELDS
 ;       V2.9b Fix to ensure order of TFORMn doesn't matter
+;       V2.9c Check if extra degenerate NAXISn keyword are present W.L. Oct 2004 
 ;-
 PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 ;
@@ -323,8 +324,8 @@ PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 
   xten = fxpar(hdr, 'XTENSION')
   nfld = fxpar(hdr, 'TFIELDS')
-  nrow = long64(fxpar(hdr, 'NAXIS2'))
-  rsize = long64(fxpar(hdr, 'NAXIS1'))
+  nrow = fxpar(hdr, 'NAXIS2')
+  rsize = fxpar(hdr, 'NAXIS1')
 
   ;; will extract these for each
   names = ['TTYPE','TFORM', 'TSCAL', 'TZERO']
@@ -711,7 +712,7 @@ end
     
 ; Return the currrent version string for MRDFITS
 function mrd_version
-    return, '2.9b'
+    return, '2.9c'
 end
 ;=====================================================================
 ; END OF GENERAL UTILITY FUNCTIONS ===================================
@@ -1139,7 +1140,6 @@ end
 pro mrd_axes_trunc,naxis, dims, silent
 
     mysilent = silent
-
     for i=naxis-1,1,-1 do begin 
 
         if dims[i] eq 1 then begin
@@ -1181,7 +1181,18 @@ pro mrd_image, header, range, maxd, rsize, table, scales, offsets, scaling, $
  
     naxis = fxpar(header, 'NAXIS') 
     bitpix= fxpar(header, 'BITPIX') 
-    if naxis gt 0 then dims = long64(fxpar(header, 'NAXIS*')) else dims = 0
+    if naxis gt 0 then begin 
+          dims = long64(fxpar(header, 'NAXIS*', Count = N_axis)) 
+          if N_axis GT naxis then begin
+; Check if extra NAXISn keywords are present (though this is not legal FITS)
+                   nextra = N_axis - naxis
+                   dim_extra = dims[naxis:N_axis-1]
+                   if total(dim_extra) EQ nextra then $
+                        dims = dims[0:naxis-1] else $
+                   message,'ERROR - NAXIS = ' + strtrim(naxis,2) +  $
+                          ' but NAXIS' + strtrim(N_axis,2) + ' keyword present'
+          endif
+   endif else dims = 0
     
     gcount = fxpar(header, 'GCOUNT') 
     pcount = fxpar(header, 'PCOUNT')
@@ -1360,7 +1371,6 @@ pro mrd_image, header, range, maxd, rsize, table, scales, offsets, scaling, $
 	
         if naxis gt 1 then for i=0, naxis - 2 do rsize=rsize*dims[i] 
         rsize = rsize*lens[type] 
-         
         sz = lonarr(naxis+3) 
         sz[0] = naxis 
         sz[1:naxis] = dims 
@@ -1712,8 +1722,8 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
  
     ; Find the beginning of the heap area. 
  
-    heapoff = long64(fxpar(header, 'THEAP'))
-    sz = long64(fxpar(header, 'NAXIS1'))*long64(fxpar(header, 'NAXIS2'))
+    heapoff = fxpar(header, 'THEAP') 
+    sz = fxpar(header, 'NAXIS1')*fxpar(header, 'NAXIS2')
     
     if heapoff ne 0 and heapoff lt sz then begin 
         print, 'MRDFITS: ERROR Heap begins within data area' 
@@ -1727,7 +1737,7 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
     endif
  
     ; Get the size of the heap. 
-    pc = long64(fxpar(header, 'PCOUNT'))
+    pc = fxpar(header, 'PCOUNT') 
     if heapoff eq 0 then heapoff = sz 
     hpsiz = pc - (heapoff-sz) 
  
@@ -2249,7 +2259,7 @@ pro mrd_table, header, structyp, use_colnum,           $
            endif
            nrowp = N_elements(rows)
     endelse
-;    rsize = long64(fxpar(header, 'NAXIS1'))
+;    rsize = fxpar(header, 'NAXIS1') 
  
     ; 
     ;  Loop over the columns           
@@ -2704,9 +2714,8 @@ function mrdfits, file, extension, header,      $
 	    endif else begin
 
 	        ; Skip remainder of last data block
-	        sz = long64(fxpar(header, 'NAXIS1')) $
-                 * long64(fxpar(header,'NAXIS2')) +  $
-		       long64(fxpar(header, 'PCOUNT'))
+	        sz = fxpar(header, 'NAXIS1')*fxpar(header,'NAXIS2') +  $
+		       fxpar(header, 'PCOUNT')
 	        skipB = 2880 - sz mod 2880
 	        if (skipB ne 2880) then mrd_skip, unit, skipB
             endelse
