@@ -628,6 +628,7 @@ pro/misc/floatcompress.pro -text
 pro/misc/idlutils_version.pro -text
 pro/misc/make_html_help.pro -text
 pro/misc/rmfile.pro -text
+pro/misc/splog.pro -text
 pro/misc/struct_addtags.pro -text
 pro/misc/struct_append.pro -text
 pro/misc/struct_print.pro -text
