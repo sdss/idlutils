@@ -95,7 +95,7 @@ pro dpf_pix2ang_ring, nside, ipix, theta, phi, double=double
   theta = theta[ipix]
   phi = phi[ipix]
 
-  print, 'time', systime(1)-t1
+;  print, 'time', systime(1)-t1
 
   return
 end

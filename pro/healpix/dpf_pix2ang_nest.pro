@@ -41,7 +41,7 @@ pro dpf_pix2ang_nest, nside, ipix, theta, phi, double=double
   dpf_pix2ang_ring, nside, ipring, theta, phi, double=double
 
 ; -------- number in each nest
-  print, 'time', systime(1)-t1
+;  print, 'time', systime(1)-t1
 
   return
 end
