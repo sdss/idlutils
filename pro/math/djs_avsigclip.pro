@@ -67,7 +67,10 @@ function djs_avsigclip, array, dim, sigrej=sigrej, maxiter=maxiter, $
    endif
 
    ; Allocate memory for the output array
-   newdimvec = dimvec[ where(lindgen(ndim)+1 NE dim) ]
+   if (ndim GT 1) then $
+    newdimvec = dimvec[ where(lindgen(ndim)+1 NE dim) ] $
+   else $
+    newdimvec = [1]
    newsize = N_elements(array) / dimvec[dim-1]
    avearr = reform(fltarr(newsize), newdimvec)
 
