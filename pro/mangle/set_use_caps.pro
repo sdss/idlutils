@@ -21,7 +21,7 @@
 ;  turn off *all* the caps --- it is zero!
 ; EXAMPLES:
 ; BUGS:
-;   Number of caps limited to 64
+;   Number of caps limited to 32
 ; PROCEDURES CALLED:
 ; REVISION HISTORY:
 ;   09-Nov-2002  Written by MRB (NYU)

@@ -13,7 +13,7 @@
 ; COMMENTS:
 ; EXAMPLES:
 ; BUGS:
-;   Number of caps limited to 64
+;   Number of caps limited to 32
 ; PROCEDURES CALLED:
 ; REVISION HISTORY:
 ;   01-Oct-2002  Written by MRB (NYU)

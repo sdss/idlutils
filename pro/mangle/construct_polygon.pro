@@ -14,7 +14,7 @@
 ; COMMENTS:
 ; EXAMPLES:
 ; BUGS:
-;   Number of caps limited to 64
+;   Number of caps limited to 32
 ; PROCEDURES CALLED:
 ; REVISION HISTORY:
 ;   01-Oct-2002  Written by MRB (NYU)
@@ -32,7 +32,7 @@ polygon1={polystr, $
           ncaps:0L, $
           weight:0.D, $
           str:0.D, $
-          use_caps:ulong64(0), $
+          use_caps:ulong(0), $
           caps:ptr_new()}
 if(n_tags(extra) gt 0) then $
   polygon1=create_struct(extra,polygon1)
