@@ -155,7 +155,7 @@ if keyword_set(psfilename) then begin
     xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color
 endif
 !P.THICK= pthick
-!P.CHARTHICK= !P.THICK & !X.THICK= !P.THICK & !Y.THICK= !P.THICK
+!P.CHARTHICK= !P.THICK
 !P.CHARSIZE= 1.0
 if(NOT keyword_set(axis_char_scale)) then axis_char_scale= 1.75
 tiny= 1.d-4
@@ -163,12 +163,14 @@ tiny= 1.d-4
 !P.LINESTYLE= 0
 !P.TITLE= ''
 !X.STYLE= 1
+!X.THICK= 0.5*pthick
 !X.CHARSIZE= tiny
 !X.MARGIN= [1,1]*0.0
 !X.OMARGIN= [6,6]*axis_char_scale-!X.MARGIN
 !X.RANGE= 0
 !X.TICKS= 0
 !Y.STYLE= 1
+!Y.THICK= !X.THICK
 !Y.CHARSIZE= !X.CHARSIZE
 !Y.MARGIN= 0.6*!X.MARGIN
 !Y.OMARGIN= 0.6*!X.OMARGIN
@@ -263,6 +265,8 @@ for id2=ydimen-1,0L,-1 do begin
 ; set plot range and make axes
             !X.RANGE= range[*,d1]
             !Y.RANGE= range[*,d2]
+            xinterval= hogg_interval(!X.RANGE*axis_char_scale)
+            yinterval= hogg_interval(!Y.RANGE*axis_char_scale)
             if d1 EQ d2 then begin
                 xfrac=(panelpoint[d1,*]-!X.RANGE[0])/(!X.RANGE[1]-!X.RANGE[0])
                 indxra=where(xfrac gt 0. and xfrac le 1.,countra)
@@ -277,10 +281,10 @@ for id2=ydimen-1,0L,-1 do begin
                                 /totweight)
                     !Y.RANGE= 1.0d0*[-0.1,1.1]*totweight/(totsig)
                 endelse
+                yinterval= 1000*(!Y.RANGE[1]-!Y.RANGE[0])
             endif
-            xinterval= hogg_interval(!X.RANGE*axis_char_scale)
-            yinterval= hogg_interval(!Y.RANGE*axis_char_scale)
-            djs_plot,[0],[1],/nodata,xtickinterval=xinterval,ytickinterval=yinterval
+            djs_plot,[0],[1],/nodata, $
+              xtickinterval=xinterval,ytickinterval=yinterval
 
 ; make extra axis labels where necessary
             if bottomside then begin
