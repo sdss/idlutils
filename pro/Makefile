@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-SUBDIRS = TeXtoIDL coord fits image math misc plot slatec yanny bspline cosmography
+SUBDIRS = TeXtoIDL spheregroup coord fits image math misc plot slatec yanny bspline cosmography
 
 all :;
 
