@@ -6,7 +6,7 @@
 ;   Write a Yanny parameter file.
 ;
 ; CALLING SEQUENCE:
-;   yanny_write, filename, [ pdata, comments=comments ]
+;   yanny_write, filename, [ pdata, hdr=hdr, enums=enums, structs=structs ]
 ;
 ; INPUTS:
 ;   filename   - Output file name for Yanny parameter file
@@ -14,7 +14,12 @@
 ; OPTIONAL INPUTS:
 ;   pdata      - Array of pointers to all strucutures read.  The i-th data
 ;                structure is then referenced with "*pdata[i]"
-;   comments   - All non-data lines.
+;   hdr        - Header lines in Yanny file, which are usually keyword pairs.
+;   enums      - All "typedef enum" structures.
+;   structs    - All "typedef struct" structures, which define the form
+;                for all the PDATA structures.
+;   quick      - Quicker read using READF, but fails if continuation lines
+;                are present.
 ;
 ; OUTPUT:
 ;
@@ -28,6 +33,7 @@
 ;     yanny_write, 'testout.par', pdata, comments=comments
 ;
 ; BUGS:
+;   Need to write STRUCTS that is consistent with PDATA, even if not passed.
 ;
 ; PROCEDURES CALLED:
 ;
@@ -35,10 +41,10 @@
 ;   05-Sep-1999  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-pro yanny_write, filename, pdata, comments=comments
+pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
 
    if (N_params() LT 1) then begin
-      print, 'Syntax - yanny_write, filename, [ pdata, comments=comments ]'
+      print, 'Syntax - yanny_write, filename, [ pdata, hdr=hdr, enums=enums, structs=structs]'
       return
    endif
 
@@ -46,10 +52,27 @@ pro yanny_write, filename, pdata, comments=comments
    openw, olun, filename
 
    ; Write the header of the Yanny file
-   if (keyword_set(comments)) then begin
-      for i=0, N_elements(comments)-1 do begin
-         printf, olun, comments[i]
+   if (keyword_set(hdr)) then begin
+      for i=0, N_elements(hdr)-1 do begin
+         if (hdr[i] NE '') then printf, olun, hdr[i]
       endfor
+      printf, olun, ''
+   endif
+
+   ; Write the "typedef enum" lines of the Yanny file
+   if (keyword_set(enums)) then begin
+      for i=0, N_elements(enums)-1 do begin
+         if (enums[i] NE '') then printf, olun, enums[i]
+      endfor
+      printf, olun, ''
+   endif
+
+   ; Write the "typedef struct" lines of the Yanny file
+   if (keyword_set(structs)) then begin
+      for i=0, N_elements(structs)-1 do begin
+         if (structs[i] NE '') then printf, olun, structs[i]
+      endfor
+      printf, olun, ''
    endif
 
    ; Write the data in the Yanny file

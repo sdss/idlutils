@@ -6,7 +6,8 @@
 ;   Read a Yanny parameter file.
 ;
 ; CALLING SEQUENCE:
-;   yanny_read, filename, [ pdata, comments=comments, /quick ]
+;   yanny_read, filename, [ pdata, hdr=hdr, enums=enums, structs=structs, $
+;    /quick ]
 ;
 ; INPUTS:
 ;   filename   - Input file name for Yanny parameter file
@@ -20,9 +21,10 @@
 ;                structure is then referenced with "*pdata[i]".  If you want
 ;                to pass a single structure (eg, FOOBAR), then pass
 ;                ptr_new(FOOBAR).
-;   comments   - All non-data lines.  These lines differ from the original
-;                text only by removing trailing whitespace, and concatenating
-;                any lines with backslashes at the end with the next line.
+;   hdr        - Header lines in Yanny file, which are usually keyword pairs.
+;   enums      - All "typedef enum" structures.
+;   structs    - All "typedef struct" structures, which define the form
+;                for all the PDATA structures.
 ;   quick      - Quicker read using READF, but fails if continuation lines
 ;                are present.
 ;
@@ -164,10 +166,12 @@ pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
    return
 end
 ;------------------------------------------------------------------------------
-pro yanny_read, filename, pdata, comments=comments, quick=quick
+pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
+ quick=quick
 
    if (N_params() LT 1) then begin
-      print, 'Syntax - yanny_read, filename, [ pdata, comments=comments ]'
+      print, 'Syntax - yanny_read, filename, [ pdata, hdr=hdr, enums=enums, $
+      print, ' structs=structs, /quick ]'
       return
    endif
 
@@ -180,7 +184,9 @@ pro yanny_read, filename, pdata, comments=comments, quick=quick
             'fltarr(' , $
             'dblarr(' ]
 
-   comments = 0
+   hdr = 0
+   enums = 0
+   structs = 0
 
    ; List of all possible structures
    pcount = 0       ; Count of structure types defined
@@ -193,22 +199,43 @@ pro yanny_read, filename, pdata, comments=comments, quick=quick
    openr, ilun, filename
    rawline = ''
 
+   ; Read the very first line
+   if (keyword_set(quick)) then readf, ilun, rawline $
+    else rawline = yanny_nextline(ilun)
+
    while (NOT eof(ilun)) do begin
-      qdone = 0 ; Set to 1 when this line is processed as a structure element
-      if (keyword_set(quick)) then readf, ilun, rawline $
-       else rawline = yanny_nextline(ilun)
+      qdone = 0 ; Set to 1 when this line is anything other than a hdr line
       sline = yanny_strip_commas(rawline)
       words = str_sep(sline, ' ') ; Divide into words based upon whitespace
       nword = N_elements(words)
       if (nword GE 2) then begin
 
-         ; LOOK FOR STRUCTURES TO BUILD
-         if (words[0] EQ 'typedef' AND words[1] EQ 'struct') then begin
+         ; LOOK FOR "typedef enum" lines and add to structs
+         if (words[0] EQ 'typedef' AND words[1] EQ 'enum') then begin
+
+            while (strmid(sline,0,1) NE '}') do begin
+               yanny_add_comment, rawline, enums
+               if (keyword_set(quick)) then readf, ilun, rawline $
+                else rawline = yanny_nextline(ilun)
+               sline = yanny_strip_commas(rawline)
+            endwhile
+
+            yanny_add_comment, rawline, enums
+
+            if (keyword_set(quick)) then readf, ilun, rawline $
+             else rawline = yanny_nextline(ilun)
+            qdone = 1
+
+         ; LOOK FOR STRUCTURES TO BUILD with "typedef struct"
+         endif else if (words[0] EQ 'typedef' AND words[1] EQ 'struct') $
+          then begin
+
             ntag = 0
-            yanny_add_comment, rawline, comments
+            yanny_add_comment, rawline, structs
             if (keyword_set(quick)) then readf, ilun, rawline $
              else rawline = yanny_nextline(ilun)
             sline = yanny_strip_commas(rawline)
+
             while (strmid(sline,0,1) NE '}') do begin
                sline = strcompress(sline)
                ww = str_sep(sline, ' ')
@@ -252,11 +279,13 @@ pro yanny_read, filename, pdata, comments=comments, quick=quick
                   ntag = ntag + 1
                endif
 
-               yanny_add_comment, rawline, comments
+               yanny_add_comment, rawline, structs
                if (keyword_set(quick)) then readf, ilun, rawline $
                 else rawline = yanny_nextline(ilun)
                sline = yanny_strip_commas(rawline)
             endwhile
+
+            yanny_add_comment, rawline, structs
 
             ; Now for the structure name - get from the last line read
             ; Force this to uppercase
@@ -266,13 +295,17 @@ pro yanny_read, filename, pdata, comments=comments, quick=quick
             add_pointer, stname, $
              ptr_new( mrd_struct(names, values, 1, structyp=stname) ), $
              pcount, pname, pdata, pnumel
-         endif
+
+            if (keyword_set(quick)) then readf, ilun, rawline $
+             else rawline = yanny_nextline(ilun)
+
+            qdone = 1
 
          ; LOOK FOR A STRUCTURE ELEMENT
          ; Only look if some structures already defined
          ; Note that the structure names should be forced to uppercase
          ; such that they are not case-sensitive.
-         if (pcount GT 0) then begin
+         endif else if (pcount GT 0) then begin
             idat = where(strupcase(words[0]) EQ pname[0:pcount-1], ct)
             if (ct EQ 1) then begin
                idat = idat[0]
@@ -301,12 +334,18 @@ pro yanny_read, filename, pdata, comments=comments, quick=quick
 
                pnumel[idat] = pnumel[idat] + 1
                qdone = 1
+               if (keyword_set(quick)) then readf, ilun, rawline $
+                else rawline = yanny_nextline(ilun)
             endif
          endif
 
       endif
 
-      if (qdone EQ 0) then yanny_add_comment, rawline, comments
+      if (qdone EQ 0) then begin
+         yanny_add_comment, rawline, hdr
+         if (keyword_set(quick)) then readf, ilun, rawline $
+          else rawline = yanny_nextline(ilun)
+      endif
    endwhile
 
    close, ilun
