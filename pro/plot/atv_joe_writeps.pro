@@ -86,7 +86,6 @@ pro atv_joe_writeps, filename, aspect=aspect, _EXTRA=KeywordsForTV
     'MEDIUM'        , 0, $
     'NARROW'        , 0, $
     'OBLIQUE'       , 0 )
-   if(keyword_set(aspect)) then forminfo.ysize=forminfo.ysize*viewaspect
    if (keyword_set(KeywordsForTV)) then begin
       tags_form = tag_names(forminfo)
       tags_in = tag_names(KeywordsForTV)
@@ -95,6 +94,7 @@ pro atv_joe_writeps, filename, aspect=aspect, _EXTRA=KeywordsForTV
          if (ct GT 0) then forminfo.(j) = KeywordsForTV.(i)
       endfor
    endif
+   if(keyword_set(aspect)) then forminfo.ysize=forminfo.xsize*viewaspect
 
    tvlct, rr, gg, bb, 8
 
