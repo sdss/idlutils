@@ -301,10 +301,11 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
     }
     /* copy polygon i into output polygon */
     copy_poly(poly[i], polys[m]);
-		add_parent(polys[m],i);
+    if(!fmt.dontoutputparents) 
+      add_parent(polys[m],i);
     
     if(i%100 == 0) 
-      fprintf(stderr, "polygon %d / %d\n",i,npoly);
+      fprintf(stderr, "polygon %d / %d (%d balkans)\n",i,npoly,npolys);
 
     /* fragment successively against other polygons */
     for (jj = 0; jj < nlinks[i]; jj++) {
@@ -327,12 +328,13 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
         /* fragment */
         dn = fragment_poly(&polys[k], poly[j], discard, npolys - n, &polys[n], mtol);
 				/* add i and j to parent list of each fragment */
-				for(ifrag=n;ifrag<n+dn;ifrag++) {
-					if(polys[ifrag]) {
-						add_parent(polys[ifrag],i);
-						add_parent(polys[ifrag],j);
-					}
-				}
+        if(!fmt.dontoutputparents) 
+          for(ifrag=n;ifrag<n+dn;ifrag++) {
+            if(polys[ifrag]) {
+              add_parent(polys[ifrag],i);
+              add_parent(polys[ifrag],j);
+            }
+          }
         /* error */
         if (dn == -1) {
           fprintf(stderr, "mrb_balkanize: UHOH at polygon %d; continuing ...\n", (fmt.newid == 'o')? polys[i]->id : ip);
