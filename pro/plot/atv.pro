@@ -2024,11 +2024,15 @@ instrume = strcompress(string(sxpar(head, 'INSTRUME')), /remove_all)
 origin = strcompress(sxpar(head, 'ORIGIN'), /remove_all)
 naxis = sxpar(head, 'NAXIS')
 
-; Make sure it's not a 1-d spectrum
+; Make sure it's not a 1-d spectrum -- but healpix is OK
 if (numext EQ 0 AND naxis LT 2) then begin
-    atv_message, 'Selected file is not a 2-d FITS image!', $
-      window = window, msgtype = 'error'
-    return
+   if ishealpix(npix = sxpar(head, 'NAXIS1'), /silent) then begin 
+      healpixfile = 1B
+   endif else begin 
+      atv_message, 'Selected file is not a 2-d FITS image!', $
+        window = window, msgtype = 'error'
+      return
+   endelse
 endif
 
 state.title_extras = ''
@@ -2047,6 +2051,14 @@ endif else begin
 endelse
 
 if (cancelled EQ 1) then return
+
+; -------- reproject healpix file
+if keyword_set(healpixfile) then begin 
+   ind = atv_healcart_ind(main_image, head=head)
+   main_image = main_image[ind]
+;   state.imagename = 'HEALPix'
+endif
+
 
 ; Make sure it's a 2-d image
 if ( (size(main_image))[0] NE 2 ) then begin
@@ -2135,7 +2147,6 @@ pro atv_plainfits_read, fitsfile, head, cancelled
 common atv_images
 
 ; Fits reader for plain fits files, no extensions.
-
 delvarx, main_image
 main_image = mrdfits(fitsfile, 0, head, /silent, /fscale) 
 
