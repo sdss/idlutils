@@ -259,7 +259,6 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    pdata = 0        ; Pointer to each structure
    pnumel = 0       ; Number of elements in each structure
 
-   nline = numlines(filename)
    get_lun, ilun
    openr, ilun, filename
    rawline = ''
