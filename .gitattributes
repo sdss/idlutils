@@ -741,6 +741,7 @@ pro/cosmography/comdis.pro -text
 pro/cosmography/comdis2.pro -text
 pro/cosmography/dcomdisdz.pro -text
 pro/cosmography/dcomvoldz.pro -text
+pro/cosmography/dlookbackdz.pro -text
 pro/cosmography/dpropdisdz.pro -text
 pro/cosmography/dpropmotdisdz.pro -text
 pro/cosmography/lookback.pro -text
