@@ -216,6 +216,9 @@ if(NOT arg_present(cache)) then begin
         ptr_free,cache[i].xpixnum
         ptr_free,cache[i].ypixnum
         ptr_free,cache[i].pixnum
+        ptr_free,cache[i].mxx
+        ptr_free,cache[i].myy
+        ptr_free,cache[i].mxy
     endfor
     cache=0
 endif

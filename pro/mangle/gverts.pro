@@ -33,7 +33,7 @@ if(NOT keyword_set(verbose)) then $
   verbose=0L $
 else $
   verbose=1L
-if(n_elements(tol) eq 0) then tol=0.
+if(n_elements(tol) eq 0) then tol=1.e-15
 if(NOT keyword_set(nve)) then nve=5L
 
 for j=0L, polygon.ncaps-1L do begin
