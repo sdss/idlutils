@@ -41,6 +41,7 @@
 ;   
 ; REVISION HISTORY:
 ;   2003-Jan-30   Written by Douglas Finkbeiner, Princeton
+;   2003-Feb-07   Precess headers if necessary
 ;----------------------------------------------------------------------
 function dust_getmap, hdr, mapname, ipath=ipath, bhpath=bhpath
 
@@ -53,6 +54,20 @@ function dust_getmap, hdr, mapname, ipath=ipath, bhpath=bhpath
   extast, hdr, astr
   xy2ad, xbox, ybox, astr, l, b
   delvarx, xbox, ybox
+
+; -------- if (RA, dec) then precess, transform to (l,b)
+  if strmid(astr.ctype[0], 0, 4) eq 'RA--' then begin 
+     ra = l
+     dec = b
+     equinox = sxpar(hdr, 'EQUINOX')
+     if equinox eq 0 then equinox = sxpar(hdr, 'EPOCH')
+     if equinox eq 0 then begin 
+        print, 'Warning -- No EQUINOX or EPOCH in header' 
+     endif else begin 
+        if equinox ne 2000 then precess, ra, dec, equinox, 2000
+     endelse 
+     euler_2000, ra, dec, l, b, 1
+  endif 
 
   image = dust_getval(l, b, map=mapname, /noloop, /interp, ipath=ipath, bhpath=bhpath)
 
