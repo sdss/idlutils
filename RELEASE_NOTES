@@ -2,6 +2,7 @@
 Directory pro/rgbcolor added to support making color (RGB) images.
 Directory pro/healpix added to support atv display of healpix maps.
 
+HEALNPIX : One more healpix routine (NP)
 ALM2HEALPIX,DPF_NEST2RING,HEAL_REBIN,HEAL_SMOOTH,HEALCART_IND,HEALGEN,
                HEALGEN_LB,HEALPIX2ALM,HEALPIX_RING_WEIGHT,ISHEALPIX,
                MAP_NEST2RING,MAP_RING2NEST: healpix routines added to
