@@ -80,11 +80,7 @@ function ucac_readgc1, node, incl, gcwidth, thiszone, decmin, decmax
    if (decmax LE dec1min) then return, 0
 
    ; CASE: Zone overlaps for entire 360 degrees
-   if ((dec2min GT decmax AND dec1max GT decmin AND dec1min LT decmax) $
-    OR (dec1max LT decmin AND dec2min GT decmin AND dec2min LT decmax)) $
-    then begin
-;   if (dec1min LT decmax AND dec1min GT decmin $
-;    AND dec2min GT decmin AND dec2min LT decmax) then begin
+   if (dec2min GE decmin AND dec1max LE decmax) then begin
       ravec = [0.d0, 360.d0]
 
    ; CASE: Take a cap at the top of the great circle
