@@ -55,7 +55,7 @@ function splog_trim, v
 
    common com_splog_trim, qcompress
 
-   if (keyword_set(v)) then $
+   if (n_elements(v) NE 0) then $
     vt = (qcompress AND size(v,/tname) NE 'STRING') $
      ? strcompress(string(v)) : v $
    else $
