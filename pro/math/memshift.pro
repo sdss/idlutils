@@ -72,7 +72,8 @@ pro memshift, array, isrc1, idest1, nmove1
 
    soname = filepath('libmath.so', $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-   retval = call_external(soname, 'memshift', array, isrc, idest, nmove*nper)
+   retval = call_external(soname, 'memshift', array, $
+    isrc*nper, idest*nper, nmove*nper)
 
    return
 end
