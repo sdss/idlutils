@@ -202,8 +202,13 @@ pro chk_and_upd, header, key, value, comment
         oldvalue = fxpar(header, key, count=count, comment=oldcomment)
    
         if (count eq 1) then begin
-	  
-	    if (oldvalue ne value) then begin
+
+	    qchange = 0 ; Set to 1 if either the type of variable or its
+	                ; value changes.
+	    if (size(oldvalue,/type) NE size(value,/type)) then qchange = 1 $
+	     else if (oldvalue ne value) then qchange = 1
+
+	     if (qchange) then begin
 
 	        if n_elements(oldcomment) gt 0 then xcomm = oldcomment[0]
 	        fxaddpar, header, key, value, xcomm
@@ -545,7 +550,7 @@ for i=0, nfld-1 do begin
 	   5:	begin
 			types[i] = 'D'
 			nbyte = nbyte + 8*nelem
-		endif
+		end
 	   6:	begin
 	   		types[i] = 'C'
 			nbyte = nbyte + 8*nelem
@@ -554,7 +559,7 @@ for i=0, nfld-1 do begin
 			types[i] = 'A'
 			nbyte = nbyte + maxstr*nelem
 			dims[i] = maxstr*nelem
-		endif
+		end
 	   9:   begin
 	                types[i] = 'M'
 			nbyte = nbyte + 16*nelem
