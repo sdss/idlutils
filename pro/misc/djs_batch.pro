@@ -6,16 +6,18 @@
 ;   Batch processing script for running jobs locally or across a network.
 ;
 ; CALLING SEQUENCE:
-;   djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
-;    command, [ priority=, selecthost=, wtime= ]
+;   djs_batch, topdir, [localfile], [outfile], protocol, remotehost, $
+;    remotedir, command, [ priority=, selecthost=, wtime= ]
 ;
 ; INPUTS:
 ;   topdir     - Local top-level directory for input and output files.
 ;                Also use this directory for remote hosts where REMOTEDIR
 ;                is not specified.
-;   localfile  - Array of pointers to input files on local machine [NPROGRAM]
+;   localfile  - Array of pointers to input files on local machine [NPROGRAM].
+;                This input is optional.
 ;   outfile    - Array of pointers to output files created on remote machine
 ;                and copied to local machine upon completion [NPROGRAM]
+;                This input is optional.
 ;   protocol   - List of protocols for remote hosts.  Valid values are:
 ;                'ssh', 'ssh1', 'ssh2', 'rsh', or ''.  One must set to
 ;                no protocol ('') if the remote host name is 'localhost'.
@@ -74,7 +76,7 @@ end
 function create_program_list, localfile, outfile, command, $
  priority=priority, selecthost=selecthost
 
-   nprog = n_elements(localfile)
+   nprog = n_elements(command)
 
    ftemp = create_struct( name='PROGLIST_STRUCT', $
     'PROGNAME', '', $
@@ -90,8 +92,10 @@ function create_program_list, localfile, outfile, command, $
    proglist = replicate(ftemp, nprog)
 
    for iprog=0, nprog-1 do begin
-      proglist[iprog].localfile = localfile[iprog] ; (pointer)
-      proglist[iprog].outfile = outfile[iprog] ; (pointer)
+      if (keyword_set(localfile)) then $
+       proglist[iprog].localfile = localfile[iprog] ; (pointer)
+      if (keyword_set(outfile)) then $
+       proglist[iprog].outfile = outfile[iprog] ; (pointer)
       proglist[iprog].progname = 'JOB#' + strtrim(string(iprog),2)
    endfor
 
@@ -237,20 +241,26 @@ pro batch_assign_job, ihost, iprog
       endfor
 
       ; Create directories on remote machine for output files
-      alloutput = djs_filepath(*proglist[iprog].outfile, $
-       root_dir=hostlist[ihost].remotedir)
-      junk = fileandpath(alloutput, path=newdir)
-      iuniq = uniq(newdir, sort(newdir))
-      batch_spawn, prothost + 'mkdir -p ' $
-       + string(newdir[iuniq]+' ',format='(99a)')
+      ; (Not necessary if OUTFILE was not specified, and is a null pointer)
+      if (keyword_set(proglist[iprog].outfile)) then begin
+         alloutput = djs_filepath(*proglist[iprog].outfile, $
+          root_dir=hostlist[ihost].remotedir)
+         junk = fileandpath(alloutput, path=newdir)
+         iuniq = uniq(newdir, sort(newdir))
+         batch_spawn, prothost + 'mkdir -p ' $
+          + string(newdir[iuniq]+' ',format='(99a)')
+      endif
 
    endif else begin
 
       ; Only need to create local directories for output files
-      junk = fileandpath(*proglist[iprog].outfile, path=newdir)
-      iuniq = uniq(newdir, sort(newdir))
-      batch_spawn, 'mkdir -p ' $
-       + string(newdir[iuniq]+' ',format='(99a)')
+      ; (Not necessary if OUTFILE was not specified, and is a null pointer)
+      if (keyword_set(proglist[iprog].outfile)) then begin
+         junk = fileandpath(*proglist[iprog].outfile, path=newdir)
+         iuniq = uniq(newdir, sort(newdir))
+         batch_spawn, 'mkdir -p ' $
+          + string(newdir[iuniq]+' ',format='(99a)')
+      endif
 
    endelse
 
@@ -425,7 +435,7 @@ pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
       if (nidle GT 0 AND nunassign GT 0) then begin
          for j=0, nidle-1 do begin ; Loop over available hosts
             k = (where(proglist.status EQ 'UNASSIGNED' $
-             AND (proglist.selechost EQ '' $
+             AND (proglist.selecthost EQ '' $
                   OR proglist.selecthost EQ hostlist.remotehost)))
             if (k[0] NE -1) then begin
                junk = max(proglist[k].priority, kmax)
