@@ -59,9 +59,9 @@
 ;   to ra,dec are as follows:
 ;     mu = FITVAL[0] + yposlist * FITVAL[4] + FITVAL[5] * timelist^2
 ;     nu = xposlist + FITVAL[3]
-;     xx = cos(mu) * cos(nu)
-;     yy = sin(mu) * cos(nu) * cos(FITVAL[2]) - sin(nu) * sin(FITVAL[2])
-;     zz = sin(mu) * cos(nu) * sin(FITVAL[2]) + sin(nu) * cos(FITVAL[2])
+;     xx = cos(mu-node) * cos(nu)
+;     yy = sin(mu-node) * cos(nu) * cos(FITVAL[2]) - sin(nu) * sin(FITVAL[2])
+;     zz = sin(mu-node) * cos(nu) * sin(FITVAL[2]) + sin(nu) * cos(FITVAL[2])
 ;     ra = (180/!pi) * atan(yy,xx) + FITVAL[1]
 ;     dec = (180/!pi) * asin(zz)
 ;
