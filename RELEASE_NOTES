@@ -1,4 +1,5 @@
 
+DUSTPLOT: Checking in this old proc for making SFD map figures.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
 SPHEREMATCH: Some memory-saving changes by Blanton.
