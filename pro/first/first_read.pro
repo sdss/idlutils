@@ -110,7 +110,7 @@ function first_readascii, filename, range=range1, columns=columns
 
    thisfile = (findfile(filename))[0]
    if (NOT keyword_set(thisfile)) then begin
-      splog, 'WARNING: FIRST data file not found ' + filename+'.dat .'
+      splog, 'WARNING: FIRST data file not found ' + filename
       splog, 'You may download these data from:'
       splog, '  http://sundog.stsci.edu/first/catalogs/'
       return, 0
@@ -360,7 +360,8 @@ function first_read, racen, deccen, radius, $
    ;----------
    ; Read the files
 
-   bigdat = first_readfile(filename, range=range, columns=columns)
+   bigdat = first_readfile(filepath(filename, root_dir=first_dir), $
+    range=range, columns=columns)
 
    ;----------
    ; Further trim to the requested circle on the sky
