@@ -30,6 +30,8 @@
 ;   djs_mosaic_rgb, 'marla-001'
 ; BUGS:
 ;   Memory issues with asinh etc.
+;   The current implementation is very slow if COLORTEXT or COLORPLOT
+;     are 2-dimensional arrays.
 ; REVISION HISTORY:
 ;   2003-11-24  written - Hogg
 ;   2004-01-03  Modified (generalized) by D. Schlegel, Princeton
@@ -102,33 +104,43 @@ pro djs_mosaic_rgb, prefix, resizefactor=resizefactor, rotation=rotation, $
          ; Add any text...
          if (keyword_set(text)) then begin
             ntext = n_elements(text)
+            erase
             for i=0L, ntext-1 do begin
-               erase
+print,'Text ',i,ntext
                xyouts, xtext[i]*resizefactor, ytext[i]*resizefactor, $
                 text[i], /device, _EXTRA=extra, color=1
-               tmpimg = tvrd(0, 0, nx, ny)
-               if (keyword_set(colortext)) then $
-                color = colortext[*,i<(ncolortext-1)] $
-               else $
-                color = [255,255,255] ; default to white
-               for j=0, 2 do charimg[*,*,j] = charimg[*,*,j] + tmpimg * color[j]
+               if (ncolortext GT 1 OR i EQ ntext-1) then begin
+                  tmpimg = tvrd(0, 0, nx, ny)
+                  if (keyword_set(colortext)) then $
+                   color = colortext[*,i<(ncolortext-1)] $
+                  else $
+                   color = [255,255,255] ; default to white
+                  for j=0, 2 do $
+                   charimg[*,*,j] = charimg[*,*,j] + tmpimg * color[j]
+                  erase
+               endif
             endfor
          endif
 
          ; Add any points...
          if (nplot GT 0) then begin
+            erase
             for i=0L, nplot-1 do begin
-               erase
+print,'Point ',i,nplot
 	       plot, [xplot[i]*resizefactor], [yplot[i]*resizefactor], $
                 _EXTRA=extra, color=1, $
                 xrange=[0,nx-1], yrange=[0,ny-1], $
-                xmargin=[0,0], ymargin=[0,0], xstyle=5, ystyle=5
-               tmpimg = tvrd(0, 0, nx, ny)
-               if (keyword_set(colorplot)) then $
-                color = colorplot[*,i<(ncolorplot-1)] $
-               else $
-                color = [255,255,255] ; default to white
-               for j=0, 2 do charimg[*,*,j] = charimg[*,*,j] + tmpimg * color[j]
+                xmargin=[0,0], ymargin=[0,0], xstyle=5, ystyle=5, /noerase
+               if (ncolorplot GT 1 OR i EQ nplot-1) then begin
+                  tmpimg = tvrd(0, 0, nx, ny)
+                  if (keyword_set(colorplot)) then $
+                   color = colorplot[*,i<(ncolorplot-1)] $
+                  else $
+                   color = [255,255,255] ; default to white
+                  for j=0, 2 do $
+                   charimg[*,*,j] = charimg[*,*,j] + tmpimg * color[j]
+                  erase
+               endif
             endfor
          endif
 
