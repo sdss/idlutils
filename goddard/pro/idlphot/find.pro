@@ -207,7 +207,7 @@ SEARCH: 			    ;Threshold dependent search begins here
  message,strtrim(ngood,2)+' local maxima located above threshold',/INF
 
  nstar = 0L       	;NSTAR counts all stars meeting selection criteria
- badround = 0 & badsharp=0  &  badcntrd=0
+ badround = 0L & badsharp=0L  &  badcntrd=0L
  if (npar GE 2) or (doprint) then begin 	;Create output X and Y arrays? 
   	x = fltarr(ngood) & y = x
  endif
@@ -352,7 +352,7 @@ REJECT:
  if doprint then begin                
    printf,lun, $
       format = '(/8x,a)','     STAR       X       Y     FLUX     SHARP    ROUND'
-	for i = 0, nstar do $
+	for i = 0L, nstar do $
 	   printf,lun,format='(12x,i5,2f8.2,f9.1,2f9.2)', $
 	              i+1, x[i], y[i], flux[i], sharp[i], roundness[i]
         free_lun, lun
