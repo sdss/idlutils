@@ -1,3 +1,6 @@
+POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
+                 poly_2d to perform a rotation of an imaging using the 
+                 cubic approximation to the sinc shift.
 
 -------------------------------------------------------------------------------
 v5_0_2b (April 17, 2004) running on IDL 5.4 - 6.0
