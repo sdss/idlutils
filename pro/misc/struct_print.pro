@@ -186,9 +186,9 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
       for irow=0L, nrow-1 do begin
          tarray[irow] = string(struct[irow], format=format)
       endfor
-      if (keyword_set(htmhdr)) then tarray = [htmhdr, tarray]
       if (NOT keyword_set(no_head)) then $
        tarray = [hdr1, hdr2, tarray]
+      if (keyword_set(htmhdr)) then tarray = [htmhdr, tarray]
       if (keyword_set(lastline)) then tarray = [tarray, lastline]
    endif
 
