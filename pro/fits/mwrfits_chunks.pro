@@ -63,25 +63,26 @@ pro mwrbin_append, file, ext, struct
     point_lun, -lun, data_start
 
     ; Update the NAXIS2  -- this has a fixed location relative to the start
-    n = fxpar(header, "NAXIS2")
+    naxis1 = long64(fxpar(header, "NAXIS1"))
+    naxis2 = long64(fxpar(header, "NAXIS2"))
     point_lun, lun, header_start+330
 
-    z = string(n+n_elements(struct), format="(i20)")
+    z = string(naxis2+n_elements(struct), format="(i20)")
     writeu, lun, z
 
     ; Write the new data
-    data_size =  n*fxpar(header, "NAXIS1")
+    data_size =  naxis2 * naxis1
 
     point_lun, lun, data_start+data_size
-    
+
     host_to_ieee, struct
     writeu,lun, struct
     ieee_to_host, struct
 
     ; Write any needed padding.
-    data_size = (n+n_elements(struct))*fxpar(header, "NAXIS1")
-    blanks = data_size mod 2880
-    if blanks ne 0 then begin
+    data_size = (naxis2+n_elements(struct)) * naxis1
+    blanks = data_size MOD 2880
+    if blanks NE 0 then begin
         buf = bytarr(2880-blanks)
         writeu, lun, buf
     endif
