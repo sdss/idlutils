@@ -74,7 +74,7 @@ PRO usno_cone, catpath, racen, deccen, rad, result, cattype=cattype
   FOR z=z0, z1 DO BEGIN 
      
      zone = long(z*(zonewidth*10))
-     print, z0, z1, zonewidth, zone, z
+;     print, z0, z1, zonewidth, zone, z
      if keyword_set(usnob) then begin 
         subdir = string(zone / 10, format='(I3.3)')
      endif else subdir = ''
