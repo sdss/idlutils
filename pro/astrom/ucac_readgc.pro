@@ -47,6 +47,7 @@ function ucac_intersect, dec0, node, incl, nu
    sinnu = sin(nu/DRADEG)
    cosnu = cos(nu/DRADEG)
    sinmu = (sin(dec0/DRADEG) - sinnu * cosi) / (cosnu * sini)
+   sinmu = ((sinmu) < 1.d0) > (-1.d0) ; Sanity-check this for round-off errors
    cosmu = sqrt(1 - sinmu^2)
    cosmu = [-cosmu,cosmu]
    yy = sinmu * cosnu * cosi - sinnu * sini
@@ -144,7 +145,7 @@ function ucac_readgc, node=node1, incl=incl1, hwidth=hwidth, decrange=decrange1
    ; in the range [0,+90] degrees, so just transform the higher-inclination
    ; great circles.  This means that the mu values along the great circle
    ; are incorrect, but we don't care since we're returning the full circle.
-   if (node1 LE 90) then begin
+   if (incl1 LE 90) then begin
       node = node1
       incl = incl1
    endif else begin

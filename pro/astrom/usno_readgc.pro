@@ -151,7 +151,7 @@ function usno_readgc, node=node1, incl=incl1, hwidth=hwidth, decrange=decrange1
    ; in the range [0,+90] degrees, so just transform the higher-inclination
    ; great circles.  This means that the mu values along the great circle
    ; are incorrect, but we don't care since we're returning the full circle.
-   if (node1 LE 90) then begin
+   if (incl1 LE 90) then begin
       node = node1
       incl = incl1
    endif else begin
