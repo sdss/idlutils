@@ -5,7 +5,7 @@
 ;
 ; PURPOSE:
 ;   Make floating-point data more compressible by trimming binary digits. 
-;   The routine keeps the nfig most signifcant binary digits. 
+;   The routine keeps the ndig most signifcant binary digits. 
 ;   If keyword nsig is passed, the algorithm rounds to the nearest
 ;   power of two less than nsig*sigma, where sigma is evaluated from
 ;   the passed array (with 5 sigma outlier rejection). 
@@ -64,6 +64,7 @@
 ;   05-Jul-2000 Written by Doug Finkbeiner (UC Berkeley)
 ;   16-Sep-2000 Put in current format and commented -DPF
 ;   22-Sep-2000 Added nsig keyword
+;   22-Jun-2002 Deals with Infs and NaNs - DPF
 ;-
 ;----------------------------------------------------------------------------;
 FUNCTION floatcompress, data, ndig=ndig, nsig=nsig
@@ -96,9 +97,12 @@ FUNCTION floatcompress, data, ndig=ndig, nsig=nsig
      data = round(temporary(data)/step)*step
   ENDIF 
 
-; replace zeros with ones temporarily. 
-  wzer = where(data EQ 0, zcount)
-  IF zcount NE 0 THEN data[wzer] = 1.
+; replace zeros and nonfinite values with ones temporarily. 
+  wzer = where((data EQ 0) OR finite(data) EQ 0, zcount)
+  IF zcount NE 0 THEN BEGIN
+     temp = data[wzer]
+     data[wzer] = 1.
+  ENDIF
 
 ; compute log base 2
   log2 = ceil(alog(abs(data))/alog(2.))  ; exponent part
@@ -106,7 +110,10 @@ FUNCTION floatcompress, data, ndig=ndig, nsig=nsig
   mant = round(temporary(data)/2.0^(log2-ndig))/(2.0^ndig) ; mantissa, truncated
   out = temporary(mant)*2.0^log2     ; multiply 2^exponent back in 
 
-  IF zcount NE 0 THEN out[wzer] = 0.
+  IF zcount NE 0 THEN BEGIN
+     out[wzer] = temp
+  ENDIF
+     
 
   return, out
 END
