@@ -20,17 +20,21 @@
 ;----------------------------------------------------------------------
 
 pro tmass_writeslice, ind, a, outpath
+
+; -------- sort list on RA
+  sind = sort(a.ra)
+  a = a[sind]
+  delvarx, sind
+
+; -------- write FITS file
   fname = string('2mass-', ind, format='(A,I4.4)')
   path = string(outpath, (ind/10), format='(A,I3.3)')+'/'
   spawn, 'mkdir -p '+ path
   print, 'Writing '+path+fname+'.fits'
   mwrfits, a, path+fname+'.fits', /create
 
-; -------- The list is not, in general, sorted in RA
+; -------- write index (acc) file
   rah = a.ra/15
-  sind = sort(rah)
-  rah = rah[sind]
-  delvarx, sind
   step = 0.25d
   openw, wlun, path+fname+'.acc', /get_lun
   thisind = 1
@@ -40,6 +44,7 @@ pro tmass_writeslice, ind, a, outpath
      printf, wlun, j*step, thisind, ngood, format='(F5.2,I12,I12)'
   endfor 
   free_lun, wlun
+
   return
 end
 
