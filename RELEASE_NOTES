@@ -1,4 +1,6 @@
 
+TRACESET_TRIM: New function for trimming trace sets to selected traces.
+
 bin/Makefile: Should have "-n32" instead of "-32" in the X_FFLAGS
                for the IRIX64 platform, to avoid inconsistencies with
                the other compiler flags.
