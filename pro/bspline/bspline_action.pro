@@ -25,6 +25,8 @@
 ;   upper      - Same as lower, but denotes the upper pixel positions
 ;
 ; COMMENTS:
+;   Does not yet support the slatec function to directly return
+;   derivatives of the b-spline (ideriv). 
 ;
 ; EXAMPLES:
 ;
@@ -97,6 +99,10 @@ function bspline_action, x, sset, x2=x2, lower=lower, upper=upper
          CASE sset.funcname OF
            'poly' : begin
                    temppoly = (x2norm*0.0 + 1.0) # replicate(1,npoly)
+                   for i=1,npoly-1 do temppoly[*,i] = temppoly[*,i-1] * x2norm
+                  end
+           'poly1' : begin
+                   temppoly = x2norm # replicate(1,npoly)  
                    for i=1,npoly-1 do temppoly[*,i] = temppoly[*,i-1] * x2norm
                   end
            'chebyshev' : temppoly = fchebyshev(x2norm, npoly)

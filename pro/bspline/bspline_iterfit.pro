@@ -62,7 +62,7 @@
 function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
  x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, $
  bkpt=bkpt, oldset=oldset, maxiter=maxiter, upper=upper, lower=lower, $
- outmask=outmask, _EXTRA=EXTRA
+ outmask=outmask, fullbkpt=fullbkpt, funcname=funcname, _EXTRA=EXTRA
 
    if (n_params() LT 2) then begin
       print, 'Syntax -  sset = bspline_iterfit( )'
@@ -114,8 +114,10 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
    endif else begin
 
-      fullbkpt = bspline_bkpts(xdata[these], nord=nord, bkpt=bkpt, _EXTRA=EXTRA)
-      sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
+     if NOT keyword_set(fullbkpt) then $
+       fullbkpt = bspline_bkpts(xdata[these], nord=nord, bkpt=bkpt, _EXTRA=EXTRA)
+
+     sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
 
       if (nthese LT nord) then begin
          message, 'Number of good data points fewer the nord', /continue
@@ -127,11 +129,13 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       ; This will typically put X2NORM in the domain [-1,1].
 
       if keyword_set(x2) then begin
-         if (NOT keyword_set(xmin)) then xmin = min(x2)
-         if (NOT keyword_set(xmax)) then xmax = max(x2)
+         if n_elements(xmin) NE 1 then xmin = min(x2)
+         if n_elements(xmax) NE 1 then xmax = max(x2)
          if (xmin EQ xmax) then xmax = xmin + 1
          sset.xmin = xmin
          sset.xmax = xmax
+         
+         if keyword_set(funcname) then sset.funcname=funcname
       endif
 
    endelse
