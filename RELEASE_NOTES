@@ -11,6 +11,8 @@ MRDFITS: Re-cast the argument to POINT_LUN to be type LONG64, to allow
                large files.  Basically, do this to all NAXIS*,THEAP,PCOUNT
                header keywords.
 POLYGON_OVERLAP: Added /allow_neg_doubles to call to SET_USE_CAPS.
+READ_BINARY_POLYGONS: New proc to read a polygon format binary file
+               written by mangle, and return in the IDL structure format.
 QU_TO_BAPHI: New proc to transform Q/U values to B/A and PHI.
 SET_USE_CAPS: New (undocumented) keyword of /ALLOW_NEG_DOUBLES.
 VMID: New proc to return vector within a given balkan polygon.
@@ -39,6 +41,9 @@ src/idlmangle/where_polygons_overlap.c: New code called by
 src/image/Makefile: Include $(MAKE_FTNLIB) options in $(LD) build step.
                Also, build the new Fortran (.f) files, and idl_profmean,
                ppvalu, tautsp, interv, interp_profmean.
+               I've now removed the Fortran code from the Makefile, since
+               there are problems getting it to link to g2c on all Linux
+               platforms.
 src/image/idl_interp_profmean.f, interp_profmean.f, interv.f, ppvalu.f,
                tautsp.f: New procs by Blanton for profile interpolation.
 src/mangle1.4/src/Makefile: Change the "make" command to put the executables
@@ -50,6 +55,8 @@ src/mangle1.4/src/GNUmakefile: Remove this file, since it appears to
                to be worrying about two versions of the same Makefile.
 src/mangle1.4/src/format.h, mrb_balkanize.c, msg.c, parse_args.c, vmid.c:
                Fixes for memory-use bugs.
+src/mangle1.4/src/copy_poly.c,defaults.h,defines.h,format.h,manglefn.h,
+               parse_args.c,wrmask.c: Change to use binary mangle outputs.
 src/math/Makfile: Compile memshift.c
 src/math/memshift.c: Called by the new IDL procedure MEMSHIFT.
 
