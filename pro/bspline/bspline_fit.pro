@@ -63,7 +63,7 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 
    if NOT keyword_set(nord) then nord = 4L
 
-   if (size(sset, /tname) EQ 'UNDEFINED') then $
+   if (size(sset, /tname) NE 'STRUCT') then $
     sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
 
    if ((where(tag_names(sset) EQ 'NPOLY'))[0] NE -1) then npoly = sset.npoly
