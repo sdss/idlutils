@@ -230,10 +230,10 @@ for id2=ydimen-1,0L,-1 do begin
               xnextblank=1
             if(id2 gt 0) then $
               if(ydims[id2-1] eq -1) then $
-              yprevblank=1
+              ynextblank=1
             if(id2 lt xdimen-1) then $
               if(ydims[id2+1] eq -1) then $
-              ynextblank=1
+              yprevblank=1
             leftside= 0B
             if (!P.MULTI[0] EQ 0) OR $
               (((!P.MULTI[0]-1) MOD xdimen) EQ (xdimen-1) OR $
