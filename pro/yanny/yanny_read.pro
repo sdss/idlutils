@@ -46,6 +46,11 @@
 ;   Yanny files assume type INT is a 4-byte integer, whereas in IDL
 ;   that type is only 2-byte.
 ;
+;   I special-case the replacement of {{}} with "", since it seems
+;   that some bonehead used the former to denote blank strings in
+;   the idReport files.  Otherwise, any curly-brackets are always ignored
+;   (as they should be).
+;
 ; EXAMPLES:
 ;
 ; BUGS:
@@ -92,17 +97,21 @@ end
 
 function yanny_strip_brackets, sline
 
-   i = strpos(sline, '}')
-   while (i NE -1) do begin
-      strput, sline, ' ', i
-      i = strpos(sline, '}')
-   endwhile
+   sline = repstr(sline, '{{}}', '""')
+   sline = repstr(sline, '{', ' ')
+   sline = repstr(sline, '}', ' ')
 
-   i = strpos(sline, '{')
-   while (i NE -1) do begin
-      strput, sline, ' ', i
-      i = strpos(sline, '{')
-   endwhile
+;   i = strpos(sline, '}')
+;   while (i NE -1) do begin
+;      strput, sline, ' ', i
+;      i = strpos(sline, '}')
+;   endwhile
+;
+;   i = strpos(sline, '{')
+;   while (i NE -1) do begin
+;      strput, sline, ' ', i
+;      i = strpos(sline, '{')
+;   endwhile
 
    return, sline
 end
