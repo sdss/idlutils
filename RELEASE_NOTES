@@ -1,6 +1,7 @@
 
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
+SPHEREMATCH: Some memory-saving changes by Blanton.
 
 src/image/pop_image.c: A double-precision version of the code has been
                added to support the double-precision option in POPULATE_IMAGE.
