@@ -131,7 +131,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
                               long(omatch1),long(omatch2), $
                               double(odistance12), long(onmatch))
    endif else begin
-       print, 'no matches'
+;       print, 'no matches'
        return
    endelse
 
