@@ -7,6 +7,12 @@ DJS_BATCH: Add a call to COUNT_FREELUN().  Do not try to use more hosts than
 GVERTS: Bug fix for the case of single-cap polygons.
 IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
+RADEC_GREATCIRCLE: In the internal function RADEC_GCFN, return the
+               concatenation of all the chi values in both mu+nu,
+               rather than some quatrature sum of the chi^2's.
+               This seems to result in much better convergence,
+               especially for those runs where we don't have a good
+               starting guess.
 VMIDC,idl_vmidc.c,vmid.c: New function to return the central vector in
                a polygon.
 UNDEFINE: Fanning procedure to wrap TEMPORARY calls to delete variables
