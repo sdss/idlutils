@@ -24,30 +24,30 @@
 ;----------------------------------------------------------------------
 function tmass_struc, N
 
-  struc = {ra:      0.d, $
-           dec:     0.d, $
-           err_maj: 0., $
-           err_min: 0., $
-           err_ang: 0., $
-           j_m:     0.,$
-           j_ivar:  0., $
-           h_m:     0.,$
-           h_ivar:  0., $
-           k_m:     0., $
-           k_ivar:  0., $
-           ph_qual: 'ZZZ', $
-           rd_flg:  0, $
-           bl_flg:  0, $
-           cc_flg:  'zzz', $
-           ndetect: bytarr(3), $
-           nobserve: bytarr(3), $
-           gal_contam: 0b, $
-           mp_flg: 0b, $
-           pts_key: 0L, $
-           hemis: ' ', $
-           jdate: 0d, $
-           dup_src: 0b, $
-           use_src: 0b }
+  struc = {tmass_ra:      0.d, $
+           tmass_dec:     0.d, $
+           tmass_err_maj: 0., $
+           tmass_err_min: 0., $
+           tmass_err_ang: 0., $
+           tmass_j:       0.,$
+           tmass_j_ivar:  0., $
+           tmass_h:       0.,$
+           tmass_h_ivar:  0., $
+           tmass_k:       0., $
+           tmass_k_ivar:  0., $
+           tmass_ph_qual: 'ZZZ', $
+           tmass_rd_flg:  0, $
+           tmass_bl_flg:  0, $
+           tmass_cc_flg:  'zzz', $
+           tmass_ndetect: bytarr(3), $
+           tmass_nobserve: bytarr(3), $
+           tmass_gal_contam: 0b, $
+           tmass_mp_flg: 0b, $
+           tmass_pts_key: 0L, $
+           tmass_hemis: ' ', $
+           tmass_jdate: 0d, $
+           tmass_dup_src: 0b, $
+           tmass_use_src: 0b }
 
   if keyword_set(N) then struc = replicate(struc, N)
 
