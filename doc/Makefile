@@ -16,6 +16,7 @@ all :
 install :
 	@ rm -rf $(IDLUTILS_DIR)/doc/www
 	@ mkdir $(IDLUTILS_DIR)/doc/www
+	- cp mk_doc $(IDLUTILS_DIR)/doc
 	- cp www/*.html $(IDLUTILS_DIR)/doc/www
 	- cp Makefile $(IDLUTILS_DIR)/doc
 
