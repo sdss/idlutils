@@ -92,9 +92,10 @@ function djs_median, array, dim, width=width, boundary=boundary
    endif else if (NOT keyword_set(dim)) then begin
 
       if (boundary EQ 'none') then begin
-         if (n_elements(array) EQ 1) then medarr = array[0] $
+         npix = n_elements(array)
+         if (npix EQ 1) then medarr = array[0] $
           else if (width EQ 1) then medarr = array $
-          else medarr = median(array, width, /even)
+          else medarr = median(array, (width < npix), /even)
       endif else begin
          padsize = ceil(width/2.)  ; This padding will be at least 1 pixel
          zero = array[0] - array[0] ; Zero in the type of ARRAY
