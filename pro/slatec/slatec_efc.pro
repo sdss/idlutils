@@ -75,7 +75,9 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 
    if (ngood EQ 0) then begin
       print, 'No good points'
-      return, -1
+      coeff = 0
+      fullbkpt = 0
+      return, fullbkpt
    endif
 
    if (NOT keyword_set(fullbkpt)) then begin
