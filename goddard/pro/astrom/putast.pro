@@ -1,10 +1,10 @@
  pro putast, hdr, astr, crpix, crval, ctype, EQUINOX=equinox, $
-                                CD_TYPE = cd_type
+                                CD_TYPE = cd_type, ALT = alt
 ;+
 ; NAME:
 ;    PUTAST
 ; PURPOSE:
-;    Put astrometry parameters into a given FITS header.
+;    Put WCS astrometry parameters into a given FITS header.
 ;
 ; CALLING SEQUENCE:
 ;     putast, hdr              ;Prompt for all values
@@ -24,8 +24,9 @@
 ;                                                             CD2_1 CD2_2
 ;              in units of DEGREES/PIXEL
 ;     CRPIX - 2 element vector giving X and Y coord of reference pixel
-;              BE SURE THE COORDINATES IN CRPIX ARE GIVEN IN FORTRAN STANDARD
-;              (e.g. FIRST PIXEL IN IMAGE IS (1,1) )
+;              BE SURE THE COORDINATES IN CRPIX ARE GIVEN IN FITS STANDARD
+;              (e.g. first pixel in image is [1,1] ) AND NOT IDL STANDARD
+;              (first pixel in image is [0,0]
 ;     CRVAL - 2 element vector giving R.A. and DEC of reference pixel 
 ;               in degrees
 ;     CTYPE - 2 element string vector giving projection types for the two axes.
@@ -41,16 +42,15 @@
 ;                coordinates.   Default (if EQUINOX keyword is not already
 ;                present in header) is 2000.
 ;
-;       CD_TYPE - Integer scalar, either 1 or 2 specifying how the CD matrix
+;       CD_TYPE - Integer scalar, either 0, 1 or 2 specifying how the CD matrix
 ;                is to be written into the header
-;               (1) convert to rotation and write as a CROTA2 value
-;               (2) as CDn_m value, this is the proposed FITS standard
+;               (0) write PCn_m values along with CDELT values
+;               (1) convert to rotation and write as a CROTA2 value (+ CDELT)
+;               (2) as CDn_m values (IRAF standard) 
 ;
-;            As described in Paper II of Calabretta & Greisen (2002, A&A, 395
-;            1077); available at http://www.aoc.nrao.edu/~egreisen/)
-;            form (2) is the preferred representation of the CD matrix.  
-;            (The paper actually specifies an additional representation PCi_j
-;            for the CD matrix, but this is not yet implemented into PUTAST.)
+;            All three forms are valid representations according to Greisen &
+;            Calabretta (2002, A&A, 395, 1061), also available at 
+;            http://www.aoc.nrao.edu/~egreisen/) although form (0) is preferred.
 ;            Form (1) is the former AIPS standard and is now  deprecated.
 ;            If CD_TYPE is not supplied, PUTAST will try to determine the 
 ;            type of astrometry already in the header.   If there is no 
@@ -66,7 +66,8 @@
 ;       rotation angle.
 ;
 ; PROCEDURES USED:
-;       GETOPT(), GET_COORDS, GET_EQUINOX, SXADDPAR, SXPAR(), ZPARCHECK
+;       GETOPT(), GET_COORDS, GET_EQUINOX, SXADDPAR, SXPAR(), TAG_EXIST(), 
+;       ZPARCHECK
 ; REVISION HISTORY:
 ;       Written by W. Landsman 9-3-87
 ;       Major rewrite, use new astrometry structure   March, 1994
@@ -86,11 +87,13 @@
 ;       Update CTYPE keyword if previous value is 'LINEAR'  W.L. July 2001
 ;       Use SIZE(/TNAME) instead of DATATYPE()  W.L.   November 2001
 ;       Allow direct specification of CTYPE W.L.        June 2002
+;       Don't assume celestial coordinates W. Landsman  April 2003
+;       Make default CD_TYPE = 2  W. Landsman   September 2003
 ;-
  npar = N_params()
 
  if ( npar EQ 0 ) then begin    ;Was header supplied?
-        print,'Syntax: PUTAST, astr, [ EQUINOX = , CD_TYPE = ]'
+        print,'Syntax: PUTAST, Hdr, astr, [ EQUINOX = , CD_TYPE = ]'
         print,'       or'
         print,'Syntax: PUTAST, Hdr, [ cd, crpix, crval, EQUINOX = , CD_TYPE =]'   
         return
@@ -98,6 +101,7 @@
 
  RADEG = 180.0d/!DPI
  zparcheck, 'PUTAST', hdr, 1, 7, 1, 'FITS image header'
+ if N_elements(alt) EQ 0 then alt = '' else if (alt EQ '1') then alt = 'a'
 
  if ( npar EQ 1 ) then begin            ;Prompt for astrometry parameters?
    ctype = strtrim(sxpar(hdr,'CTYPE*', Count = N_Ctype),2)
@@ -140,6 +144,8 @@ RD_CEN:
         crval = astr.crval
         crpix = astr.crpix
         ctype = astr.ctype
+	longpole = astr.longpole
+        if tag_exist(astr,'latpole') then latpole = astr.latpole
    endif else  begin
         cd = astr
         zparcheck,'PUTAST', cd, 2, [4,5], 2, 'CD matrix'
@@ -150,8 +156,8 @@ RD_CEN:
 
  if N_elements( ctype ) GE 2 then begin
 
- sxaddpar,hdr,'CTYPE1',ctype[0],' Coordinate Type','HISTORY'
- sxaddpar,hdr,'CTYPE2',ctype[1],' Coordinate Type','HISTORY'
+ sxaddpar,hdr,'CTYPE1'+alt,ctype[0],' Coordinate Type','HISTORY',/SaveC
+ sxaddpar,hdr,'CTYPE2'+alt,ctype[1],' Coordinate Type','HISTORY',/SaveC
 
  endif
 
@@ -160,39 +166,57 @@ RD_CEN:
  if N_elements( equinox ) EQ 0 then begin        ;Is EQUINOX already in header?
     equinox = get_equinox( hdr, code)   
     if  code LT 0 then $
-       sxaddpar, hdr, 'EQUINOX', 2000.0, ' Equinox of Ref. Coord.', 'HISTORY'
+       sxaddpar, hdr, 'EQUINOX', 2000.0, ' Equinox of Ref. Coord.',  $
+                      'HISTORY',/SaveC
  
  endif else $
-     sxaddpar,hdr, 'EQUINOX', equinox, 'Equinox of Ref. Coord.', 'HISTORY'
+     sxaddpar,hdr, 'EQUINOX', equinox, 'Equinox of Ref. Coord.', 'HISTORY',/Sav
 
 ; Add coordinate description (CD) matrix to FITS header
-; 1. CROTA + CDELT     2: CD1_1 
+; 1. PCn_m keywords 
+
+
+
+; 2. CROTA + CDELT     2: CD1_1 
   
  
  if (N_elements(cd_type) EQ 0) then begin
  cd_type = 2
- cd1_1 = sxpar( hdr, 'CD1_1', COUNT = N_CD)
- 	if N_CD EQ 0 then begin               ; 
-             cd1_1 = sxpar( hdr, 'CD001001', COUNT = N_CD)
-             if N_CD GT 1 then fits_cd_fix, hdr,/reverse
-        endif
- if N_CD EQ 0 then begin
-                CDELT1 = sxpar( hdr,'CDELT1', COUNT = N_CDELT1)
-                if N_CDELT1 GE 1 then cd_type = 1
-        endif
+ pc1_1 = sxpar( hdr, 'PC1_1', Count = N_PC)
+      if N_pc EQ 0 then begin 
+      cd1_1 = sxpar( hdr, 'CD1_1', Count = N_CD)
+      if N_CD EQ 0 then begin               ; 
+             CDELT1 = sxpar( hdr,'CDELT1', COUNT = N_CDELT1)
+             if N_CDELT1 GE 1 then cd_type = 1
+      endif       
+     endif else cd_type = 0
  endif
 
-  if cd_type EQ 2 then begin
+  degpix  = ' Degrees / Pixel'
+  if cd_type EQ 0 then begin
+
+
+    sxaddpar, hdr, 'PC1_1'+alt, cd[0,0], degpix, 'HISTORY',/SaveC
+    sxaddpar, hdr, 'PC2_1'+alt, cd[1,0], degpix, 'HISTORY',/SaveC
+    sxaddpar, hdr, 'PC1_2'+alt, cd[0,1], degpix, 'HISTORY',/SaveC
+    sxaddpar, hdr, 'PC2_2'+alt, cd[1,1], degpix, 'HISTORY',/SaveC
+
+    sxaddpar, hdr, 'CDELT1'+alt, cdelt[0], degpix, 'HISTORY',/SaveC
+    sxaddpar, hdr, 'CDELT2'+alt, cdelt[1], degpix, 'HISTORY',/SaveC
+
+
+  endif else if cd_type EQ 2 then begin
 
     if N_elements(CDELT) GE 2 then if (cdelt[0] NE 1.0) then begin
             cd[0,0] = cd[0,0]*cdelt[0] & cd[0,1] =  cd[0,1]*cdelt[0]
             cd[1,1] = cd[1,1]*cdelt[1] & cd[1,0] =  cd[1,0]*cdelt[1]
     endif
 
-    sxaddpar, hdr, 'CD1_1', cd[0,0], ' Degrees / Pixel', 'HISTORY'
-    sxaddpar, hdr, 'CD2_1', cd[1,0], ' Degrees / Pixel', 'HISTORY'
-    sxaddpar, hdr, 'CD1_2', cd[0,1], ' Degrees / Pixel', 'HISTORY'
-    sxaddpar, hdr, 'CD2_2', cd[1,1], ' Degrees / Pixel', 'HISTORY'
+
+    sxaddpar, hdr, 'CD1_1' + alt, cd[0,0], degpix, 'HISTORY',/SaveC
+    sxaddpar, hdr, 'CD2_1' + alt, cd[1,0], degpix, 'HISTORY',/SaveC
+    sxaddpar, hdr, 'CD1_2' + alt, cd[0,1], degpix, 'HISTORY',/SaveC
+    sxaddpar, hdr, 'CD2_2' + alt, cd[1,1], degpix, 'HISTORY',/SaveC
 
  endif else begin
 
@@ -209,17 +233,18 @@ RD_CEN:
                         delt = [sgn*sqrt(cd[0,0]^2 + cd[0,1]^2), $
                                      sqrt(cd[1,0]^2 + cd[1,1]^2) ]
         endif 
-        sxaddpar, hdr, 'CDELT1', delt[0]
-        sxaddpar, hdr, 'CDELT2', delt[1]
-  
+        sxaddpar, hdr, 'CDELT1'+alt, delt[0],degpix, 'HISTORY',/SaveC
+        sxaddpar, hdr, 'CDELT2'+alt, delt[1],degpix, 'HISTORY',/SaveC
+
+        if (cd[1,0] eq 0) and (cd[0,1] eq 0) then rot = 0.0 else $ 
         rot = float(atan( -cd[1,0],cd[1,1])*RADEG) 
 
         crota2 = sxpar(hdr,'CROTA2', Count = N_crota2)
-        if N_crota2 GT 0 then sxaddpar, hdr, 'CROTA2', rot else $
-                sxaddpar, hdr, 'CROTA2', rot, ' Rotation Angle (Degrees)'
+        if N_crota2 GT 0 then sxaddpar, hdr, 'CROTA2'+alt, rot else $
+                sxaddpar, hdr, 'CROTA2'+alt, rot, ' Rotation Angle (Degrees)'
         crota1 = sxpar(hdr,'CROTA1', Count = N_crota1)
         if N_crota1 GT 0 then $
-                 sxaddpar, hdr, 'CROTA1', rot       
+                 sxaddpar, hdr, 'CROTA1'+alt, rot       
  
 
  endelse
@@ -232,8 +257,10 @@ RD_CEN:
 
         zparcheck, 'PUTAST', crpix, 3, [1,2,4,3,5], 1, 'CRPIX vector'
 
-        sxaddpar, hdr, 'CRPIX1',crpix[0], ' Reference Pixel in X','HISTORY'
-        sxaddpar, hdr, 'CRPIX2',crpix[1], ' Reference Pixel in Y','HISTORY'
+        sxaddpar, hdr, 'CRPIX1'+alt, crpix[0], ' Reference Pixel in X', $
+                        'HISTORY', /SaveC
+        sxaddpar, hdr, 'CRPIX2'+alt ,crpix[1], ' Reference Pixel in Y', $
+                        'HISTORY', /SaveC
 
         hist = ' CD and CRPIX parameters written'
  endif
@@ -242,14 +269,39 @@ RD_CEN:
 ;  precision to ensure enough significant figures
 
  if N_elements( crval ) GE 2 then begin         
+       case strmid(ctype[0],0,4) of
+       'GLON': begin
+               coord = 'Galactic'               
+               comm1 = ' Galactic longitude of reference pixel'
+               comm2 = ' Galactic latitude of reference pixel'
+               end
+       'ELON': begin
+               coord = 'Ecliptic'
+               comm1 = ' Ecliptic longitude of reference pixel'
+               comm2 = ' Ecliptic latitude of reference pixel'
+               end
+       else:  begin
+              coord = 'Celestial'
+              comm1 = ' R.A. (degrees) of reference pixel'
+              comm2 = ' Declination of reference pixel'
+               end
+      endcase
 
         zparcheck, 'PUTAST', crval, 3, [2,4,3,5], 1, 'CRVAL vector'
-        sxaddpar, hdr, 'CRVAL1', double(crval[0]), ' R.A. (Degrees)', 'HISTORY'
-        sxaddpar, hdr, 'CRVAL2', double(crval[1]), ' Dec  (Degrees)', 'HISTORY'
-        hist = ' CD, CRPIX and CRVAL parameters written'
+        sxaddpar, hdr, 'CRVAL1'+alt, double(crval[0]), comm1, 'HISTORY'
+        sxaddpar, hdr, 'CRVAL2'+alt, double(crval[1]), comm2 , 'HISTORY'
+        hist = ' World Coordinate System parameters written'
 
   endif
  
+    if N_elements(longpole) EQ 1 then $
+        sxaddpar, hdr, 'LONPOLE' +alt ,double(longpole), $
+	 ' Native longitude of ' +coord + ' pole', 'HISTORY', /SaveC
+ 
+    if N_elements(latpole) EQ 1 then $
+        sxaddpar, hdr, 'LATPOLE' +alt ,double(latpole), $
+	 ' ' + coord + ' latitude of native pole', 'HISTORY',/SaveC 
+
  sxaddhist,'PUTAST: ' + strmid(systime(),4,20) + hist,hdr
 
  return
