@@ -9,7 +9,9 @@ IDL_LONG grow_obj
    void    *   argv[])
 {
    IDL_LONG    nx;
+/* Comment-out ny because we don't actually use it
    IDL_LONG    ny;
+*/
    unsigned char *  image;
    IDL_LONG *  mask;
    IDL_LONG    iloc_in;
@@ -25,7 +27,9 @@ IDL_LONG grow_obj
 
    /* Allocate pointers from IDL */
    nx = *((IDL_LONG *)argv[0]);
+/* Comment-out ny because we don't actually use it
    ny = *((IDL_LONG *)argv[1]);
+*/
    image = (unsigned char *)argv[2];
    mask = (IDL_LONG *)argv[3];
    iloc_in = *((IDL_LONG *)argv[4]);
