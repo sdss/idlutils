@@ -51,7 +51,7 @@ function fileandpath, fullname, path=path
       return, filename
    endif
 
-   fdecomp, fullname, disk, dir, name, qual, vers
+   fdecomp, fullname[0], disk, dir, name, qual, vers
    filename = name
    if (keyword_set(qual)) then filename = filename + '.' + qual
    if (keyword_set(vers)) then filename = filename + ';' + vers
