@@ -35,10 +35,7 @@
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
 ; BUGS:
-;   Image resolutions hard-wired; they should be tied to the sizes of the
-;     smallest gaussians.
-;   Histogram vertical axes fixed to measured inverse variances of the
-;     input data.
+;   Conditional plots look terrible.
 ; DEPENDENCIES:
 ; REVISION HISTORY:
 ;   2001-10-22  written - Hogg
@@ -118,7 +115,9 @@ bangX= !X
 bangY= !Y
 
 ; setup postscript file
-!P.FONT= -1 & !P.BACKGROUND= 255 & !P.COLOR= 0
+!P.FONT= -1
+!P.BACKGROUND= djs_icolor('white')
+!P.COLOR= djs_icolor('black')
 set_plot, "PS"
 xsize= 7.5 & ysize= 7.5
 device, file=psfilename,/inches,xsize=xsize,ysize=ysize, $
@@ -440,7 +439,7 @@ for id2=ydimen-1,0L,-1 do begin
 ; contour
                     if(NOT keyword_set(conditional)) then begin
                         contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
-                          thick=3,/overplot,color=255
+                          thick=3,/overplot,color=djs_icolor('white')
                         contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
                           thick=1,/overplot
                     endif else begin
@@ -454,9 +453,10 @@ for id2=ydimen-1,0L,-1 do begin
                                 outmedindx=where(meduse[m,*] ne 0,outcount)
                                 if(outcount gt 0) then begin
                                     djs_oplot,xline[outmedindx], $
-                                      medvalue[m,outmedindx],thick=4,color=255
+                                      medvalue[m,outmedindx],thick=4,psym=10, $
+                                      color=djs_icolor('white')
                                     djs_oplot,xline[outmedindx], $
-                                      medvalue[m,outmedindx],thick=1
+                                      medvalue[m,outmedindx],thick=1,psym=10
                                 endif
                             endfor
                         endif else begin 
@@ -515,10 +515,12 @@ for id2=ydimen-1,0L,-1 do begin
                                     endif
                                     
                                 endfor
-                                djs_oplot, xline, ylinelower,thick=4,color=255
-                                djs_oplot, xline, ylineupper,thick=4,color=255
-                                djs_oplot, xline, ylinelower,thick=1
-                                djs_oplot, xline, ylineupper,thick=1
+                                djs_oplot, xline, ylinelower,thick=4,psym=10, $
+                                    color=djs_icolor('white')
+                                djs_oplot, xline, ylineupper,thick=4,psym=10, $
+                                    color=djs_icolor('white')
+                                djs_oplot, xline, ylinelower,thick=1,psym=10
+                                djs_oplot, xline, ylineupper,thick=1,psym=10
                             endfor
                         endelse
                     endelse
