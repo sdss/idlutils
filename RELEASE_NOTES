@@ -27,6 +27,7 @@ REJECT_CR: A previous error in determining the background for rejection
 
 Makefile: Install the RELEASE_NOTES file.
 bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
+lib/Makefile: For "make clean", also remove ".dylib" files.
 
 -------------------------------------------------------------------------------
 v5_0_2b (April 17, 2004) running on IDL 5.4 - 6.0
