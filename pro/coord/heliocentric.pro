@@ -23,7 +23,8 @@
 ;   longitude      - Longitude of observatory;
 ;                    default to (360-105.820417) deg for APO
 ;   latitute       - Latitude of observatory; default to 32.780361 deg for APO
-;   altitude       - Altitude of observatory; default to 2788 m for APO
+;   altitude       - Altitude of observatory in meters;
+;                    default to 2788 m for APO
 ;
 ; OUTPUTS:
 ;   vcorr          - Velocity correction term, in km/s, to add to measured
