@@ -60,7 +60,7 @@
 function sshiftrotate, image, theta1, xshift=xshift, yshift=yshift, $
  xcen=xcen, ycen=ycen, bigger=bigger, xoffset=xoffset, yoffset=yoffset
 
-   if (n_params() LT 2) then $
+   if (n_params() LT 1) then $
     message, 'Incorrect number of arguments'
    if (NOT keyword_set(xshift)) then xshift = 0
    if (NOT keyword_set(yshift)) then yshift = 0
@@ -76,6 +76,7 @@ function sshiftrotate, image, theta1, xshift=xshift, yshift=yshift, $
 
    ; Compute the offset functions for each of the 3 sinc shifts
 
+; This fails if theta=0 exactly ???
    sint = sin(-theta/!radeg)
    aslope = (-2. + sqrt(4. - 2.*sint^2)) / (2. * sint)
    bslope = -2. * aslope / (1. + aslope^2)
