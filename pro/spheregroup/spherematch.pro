@@ -56,7 +56,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
-                 distance12, maxmatch=maxmatch
+                 distance12, maxmatch=maxmatch, chunksize=chunksize
 
    ; Need at least 3 parameters
    if (N_params() LT 8) then begin
@@ -74,7 +74,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
        endif
    endelse 
 
-   chunksize=max([4.*matchlength,0.1])
+   if(NOT keyword_set(chunksize)) then chunksize=max([4.*matchlength,0.1])
 
    npoints1 = N_elements(ra1)
    if (npoints1 le 0l) then begin

@@ -64,7 +64,8 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  sigrejimage=sigrejimage, paneluse=paneluse, $
                  quantfrac=quantfrac, quantile=quantile, quantneff=quantneff, $
                  default_font=default_font,twodimages=twodimages, $
-                 psym_overpoints=psym_overpoints,sizepanellabel=sizepanellabel, $
+                 psym_overpoints=psym_overpoints, $
+                 sizepanellabel=sizepanellabel, $
                  pthick=pthick
 
 ; set defaults
@@ -265,8 +266,9 @@ for id2=ydimen-1,0L,-1 do begin
 ; set plot range and make axes
             !X.RANGE= range[*,d1]
             !Y.RANGE= range[*,d2]
-            xinterval= hogg_interval(!X.RANGE*axis_char_scale)
-            yinterval= hogg_interval(!Y.RANGE*axis_char_scale)
+            nticks=8/axis_char_scale
+            xinterval= hogg_interval(!X.RANGE,nticks=nticks)
+            yinterval= hogg_interval(!Y.RANGE,nticks=nticks)
             if d1 EQ d2 then begin
                 xfrac=(panelpoint[d1,*]-!X.RANGE[0])/(!X.RANGE[1]-!X.RANGE[0])
                 indxra=where(xfrac gt 0. and xfrac le 1.,countra)
