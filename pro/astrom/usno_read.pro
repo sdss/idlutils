@@ -268,8 +268,8 @@ function usno_read, racen, deccen, rad, path=path
 ; unpack B and R magnitudes from info array
   magrint = (info MOD 1000L)
   magbint = (info MOD 1000000L) - magrint
-  usnostruct.bmag = magbint/10.
-  usnostruct.rmag = magrint/10000.
+  usnostruct.bmag = magbint/10000.
+  usnostruct.rmag = magrint/10.
 
   return, usnostruct
 end
