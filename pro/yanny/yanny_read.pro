@@ -201,15 +201,18 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    openr, ilun, filename
    rawline = ''
 
-   ; Read the very first line
-   if (keyword_set(quick)) then readf, ilun, rawline $
-    else rawline = yanny_nextline(ilun)
-
    while (NOT eof(ilun)) do begin
-      qdone = 0 ; Set to 1 when this line is anything other than a hdr line
+
+      qdone = 0
+
+      ; Read the next line
+      if (keyword_set(quick)) then readf, ilun, rawline $
+       else rawline = yanny_nextline(ilun)
+
       sline = yanny_strip_commas(rawline)
       words = str_sep(sline, ' ') ; Divide into words based upon whitespace
       nword = N_elements(words)
+
       if (nword GE 2) then begin
 
          ; LOOK FOR "typedef enum" lines and add to structs
@@ -223,10 +226,6 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
             endwhile
 
             yanny_add_comment, rawline, enums
-
-            if (keyword_set(quick)) then readf, ilun, rawline $
-             else rawline = yanny_nextline(ilun)
-            qdone = 1
 
          ; LOOK FOR STRUCTURES TO BUILD with "typedef struct"
          endif else if (words[0] EQ 'typedef' AND words[1] EQ 'struct') $
@@ -298,10 +297,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
              ptr_new( mrd_struct(names, values, 1, structyp=stname) ), $
              pcount, pname, pdata, pnumel
 
-            if (keyword_set(quick)) then readf, ilun, rawline $
-             else rawline = yanny_nextline(ilun)
-
-            qdone = 1
+            qdone = 1 ; This last line is still part of the structure def'n
 
          ; LOOK FOR A STRUCTURE ELEMENT
          ; Only look if some structures already defined
@@ -335,19 +331,15 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                endfor
 
                pnumel[idat] = pnumel[idat] + 1
-               qdone = 1
-               if (keyword_set(quick)) then readf, ilun, rawline $
-                else rawline = yanny_nextline(ilun)
             endif
+            qdone = 1 ; This last line was a structure element
          endif
 
       endif
 
-      if (qdone EQ 0) then begin
-         yanny_add_comment, rawline, hdr
-         if (keyword_set(quick)) then readf, ilun, rawline $
-          else rawline = yanny_nextline(ilun)
-      endif
+      if (qdone EQ 0) then $
+       yanny_add_comment, rawline, hdr
+
    endwhile
 
    close, ilun
