@@ -656,6 +656,7 @@ goddard/text/tv.readme -text
 lib/Makefile -text
 pro/2mass/tmass_ascii2fits.pro -text
 pro/2mass/tmass_decslice.pro -text
+pro/2mass/tmass_readzone.pro -text
 pro/2mass/tmass_struc.pro -text
 pro/Makefile -text
 pro/TeXtoIDL/COPYRIGHT -text
