@@ -14,7 +14,7 @@
 ; OPTIONAL INPUTS:
 ;   nsig         number of sigma for half-width of each plot; default 5
 ;   label        [d] array of axis labels; default 'x_i'
-;   contlevel    confidence levels for contouring; default [0.01,0.32]
+;   contlevel    confidence levels for contouring; defaults in source code
 ;   range        [2,d] array of plotting ranges
 ;   textlabel    [q] vector of text labels
 ;   textpos      [d,q] array of text label positions
@@ -116,7 +116,7 @@ endif
 if NOT keyword_set(label) then $
   label= 'x!d'+strcompress(string(lindgen(dimen)),/remove_all)
 if NOT keyword_set(nsig) then nsig= 5d
-if NOT keyword_set(contlevel) then contlevel= [0.01,0.32]
+if NOT keyword_set(contlevel) then contlevel= [0.01,0.05,0.32,2.0/3.0]
 
 ; invert all matrices
 invvar= reform(dblarr(dimen*dimen*ngauss),dimen,dimen,ngauss)
@@ -164,8 +164,8 @@ tiny= 1.d-4
 !P.TITLE= ''
 !X.STYLE= 1
 !X.CHARSIZE= tiny
-!X.MARGIN= [1,1]*0.5
-!X.OMARGIN= [5,5]*axis_char_scale
+!X.MARGIN= [1,1]*0.0
+!X.OMARGIN= [6,6]*axis_char_scale-!X.MARGIN
 !X.RANGE= 0
 !X.TICKS= 0
 !Y.STYLE= 1
@@ -447,7 +447,7 @@ for id2=ydimen-1,0L,-1 do begin
                     endelse
                     tvimage= 255-((floor(256*(outimage-tvrange[0])/ $
                                          (tvrange[1]-tvrange[0])) > 0) < 255)
-print, minmax(tvimage)
+
 ; plot greyscale image
                     tv, tvimage,!X.CRANGE[0],!Y.CRANGE[0],/data, $
                       xsize=(!X.CRANGE[1]-!X.CRANGE[0]), $
@@ -456,8 +456,7 @@ print, minmax(tvimage)
 ; re-make axes (yes, this is a HACK)
                     !P.MULTI[0]= !P.MULTI[0]+1
                     djs_plot,[0],[1],/nodata, $
-                      xtickinterval=xinterval,ytickinterval=yinterval, $
-                      color='grey'
+                      xtickinterval=xinterval,ytickinterval=yinterval
 
 ; cumulate the image
                     cumindex= reverse(sort(image))
