@@ -15,6 +15,7 @@
 ;   differential proper distance DD/dz in units of the Hubble length c/H_0
 ; COMMENTS:
 ; BUGS:
+;   May not work for pathological parts of the OmegaM-OmegaL plane.
 ; EXAMPLES:
 ; PROCEDURES CALLED:
 ;   dcomdisdz()

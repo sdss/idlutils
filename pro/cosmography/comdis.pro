@@ -16,6 +16,7 @@
 ; COMMENTS:
 ; BUGS:
 ;   The integrator is crude and slow.
+;   May not work for pathological parts of the OmegaM-OmegaL plane.
 ; EXAMPLES:
 ; PROCEDURES CALLED:
 ;   dcomdisdz()
