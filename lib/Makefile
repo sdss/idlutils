@@ -14,6 +14,8 @@ all :;
 #
 install :
 	- cp *.so $(IDLUTILS_DIR)/lib
+	- cp *.a $(IDLUTILS_DIR)/lib
+	- cp Makefile $(IDLUTILS_DIR)/lib
 
 clean :
 	- /bin/rm -f *~ core *.so
