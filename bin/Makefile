@@ -14,7 +14,7 @@ all :;
 install :
 	/bin/cp Makefile $(IDLUTILS_DIR)/bin
 	/bin/cp build_links $(IDLUTILS_DIR)/bin
-	/bin/cp evilinstall $(IDLUTILS_DIR)/bin
+#	/bin/cp evilinstall $(IDLUTILS_DIR)/bin
 	/bin/cp evilmake $(IDLUTILS_DIR)/bin
 	/bin/cp eviltarball $(IDLUTILS_DIR)/bin
 	/bin/cp install_ups_table $(IDLUTILS_DIR)/bin
