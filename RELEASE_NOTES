@@ -1,3 +1,4 @@
+HEALGEN        No longer loop over chunks to save memory.
 HEALPIX_RING_WEIGHT: Fix fatal bug caused by new mrdfits() response to 
                Gorski's nonstandard file format for ring weights.
 ATV,ATV_JOE_WRITEPS,SPLOT,SXASCII_READ,TEXTOIDL,YANNY_READ:
