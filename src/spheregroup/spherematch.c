@@ -16,6 +16,21 @@ static IDL_LONG **nchunk2=NULL, ***chunklist2=NULL;
 double separation(double xx1, double yy1, double zz1, double xx2, double yy2,
 									double zz2);
 
+#define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
+static void free_memory()
+{
+	FREEVEC(xx1);
+	FREEVEC(yy1);
+	FREEVEC(zz1);
+	FREEVEC(xx2);
+	FREEVEC(yy2);
+	FREEVEC(zz2);
+	if(nchunk2!=NULL) 
+		unassignchunks(&nchunk2,&chunklist2,nra,ndec);
+	if(rabounds!=NULL)
+		unsetchunks(&rabounds,&decbounds,&nra,&ndec);
+}
+
 /********************************************************************/
 IDL_LONG spherematch
   (int      argc,
@@ -115,12 +130,7 @@ IDL_LONG spherematch
 	 unsetchunks(&rabounds,&decbounds,&nra,&ndec);
 
 	 /* 6. free memory */
-	 free((char *) xx1);
-	 free((char *) yy1);
-	 free((char *) zz1);
-	 free((char *) xx2);
-	 free((char *) yy2);
-	 free((char *) zz2);
+	 free_memory();
 
    return retval;
 }

@@ -20,7 +20,7 @@
 
 #define RAD2DEG 57.29577951
 
-IDL_LONG *renumberedCFOF=NULL;
+static IDL_LONG *renumberedCFOF=NULL;
 
 double separation(double x1, double y1, double z1, double x2, double y2,
 									double z2);

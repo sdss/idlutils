@@ -27,7 +27,15 @@ static IDL_LONG *mapGroups=NULL;  /* equivalency mapping; mapGroup[igroup]=
 															* index of an earlier group which is equivalent
 															* to group igroup */
 
-static IDL_LONG freeMemoryFOF(void);
+#define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
+static void free_memory()
+{
+	FREEVEC(chunkFirstGroup);
+	FREEVEC(chunkMultGroup);
+	FREEVEC(chunkNextGroup);
+	FREEVEC(chunkInGroup);
+	FREEVEC(mapGroups);
+}
 
 IDL_LONG 
 friendsoffriends(double x[],
@@ -56,7 +64,7 @@ friendsoffriends(double x[],
 	if(nChunk==NULL || chunkList==NULL || nRa==NULL || nDec==0) {
 		fprintf(stderr,
 						"Chunk lists not properly assigned in friendsoffriends().\n");
-		freeMemoryFOF();
+		free_memory();
 		return(0);
 	} /* end if */
 
@@ -110,7 +118,7 @@ friendsoffriends(double x[],
 				fprintf(stderr,
 								"chunkfriendsoffriends error %d in friendsoffriends()\n",
 								(int) result);
-				freeMemoryFOF();
+				free_memory();
 				return(result);
 			} /* end if */
 
@@ -124,7 +132,7 @@ friendsoffriends(double x[],
 					fprintf(stderr,
 									"chunkMultGroup[%d]=%d in friendsoffriends()\n",
 									(int) k,(int) chunkMultGroup[k]);
-					freeMemoryFOF();
+					free_memory();
 					return(0);
 				} /* end if */
 
@@ -169,7 +177,7 @@ friendsoffriends(double x[],
 					fprintf(stderr,
 									"nMapGroups=%d has reached limit in friendsoffriends()\n",
 									(int) nMapGroups);
-					freeMemoryFOF();
+					free_memory();
 					return(0);
 				} /* end if */
 			} /* end for k */
@@ -190,7 +198,7 @@ friendsoffriends(double x[],
 		} else {
 			fprintf(stderr,"mapGroups[%d]=%d in friendsoffriends()\n",
 							(int) i,(int) mapGroups[i]);
-			freeMemoryFOF();
+			free_memory();
 			return(0);
 		}/* end if */
 
@@ -215,7 +223,7 @@ friendsoffriends(double x[],
 		if(multGroup[i]<=0) {
 			fprintf(stderr,"multGroup[%d]=%d in friendsoffriends()\n",
 							(int) i,(int) multGroup[i]);
-			freeMemoryFOF();
+			free_memory();
 			return(0);
 		} /* end if */
 	} /* end for i */
@@ -224,24 +232,7 @@ friendsoffriends(double x[],
 	 * Free memory 
 	 */
 	chunkNGroups=0;
-	freeMemoryFOF();
+	free_memory();
 
 	return(1);
 } /* end fof */
-
-static IDL_LONG 
-freeMemoryFOF(void)
-{
-	if(chunkFirstGroup!=NULL) free((char *) chunkFirstGroup);
-	chunkFirstGroup=NULL;
-	if(chunkMultGroup!=NULL) free((char *) chunkMultGroup);
-	chunkMultGroup=NULL;
-	if(chunkNextGroup!=NULL) free((char *) chunkNextGroup);
-	chunkNextGroup=NULL;
-	if(chunkInGroup!=NULL) free((char *) chunkInGroup);
-	chunkInGroup=NULL;
-	if(mapGroups!=NULL) free((char *) mapGroups);
-	mapGroups=NULL;
-
-	return(1);
-} /* end freeMemoryFOF */

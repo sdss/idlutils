@@ -361,7 +361,8 @@ assignchunks(double ra[],        /* degrees */
 		(*chunkList)[i]=(IDL_LONG **) malloc(nRa[i]*sizeof(IDL_LONG *));
 		for(j=0;j<nRa[i];j++) {
 			if((*nChunk)[i][j]>0)
-				(*chunkList)[i][j]=(IDL_LONG *) malloc((*nChunk)[i][j]*sizeof(IDL_LONG));
+				(*chunkList)[i][j]=(IDL_LONG *) 
+					malloc((*nChunk)[i][j]*sizeof(IDL_LONG));
 		} /* end for i */
 	} /* end for i */
 	

@@ -14,6 +14,22 @@ static double *x=NULL,*y=NULL,*z=NULL;
 static IDL_LONG *firstgroup=NULL,*nextgroup=NULL,*multgroup=NULL;
 static IDL_LONG ngroups;
 
+#define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
+static void free_memory()
+{
+	FREEVEC(x);
+	FREEVEC(y);
+	FREEVEC(z);
+	FREEVEC(firstgroup);
+	FREEVEC(nextgroup);
+	FREEVEC(multgroup);
+	FREEVEC(renumbered);
+	if(nchunk!=NULL) 
+		unassignchunks(&nchunk,&chunklist,nra,ndec);
+	if(rabounds!=NULL)
+		unsetchunks(&rabounds,&decbounds,&nra,&ndec);
+}
+
 #define DEG2RAD .01745329251994
 
 /********************************************************************/
@@ -66,6 +82,7 @@ IDL_LONG spheregroup
 												nra,ndec,firstgroup,multgroup,nextgroup,
 												ingroup,&ngroups)) {
 		 printf("friendsoffriends returned error in spheregroup()\n");
+		 free_memory();
 		 return(0);
 	 } /* end if */
 
@@ -106,13 +123,7 @@ IDL_LONG spheregroup
 	 } /* end for i */
 	 
 	 /* 6. free memory */
-	 free((char *) x);
-	 free((char *) y);
-	 free((char *) z);
-	 free((char *) firstgroup);
-	 free((char *) nextgroup);
-	 free((char *) multgroup);
-
+	 free_memory();
    return retval;
 }
 
