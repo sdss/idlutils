@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-SUBDIRS = filters sdss
+SUBDIRS = filters objects sdss
 
 all :;
 
