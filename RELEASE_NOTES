@@ -13,6 +13,9 @@ WHERE_POLYGONS_OVERLAP: Add optional output AREAMATCH.
 src/idlmangle/Makefile: Add idl_garea.o
 src/idlmangle/where_polygons_overlap.c: Compute and return the overlap area.
 
+data/sdss/sdssMaskbits.par: Remove the RESOLVE bits, which have been deprecated
+               with the RESOLVE_STATUS mask bits.
+
 -------------------------------------------------------------------------------
 v5_0_0 (Feb 19, 2004) running on IDL 5.4 - 6.0
 Tagged for idlspec2d v5_0_0.
