@@ -648,7 +648,6 @@ pro/math/djs_posmod.pro -text
 pro/math/djs_reject.pro -text
 pro/math/djsig.pro -text
 pro/math/ex_max.pro -text
-pro/math/ex_max_plot.pro -text
 pro/math/gauss_kernel.pro -text
 pro/math/gausspix1d.pro -text
 pro/math/poly_iter.pro -text
@@ -711,6 +710,8 @@ pro/plot/djs_oploterr.pro -text
 pro/plot/djs_plot.pro -text
 pro/plot/djs_plotlimitbox.pro -text
 pro/plot/djs_xyouts.pro -text
+pro/plot/ex_max_plot.pro -text
+pro/plot/hogg_interval.pro -text
 pro/plot/imgexp.pro -text
 pro/plot/imgscl.pro -text
 pro/plot/s_plotdev.pro -text
