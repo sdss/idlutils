@@ -41,8 +41,10 @@ pro djs_oploterr, x, y, xerr=xerr, yerr=yerr, xlog=xlog, ylog=ylog, $
  color=color, psym=psym, symsize=symsize, _EXTRA=KeywordsForPlot
 
    if (NOT keyword_set(color)) then color = !p.color
-   if (NOT keyword_set(psym)) then psym = !p.psym
    if (NOT keyword_set(symsize)) then symsize = 1.0
+   if (NOT keyword_set(psym)) then psym = !p.psym
+   blah= !p.psym  ; store away psym value for restoration later
+   !p.psym= 0
 
    if (NOT keyword_set(xlen)) then xlen = 0.06 * (!x.crange[1] - !x.crange[0])
    if (NOT keyword_set(ylen)) then ylen = 0.06 * (!y.crange[1] - !y.crange[0])
@@ -127,6 +129,8 @@ pro djs_oploterr, x, y, xerr=xerr, yerr=yerr, xlog=xlog, ylog=ylog, $
       endif
 
    endfor
+
+   !p.psym= blah  ; restore psym value
 
    return
 end 
