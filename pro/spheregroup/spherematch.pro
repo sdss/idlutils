@@ -65,7 +65,7 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
       return
   endif
 
-   if (NOT keyword_set(maxmatch)) then begin
+   if (n_elements(maxmatch) eq 0) then begin
        maxmatch=1l
    end else begin
        if (maxmatch lt 0l) then begin
