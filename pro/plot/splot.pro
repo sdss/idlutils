@@ -15,6 +15,9 @@
 ;   sxyouts, x, y, string, [alignment=, charsize=, charthick=, color=, $
 ;    font=, orientation= ]
 ;
+;   spolyfill, x, y, [ color=, fill=0, /image_interp, /line_fill, pattern=, $
+;    spacing= ]
+;
 ;   serase, [nerase, /norefresh]
 ;
 ; INPUTS:
@@ -61,9 +64,11 @@
 ;   splot_headinfo
 ;   splot_headinfo_event
 ;   splot_plot1plot
+;   splot_plot1poly
 ;   splot_plot1text
 ;   splot_plotwindow
 ;   splot_plotall
+;   spolyfill
 ;   sxyouts
 ;   splot_move_cursor
 ;   splot_set_minmax
@@ -939,6 +944,29 @@ pro splot_plot1plot, iplot
    return
 end
 
+;------------------------------------------------------------------------------
+
+pro splot_plot1poly, iplot
+
+   common splot_state
+   common splot_pdata
+
+   widget_control, /hourglass
+
+   ; Convert color names to index numbers
+   options = (*(plot_ptr[iplot])).options
+   c = where(tag_names(options) EQ 'COLOR', ct)
+   if (ct EQ 1) then options.color = splot_icolor(options.color)
+
+   pposition = !p.position
+   !p.position = state.position
+   polyfill, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
+    _EXTRA=options
+   !p.position = pposition
+
+   return
+end
+
 ;----------------------------------------------------------------------
 
 pro splot_plot1text, iplot
@@ -1008,9 +1036,58 @@ pro splot_plotall
       case (*(plot_ptr[iplot])).type of
         'points'  : splot_plot1plot, iplot
         'text'    : splot_plot1text, iplot
+        'polyfill': splot_plot1poly, iplot
         else      : print, 'Problem in splot_plotall!'
       endcase
    endfor
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
+pro spolyfill, x, y, _EXTRA=options
+
+   common splot_pdata
+   common splot_state
+
+   ; Routine to overplot polygons
+
+   if (NOT xregistered('splot')) then begin
+      print, 'You need to start SPLOT first!'
+      return
+   endif
+
+   if (N_params() LT 2) then begin
+      print, 'Too few parameters for SPOLYFILL'
+      return
+   endif
+
+   if (nplot LT maxplot) then begin
+
+      ; Set default "fill" to 1
+      if (N_elements(options) EQ 0) then begin
+         options = {fill: 1}
+      endif else begin
+         c = where(tag_names(options) EQ 'FILL', ct)
+         if (ct EQ 0) then options = create_struct(options, 'fill', 1)
+      endelse
+
+      pstruct = { $
+       type: 'polyfill',   $       ; type of plot
+       x: x,             $     ; x coordinate
+       y: y,             $     ; y coordinate
+       options: options  $     ; plot keyword options
+      }
+
+      plot_ptr[nplot] = ptr_new(pstruct)
+      nplot = nplot + 1
+
+      wset, state.draw_window_id
+      splot_plot1poly, nplot-1
+   endif else begin
+      print, 'Too many calls to SPOLYFILL'
+   endelse
 
    return
 end
