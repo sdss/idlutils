@@ -10,7 +10,9 @@
 ;
 ; INPUTS:
 ;   hdr        - Header lines in Yanny file, which are usually keyword pairs.
-;   keyname    - Keyword name of which to find its corresponding value
+;   keyname    - Keyword name of which to find its corresponding value.
+;                If this is an array, then this routine is called recursively
+;                and the results appended together.
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -43,7 +45,7 @@
 ;------------------------------------------------------------------------------
 function yanny_par, hdr, keyname, count=count, indx=indx
 
-   count = 0
+   count = 0L
 
    if (N_params() LT 2) then begin
       print, 'Syntax - result = yanny_par(hdr, keyname, [count=, indx= ] )'
@@ -61,6 +63,29 @@ function yanny_par, hdr, keyname, count=count, indx=indx
       return, ''
    endif
 
+   ; Call this routine recursively if KEYNAME is an array
+   nkey = n_elements(keyname)
+   if (nkey GT 1) then begin
+      for ikey=0, nkey-1 do begin
+         res1 = yanny_par(hdr, keyname[ikey], count=count1, indx=indx1)
+         if (count1 GT 0) then begin
+            count = count + 1
+            if (NOT keyword_set(result)) then begin
+               result = res1
+               indx = indx1
+            endif else begin
+               result = [result, res1]
+               indx = [indx, indx1]
+            endelse
+         endif
+      endfor
+      if (NOT keyword_set(result)) then begin
+         result = ''
+         indx = -1L
+      endif
+      return, result
+   endif
+
    keylist = strarr(nhead)
    keystring = strarr(nhead)
    for i=0, nhead-1 do begin
@@ -68,13 +93,13 @@ function yanny_par, hdr, keyname, count=count, indx=indx
    endfor
 
    ; Locate the first keyword that matches
-   indx = where(keyname EQ keylist, ct)
+   indx = where(keyname[0] EQ keylist, ct)
    if (ct EQ 0) then return, ''
    if (ct EQ 1) then begin
       j = indx[0]
    endif else begin
       for j=0, ct-1 do begin
-         result1 = yanny_par(hdr[indx[j]], keyname)
+         result1 = yanny_par(hdr[indx[j]], keyname[0])
          if (NOT keyword_set(result)) then result = result1 $
           else result = [result, result1]
       endfor
