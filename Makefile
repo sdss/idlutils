@@ -15,7 +15,7 @@ SHELL = /bin/sh
 #
 CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
 
-SUBDIRS = bin data doc goddard lib pro src ups
+SUBDIRS = bin data doc goddard include lib pro src ups
 
 all :
 	@ for f in $(SUBDIRS); do \
