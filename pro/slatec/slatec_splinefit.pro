@@ -171,17 +171,17 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, x2=x2, npoly=npoly, $
             mask[bad]  = 0
             if total(abs(mask - oldmask)) EQ 0 then iiter=maxiter
          endelse
-      endelse
 
-      ;----------
-      ; End iterations if no points are rejected, or the same points are
-      ; rejected as the last iteration.
+         ;----------
+         ; End iterations if no points are rejected, or the same points are
+         ; rejected as the last iteration.
 
-      if (nbad EQ 0) then iiter = maxiter $
-      else begin
-         mask = bytarr(nx) + 1
-         mask[bad]  = 0
-         if total(abs(mask - oldmask)) EQ 0 then iiter=maxiter
+         if (nbad EQ 0) then iiter = maxiter $
+         else begin
+            mask = bytarr(nx) + 1
+            mask[bad]  = 0
+            if total(abs(mask - oldmask)) EQ 0 then iiter=maxiter
+         endelse
       endelse
 
    endfor
