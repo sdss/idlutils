@@ -26,7 +26,9 @@
 ; KEYWORDS:
 ;   conditional - normalize each column separately
 ;   labelcont   - label contours with numbers
-;   internal_weight - use only the points in the image to determine contours
+;   internal_weight - use only the points in the image to determine
+;                     contours
+;   nogreyscale     - don't plot the greyscale
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
@@ -60,7 +62,7 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       darkest=darkest, $
                       internal_weight=internal_weight, $
                       conditional=conditional, $
-                      labelcont=labelcont, $
+                      labelcont=labelcont,nogreyscale=nogreyscale, $
                       xvec=xvec,yvec=yvec,grid=grid, $
                       cumimage=cumimage, $
                       _EXTRA=KeywordsForPlot
@@ -147,16 +149,18 @@ endif else begin
 endelse
 
 ; scale greyscale
-mingrey= 255.0
-maxgrey= darkest
-maxgrid= grid[(reverse(sort(grid)))[ceil(satfrac*xnpix*ynpix)]]
-mingrid= 0.0
-tvgrid= mingrey+(maxgrey-mingrey)*((grid-mingrid)/(maxgrid-mingrid))^exponent
-tvgrid= (tvgrid < mingrey) > maxgrey
+if NOT keyword_set(nogreyscale) then begin
+    mingrey= 255.0
+    maxgrey= darkest
+    maxgrid= grid[(reverse(sort(grid)))[ceil(satfrac*xnpix*ynpix)]]
+    mingrid= 0.0
+    tvgrid= mingrey+(maxgrey-mingrey)*((grid-mingrid)/(maxgrid-mingrid))^exponent
+    tvgrid= (tvgrid < mingrey) > maxgrey
 
 ; plot greyscale
-tv, tvgrid,xrange[0],yrange[0],/data, $
-  xsize=(xrange[1]-xrange[0]),ysize=(yrange[1]-yrange[0]) 
+    tv, tvgrid,xrange[0],yrange[0],/data, $
+      xsize=(xrange[1]-xrange[0]),ysize=(yrange[1]-yrange[0]) 
+endif
 
 ; plot quantiles, if necessary
 if keyword_set(conditional) then begin
