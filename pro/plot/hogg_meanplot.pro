@@ -45,7 +45,7 @@ pro hogg_meanplot, x,y,z,weight=weight, $
                    bin_number=bin_number, input_mean=input_mean, $
                    axis_char_scale=axis_char_scale, $
                    nocontourlabels=nocontourlabels, overplot=overplot, $
-                   nofill=nofill
+                   nofill=nofill, nearest=nearest
 
 if(NOT keyword_set(nofill)) then cell_fill=1L
 if(NOT keyword_set(minnum)) then minnum=1L
@@ -93,10 +93,10 @@ endelse
 
 ; make mean image
 if (NOT keyword_set(input_mean)) then begin
-    image= hogg_weighted_mean_surface(x,y,z,weight,xbin,ybin,dxbin,dybin)
+    image= hogg_weighted_mean_surface(x,y,z,weight,xbin,ybin,dxbin,dybin, $
+                                      nearest=nearest)
     bin_number= image[*,*,0]
     bin_weight= image[*,*,1]
-    bin_weight2= image[*,*,2]
     bin_mean= image[*,*,3]
     bin_scatter= image[*,*,4]
 endif

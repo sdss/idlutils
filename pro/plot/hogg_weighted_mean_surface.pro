@@ -23,7 +23,7 @@
 ;   2003-01-11  written - Hogg
 ;-
 function hogg_weighted_mean_surface, x,y,quantity,weight,xbin,ybin,dx,dy, $
-                                     boot_seed=boot_seed
+                                     boot_seed=boot_seed, nearest=nearest
 
 ; set dimensions, defaults, arrays, etc
 npt= n_elements(x)
@@ -48,18 +48,37 @@ endif else begin
 endelse
 
 ; loop over x,y subsamples
-for xi= 0L,nx-1 do for yi= 0L,ny-1 do begin
-    isub= where(abs(tx-xbin[xi]) LE abs(0.5*dx) AND $
-                abs(ty-ybin[yi]) LE abs(0.5*dy),nsub)
-    image[xi,yi,0]= double(nsub)
-    if nsub GT 0 then begin
-        image[xi,yi,1]= total(tw[isub],/double)
-        image[xi,yi,2]= total((tw[isub])^2,/double)
-        image[xi,yi,3]= total(tw[isub]*tq[isub],/double)/image[xi,yi,1]
-        image[xi,yi,4]= total(tw[isub]*(tq[isub]-image[xi,yi,3])^2,/double)/ $
-          image[xi,yi,1]
-    endif
-endfor
+if(NOT keyword_set(nearest)) then begin
+    for xi= 0L,nx-1 do for yi= 0L,ny-1 do begin
+        isub= where(abs(tx-xbin[xi]) LE abs(0.5*dx) AND $
+                    abs(ty-ybin[yi]) LE abs(0.5*dy),nsub)
+        image[xi,yi,0]= double(nsub)
+        if nsub GT 0 then begin
+            image[xi,yi,1]= total(tw[isub],/double)
+            image[xi,yi,2]= total((tw[isub])^2,/double)
+            image[xi,yi,3]= total(tw[isub]*tq[isub],/double)/image[xi,yi,1]
+            image[xi,yi,4]=  $
+              total(tw[isub]*(tq[isub]-image[xi,yi,3])^2,/double)/ $
+              image[xi,yi,1]
+        endif
+    endfor
+endif else begin
+    nsub=long(nearest)
+    for xi= 0L,nx-1 do for yi= 0L,ny-1 do begin
+        dist2=((tx-xbin[xi])^2+(ty-ybin[yi])^2) 
+        isort=sort(dist2)
+        isub=isort[0:nsub-1L]
+        if(sqrt(dist2[isub[0]]) lt dx) then begin
+            image[xi,yi,0]= double(nsub)
+            image[xi,yi,1]= total(tw[isub],/double)
+            image[xi,yi,2]= total((tw[isub])^2,/double)
+            image[xi,yi,3]= total(tw[isub]*tq[isub],/double)/image[xi,yi,1]
+            image[xi,yi,4]=  $
+              total(tw[isub]*(tq[isub]-image[xi,yi,3])^2,/double)/ $
+              image[xi,yi,1]
+        endif
+    endfor
+endelse 
 
 ; return
 splog, '...done'
