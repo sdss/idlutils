@@ -744,6 +744,7 @@ pro/trace/trace_gweight.pro -text
 pro/trace/traceset2pix.pro -text
 pro/trace/traceset2xy.pro -text
 pro/trace/xy2traceset.pro -text
+pro/yanny/hogg_strsplit.pro -text
 pro/yanny/sxascii_read.pro -text
 pro/yanny/yanny_diff.pro -text
 pro/yanny/yanny_free.pro -text
