@@ -47,6 +47,9 @@ endfor
 nused_caps=n_elements(used_caps)
 if(nused_caps eq 0) then return
 
+verts=0
+if(garea(polygon) eq 0) then return
+
 ; Call grouping software
 soname = filepath('libidlmangle.so', $
                   root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
