@@ -12,9 +12,8 @@ all :;
 #
 install :
 	@ for f in $(SUBDIRS); do \
-		(mkdir $(IDLUTILS_DIR)/goddard/$$f; \
-		echo Copying $$f; \
-		cp $$f/*.pro $(IDLUTILS_DIR)/goddard/$$f ); \
+		mkdir $(IDLUTILS_DIR)/goddard/$$f; \
+		(cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) install ); \
 	done
 
 clean :
