@@ -805,6 +805,7 @@ pro/misc/djs_selectlines.pro -text
 pro/misc/djs_unlockfile.pro -text
 pro/misc/fileandpath.pro -text
 pro/misc/floatcompress.pro -text
+pro/misc/group_indx.pro -text
 pro/misc/idlutils_version.pro -text
 pro/misc/lookforgzip.pro -text
 pro/misc/make_html_help.pro -text
