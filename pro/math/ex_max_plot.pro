@@ -243,3 +243,4 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
   device, /close
   return
 end
+
