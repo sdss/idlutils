@@ -8,7 +8,8 @@
 ; EXPLANATION: 
 ;     WEBGET() can access http servers - even from behind a firewall - 
 ;     and perform simple downloads. Currently, text and FITS files can be 
-;     accessed.    Requires IDL V5.4 or later, Unix or Windows only
+;     accessed.    Requires IDL V5.4 or later on Unix or Windows, V5.6 on
+;     Macintosh
 ;
 ; CALLING SEQUENCE: 
 ;      a=webget(URL)
@@ -22,7 +23,7 @@
 ;       COPYFILE - if set to a valid filename (file must have write permission),
 ;            the data contents of the web server's answer is copied to that 
 ;            file. 
-;
+;       /SILENT - If set, the information error messages are suppressed
 ; OUTPUTS: A structure with the following fields:
 ;
 ;            .Header - the HTTP header sent by the server
@@ -42,11 +43,10 @@
 ;
 ;
 ; RESTRICTIONS: 
-;     Works only for un*x and windows systems with IDL V5.4 or later (because 
-;     of IDL's socket support limitations). The mime-type recognition is
-;     extremely limited. Only the content-type is determined. Any text-file 
-;     will be stored in out.Text. The only other category which can be fetched
-;     is FITS files,  which will be stored in out.Image and out.ImageHeader.
+;     The mime-type recognition is extremely limited. Only the content-type is 
+;     determined. Any text-file  will be stored in out.Text. The only other 
+;     category which can be fetched is FITS files,  which will be stored in 
+;     out.Image and out.ImageHeader.
 ;
 ;     PROXY: If you are behind a firewall and have to access the net through a 
 ;         Web proxy,  set the environment variable 'http_proxy' to point to 
@@ -61,8 +61,8 @@
 ;     FITS file.
 ;
 ; EXAMPLE: 
-;           > a=webget('http://www.mpia.de/index.html')
-;          > print,a.Text
+;      IDL> a=webget('http://www.mpia.de/index.html')
+;      IDL> print,a.Text
 ;      or
 ;
 ;          > PointingRA=0.0
@@ -82,6 +82,7 @@
 ; MODIFICATION HISTORY: 
 ;     Written by M. Feldt, Heidelberg, Oct 2001 <mfeldt@mpia.de>
 ;     Use /swap_if_little_endian keyword to SOCKET  W. Landsman August 2002
+;     Less restrictive search on Content-Type   W. Landsman   April 2003
 ;
 ;-
 
@@ -91,23 +92,28 @@ PRO MimeType,  Header, Class, Type, Length
 ;
   Class = 'text'
   Type = 'simple'               ; in case no information found...    
-  FOR ii=0, N_elements(Header) - 1 DO BEGIN 
-      IF strmid(Header[ii], 0, 13) EQ 'Content-Type:' THEN BEGIN 
-          ClassAndType = strmid(Header[ii], 14, strlen(Header[ii])-1)
-          Class = (strsplit(ClassAndType, '/', /extract))[0]
-          Type = (strsplit(ClassAndType, '/', /extract))[1]
-      ENDIF 
-      IF strmid(Header[ii], 0, 15) EQ 'Content-Length:' THEN $
-          Length = long(strmid(Header[ii], 15, strlen(Header[ii])-1))
-  ENDFOR 
+  def = strupcase(strmid(header,0,13))
+  g = where(def EQ 'CONTENT-TYPE:', Ng)
+  if Ng GT 0 then begin
+       ClassAndType = strmid(Header[g[0]], 14, strlen(Header[g[0]])-1)
+       Class = (strsplit(ClassAndType, '/', /extract))[0]
+       Type = (strsplit(ClassAndType, '/', /extract))[1]
+  ENDIF 
+  def = strupcase(strmid(header,0,15))
+  g = where(def EQ 'CONTENT-LENGTH:', Ng)
+  if Ng GT 0 then $
+         Length = long(strmid(Header[g[0]], 15, strlen(Header[g[0]])-1))
+  return
 END 
 
 FUNCTION webget,  url,  SILENT=silent, COPYFILE=copyfile
   ;;
   ;;
-  IF ((!version.os_family NE 'unix') AND (!version.os_family NE 'windows')) OR $
-      !VERSION.RELEASE LT '5.4' THEN BEGIN 
-      ;; sockets supported in unix & windows only
+  ;; sockets supported in unix & windows since V5.4, Macintosh since V5.6
+
+   proc = routine_info(/system)
+   g  = where(proc EQ 'SOCKET', Ng)
+   If Ng EQ 0 THEN BEGIN 
       IF NOT Keyword_set(silent) THEN $
         dummy=Dialog_Message('Sorry,  web-access not supported in '+!version, /error)
       return, ''
@@ -170,9 +176,9 @@ DONE: On_IOERROR, NULL
   MimeType, Header, Class,  Type, Length; analyze the header
   ;;
   IF Keyword_Set(CopyFile) THEN BEGIN
-      aaa = bytarr(Length)
-      readu, unit, aaa
       openw, wunit, CopyFile, /get_lun
+      aaa = bytarr(Length,/nozero)
+      readu, unit, aaa
       writeu, wunit, aaa
       free_lun, wunit
       free_lun, unit
@@ -213,6 +219,7 @@ DONE: On_IOERROR, NULL
           ENDCASE 
       END 
   ENDCASE 
+
   IF LinesRead EQ 0 THEN Data = ''
   free_lun, unit
   return, {Header:Header, Text:Data, ImageHeader:ImageHeader,  Image: Image}
