@@ -53,7 +53,8 @@ function struct_trimtags, instruct, select_tags=select_tags, $
       qkeep = bytarr(ntag)
       for itag=0, ntag-1 do begin
          for jtag=0, n_elements(select_tags)-1 do begin
-            if (strmatch(tags[itag], strupcase(select_tags[jtag]))) then qkeep[itag] = 1B
+            if (strmatch(tags[itag], strupcase(select_tags[jtag]))) then $
+             qkeep[itag] = 1B
          endfor
       endfor
    endif else begin
@@ -66,7 +67,8 @@ function struct_trimtags, instruct, select_tags=select_tags, $
    if (keyword_set(except_tags)) then begin
       for itag=0, ntag-1 do begin
          for jtag=0, n_elements(except_tags)-1 do begin
-            if (strmatch(tags[itag], strupcase(except_tags[jtag]))) then qkeep[itag] = 0B
+            if (strmatch(tags[itag], strupcase(except_tags[jtag]))) then $
+             qkeep[itag] = 0B
          endfor
       endfor
    endif
@@ -77,9 +79,10 @@ function struct_trimtags, instruct, select_tags=select_tags, $
    ikeep = where(qkeep, nkeep)
    if (nkeep EQ 0) then return, 0
 
-   outstruct = create_struct(tags[ikeep[0]], instruct.(ikeep[0]))
+   outstruct = create_struct(tags[ikeep[0]], instruct[0].(ikeep[0]))
    for ii=1, nkeep-1 do $
-    outstruct = create_struct(outstruct, tags[ikeep[ii]], instruct.(ikeep[ii]))
+    outstruct = create_struct(outstruct, $
+     tags[ikeep[ii]], instruct[0].(ikeep[ii]))
 
    struct_assign, {junk:0}, outstruct ; Zero-out all elements
    outstruct = replicate(outstruct, nout)

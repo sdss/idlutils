@@ -64,6 +64,7 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
    endif else begin
       hdr1 = ''
       hdr2 = ''
+      hdrsep = ''
       rowsep = ''
       colsep = ''
    endelse
