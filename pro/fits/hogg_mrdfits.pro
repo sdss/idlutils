@@ -2,13 +2,13 @@
 ; NAME:
 ;   HOGG_MRDFITS
 ; PURPOSE:
-;   Wrapper on mrdfits to read in a chunk at a time
+;   Wrapper on MRDFITS() to read in a FITS file one chunk at a time
 ; CALLING SEQUENCE:
 ; INPUTS:
 ;   see MRDFITS
 ; KEYWORDS:
 ;   see MRDFITS
-;   nrowchunk  - number of rows to read at a time.
+;   nrowchunk  - Number of rows to read at a time; default to 1000
 ; COMMENTS:
 ;   Useful when "columns" is set, so you can get a couple
 ;   of columns without holding the whole file in memory
@@ -17,8 +17,8 @@
 ; REVISION HISTORY:
 ;   2002-02-08  written by Hogg
 ;-
-function hogg_mrdfits, file,extension,header, silent=silent, $
-   range=range,nrowchunk=nrowchunk, _EXTRA=inputs_for_mrdfits
+function hogg_mrdfits, file, extension, header, silent=silent, $
+ range=range, structyp=structyp, nrowchunk=nrowchunk, _EXTRA=inputs_for_mrdfits
 
   if not keyword_set(range) then begin
     naxis2= sxpar(headfits(file,exten=extension,silent=silent),'NAXIS2')
@@ -33,7 +33,8 @@ function hogg_mrdfits, file,extension,header, silent=silent, $
 
     if(NOT keyword_set(silent)) then splog, chunkrange
     chunkresult= mrdfits(file,extension,header, $
-      range=chunkrange,silent=silent,_EXTRA=inputs_for_mrdfits)
+     range=chunkrange, structyp=structyp, $
+      silent=silent, _EXTRA=inputs_for_mrdfits)
     if(NOT keyword_set(silent)) then help, chunkresult
     if not keyword_set(result) then begin
         result=replicate(chunkresult[0],range[1]-range[0]+1)
