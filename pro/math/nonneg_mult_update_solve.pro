@@ -5,7 +5,8 @@
 ;	 Use nonneg_mult_update to iterate to convergence
 ; DESCRIPTION:
 ;  From some starting point, iterates to convergence a
-;  box-constrained QP problem
+;  box-constrained QP problem: 
+;     F(v) = (1/2) v^T.A.v + b^T.v for v_i >= 0 for all i.
 ; CATEGORY:
 ;       Numerical
 ; CALLING SEQUENCE:
@@ -16,8 +17,8 @@
 ;  b - vector
 ; OPTIONAL INPUT PARAMETERS:
 ; KEYWORD PARAMETERS:
-;  /matrix - indicates that avfunc is actually just the matrix to
-;            apply
+;  /matrix - indicates that avfunc is actually just the matrix A,
+;            and the default A+/-.v function should be used
 ; OUTPUTS:
 ;	 Return value is the shifted array.
 ; COMMON BLOCKS:
