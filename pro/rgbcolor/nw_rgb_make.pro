@@ -59,14 +59,14 @@ IF (NOT keyword_set(quality)) THEN quality = 100
 
 ;assume Rim,Gim,Bim same type, same size
 IF size(rim,/tname) eq 'STRING' THEN BEGIN
-    R = mrdfits(Rim)
+    R = mrdfits(Rim[0])
     dim = size(R,/dimensions)
     NX = LONG(dim[0])
     NY = LONG(dim[1])
     colors = fltarr(NX,NY,3)
     colors[*,*,0] = temporary(R)
-    colors[*,*,1] = mrdfits(Gim)
-    colors[*,*,2] = mrdfits(Bim)
+    colors[*,*,1] = mrdfits(Gim[0])
+    colors[*,*,2] = mrdfits(Bim[0])
 ENDIF ELSE BEGIN
     dim = size(Rim,/dimensions)
     NX = LONG(dim[0])
