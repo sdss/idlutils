@@ -133,9 +133,36 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 
     errb = cholesky_band(alpha, mininf=minimum_influence) 
 
+
     if (errb[0] NE -1) then begin
-      hmm = ((errb[uniq(errb/npoly)]/npoly - 1) > 0) < (n - nord - 1)
-      return, goodbk[hmm] + nord
+      hmm = errb[uniq(errb/npoly)]/npoly  
+      badontop = where(hmm GE (n - nord), nbad)
+
+      test = lonarr(nbkpt) + 1
+      test[hmm] = 0
+
+      if nbad GT 0 then begin
+         aa = reverse(where(test))
+         if aa[0] NE -1 then hmm[badontop] = aa[0:nbad-1]
+      endif
+
+      test[*] = 1
+      test[hmm] = 0
+
+      for jj=1,nord/2 do begin
+        test[(hmm - jj)>0] = 0
+        test[(hmm + jj)<(nbkpt-1)] = 0
+      endfor
+ 
+      hmm = where(test EQ 0)
+          
+      currenterr =  (goodbk[hmm < (n - nord - 1) ] + nord) 
+
+      ; first entry is bad, get rid of lowest bkpt
+      ; if (where(hmm EQ nord))[0] NE -1 then $
+        ;  currenterr = [(where(sset.bkmask))[0], currenterr]
+      return, currenterr
+
     endif
 
 ; this changes beta to contain the solution

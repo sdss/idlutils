@@ -36,7 +36,8 @@ function cholesky_band, lower, mininf=mininf, verbose=verbose
          x = lower[spot,j]
 
          if (where(finite(x) EQ 0))[0] NE -1 then begin
- 	    message, 'NaN found in cholesky_band', /continue
+ 	    if keyword_set(verbose) then $
+               message, 'NaN found in cholesky_band', /continue
             return, j
          endif
 

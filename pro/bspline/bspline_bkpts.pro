@@ -81,7 +81,7 @@ function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
       nshortbkpt = n_elements(bkpt)
       fullbkpt = bkpt
 
-      if (NOT keyword_set(bkspread)) then bkspread = 0.1
+      if (NOT keyword_set(bkspread)) then bkspread = 1.0
       bkspace = (bkpt[1] - bkpt[0]) * bkspread
 
       for i=1, nord-1 do $

@@ -60,33 +60,37 @@ function bspline_action, x, sset, x2=x2, lower=lower, upper=upper
       goodbk = where(sset.bkmask NE 0, nbkpt)
       if nbkpt LT 2*nord then return, -2L
       n = nbkpt - nord
-      nfull = n*npoly
 
       gb = sset.fullbkpt[goodbk]
 
       bw = npoly * nord   
       action = x # replicate(0,bw) 
-      right = -1L
 
       lower = lonarr(n-nord+1)
-      upper = lonarr(n-nord+1)
+      upper = lonarr(n-nord+1) - 1
 
-      for i= 0L, n - nord do begin
-  
-         bspline_indx, x, gb[i+nord-1], gb[i+nord], left, right
-         lower[i] = left
-         upper[i] = right
-         numel = upper[i] - lower[i] + 1
+      indx = intrv(x, gb, nord)
 
+      bf1 = bsplvn(gb, nord, x, indx)
+      action = bf1
 
-         if (upper[i] GT -1 AND numel GT 0) then begin  
-            bf1 = bsplvn(gb, nord, x[lower[i]:upper[i]], i+nord-1)
-            action[lower[i]:upper[i],*] = $
-        transpose(reform((transpose(bf1))[*] ## replicate(1,npoly), bw, numel))
-         endif
-      endfor
+      ;--------------------------------------------------------------
+      ;  sneaky way to calculate upper and lower indices when 
+      ;   x is sorted
+      ;
+      aa = uniq(indx)
+      upper[indx[aa]-nord+1] = aa
 
+      rindx = reverse(indx)
+      bb = uniq(rindx)
+      lower[rindx[bb]-nord+1] = nx - bb - 1
+
+      ;---------------------------------------------------------------
+      ;  just attempt this if 2d fit is required
+      ;
       if keyword_set(x2) then begin
+
+         for jj=1,npoly-1 do action = [[action],[bf1]]
 
          x2norm = 2.0 * (x2[*] - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
 
