@@ -1014,6 +1014,7 @@ pro/psconfig/fsc_psconfig__define.pro -text
 pro/psconfig/psconfig.pro -text
 pro/rgbcolor/djs_mosaic_rgb.pro -text
 pro/rgbcolor/djs_rgb_make.pro -text
+pro/rgbcolor/hogg_bwify.pro -text
 pro/rgbcolor/hogg_image_overlay.pro -text
 pro/rgbcolor/hogg_make_image_label.pro -text
 pro/rgbcolor/hogg_rgb_entropy.pro -text
