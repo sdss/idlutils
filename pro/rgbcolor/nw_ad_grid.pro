@@ -71,9 +71,9 @@ FOR i=-nra,nra DO BEGIN
             dx = x_dec_line[in_pts[0]]-x_dec_line[in_pts[1]]
             dy = y_dec_line[in_pts[0]]-y_dec_line[in_pts[1]]
             angle = atan(dy,dx)*180D0/!DPI
-            xyouts,x_dec_line[in_pts[0]],y_dec_line[in_pts[1]],'RA = '+$
-              strcompress(string(thisra,format='(F7.2)'),/remove_all)+$
-              ' deg',alignment=1,charthick=charthick,charsize=charsize,$
+            xyouts,x_dec_line[in_pts[0]],y_dec_line[in_pts[1]],'!7a!3 '+$
+              strcompress(string(thisra,format='(F7.2)'),/remove_all),$
+              alignment=1,charthick=charthick,charsize=charsize,$
               orientation=angle,color=color
         ENDIF
     ENDIF
@@ -96,9 +96,9 @@ FOR j=-ndec,ndec DO BEGIN
                 dx = x_ra_line[in_pts[0]]-x_ra_line[in_pts[1]]
                 dy = y_ra_line[in_pts[0]]-y_ra_line[in_pts[1]]
                 angle = atan(dy,dx)*180D0/!DPI
-                xyouts,x_ra_line[in_pts[0]],y_ra_line[in_pts[0]],'Dec = '+$
-                  strcompress(string(thisdec,format='(F7.2)'),/remove_all)+$
-                  ' deg',alignment=1,charthick=charthick,charsize=charsize,$
+                xyouts,x_ra_line[in_pts[0]],y_ra_line[in_pts[0]],'!7d!3 '+$
+                  strcompress(string(thisdec,format='(F7.2)'),/remove_all),$
+                  alignment=1,charthick=charthick,charsize=charsize,$
                   orientation=angle,color=color
             ENDIF
         ENDIF
