@@ -26,7 +26,7 @@ function tmass_read, racen, deccen, rad
 
   fitspath = concat_dir(getenv('TWOMASS_DIR'),'slice')
   if fitspath eq 'slice' then begin 
-     print, 'You must set your $TWOMASS_DIR environment variable!'
+     splog, 'You must set your $TWOMASS_DIR environment variable!'
      stop
   endif
 
@@ -55,7 +55,7 @@ function tmass_read, racen, deccen, rad
 ; loop over zones
   FOR zone=z0, z1 DO BEGIN 
      
-;     print, z0, z1, zonewidth, zone
+;     splog, z0, z1, zonewidth, zone
      subdir = string(zone / 10, format='(I3.3)')
      path = concat_dir(fitspath, subdir)
      IF (ra0 LT ra1) THEN BEGIN 
@@ -92,7 +92,7 @@ function tmass_read, racen, deccen, rad
      result = dtrim[good]
   ENDIF ELSE BEGIN 
      result = dtrim  ; keep padding
-     print, 'Problem!!!'
+     splog, 'Problem!!!'
   ENDELSE 
 
   return, result
