@@ -250,7 +250,9 @@ function usno_read, racen, deccen, rad, path=path
        data=[[data], [zdata]]
   ENDFOR 
 
-  ntot = (size(data,/dimens))[1]
+  if n_elements(data) EQ 0 then print, 'NO Data - try a bigger radius.'
+  if n_elements(data) EQ 3 then ntot = 1 else $
+    ntot = (size(data,/dimens))[1]
   if (ntot EQ 0) then return, 0
   usnostruct = create_usnostruct(ntot)
 
