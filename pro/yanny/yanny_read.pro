@@ -457,7 +457,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   sz = N_elements( (*pdata[idat])[0].(itag) )
 
                   ; Error-checking code below
-                  if (i+sz GT nword) then begin
+                  if (i+sz GT n_elements(ww)) then begin
                      splog, 'ABORT: Invalid Yanny file!'
                      close, ilun
                      free_lun, ilun
