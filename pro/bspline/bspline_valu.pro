@@ -42,10 +42,12 @@
 function bspline_valu, x, sset, x2=x2, action=action, upper=upper, $
     lower=lower, mask=mask
 
+      nx = n_elements(x)
+      mask = lonarr(nx) 
 
       if size(sset,/tname) NE 'STRUCT' then begin
-         print, 'Please send in a proper B-spline structure'
-         return, -1
+         message, 'Please send in a proper B-spline structure', /continue
+         return, x*0.0
       endif
 
       xsort = sort(x)
@@ -62,7 +64,6 @@ function bspline_valu, x, sset, x2=x2, action=action, upper=upper, $
            action = bspline_action(xwork, sset, x2=x2work, upper=upper, $
                        lower=lower)
  
-      nx = n_elements(x)
       yfit = x * 0.0
       nord = sset.nord
       bw = npoly * nord
@@ -95,7 +96,7 @@ function bspline_valu, x, sset, x2=x2, action=action, upper=upper, $
       yy = yfit
       yy[xsort] = yfit 
 
-      mask = lonarr(nx) + 1
+      mask[*] = 1
       gb = sset.fullbkpt[goodbk]
 
       outside = where(x LT gb[nord-1] OR x GT gb[n])

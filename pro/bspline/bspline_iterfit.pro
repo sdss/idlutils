@@ -167,8 +167,11 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
          sset.coeff = 0
          iiter = maxiter + 1; End iterations
       endif else begin
-        ; Do the fit.  The indices of ill-constrained values are returned,
-        ; or -1 if all break points are good.
+        ; Do the fit.  
+        ;  returns 0 if fit is good
+        ;         -1 if bkpts are masked
+        ;      or -2 if everything is screwed
+        ;
         error = bspline_fit(xwork, ywork, invwork*outmask, sset, $
          x2=x2work, yfit=yfit, nord=nord, mask=mask)
       endelse
