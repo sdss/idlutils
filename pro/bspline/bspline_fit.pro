@@ -185,7 +185,7 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 ;
 ;	Now evaluate fit just since we can
 ;
-    yfit = bspline_valu(xdata, sset, x2=x2, action=a1)
+    yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, lower=lower)
 
     return, -1L
 end 

@@ -181,7 +181,8 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
                             x2=x2work, yfit=yfit)
       endelse
 
-      if (error[0] NE -1) then sset.bkmask[error] = 0 $
+      if (error[0] EQ -2) then return, sset $
+      else if (error[0] NE -1) then sset.bkmask[error] = 0 $
       else qdone = djs_reject(ywork, yfit, invvar=invwork, $
               outmask=outmask, upper=upper, lower=lower, _EXTRA=EXTRA)
 

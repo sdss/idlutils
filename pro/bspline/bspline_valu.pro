@@ -33,7 +33,7 @@
 ;   11-Sep-2000 Written by Scott Burles, FNAL
 ;-
 ;------------------------------------------------------------------------------
-function bspline_valu, x, sset, x2=x2, action=action, indx=indx
+function bspline_valu, x, sset, x2=x2, action=action, upper=upper, lower=lower
 
       if size(sset,/tname) NE 'STRUCT' then begin
          print, 'Please send in a proper B-spline structure'
@@ -51,7 +51,8 @@ function bspline_valu, x, sset, x2=x2, action=action, indx=indx
       endif else x2work = 0
 
       if NOT keyword_set(action) then $
-           action = bspline_action(xwork, sset, x2=x2work)
+           action = bspline_action(xwork, sset, x2=x2work, upper=upper, $
+                       lower=lower)
  
       nx = n_elements(x)
       yfit = x * 0.0
@@ -70,21 +71,23 @@ function bspline_valu, x, sset, x2=x2, action=action, indx=indx
       else goodcoeff = sset.coeff[coeffbk]
       gb = sset.fullbkpt[goodbk]
 
-      upper = -1L
+      maskthis = xwork * 0.0 
+   
+
       for i= 0L, n - nord do begin
 
-         bspline_indx, xwork, gb[i+nord-1], gb[i+nord], lower, upper
-         ict = upper - lower + 1
+         ict = upper[i] - lower[i] + 1
 
           if (ict GT 0) then begin
-             yfit[lower:upper] = action[lower:upper,*] # $
+             yfit[lower[i]:upper[i]] = action[lower[i]:upper[i],*] # $
                   goodcoeff[i*npoly+spot]
+             maskthis[lower[i]:upper[i]] = 1
           endif
 
       endfor
 
       yy = yfit
-      yy[xsort] = yfit
+      yy[xsort] = yfit * maskthis
 
       return, yy
 end
