@@ -143,7 +143,7 @@ pro astrom_warp, catmatch, immatch, deltax, deltay, rot, shift=shift, $
       warp_apply, x_0, y_0, k_x, k_y, xwarp, ywarp
       adiff = sqrt( (x_i-xwarp)^2 + (y_i-ywarp)^2 )
       qdone = djs_reject(adiff, 0*adiff, outmask=outmask, $
-       maxdev=maxsep)
+       maxdev=maxsep, maxrej=ceil(0.10*ndata)) ; Some hard-wired values ???
       iiter = iiter + 1
    endwhile
    splog, 'Number of iterations = ', iiter
