@@ -2,6 +2,7 @@
 Directory pro/rgbcolor added to support making color (RGB) images.
 Directory pro/healpix added to support atv display of healpix maps.
 
+ATV: Add support for healpix (DPF).
 CMP_FITS_FILES: New proc for comparing the contents of two FITS files.
 DJS_READILINES: Minor bug fix reported by John Moustakes; need to
                allow setting INDX=[0] and return that first line.
@@ -19,6 +20,7 @@ REJECT_CR: New proc for detecting CRs by finding features sharper than the PSF.
 SPHEREMATCH: Some memory-saving changes by Blanton.
 STRUCT_SELECTTAGS: New proc for trimming structures to specified tags.
                This is code broken out of SDSS_READOBJ().
+WCSXY2SPH: Comment fix from May version (for HealCart)
 
 data/sdss/sdssMaskbits.par: Change IMAGE_STATUS bit from "CLOUDS" to "CLOUDY".
 pro/Makfile: Add reference to healpix,rgbcolor directories.
