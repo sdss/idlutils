@@ -19,7 +19,8 @@ end
 ; NAME:
 ;       usno_readzone
 ;+------------------------------------------------------------------------  
-; PURPOSE:     Read given RA range out of one deczone. 
+; PURPOSE:
+;       Read given RA range out of one deczone. 
 ;+------------------------------------------------------------------------  
 ; INPUTS:
 ;   catpath   - path to catalogue files (.cat and .acc)
@@ -108,7 +109,8 @@ end
 ; NAME:
 ;       usno_cone
 ;+------------------------------------------------------------------------  
-; PURPOSE:     Determine RA,dec regions to read and call usno_readzone
+; PURPOSE:
+;       Determine RA,dec regions to read and call usno_readzone
 ;+------------------------------------------------------------------------  
 ; INPUTS:
 ;   racen     - RA of region center (J2000)    (degrees)
@@ -201,7 +203,8 @@ end
 ; NAME:
 ;       usno_read
 ;+------------------------------------------------------------------------  
-; PURPOSE:     Read star list from the USNO-A2.0 catalogue
+; PURPOSE:
+;       Read star list from the USNO-A2.0 catalogue
 ;+------------------------------------------------------------------------  
 ; INPUTS:
 ;   racen     - RA of region center (J2000)    (degrees) (may be array)
