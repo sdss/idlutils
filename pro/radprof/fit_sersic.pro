@@ -55,7 +55,7 @@ pro fit_sersic,nprof,profmean,proferr,seeing_width,seeing_amp,sersic, $
 common com_fit_sersic
 
 if(NOT keyword_set(maxnprof)) then maxnprof=11L
-if(NOT keyword_set(nprofile)) then nprofile=400L
+if(NOT keyword_set(nprofile)) then nprofile=100L
 if(NOT keyword_set(profradius)) then $
   profradius=[0., 0.564190, 1.692569, 2.585442, 4.406462, $
               7.506054, 11.576202, 18.584032, 28.551561, $
