@@ -9,6 +9,8 @@ SHELL = /bin/sh
 #
 .c.o :
 	$(CC) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.c
+.f.o :
+	$(F77) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.f
 #
 CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(IDLUTILS_DIR)/include
 
