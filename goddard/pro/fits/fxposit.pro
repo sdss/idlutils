@@ -42,7 +42,7 @@
 ;      the output.
 ;      Call FXMOVE to get to the appropriate extension.
 ; PROCEDURE CALLS:
-;      EXPAND_TILDE() (Unix only), FXPAR(), FXMOVE()
+;      EXPAND_TILDE() (pre V5.5 Unix only), FXPAR(), FXMOVE(), REPSTR()
 ; MODIFICATION HISTORY:
 ;      Derived from William Thompson's FXFINDEND routine.
 ;      Modified by T.McGlynn, 5-October-1994.
