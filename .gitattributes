@@ -5,8 +5,6 @@ bin/evilmake -text
 doc/Makefile -text
 doc/mk_doc -text
 doc/www/.cvsignore -text
-doc/www/goddard_doc.html -text
-doc/www/idlutils_doc.html -text
 goddard/Makefile -text
 goddard/README -text
 goddard/contents.txt -text
