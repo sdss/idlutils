@@ -1,48 +1,49 @@
 pro ticpos,deglen,pixlen,ticsize,incr,units      ;Compute tic positions
 ;+
 ; NAME:
-;	TICPOS
+;       TICPOS
 ; PURPOSE:
-;	Specify distance between tic marks for astronomical coordinate overlays
+;       Specify distance between tic marks for astronomical coordinate overlays
 ; EXPLANATION:
-;	User inputs number an approximate distance
-;	between tic marks, and the axis length in degrees.  TICPOS will return 
-;	a distance between tic marks such that the separation is a round
-;	multiple in arc seconds, arc minutes, or degrees
+;       User inputs number an approximate distance
+;       between tic marks, and the axis length in degrees.  TICPOS will return 
+;       a distance between tic marks such that the separation is a round
+;       multiple in arc seconds, arc minutes, or degrees
 ;
 ; CALLING SEQUENCE:
-;	ticpos, deglen, pixlen, ticsize, incr, units
+;       TICPOS, deglen, pixlen, ticsize, incr, units
 ;
 ; INPUTS:
-;	deglen - length of axis in DEGREES
-;	pixlen - length of axis in plotting units (pixels)
-;	ticsize - distance between tic marks (pixels).  This value will be
-;		adjusted by TICPOS such that the distance corresponds to
-;		a round multiple in the astronomical coordinate.
+;       deglen - length of axis in DEGREES
+;       pixlen - length of axis in plotting units (pixels)
+;       ticsize - distance between tic marks (pixels).  This value will be
+;               adjusted by TICPOS such that the distance corresponds to
+;               a round multiple in the astronomical coordinate.
 ;
 ; OUTPUTS:
-;	ticsize - distance between tic marks (pixels), positive scalar 
-;	incr    - incremental value for tic marks in round units given 
-;		by the UNITS parameter
-;	units - string giving units of ticsize, either 'ARC SECONDS',
-;		'ARC MINUTES', or 'DEGREES'
+;       ticsize - distance between tic marks (pixels), positive scalar 
+;       incr    - incremental value for tic marks in round units given 
+;               by the UNITS parameter
+;       units - string giving units of ticsize, either 'ARC SECONDS',
+;               'ARC MINUTES', or 'DEGREES'
 ;
 ; EXAMPLE:
-;	Suppose a 512 x 512 image array corresponds to 0.2 x 0.2 degrees on
-;	the sky.   A tic mark is desired in round angular units, approximately 
-;	every 75 pixels.
+;       Suppose a 512 x 512 image array corresponds to 0.2 x 0.2 degrees on
+;       the sky.   A tic mark is desired in round angular units, approximately 
+;       every 75 pixels.
 ;
-;	IDL> ticsize = 75
-;	IDL> TICPOS,0.2,512,ticsize,incr,units   
+;       IDL> ticsize = 75
+;       IDL> TICPOS,0.2,512,ticsize,incr,units   
 ;
-;	==> ticsize = 85.333, incr = 2. units = 'ARC MINUTES'
+;       ==> ticsize = 85.333, incr = 2. units = 'Arc Minutes'
 ;
-;	i.e. a good tic mark spacing is every 2 arc minutes, corresponding
-;	to 85.333 pixels.
+;       i.e. a good tic mark spacing is every 2 arc minutes, corresponding
+;       to 85.333 pixels.
 ;
 ; REVISON HISTORY:
-;	written by W. Landsman            November, 1988
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       written by W. Landsman            November, 1988
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Don't use all capital letters  W. Landsman May 2003
 ;-
   On_error,2
 
@@ -51,9 +52,9 @@ pro ticpos,deglen,pixlen,ticsize,incr,units      ;Compute tic positions
 
   if (incr LT 0 ) then sgn = -1 else sgn = 1
   incr = abs(incr)
-  if ( incr GE 30 )  then units = 'DEGREES' else $
-  if ( incr LE 0.5 ) then units = 'ARC SECONDS'  $
-                     else units = 'ARC MINUTES'
+  if ( incr GE 30 )  then units = 'Degrees' else $
+  if ( incr LE 0.5 ) then units = 'Arc Seconds'  $
+                     else units = 'Arc Minutes'
 ;                                        determine increment
   case 1 of 
 
@@ -75,8 +76,8 @@ pro ticpos,deglen,pixlen,ticsize,incr,units      ;Compute tic positions
   
   endcase                                         
 
-  if ( units EQ 'ARC SECONDS' ) then minpix = minpix*60. else $
-  if ( units EQ 'DEGREES' )  then minpix = minpix/60.
+  if ( units EQ 'Arc Seconds' ) then minpix = minpix*60. else $
+  if ( units EQ 'Degrees' )  then minpix = minpix/60.
 
   ticsize= incr/abs(minpix)                ;determine ticsize
   incr = incr*sgn
