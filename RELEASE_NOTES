@@ -1,10 +1,18 @@
 
+YANNY_READ:   - Don't crash when FILENAME is a 1-element array!
+
+src/math/nr.h - Comment-out line 93 which defines "float fmin(float x[]);".
+               This conflicts with a definition in one of the include files
+               under Mac OS X: "/usr/include/architecture/ppc/math.h".
+               Note that we don't actually use the fmin() function anywhere
+               in this directory anyway.
+
 -------------------------------------------------------------------------------
 v4_10_0 (Mar 29, 2003)
 Tagged for photoop v0_6, and includes updated Goddard libraries.
 
 data/filters/Makefile - This file is no longer needed, since the Makefile
-           one directory up takes care of copying these filter files.
+               one directory up takes care of copying these filter files.
 pro/Makefile - This was missing several subdirectories.
 goddard      - This library was brought up to the 2003-Mar-21 version
                of Landsman's library.  There were changes to 192 files
