@@ -65,7 +65,7 @@ pro mwrbin_append, file, ext, struct
     ; Update the NAXIS2  -- this has a fixed location relative to the start
     naxis1 = long64(fxpar(header, "NAXIS1"))
     naxis2 = long64(fxpar(header, "NAXIS2"))
-    point_lun, lun, header_start+330
+    point_lun, lun, header_start+330LL
 
     z = string(naxis2+n_elements(struct), format="(i20)")
     writeu, lun, z
@@ -81,7 +81,7 @@ pro mwrbin_append, file, ext, struct
 
     ; Write any needed padding.
     data_size = (naxis2+n_elements(struct)) * naxis1
-    blanks = data_size MOD 2880
+    blanks = data_size MOD 2880LL
     if blanks NE 0 then begin
         buf = bytarr(2880-blanks)
         writeu, lun, buf
@@ -155,13 +155,13 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    nrow = n_elements(input)
    if (NOT keyword_set(chunksize)) then chunksize = nrow
    nchunk = nrow / chunksize + ((nrow MOD chunksize) NE 0)
-   for ichunk=0L, nchunk-1L do begin
+   for ichunk=0LL, nchunk-1LL do begin
       if (NOT keyword_set(silent)) then $
        print, 'Writing chunk number ', ichunk+1, ' of ', nchunk
 
       i1 = ichunk * chunksize
-      i2 = ((ichunk+1) * chunksize - 1) < (nrow-1)
-      indx = i1 + lindgen(i2-i1+1)
+      i2 = ((ichunk+1) * chunksize - 1LL) < (nrow-1LL)
+      indx = i1 + lindgen(i2-i1+1LL)
 
       if (ichunk EQ 0 AND NOT keyword_set(append)) then begin
          ; Create a new file, and write this structure as HDU #1.

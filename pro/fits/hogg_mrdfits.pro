@@ -21,14 +21,14 @@ function hogg_mrdfits, file, extension, header, silent=silent, $
  range=range, structyp=structyp, nrowchunk=nrowchunk, _EXTRA=inputs_for_mrdfits
 
   if not keyword_set(range) then begin
-    naxis2= sxpar(headfits(file,exten=extension,silent=silent),'NAXIS2')
+    naxis2= long64(sxpar(headfits(file,exten=extension,silent=silent),'NAXIS2'))
     if(NOT keyword_set(silent)) then splog, naxis2
-    range= [0,naxis2-1]
+    range= [0LL,naxis2-1LL]
   endif
 
-  if not keyword_set(nrowchunk) then nrowchunk= 1000
+  if not keyword_set(nrowchunk) then nrowchunk= 1000LL
 
-  chunkrange= [range[0],((range[0]+nrowchunk-1) < range[1])]
+  chunkrange= [range[0],((range[0]+nrowchunk-1LL) < range[1])]
   while (chunkrange[1] GE chunkrange[0]) do begin
 
     if(NOT keyword_set(silent)) then splog, chunkrange
@@ -36,7 +36,7 @@ function hogg_mrdfits, file, extension, header, silent=silent, $
      range=chunkrange, structyp=structyp, $
       silent=silent, _EXTRA=inputs_for_mrdfits)
     if not keyword_set(result) then begin
-        result=replicate(chunkresult[0],range[1]-range[0]+1)
+        result=replicate(chunkresult[0],range[1]-range[0]+1LL)
     endif 
     result[chunkrange[0]-range[0]:chunkrange[1]-range[0]]=chunkresult
 
