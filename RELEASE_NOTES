@@ -2,15 +2,20 @@
 ADJUST_ERROR: New proc.
 ASINH2: Trig function; moved from vagc product.
 ASTROM_ENGINE: Fix print statement for "XSHIFT:".
+DJS_PHOT,DJS_PHOTSKY,EXACT_PHOTFRAC: Add support for calling the sinc-shift
+               "exact" photometry that Lupton uses in PHOTO.  This algorithm
+               is called if the /EXACT keyword is set.
 FIRST_READ,FIRST_COVERAGE: New functions for reading the FIRST radio survey
                data files.
 IS_IN_CAP,IS_IN_POLYGON,IS_IN_WINDOW: Change calling sequence, with
                ra=,dec=,xyz= instead of assuming xyz is passed.
+LOGSUM: Small bug fix.
 MWRFITS_CHUNKS: Small changes to internal proc MWRBIN_APPEND to allow
                support for files larger than 2 Gb.
                Free all logical units (LUNs), which was not the case.
                We were not freeing one LUN for each time this routine
                was called.
+POLYGON_OVERLAP - Blanton changed the usage?
 SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                is left in a bad state that does not allow the use of !p.multi
                in other plot windows.  The fix is to always make sure that
