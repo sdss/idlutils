@@ -1098,7 +1098,6 @@ src/mangle1.4/HELP.unformatted -text
 src/mangle1.4/INSTALL -text
 src/mangle1.4/README -text
 src/mangle1.4/README.blanton -text
-src/mangle1.4/src/GNUmakefile -text
 src/mangle1.4/src/Makefile -text
 src/mangle1.4/src/Makefile.sun -text
 src/mangle1.4/src/add_parent.c -text
