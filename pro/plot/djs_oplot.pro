@@ -51,7 +51,7 @@ pro djs_oplot, x, y, $
 
    if (ncolor LE 1 AND npsym LE 1 AND nsize LE 1) then begin
       oplot, xtmp, ytmp, $
-       color=icolor, psym=psym, symsize=symsize, $
+       color=icolor[0], psym=psym[0], symsize=symsize[0], $
        _EXTRA=KeywordsForPlot
    endif else begin
       for ipt=0L, npt-1 do begin
