@@ -1,4 +1,10 @@
 #!/bin/sh
+
+# Do not use optimization for the IRIX platforms, since that
+# seems to fail at the build step.
+# Our Makefile's always build with $(SDSS_CFLAGS), so we can use that
+# variable to set optimization.
+
 echo "OS type detected: "`uname`
 case `uname` in
 	"SunOS") if [  -d /proc ]; then
@@ -6,22 +12,28 @@ case `uname` in
 			X_CFLAGS="-KPIC"
 			X_LD_FLAGS=-G
 		fi
+		SDSS_CFLAGS=-O3
 	;;
 	"HP-UX")
 		SO_EXT=sl
 		X_CFLAGS="+z -Aa -D_HPUX_SOURCE"
-		X_LD_FLAGS=-b;;
+		X_LD_FLAGS=-b
+	;;
 	"IRIX" )
 		SO_EXT=so
 		X_CFLAGS="-32 -KPIC"
-		X_LD_FLAGS="-shared -32";;
+		X_LD_FLAGS="-shared -32"
+	;;
 	"IRIX64" )
 		SO_EXT=so
 		X_CFLAGS="-32 -KPIC"
-		X_LD_FLAGS="-shared -32";;
+		X_LD_FLAGS="-shared -32"
+	;;
 	"OSF1" )
 		SO_EXT=so
-		X_LD_FLAGS="-S -shared";;
+		X_LD_FLAGS="-S -shared"
+		SDSS_CFLAGS=-O3
+	;;
 	"Darwin" )
 		F77=g77
 		SO_EXT=so
@@ -29,20 +41,18 @@ case `uname` in
 # The following two lines should be equivalent to the above line
 #		LD=libtool
 #		X_LD_FLAGS="-dynamic -L/usr/lib -lc -lcc_dynamic"
-		X_CFLAGS="-g -Wall -dynamic";;
+		X_CFLAGS="-g -Wall -dynamic"
+		SDSS_CFLAGS=-O3
+	;;
 	"Linux" )
 		SO_EXT=so
 		X_CFLAGS="-fPIC -g -Wall"
-		X_LD_FLAGS=-shared ;;
+		X_LD_FLAGS=-shared
+		SDSS_CFLAGS=-O3
+	;;
 	*) echo "This system is not supported" >&2
 		exit 1;;
 esac
-
-# Always optimize when building with "evilmake"
-# Our Makefile's always build with $(SDSS_CFLAGS), so we can use that
-# variable to set optimization.
-# Comment this out since it seems to fail on an SGI platform...
-SDSS_CFLAGS=-O3
 
 export SO_EXT X_CFLAGS X_LD_FLAGS SDSS_CFLAGS LD F77
 
