@@ -6,8 +6,8 @@
 ; CALLING SEQUENCE:
 ;   result=is_in_cap(xyz, cap [, /radec]
 ; INPUTS:
-;   xyz - xyz value (or radec if /radec is set)
-;   cap - cap to check
+;   xyz - xyz value(s) (or radec if /radec is set)
+;   cap - single cap to check
 ; OPTIONAL INPUTS:
 ;   /radec - if set, assume xyz actually holds array [ra,dec]
 ; OUTPUTS:
