@@ -583,6 +583,7 @@ pro/coord/djs_angpos.pro -text
 pro/coord/djs_angsgn.pro -text
 pro/coord/djs_diff_angle.pro -text
 pro/coord/dotproduct_sphere.pro -text
+pro/coord/moon_zenith.pro -text
 pro/coord/recenter.pro -text
 pro/coord/sptr1.pro -text
 pro/coord/tai2airmass.pro -text
