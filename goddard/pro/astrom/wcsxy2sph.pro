@@ -62,6 +62,7 @@
 ;   QCS    24    Quadrilateralized
 ;                Spherical Cube
 ;   TSC    25    Tangential Spherical Cube
+;   HCT    26    HealCart (Cartesian approximation of Healpix)
 ;
 ; OPTIONAL KEYWORD PARAMETERS:
 ;
@@ -192,7 +193,7 @@ PRO wcsxy2sph, x, y, longitude, latitude, map_type, ctype=ctype, $
  pi2 = pi/2.0d
  map_types=['DEF','AZP','TAN','SIN','STG','ARC','ZPN','ZEA','AIR','CYP',$
             'CAR','MER','CEA','COP','COD','COE','COO','BON','PCO','SFL',$
-            'PAR','AIT','MOL','CSC','QSC','TSC']
+            'PAR','AIT','MOL','CSC','QSC','TSC','HCT']
 
 ; check to see that enough parameters (at least 4) were sent
  if ( N_params() lt 4 ) then begin
@@ -393,6 +394,19 @@ case strupcase(projection_type) of
   'CAR':begin
     phi = xx/radeg
     theta = yy/radeg
+  end
+  
+  'HCT':begin
+    phi = xx/radeg
+
+    w_np = where(yy ge 45, n_np)
+    w_eq = where((yy lt 45) and (yy gt -45), n_eq)
+    w_sp = where(yy le -45, n_sp)
+    theta = dblarr(n_elements(yy)) 
+    
+    if n_np gt 0 then theta[w_np] =  asin(1-(yy/45-2)^2/3.d)
+    if n_eq gt 0 then theta[w_eq] =  asin((yy/45)*2./3.d)
+    if n_sp gt 0 then theta[w_sp] = -asin(1-(yy/45+2)^2/3.d)
   end
   
   'MER':begin
