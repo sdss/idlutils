@@ -759,6 +759,8 @@ pro/math/gauss_kernel.pro -text
 pro/math/gausspix1d.pro -text
 pro/math/hogg_iter_linfit.pro -text
 pro/math/nnls.pro -text
+pro/math/nonneg_mult_update.pro -text
+pro/math/nonneg_mult_update_solve.pro -text
 pro/math/poly_iter.pro -text
 pro/math/sshift.pro -text
 pro/math/sshift2d.pro -text
