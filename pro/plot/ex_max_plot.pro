@@ -359,9 +359,11 @@ for id2=ydimen-1,0L,-1 do begin
                     invvar2d= invert(var2d,/double)
                     for xxi=0L,usenpix_x-1 do for yyi=0L,usenpix_y-1 do $
                       image[xxi,yyi]= image[xxi,yyi]+ $
-                      amp[j]/sqrt(det)/2.0/!PI*exp(-0.5* $
-                                                   ([mean[d1,j],mean[d2,j]]-[ximg[xxi],yimg[yyi]])# $
-                                                   invvar2d#([mean[d1,j],mean[d2,j]]-[ximg[xxi],yimg[yyi]]))
+                      amp[j]/sqrt(det)/2.0/!PI* $
+                      exp(-0.5*([mean[d1,j],mean[d2,j]]- $
+                                [ximg[xxi],yimg[yyi]])# $
+                          invvar2d#([mean[d1,j],mean[d2,j]]- $
+                                    [ximg[xxi],yimg[yyi]]))
                 endif
             endfor
 
@@ -371,11 +373,11 @@ for id2=ydimen-1,0L,-1 do begin
                     loadct,0,/silent
                     if(keyword_set(conditional)) then begin
                         xx= floor(double(usenpix_x)* $
-                                  (panelpoint[d1,*]-RANGE[0,d1])/ $
-                                  (RANGE[1,d1]-RANGE[0,d1]))
+                                  (panelpoint[d1,*]-range[0,d1])/ $
+                                  (range[1,d1]-range[0,d1]))
                         yy= floor(double(usenpix_y)* $
-                                  (panelpoint[d2,*]-RANGE[0,d2])/ $
-                                  (RANGE[1,d2]-RANGE[0,d2]))
+                                  (panelpoint[d2,*]-range[0,d2])/ $
+                                  (range[1,d2]-range[0,d2]))
                         amp1col=dblarr(usenpix_x)
                         avgcol=total(image,1)
                         avgcol=avgcol/total(avgcol)
@@ -384,8 +386,10 @@ for id2=ydimen-1,0L,-1 do begin
                         endif
                         for ii=0L, usenpix_x-1L do begin
                             indx=where(xx eq ii, countin)
-                            if(countin gt 1) then begin
-                                amp1col[ii]=total(image[ii,*]^2)/total(image[ii,*]*avgcol)
+                            if(countin gt 1 and total(image[ii,*] gt 0) $
+                               then begin
+                                amp1col[ii]=total(image[ii,*]^2)/ $
+                                  total(image[ii,*]*avgcol)
                                 image[ii,*]=image[ii,*]/amp1col[ii]
                                 if(keyword_set(quantfrac)) then begin
                                     quantile[id1,id2,*,ii,1]= $
