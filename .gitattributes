@@ -663,6 +663,7 @@ goddard/text/tape_io.readme -text
 goddard/text/tv.readme -text
 include/Makefile -text
 include/export.h -text
+lib/.cvsignore -text
 lib/Makefile -text
 pro/2mass/tmass_ascii2fits.pro -text
 pro/2mass/tmass_cone.pro -text
