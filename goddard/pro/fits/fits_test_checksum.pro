@@ -50,6 +50,7 @@
 ;     of the FITS header
 ; REVISION HISTORY:
 ;     W. Landsman  SSAI               December 2002
+;     Return quietly if CHECKSUM keywords not found W. Landsman May 2003
 ;-
   if N_Params() LT 1 then begin
       print,'Syntax - result = FITS_TEST_CHECKSUM(Hdr, [Data,' +  $
@@ -61,9 +62,9 @@
   checksum = sxpar(hdr,'CHECKSUM', Count = N_checksum)
   datasum = sxpar(hdr,'DATASUM', Count = N_datasum)
   if (N_checksum EQ 0) then begin
-      result = 0
       errmsg = 'CHECKSUM keyword not present in FITS header'
-      if printerr then message,/con, errmsg 
+      if printerr then message,/con, errmsg
+      return, 0
   endif 
   if N_datasum EQ 0 then datasum = '0' 
   ch  = shift(byte(checksum),-1)
