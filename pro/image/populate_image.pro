@@ -53,7 +53,7 @@ pro populate_image, image, x, y, weights=weights, assign=assign
 
    dims = size(image, /dimens)
    nx = dims[0]
-   if (ndim EQ 1) then ny = 1 $
+   if (ndim EQ 1) then ny = 1L $
     else ny = dims[1]
 
    if (NOT keyword_set(y)) then y = fltarr(npts) + 0
