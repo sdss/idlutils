@@ -10,6 +10,10 @@ CHOLESKY_SOLVE: Up to date bspline implementation, passing structure and
                Make loop variables type long (Blanton).
 DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
                parameter for OmegaL.
+DJS_PHOTFRAC: add documentation on /exact keyword, and report error in case
+              of non-integer center given with /exact keyword set. also, 
+              changed so it doesn't recenter on its own if /exact is set.
+EXACT_PHOTFRAC: fix bug involving calculation of annulus photometry
 FIND: Need to index some loops with type LONG to allow for large
                numbers of stars.
 HOGG_BWIFY:  ???

@@ -72,6 +72,9 @@
 ; 
 ; KEYWORDS:
 ;   exact       Use slow photo-based photfrac algorithm (Not thoroughly tested)
+;               Requires image to be centered such that xcen and ycen
+;               are integer values. If set, does not recalculate
+;               center.
 ;   quick       Use faster photfrac algorithm (Not thoroughly tested)
 ;
 ; OUTPUTS:
@@ -93,12 +96,14 @@
 ;               pixels [NOBJ].
 ;   peakval:    Peak pixel value (before sky-subtraction)
 ;
-; BUGS:
-;   if /exact keyword is set, input xcen, ycen should be integers
-;
 ; COMMENTS:
 ;   Sub-pixel sampling of the circular apertures is handled exactly.
-;
+;   If /exact keyword is set, input xcen, ycen must be integers or 
+;     the code bombs. See exact_photfrac.pro for more details, but 
+;     basically exact_photfrac is much simpler to implement if the 
+;     object is already centered, which doesn't cost you precision.
+;   For similar reasons, if /exact is set, djs_phot will not try to
+;     recentroid your object.
 ; PROCEDURES CALLED:
 ;   djs_photcen
 ;   djs_photfrac
@@ -129,6 +134,13 @@ function djs_phot, xcen, ycen, objrad, skyrad, image, invvar, $
    if (n_elements(ycen) NE nobj) then $
     message, 'XCEN and YCEN must have same number of elements'
 
+   if(keyword_set(exact)) then begin
+       ini=where(long(xcen) ne xcen OR long(ycen) ne ycen, nni)
+       if(nni gt 0) then begin
+           message, 'xcen and ycen MUST be integers if /exact keyword is set'
+       endif
+   endif
+
    dims = size(image, /dimens)
    xdimen = dims[0]
    ydimen = dims[1]
@@ -148,8 +160,14 @@ function djs_phot, xcen, ycen, objrad, skyrad, image, invvar, $
       ; Center the object
       xcen1 = xcen[iobj]
       ycen1 = ycen[iobj]
-      djs_photcen, xcen1, ycen1, image, $
-       calg=calg, cbox=cbox, cmaxiter=cmaxiter, cmaxshift=cmaxshift
+      if(NOT keyword_set(exact)) then begin
+          djs_photcen, xcen1, ycen1, image, $
+            calg=calg, cbox=cbox, cmaxiter=cmaxiter, cmaxshift=cmaxshift 
+      endif else begin
+          splog, 'Not recentering -- /exact requires correct input center'
+          xcen1=xcen[iobj]
+          ycen1=ycen[iobj]
+      endelse
 
       ; Find the sky value
       ; Add 0.0 to the skyrad to convert to floating-point
