@@ -39,10 +39,13 @@
 ;------------------------------------------------------------------------------
 function struct_append, struct1, struct2
 
+   if (NOT keyword_set(struct1) AND NOT keyword_set(struct2)) then $
+    return, 0
+   if (NOT keyword_set(struct1)) then return, struct2
+   if (NOT keyword_set(struct2)) then return, struct1
+
    num1 = n_elements(struct1)
-   if (num1 EQ 0) then return, struct2
    num2 = n_elements(struct2)
-   if (num2 EQ 0) then return, struct1
 
    obj1 = struct1[0]
    outstruct = replicate(obj1, num1+num2)
