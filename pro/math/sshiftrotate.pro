@@ -130,8 +130,6 @@ function sshiftrotate, image, theta1, xshift=xshift1, yshift=yshift1, $
       return, thisimg
    endif
 
-   t0 = systime(1)
-
    ;----------
    ; Compute the offset functions for each of the 3 sinc shifts
 
@@ -166,7 +164,7 @@ function sshiftrotate, image, theta1, xshift=xshift1, yshift=yshift1, $
 
    nbigx = nx + xpad1 + xpad2
    nbigy = ny + ypad1 + ypad2
-   print, 'Resize image from ', nx, ny, ' to ', nbigx, nbigy
+;   print, 'Resize image from ', nx, ny, ' to ', nbigx, nbigy
 
    newimg = fltarr(nbigx, nbigy) ; What if this is double???
    newimg[xpad1:xpad1+nx-1,ypad1:ypad1+ny-1] = image
@@ -200,8 +198,6 @@ function sshiftrotate, image, theta1, xshift=xshift1, yshift=yshift1, $
       yoffset = 0
       newimg = newimg[xpad1:xpad1+nx-1,ypad1:ypad1+ny-1]
    endelse
-
-   print, 'Time to rotate = ', systime(1)-t0
 
    return, newimg
 end
