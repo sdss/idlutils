@@ -3,10 +3,8 @@
 ;   bspline_valu
 ;
 ; PURPOSE:
-;   This routine has TWO purposes.  
 ;      1) Evaluate a bspline set (see create_bsplineset) at specified
 ;            x and x2 arrays
-;      2) Construct banded bspline matrix, with dimensions [ndata, bandwidth]
 ;
 ; CALLING SEQUENCE:
 ;   
@@ -21,8 +19,6 @@
 ;
 ; OPTIONAL KEYWORDS:
 ;   x2         - Orthogonal dependent variable for 2d fits
-;
-; OPTIONAL OUTPUTS:
 ;   action     - This keyword is overwritten with b-spline action matrix
 ;   indx       - The index of bkpt which is just left of x[i], needed to
 ;                  complete banded algebra
@@ -43,76 +39,53 @@ function bspline_valu, x, sset, x2=x2, action=action, indx=indx
          print, 'Please send in a proper B-spline structure'
          return, -1
       endif
- 
+
+      xsort = sort(x)
       npoly = 1L
-      nx = n_elements(x)
+      xwork = x[xsort]
 
-;
-;	Check for the existence of x2 
-;
       if keyword_set(x2) then begin
-        if n_elements(x2) NE nx then begin
-          print, 'dimensions do not match between x and x2'
-          return, -1
-        endif
+        if ((where(tag_names(sset) EQ 'NPOLY'))[0] NE -1) then $
+           npoly=sset.npoly
+        x2work = x2[xsort]
+      endif else x2work = 0
 
-        if ((where(tag_names(sset) EQ 'NPOLY'))[0] NE -1) then npoly=sset.npoly
-      endif
+      if NOT keyword_set(action) then $
+           action = bspline_action(xwork, sset, x2=x2work)
  
-
-      goodbk = where(sset.bkmask NE 0, nbkpt)
+      nx = n_elements(x)
+      yfit = x * 0.0
       nord = sset.nord
-      if nbkpt LT 2*nord then return, -2L
-      n = (nbkpt - nord)
-      nfull = n*npoly
+      bw = npoly * nord
 
+
+      spot = lindgen(bw)
+      goodbk = where(sset.bkmask NE 0, nbkpt) 
+      coeffbk = where(sset.bkmask[nord:*] NE 0) 
+      n = nbkpt - nord
+
+      
+      sc = size(sset.coeff)
+      if sc[0] EQ 2 then goodcoeff = sset.coeff[0:npoly-1,coeffbk] $
+      else goodcoeff = sset.coeff[coeffbk]
       gb = sset.fullbkpt[goodbk]
 
-      bw = npoly * nord   
-      indx = intrv(x[*], gb, nord)
+      upper = -1L
+      for i= 0L, n - nord do begin
 
-      largex = (x[*] # replicate(1,npoly))[*]
-      largeindx = (indx # replicate(1,npoly))[*]
-      bf = reform(bsplvn(gb, nord, largex, largeindx), nx, bw)
-      action = bf
+         bspline_indx, xwork, gb[i+nord-1], gb[i+nord], lower, upper
+         ict = upper - lower + 1
 
-
-      if keyword_set(x2) then begin
-
-         x2norm = 2.0 * (x2[*] - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
-
-         CASE sset.funcname OF
-           'poly' : begin
-                   temppoly = (x2norm*0.0 + 1.0) # replicate(1,npoly)
-                   for i=1,npoly-1 do temppoly[*,i] = temppoly[*,i-1] * x2norm
-                  end
-           'chebyshev' : temppoly = fchebyshev(x2norm, npoly)
-           'legendre'  : temppoly = flegendre(x2norm, npoly)
-           else :        temppoly = flegendre(x2norm, npoly)
-         ENDCASE
-
-         ypoly = reform((temppoly[*] # replicate(1,nord))[*],nx,bw)
-         action = bf * ypoly
-
-      endif
-
-      yfit = x * 0.0
-      spot = lindgen(bw)
-      slist = indx[sort(indx)]
-      ilist = slist[uniq(slist)]
-
-      goodbk = where(sset.bkmask[nord:*] NE 0) 
-
-      sc = size(sset.coeff)
-      if sc[0] EQ 2 then goodcoeff = sset.coeff[0:npoly-1,goodbk] $
-      else goodcoeff = sset.coeff[goodbk]
-
-      for i=0, n_elements(ilist) - 1 do begin
-         inside = where(indx EQ ilist[i], ict)
-         if inside[0] NE -1 then yfit[inside] = action[inside,*] # $
+          if (ict GT 0) then begin
+             yfit[lower:upper] = action[lower:upper,*] # $
                   goodcoeff[i*npoly+spot]
+          endif
+
       endfor
 
-      return, yfit
+      yy = yfit
+      yy[xsort] = yfit
+
+      return, yy
 end
 

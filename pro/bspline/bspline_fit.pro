@@ -62,19 +62,19 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
       if ((where(tag_names(sset) EQ 'NPOLY'))[0] NE -1) then npoly=sset.npoly
       if NOT keyword_set(npoly) then npoly=1L
     
-      goodbk = where(sset.bkmask NE 0, nbkpt)
-     nord = sset.nord
+      goodbk = where(sset.bkmask[nord:*] NE 0, nbkpt)
 
-      if nbkpt LT 2*nord then return, -2L
+      nord = sset.nord
 
-      n = (nbkpt - nord)
+      if nbkpt LT nord then return, -2L
+
+      n = nbkpt 
       nfull = n*npoly
       bw = npoly * nord   ; this is the bandwidth
 
       ;  The next line is REQUIRED to fill a1
 
-
-      zeros = bspline_valu(xdata, sset, x2=x2, action=a1, indx=indx)
+      a1 = bspline_action(xdata, sset, x2=x2, lower=lower, upper=upper)
 
       a2 = a1 * (invvar # replicate(1,bw))
 
@@ -86,21 +86,21 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
       for i=1,bw-1 do bi = [bi,lindgen(bw-i)+(bw+1)*i]
       for i=1,bw-1 do bo = [bo,lindgen(bw-i)+bw*i]
 
-      slist = indx[sort(indx)]
-      ilist = slist[uniq(slist)]
-      for i=0, n_elements(ilist) - 1 do begin
+      for i=0L, n-nord do begin
 
         itop = i*npoly
         ibottom = (itop < nfull + bw) - 1
-        inside = where(indx EQ ilist[i], ict)
+       
+        ict = upper[i] - lower[i] + 1
+  
+        if (ict GT 0) then begin
 
-        if (ict NE 0) then begin
-
-          work = a2[inside,*] ## transpose(a1[inside,*])
-          wb =  ydata[inside] # a2[inside,*] 
+          work = a2[lower[i]:upper[i],*] ## transpose(a1[lower[i]:upper[i],*])
+          wb =  ydata[lower[i]:upper[i]] # a2[lower[i]:upper[i],*] 
 
           alpha[bo+itop*bw] = alpha[bo+itop*bw] + work[bi]
           beta[itop:ibottom] = beta[itop:ibottom] + wb
+
         endif
       endfor
 
@@ -123,33 +123,28 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 ;
 ;	This is an attempt to drop bkpts where minimal influence is located
 ;
-    minimum_influence = 0.001 * total(invvar)/nfull
+    minimum_influence = 1.0e-5 * total(invvar)/nfull
+    yfit = ydata*0.0
 
 ;
 ;       cholesky_band operates on alpha and changes contents
 ;
 
+
     errb = cholesky_band(alpha, mininf=minimum_influence) 
 
     if (errb[0] NE -1) then begin
-      errb = goodbk[errb[uniq(errb/npoly)]/npoly]
-      return, errb
+      hmm = ((errb[uniq(errb/npoly)]/npoly - 1) > 0) < (n - nord - 1)
+      return, goodbk[hmm] + nord
     endif
 
 ; this changes beta to contain the solution
 
     errs = cholesky_solve(alpha, beta)   
     if (errs[0] NE -1) then begin
-      errs = goodbk[errs[uniq(errs/npoly)]/npoly]
-      return, errs
+      hmm = ((errs[uniq(errb/npoly)]/npoly - 1) > 0) < (n - nord - 1)
+      return, goodbk[hmm] + nord
     endif
-
-;
-;	Now fill up structure with answers
-;
-
-;    goodbk = where(sset.bkmask[nord-1L:n_elements(sset.bkmask)-2] NE 0)
-    goodbk = where(sset.bkmask[nord:*] NE 0)
 
     sc = size(sset.coeff)
     if sc[0] EQ 2 then begin
@@ -163,7 +158,7 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 ;
 ;	Now evaluate fit just since we can
 ;
-    yfit = bspline_valu(xdata, sset, x2=x2)
+    yfit = bspline_valu(xdata, sset, x2=x2, action=a1)
 
     return, -1L
 end 

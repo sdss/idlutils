@@ -16,7 +16,7 @@
 ;   invvar     - Inverse variance of y; if not set, then set to be
 ;                consistent with the standard deviation.  This only matters
 ;                if rejection is being done.
-;   nord       - Order for spline fit; default to 3 (cubic).
+;   nord       - Order for spline fit; default to 4 (cubic).
 ;   x2         - 2nd dependent variable for 2-D spline fitting.
 ;   npoly      - Polynomial order to fit over 2nd variable (X2); default to 2.
 ;   xmin       - Normalization minimum for X2; default to MIN(XDATA).
@@ -42,6 +42,9 @@
 ;   be concatented, i.e.
 ;     > junk = [oldset, sset]
 ;
+;   Although I'm not sure how to treat data points which fall outside
+;   minmax(bkpt), now I will set them equal to minmax with invvar = 0
+;
 ; EXAMPLES:
 ;
 ; PROCEDURES CALLED:
@@ -54,8 +57,9 @@
 ;-
 ;------------------------------------------------------------------------------
 function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
- x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, $
- oldset=oldset, maxiter=maxiter, outmask=outmask, _EXTRA=EXTRA
+ x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, $
+ bkpt=bkpt, oldset=oldset, maxiter=maxiter, outmask=outmask, $
+ upper=upper, lower=lower, _EXTRA=EXTRA
 
    if (n_params() LT 2) then begin
       print, 'Syntax -  sset = bspline_iterfit( )'
@@ -70,6 +74,8 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
     message, 'Dimensions of XDATA and YDATA do not agree'
 
    if (NOT keyword_set(nord)) then nord = 4L
+   if (NOT ARG_PRESENT(upper)) then upper = 5
+   if (NOT ARG_PRESENT(lower)) then lower = 5
 
    if (keyword_set(invvar)) then begin
       if (n_elements(invvar) NE nx) then $
@@ -83,6 +89,23 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    endif
    if (NOT keyword_set(maxiter)) then maxiter = 10
 
+   if NOT keyword_set(invvar) then begin
+       var = variance(ydata)
+       if var EQ 0 then return, -1
+       invvar = 0.0 * ydata + 1.0/var
+   endif
+
+   outmask = invvar GT 0
+   these = where(outmask EQ 1, nthese)
+ 
+   if nthese LT nord then begin
+      message, 'Number of good data points fewer the nord', /continue
+      return, -1
+   endif
+
+
+   
+
    ;----------
    ; Determine the break points and create output structure
 
@@ -93,9 +116,15 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       tags = tag_names(oldset)
       if ((where(tags EQ 'XMIN'))[0] NE -1 AND NOT keyword_set(x2)) then $
        message, 'X2 must be set to be consistent with OLDSET'
+
    endif else begin
-      fullbkpt = bspline_bkpts(xdata, nord=nord, _EXTRA=EXTRA) ; ???
+
+      fullbkpt = bspline_bkpts(xdata[these], nord=nord, bkpt=bkpt, _EXTRA=EXTRA)
       sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
+
+   ;----------
+   ; Condition the X2 dependent variable by the XMIN, XMAX values.
+   ; This will typically put X2NORM in the domain [-1,1].
 
       if keyword_set(x2) then begin
          if (NOT keyword_set(xmin)) then xmin = min(x2)
@@ -108,39 +137,36 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    endelse
 
    ;----------
-   ; Test that the input data falls within the bounds set by the break points.
-   ; This would only fail if OLDSET is used, and the break points do not
-   ; bound the data.
+   ; It's okay now if the data fall outside breakpoint regions, the
+   ; fit is just set to zero outside.
+   ;
 
-   junk = where(xdata LT min(sset.fullbkpt) OR xdata GT max(sset.fullbkpt), $
-    nbad)
-   if (nbad GT 0) then $
-    message, 'Break points do not bound XDATA'
-
-   ;----------
-   ; Condition the X2 dependent variable by the XMIN, XMAX values.
-   ; This will typically put X2NORM in the domain [-1,1].
-
-   if NOT keyword_set(invvar) then begin
-       var = variance(ydata)
-       if var EQ 0 then return, -1
-       invvar = 0.0 * ydata + 1.0/var
-   endif
 
    ;----------
    ; Iterate spline fit
 
-   outmask = 0
    iiter = 0
    error = -1L
+
+   xsort = sort(xdata)
+   xwork = xdata[xsort]
+   ywork = ydata[xsort]
+   invwork = invvar[xsort]
+   outmask = invwork GT 0
+   if keyword_set(x2) then x2work = x2[xsort]
+
    while (((error[0] NE -1) OR (keyword_set(qdone) EQ 0)) $
     AND iiter LE maxiter) do begin
 
-      if (error[0] NE -1) then $
-       sset.bkmask[error+nord-1L] = 0 $
-      else $
-       qdone = djs_reject(ydata, yfit, invvar=invvar, $
-        outmask=outmask, _EXTRA=EXTRA)
+
+      igood = where(outmask EQ 1, ngood)
+      ibad = where(outmask NE 1, nbad)
+
+;      if (error[0] NE -1) then $
+;       sset.bkmask[error+nord-1L] = 0 $
+;      else $
+;       qdone = djs_reject(ydata, yfit, invvar=invvar, $
+;        outmask=outmask, _EXTRA=EXTRA)
 
       ngood = total(outmask)
       goodbk = where(sset.bkmask NE 0)
@@ -151,12 +177,23 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       endif else begin
         ; Do the fit.  The indices of ill-constrained values are returned,
         ; or -1 if all break points are good.
-        error = bspline_fit(xdata, ydata, invvar*outmask, sset, $
-         x2=x2, yfit=yfit)
+        error = bspline_fit(xwork, ywork, invwork*outmask, sset, $
+                            x2=x2work, yfit=yfit)
       endelse
 
+      if (error[0] NE -1) then sset.bkmask[error] = 0 $
+      else qdone = djs_reject(ywork, yfit, invvar=invwork, $
+              outmask=outmask, upper=upper, lower=lower, _EXTRA=EXTRA)
+
       iiter = iiter + 1
+
    endwhile
+
+   temp = outmask
+   outmask[xsort] = temp
+
+   temp = yfit
+   yfit[xsort] = temp
 
    return, sset
 end
