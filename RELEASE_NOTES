@@ -6,8 +6,6 @@ Tagged for idlspec2d v4_10_7.
 Directory pro/rgbcolor added to support making color (RGB) images.
 Directory pro/healpix added to support atv display of healpix maps.
 
-MQLADVANCE : A healpix routine DPF forgot (NP)
-HEALNPIX : One more healpix routine (NP)
 ALM2HEALPIX,DPF_NEST2RING,DPF_PIX2ANG_RING,HEAL_REBIN,
                HEAL_SMOOTH,HEALCART_IND,HEALGEN,
                HEALGEN_LB,HEALPIX2ALM,HEALPIX_RING_WEIGHT,HEALNPIX,ISHEALPIX,
@@ -19,10 +17,12 @@ DJS_READILINES: Minor bug fix reported by John Moustakes; need to
                allow setting INDX=[0] and return that first line.
 DUSTPLOT: Checking in this old proc for making SFD map figures.
 FIRST_READ: Fix possible crash condition if radius > 1 deg, and near RA=0.
+HEALNPIX, HEALPIX_CL :  More healpix routine (NP)
 HOGG_MAKE_IMAGE_LABEL,NW_ARCSINH,NW_CUT_TO_BOX,
                NW_FLOAT_TO_BYTE,NW_REBIN_IMAGE,NW_SCALE_RBG:
                Hogg's code for generating color (RGB) images.
 LOOKBACK: New proc in cosmography routines for computing look-back times.
+MQLADVANCE : A healpix routine DPF forgot (NP)
 PLOT_POLY: Use SPLOT routine.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
