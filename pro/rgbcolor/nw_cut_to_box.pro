@@ -22,6 +22,10 @@
 FUNCTION nw_cut_to_box,colors,origin=origin
 IF NOT keyword_set(origin) THEN origin = [0.0,0.0,0.0]
 
+if((n_elements(colors) MOD 3) ne 0) then $
+  message,'nw_cut_to_box requires colors to be [nx,ny,3] array'
+if(n_elements(colors) eq 3) then $
+  colors=reform(colors,1,1,3)
 dim = size(colors,/dimensions)
 NX = LONG(dim[0])
 NY = LONG(dim[1])
