@@ -1,4 +1,4 @@
-pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr     
+pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr, projection=projection    
 ;+
 ; NAME:
 ;       STARAST 
@@ -13,7 +13,7 @@ pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr
 ;       allow a unique determination of each element of the CD matrix.
 ;
 ; CALLING SEQUENCE:
-;       starast, ra, dec, x, y, cd, [/Righthanded, HDR = h]
+;       starast, ra, dec, x, y, cd, [/Righthanded, HDR = h, PROJECTION=]
 ;
 ; INPUTS:
 ;       RA - 2 or 3 element vector containing the Right Ascension in DEGREES
@@ -30,6 +30,10 @@ pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr
 ;               (R.A. increase to the left).   If /Right is set then a 
 ;               righthanded coordinate is assumed.  This keyword has no effect
 ;               if 3 star positions are supplied.
+;        PROJECTION - Either a 3 letter scalar string giving the projection
+;               type (e.g. 'TAN' or 'SIN') or an integer 1 - 25 specifying the
+;               projection as given in the WCSSPH2XY procedure.   If not 
+;               specified then a tangent projection is computed.
 ; OPTIONAL INPUT-OUTPUT KEYWORD:
 ;        HDR - If a FITS header string array is supplied, then an astrometry 
 ;              solution is added to the header using the CD matrix and star 0
@@ -48,56 +52,60 @@ pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr
 ; METHOD:
 ;       The CD parameters are determined by solving the linear set of equations
 ;       relating position to local coordinates (l,m)
+;
+;       For highest accuracy the first star position should be the one closest
+;       to the reference pixel.
 ; REVISION HISTORY:
 ;       Written, W. Landsman             January 1988
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /RightHanded and HDR keywords   W. Landsman   September 2000
 ;       Write CTYPE values into header   W. Landsman/A. Surkov  December 2002
+;       CD matrix was mistakenly transpose in 3 star solution
+;       Added projection keyword    W. Landsman   September 2003 
 ;-
  if N_params() LT 4 then begin
-        print,'Syntax - STARAST, ra, dec, x, y, cd. [/Right, HDR =h]'
+        print,'Syntax - STARAST, ra, dec, x, y, cd, [/Right, HDR =h,Projection=]'
         return                         
  endif
 
  cdr = !DPI/180.0D 
+ map_types=['DEF','AZP','TAN','SIN','STG','ARC','ZPN','ZEA','AIR','CYP',$
+            'CAR','MER','CEA','COP','COD','COE','COO','BON','PCO','SFL',$
+            'PAR','AIT','MOL','CSC','QSC','TSC']
+
+ iterate = (N_elements(crpix) EQ 2) and (N_elements(crval) EQ 0)
+ if N_elements(projection) EQ 0 then projection = 2    ;Default is tangent proj.
+ if size(projection,/TNAME) EQ 'STRING' then begin
+      map_type  =where(map_types EQ strupcase(strtrim(projection,2)), Ng)
+      if Ng EQ 0 then message, $
+         'ERROR - supplied projection of ' + projection[0] + ' not recognized'
+      map_type = map_type[0]
+ endif else map_type = projection
 
  nstar = min( [N_elements(ra), N_elements(dec), N_elements(x), N_elements(y)])
  if (nstar NE 2) and (nstar NE 3) then $
         message,'Either 2 or 3 star positions required'
+        crval1  = [ ra[0], dec[0] ]
+        crpix1  = [ x[0], y[0] ]
 
 ; Convert RA, Dec to Eta, Xi
 
- ra_rad = ra*cdr       
- dec_rad = dec*cdr
- delx1 = x[1] - x[0] 
- dely1 = y[1] - y[0]     
- delra = ra_rad[1] - ra_rad[0]
- cosdec = cos(dec_rad)  
- sindec = sin(dec_rad) 
- cosra =  cos(delra) 
- sinra = sin(delra)
- denom = sindec[1]*sindec[0] + cosdec[1]*cosdec[0]*cosra
- l1 = cosdec[1]*sinra/denom
- m1 = (sindec[1]*cosdec[0] - cosdec[1]*sindec[0]*cosra)/denom
+ wcssph2xy, crval = crval1, ra[1:*], dec[1:*], eta, xi, map_type, $
+         latpole = 0.0
+ delx1 = x[1] - crpix1[0] 
+ dely1 = y[1] - crpix1[1]     
 
 if nstar EQ 3 then begin
 
-        delx2 = x[2] - x[0] & dely2 = y[2] - y[0]
-        delra = ra_rad[2] - ra_rad[0]
-        cosra = cos(delra) 
-        sinra = sin(delra)
-        denom = sindec[2]*sindec[0] + cosdec[2]*cosdec[0]*cosra
-        l2 = cosdec[2]*sinra/denom
-        m2 = (sindec[2]*cosdec[0] - cosdec[2]*sindec[0]*cosra)/denom
-        b = double([l1,m1,l2,m2])
-        a = double( [ [delx1, dely1, 0,    0    ], $
-                      [0    , 0,     delx1,dely1], $
-                      [delx2, dely2, 0,    0    ], $
-                      [0    , 0    , delx2,dely2] ] )
-        a = transpose(a)        ;Make IDL conform to matrix notation
+        delx2 = x[2] - crpix1[0] & dely2 = y[2] - crpix1[1]
+        b = double([eta[0],xi[0],eta[1],xi[1]])
+        a = double( [ [delx1, 0, delx2,    0    ], $
+                      [dely1, 0,  dely2,    0  ], $
+                      [0. , delx1, 0,    delx2    ], $
+                      [0    , dely1   , 0. ,dely2] ] )
 endif else begin
 
-        b = double( [l1,m1] )
+        b = double( [eta[0],xi[0]] )
         if keyword_set(right) then  $
               a = double( [ [delx1,dely1], [-dely1,delx1] ] ) else $
               a = double( [ [delx1,-dely1], [dely1,delx1] ] )
@@ -110,15 +118,17 @@ endelse
            if keyword_set(right) then $ 
                cd = [ [cd[0],cd[1]],[-cd[1],cd[0]] ] else $
                cd = [ [cd[0],cd[1]],[cd[1],-cd[0]] ] 
- endif else cd = dblarr(2,2) + cd
+ endif else $ 
+       cd = transpose(reform(cd,2,2))
 
- cd = cd/cdr
- 
+
 ;Add parameters to header
  if N_elements(hdr) GT 0 then begin
-        crval = [ra[0],dec[0]]         ;Use Star 0 as reference star
-        crpix = [x(0),y(0)] + 1.       ;FITS is offset 1 pixel from ID
-        putast,hdr,cd,crpix,crval,['RA---TAN','DEC--TAN'],equi=2000.0        
+        proj = map_types[map_type]
+        make_astr, astr,CD = cd, crval = crval1, crpix = crpix1+1, $
+                   ctype = ['RA---','DEC--'] + proj
+        putast, hdr, astr, equi=2000.0,cd_type=2
+       
  endif
      
  return
