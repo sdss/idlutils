@@ -89,7 +89,8 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
    ntag = n_elements(tags)
 
    if (keyword_set(html)) then begin
-      hdr1 = '<TABLE BORDER=1 CELLPADDING=3>'
+      htmhdr = '<TABLE BORDER=1 CELLPADDING=3>'
+      hdr1 = ''
       hdr2 = '<TR>'
       rowsep = '"<TR>",'
       colsep = '"<TD ALIGN=RIGHT>",'
@@ -169,6 +170,7 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
    ; Now print one row at a time
 
    if (keyword_set(lun)) then begin
+      if (keyword_set(htmhdr)) then printf, lun, htmhdr
       if (NOT keyword_set(no_head)) then begin
          printf, lun, hdr1
          printf, lun, hdr2
@@ -178,14 +180,17 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
       endfor
       if (keyword_set(lastline)) then printf, lun, lastline
       if (keyword_set(filename)) then close, lun
-   endif else begin
+   endif
+   if (arg_present(tarray)) then begin
       tarray = strarr(nrow)
       for irow=0L, nrow-1 do begin
          tarray[irow] = string(struct[irow], format=format)
       endfor
-      if (NOT keyword_set(no_head)) then tarray = [hdr1, hdr2, tarray]
+      if (keyword_set(htmhdr)) then tarray = [htmhdr, tarray]
+      if (NOT keyword_set(no_head)) then $
+       tarray = [hdr1, hdr2, tarray]
       if (keyword_set(lastline)) then tarray = [tarray, lastline]
-   endelse
+   endif
 
    return
 end
