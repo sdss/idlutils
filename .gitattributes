@@ -566,6 +566,11 @@ pro/coord/dotproduct_sphere.pro -text
 pro/coord/recenter.pro -text
 pro/coord/sptr1.pro -text
 pro/coord/xyz_to_angles.pro -text
+pro/cosmography/angdidis.pro -text
+pro/cosmography/comdis.pro -text
+pro/cosmography/dcomdisdz.pro -text
+pro/cosmography/dpropdisdz.pro -text
+pro/cosmography/propmotdis.pro -text
 pro/fits/djs_modfits.pro -text
 pro/fits/djs_readmany.pro -text
 pro/fits/modfitscard.pro -text
