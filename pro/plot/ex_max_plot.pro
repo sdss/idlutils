@@ -210,7 +210,7 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
         !Y.RANGE= mean1[d2]+[-nsig,nsig]*sqrt(var1[d2,d2])
       endelse
       if d1 EQ d2 then begin
-        !Y.RANGE= [-0.1,1.1]/1.5*amp1/sqrt(var1[d1,d1])
+        !Y.RANGE= 5d0*[-0.1,1.1]*amp1/abs(!X.RANGE[1]-!X.RANGE[0])
       endif
       xinterval= hogg_interval(!X.RANGE*axis_char_scale)
       yinterval= hogg_interval(!Y.RANGE*axis_char_scale)
