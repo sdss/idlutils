@@ -1,6 +1,4 @@
 
-HOGG_SCATTERPLOT: add /outliers keyword to show points outside last contour
-                  as points (and don't show greyscale there).
 BSPLINE_ITERFIT: Fix crash condition for when only 1 point to fit.
 DJS_RGB_MAKE: Code to create JPEG from 3 FITS files based upon NW_RGB_MAKE,
                but saturating stars to a single color per object.
@@ -11,6 +9,8 @@ EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
                TRACE_CRUDE,TRACE_FWEIGHT,TRACE_GWEIGHT:
                Call IDLUTILS_SO_EXT() to get the suffix for dynamically
                loaded libraries (rather than assuming ".so").
+HOGG_SCATTERPLOT: Add /outliers keyword to show points outside last contour
+               as points (and don't show greyscale there).
 MAKE_RA_CAP,MAKE_DEC_CAP: Functions moved from photoop; make mangle
                caps along ra and dec lines. 
 MRDFITS: When we updated the Goddard routines on 15 April 2004, it went
@@ -30,6 +30,8 @@ POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and
                cubic approximation to the sinc shift.
 REJECT_CR: A previous error in determining the background for rejection
                has been fixed, so more cosmics are now successfully rejected. 
+SORTINPLACE: New function for sorting arrays in-place.
+SPLOT: Add PLUGIN keyword for coordinate plug-ins.
 
 Makefile: Install the RELEASE_NOTES file.
 bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
