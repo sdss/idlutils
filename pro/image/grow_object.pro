@@ -13,9 +13,6 @@
 ;                values indicate that an object touches that pixel.
 ;
 ; OPTIONAL INPUTS:
-;   mask       - Mask with object IDs; zeros indicate that there is no object
-;                in that pixel, and positive values are used as object IDs.
-;                Negative values are not allowed.
 ;   xstart     - Starting X position(s) for assembling the object; default to
 ;                settting all pixels where IMAGE != 0.
 ;   ystart     - Starting Y position(s) for assembling the object; default to
@@ -28,7 +25,9 @@
 ;                as well as pixels simply to the left, right, down, or up.
 ;
 ; OUTPUTS:
-;   mask       - (Modified)
+;   mask       - Mask with object IDs; zeros indicate that there is no object
+;                in that pixel, and positive values are used as object IDs.
+;                Negative values are not allowed.
 ;
 ; OPTIONAL OUTPUTS:
 ;   nadd       - Number of pixels added to all objects
@@ -57,6 +56,24 @@
 ;   20-May-2003  Written by D. Schlegel, Princeton
 ;-
 ;------------------------------------------------------------------------------
+function grow_obj1, image, mask, iloc, putval=putval, $
+ diagonal=diagonal, nx=nx, ny=ny, workarray=workarray
+
+   ; Don't bother calling the C code if we know it won't do anything
+   if (image[iloc] EQ 0) then return, 0
+
+   if (putval LT 0) then message, 'PUTVAL cannot be negative'
+
+   soname = filepath('libimage.so', $
+    root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+
+   qdiag = long(keyword_set(diagonal))
+   nadd = call_external(soname, 'grow_obj', $
+    nx, ny, image, mask, iloc, putval, qdiag, workarray)
+
+   return, nadd
+end
+;------------------------------------------------------------------------------
 pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
  diagonal=diagonal, nadd=nadd
 
@@ -65,14 +82,6 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
    nx = dims[0]
    if (ndim EQ 1) then ny = 1L $
     else ny = dims[1]
-   if (NOT keyword_set(mask)) then begin
-      mask = long(0 * image)
-   endif else begin
-      if (min(mask) LT 0) then $
-       message, 'MASK cannot have negative values!'
-      if (n_elements(mask) NE n_elements(image)) then $
-       message, 'Dimensions of IMAGE and MASK must agree'
-   endelse
    nxcen = n_elements(xstart1)
    nycen = n_elements(ystart1)
    if (nxcen NE nycen) then $
@@ -81,67 +90,52 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
    ; Set default return values
    nadd = 0L
 
-   if (nxcen EQ 1) then begin
-      xstart = long(xstart1[0])
-      ystart = long(ystart1[0])
-   endif else if (nxcen GT 1) then begin
+   ; Pad everything by 1, which was necessary to make the C code fast.
+   image_pad = lonarr(nx+2,ny+2)
+   image_pad[1:nx,1:ny] = image
+   mask_pad = lonarr(nx+2,ny+2)
+   workarray = lonarr(nx+2,ny+2)
+
+   if (nxcen GE 1) then begin
       if (keyword_set(putval1)) then $
-       objid = putval1[i<(n_elements(putval1)-1)] $
+       objid = long( putval1[i<(n_elements(putval1)-1)] ) $
       else $
        objid = 1L
       for i=0L, nxcen-1 do begin
-         grow_object, image, mask, $
-          xstart=long(xstart1[i]), ystart=long(ystart1[i]), $
-          putval=objid, nadd=nadd1, diagonal=diagonal
+         iloc = long( (xstart1[i]+1) + (ystart1[i]+1) * (nx+2) )
+         nadd1 = grow_obj1(image_pad, mask_pad, iloc, $
+          putval=objid, diagonal=diagonal, $
+          nx=nx+2, ny=ny+2, workarray=workarray)
          if (nadd1 GT 0) then begin
             nadd = nadd + nadd1
             if (NOT keyword_set(putval1)) then objid = objid + 1L
          endif
       endfor
-      return
    endif else begin
-      indx = where(image NE 0 AND mask EQ 0, ct)
-      if (keyword_set(putval1)) then objid = putval1 $
+      indx = [where(image_pad NE 0 AND mask_pad EQ 0, ct), 0]
+      jj = 0L
+      if (keyword_set(putval1)) then objid = long(putval1[0]) $
        else objid = 1L
-      while (ct GT 0) do begin
-         ystart = indx[0] / nx
-         xstart = indx[0] - ystart * nx
-         grow_object, image, mask, xstart=xstart, ystart=ystart, $
-          putval=objid, nadd=nadd1, diagonal=diagonal
+      while (jj LT ct) do begin
+print,objid,ct,indx[jj]
+         nadd1 = grow_obj1(image_pad, mask_pad, indx[jj], $
+          putval=objid, diagonal=diagonal, $
+          nx=nx+2, ny=ny+2, workarray=workarray)
          if (nadd1 GT 0) then begin
             nadd = nadd + nadd1
             if (NOT keyword_set(putval1)) then objid = objid + 1L
          endif
-         ; Trim the list of object pixels to only those left to assign...
-         jndx = where(image[indx] NE 0 AND mask[indx] EQ 0, ct)
-         if (ct GT 0) then indx = indx[jndx]
+         ; Pick the next pixel that can be assigned...
+         while ((image_pad[indx[jj]] EQ 0 OR mask_pad[indx[jj]] NE 0) $
+          AND jj LT ct) do jj = jj + 1
       endwhile
-      return
    endelse
 
-   if (xstart LT 0 OR xstart GE nx OR ystart LT 0 OR ystart GE ny) then return
+   workarray = 0 ; Clear memory
 
-   ; Don't bother calling the C code if we know it won't do anything
-   if (image[xstart,ystart] EQ 0) then return
+   ; Un-pad the output image by 1
+   mask = mask_pad[1:nx,1:ny]
 
-   if (keyword_set(putval1)) then begin
-      if (putval1 LT 0) then message, 'PUTVAL cannot be negative'
-      putval = long(putval1)
-   endif else begin
-      putval = 1L
-   endelse
-
-   soname = filepath('libimage.so', $
-    root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-
-   qdiag = long(keyword_set(diagonal))
-   if size(image, /tname) EQ 'LONG' then begin 
-      nadd = call_external(soname, 'grow_obj', $
-       nx, ny, image, mask, xstart, ystart, putval, qdiag)
-   endif else begin  
-      nadd = call_external(soname, 'grow_obj', $
-       nx, ny, long(image), mask, xstart, ystart, putval, qdiag)
-   endelse
-
+   return
 end
 ;------------------------------------------------------------------------------
