@@ -65,23 +65,38 @@ pro tmass_ascii2fits, infile, outfile
      print, fptr, nline, systime(1)-t0
      for j=0L, n_elements(str)-1 do begin 
         b = a[0]
-        field = strsplit(strmid(str[j], 0, 150), '|', /extract)
+        field = strsplit(str[j], '|', /extract)
         field = repstr(field, '\N', '0')
+        magerr = float( field[[7,11,15]] )
         b.ra     = field[0]
-        b.decl   = field[1]
+        b.dec    = field[1]
         b.err_maj = field[2]
         b.err_min = field[3]
         b.err_ang = field[4]
         b.j_m     = field[6]
-        b.j_cmsig = field[7]
+        b.j_ivar  = (magerr[0] LE 0) ? 0 : 1./magerr[0]^2
         b.h_m     = field[10]
-        b.h_cmsig = field[11]
+        b.h_ivar  = (magerr[1] LE 0) ? 0 : 1./magerr[1]^2
         b.k_m     = field[14]
-        b.k_cmsig = field[15]
+        b.k_ivar  = (magerr[2] LE 0) ? 0 : 1./magerr[2]^2
         b.ph_qual = field[18]
         b.rd_flg  = field[19]
         b.bl_flg  = field[20]
         b.cc_flg  = field[21]
+        detstr = field[22]
+        b.ndetect = fix([strmid(detstr,0,1), $
+                         strmid(detstr,2,1), $
+                         strmid(detstr,4,1)])
+        b.nobserve = fix([strmid(detstr,1,1), $
+                         strmid(detstr,3,1), $
+                         strmid(detstr,5,1)])
+        b.gal_contam = field[26]
+        b.mp_flg = field[27]
+        b.pts_key = field[28]
+        b.hemis = field[29]
+        b.jdate = field[35]
+        b.dup_src = field[48]
+        b.use_src = field[49]
         a[fptr+j] = b
 
      endfor 

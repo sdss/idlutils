@@ -68,7 +68,7 @@ PRO tmass_cone, fitspath, racen, deccen, rad, result
 
 ; strip extra dec (works for both TMASS-A and B)
   racat  = data.ra
-  deccat = data.decl
+  deccat = data.dec
   good = where((deccat GE dec0) AND (deccat LE dec1), ct)
 
   IF ct GT 0 THEN BEGIN 
@@ -79,7 +79,7 @@ PRO tmass_cone, fitspath, racen, deccen, rad, result
   
 ; Now use dot products to strip extras
   racat  = dtrim.ra
-  deccat = dtrim.decl
+  deccat = dtrim.dec
   uvobj = ll2uv(double([[racat], [deccat]]), /double) ; (n,3) array
   uvcen = ll2uv(double([[racen], [deccen]]), /double) ; (1,3) array
   dot   = uvobj#transpose(uvcen)
