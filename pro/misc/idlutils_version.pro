@@ -3,7 +3,7 @@
 ;   idlutils_version
 ;
 ; PURPOSE:
-;   Return the version name for the product idlspec2d
+;   Return the version name for the product idlutils
 ;
 ; CALLING SEQUENCE:
 ;   vers = idlutils_version()
@@ -11,13 +11,13 @@
 ; INPUTS:
 ;
 ; OUTPUTS:
-;   vers       - Version name for the product idlspec2d
+;   vers       - Version name for the product idlutils
 ;
 ; COMMENTS:
 ;   If this version is not tagged by CVS, then we return 'NOCVS: TOPLEVEL'
 ;   where TOPLEVEL is the last directory in the environment variable
 ;   $IDLUTILS_DIR.  For example, if you are using a version of the code
-;   in the directory '/u/schlegel/idlspec2d/v0_0', then this returns
+;   in the directory '/u/schlegel/idlutils/v0_0', then this returns
 ;   'NOCVS: v0_0'.
 ;
 ; BUGS:
