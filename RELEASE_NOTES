@@ -41,6 +41,9 @@ NW_RGB_MAKE: Trivial bug fixes; change SPLOG statements to PRINT.
                Change default quality to 100, add dpitiff keyword.
                Other changes???
 POLYWARP_SHIFT: Wrapper on polywarp to do a simple shift.
+SPLOT: The reported "Area" for the interactive gaussian fits was missing
+               a factor of sigma.
+TRACE_CRUDE: Allow XSTART to be set to exactly zero as an input.
 USNOB2FITS: Compress files locally, then copy to target.
 
 mangle1.4/src/mrb_balkanize.c: Add QA print statement for number of caps.
