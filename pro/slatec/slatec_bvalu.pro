@@ -65,15 +65,12 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
    work = fltarr(3*k)
    y = x
    nx = n_elements(x)
-   retval = 1.0
 
    inbv = 1L
-   for i=0L,nx-1 do begin
-	xtemp = min([max([x[i],minbkpt]), maxbkpt])
-     rr = call_external(getenv('IDL_EVIL')+'libslatecidl.so','bvalu_idl', $
-      bkpt, coeff, n, k, ideriv, xtemp, inbv, work, retval)
-      y[i] = retval
-   endfor
+   xtemp = (x < maxbkpt)
+   xtemp = (xtemp > minbkpt)
+   rr = call_external(getenv('IDL_EVIL')+'libslatecidl.so','bvalu_idl', $
+      bkpt, coeff, n, k, ideriv, xtemp, nx, inbv, work, y)
 
    return, y
 end

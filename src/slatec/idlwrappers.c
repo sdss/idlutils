@@ -75,6 +75,7 @@ IDL_LONG bvalu_idl
   IDL_LONG *k;
   IDL_LONG *ideriv;
   float *x; 
+  IDL_LONG *ndata;
   IDL_LONG *inbv;
   float  *w;
   float *value;
@@ -87,11 +88,13 @@ IDL_LONG bvalu_idl
   k = (IDL_LONG *)argv[argct++];
   ideriv = (IDL_LONG *)argv[argct++];
   x      = (float *)argv[argct++];
+  ndata  = (IDL_LONG *)argv[argct++];
   inbv   = (IDL_LONG *)argv[argct++];
   w      = (float *)argv[argct++];
   value   = (float *)argv[argct++];
- 
-  bvalu_(t, a, n, k, ideriv, x, inbv, w, value);
+
+  for (i=0;i<*ndata;i++)    
+    bvalu_(t, a, n, k, ideriv, &x[i], inbv, w, &value[i]);
 
   return 0;
 } 
