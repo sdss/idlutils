@@ -70,8 +70,7 @@
 function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
  x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, $
  bkpt=bkpt, oldset=oldset, maxiter=maxiter, upper=upper, lower=lower, $
- inmask=inmask, outmask=outmask, fullbkpt=fullbkpt, $
- funcname=funcname, _EXTRA=EXTRA
+ outmask=outmask, fullbkpt=fullbkpt, funcname=funcname, _EXTRA=EXTRA
 
    if (n_params() LT 2) then begin
       print, 'Syntax -  sset = bspline_iterfit( )'
@@ -107,9 +106,10 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       invvar = 0.0 * ydata + 1.0/var
    endif
 
-   outmask = invvar GT 0
-   if keyword_set(inmask) then outmask = outmask * inmask
-   these = where(outmask, nthese)
+   if NOT keyword_set(outmask) then outmask = (invvar EQ invvar)
+
+   maskwork = outmask * (invvar GT 0)
+   these = where(maskwork, nthese)
  
    ;----------
    ; Determine the break points and create output structure
@@ -169,21 +169,18 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ywork = ydata[xsort]
    invwork = invvar[xsort]
    if (keyword_set(x2)) then x2work = x2[xsort]
-   if (keyword_set(inmask)) then inmaskwork = inmask[xsort] $
-   else inmaskwork = 0
 
    ;----------
    ; Iterate spline fit
 
    iiter = 0
    error = 0
-   outmask = invwork GT 0
-   if (keyword_set(inmask)) then outmask = outmask * inmaskwork
+   maskwork = maskwork[xsort]
 
    while (((error[0] NE 0) OR (keyword_set(qdone) EQ 0)) $
     AND iiter LE maxiter) do begin
 
-      ngood = total(outmask)
+      ngood = total(maskwork)
       goodbk = where(sset.bkmask NE 0)
 
       if (ngood LE 1 OR goodbk[0] EQ -1) then begin
@@ -194,20 +191,22 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
         ;    0 if fit is good
         ;   -1 if all break points are masked
         ;   -2 if everything is screwed
-        error = bspline_fit(xwork, ywork, invwork*outmask, sset, $
+        error = bspline_fit(xwork, ywork, invwork*maskwork, sset, $
          x2=x2work, yfit=yfit, nord=nord)
       endelse
 
       iiter = iiter + 1
+
+      inmask = maskwork
 
       if (error[0] EQ -2L) then begin
          ; All break points have been dropped.
          return, sset
       endif else if (error[0] EQ 0) then begin
          ; Iterate the fit -- next rejection iteration.
-         inmaskwork = outmask
-         qdone = djs_reject(ywork, yfit, invvar=invwork, inmask=inmaskwork, $
-          outmask=outmask, upper=upper, lower=lower, _EXTRA=EXTRA)
+         qdone = djs_reject(ywork, yfit, invvar=invwork, inmask=inmask, $
+          outmask=maskwork, upper=upper, lower=lower, _EXTRA=EXTRA)
+
       endif
 
    endwhile
@@ -215,8 +214,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ;----------
    ; Re-sort the output arrays OUTMASK and YFIT to agree with the input data.
 
-   temp = outmask
-   outmask[xsort] = temp
+   outmask[xsort] = maskwork
 
    temp = yfit
    yfit[xsort] = temp
