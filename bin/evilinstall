@@ -145,7 +145,8 @@ fi
 #   of the script "install_ups_table".
 
 setup sdsstools
-if [ -n "$SDSSTOOLS_DIR" ] && [ -e "$SDSSTOOLS_DIR/bin/sdssmake" ] ; then
+if [ -n "$SDSSTOOLS_DIR" ] && [ -e "$SDSSTOOLS_DIR/bin/sdssmake" ] &&\
+   [ -e "$SDSSTOOLS_DIR/bin/install_ups_table" ] ; then
    MAKECOMMAND='sdssmake -idl -opt -debug'
    MAKEINSTALLCOMMAND='sdssmake install'
 else
