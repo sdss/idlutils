@@ -1,17 +1,38 @@
 -------------------------------------------------------------------------------
 
+BSPLVN: Added code to break up task for 10^6 pts or more.
+              BSPLINE_ACTION was not carrying double precision all the way
+              through, now it should be.
 BSPLINE_FIT: Test if SSET is set by demanding that it be a structure;
                as it was, setting SSET=0 would not cause it to self-initialize.
+CHOLESKY_SOLVE: Up to date bspline implementation, passing structure and
+               masking breakpoints (Burles).
+               Make loop variables type long (Blanton).
 DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
                parameter for OmegaL.
 FIND: Need to index some loops with type LONG to allow for large
                numbers of stars.
+HOGG_BWIFY:  ???
+HOGG_IAU_NAME: Clean-roomed adstring out.
+HOGG_IMAGE_OVERLAY: Erase .ppm file when done.
+HOGG_MEANPLOT, HOGG_WEIGHTED_MEAN_SURFACE: Added NEAREST option to smooth
+               based upon the nearest N neighbors.
+HOGG_MRDFITS,MWRFITS_CHUNKS: Declare all internal variables as long64,
+               just to be sure that files larger than 2Gb will be handled
+               correctly.
+HOGG_NAME2RADEC: New proc to convert IAU name in "J" format to RA,DEC (Hogg).
+HOGG_OPLOT_COVAR: Add support for a vectorized THICK keyword.
+HOGG_PLOTHIST: Change in behviour for setting X range when using /OVERPLOT.
+HOGG_SCATTERPLOT: Added IOUTLIERS keyword, to plot the outliers differently.
+LG_TO_HELIO: Inverse function to HELIO_TO_LG.
 MRDFITS:       LONG64 stuff, handle degenerate excess NAXIS keywords
 MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
                tables for string-type elements.  Bug fix to allow appending
                string elements that are different lengths, though if the
                appended strings are longer then they get truncated.
 NW_RGB_MAKE: Trivial bug fixes; change SPLOG statements to PRINT.
+               Change default quality to 100.  Other changes???
+POLYWARP_SHIFT: Wrapper on polywarp to do a simple shift.
 USNOB2FITS: Compress files locally, then copy to target.
 
 mangle1.4/src/mrb_balkanize.c: Add QA print statement for number of caps.
