@@ -1,5 +1,6 @@
 ;+
 ; NAME:
+;   hogg_snap_integer
 ; PURPOSE:
 ;   Randomly snap floats or doubles to nearest integers up and down so
 ;     that the mean is correct on average.
