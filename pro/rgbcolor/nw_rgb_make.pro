@@ -98,6 +98,9 @@ IF keyword_set(tiff) THEN BEGIN
       green=colors[*,*,1],blue=colors[*,*,2]
 ENDIF ELSE BEGIN
     splog, 'writing jpeg'
-    WRITE_JPEG,name,temporary(colors),TRUE=3,QUALITY=quality
+    if(NOT arg_present(colors)) then $
+      WRITE_JPEG,name,temporary(colors),TRUE=3,QUALITY=quality $ 
+    else $
+      WRITE_JPEG,name,(colors),TRUE=3,QUALITY=quality 
 ENDELSE
 END
