@@ -35,6 +35,7 @@ data/filters/landolt_V.dat -text
 data/filters/landolt_qe.dat -text
 data/filters/lick_qe40orbit.dat -text
 data/filters/lick_rsnew.dat -text
+data/filters/ogle_I.dat -text
 data/filters/palomar_atmos.dat -text
 data/filters/sdss_1994_g_noatm.dat -text
 data/filters/sdss_1994_i_noatm.dat -text
