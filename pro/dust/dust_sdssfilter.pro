@@ -53,11 +53,11 @@
 ; DATA FILES:
 ;   $IDLUTILS_DIR/filters/kurucz_fstar.dat
 ;   $IDLUTILS_DIR/filters/kpno_atmos.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_u_notam.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_g_notam.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_r_notam.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_i_notam.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_z_notam.dat
+;   $IDLUTILS_DIR/filters/sdss_1994_u_noatm.dat
+;   $IDLUTILS_DIR/filters/sdss_1994_g_noatm.dat
+;   $IDLUTILS_DIR/filters/sdss_1994_r_noatm.dat
+;   $IDLUTILS_DIR/filters/sdss_1994_i_noatm.dat
+;   $IDLUTILS_DIR/filters/sdss_1994_z_noatm.dat
 ;   $IDLUTILS_DIR/filters/sdss_jun2001_u_atm.dat
 ;   $IDLUTILS_DIR/filters/sdss_jun2001_g_atm.dat
 ;   $IDLUTILS_DIR/filters/sdss_jun2001_r_atm.dat
@@ -83,7 +83,7 @@ function dust_sdssfilter, ixval, source=source, zsource=zsource1, $
 
    filtnames = ['u','g','r','i','z']
    if (keyword_set(old)) then begin
-      ffiles = filepath('sloan_'+filtnames+'.dat', $
+      ffiles = filepath('sdss_1994_'+filtnames+'_noatm.dat', $
        root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
       atmfilename1 = filepath('kpno_atmos.dat', $
        root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
