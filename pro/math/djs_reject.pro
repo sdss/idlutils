@@ -268,7 +268,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
             endif else begin
               if (NOT keyword_set(groupsize)) then begin
                 ngroups = 1L 
-                groups_lower = 0
+                groups_lower = 0L
                 groups_upper = nin - 1L
               endif else begin
                 ngroups = nin/groupsize + 1L
@@ -281,8 +281,10 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
                i1 = groups_lower[igroup]
                i2 = groups_upper[igroup]
                nii = i2 - i1 + 1
-               
-               if nii GT 0 then begin 
+
+               ; Need the test that i1 NE -1 below to prevent a crash condition,
+               ; but why is it that we ever get groups w/out any points?
+               if (nii GT 0 AND i1 NE -1) then begin 
                  jj = indx[i1:i2]
                  ; Test if too many points rejected in this group...
                  if (total(badness[jj] NE 0) GT maxrej[iloop]) then begin
