@@ -43,7 +43,8 @@
 ;   16-Jan-2002  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-pro interp_profmean,nprof,profmean,radius,counts, rscale=rscale, runit=runit
+pro interp_profmean,nprof,profmean,radius,counts, rscale=rscale, runit=runit, $
+                    profradius=profradius
 
 if(n_params() lt 4) then begin
     print,'Syntax - interp_profmean, nprof, profmean, radius, counts [, rscale=, runit=]'

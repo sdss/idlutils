@@ -33,7 +33,7 @@ return,fluxtot*frac-flux
 end
 ;
 function frac_profmean, in_frac, in_nprof, in_profmean, radtot, $
-                        in_profradius=in_profradius
+                        profradius=in_profradius
 
 common frac_profmean_com 
 
