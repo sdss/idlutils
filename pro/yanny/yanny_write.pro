@@ -94,7 +94,7 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
          for idat=0, N_elements(pdata)-1 do begin
             ntag = N_tags( *pdata[idat] )
             tags = tag_names( *pdata[idat] )
-            if (keyword_set(stnames)) then stname = stnames[idat] $
+            if (keyword_set(stnames)) then stname1 = strupcase(stnames[idat]) $
              else stname1 = tag_names( *pdata[idat], /structure_name)
             if (stname1 EQ '') then $
              stname1 = 'STRUCT' + strtrim(string(idat+1),2)
