@@ -9,7 +9,7 @@
 ;  colors      - (NXxNYx3) array containing the R, G, and B
 ;OPTIONAL INPUTS:
 ;  scales      - (3x1) array to scale the R/G/B
-;              - defaults are [4.9,5.7,7.8]
+;              - defaults are [1.,1.,1.]
 ;KEYWORDS:
 ;  none
 ;OUTPUTS:
@@ -26,7 +26,7 @@
 FUNCTION nw_scale_rgb,colors,scales=scales
 
 ;set default scales
-IF NOT keyword_set(scales) THEN scales = [4.9,5.7,7.8]
+IF NOT keyword_set(scales) THEN scales = [1.,1.,1.]
 ;get dimensions
 tmp= size(colors,/dimensions)
 NX= LONG(tmp[0])
