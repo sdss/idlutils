@@ -78,11 +78,13 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
    if (nxcen NE nycen) then $
     message, 'Number of elements in XSTART,YSTART must agree'
 
+   ; Set default return values
+   nadd = 0L
+
    if (nxcen EQ 1) then begin
       xstart = long(xstart1[0])
       ystart = long(ystart1[0])
    endif else if (nxcen GT 1) then begin
-      nadd = 0L
       if (keyword_set(putval1)) then $
        objid = putval1[i<(n_elements(putval1)-1)] $
       else $
@@ -104,7 +106,6 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
       xstart = indx - ystart * nx
       if (keyword_set(putval1)) then objid = putval1 $
        else objid = 1L
-      nadd = 0L
       for i=0L, ct-1 do begin
          grow_object, image, mask, xstart=xstart[i], ystart=ystart[i], $
           putval=objid, nadd=nadd1, diagonal=diagonal
@@ -118,6 +119,9 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
 
    if (xstart LT 0 OR xstart GE nx OR ystart LT 0 OR ystart GE ny) then return
 
+   ; Don't bother calling the C code if we know it won't do anything
+   if (image[xstart,ystart] EQ 0) then return
+
    if (keyword_set(putval1)) then begin
       if (putval1 LT 0) then message, 'PUTVAL cannot be negative'
       putval = long(putval1)
@@ -128,7 +132,6 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
    soname = filepath('libimage.so', $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
-   nadd = 0L
    qdiag = long(keyword_set(diagonal))
    if size(image, /tname) EQ 'LONG' then begin 
       nadd = call_external(soname, 'grow_obj', $
