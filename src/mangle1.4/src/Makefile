@@ -83,68 +83,68 @@ FOBJ = azel.s.o azell.s.o braktop.s.o felp.s.o fframe.s.o findtop.s.o garea.s.o 
 OBJ = $(COBJ) $(FOBJ)
 
 mangle:
-	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.a -a "$(OBJ)" ] ; then \
-		echo "extracting files from $(IDLUTILS_DIR)/lib/libmangle.a" ; \
-		ar xo $(IDLUTILS_DIR)/lib/libmangle.a $(OBJ) &> /dev/null ; \
+	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) -a "$(OBJ)" ] ; then \
+		echo "extracting files from $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT)" ; \
+		ar xo $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) $(OBJ) &> /dev/null ; \
 		rm -f __.SYMDEF ; \
 	fi
 	@ $(MAKE) mangler
 	@ rm -f $(COBJ) $(FOBJ)
 
 mangler:
-	$(MAKE) $(IDLUTILS_DIR)/lib/libmangle.a $(PROGS)
+	$(MAKE) $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) $(PROGS)
 
-$(IDLUTILS_DIR)/lib/libmangle.a: $(COBJ) $(FOBJ) Makefile
-	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.a ] ; then echo "updating $(IDLUTILS_DIR)/lib/libmangle.a" ; else echo "creating $(IDLUTILS_DIR)/lib/libmangle.a" ; fi
-	ar ru $(IDLUTILS_DIR)/lib/libmangle.a $(COBJ) $(FOBJ)
-	ranlib $(IDLUTILS_DIR)/lib/libmangle.a
+$(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT): $(COBJ) $(FOBJ) Makefile
+	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) ] ; then echo "updating $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT)" ; else echo "creating $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT)" ; fi
+	ar ru $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) $(COBJ) $(FOBJ)
+	ranlib $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT)
 
-mrb_balkanize: mrb_balkanize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+mrb_balkanize: mrb_balkanize.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)mrb_balkanize mrb_balkanize.o $(ILIB) $(LLIB)
 
-balkanize: balkanize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+balkanize: balkanize.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)balkanize balkanize.o $(ILIB) $(LLIB)
 
-ddcount: ddcount.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+ddcount: ddcount.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)ddcount ddcount.o $(ILIB) $(LLIB)
 
-drangle: drangle.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+drangle: drangle.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)drangle drangle.o $(ILIB) $(LLIB)
 
-harmonize: harmonize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+harmonize: harmonize.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)harmonize harmonize.o $(ILIB) $(LLIB)
 
-map: map.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+map: map.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)map map.o $(ILIB) $(LLIB)
 
-polyid: polyid.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+polyid: polyid.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)polyid polyid.o $(ILIB) $(LLIB)
 
-poly2poly: poly2poly.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+poly2poly: poly2poly.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)poly2poly poly2poly.o $(ILIB) $(LLIB)
 
-ransack: ransack.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+ransack: ransack.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)ransack ransack.o $(ILIB) $(LLIB)
 
-#rotate: rotate.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+#rotate: rotate.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 #$(F77) $(FFLAGS) -o $(DEST)rotate rotate.o $(ILIB) $(LLIB) $(ISLIB) $(SLIB)
 
-rrcoeffs: rrcoeffs.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+rrcoeffs: rrcoeffs.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)rrcoeffs rrcoeffs.o $(ILIB) $(LLIB)
 
-mrb_snap: mrb_snap.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+mrb_snap: mrb_snap.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)mrb_snap mrb_snap.o $(ILIB) $(LLIB)
 
-snap: snap.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+snap: snap.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)snap snap.o $(ILIB) $(LLIB)
 
-unify: unify.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+unify: unify.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)unify unify.o $(ILIB) $(LLIB)
 
-mrb_unify: mrb_unify.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+mrb_unify: mrb_unify.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)mrb_unify mrb_unify.o $(ILIB) $(LLIB)
 
-weight: weight.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+weight: weight.o $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) Makefile
 	$(F77) $(FFLAGS) -o $(DEST)weight weight.o $(ILIB) $(LLIB)
 
 advise_fmt.o: angunit.h manglefn.h advise_fmt.c
@@ -343,9 +343,9 @@ clean :
 	- /bin/rm -f *~ core *.o so_locations
 
 cleaner:
-	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a
+	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT)
 
 cleanest:
-	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a $(PROGS)
+	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT) $(PROGS)
 	if [ -d "$(DEST)" ] ; then cd $(DEST) ; rm -f core $(PROGS) ; fi
 
