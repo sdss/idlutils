@@ -220,7 +220,7 @@ maskbits Q_EYEBALL 4 BAD_DEBLEND
 maskbits Q_EYEBALL 5 FLECK
 maskbits Q_EYEBALL 6 DOUBLE_STAR
 maskbits Q_EYEBALL 7 HII
-maskbits Q_EYEBALL 8 HII_REMOVED
+maskbits Q_EYEBALL 8 USE_ANYWAY
 maskbits Q_EYEBALL 9 EDGE
 maskbits Q_EYEBALL 10 SATELLITE
 maskbits Q_EYEBALL 11 PLANE
@@ -237,6 +237,8 @@ maskbits Q_EYEBALL 21 POSSIBLE_LENS
 maskbits Q_EYEBALL 22 IS_STAR
 maskbits Q_EYEBALL 23 DOUBLE_Z
 maskbits Q_EYEBALL 24 PLANETARY_NEBULA
+maskbits Q_EYEBALL 25 BAD_PARENT_CENTER
+maskbits Q_EYEBALL 26 GOOD_Z
 
 #------------------------------------------------------------------------------
 
