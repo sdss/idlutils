@@ -631,6 +631,7 @@ pro/TeXtoIDL/textoidl.pro -text
 pro/astrom/angle_from_pairs.pro -text
 pro/astrom/astrom_engine.pro -text
 pro/astrom/astrom_tweak.pro -text
+pro/astrom/gsc_read_table.pro -text
 pro/astrom/ll2uv.pro -text
 pro/astrom/offset_from_pairs.pro -text
 pro/astrom/usno_cone.pro -text
