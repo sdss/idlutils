@@ -26,6 +26,10 @@
 ; OPTIONAL OUTPUTS:
 ;
 ; COMMENTS:
+;   Read and write variables that are denoted INT in the Yanny file
+;   as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
+;   Yanny files assume type INT is a 4-byte integer, whereas in IDL
+;   that type is only 2-byte.
 ;
 ; EXAMPLES:
 ;   Read a Yanny parameter file, then re-write as a different file with:
@@ -48,8 +52,13 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
       return
    endif
 
-   tname = ['char', 'short', 'int', 'long', 'float', 'double']
-   idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'FLOAT', 'DOUBLE']
+   ; Read and write variables that are denoted INT in the Yanny file
+   ; as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
+   ; Yanny files assume type INT is a 4-byte integer, whereas in IDL
+   ; that type is only 2-byte.
+;   tname = ['char', 'short', 'int', 'long', 'float', 'double']
+   tname = ['char', 'short', 'int', 'int', 'long', 'float', 'double']
+   idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'LONG64', 'FLOAT', 'DOUBLE']
 
    get_lun, olun
    openw, olun, filename

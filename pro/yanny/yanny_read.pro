@@ -29,6 +29,10 @@
 ;                are present.
 ;
 ; COMMENTS:
+;   Read and write variables that are denoted INT in the Yanny file
+;   as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
+;   Yanny files assume type INT is a 4-byte integer, whereas in IDL
+;   that type is only 2-byte.
 ;
 ; EXAMPLES:
 ;
@@ -195,11 +199,22 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    endif
 
    tname = ['char', 'short', 'int', 'long', 'float', 'double']
-   tvals = ['""'  , '0'    , '0'  , '0L'  , '0.0'  , '0.0D'  ]
+   ; Read and write variables that are denoted INT in the Yanny file
+   ; as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
+   ; Yanny files assume type INT is a 4-byte integer, whereas in IDL
+   ; that type is only 2-byte.
+;   tvals = ['""'  , '0'    , '0'  , '0L'  , '0.0'  , '0.0D'  ]
+;   tarrs = ['strarr(' , $
+;            'intarr(' , $
+;            'intarr(' , $
+;            'lonarr(' , $
+;            'fltarr(' , $
+;            'dblarr(' ]
+   tvals = ['""'  , '0'    , '0L'  , '0LL'  , '0.0'  , '0.0D'  ]
    tarrs = ['strarr(' , $
             'intarr(' , $
-            'intarr(' , $
             'lonarr(' , $
+            'lon64arr(' , $
             'fltarr(' , $
             'dblarr(' ]
 
