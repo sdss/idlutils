@@ -83,6 +83,9 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
 
     nx = n_elements(x)
     good = bytarr(nx) + 1
+    bad = where(invsig LE 0.0)
+    if (bad[0] NE -1) then good[bad] = 0
+   
 
     for iiter=0, maxiter do begin
        oldgood = good
@@ -93,7 +96,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
        yfit = slatec_bvalu(x, fullbkpt, coeff)
  
        diff = (y - yfit)*invsig
-       bad = where(diff LT -lower OR diff GT upper)
+       bad = where(diff LT -lower OR diff GT upper OR invsig LE 0.0)
 
 	if (bad[0] EQ -1) then iiter = maxiter $
         else begin
