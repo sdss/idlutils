@@ -11,6 +11,8 @@ EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
                loaded libraries (rather than assuming ".so").
 HOGG_SCATTERPLOT: Add /outliers keyword to show points outside last contour
                as points (and don't show greyscale there).
+LOCAL_EXTRAGALACTIC: Code added by Blanton for returning the locations of
+               nearby clusters, using the data files in data/objects.
 MAKE_RA_CAP,MAKE_DEC_CAP: Functions moved from photoop; make mangle
                caps along ra and dec lines. 
 MRDFITS: When we updated the Goddard routines on 15 April 2004, it went
@@ -35,6 +37,11 @@ SPLOT: Add PLUGIN keyword for coordinate plug-ins.
 
 Makefile: Install the RELEASE_NOTES file.
 bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
+data/Makefile: Add "objects" subdirectory.
+data/objects/ned-query-clusters-lt0.03.dat,ned-query-clusters-lt0.03.txt,
+               process_ned_list: Data files added by Blanton for returning
+               the locations of nearby clusters.
+
 lib/Makefile: For "make clean", also remove ".dylib" files.
 
 -------------------------------------------------------------------------------
