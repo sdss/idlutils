@@ -186,5 +186,11 @@ print,'remove end ',nbkpt
 
    endwhile
 
+   inff = where(finite(coeff) EQ 0,ninff) 
+   if (inff[0] NE -1) then begin
+     print, 'Replacing infinities in coeff!', ninff
+     coeff[inff] = 0.0
+   endif
+
    return, fullbkpt
 end
