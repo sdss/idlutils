@@ -313,6 +313,7 @@
 ;             Swallow binary tables with more columns than given in TFIELDS
 ;       V2.9b Fix to ensure order of TFORMn doesn't matter
 ;       V2.9c Check if extra degenerate NAXISn keyword are present W.L. Oct 2004 
+;       V2.9d Propagate /SILENT to MRD_HREAD, more LONG64 casting W. L. Dec 2004
 ;-
 PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 ;
@@ -324,8 +325,8 @@ PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 
   xten = fxpar(hdr, 'XTENSION')
   nfld = fxpar(hdr, 'TFIELDS')
-  nrow = fxpar(hdr, 'NAXIS2')
-  rsize = fxpar(hdr, 'NAXIS1')
+  nrow = long64(fxpar(hdr, 'NAXIS2'))
+  rsize = long64(fxpar(hdr, 'NAXIS1'))
 
   ;; will extract these for each
   names = ['TTYPE','TFORM', 'TSCAL', 'TZERO']
@@ -1722,7 +1723,7 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
  
     ; Find the beginning of the heap area. 
  
-    heapoff = fxpar(header, 'THEAP') 
+    heapoff = long64(fxpar(header, 'THEAP')) 
     sz = fxpar(header, 'NAXIS1')*fxpar(header, 'NAXIS2')
     
     if heapoff ne 0 and heapoff lt sz then begin 
@@ -1737,7 +1738,7 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
     endif
  
     ; Get the size of the heap. 
-    pc = fxpar(header, 'PCOUNT') 
+    pc = long64(fxpar(header, 'PCOUNT')) 
     if heapoff eq 0 then heapoff = sz 
     hpsiz = pc - (heapoff-sz) 
  
@@ -2613,7 +2614,7 @@ function mrdfits, file, extension, header,      $
         return, 0
     endif
 
-    mrd_hread, unit, header, status
+    mrd_hread, unit, header, status, SILENT = silent
     
     if status lt 0 then begin
         print, 'MRDFITS: Unable to read header for extension'
@@ -2714,8 +2715,9 @@ function mrdfits, file, extension, header,      $
 	    endif else begin
 
 	        ; Skip remainder of last data block
-	        sz = fxpar(header, 'NAXIS1')*fxpar(header,'NAXIS2') +  $
-		       fxpar(header, 'PCOUNT')
+	        sz = long64(fxpar(header, 'NAXIS1'))* $
+                     long64(fxpar(header,'NAXIS2')) +  $
+		       long64(fxpar(header, 'PCOUNT'))
 	        skipB = 2880 - sz mod 2880
 	        if (skipB ne 2880) then mrd_skip, unit, skipB
             endelse
