@@ -68,6 +68,7 @@
 ; EXAMPLES:
 ;
 ; BUGS:
+;   Still possible to return INCL not in bounds of [-90,+90] degrees ???
 ;
 ; PROCEDURES CALLED:
 ;   cirrange
@@ -173,8 +174,8 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
    endif
 
    ; Set bounds on INCL
-   parinfo[2].limited = [1b, 1b]
-   parinfo[2].limits = [-90.d0, 90.d0]
+;   parinfo[2].limited = [1b, 1b]
+;   parinfo[2].limits = [-90.d0, 90.d0]
 
    ; Set bounds on XBORE
    parinfo[3].limited = [1b, 1b]
@@ -188,6 +189,20 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
     debug: keyword_set(debug), muerr: muerr, nuerr: nuerr }
    fitval = mpfit('radec_gcfn', parinfo=parinfo, functargs=functargs, $
     maxiter=maxiter, niter=niter, status=status)
+
+   ;----------
+   ; If the INCL goes out of bounds from [-90,+90] degrees, then
+   ; re-define the values to be in those bounds.
+
+   if (fitval[2] GT 90 AND fitval[2] LT 180) then begin
+      fitval[0] = fitval[0] + 180.d0
+      fitval[1] = fitval[1] + 180.d0
+      fitval[2] = 180.d0 - fitval[2]
+   endif else if (fitval[2] LT -90 AND fitval[2] GT -180) then begin
+      fitval[0] = fitval[0] + 180.d0
+      fitval[1] = fitval[1] + 180.d0
+      fitval[2] = -180.d0 - fitval[2]
+   endelse
 
    ;----------
    ; Do bounds-checking on the fit coordinates
