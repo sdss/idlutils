@@ -130,7 +130,7 @@ maskbits RESOLVE  12 FULL_MARGINAL
 #------------------------------------------------------------------------------
 
 maskbits IMAGE_STATUS  0 CLEAR
-maskbits IMAGE_STATUS  1 CLOUDS      # Unphotometric score
+maskbits IMAGE_STATUS  1 CLOUDY      # Unphotometric score
 maskbits IMAGE_STATUS  2 UNKNOWN     # Unphotometric score
 maskbits IMAGE_STATUS  3 BAD_ROTATOR # Set score=0
 maskbits IMAGE_STATUS  4 BAD_ASTROM  # Set score=0
