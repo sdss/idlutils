@@ -10,6 +10,7 @@ EMBED_STAMP: New procedure to take one image and add it to another, starting
              at an arbitrary position (SSHIFTing appropriately) without 
              rotation. 
 GVERTS: Bug fix for the case of single-cap polygons.
+HELIO_TO_LG: Fixed sign error in correction
 IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
 MULTI_PSF_FIT: New procedure which, given an image and a PSF, finds the

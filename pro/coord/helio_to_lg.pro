@@ -11,6 +11,10 @@
 ;   Dec       - declination (deg, J2000)
 ; OUTPUTS:
 ;   z_lg      - local-group-centric redshift
+; REVISION HISTORY:
+;   Originally imported by Hogg, 2002-08 or so.
+;   MRB corrected sign error in correction 2004-04-08 (affected tags
+;   v5_0_0 and previous)
 ;-
 function helio_to_lg, z_h,RA,Dec
 
@@ -19,6 +23,6 @@ function helio_to_lg, z_h,RA,Dec
   RA_lg = 343D
   Dec_lg = 52D
 
-  z_lg = z_h - z_sun_lg * cos(double(!PI) * djs_diff_angle(RA,Dec,RA_lg,Dec_lg) / 180D)
+  z_lg = z_h + z_sun_lg * cos(double(!PI) * djs_diff_angle(RA,Dec,RA_lg,Dec_lg) / 180D)
   return, z_lg
 end
