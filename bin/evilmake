@@ -31,10 +31,12 @@ case $UNAME in
 	;;
 	"IRIX64" )
 		SO_EXT=so
-		X_CFLAGS="-32 -KPIC"
+		X_CFLAGS="-n32 -KPIC -mips3"
+		CC=cc
+		LD=ld
     X_FFLAGS="-32 -extend_source -KPIC"
     MAKE_FTNLIB="-lftn"
-		X_LD_FLAGS="-shared -32"
+		X_LD_FLAGS="-shared -n32 -mips3"
 	;;
 	"OSF1" )
 		SO_EXT=so
