@@ -599,6 +599,7 @@ goddard/pro/sockets/querydss.pro -text
 goddard/pro/sockets/querygsc.pro -text
 goddard/pro/sockets/querysimbad.pro -text
 goddard/pro/sockets/queryusno.pro -text
+goddard/pro/sockets/queryvizier.pro -text
 goddard/pro/sockets/webget.pro -text
 goddard/pro/structure/README -text
 goddard/pro/structure/compare_struct.pro -text
