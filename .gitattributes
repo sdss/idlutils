@@ -991,6 +991,7 @@ pro/plot/djs_plot.pro -text
 pro/plot/djs_plotlimitbox.pro -text
 pro/plot/djs_xyouts.pro -text
 pro/plot/ex_max_plot.pro -text
+pro/plot/hogg_arrow.pro -text
 pro/plot/hogg_autocrop_image.pro -text
 pro/plot/hogg_greyscale_plot.pro -text
 pro/plot/hogg_interval.pro -text
