@@ -61,11 +61,9 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
    ; If the file appears to be g-zipped, then unzip the file first
    if (strmatch(filename, '*.gz')) then begin
       spawn, 'gunzip '+filename
-print,'zzz'
       thisfile = strmid(filename, 0, strlen(filename)-3)
    endif else begin
       thisfile = filename
-print,'yyy'
    endelse
 
    if (NOT keyword_set(exten_no)) then exten_no = 0
