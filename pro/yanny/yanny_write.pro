@@ -136,13 +136,26 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
             sline = stname
 
             for itag=0, ntag-1 do begin          ; Loop through each variable
-               sz = N_elements( (*pdata[idat])[iel].(itag) )
-               if (sz EQ 1) then begin
-                  sline = sline + ' ' + string( (*pdata[idat])[iel].(itag) )
+               words = (*pdata[idat])[iel].(itag)
+               nword = N_elements(words)
+
+               ; If WORDS is type STRING, then check for white-space
+               ; in any of its elements.  If there is white space, then
+               ; put double-quotes around that element.
+               if (size(words,/tname) EQ 'STRING') then begin
+                  for iw=0, nword-1 do $
+                   if (strpos(words[iw],' ') NE -1) then $
+                    words[iw] = '"' + words[iw] + '"'
+               endif else begin
+                  words = string(words)
+               endelse
+
+               if (nword EQ 1) then begin
+                  sline = sline + ' ' + words
                endif else begin
                   sline = sline + ' {'
                   for i=0, N_elements( (*pdata[idat])[iel].(itag) )-1 do $
-                   sline = sline + ' ' + string( (*pdata[idat])[iel].(itag)[i] )
+                   sline = sline + ' ' + words[i]
                   sline = sline + ' }'
                endelse
             endfor

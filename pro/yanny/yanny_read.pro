@@ -173,13 +173,49 @@ pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
    return
 end
 ;-----------------------------------------------------------------------------
+; Split SLINE into words.  First, any phrase that appears between double-
+; quotes is designated one word (and the quotes are dropped).  Then, white-
+; space is used to split the line into words.
+
 function yanny_getwords, sline
 
-   words = str_sep(sline, '"') ; Divide into words based upon quotes
-   nword = n_elements(words)
-   if (nword GT 2) then words = [str_sep(strtrim(words[0],2), ' '), $
-    words[1:nword-2], str_sep(strtrim(words[nword-1],2), ' ')] $
-    else words = str_sep(sline, ' ') ; Divide into words based upon spaces
+   words = ''
+   stemp = strtrim(sline,2)
+
+   while (keyword_set(stemp)) do begin
+      slen = strlen(stemp)
+      if (strmid(stemp,0,1) EQ '"') then begin
+         ; Found double-quote, so extract that string (w/out the quotes)
+         if (slen EQ 1) then begin
+            words = [words, '']
+            i2 = slen-1
+            stemp = ''
+         endif else begin
+            i2 = strpos(stemp, '"', 1)
+            if (i2 NE -1) then begin
+               words = [words, strmid(stemp, 1, i2-1)]
+            endif else begin
+               i2 = slen-1
+               words = [words, strmid(stemp, 1, i2)]
+            endelse
+         endelse
+      endif else begin
+         i2 = strpos(stemp, '"', 1)
+         if (i2 EQ -1) then i2 = slen-1 $
+          else i2 = i2-1
+
+         ; Divide into words based upon spaces
+         words = [words, $
+          str_sep( strcompress(strtrim(strmid(stemp,0,i2+1),2)),' ') ]
+      endelse
+      if (i2 LT slen-1) then $
+       stemp = strtrim( strmid(stemp, i2+1, slen-i2+1), 2) $
+      else $
+       stemp = ''
+   endwhile
+
+   nword = N_elements(words)
+   if (nword GT 1) then words = words[1:nword-1]
 
    return, words
 end
