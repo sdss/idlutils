@@ -1,4 +1,5 @@
-	PRO FXBFIND,P1,KEYWORD,COLUMNS,VALUES,N_FOUND,DEFAULT
+	PRO FXBFIND,P1,KEYWORD,COLUMNS,VALUES,N_FOUND,DEFAULT, $
+                    COMMENTS=COMMENTS
 ;+
 ; NAME: 
 ;	FXBFIND
@@ -40,8 +41,8 @@
 ;		  unaffected by whether or not DEFAULT is passed.
 ; Opt. Outputs: 
 ;	None.
-; Keywords    : 
-;	None.
+; Output Keywords    : 
+;      COMMENTS = Comments associated with each keyword, if any
 ; Calls       : 
 ;	FXBFINDLUN, FXPAR
 ; Common      : 
@@ -71,6 +72,7 @@
 ; Version     : 
 ;	Version 1, 12 April 1993.
 ;       Vectorized implementation improves performance, CM 18 Nov 1999
+;       Added COMMENTS keyword CM Nov 2003
 ;-
 ;
 @fxbintable
@@ -97,7 +99,8 @@
 ;
 ;  Extract the keyword values all in one pass
 ;        
-        KEYVALUES = FXPAR(HEADER, STRTRIM(KEYWORD,2)+'*')
+        KEYVALUES = FXPAR(HEADER, STRTRIM(KEYWORD,2)+'*', $
+                          COMMENT=COMMENT_STRS, DATATYPE=DEFAULT)
         N_FOUND = 0L
 
 ;
@@ -121,9 +124,13 @@
             ;; Make an array with the number of columns in the table
             SZ_VALUE = SIZE(KEYVALUES[0])
             VALUES   = MAKE_ARRAY(TFIELDS0, TYPE=SZ_VALUE[1], VALUE=DEFAULT)
+            COMMENTS = STRARR(TFIELDS0)
 
             ;; Fill the columns which had this keyword
-            IF N_FOUND GT 0 THEN VALUES[INDEX] = KEYVALUES
+            IF N_FOUND GT 0 THEN BEGIN
+                VALUES[INDEX] = KEYVALUES
+                COMMENTS[INDEX] = COMMENT_STRS
+            ENDIF
 
         ENDIF ELSE BEGIN
 
@@ -134,6 +141,7 @@
             IF N_FOUND GT 0 THEN BEGIN
                 COLUMNS = INDEX + 1
                 VALUES  = KEYVALUES
+                COMMENTS = COMMENT_STRS
             ENDIF
 
         ENDELSE
