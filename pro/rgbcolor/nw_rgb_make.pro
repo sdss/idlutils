@@ -29,6 +29,7 @@
 ;              - choose whether to saturate high-value pixels to white
 ;                or to color
 ;  tiff        - make tiff instead of jpeg
+;  invert      - ???
 ;OPTIONAL OUTPUTS:
 ;  
 ;EXAMPLE:
