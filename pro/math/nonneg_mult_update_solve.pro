@@ -38,7 +38,7 @@ return, nnmus_matrix_neg#vec
 
 end
 ;
-function nnmus_value,vec,avfunc,b
+function nnmus_value,vec,avfunc,b,offset=offset
 
 common nnmus_com, nnmus_matrix_pos, nnmus_matrix_neg
 
@@ -47,17 +47,20 @@ avneg=call_function(avfunc,vec,-1.)
 av=avpos-avneg
 vav=(transpose(vec)#av)[0]
 
-val=(0.5*vav+b#vec)[0]
+val=(0.5*vav+transpose(b)#vec)[0]
+if(keyword_set(offset)) then val=val+offset
 return,val
 
 end
 ;
 function nonneg_mult_update_solve,start,avfunc,b,matrix=matrix,tol=tol, $
-                                  verbose=verbose
+                                  verbose=verbose,offset=offset,value=value
 
 common nnmus_com
 
 if(NOT keyword_set(tol)) then tol=1.D-7
+b=reform(b,n_elements(b))
+start=reform(start,n_elements(start))
 
 ; set avfunc to use
 use_avfunc=avfunc
@@ -68,20 +71,22 @@ if(keyword_set(matrix)) then begin
 endif
 
 sol=start
-oldval=nnmus_value(sol,use_avfunc,b)
+oldval=nnmus_value(sol,use_avfunc,b,offset=offset)
 splog,'oldval='+string(oldval)
 diff=tol*2.
 while(abs(diff) gt tol) do begin
     sol=nonneg_mult_update(sol,use_avfunc,b,factor=factor)
-    newval=nnmus_value(sol,use_avfunc,b)
+    newval=nnmus_value(sol,use_avfunc,b,offset=offset)
     if(keyword_set(verbose)) then begin
         splog,'newval='+string(newval)
 ;        splog,'sol='+string(sol)
-;        splog,'factor='+string(factor)
+        splog,['min(factor)=','max(factor)']+string(minmax(factor))
     endif
     diff=(newval-oldval)
     oldval=newval
 endwhile
+
+value=oldval
 
 return,sol
 
