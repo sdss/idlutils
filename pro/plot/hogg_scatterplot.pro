@@ -141,7 +141,7 @@ if keyword_set(conditional) then begin
 ; otherwise overplot contours
 endif else begin
     if NOT keyword_set(labelcont) then labelcont=0
-    contour, cumimage,xvec,yvec,levels=levels,thick=1,/overplot, $
+    contour, cumimage,xvec,yvec,levels=levels,/overplot, $
       c_labels=lonarr(n_elements(levels))+labelcont
 endelse
 
