@@ -9,14 +9,14 @@
 ;   filename = fileandpath(fullname, [path= ])
 ;
 ; INPUTS:
-;   fullname   - File name which may include disk and/or directory
+;   fullname   - File name(s) which may include disk and/or directory
 ;                specifications.
 ;
 ; OUTPUT:
-;   filename   - File name without any disk or directory specifications.
+;   filename   - File name(s) without any disk or directory specifications.
 ;
 ; OPTIONAL OUTPUT:
-;   path       - Disk and directory specification.
+;   path       - Disk and directory specification(s).
 ;
 ; COMMENTS:
 ;   This routine is meant to absorb any operating system dependencies.
@@ -41,11 +41,10 @@
 function fileandpath, fullname, path=path
 
    ; If FULLNAME is an array, then call this routine recursively
-   nname = n_elements(fullname)
-   if (nname GT 1) then begin
-      filename = strarr(nname)
-      path = strarr(nname)
-      for i=0, nname-1 do begin
+   if (size(fullname,/n_dim) GT 0) then begin
+      filename = make_array(size=size(fullname))
+      path = make_array(size=size(fullname))
+      for i=0, n_elements(fullname)-1 do begin
          filename[i] = fileandpath(fullname[i], path=tmp_path)
          path[i] = tmp_path
       endfor
