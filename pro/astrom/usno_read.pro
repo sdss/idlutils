@@ -70,25 +70,38 @@ function usno_read, racen, deccen, rad, path=path
   FOR i=0, nstar-1 DO BEGIN 
      radi = i < (n_elements(rad)-1) ; don't require that rad be array
      usno_cone, path, racen[i], deccen[i], rad[radi], zdata, catname=catname
-     data = n_elements(data) EQ 0 ? zdata : [[data], [zdata]]
+     data = n_elements(data) EQ 0 ? temporary(zdata) : [[data], [zdata]]
   ENDFOR 
 
   if n_elements(data) EQ 0 then print, 'NO Data - try a bigger radius.'
-  if n_elements(data) EQ 3 then ntot = 1 else $
+  if size(data, /n_dim) EQ 1 then ntot = 1 else $
     ntot = (size(data,/dimens))[1]
   if (ntot EQ 0) then return, 0
-  usnostruct = create_usnostruct(ntot)
+
+; -------- For USNO-A (or SA)
+  if strupcase(catname) eq 'USNO-A' then begin 
+
+     usnostruct = create_usnostruct(ntot)
 
 ; unpack data array
-  usnostruct.ra  = transpose(data[0, *]) /3.6d5
-  usnostruct.dec = transpose(data[1, *]) /3.6d5 - 90.
-  info   = transpose(data[2, *])
-
+     usnostruct.ra  = transpose(data[0, *]) /3.6d5
+     usnostruct.dec = transpose(data[1, *]) /3.6d5 - 90.
+     info   = transpose(data[2, *])
+     
 ; unpack B and R magnitudes from info array
-  magrint = (info MOD 1000L)
-  magbint = (info MOD 1000000L) - magrint
-  usnostruct.bmag = magbint/10000.
-  usnostruct.rmag = magrint/10.
+     magrint = (info MOD 1000L)
+     magbint = (info MOD 1000000L) - magrint
+     usnostruct.bmag = magbint/10000.
+     usnostruct.rmag = magrint/10.
+
+  endif 
+
+; -------- For USNO-B
+  if strupcase(catname) eq 'USNO-B' then begin 
+
+     usnostruct = usnob10_extract(data)
+
+  endif
 
   return, usnostruct
 end
