@@ -81,6 +81,7 @@
 ;
 ; REVISION HISTORY:
 ;   28-Sep-1999  Written by David Schlegel, Princeton.
+;   19-Jun-2001  Gaussfit amplitude was wrong - fixed - D. Finkbeiner
 ;-
 ;------------------------------------------------------------------------------
 ; Routine to evaluate a gaussian function integrated over a pixel of width 1,
@@ -89,11 +90,14 @@
 ;    A[1] = sigma width of the Ith Gaussian
 ;    A[2] = normalization of the Gaussian
 ;    A[3...] = polynomial coefficients for background terms
+; 19 June 2001 factor of sqrt(2*!pi) added to make amplitude correct - DPF
 
 pro splot_gausspix, x, a, f, pder
 
    ncoeff = N_elements(a)
-   f = a[2] * a[1] * (gaussint((x+0.5-a[0])/a[1]) -gaussint((x-0.5-a[0])/a[1]))
+   fac = size(a, /tname) EQ 'DOUBLE' ? sqrt(2. * !dpi) : sqrt(2. * !pi)
+   f = (fac * a[2] * a[1]) * $
+     (gaussint((x+0.5-a[0])/a[1]) -gaussint((x-0.5-a[0])/a[1]))
 
    if (ncoeff GT 3) then begin
       f = f + poly(x, a[3:ncoeff-1])
