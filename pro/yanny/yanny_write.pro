@@ -146,10 +146,12 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
                ; If WORDS is type STRING, then check for white-space
                ; in any of its elements.  If there is white space, then
-               ; put double-quotes around that element.
+               ; put double-quotes around that element.  Or, use quotes
+               ; if the string is completely empty.
                if (size(words,/tname) EQ 'STRING') then begin
                   for iw=0, nword-1 do $
-                   if (strpos(words[iw],' ') NE -1) then $
+                   if (strpos(words[iw],' ') NE -1 $
+                    OR strtrim(words[iw],2) EQ '') then $
                     words[iw] = '"' + words[iw] + '"'
                endif else begin
                   words = string(words)
