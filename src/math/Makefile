@@ -21,6 +21,7 @@ OBJECTS = \
 	arravsigmask.o \
 	arrmedian.o \
 	ccorrelate.o \
+	memshift.o \
 	$(RECIPES)
 
 all : $(LIB)/libmath.$(SO_EXT)
