@@ -63,7 +63,7 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  sigrejimage=sigrejimage, paneluse=paneluse, $
                  quantfrac=quantfrac, quantile=quantile, quantneff=quantneff, $
                  default_font=default_font,twodimages=twodimages, $
-                 psym_overpoints=psym_overpoints
+                 psym_overpoints=psym_overpoints,sizepanellabel=sizepanellabel
 
 ; set defaults
 if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
@@ -566,7 +566,7 @@ for id2=ydimen-1,0L,-1 do begin
                     if(n_elements(psym_overpoints) eq 0) then $
                       psym_overpoints=6
                     djs_oplot,overpoints[d1,*],overpoints[d2,*],psym=psym_overpoints,color='red', $
-                      symsize=0.8
+                      symsize=0.8,thick=4
                 endif
 
 ; plot ellipses
@@ -623,9 +623,9 @@ for id2=ydimen-1,0L,-1 do begin
                       (!Y.CRANGE[1]-!Y.CRANGE[0])
                 endelse
                 xyouts, xlabelpos, ylabelpos, panellabels[id1,id2], $
-                  charsize=1.4, charthick=4, color=255
+                  charsize=sizepanellabel, charthick=4, color=255
                 xyouts, xlabelpos, ylabelpos, panellabels[id1,id2], $
-                  charsize=1.4, charthick=1
+                  charsize=sizepanellabel, charthick=1
             endif
                                 ; end loops and close file
         endelse 
