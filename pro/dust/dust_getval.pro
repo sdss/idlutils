@@ -172,6 +172,21 @@ function dust_getval, gall, galb, infile=infile, skipline=skipline, $
        ['SFD_i100_4096_ngp.fits', 'SFD_i100_4096_sgp.fits'], $
        gall, galb, path=ipath, interp=interp, noloop=noloop, verbose=verbose)
       end
+   'I60': begin
+      value = wcs_getval( $
+       ['SFD_i60_4096_ngp.fits', 'SFD_i60_4096_sgp.fits'], $
+       gall, galb, path=ipath, interp=interp, noloop=noloop, verbose=verbose)
+      end
+   'I25': begin
+      value = wcs_getval( $
+       ['SFD_i25_4096_ngp.fits', 'SFD_i25_4096_sgp.fits'], $
+       gall, galb, path=ipath, interp=interp, noloop=noloop, verbose=verbose)
+      end
+   'I12': begin
+      value = wcs_getval( $
+       ['SFD_i12_4096_ngp.fits', 'SFD_i12_4096_sgp.fits'], $
+       gall, galb, path=ipath, interp=interp, noloop=noloop, verbose=verbose)
+      end
    'X': begin
       value = wcs_getval( $
        ['SFD_xmap_ngp.fits', 'SFD_xmap_sgp.fits'], $
