@@ -891,6 +891,7 @@ pro/yanny/yanny_readone.pro -text
 pro/yanny/yanny_write.pro -text
 src/Makefile -text
 src/idlmangle/Makefile -text
+src/idlmangle/export.h -text
 src/idlmangle/idl_garea.c -text
 src/idlmangle/idl_gverts.c -text
 src/image/Makefile -text

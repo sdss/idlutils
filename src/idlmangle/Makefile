@@ -6,13 +6,13 @@
 
 SHELL = /bin/sh
 #
-CFLAGS  = -I$(IDL_DIR)/external -I$(VAGC_DIR)/mangle1.2 -DCHECK_LEAKS
+CFLAGS  = -I$(IDL_DIR)/external -I$(IDLUTILS_DIR)/src/mangle1.2 -DCHECK_LEAKS
 #
-.c.o : $(VAGC_DIR)/mangle1.2/polygon.h export.h 
+.c.o : $(IDLUTILS_DIR)/src/mangle1.2/polygon.h export.h 
 	$(CC) -c $(CCCHK) $(CFLAGS) $(IDL_FLAG) $*.c
 
-LIB = $(VAGC_DIR)/lib
-BIN = $(VAGC_DIR)/bin
+LIB = $(IDLUTILS_DIR)/lib
+BIN = $(IDLUTILS_DIR)/bin
 
 RECIPES = 
 OBJECTS = \
@@ -21,10 +21,10 @@ OBJECTS = \
 
 all : $(LIB)/libidlmangle.$(SO_EXT) 
 
-$(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(VAGC_DIR)/mangle1.2/libmangle.a
+$(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle.a
 	$(LD) -shared $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
 		-lmangle $(MAKE_FTNLIB) -L/usr/lib/gcc-lib/i386-redhat-linux/2.96 \
-		-L$(VAGC_DIR)/mangle1.2
+		-L$(IDLUTILS_DIR)/lib
 
 install : 
 
