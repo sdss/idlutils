@@ -36,6 +36,11 @@ MWRFITS: Fix a bug, whereby if a pointer was included in an output structure,
                the byte padding in heap was incorrect, and block sizes other
                than 2880 bytes were incorrectly written out.  This was a
                1-line bug fix that Landsman found.
+               Also, needed bug fix in the function MWR_RETABLE, whereby
+               other elements in a structure that also contained heap data
+               was not being written properly.  Only the zeroth element of
+               the non-pointer tags were being copied.  This bug fix was
+               sent to me by Landsman on 16-Jul-2004.
 PLOT_POLY: Add /AITOFF flag to plot on Aitoff projections.
 POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
                poly_2d to perform a rotation of an imaging using the 
