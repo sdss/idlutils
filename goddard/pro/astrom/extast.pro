@@ -63,6 +63,7 @@ pro extast,hdr,astr,noparams
 ;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Get correct sign, when converting CDELT* to CD matrix for right-handed
 ;      coordinate system                  W. Landsman   November 1998
+;      Recognize GSSS in ctype also       W. Landsman, D. Finkbeiner Nov 2000
 ;-
  On_error,2
 
@@ -77,25 +78,27 @@ pro extast,hdr,astr,noparams
  noparams = -1                                    ;Assume no astrometry to start
 
  ctype = strtrim( sxpar( hdr, 'CTYPE*', Count = N_ctype), 2)
+ check_gsss = (N_ctype EQ 0)
+ if N_ctype GE 1 then check_gsss = (strmid(ctype[0], 5, 3) EQ 'GSS')
 
 ; If the standard CTYPE* astrometry keywords not found, then check if the
 ; ST guidestar astrometry is present
 
- if N_ctype EQ 0 then begin            
-         gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
-         if N_ppo1 EQ 1 then begin 
-                gsssextast, hdr, astr, noparams
-                return
-        endif
-        ctype = ['RA---TAN','DEC--TAN']
-  endif
+ if check_gsss then begin            
+    gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
+    if N_ppo1 EQ 1 then begin 
+       gsssextast, hdr, astr, noparams
+       return
+    endif
+    ctype = ['RA---TAN','DEC--TAN']
+ endif
 
-  crval = sxpar( hdr, 'CRVAL*', Count = N )
-     if N LT 2 then return              ;No CRVAL parameters
-
-  crpix = sxpar( hdr, 'CRPIX*', Count = N )
-     if N lt 2 then return                 ;No CRPIX parameters?
-
+ crval = sxpar( hdr, 'CRVAL*', Count = N )
+ if N LT 2 then return          ;No CRVAL parameters
+ 
+ crpix = sxpar( hdr, 'CRPIX*', Count = N )
+ if N lt 2 then return          ;No CRPIX parameters?
+ 
  CD11 = sxpar( hdr, 'CD001001', COUNT = N_CD001 )
 
  if N_CD001 EQ 1 then begin 
