@@ -17,12 +17,12 @@
 ; REVISION HISTORY:
 ;   2002-02-08  written by Hogg
 ;-
-function hogg_mrdfits, file,extension,header, $
+function hogg_mrdfits, file,extension,header, silent=silent, $
    range=range,nrowchunk=nrowchunk, _EXTRA=inputs_for_mrdfits
 
   if not keyword_set(range) then begin
-    naxis2= sxpar(headfits(file,exten=extension),'NAXIS2')
-    splog, naxis2
+    naxis2= sxpar(headfits(file,exten=extension,silent=silent),'NAXIS2')
+    if(NOT keyword_set(silent)) then splog, naxis2
     range= [0,naxis2-1]
   endif
 
@@ -31,10 +31,10 @@ function hogg_mrdfits, file,extension,header, $
   chunkrange= [range[0],((range[0]+nrowchunk-1) < range[1])]
   while (chunkrange[1] GE chunkrange[0]) do begin
 
-    splog, chunkrange
+    if(NOT keyword_set(silent)) then splog, chunkrange
     chunkresult= mrdfits(file,extension,header, $
-      range=chunkrange,_EXTRA=inputs_for_mrdfits)
-    help, chunkresult
+      range=chunkrange,silent=silent,_EXTRA=inputs_for_mrdfits)
+    if(NOT keyword_set(silent)) then help, chunkresult
     if not keyword_set(result) then begin
         result=replicate(chunkresult[0],range[1]-range[0]+1)
     endif 
