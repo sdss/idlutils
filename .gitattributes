@@ -580,6 +580,7 @@ pro/plot/splot.pro -text
 pro/slatec/slatec_bvalu.pro -text
 pro/slatec/slatec_efc.pro -text
 pro/slatec/slatec_splinefit.pro -text
+pro/yanny/yanny_free.pro -text
 pro/yanny/yanny_par.pro -text
 pro/yanny/yanny_read.pro -text
 pro/yanny/yanny_write.pro -text
