@@ -11,7 +11,7 @@
 ;   If string descriptors are used, then load a basic 8-color color table.
 ;
 ; CALLING SEQUENCE:
-;   plot, [x,] y, xerr=xerr, yerr=yerr, xlog=xlog, ylog=ylog, $
+;   djs_oploterr, [x,] y, xerr=xerr, yerr=yerr, xlog=xlog, ylog=ylog, $
 ;    cap=cap, xlen=xlen, ylen=ylen, $
 ;    color=color, psym=psym, symsize=symsize
 ;
@@ -105,7 +105,7 @@ pro djs_oploterr, x, y, xerr=xerr, yerr=yerr, xlog=xlog, ylog=ylog, $
    if (keyword_set(xlog)) then xtmp = alog10(xtmp)
    if (keyword_set(ylog)) then ytmp = alog10(ytmp)
 
-   for ipt=0, npt-1 do begin
+   for ipt=0L, npt-1 do begin
       color1 = icolor[ipt MOD ncolor]
       psym1 = psym[ipt MOD npsym]
       symsize1 = symsize[ipt MOD nsize]
