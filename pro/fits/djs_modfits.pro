@@ -8,7 +8,7 @@
 ;   and that works with g-zipped files.
 ;
 ; CALLING SEQUENCE:
-;   djs_modfits, filename, data, [hdr, exten_no=]
+;   djs_modfits, filename, data, [hdr, exten_no=, /delete_data]
 ;
 ; INPUTS:
 ;   filename  - FITS file name; if the name ends in the suffix ".gz",
@@ -19,6 +19,10 @@
 ; OPTIONAL INPUTS:
 ;   hdr       - New FITS header for extension EXTEN_NO
 ;   exten_no  - FITS extension number to modify; default to 0.
+;   delete_data - If set, then delete this data.  Note that this cannot
+;               be accomplished by setting DATA=0, since that simply says
+;               to not change the data array/structure (to be consistent
+;               with the functionality of MODFITS).
 ;
 ; OUTPUTS:
 ;
@@ -50,11 +54,12 @@ function bitsperpixel, type
    return, tvec[type]
 end
 ;-----------------------------------------------------------------------
-pro djs_modfits, filename, data, hdr, exten_no=exten_no
+pro djs_modfits, filename, thisdata, hdr, exten_no=exten_no, $
+ delete_data=delete_data
 
    ; Need at least 2 parameters
    if (N_params() LT 2) then begin
-      print, 'Syntax - djs_modfits, filename, data, [hdr, exten_no=]'
+      print, 'Syntax - djs_modfits, filename, data, [hdr, exten_no=, /delete_data]'
       return
    endif
 
@@ -90,15 +95,18 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
    endif
 
    qstruct = 0
-   if (keyword_set(data)) then begin
+   if (keyword_set(thisdata) OR keyword_set(delete_data)) then begin
       data1 = mrdfits(thisfile, exten_no)
-      qstruct = size(data, /tname) EQ 'STRUCT'
+      qstruct = size(thisdata, /tname) EQ 'STRUCT'
       if (qstruct) then begin
          nbytes1 = n_tags(data1, /length)
-         nbytes = n_tags(data, /length)
+         nbytes = n_tags(thisdata, /length)
       endif else begin
          nbytes1 = n_elements(data1) * bitsperpixel(size(data1,/type))
-         nbytes = n_elements(data) * bitsperpixel(size(data,/type))
+         if (keyword_set(delete_data)) then $
+          nbytes = 0 $
+         else $
+          nbytes = n_elements(thisdata) * bitsperpixel(size(thisdata,/type))
       endelse
       if (NOT keyword_set(data1) OR $
        (nbytes+2879)/2880 GT (nbytes1+2879)/2880) then qbigger = 1
@@ -108,9 +116,10 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
    ; For now, the Goddard routine MODFITS does not work with structures.
    ; So don't use it in that case.
 
-   if ((qbigger EQ 0) AND qstruct EQ 0) then begin
+   if ( (qbigger EQ 0) AND (qstruct EQ 0) $
+    AND (NOT keyword_set(delete_data)) ) then begin
 
-      modfits, thisfile, data, hdr, exten_no=exten_no
+      modfits, thisfile, thisdata, hdr, exten_no=exten_no
 
    endif else begin
 
@@ -144,9 +153,12 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
          phdr[exten_no] = ptr_new(hdr)
       endif
 
-      if (keyword_set(data)) then begin
+      if (keyword_set(delete_data)) then begin
          ptr_free, pdata[exten_no]
-         pdata[exten_no] = ptr_new(data)
+         pdata[exten_no] = ptr_new(0)
+      endif else if (keyword_set(thisdata)) then begin
+         ptr_free, pdata[exten_no]
+         pdata[exten_no] = ptr_new(thisdata)
       endif
 
       writefits, thisfile, *(pdata[0]), *(phdr[0])
