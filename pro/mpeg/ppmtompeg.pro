@@ -19,7 +19,7 @@
 ;   mpeg file with name given above
 ;
 ; EXAMPLES:
-;   ppmtompeg, bytscale(imagecube, min=800, max=1600), 'movie.mpeg'
+;   ppmtompeg, bytscl(imagecube, min=800, max=1600), 'movie.mpeg'
 ;
 ; COMMENTS:
 ;   
