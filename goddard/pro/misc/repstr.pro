@@ -45,10 +45,10 @@ function repstr,obj,in,out
  l2 = strlen(out)
  Nstring = N_elements(obj)
  object = obj
- for i= 0 ,Nstring-1 do begin
- last_pos = 0
- lo = 9999
- pos = 0
+ for i= 0L ,Nstring-1 do begin
+ last_pos = 0L
+ lo = 9999L
+ pos = 0L
  while ( pos LT lo-l1) and (pos GE 0) do begin
    lo = strlen(object[i])
    pos = strpos(object[i],in,last_pos)
