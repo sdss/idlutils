@@ -263,7 +263,12 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
    get_lun, ilun
    openr, ilun, filename, error=err
-   if (err NE 0) then return
+   if (err NE 0) then begin
+      close, ilun
+      free_lun, ilun
+      return
+   endif
+
    rawline = ''
 
    while (NOT eof(ilun)) do begin
