@@ -22,7 +22,9 @@
 ;
 ; COMMENTS:
 ;   The selection based upon SELECT_TAGS is performed before excluding
-;   tags based upon EXCEPT_TAGS.
+;   tags based upon EXCEPT_TAGS.  The order of the tags in the output
+;   structure is the same as the order set by SELECT_TAGS, which allows
+;   one to re-order the tags in a structure.
 ;
 ; EXAMPLES:
 ;
@@ -50,39 +52,42 @@ function struct_trimtags, instruct, select_tags=select_tags, $
    ; Select which tags are wanted according to SELECT_TAGS.
 
    if (keyword_set(select_tags)) then begin
-      qkeep = bytarr(ntag)
-      for itag=0, ntag-1 do begin
-         for jtag=0, n_elements(select_tags)-1 do begin
-            if (strmatch(tags[itag], strupcase(select_tags[jtag]))) then $
-             qkeep[itag] = 1B
-         endfor
+      for jtag=0, n_elements(select_tags)-1 do begin
+         jj = where(strmatch(tags, strupcase(select_tags[jtag])))
+         if (jj[0] NE -1) then begin
+            if (NOT keyword_set(indx)) then indx = jj $
+             else indx = [indx, jj]
+         endif
       endfor
    endif else begin
-      qkeep = bytarr(ntag) + 1B
+      indx = lingden(ntag)
    endelse
+
+   if (NOT keyword_set(indx)) then return, 0
 
    ;----------
    ; De-select which tags are excluded according to EXCEPT_TAGS.
 
    if (keyword_set(except_tags)) then begin
-      for itag=0, ntag-1 do begin
-         for jtag=0, n_elements(except_tags)-1 do begin
-            if (strmatch(tags[itag], strupcase(except_tags[jtag]))) then $
-             qkeep[itag] = 0B
-         endfor
+      qkeep = bytarr(n_elements(indx)) + 1B
+      for ktag=0, n_elements(except_tags)-1 do begin
+         iexc = where(strmatch(tags[indx], strupcase(except_tags[ktag])), nexc)
+         if (nexc GT 0) then qkeep[iexc] = 0B
       endfor
-   endif
+      ikeep = where(qkeep, nkeep)
+      if (nkeep EQ 0) then return, 0
+      indx = indx[ikeep]
+   endif else begin
+      nkeep = n_elements(indx)
+   endelse
 
    ;----------
    ; Create the output structure and copy the requested tags
 
-   ikeep = where(qkeep, nkeep)
-   if (nkeep EQ 0) then return, 0
-
-   outstruct = create_struct(tags[ikeep[0]], instruct[0].(ikeep[0]))
+   outstruct = create_struct(tags[indx[0]], instruct[0].(indx[0]))
    for ii=1, nkeep-1 do $
     outstruct = create_struct(outstruct, $
-     tags[ikeep[ii]], instruct[0].(ikeep[ii]))
+     tags[indx[ii]], instruct[0].(indx[ii]))
 
    struct_assign, {junk:0}, outstruct ; Zero-out all elements
    outstruct = replicate(outstruct, nout)
