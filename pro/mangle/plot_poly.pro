@@ -1,11 +1,12 @@
 pro plot_poly,poly,offset=offset,xrange=xrange,yrange=yrange, $
               filename=filename,fill=fill,nooutline=nooutline, $
               xsize=xsize, ysize=ysize, over=over, color=color, $
-              minside=minside, dangle=dangle
+              minside=minside, dangle=dangle, outline_thick=outline_thick
 
 if(not keyword_set(xrange)) then xrange=[0.,360.]
 if(not keyword_set(yrange)) then yrange=[-90.,90.]
 if(not keyword_set(offset)) then offset=0.
+if(not keyword_set(outline_thick)) then outline_thick=0.001
 if(not keyword_set(minside)) then minside=7
 if(not keyword_set(dangle)) then dangle=0.05
 if(n_elements(color) eq 0) then $
@@ -19,8 +20,12 @@ endif
 
 ;if(keyword_set(fill)) then $
   ;loadct,0
+if(keyword_set(offset)) then $
+  xtitle='ra-'+strtrim(string(offset),2) $
+else $
+  xtitle='ra'
 if(NOT keyword_set(over)) then $
-  plot,[0],[0],/nodata,xtitle='ra-'+strtrim(string(offset),2),ytitle='dec', $
+  plot,[0],[0],/nodata,xtitle=xtitle,ytitle='dec', $
   xrange=xrange,yrange=yrange
 
 for i=0L, n_elements(poly)-1L do begin
@@ -35,7 +40,8 @@ for i=0L, n_elements(poly)-1L do begin
         if(keyword_set(fill)) then $
           polyfill,ramoffset,dec,color=use_color[i],noclip=0
         if(NOT keyword_set(nooutline)) then $
-          oplot,ramoffset,dec,thick=0.001,color=use_color[i]
+          oplot,ramoffset,dec,color=use_color[i], $
+          thick=outline_thick
     endif
 endfor
 
