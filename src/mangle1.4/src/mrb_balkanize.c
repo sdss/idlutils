@@ -326,7 +326,8 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
         /* skip null polygons */
         if (!polys[k] || (polys[k]->np > 0 && polys[k]->cm[0] == 0.)) continue;
         /* fragment */
-        dn = fragment_poly(&polys[k], poly[j], discard, npolys - n, &polys[n], mtol);
+        dn = fragment_poly(&polys[k], poly[j], discard, npolys - n, 
+                           &polys[n], mtol);
 				/* add i and j to parent list of each fragment */
         if(!fmt.dontoutputparents) 
           for(ifrag=n;ifrag<n+dn;ifrag++) {
@@ -337,7 +338,9 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
           }
         /* error */
         if (dn == -1) {
-          fprintf(stderr, "mrb_balkanize: UHOH at polygon %d; continuing ...\n", (fmt.newid == 'o')? polys[i]->id : ip);
+          fprintf(stderr, 
+                  "mrb_balkanize: UHOH at polygon %d; continuing ...\n", 
+                  (fmt.newid == 'o')? polys[i]->id : ip);
           continue;
           /* return(-1); */
         }
@@ -383,6 +386,8 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
   ip = 0;
   failed = 0;
   for (i = 0; i < m; i++) {
+    if(i%1000 == 0) 
+      fprintf(stderr, "balkan %d / %d (%d balkans)\n",i,m,np);
     /* skip null polygons */
     if (!polys[i] || (polys[i]->np > 0 && polys[i]->cm[0] == 0.)) continue;
     /* partition disconnected polygons */
