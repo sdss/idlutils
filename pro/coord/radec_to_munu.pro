@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   munu_to_radec
+;   radec_to_munu
 ;
 ; PURPOSE:
 ;   Convert from equatorial coordinates to SDSS great circle coordinates.
