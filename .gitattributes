@@ -811,5 +811,6 @@ src/slatec/xersve.f -text
 src/slatec/xgetua.f -text
 src/slatec/xsetf.f -text
 src/spheregroup/Makefile -text
+src/spheregroup/chunkfriendsoffriends.c -text
 ups/Makefile -text
 ups/idlutils.table -text
