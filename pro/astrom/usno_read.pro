@@ -69,7 +69,7 @@ function usno_read, racen, deccen, rad, path=path, catname=catname
 
 ; which catalogue?
   testfile = concat_dir(path, 'zone*.cat')
-  cattype = file_test(testfile) ? 'USNO-A' : 'USNO-B'
+  cattype = keyword_set(findfile(testfile)) ? 'USNO-A' : 'USNO-B'
 
 ; Read the stars - loop over pointings
   nstar = n_elements(racen)
