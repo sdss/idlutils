@@ -785,6 +785,7 @@ pro/fits/mwrfits_chunks.pro -text
 pro/fits/rdss_fits.pro -text
 pro/fits/sxcombinepar.pro -text
 pro/healpix/dpf_nest2ring.pro -text
+pro/healpix/heal_rebin.pro -text
 pro/healpix/healcart_ind.pro -text
 pro/healpix/healgen.pro -text
 pro/healpix/healgen_lb.pro -text
