@@ -565,6 +565,7 @@ pro/misc/djs_readcol.pro -text
 pro/misc/djs_readilines.pro -text
 pro/misc/djs_readlines.pro -text
 pro/misc/djs_selectlines.pro -text
+pro/misc/rmfile.pro -text
 pro/plot/atv.pro -text
 pro/plot/djs_arrow.pro -text
 pro/plot/djs_axis.pro -text
