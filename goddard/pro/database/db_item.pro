@@ -57,6 +57,7 @@ pro db_item,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes,errmsg=errmsg
 ;                       Added keyword ERRMSG
 ;       Converted to IDL V5.0   W. Landsman   October 1997
 ;       Use STRSPLIT instead of GETTOK to parse form 1, W. Landsman July 2002
+;	Fixed bug in pre-5.3 support, William Thompson, 22 May 2003
 ;-
 ;
 ;------------------------------------------------------------------------
@@ -194,8 +195,10 @@ end
 ;
  if form eq 1 then begin 
    if !VERSION.RELEASE GE '5.3' then  $
-             item_names = strsplit(items,',',/EXTRACT) else $
-             item_names = str_sep(strtrim(items,2),',') 
+             item_names = strsplit(items,',',/EXTRACT) else begin
+	item_names = str_sep(strtrim(items,2),',')
+	item_names = item_names(where(item_names ne ''))
+   endelse
    nitems = N_elements(item_names)                     
  endif
 ;

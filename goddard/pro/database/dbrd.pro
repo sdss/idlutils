@@ -46,6 +46,8 @@ pro dbrd,enum,entry,available,dbno, noconvert=noconvert
 ;			Add noconvert keyword
 ;
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Version 4, 2 May 2003, W. Thompson
+;               Use BSWAP keyword to DBXVAL instead of calling IEEE_TO_HOST.
 ;-
 ;
 ;-----------------------------------------------------------------------
@@ -93,10 +95,10 @@ On_error,2
 		pointer = db_info('pointer',i)		;what points to it
 		db_item, pointer,itnum,ival,dtype,sb,nv,nb
 		
-		irec = dbxval(entry,dtype[0],1,sb[0],nb[0])
 		;Make sure irec is in internal format!
 		if externali[db_item_info('dbnumber',itnum[0])] and keyword_set(noconvert) $
-			 then ieee_to_host, irec
+			 then bswap=1 else bswap=0
+		irec = dbxval(entry,dtype[0],1,sb[0],nb[0],bswap=bswap)
 		if irec GT 0 then begin
 			p = assoc( units[i], bytarr( len[i],/NOZERO ))
 			tmp = p[irec]

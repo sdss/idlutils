@@ -31,6 +31,8 @@
 ;		Allow 2 dimensional byte arrays for entries to facilitate 
 ;		multiple entry processing.    Pass IDLTYPE onto IEEE_TO_HOST
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Version 4, 2 May 2003, W. Thompson
+;               Use BSWAP keyword to DBXVAL instead of calling IEEE_TO_HOST.
 ;-
 ;
 	ON_ERROR,1
@@ -114,8 +116,9 @@
 ;  For each entry, convert the data into external format.
 ;
 	FOR I = 0, N_ITEMS-1 DO BEGIN
-		ITEM = DBXVAL(ENTRY,IDLTYPE[I],NVALUES[I],SBYTE[I],NBYTES[I])
-		IEEE_TO_HOST, ITEM, IDLTYPE=IDLTYPE[I]
+		ITEM = DBXVAL(ENTRY,IDLTYPE[I],NVALUES[I],SBYTE[I],NBYTES[I],$
+			/BSWAP)
+;;		IEEE_TO_HOST, ITEM, IDLTYPE=IDLTYPE[I]
 		NB = NBYTES[I]*NVALUES[I]
 		DBXPUT, ITEM, ENTRY, IDLTYPE[I], SBYTE[I], NB
 	ENDFOR

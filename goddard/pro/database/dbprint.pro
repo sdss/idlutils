@@ -110,7 +110,8 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 
 
  if N_params() EQ 0 then begin
-       print,'Syntax - dbprint, list, items, [ FORMS = , TEXTOUT =, /NoHeader ]'
+       print,'Syntax - DBPRINT, list, items, '
+       print,'             [ FORMS = , TEXTOUT =, /NoHeader, /AdjustFormat ]'
        return
  endif
 

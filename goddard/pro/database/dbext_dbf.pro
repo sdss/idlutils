@@ -49,6 +49,7 @@ pro dbext_dbf,list,dbno,sbyte,nbytes,idltype,nval,v1,v2,v3,v4,v5,v6, $
 ;       Use /OVERWRITE with reform   W. Landsman   May 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Increase maximum number of items to 18  W. Landsman  November 1999
+;       2 May 2003, W. Thompson, Use DBXVAL with BSWAP instead of IEEE_TO_HOST.
 ;-
 ;
 ;*****************************************************************
@@ -133,8 +134,8 @@ end
 ;
 last = bpos + nbytes -1
 for i = 0,nitems-1 do begin
-    item = dbxval(big, idltype[i], nval[i], bpos[i], nbytes[i])
-    if bswap[i] then ieee_to_host, item, idltype = idltype[i]
+    item = dbxval(big, idltype[i], nval[i], bpos[i], nbytes[i], bswap=bswap[i])
+;;  if bswap[i] then ieee_to_host, item, idltype = idltype[i]
     st = 'v' + strtrim(i+1,2)
     if nlist GT 1 then $
              st = st + '= reform(item, /overwrite)'  else $
