@@ -1387,21 +1387,34 @@ pro splot_gaussfit
        AND (*(plot_ptr[0])).x LE xmax)
       if (N_elements(j) GT 3) then begin
          xtemp = (*(plot_ptr[0])).x[j]
+         xmid = median(xtemp)
+         xtemp = xtemp - xmid ; Do this for numerical stability in the fit
          ytemp = (*(plot_ptr[0])).y[j]
          ymin = min(ytemp)
          ymax = max(ytemp, imax)
 
          ; Set initial guess for fitting coefficients
-         a = [xtemp[imax], 0.2*(max(xtemp)-min(xtemp)), ymax-ymin, ymin]
-
          ; Fit a gaussian + a constant sky term
+         a = [xtemp[imax], 0.2*(max(xtemp)-min(xtemp)), ymax-ymin, ymin]
          yfit = curvefit(xtemp, ytemp, xtemp*0+1.0, a, $
-          /noderivative, function_name='splot_gausspix')
+          /noderivative, function_name='splot_gausspix', chisq=chisq)
 
+         ; If an absorption line is a better fit, use that
+         a_abs = [xtemp[imax], 0.2*(max(xtemp)-min(xtemp)), ymin-ymax, ymax]
+         yfit_abs = curvefit(xtemp, ytemp, xtemp*0+1.0, a_abs, $
+          /noderivative, function_name='splot_gausspix', chisq=chisq_abs)
+         if (chisq_abs LT chisq AND chisq_abs NE 0) then begin
+            yfit = yfit_abs
+            a = a_abs
+         endif
+
+         xtemp = xtemp + xmid
+         a[0] = a[0] + xmid
+         area = a[2] * sqrt(2.*!pi)
          out_string = 'GAUSSFIT: ' $
           + ' x0= ' + strtrim(string(a[0]),2) $
           + ' sig= ' + strtrim(string(a[1]),2) $
-          + ' A= ' + strtrim(string(a[2]),2) $
+          + ' Area= ' + strtrim(string(area),2) $
           + ' sky= ' + strtrim(string(a[3]),2)
          widget_control, state.comments_text_id, set_value=out_string
          soplot, xtemp, yfit, color='red', psym=10
