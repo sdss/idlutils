@@ -106,7 +106,7 @@ pro splot_startup
     comments_text_id: 0L       , $ ; ID of comments output widget
     keyboard_text_id: 0L       , $ ; ID of keyboard input widget
     nkey: 0                    , $ ; Number of elements in keylist
-    keylist: replicate(keylist,2), $ ; Record of keystrokes + cursor in plot
+    keylist: replicate(keylist,5), $ ; Record of keystrokes + cursor in plot
     xrange: [0.0,1.0]          , $ ; X range of plot window
     yrange: [0.0,1.0]          , $ ; Y range of plot window
     position: [0.15,0.15,0.95,0.95], $ ; POSITION for PLOT procedure
@@ -272,6 +272,8 @@ pro splot_clearkeylist
 
    state.nkey = 0
    state.keylist.key = ' '
+   state.keylist.x = 0.0
+   state.keylist.y = 0.0
    return
 end
 
@@ -870,8 +872,8 @@ pro splot_gaussfit
    endif else if (ct EQ 2) then begin
       ; Select all data points in the first PDATA array within the
       ; selected X boundaries.
-      xmin = min([state[i].keylist.x, state[i].keylist.x])
-      xmax = max([state[i].keylist.x, state[i].keylist.x])
+      xmin = min([state.keylist[i].x, state.keylist[i].x])
+      xmax = max([state.keylist[i].x, state.keylist[i].x])
       j = where(*(pdata.x[0]) GE xmin AND *(pdata.x[0]) LE xmax)
       if (N_elements(j) GT 3) then begin
          xtemp = (*(pdata.x[0]))[j]
