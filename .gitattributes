@@ -636,6 +636,8 @@ pro/misc/struct_print.pro -text
 pro/misc/which.pro -text
 pro/plot/atv.pro -text
 pro/plot/cmps_form.pro -text
+pro/plot/dfpsclose.pro -text
+pro/plot/dfpsplot.pro -text
 pro/plot/display.pro -text
 pro/plot/djs_arrow.pro -text
 pro/plot/djs_axis.pro -text
