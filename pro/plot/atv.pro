@@ -2364,16 +2364,21 @@ aspect = float(ysize) / float(xsize)
 fname = strcompress(state.current_dir + 'atv.ps', /remove_all)
 
 tvlct, rr, gg, bb, 8, /get
-forminfo = cmps_form(cancel = canceled, create = create, $
-                     aspect = aspect, parent = state.base_id, $
-                     /preserve_aspect, $
-                     xsize = 6.0, ysize = 6.0 * aspect, $
-                     /color, /encapsulated, $
-                     /nocommon, papersize='Letter', $
-                     bits_per_pixel=8, $
-                     filename = fname, $
-                     button_names = ['Create PS File'])
 
+;psObject = Obj_New("FSC_PSCONFIG")
+;psObject->GUI
+;psKeywords = psObject -> GetKeywords()
+;forminfo = cmps_form(cancel = canceled, create = create, $
+;                     aspect = aspect, parent = state.base_id, $
+;                     /preserve_aspect, $
+;                     xsize = 6.0, ysize = 6.0 * aspect, $
+;                     /color, /encapsulated, $
+;                     /nocommon, papersize='Letter', $
+;                     bits_per_pixel=8, $
+;                     filename = fname, $
+;                     button_names = ['Create PS File'])
+canceled = 0
+forminfo = PSConfig(Cancel = canceled)
 if (canceled) then return
 if (forminfo.filename EQ '') then return
 tvlct, rr, gg, bb, 8
@@ -2448,7 +2453,6 @@ tvlct, temporary(rr), temporary(gg), temporary(bb), 8
 
 device, /close
 set_plot, screen_device
-
 
 end
 

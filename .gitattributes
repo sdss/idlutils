@@ -905,6 +905,14 @@ pro/plot/imgscl.pro -text
 pro/plot/restore_sysvars.pro -text
 pro/plot/splot.pro -text
 pro/plot/sysvars.pro -text
+pro/psconfig/error_message.pro -text
+pro/psconfig/fsc_droplist.pro -text
+pro/psconfig/fsc_field.pro -text
+pro/psconfig/fsc_fileselect.pro -text
+pro/psconfig/fsc_inputfield.pro -text
+pro/psconfig/fsc_plotwindow.pro -text
+pro/psconfig/fsc_psconfig__define.pro -text
+pro/psconfig/psconfig.pro -text
 pro/sdss/findopfile.pro -text
 pro/sdss/sdss_flagname.pro -text
 pro/sdss/sdss_flagval.pro -text
