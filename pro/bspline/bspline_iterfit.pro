@@ -130,45 +130,29 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ;----------
    ; Iterate spline fit
 
-   outmask = make_array(size=size(xdata), /byte) + 1
+   outmask = 0
    iiter = 0
    error = -1L
    while (((error[0] NE -1) OR (keyword_set(qdone) EQ 0)) $
-           AND iiter LE maxiter) do begin
+    AND iiter LE maxiter) do begin
 
-      if (iiter GT 0) then begin
-        print, error
-        if (error[0] NE -1) then sset.bkmask[error+nord-1L] = 0 $
-        else qdone = djs_reject(ydata, yfit, invvar=invvar, $
-                           outmask=outmask, _EXTRA=EXTRA)
-      endif
+      if (error[0] NE -1) then $
+       sset.bkmask[error+nord-1L] = 0 $
+      else $
+       qdone = djs_reject(ydata, yfit, invvar=invvar, $
+        outmask=outmask, _EXTRA=EXTRA)
 
-      qgood = outmask EQ 1
-      igood = where(qgood, ngood)
-      ibad = where(qgood NE 1, nbad)
-
+      ngood = total(outmask)
       goodbk = where(sset.bkmask NE 0)
 
       if (ngood LE 1 OR goodbk[0] EQ -1) then begin
-         coeff = 0
-         iiter = maxiter + 1 ; End iterations
+         sset.coeff = 0
+         iiter = maxiter ; End iterations
       endif else begin
-
-;         DO THE FIT ???
-;            INPUTS: xdata, ydata, x2, invvar, sset.fullbkpt, sset.bkmask,
-;                    sset.nord, sset.xmin, sset.xmax, sset.npoly
-;            OUTPUTS: updated bkmask, yfit, coeff
-;
-;	Let's demand invvar, fullbkpt, and coeff to be passed
-;       ill constrained entries are returned
-;       yfit is keyword
-;       Full bkpt is required, not sure how to implement bkptmask yet
-;
-
-
-        error = bspline_fit(xdata, ydata, invvar*qgood, sset, $
-               x2=x2, yfit=yfit)
-
+        ; Do the fit.  The indices of ill-constrained values are returned,
+        ; or -1 if all break points are good.
+        error = bspline_fit(xdata, ydata, invvar*outmask, sset, $
+         x2=x2, yfit=yfit)
       endelse
 
       iiter = iiter + 1
