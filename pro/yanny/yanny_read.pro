@@ -133,22 +133,26 @@ function yanny_nextline, ilun
       yanny_readstring, ilun, stemp
       stemp = strtrim(stemp) ; Remove only trailing whitespace
       sline = sline + stemp
+      nchar = strlen(sline)
    endwhile
 
+print,sline
    return, sline
 end
 ;------------------------------------------------------------------------------
 ; Append another pointer NEWPTR to the array of pointers PDATA.
 ; Also add its name to PNAME.
 
-pro add_pointer, stname, newptr, pcount, pname, pdata
+pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
 
    if (pcount EQ 0) then begin
       pname = stname
       pdata = newptr
+      pnumel = 0
    endif else begin
       pname = [pname, stname]
       pdata = [pdata, newptr]
+      pnumel = [pnumel, 0]
    endelse
 
    pcount = pcount + 1
@@ -204,7 +208,19 @@ pro yanny_read, filename, pdata, comments=comments
 
                if (N_elements(ww) GE 2) then begin
                   i = where(ww[0] EQ tname, ct)
-                  if (ct EQ 0) then i = 0 ; Force this to be a "char"
+                  i = i[0]
+
+                  ; If the type is "char", then remove the string length
+                  ; from the defintion, since IDL does not need a string
+                  ; length.  For example, change "char foo[20]" to "char foo",
+                  ; or change "char foo[10][20]" to "char foo[10]".
+                  if (i EQ 0) then begin
+                     j1 = rstrpos(ww[1], '[')
+                     if (j1 NE -1) then ww[1] = strmid(ww[1], 0, j1)
+                  endif
+
+                  ; Force an unknown type to be a "char"
+                  if (i[0] EQ -1) then i = 0
 
                   ; Test to see if this should be an array
                   ; (Only 1-dimensional arrays supported here.)
@@ -235,18 +251,21 @@ pro yanny_read, filename, pdata, comments=comments
             endwhile
 
             ; Now for the structure name - get from the last line read
-            stname = strtrim(strmid(sline,1), 2)
+            ; Force this to uppercase
+            stname = strupcase( strtrim(strmid(sline,1), 2) )
 
             ; Create the actual structure
             add_pointer, stname, $
              ptr_new( mrd_struct(names, values, 1, structyp=stname) ), $
-             pcount, pname, pdata
+             pcount, pname, pdata, pnumel
          endif
 
          ; LOOK FOR A STRUCTURE ELEMENT
          ; Only look if some structures already defined
+         ; Note that the structure names should be forced to uppercase
+         ; such that they are not case-sensitive.
          if (pcount GT 0) then begin
-            idat = where(words[0] EQ pname[0:pcount-1], ct)
+            idat = where(strupcase(words[0]) EQ pname[0:pcount-1], ct)
             if (ct EQ 1) then begin
                idat = idat[0]
                ; Add an element to the idat-th structure
