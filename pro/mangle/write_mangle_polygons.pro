@@ -41,7 +41,7 @@ for i=0L, n_elements(polygons)-1L do begin
       if(is_cap_used(polygons[i].use_caps,j)) then $
          nused_caps=nused_caps+1
     printf,unit, $
-      format='(%"polygon %22d ( %d caps, %13.7f weight, %20.16f str):")', $
+      format='(%"polygon %22d ( %d caps, %20.7f weight, %20.16f str):")', $
       id[i],nused_caps,polygons[i].weight,polygons[i].str
     for j=0L, polygons[i].ncaps-1L do begin
         if(is_cap_used(polygons[i].use_caps,j)) then $
