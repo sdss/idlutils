@@ -172,9 +172,6 @@
 ; RESTRICTIONS:
 ;       (1)     Variable length columns are not supported for anything
 ;               other than simple types (byte, int, long, float, double).
-;               Unsigned variable length columns are not supported.
-;       (2)     String columns with all columns of zero length crash the
-;               program
 ; NOTES:
 ;       This multiple format FITS writer is designed to provide a
 ;       single, simple interface to writing all common types of FITS data.
@@ -222,14 +219,34 @@
 ;               Aliases
 ;               Variable length arrays
 ;               Some code cleanup
+;       Version 1.1: T. McGlynn 2002-2-18
+;               Fixed major bug in processing of unsigned integers.
+;               (Thanks to Stephane Beland)
+;
 ;              
 ;-
 
 ; What is the current version of this program.
 function mwr_version
-    return, '1.0'
+    return, '1.1'
 end
     
+
+; Find the appropriate offset for a given unsigned type
+; or just return 0 if the type is not unsigned.
+
+function mwr_unsigned_offset, type
+    	    
+    if (type eq 12) then begin
+	return, uint(32768)
+    endif else if (type eq 13) then begin
+	return, ulong('2147483648')
+    endif else if (type eq 15) then begin
+	return, ulong64('9223372036854775808')
+    endif
+    return, 0
+end
+
 
 ; Add a keyword as non-destructively as possible to a FITS header
 pro chk_and_upd, header, key, value, comment
@@ -741,22 +758,13 @@ pro mwr_tablehdr, lun, input, header, vtypes,     $
 	                types[i] = 'P'+vtypes[i].type
 			nbyte = nbyte + 8
 			dims[i] = 1
-			
-			if vtypes[i].itype eq 12 then begin
+
+			test = mwr_unsigned_offset(vtypes[i].itype)
+			if test gt 0 then begin
 			    if (n_elements(offsets) lt 1) then begin
 			        offsets = ulon64arr(nfld)
 			    endif
-			    offsets[i] = 32768L
-			endif else if vtypes[i].itype eq 13 then begin
-			    if (n_elements(offsets) lt 1) then begin
-			        offsets = ulon64arr(nfld)
-			    endif
-			    offsets[i] = ulong('2147483648')
-			endif else if vtypes[i].itype eq 15 then begin
-			    if (n_elements(offsets) lt 1) then begin
-			        offsets = ulon64arr(nfld)
-			    endif
-			    offsets[i] = ulong64('9223372036854775808')
+			    offsets[i] = test
 			endif
 			
 	        end
@@ -766,7 +774,7 @@ pro mwr_tablehdr, lun, input, header, vtypes,     $
 			if (n_elements(offsets) lt 1) then begin
 			    offsets = ulon64arr(nfld)
 			endif
-			offsets[i] = 32768L
+			offsets[i] = mwr_unsigned_offset(12);
 			nbyte = nbyte + 2*nelem
 		end
 
@@ -775,7 +783,7 @@ pro mwr_tablehdr, lun, input, header, vtypes,     $
 			if (n_elements(offsets) lt 1) then begin
 			    offsets = ulon64arr(nfld)
 			endif
-			offsets[i] = ulong('2147483648')
+			offsets[i] = mwr_unsigned_offset(13);
 			nbyte = nbyte + 4*nelem
 		end
 		
@@ -797,7 +805,7 @@ pro mwr_tablehdr, lun, input, header, vtypes,     $
 			if (n_elements(offsets) lt 1) then begin
 			    offsets = ulon64arr(nfld)
 			endif
-			offsets[i] = ulong64('9223372036854775808')
+			offsets[i] = mwr_unsigned_offset(15)
 	        end
 		    
 	   0:   begin
@@ -1027,14 +1035,16 @@ function mwr_writeheap, lun, vtypes
     
     for i=0, n_elements(vtypes)-1 do begin
 	if vtypes[i].status then begin
+	    
 	    itype = vtypes[i].itype
-	    unsigned = 0
-	    if (itype eq 12 or itype eq 13 or itype eq 15) then unsigned=1
+	    unsigned = mwr_unsigned_offset(itype)
+	    
 	    ptrs = vtypes[i].data
+	    
 	    for j=0,n_elements(ptrs)-1 do begin
 		if ptr_valid(ptrs[j]) then begin
-		    if (unsigned) then begin
-			*ptrs[j] = not *ptrs[j]
+		    if (unsigned gt 0) then begin
+			*ptrs[j] = *ptrs[j] + unsigned
 		    endif
 		    if flip then begin
 			x = *ptrs[j]
@@ -1054,7 +1064,6 @@ function mwr_writeheap, lun, vtypes
     return, offset
     
 end
-	
 
 ; Write the brinary table.
 pro mwr_tabledat, lun, input, header, vtypes
@@ -1082,10 +1091,12 @@ pro mwr_tabledat, lun, input, header, vtypes
 	    endif
 
 	endif
-	
-	if (typ eq 12 or typ eq 13 or typ eq 15) then begin
-	    input.(i) = not(input.(i))
+
+	unsigned = mwr_unsigned_offset(typ)
+	if (unsigned gt 0) then begin
+	    input.(i) = input.(i) + unsigned
 	endif
+	
     endfor
 
     if n_elements(vtypes) gt 0 then begin
@@ -1383,7 +1394,7 @@ pro mwr_image, input, siz, lun, bof, hdr,       $
 	silent=silent
 
 
-    type = siz(siz[0] + 1)
+    type = siz[siz[0] + 1]
 
     bitpixes=[8,8,16,32,-32,-64,-32,0,0,-64,0,0,16,32,64,64]
 
@@ -1482,17 +1493,15 @@ pro mwr_image, input, siz, lun, bof, hdr,       $
         chk_and_upd, hdr, 'BZERO', offsetval
     
     endif else begin
-        if type eq 12 or type eq 13 or type eq 15 then begin
+	
+	; Handle unsigned offsets
+	bzero = mwr_unsigned_offset(type)
+	if bzero gt 0 then begin
 	    chk_and_upd,hdr,'BSCALE', 1
-            if type eq 12 then begin
-	        chk_and_upd, hdr, 'BZERO', 32768
-	    endif else if type eq 13 then begin
-	        chk_and_upd, hdr, 'BZERO', ulong64('2147483648')
-	    endif else if type eq 15 then begin
-	        chk_and_upd, hdr, 'BZERO', ulong64('9223372036854775808')
-	    endif
-	    data = not(data)
+	    chk_and_upd, hdr, 'BZERO', bzero
+	    data = data + bzero
         endif
+	
     endelse
 
     if keyword_set(group) then begin
@@ -1565,7 +1574,7 @@ pro mwrfits, xinput, file, header,              $
     ; Check required keywords.
 
     if (keyword_set(Version)) then begin
-        print, "MWRFITS V"+mwr_version()+":  2001-12-04"
+        print, "MWRFITS V"+mwr_version()+":  February 18, 2002"
     endif
 
     if n_elements(file) eq 0 then begin
@@ -1678,3 +1687,5 @@ pro mwrfits, xinput, file, header,              $
     
     return
 end
+
+

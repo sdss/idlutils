@@ -293,6 +293,11 @@
 ;       V2.4a May 2, 2001  Trim binary format string   (W. Landsman)
 ;       V2.5 December 5, 2001 Add unsigned, alias, 64 bit integers. version, $
 ;                           /pointer_val, /fixed_var.
+;       V2.5a Fix problem when both the first and the last character
+;            in a TTYPEnn value are invalid structure tag characters
+;       V2.6 February 15, 2002 Fix error in handling unsigned numbers, $
+;                           and 64 bit unsigneds.
+;                           (Thanks to Stephane Beland)
 ;
 ;       Note to users of IDL prior to V5.0:  This version is compiled
 ;       with the [] array syntax.  To convert this version to run under
@@ -302,6 +307,8 @@
 ;       to () but this cannot be done as a global replace since
 ;       array initializations of the form x=[1,2] must be left unchanged.
 ;       Subroutines called by this routine may need similar modification.
+;       Also the use of the pointer syntax (in versions 2.5 and above
+;       is not parseable by earlier version of IDL.
 ;-
 ; Utility Functions ==========================================================
 ;=============================================================================
@@ -417,7 +424,8 @@ function  mrd_dofn, name, index, use_colnum, alias=alias
     ; First character must be alphabetic. 
  
     if  not (('a' le c  and 'z' ge c) or ('A' le c  and 'Z' ge c)) then begin 
-        str = 'X' + str 
+        str = 'X' + str
+        len = len + 1 
     endif 
  
     ; 
@@ -496,6 +504,24 @@ function mrd_chkfn, name, namelist, index
  
 end
 
+; Find the appropriate offset for a given unsigned type.
+; The type may be given as the bitpix value or the IDL
+; variable type.
+
+function mrd_unsigned_offset, type
+    	    
+    if (type eq 12 or type eq 16) then begin
+	return, uint(32768)
+    endif else if (type eq 13 or type eq 32) then begin
+	return, ulong('2147483648')
+    endif else if (type eq 15 or type eq 64) then begin
+	return, ulong64('9223372036854775808');
+    endif
+    return, 0
+end
+
+
+
 ; Can we treat this data as unsigned?
 
 function mrd_chkunsigned, bitpix, scale, zero, unsigned=unsigned
@@ -504,10 +530,20 @@ function mrd_chkunsigned, bitpix, scale, zero, unsigned=unsigned
     
     ; Only allow unsigned for versions >= 5.2
     if float(!version.release) + .01 lt 5.2 then return, 0
+
+    ; This is correct but we should note that
+    ; FXPAR returns a double rather than a long.
+    ; Since the offset is a power of two
+    ; it is an integer that is exactly representable
+    ; as a double.  However, if a user were to use
+    ; 64 bit integers and an offset close to but not
+    ; equal to 2^63, we would erroneously assume that
+    ; the dataset was unsigned...
+
     
     if scale eq 1 then begin
 	if (bitpix eq 16 and zero eq 32768L)  or                    $
-	   (bitpix eq 32 and zero eq ulong64('2147483648')) or     $
+	   (bitpix eq 32 and zero eq ulong('2147483648')) or        $
 	   (bitpix eq 64 and zero eq ulong64('9223372036854775808')) then begin
 	    return, 1
 	endif
@@ -521,7 +557,7 @@ function mrd_unsignedtype, data
     sz = size(data)
     type = sz[sz[0]+1]
     if type eq 12 or type eq 13 or type eq 15 then begin
-	return, 1
+	return, type
     endif else begin
 	return, 0
     endelse
@@ -530,7 +566,7 @@ end
     
 ; Return the currrent version string for MRDFITS
 function mrd_version
-    return, '2.5'
+    return, '2.6'
 end
 ;=====================================================================
 ; END OF GENERAL UTILITY FUNCTIONS ===================================
@@ -948,7 +984,10 @@ pro mrd_read_image, unit, range, maxd, rsize, table
     if not is_ieee_big() then ieee_to_host, table
 
     ; Fix offset for unsigned data
-    if mrd_unsignedtype(table) then table = not(table)
+    type = mrd_unsignedtype(table)
+    if type gt 0 then begin
+	table = table - mrd_unsigned_offset(type)
+    endif
     
 end 
 
@@ -1009,7 +1048,7 @@ pro mrd_image, header, range, maxd, rsize, table, scales, offsets, scaling, $
     gcount = long(gcount)
 
     xscale = fxpar(header, 'BSCALE', count=cnt)
-    if cnt eq 0 then xscale = 1
+    if cnt eq 0 then scale = 1
     
     xunsigned = mrd_chkunsigned(bitpix,  xscale, $
 				fxpar(header, 'BZERO'), unsigned=unsigned)
@@ -1149,7 +1188,6 @@ pro mrd_image, header, range, maxd, rsize, table, scales, offsets, scaling, $
                 str = str + strcompress(string(dims[i]),/remo)
             endfor
             str = str+')'
-;	    print,'Type is now',type
             print, 'MRDFITS: Image array ',str, '  Type=', typstrs[type]
         endif
                 
@@ -1394,6 +1432,17 @@ pro mrd_varcolumn, vtype, array, heap, off, siz
     siz = siz[w]
     off = off[w]
 
+    unsigned = 0
+    if vtype eq '1' then begin
+	unsigned = 12
+    endif else if vtype eq '2' then begin
+	unsigned = 13
+    endif else if vtype eq '3' then begin
+	unsigned = 15;
+    endif
+    unsigned = mrd_unsigned_offset(unsigned)
+    
+
     for j=0, nw-1 do begin
 
         case vtype of
@@ -1424,7 +1473,7 @@ pro mrd_varcolumn, vtype, array, heap, off, siz
         endif
 
 	; Scale unsigneds.
-	if vtype eq '1' or vtype eq '2' or vtype eq '3' then *array[w[j]] = not *array[w[j]]
+	if unsigned gt 0 then *array[w[j]] = *array[w[j]] - unsigned
 	
     endfor
 end
@@ -1473,11 +1522,25 @@ pro mrd_fixcolumn, vtype, array, heap, off, siz
     if vtype ne 'A' and vtype ne 'B' and vtype ne 'X' and vtype ne 'L' then begin
 	ieee_to_host, array
     endif
-    
+
     ; Scale unsigned data
-    uns  = vtype eq '1' or vtype eq '2' or vtype eq '3'
-    if uns then begin
-	curr_colx = not curr_colx
+    unsigned = 0
+    if vtype eq '1' then begin
+	unsigned = 12
+    endif else if vtype eq '2' then begin
+	unsigned = 13
+    endif else if vtype eq '3' then begin
+	unsigned = 15;
+    endif
+    
+    if unsigned gt 0 then begin
+        unsigned = mrd_unsigned_offset(unsigned)
+    endif
+    
+    if unsigned gt 0 then begin
+        for j=0, nw-1 do begin
+            array[0:siz[j]-1,w[j]] = array[0:siz[j]-1,w[j]] - unsigned
+	endfor
     endif
 
 
@@ -1882,6 +1945,7 @@ pro mrd_read_table, unit, range, rsize, structyp, nrows, nfld, typarr, table, $
             fld = mrd_getc(table,i)
             if typ eq 'I' then byteorder, fld, /htons 
             if typ eq 'J' or typ eq 'P' then byteorder, fld, /htonl 
+            if typ eq 'K' then byteorder, fld, /l64swap
             if typ eq 'E' or typarr[i] eq 'C' then byteorder, fld, /xdrtof
 	    
             if typ eq 'D' or typarr[i] eq 'M' then begin 
@@ -1912,15 +1976,19 @@ pro mrd_read_table, unit, range, rsize, structyp, nrows, nfld, typarr, table, $
 
         if not keyword_set(old_struct) then begin
 
-	    if mrd_unsignedtype(table.(i)) then begin
-	        table.(i) = not(table.(i))
+	    type = mrd_unsignedtype(table.(i))
+
+	    if type gt 0 then begin
+	        table.(i) = table.(i) - mrd_unsigned_offset(type)
 	    endif
 	    
 	endif else begin
 	    
 	    col = mrd_getc(table,i)
-	    if mrd_unsignedtype(col) then begin
-		mrd_putc, table, i, not(col)
+	    type  = mrd_unsignedtype(col)
+	    
+	    if type gt 0 then begin
+		mrd_putc, table, i, col - mrd_unsigned_offset(type)
 	    endif
 	    
 	endelse
@@ -2304,7 +2372,7 @@ function mrdfits, file, extension, header,      $
     
     ;   Let user know version if MRDFITS being used.
     if keyword_set(version) then begin
-        print,'MRDFITS: Version '+mrd_version()+' December 5, 2001'
+        print,'MRDFITS: Version '+mrd_version()+' February 18, 2002'
     endif
     
     ;
@@ -2547,4 +2615,3 @@ function mrdfits, file, extension, header,      $
     endelse
 
 end
-

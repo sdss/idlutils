@@ -172,6 +172,8 @@
 ;       Assume since V5.1, remove NANvalue keyword  W. Landsman   July 2001 
 ;       Support the unofficial 64bit integer format W. Landsman   September 2001
 ;       Option to read a unit number rather than file name W.L    October 2001
+;       Fix byte swapping problem for compressed files again (sigh...) 
+;                W. Landsman   March 2002 
 ;-
 ;
 function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
@@ -419,6 +421,7 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
     data = make_array( DIM = nax, TYPE = IDL_type, /NOZERO)
 
      readu, unit, data
+    if gzip then if not is_ieee_big() then ieee_to_host,data
     if (exten_no GT 0) and (pcount GT 0) then begin
         theap = sxpar(header,'THEAP')
         skip = theap - N_elements(data)

@@ -71,6 +71,16 @@ Pro sxaddpar, Header, Name, Value, Comment, Location, before=before, $
 ;       in the header.    There is no particular reason for having two nearly 
 ;       identical procedures, but both are too widely used to drop either one.
 ;
+;       All HISTORY records are inserted in order at the end of the header.
+;
+;       All COMMENT records are also inserted in order at the end of the header
+;       header, but before the HISTORY records.  The BEFORE and AFTER keywords
+;       can override this.
+;
+;       All records with no keyword (blank) are inserted in order at the end of
+;       the header, but before the COMMENT and HISTORY records.  The BEFORE and
+;       AFTER keywords can override this.
+
 ; RESTRICTIONS:
 ;       Warning -- Parameters and names are not checked
 ;               against valid FITS parameter names, values and types.
@@ -94,6 +104,7 @@ Pro sxaddpar, Header, Name, Value, Comment, Location, before=before, $
 ;               e for exponential formats.
 ;       Apr 2000, Make user-supplied format upper-case  W. Landsman 
 ;       Oct 2001, Treat COMMENT or blank string like HISTORY keyword W. Landsman
+;       Jan 2002, Allow BEFORE, AFTER to apply to COMMENT keywords W. Landsman
 ;       
 ;-
  if N_params() LT 3 then begin             ;Need at least 3 parameters
@@ -149,19 +160,71 @@ Pro sxaddpar, Header, Name, Value, Comment, Location, before=before, $
  if (nn EQ 'HISTORY ') or (nn EQ 'COMMENT ') or $
     (nn EQ '        ')  then begin             ;add history record?
 ;
-;  If the header array needs to grow, then expand it in increments of 36 lines.
+;  If the header array needs to grow, then expand it in increments of 5 lines.
 ;
-     if iend lt (n-1) then $
-                 header[iend+1]=ENDLINE $ ;move end up
-      else begin
+     if iend GE (n-1) then begin
                  header = [header,replicate(blank,5)] ;yes, add 5.
-                 header[n] = ENDLINE
-      endelse
+                 n = N_elements(header)
+      endif
+
+; Format the record
+
       newline = blank
       strput,newline,nn+string(value),0
-      header[iend] = newline             ;add history rec.
-      return
- endif          ;history
+
+;
+;  If a history record, then append to the record just before the end.
+;
+      if nn EQ 'HISTORY ' then begin
+             header[iend] = newline             ;add history rec.
+             header[iend+1] = endline
+;
+;  The comment record is placed immediately after the last previous comment
+;  record, or immediately before the first history record, unless overridden by
+;  either the BEFORE or AFTER keywords.
+;
+      endif else if nn EQ 'COMMENT ' then begin
+            if loc EQ 'END     ' then loc = 'COMMENT '
+            iloc = where(keywrd EQ loc, nloc)
+            if nloc EQ 0 then iloc = where(keywrd EQ 'HISTORY ', nloc)
+            if nloc gt 0 then begin
+               i = iloc[nloc-1]
+               if keyword_set(after) or (loc EQ 'COMMENT ') then i = i+1 < iend 
+               if i gt 0 then header=[header[0:i-1],newline,header[i:n-1]] $
+                        else header=[newline,header[0:n-1]]
+            endif else begin
+                header[iend] = newline
+                header[iend+1] = endline
+            endelse
+
+;
+;  The "blank" record is placed immediately after the last previous "blank"
+;  record, or immediately before the first comment or history record, unless
+;  overridden by either the BEFORE or AFTER keywords.
+;
+          ENDIF ELSE BEGIN
+            if loc EQ 'END     ' then loc = '       '
+            iloc = where(keywrd[0:iend] EQ loc, nloc)
+            if nloc gt 0 then begin
+               i = iloc[0]
+               if keyword_set(after) and loc ne 'HISTORY ' then i = i+1 < iend 
+               if i gt 0 then header=[header[0:i-1],newline,header[i:n-1]] $
+                        else header=[newline,header[0:n-1]]
+            endif else begin
+                iloc = where(keywrd EQ 'COMMENT ', nloc)
+                if nloc Eq 0 then iloc = where(keywrd EQ 'HISTORY ', nloc)
+                if nloc GT 0 then begin
+                   i = iloc[0]
+                   if i gt 0 then header=[header[0:i-1],newline,header[i:n-1]] $
+                        else header=[newline,header[0:n-1]]
+                endif else begin
+                  header[iend] = newline
+                  header[iend+1] = endline
+            endelse
+            endelse
+           endelse
+            RETURN
+ endif
 
 ; Find location to insert keyword.   Save the existing comment if user did
 ; not supply a new one.   Comment starts after column 32 for numeric data,

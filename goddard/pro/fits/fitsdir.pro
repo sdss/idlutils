@@ -119,6 +119,8 @@ pro fitsdir ,directory, TEXTOUT = textout,NoTelescope = NoTelescope, $
  else directory = '*.fits'
  if N_elements(exten) EQ 0 then exten = 0 
 
+ defsysv, '!TEXTOUT', exist=i
+ if i EQ 0 then astrolib
  fdecomp, directory, disk, dir, filename, ext
  if filename EQ '' then begin 
       directory = disk + dir + '*.fits'

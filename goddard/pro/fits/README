@@ -1,11 +1,11 @@
-/FITS directory                                                  15-Dec-2001
+/FITS directory                                                  19-Dec-2001
 
-FITS (Flexible Image Transport Sytem) is a standardized data format which
-is widely used in astronomy.   Information on the FITS format can be obtained 
-from the NRAO FITS archive http://fits.cv.nrao.edu or from the FITS support 
-office at Goddard at http://www.gsfc.nasa.gov/astro/fits/fits_home.html.   I 
-note here only that FITS is a binary format, and so the binary option should 
-be used when copying FITS files with FTP.
+FITS (Flexible Image Transport Sytem) is a standardized data format which is
+widely used in astronomy.   Information on the FITS format can be obtained 
+from the NRAO FITS archive at http://fits.cv.nrao.edu or from the HEASARC FITS
+page at http://heasarc.gsfc.nasa.gov/docs/heasarc/fits.html.   I  note here
+only that FITS is a binary format, and so the binary option should  be used
+when copying FITS files with FTP.
 
 The IDL Astronomy Library contains a variety of procedures for reading, 
 writing, and modifying FITS files.   Information on how to use these procedures
@@ -14,12 +14,14 @@ described here.    There are four main types of FITS I/O
 procedures available in the Library:
 
    (1) MRDFITS() will read all standard FITS data types into IDL arrays (for
-primary images and image extensions) or structures (for binary or ASCII tables).
-The procedure MWRFITS() will write an IDL structure to a FITS file, with many 
-options available (binary or ASCII table, default generation of column names).
-These procedures were written by Tom McGlynn (USRA/Goddard).   Further 
-information on MRDFITS is available in the mrdfits.txt file in this directory or
-at  http://idlastro.gsfc.nasa.gov/mrdfits.html.
+primary images and image extensions) or structures (for binary or ASCII
+tables). The procedure MWRFITS() will write an IDL structure to any type of
+FITS file, with many  options available (binary or ASCII table, default
+generation of column names). These procedures were written by Tom McGlynn
+(USRA/Goddard).   Further  information on MRDFITS is available in the
+mrdfits.txt file in this directory or at 
+http://idlastro.gsfc.nasa.gov/mrdfits.html.
+
 To compile MRDFITS and MWRFITS the following procedures must be included in
 the !PATH
 	FXADDPAR, FXPAR(), FXPARPOS()             (in pro/fits_bintable)
@@ -35,7 +37,7 @@ are then required to interpret binary and ASCII tables.   The FT* procedures in
 the /fits_table directory are used to interpret a FITS ASCII table, and the
 TB* procedures are used interpret FITS Binary table.    The procedure WRITEFITS
 can be used to write a primary image, ASCII extension, or image extension
-(see Appendix 3).      The READFITS/WRITEFITS software currently cannot read 
+(see Appendix 2).      The READFITS/WRITEFITS software currently cannot read 
 variable length binary tables, or write any type of binary table.    The
 READFITS/WRITEFITS software requires the following procedures from the /misc
 directory: GETTOK(), STRN(), VALID_NUM().
