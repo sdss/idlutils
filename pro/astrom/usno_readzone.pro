@@ -14,7 +14,7 @@
 ;   prefix    - filename prefix: 'zone' for USNOA, 'b' for USNOB
 ;
 ; KEYWORDS:
-;   swap_if... - USNOA is written big endian, B is little endian(!)
+;   swap_if... - USNOA is written little endian, B is big endian(!)
 ;+------------------------------------------------------------------------  
 ; OUTPUTS:
 ;   data      - float(rec_len/4,N) array of results.  
