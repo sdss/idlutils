@@ -71,7 +71,8 @@
 ;       list of known bugs, and further information, go to:
 ;              http://www.astro.caltech.edu/~barth/atv
 ;
-;-
+;       Hacked up by Finkbeiner 5 December 2003 to support healpix.
+;;-
 ;----------------------------------------------------------------------
 ;        atv startup, initialization, and shutdown routines
 ;----------------------------------------------------------------------
@@ -2026,13 +2027,11 @@ naxis = sxpar(head, 'NAXIS')
 
 ; Make sure it's not a 1-d spectrum -- but healpix is OK
 if (numext EQ 0 AND naxis LT 2) then begin
-   if ishealpix(npix = sxpar(head, 'NAXIS1'), /silent) then begin 
-      healpixfile = 1B
-   endif else begin 
+   if ishealpix(npix = sxpar(head, 'NAXIS1'), /silent) EQ 0 then begin 
       atv_message, 'Selected file is not a 2-d FITS image!', $
         window = window, msgtype = 'error'
       return
-   endelse
+   endif
 endif
 
 state.title_extras = ''
@@ -2053,10 +2052,10 @@ endelse
 if (cancelled EQ 1) then return
 
 ; -------- reproject healpix file
-if keyword_set(healpixfile) then begin 
-   ind = atv_healcart_ind(main_image, head=head)
+if ishealpix(main_image) then begin 
+   nest = strupcase(strmid(sxpar(head, 'ORDERING'), 0, 4)) eq 'NEST'
+   ind = atv_healcart_ind(main_image, nest=nest, head=head)
    main_image = main_image[ind]
-;   state.imagename = 'HEALPix'
 endif
 
 
@@ -2088,6 +2087,11 @@ pro atv_fitsext_read, fitsfile, numext, head, cancelled
 common atv_state
 common atv_images
 
+; if primary HDU is empty and there is only one extension, just read it.
+if (sxpar(head, 'NAXIS') EQ 0) AND (numext EQ 1) then begin 
+   extension = 1
+endif else begin 
+
 numlist = ''
 for i = 1, numext do begin
     numlist = strcompress(numlist + string(i) + '|', /remove_all)
@@ -2118,14 +2122,20 @@ endif else begin
     extension = 0               ; primary image selected
 endelse
 
+endelse
+
 ; Make sure it's not a fits table: this would make mrdfits crash
 head = headfits(fitsfile, exten=extension)
 xten = strcompress(sxpar(head, 'XTENSION'), /remove_all)
 if (xten EQ 'BINTABLE') then begin
-    atv_message, 'File appears to be a FITS table, not an image.', $
-      msgtype='error', /window
-    cancelled = 1
-    return
+
+; -------- check for healpix bintable (e.g. WMAP format)
+   if ishealpix(npix = sxpar(head, 'NAXIS2'), /silent) EQ 0 then begin 
+      atv_message, 'File appears to be a FITS table, not an image.', $
+        msgtype='error', /window
+      cancelled = 1
+      return
+   endif
 endif
 
 if (extension GE 1) then begin
@@ -2137,6 +2147,13 @@ endelse
 ; Read in the image
 delvarx, main_image
 main_image = mrdfits(fitsfile, extension, head, /silent, /fscale) 
+
+; if it is a structure, assume we want the first tag.
+if size(main_image, /tname) EQ 'STRUCT' then begin 
+    print, 'Binary table data... extracting tag name ', $
+      (tag_names(main_image))[0]
+    main_image = main_image.(0)
+endif 
 
 end
 
@@ -5163,6 +5180,7 @@ pro atv, image, $
          block = block, $
          align = align, $
          stretch = stretch, $
+         nest = nest, $
          header = header
 
 common atv_state
@@ -5223,7 +5241,7 @@ if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') AND $
 
 ; See if it is a HEALPix array
         if ishealpix(image) then begin 
-           ind = atv_healcart_ind(image, header=header)
+           ind = atv_healcart_ind(image, nest=nest, header=header)
            main_image = image[ind]
            newimage = 1
            state.imagename = 'HEALPix'
