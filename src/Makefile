@@ -12,7 +12,8 @@ SHELL = /bin/sh
 #
 CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
 
-SUBDIRS = idlmangle image mangle1.2 math slatec spheregroup trace
+# Note that mangle1.2 must be built before idlmangle!
+SUBDIRS = image mangle1.2 idlmangle math slatec spheregroup trace
 
 all :
 	@ for f in $(SUBDIRS); do \
