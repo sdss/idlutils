@@ -98,7 +98,7 @@ function efcmn, x, y, invsig, nordin, fullbkptin
       invsigval = float(invsig[ptemp])
 
  
-      for i=0, nx-1 do begin
+      for i=0L, nx-1 do begin
 
         if (xval[i] GE fullbkpt[ileft]) then begin
           test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
@@ -134,7 +134,7 @@ function efcmn, x, y, invsig, nordin, fullbkptin
     test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
                 'bndacc_idl', g, mdg, nord, ip, ir, 1L, n+1)
 
-  
+
     rnorm = 1.0
     test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
                 'bndsol_idl', 1L, g, mdg, nord, ip, ir, coeff, n, rnorm)

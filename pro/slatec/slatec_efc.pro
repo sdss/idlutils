@@ -102,7 +102,7 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
       if (keyword_set(x2)) then begin
         ;calling special 2d version of efc
         if (NOT keyword_set(npoly)) then npoly = 2L
-        coeff = efc2d(x,x2,y,invsig, npoly, nord, fullbkpt)
+        coeff = fill_bspline(x,x2,y,invsig, npoly, nord, fullbkpt, /poly)
       endif else if (keyword_set(idlver)) then $
         coeff = efcmn(x,y,invsig, nord, fullbkpt) $
       else begin
