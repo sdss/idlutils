@@ -35,7 +35,9 @@
 ;                name (before applying any ALIAS), and the second is the
 ;                format code, such as "a10" for a 10-character string,
 ;                or "f10.5" for a floating-point value with 5 places after
-;                the decimal point.
+;                the decimal point.  Note that this may truncate the
+;                names in the two-line header if the format is fewer
+;                characters than that name length.
 ;
 ; OUTPUTS:
 ;
@@ -173,7 +175,11 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
 
          if (keyword_set(formatcodes)) then begin
             jj = (where(strupcase(formatcodes[0,*]) EQ tags[itag], ct))[0]
-            if (ct NE 0) then thiscode = formatcodes[1,jj]
+            if (ct NE 0) then begin
+               thiscode = formatcodes[1,jj]
+               nchar = strlen( $
+                string(struct[0].(itag)[iarr], format='('+formatcodes[1,jj]+')') )
+            endif
          endif
 
          schar = strtrim(string(nchar),2)
