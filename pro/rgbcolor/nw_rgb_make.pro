@@ -21,6 +21,8 @@
 ;                directions; eg, a rebinfactor of 2 halves the number
 ;                of pixels in each direction and quarters the total
 ;                number of pixels in the image.
+;  quality     - quality input for WRITE_JPEG
+;  overlay     - [3,nx,ny] image to overlay on the input images
 ;OPTIONAL KEYWORDS:
 ;  saturatetowhite
 ;              - choose whether to saturate high-value pixels to white
@@ -44,10 +46,12 @@
 ;-
 PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
                 nonlinearity,origin=origin,rebinfactor=rebinfactor, $
-                saturatetowhite=saturatetowhite
+                saturatetowhite=saturatetowhite,quality=quality, $
+                overlay=overlay
 
-;set defaults?
-IF NOT keyword_set(name) THEN name = 'blah.jpg' ;what is default name?
+;set defaults
+IF (NOT keyword_set(name)) THEN name = 'nw_rgb_make.jpg'
+IF (NOT keyword_set(quality)) THEN quality = 75
 
 ;assume Rim,Gim,Bim same type, same size
 IF size(rim,/tname) eq 'STRING' THEN BEGIN
@@ -68,14 +72,17 @@ ENDIF ELSE BEGIN
     colors[*,*,1] = Gim
     colors[*,*,2] = Bim
 ENDELSE
-IF n_elements(rebinfactor) THEN $ 
-  colors = nw_rebin_image(colors,rebinfactor)
+IF n_elements(rebinfactor) THEN BEGIN
+    colors = nw_rebin_image(colors,rebinfactor)
+    IF keyword_set(overlay) THEN overlay1= nw_rebin_image(overlay,rebinfactor)
+ENDIF
 
 colors = nw_scale_rgb(colors,scales=scales)
 colors = nw_arcsinh(colors,nonlinearity=nonlinearity)
-IF NOT n_elements(saturatetowhite) THEN $
+IF (NOT n_elements(saturatetowhite)) THEN $
   colors = nw_cut_to_box(colors,origin=origin)
-image = nw_float_to_byte(colors)
+IF keyword_set(overlay1) THEN colors= colors > overlay1
+colors = nw_float_to_byte(colors)
 
-WRITE_JPEG,name,image,TRUE=3,QUALITY=100
+WRITE_JPEG,name,colors,TRUE=3,QUALITY=quality
 END
