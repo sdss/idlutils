@@ -65,13 +65,11 @@
 ;
 ;   Not set up yet to deal with multi-dimensional arrays.
 ;
-;   The following does not look for semi-colons within strings,
-;   and will incorrectly split that different input lines (at STRSPLIT command).
-;
 ; PROCEDURES CALLED:
 ;   mrd_struct
 ;
 ; INTERNAL SUPPORT ROUTINES:
+;   yanny_inquotes
 ;   yanny_add_comment
 ;   yanny_getwords()
 ;   yanny_strip_brackets()
@@ -81,8 +79,43 @@
 ;
 ; REVISION HISTORY:
 ;   05-Sep-1999  Written by David Schlegel, Princeton.
+;   18-Jun-2001  Fixed bug to allow semi-colons within double quotes
+;                C. Tremonti (added yanny_inquotes, modifed yanny_strip_commas,
+;                yanny_nextline)
 ;-
 ;------------------------------------------------------------------------------
+; Return an array (1-element / text character) set to 1 where a semi colon is 
+; within double quotes, -1 where it is not
+
+function yanny_inquotes, textline, bytetext = bytetext
+
+   ; Turn string to byte array in order to manipulate it as an array
+   bytetext = byte(textline)
+   scinquote = intarr(n_elements(bytetext))
+
+   double_quote = (byte('"'))[0]
+   semi_colon = (byte(';'))[0]
+
+   dquote_index = where(bytetext EQ double_quote, ndquotes)
+   scolon_index = where(bytetext EQ semi_colon, nscolon)
+
+   ; Assume double quotes come in pairs!
+   IF (ndquotes mod 2) NE 0 THEN print, 'ERROR: double quotes not in pairs!'
+ 
+   IF nscolon GT 0 THEN BEGIN 
+     scinquote[scolon_index] = -1
+     FOR ii = 0, ndquotes - 1, 2 do BEGIN
+       inquote = where(scolon_index GT dquote_index[ii] AND $
+                       scolon_index LT dquote_index[ii+1], niq)
+       IF niq GT 0 THEN scinquote[scolon_index[inquote]] = 1
+     ENDFOR
+   ENDIF
+
+   return, scinquote
+end
+
+;------------------------------------------------------------------------------
+
 pro yanny_add_comment, rawline, comments
 
    if (size(comments,/tname) EQ 'INT') then $
@@ -92,6 +125,7 @@ pro yanny_add_comment, rawline, comments
 
    return
 end
+
 ;------------------------------------------------------------------------------
 ; Replace left or right curly brackets with spaces.
 
@@ -118,6 +152,7 @@ end
 ;------------------------------------------------------------------------------
 ; Replace ";" or "," with spaces.  Also get rid of extra whitespace.
 ; Also get rid of anything after a hash mark.
+; Modified by C. Tremonti to leave semi-colons inside double quotes
 
 function yanny_strip_commas, rawline
 
@@ -126,6 +161,9 @@ function yanny_strip_commas, rawline
    i = strpos(sline, '#')
    if (i EQ 0) then sline = '' $
     else if (i GE 0) then sline = strmid(sline, 0, i-1)
+
+   quoted_semi_colon = yanny_inquotes(sline)
+   qsc_index = where(quoted_semi_colon eq 1, niq)
 
    i = strpos(sline, ',')
    while (i NE -1) do begin
@@ -139,8 +177,14 @@ function yanny_strip_commas, rawline
       i = strpos(sline, ';')
    endwhile
 
-   sline = strtrim(strcompress(sline),2)
+   IF niq GT 0 THEN BEGIN 
+     bytesline = byte(sline)
+     bytesline[qsc_index] = (byte(';'))[0]
+     sline = string(bytesline)
+   ENDIF
 
+   sline = strtrim(strcompress(sline),2)
+ 
    return, sline
 end
 ;------------------------------------------------------------------------------
@@ -212,7 +256,30 @@ function yanny_nextline, ilun
 
    ; Attempt with a 5.2 hack
 
-   lastline = str_sep(strcompress(sline), ';')
+
+   ; Attempt to fix quotes problem cited above -- C. Tremonti
+   ; -----------------
+
+   ; lastline = str_sep(strcompress(sline), ';')
+   csline = strcompress(sline)
+
+   quoted_semi_colon = yanny_inquotes(csline)
+   scolon_index = where(quoted_semi_colon eq -1, nscolon)
+
+   IF nscolon gt 0 THEN BEGIN
+     starti = 0
+     FOR ii = 0, nscolon - 1 DO BEGIN
+       endi = scolon_index[ii] - 1
+       IF ii EQ 0 THEN lastline = strmid(csline, starti, endi - starti + 1) $
+       ELSE lastline = [lastline, strmid(csline, starti, endi - starti + 1)]
+       starti = scolon_index[ii] + 1
+     ENDFOR
+     IF endi ne strlen(csline) then lastline = [lastline, $
+        strmid(csline, starti, strlen(csline) - starti + 1)]
+   ENDIF ELSE lastline = csline
+
+  ; ------------
+
    nonblank = where(lastline NE '')
    if nonblank[0] NE -1 then lastline = lastline[nonblank]
    nlast = n_elements(lastline)
