@@ -27,8 +27,7 @@ function N_bytes,a
 ;-
 ;-----------------------------------------------------
 ;
- s = size(a)
- dtype = s(s[0]+1)                      ;data type
+ dtype = size(a,/type)                      ;data type
  if dtype EQ 0 then return,0            ;undefined
  nel = N_elements(a)
  case dtype of

@@ -24,7 +24,7 @@
 ;			  returned as a double precision number unless /INTEGER
 ;			  is present, in which case a long integer is returned.
 ;               
-; Keywords    : Integer   -  if present code checks specfically for an integer.
+; Keywords    : Integer   -  if present code checks specifically for an integer.
 ;
 ; Calls       : None
 ;               

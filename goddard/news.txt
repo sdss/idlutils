@@ -1,4 +1,333 @@
+17-Mar-2003: MWRFITS - Modified to reflect Jul-2002 change in FXADDPAR, to again
+                       allow creation of a dummy dataset from undefined data
+                     
+14-Mar-2003: XYAD - Option to return results in Galactic or ecliptic coordinates
+             EULER - Selection parameter now also available as a keyword
+
+06-Mar-2003: WFPC2_METRIC -  Compute the distortion in a WFPC2 image and 
+                             optionally return coordinates
+
+03-Mar-2003: FXBREADM - Now correctly handle case where TSCAL/TZERO changes type
+
+28-Feb-2003  FTAB_DELROW - Use COPY_LUN internally if V5.6 or later 
+
+25-Feb-2003: FITS_INFO,FXMOVE - Improve speed by reading only first 36 lines of the
+                     FITS header.
+             MRD_HREAD - /FIRSTBLOCK option to read only the first 36 lines of
+                     FITS header
+             READFITS() - New HBUFFER keyword available to speed up the reading
+                     of very large FITS headers. 
+
+13-Feb-2003: TBINFO, TBGET() - Now recognize the unofficial "K" format for 
+                     64 bit integers in FITS binary tables
+
+06-Feb-2003: TBPRINT - Wasn't always printing the final row.
+
+05-Feb-2003: HOST_TO_IEEE, IEEE_TO_HOST - now use /SWAP_IF_LITTLE_ENDIAN keyword
+                    for 64 bit data types
+
+04-Feb-2003: SXDELPAR - Work with headers with more than 32767 lines
+             READFITS() - Improve speed by only reading entire header when
+                        needed
+
+29-Jan-2003: FITS_OPEN, FITS_READ - updated to allow reading gzip compressed 
+                        files, (although there is a performance penalty)
+             FITS_HELP & RDFITS_STRUCT now also work with compressed files.
+
+21-Jan-2003: Library now requires at least V5.2.    New V5.1 directory contains
+             the (frozen) tar files for V5.1 or later.   Procedures updated for
+             V5.2 (recognizing unsigned integers) include FITS_OPEN, DBHELP,  
+             DBINDEX, DBINDEX_BLK, DBFIND_SORT, DBEXT_IND and READFITS().
+
+16-Jan-2003: FITS_INFO - Now works with gzip compressed files (if V5.3 or later)
+
+14-Jan-2003: REPSTR() - Fix case where object and input string lengths are 
+                        identical
+
+27-Dec-2002: WRITEFITS - /CHECKSUM keyword to write checksum values in header
+             MODFITS - Automatically update checksum keywords, (if present) adds
+                       padding if new data size is smaller than the old
+
+23-Dec-2002: New procedures for working with FITS checksums (data integrity)
+            FITS_ADD_CHECKSUM -  Add or update the CHECKSUM and DATASUM 
+                                  keywords in a FITS header
+            FITS_ASCII_ENCODE() - Encode an unsigned longword as an ASCII string 
+                                  to insert in a FITS header
+            FITS_TEST_CHECKSUM() - Verify the values of the CHECKSUM and DATASUM 
+                                  keywords in a FITS header
+
+18-Dec-2002: PLANET_COORDS - Allow vector Julian Dates when using the /JPL
+                             keyword.
+
+15-Dec-2002: STARAST - Now include CTYPE keyword when writing FITS header
+
+13-Dec-2002: FXBGROW - Can now be used to increase the number of rows in any
+                       FITS binary table extension (formerly restricted to the
+                       last extension)
+             BLKSHIFT - Shift a block of data to a new (possibly overlapping) 
+                  position in a file 
+             FXBPARSE -  now explicitly parses the THEAP keyword        
+             FXBCREATE - now has an optimization for the case where there are a
+                large number of rows in a table, especially ones with small
+                number of bytes.
+
+             WRITEFITS - Fixed problem when using /APPEND and not supplying a 
+                     header
+
+11-Dec-2002: FXBWRITM - Allow more than 50 output columns when using pointers
+
+23-Nov-2002: TEXTOPEN - Return calling sequence if no parameters supplied
+
+22-Nov-2002: MEDARR - Use DIMEN keyword to MEDIAN in V5.6 or later
+             PRODUCT() - Added /NAN keyword, documentation about V5.6 emulation
+             RDFLOAT, READCOL - Use SKIP_LUN if V5.6 or later
+             PSF_GAUSSIAN() - Now allows use of the ST_DEV keyword
+
+21-Nov-2002: FITS_WRITE, FITS_READ - Removed NaNValue keyword, as NAN is 
+                     recognized on all IDL machines since V5.1
+
+20-Nov-2002: TBGET() - Bypass IEEE_TO_HOST call for improved speed
+
+11-Nov-2002: CHECKSUM32 - Now works correctly on non- big endian machines
+
+04-Nov-2002: FITSDIR - Major rewrite, no truncation of keyword display, option
+                       to select displayed FITS keywords and alternates
+
+18-Oct-2002: FDECOMP - Now accepts vector filenames
+             DBHELP - Use vectorized version of FDECOMP internally
+
+10-Oct-2002: FIND - Fix problem when PRINT= 'filename'
+
+26-Sep-2002: ZBRENT() - Use MACHAR() to define machine precision
+
+24-Sep-2002: GLACTC - Now has /SuperGalactic keyword to convert between 
+                     celestial and SuperGalactic coordinates
+
+             DBTARGET() - Find database entries within specified radius of 
+                     supplied astronomical target name.
+                   
+20-Sep-2002: DBPRINT - New /AdjustFormat will adjust the format length for 
+                string items to the maximum length for the entries to be 
+                printed.    
+
+13-Sep-2002: QueryUSNO - Query the USNO-A2.0 astrometric catalog by position
+
+12-Sep-2002: LEGEND - Don't change scalar input keywords (THICK, PSYM) to 
+                      vectors
+
+             ADSTRING() - Now has /TRUNCATE keyword to truncate rather than
+                     round the least significant digit.   Useful for creating 
+                     IAU names from coordinates.
+
+10-Sep-2002: RDFITS_STRUCT - Major rewrite to use FITS_OPEN and CREATE_STRUCT()
+                 and avoid use of temporary files.
+
+6-Sep-2002: QueryGSC() - Fix parsing of input RA and Dec coordinates
+
+3-Sep-2002:  MRDFITS() - Fix possible problem with conflicting data structures
+                      under V5.5 when reading variable length arrays
+
+             WRITEFITS - Create a minimal primary header if supplied file 
+                       name does not exist and /APPEND is set 
+             FTPUT - Fix problem when existing table header contains no columns
+
+             FINDPRO - Force lowercase extension to fix VMS problem
+
+30-Aug-2002: New /SOCKETS directory contains procedures using the IDL SOCKET
+             command to access Web servers.   These procedures require IDL
+             V5.4 or later on either Unix or Windows machines
+
+           WEBGET() - Use the IDL SOCKET procedure to get data from http servers
+           QUERYGSC() - Query the Guide Star Catalog (GSC V2.2) at the Space
+               Telescope Science Institute by position  
+           QUERYDSS - Query the digital sky survey (DSS) on-line at the European
+               Space Observatory (ESO) or STSCI servers
+           QUERYSIMBAD - Query the SIMBAD name resolver at ESO to obtain J2000
+               coordinates
+
+           RADEC - Now has /HOURS keyword to input RA in hours 
+
+13-Aug-2002: ASINH() - Now works for multidimensional arrays 
+
+31-Jul-2002: DB_ITEM, TBPRINT, FTPRINT, FTAB_EXT, CREATE_STRUCT - Use 
+                 STRSPLIT() instead of STR_SEP() for V5.3 or later
+
+24-Jul-2002: FXADDPAR - Now forces EXTEND keyword to appear immediately after
+                        last NAXISi keyword, per FITS rules
+
+19-Jul-2002: PARTVELVEC - Added /OVER keyword to not erase previous plot
+
+16-Jul-2002: BREAK_PATH(), FIND_WITH_DEF() - Use STRSPLIT instead of STR_SEP() 
+                    for V5.3 or later
+
+12-Jul-2002: CNTRD - Check if more than 1 pixel achieves the maximum value
+
+28-Jun-2002: TSUM() - Fix problem (IMAX undefined) if only 1 parameter supplied
+
+27-Jun-2002: TEXTOPEN - Now has a /SILENT keyword
+             FORPRINT - Now has a /NoCOMMENT keyword.   The /SILENT keyword
+                  is now used only to suppress informational messages.
+
+26-Jun-2002: PUTAST - Allow direct specification of CTYPE keywords
+
+24-Jun-2002: WCS_ROTATE - Ensure argument of ASIN() is -1 < x < 1 after roundoff
+
+14-Jun-2002: MODFITS - Work for FITS extension headers using the STScI 
+                       inheritance convention
+                     
+12-Jun-2002: EQ2HOR, HOR2EQ - Convert between equatorial (RA-Dec) and horizon
+                 (alt-az) coordinates, including the effects of precession,
+                 nutation, aberration, and refraction
+
+             CO_ABERRATION - Calculate change in RA and Dec due to aberration
+
+11-Jun-2002: ALTAZ2HADEC - Convert Horizon (Alt-Az) coordinates to Hour Angle 
+                            and Declination
+             HADEC2ALTAZ -  Converts Hour Angle and Declination to Horizon 
+                            (alt-az) coordinates
+
+07-Jun-2002: REPSTR() - Make loop long integer, vectorize STRLEN call
+
+05-Jun-2002: RESISTANT_MEAN - Improve sigma determination  (conditional test
+                    was done on the wrong variable, higher order correction)
+
+04-Jun-2002: PLOTERROR, OPLOTERROR - Fix Jan 2002 speed update to work with 
+                       logarithmic plots
+
+03-Jun-2002: Two new contributions from Chris O'Dell in pro/astro
+             CO_NUTATE - Calculate changes in RA and Dec due to nutation of the
+                          Earth's rotation
+             CO_REFRACT() - Calculate correction to altitude due to atmospheric
+                          refraction
+
+30-May-2002: PLOTHIST - don't plot out of range with /FILL, added HALFBIN 
+         keyword, and made half bin shift default for integer data only 
+
+28-May-2002: RDFLOAT - Now has COLUMNS keyword to read only selected columns
+
+             STREBCASC has been removed the Library, though it is still 
+             available in the ftp://idlastro.gsfc.nasa.gov/pub/obsolete
+             directory.
+
+20-May-2002 -GEO2GEODETIC(), GEO2GEODETIC() - new EQUATORIAL_RADIUS and
+                 POLAR_RADIUS keywords
+                
+
+17-May-2002 -GEO2GEODETIC(), GEO2GEODETIC() - new PLANET keyword to convert
+                 between planetographic and planetodetic coordinates
+
+             READCOL - Faster algorithm, now use STRSPLIT if V5.3 or later
+         
+15-May-2002: New procedures for converting between geographic and geodetic, 
+             geomagnetic & Earth-centered inertial coordinates from  
+             Pascal Saint-Hilaire (ETH).
+
+ ECI2GEO() - Convert Earth-centered inertial coordinates to geographic coords
+ GEO2ECI() - Convert geographic coordinates to Earth-centered inertial coords 
+ GEO2GEODETIC() - Convert from geographic to geodetic coordinates
+ GEO2MAG() - Convert from geographic to geomagnetic coordinates
+ GEODETIC2GEO() - Convert from geodetic to geographic coordinates
+ MAG2GEO() - Convert from geomagnetic to geographic coordinates
+
+ trim.pro has been removed from the Library.   It is still available in 
+  ftp://idlastro.gsfc.nasa.gov/pub/obsolete or in the SolarSoft directory 
+  http://sohowww.nascom.nasa.gov/solarsoft/gen/idl/ 
+
+10-May-2002: Robust statistics procedures in contrib/freudenreich are being
+             transferred to the main library in the new /pro/robust directory.
+             The first 8 procedures to be transferred are 
+              
+   AUTOHIST  - Draw a histogram using automatic bin-sizing.
+   BIWEIGHT_MEAN()  -  Iterative biweighted determination of mean and std. dev.
+   HISTOGAUSS  -  Outlier-resistant autoscaled histogram drawing
+   RESISTANT_MEAN -  Outlier-resistant determination of  mean and std. deviation.
+   ROB_CHECKFIT() - Utility to determine quality of a fit and return biweights
+   ROBUST_LINEFIT() - Robust fit of Y vs X (or bisector of Y vs X and X vs Y)
+   ROBUST_POLY_FIT() - Robust polynomial fit
+   ROBUST_SIGMA()  -   Robust analog of the standard deviation
+              
+07-May-2002: HREBIN - Fix astrometry update problem when contracting by an 
+          exact integral factor
+
+30-Apr-2002: FXPOSIT - Now recognize file names with internal spaces
+             WRITEFITS, FITS_INFO - Use FILE_SEARCH() instead of FINDFILE()
+                       if V5.5 or later
+
+24-Apr-2002: FIND_ALL_DIR - Now follows Unix logical links
+             FITS_READ - Don't erase error message when closing the file
+
+17-Apr-2002: ADSTRING() - Fix possible error in seconds display when the 
+                   precision parameter is zero.
+
+11-Apr-2002: GLACTC - Major rewrite, now assumes FK5 coordinates by default,
+                   added /FK4 keyword, use external precession routines
+
+10-Apr-2002: CLEANPLOT - Now has /ShowOnly keyword to display but not reset
+                  plotting keywords with nondefault values
+
+04-Apr-2002: AVG() - Return NAN if all input values to be averaged are NAN
+
+27-Mar-2002: READFITS - Fixed (again) for compressed files on little endian 
+                         machines
+
+25-Mar-2002: HROT - Correct astrometry when /PIVOT keyword is set
+             IMCONTOUR -  Added XMID, YMID keywords to specify offset position 
+                 for labeling (default is still center of image)
+
+21-Mar-2002: AVG() -- Always use double precision computations internally
+
+12-Mar-2002: SXPAR() - Make sure extracted vectors of mixed data type are
+                       returned with the highest type.
+
+11-Mar-2002: PSF_GAUSSIAN() - Suppress floating underflow messages, added
+                     /DOUBLE keyword, integer centroid now defined as the center
+                      of a pixel.
+
+02-Mar-2002: DBMATCH() - Fix typo when searching on sorted items
+
+22-Feb-2002: DBFIND_ENTRY - better checking of out of range entry numbers
+
+20-Feb-2002: MRDFITS/MWRFITS - Fix major bug in the processing of unsigned 
+                        integers
+
+03-Feb-2002: MRDFITS() - Fix problem when both the first and the last character
+                      in a TTYPEnn value are invalid structure tag characters
+
+28-Jan-2002: UVBYBETA - Major rewrite, *slightly modified calling sequence*
+
+24-Jan-2002: PLOTERROR, EXTAST, HROTATE- Fixed dumb typos recently introduced
+
+22-Jan-2002: SXADDPAR  - BEFORE and AFTER keywords now apply to (FITS) 
+                        COMMENT keyword (behavior already in FXADDPAR). 
+
+16-Jan-2002: PLOTERROR, OPLOTERROR - Only draw error bars with in !X.CRANGE 
+                       (to improve speed)
+
+15-Jan-2002: EXTAST  - Recognize CTYPE1 = 'GSS--RA' keyword in FITS header
+             TVELLIPSE -  Negative XC, YC values allowed noninteractively  
+                         if /DATA is set
+
+12-Jan-2002: AITOFF_GRID - Several tweaks, plot only hours not minutes for  
+                          LABEL=2 
+             PLANCK() - Improve precision of constants, use MACHAR for overflow
+
+11-Jan-2002: MINMAX() - Now has DIMEN keyword (V5.5 only) to work over 1 
+                        dimension of an array
+             DBPRINT - Don't write an initial page eject
+
+01-Jan-2002: FSTRING() - Check if version is V5.4 or later (when 1024 element
+                         string formatting limit was removed) 
+
+31-Dec-2001: FREBIN() - Improve speed by addressing arrays in memory order
+                         (bug fixed 14-jan-2002)
+
+30-Dec-2001: SXPAR() - Added /SILENT keyword to suppress warning messages
+
 16-Dec-2001: *.doc files in the /text directory have been renamed to *.readme
+
+             EXTAST, HROT, HROTATE, HCONGRID, HBOXAVE, HREBIN, HREVERSE - 
+             Recognize PC00m00n (pixel coordinate matrix) keywords for FITS 
+             astrometry  (sigh...) 
 
 15-Dec-2001: MRDFITS() - Major upgrade (V2.5) now supports unsigned integer
              types (/UNSIGNED), aliases between FITS column names and structure
@@ -6,7 +335,8 @@
              variable length binary tables into IDL pointers
 
              MWRFITS - Major upgrade (V1.0) to support unsigned integer types,
-             64 bit integers, aliases, and writing of variable length arrays
+             64 bit integers, aliases, and writing of variable length binary 
+             table arrays.
 
 10-Dec-2001: DBEDIT - Work for entry numbers greater than 32767 
 
@@ -268,430 +598,4 @@
                 system, and HDR input-output keyword to update FITS astrometry        
 
 21-Sep-2000: TVLIST - Removed broken call to !TEXTUNIT when no image supplied
-
-06-Sep-2000: READFITS()- Fix error handling to FREE_LUN iin case of READU error
-
-01-Sep-2000: XCTV, XCTV2 - Image display widgets in contrib/bhill directory 
-                 now include blinking and 24bit color awareness
-
-29-Aug-2000: SIGRANGE() - Now defaults to consider 99% range of data as 
-                significant (for compatibility with the Solar Library)
-
-23-Aug-2000: MKHDR, CHECK_FITS - Now force NAXISi, EXTEND keyword to appear
-                  in proper order in a FITS header.
-
-22-Aug-2000: HELIO - Fixed problems when a vector planet list supplied
-             PLANET_COORD - Fixed internal Julian date conversion problem 
-
-             FXBREAD - Now catches I/O errors.
-
-16-Aug-2000: LEGEND - Make some keyword names longer to avoid ambiguity if 
-                calling LEGEND from a plot routine with _EXTRA
-
-08-Aug-2000: DBPRINT - Change a loop index to type LONG (sigh...)
-
-06-Aug-2000: MPHASE - Use /RADIAN keyword to SUNPOS, MOONPOS internally
-
-04-Aug-2000: EQPOLE_GRID, AITOFF_GRID - Now create default plot limits if 
-                   none had been previously specified
-
-             FM_UNRED - now has keywords for LMC-type extinction
-
-03-Aug-2000: HELIO - Major rewrite, improved mean elements, more accurate
-                    solution of Kepler equation, **new calling sequence**
-             PLANET_COORDS - return low-precision RA and Dec of of the planets
-
-28-Jul-2000: OBSERVATORY - Return longitude, latitude, altitude & time zones 
-                           of selected observatories
-
-26-Jul-2000: AVG() - Now accepts /NAN and /DOUBLE input keywords
-
-24-Jul-2000: GET_EQUINOX - Fixed check for EPOCH keyword
-             CLEANPLOT - Work for new V5.4 !X tags, add /SILENT, check visual
-                    depth to obtain default of !P.COLOR
-
-16-Jul-2000: HEADFITS() - Now has ERRMSG output keyword to catch errors
-
-14-Jul-2000: HOST_TO_IEEE, IEEE_TO_HOST - Now recognize new IDL integer 
-                    datatypes introduced in IDL V5.1
-
-             WRITEFITS - Correctly update BZERO value for unsigned integers
-
-12-Jul-2000: LOOK - Widget image display program in /contrib/knight now has
-                    several changes / fixes / improvements
-
-10-Jul-2000: MEDARR - Faster algorithm for an odd number of images
-
-07-Jul-2000: FITSDIR - Avoid integer overflow for NAXISi > 32767
-                       Don't leave open file units
-
-05-Jul-2000: FXPOSIT - Added test for Windows NT machine
-             MRDFITS - Added STATUS=-1 for "File access error"
-
-04-Jul-2000: MAKE_2D - Rewritten for improved speed
-
-28-Jun-2000: APER - now better approximates the fractional intersection of a  
-                 circular area on a pixel, and also has a /EXACT keyword to 
-                 (slowly) perform this calculation exactly.
-             PIXWT() - Compute the area of a circle-rectangle overlap.
-
-23-Jun-2000: The Web server for the IDL Astronomy Library has been upgraded to
-             an Ultra-10, and now has a faster connection (100BaseT) to the 
-             Internet. 
-
-14-Jun-2000: CR_REJECT - Now has SKYBOX keyword to specify region where sky
-                     should be evaluated
-
-30-May-2000: UNZOOM_XY, ZOOM_XY -- Fix calculation when non-zero offset supplied
-             
-23-May-2000: MODFITS - Remove obsolete !ERR call, add ERRMSG output keyword
-
-20-May-2000: FTINFO -- This low-level FITS ASCII table procedure has been 
-                rewritten ***and the  new calling sequence is incompatible with 
-                the old***.   (It is now analogous to TBINFO for binary tables.)
-                Procedures updated for the new FTINFO (often with a speed 
-                improvement) include FTADDCOL, FTDELCOL, FTGET(), FTPUT, FTPRINT,
-                FTSORT, FTHMOD, FTAB_EXT, T_APER, T_NSTAR, T_GETPSF, T_GROUP, 
-                T_SUBSTAR, ST_DISKREAD, and WFPC2_READ 
-
-             FTSIZE - Added ERRMSG keyword
-
-19-May-2000: RINTER - Correctly output derivatives for 2-d input arrays
-             RDPLOT - Use !D.TABLE_SIZE instead of !D.N_COLORS for 24bit support
-             
-15-May-2000: APER - Don't abort entire program for insufficient number of sky
-                    pixels
-
-12-May-2000: TICS, TICLABELS - Now allow sub arcsecond formatting
-             IMCONTOUR - Removed call to obsolete !ERR system variable
-
-2-May-2000:  HASTROM, HBOXAVE, HCONGRID, HREBIN, HREVERSE, HROT, HROTATE - Now
-             have ERRMSG output keyword to pass error message to calling program
-
-28-Apr-2000: FITS_CD_FIX,HBOXAVE, HCONGRID, HREBIN, HREVERSE, HROT , HROTATE 
-              - Now use full double precision formatting for the CD matrix
-
-27-Apr-2000: TRIM() - Now accepts vector arguments
-             MATCH - Again accepts string arguments (fixed bug added 10-Mar)
-
-25-Apr-2000: READFITS() - Fixed bug introduced 10-Feb-2000 affecting proper
-                  byte-swapping of compressed files on little endian machines
-
-17-Apr-2000: REMOVE - Major rewrite for improved speed
-
-11-Apr-2000: FXWRITE - Catch error if unable to open file.
-
-09-Apr-2000: HEADFITS() - Added COMPRESS keyword, under IDL V5.3 can now read 
-                 gzip compressed FITS file under any machine OS
-
-06-Apr-2000: MRDFITS - (1) Now can read gzip compressed files under any OS when
-                          used with IDL V5.3 or later
-                 (2) User can now specify a unit number instead of a file
-                     name for more efficient processing of multiple extensions
-                 (3) Now has a output status keyword
-                 Note that MRDFITS now requires the new FXMOVE and updated 
-                 FXPOSIT procedures
-             FXMOVE - Move to a specified extension in a FITS file
-             FXPOSIT - Rewritten to call FXMOVE
-
-04-Apr-2000: SXADDPAR, FXADDPAR - Exponential format now always written with 
-                      an upper-case ('E' or 'D') per FITS standard
-                         
-02-Apr-2000: LUMDIST() - Compute luminosity distance as a function of redshift 
-                       for  a given cosmological model
-             GALAGE() - Compute galaxy age as a function of current redshift,
-                       formation redshift and cosmological model
-             COSMO_PARAM - Subroutine to return a full set of cosmological 
-                       parameters given a subset 
-             ZANG() - Updated to allow for a non-zero cosmological constant
-
-26-Mar-2000: WFPC2_READ, FTAB_EXT - Improved performance by eliminating loops
-
-22-Mar-2000: READFITS() - Fixed logic error in use of NSLICE keyword
-
-19-Mar-2000: TO_HEX() - Now calls FSTRING to process more than 1024 values
-             STRNUMBER() - Now has /HEX keyword, to recognize a string as hex
-             READCOL - Now recognize a 'Z' (hexadecimal) format string  
-             READFMT - Now recognize octal ('O') and hexadecimal ('Z') formats
-
-14-Mar-2000: FITEXY - Fixed error in scaling for initial guess; this caused 
-                    generally insignificant changes in the final fit.
-
-10-Mar-2000: MATCH - Use a faster algorithm (HISTOGRAM with REVERSE_INDICIES)
-                     when input vectors are integers
-
-8-Mar-2000:  TBGET() - Improved performance by (1) not indexing when all rows
-                        are requested and (2) not byteswapping unless necessary
-             TBPRINT - Made more robust for various print formats.
-
-6-Mar-2000:  This news file is now also available in HTML format at 
-             http://idlastro.gsfc.nasa.gov/news.html 
-
-2-Mar-2000:  JULDATE - Make negative years correspond to B.C., work for year
-                    1582, disallow 2 digit years to signify 1900+
-
-1-Mar-2000:  VSYM - Create "Mongo"-like plotting symbols, rotationally 
-                    symmetric polygons
-
-29-Feb-2000: CHECK_FITS - Now has ERRMSG keyword to replace use of obsolete
-                          !ERR system variable.
-             ZPARCHECK - Can now check for new data types (e.g. unsigned
-                          integers)
-
-28-Feb-2000: HCONGRID - Now has /HALF_HALF keyword to avoid shift of image
-                        centroid when CONGRIDing images
-
-24-Feb-2000: TVBOX - Now has ANGLE keyword to draw boxes or rectangles at
-                     a specified angle
-
-19-Feb-2000: FSTRING() - Wrapper around STRING function to fix 1024 element
-                  limit on formatted strings
-             ADSTRING() - Now calls FSTRING(), accepts vector input
-             XYAD, ADXY - Now use a vector call to ADSTRING() 
-             FTHELP - Remove calls to !ERR, some vectorization
-
-17-Feb-2000: CONCAT_DIR, BREAK_PATH() - Fix last directory character on 
-                   Macintosh systems
-
-16-Feb-2000: A new beta test directory /v53 contains some procedure upgrades to
-             take advantage of new features in IDL V5.3.   These procedures will
-             *not* work in earlier versions of IDL.
-
-15-Feb-2000: DBPRINT, FITS_READ - Only byteswap when necessary, for much 
-                    improved speed.
-
-10-Feb-2000: READFITS -  Open with /swap_if_little_endian if since V5.1 for
-                    improved speed
-
-09-Feb-2000: BPRECESS - Fixed bug where E-terms of aberration not properly
-                  initialized for vector input
-
-06-Feb-2000: CONS_RA - Now supports SIN projection, 
-             CONS_DEC - Fix case where DEC is scalar, X is a vector
-
-02-Feb-2000: MWRFITS - Much faster processing of ASCII tables, Use G rather than
-                       E formats as defaults for ASCII tables
-
-30-Jan-2000: IMLIST - Now supports new integer data types, new OFFSET keyword
-             TVLIST - Major rewrite to use IMLIST to format output.
-
-27-Jan-2000: SXMAKE, SXHMAKE, SXOPEN -- Now support unsigned integers for IDL
-                     V5.1 or later
-
-25-Jan-2000: FINDPRO - Added a strlowcase to fix VMS compatibility problem
-                       introduced October 1999
-
-24-Jan-2000: HROT - Now accepts /PIVOT keyword to pass to the ROT() function
-
-19-Jan-2000: BOXAVE() - Now recognizes unsigned data types
-             FITS_READ, CHECK_FITS, MKHDR, READFITS - now output BZERO = 0 for
-                        unsigned data types
-             SXPAR() -  For a wildcard search on a keyword name, (e.g. cdelt = 
-                     sxpar(h,'cdelt*') only return integer values of wildcard
-                     This behaviour already exists in FXPAR.PRO 
-                       
-18-Jan-2000: MEANCLIP - Compute an iteratively sigma-clipped mean on a data set
-             SKYADJ_CUBE - Added EXTRAPR, EDEGREE, INPUT_MASK keywords, call
-                        meanclip if necessary 
-             CR_REJECT - Minor updates to support enhanced SKYADJ_CUBE function
- 
-12-Jan-2000: FITS_READ - The /NO_ABORT keyword now works correctly for an 
-                         undefined file
-             MWRFITS - Force an update of a FITS keyword value if the datatype 
-                         has changed (even if the value remains equal).
-             GET_DATE - Work after year 2000 even with the /OLD keyword
-
-10-Jan-2000: The LaTex file fits_bintable.tex (describing use of the FX* FITS 
-             I/O procedures) has been updated to include a discussion of 
-             new procedures FXBREADM and FXBWRITM  and methods of modifying 
-             existing binary tables.
-
-21-Dec-1999: A number of updates to the fx* FITS I/O routines, mainly for
-               improved performance
-
-             FXBCREATE, FXBFINDLUN - Now return newly created extension number
-             FXBFIND - vectorized for speed increase
-             FXPAR - Optimized to do local lookup using START keyword
-             FXBOPEN - added access = 'RW' for read/write on an existing table
-                      keyword REOPEN an already open file
-             FXBPARSE - performance increase by (1) using START keyword to FXPAR
-                      (2) using FXBFIND instead of multiple FXPARs
-             FXBTFORM - performance increase on calls to FXPAR using START
-                        keyword         
-
-
-20-Dec-1999: MWRFITS - Changed two ENDIF statements to END since IDL V5.3 is 
-                       now fussier about this
-
-             FXBGROW - Increase the number of rows in a binary table
-             FXBREAD - Now has /NOIEEE keyword to leave byteorder unchanged
-
-             CHECK_FITS, FITS_READ, FITS_WRITE, MKHDR, READFITS, WRITEFITS
-                - updated to recognize unsigned integer FITS data  
-                 (BITPIX=16, BZERO=32768) and convert to or from UINT data type
-                 for IDL V5.2 or later
-
-14-Dec-1999: QUADTERP - Fix possible integer overflow problem for input
-                   X tabular vector
-
-
-4-Dec-1999:  NGP, TSC, CIC - Now avoids integer overflow when interpolating 
-                  images of large dimension
-
-1-Dec-1999:  FXADDPAR - now write FITS keywords longer than 68 characters using
-                   the  FITS continuation convention described in
-    http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/ofwg_recomm/r13.html
-
-             New procedures set in the /contrib directory
-             /markwardt - (Craig Markwardt, Goddard) contains further 
-             enhancements of the FX* FITS I/O procedures (mainly for speed). 
-
-18-Nov-1999: Two FX* new procedures from C. Markwardt for faster I/O
-             FXBWRITM - Write multiple columns/rows to a FITS binary table file
-             FXBREADM - Read multiple columns/rows from a FITS binary table file.
-             
-17-Nov-1999: GLACTC - Now has /DEGREES keyword for R.A. input/output in degrees
-
-15-Nov-1999: OPLOTERROR - Now checks limits for logarithmic axes
-             READCOL - Now has DELIMITER keyword to specify column delimiter
-
-5-Nov-1999:  HELIO_JD - Make J2000 default equinox, add /B1950, /TIME_DIFF
-                        keywords, compute variation of the obliquity
-             XYZ - Don't compute velocities unless user asked for them
-
-1-Nov-1999:  DBINDEX, DBEXT_DBF - Now allow a maximum of 18 instead of 15 items
-
-19-Oct-1999: PLOTERROR - Fixed case where /XLOG is set but no X error bars given 
-
-16-Oct-1999: FITS_WRITE - Inserts required PCOUNT, GCOUNT keywords for IMAGE
-                          extensions
-
-13-Oct-1999: SXPAR() - Did not properly recognize numbers such as 1E-10 as 
-                       floating point.
-
-05-Oct-1999: The XCTV and XCTV2 procedures in /contrib/bhill now support 
-                 display of astronomical coordinates.
-
-04-Oct-1999: FINDPRO - Now checks for .sav files along with .pro files
-
-21-Sep-1999: DBPRINT - Fixed occasional problem when /NOHEADER supplied
-
-04-Sep-1999: DBCIRCLE - Fixed bug that could cause some entries to be missed
-                        in large search fields at high latitudes.
-
-23-Aug-1999: The IDLAstro Web site was down between 18 Aug and 23 Aug due to 
-             a system crash.
-
-13-Aug-1999: DATATYPE - major rewrite, recognize unsigned, 64 bit datatypes, 
-                now has /TNAME keyword to emulate the size(/TNAME) option 
-               introduced in V5.2
-
-12-Aug-1999: WFPC2_READ - Better astrometry handling of PC image in the 
-                    "batwing" configuration
-
-09-Aug-1999: PLOTERROR, OPLOTERROR - Now correctly handle NSUM keyword
-
-06-Aug-1999: New  procedure set in the /contrib directory
-             /beck - IDL routines for neural network classification
-
-05-Aug-1999: DBMATCH - Removed loop (faster) for substring searches
-
-03-Aug-1999: SXMAKE - Now has PSIZE input keyword, for when STSDAS parameter 
-               blocks have mixed data types
-             FXPOSIT - Expand tilde in Unix directory name if necessary
-
-27-Jul-1999: Two new procedure sets are available in the /contrib directory
-             /bhill (Robert Hill, Raytheon) - Contains the procedures XCTV and
-                 XCTV2 which are object-oriented display widgets for roaming,
-                 zooming, scaling and examining pixel values in an image.
-             /malumuth (Eliot Malumuth, Raytheon) - Contains TCTOOL, a widget
-                 tool for create true-color images on 24 bit displays
-
-24-Jul-1999: XYZ - Added more terms, EQUINOX keyword, and now optionally 
-                   computes velocities
-             PRECESS_XYZ - Precess equatorial geocentric rectangular
-                    coordinates.
-             DBMATCH() - Change some loop indicies to type LONG
-    
-21-Jul-1999: LINTERP - Now has /NoINTERP keyword to use nearest value rather
-                      than interpolating
-
-18-Jul-1999: QSIMP, QTRAP, TRAPZD - Now use _EXTRA facility to allow keywords
-                 to be passed the user-supplied function.
-
-12-Jul-1999: GSSSEXTAST, GSSSADXY, GSSSXYAD -- Routines for handling ST Guide
-                 star photometry did not include all necessary coefficients
-                 for some images.   Older procedures had errors of up to 15''
-                 near the edges of ~10% of northern DSS images.
-                 
-             DBCIRCLE() - Leave output DIS vector unchanged if no entries found
-
-18-Jun-1999: MRDFITS - Fixed for the case where all variable length tables
-                       are empty
-
-15-Jun-1999: DIST_CIRCLE - Added /DOUBLE keyword, make XCen, YCen optional
-             SRCOR, CR_REJECT - Replace RETALL lines with RETURN
-
-05-Jun-1999: FXPOSIT - Use /NoShell with spawn to eliminate dangling processes 
-                       when reading compressed files. 
-
-26-May-1999: IRAFWRT - Now works for double precision
-
-20-May-1999: HREBIN - Fixed bug introduced 14-Apr for "header only" calling
-                      sequence
-
-02-May-1999: MODFITS - New Header and data need only be the same as the old
-                       within a multiple of 2880 bytes
-
-30-Apr-1999: IRAFWRT - Don't automatically apply strlowcase to .pix directory
-                        name
-
-25-Apr-1999: FXPOSIT, READFITS() - Added /binary keyword to OPENR for WINDOWS
-                      compatibility.
-
-14-Apr-1999: HREBIN - Correct for edge effect in REBIN when expanding with
-                      bilinear interpolation.
-
-4-Apr-1999:  DBPRINT - Fixed display of byte values when table format used
-
-1-Apr-1999:  JPRECESS - Fixed typo in updating proper motion keyword values
-             CR_REJECT - Now allows for weighted co-addition of images
-             
-31-Mar-1999: PRECESS - Avoid negative RA values when /RADIAN is used
-
-13-Mar-1999: MWRFITS - Fixed Table appends under VMS
-
-11-Mar-1999: TVLASER - New keywords BottomDW and NColorsDW specify first color
-               and number of colors to use for the density wedge
-
-1-Mar-1999:  CSPLINE - Work for monotonic decreasing tabulated X vector 
-
-25-Feb-1999: GROUP - Convert input X,Y vectors to floating point, if necessary
-
-18-Feb-1999: WCSSPH2XY, WCSXY2SPH - Fixed algorithm for ARC projection
-
-17-Feb-1999:  SXPAR(), FXPAR() - Now recognize the FITS keyword continuation 
-              convention described in 
-        http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/ofwg_recomm/r13.html
-
-15-Feb-1999:  Three new procedures added for interpolating 3-D (or 1-D or 2-D)
-              irregularly grided data onto a regular grid (useful e.g. for 
-              particle simulations) 
-              NGP - Nearest Grid Point interpolation (lowest order) 
-              CIC - Cloud in Cell interpolation (higher order) 
-              TSC - Triangular Shaped Cloud interpolation (highest order)
-
-14-Feb-1999: IRAFRD - Work correctly when reading IRAF V2.11 images on big 
-                      endian machines (e.g. Dec Alpha)
-
-03-Feb-1999: CONCAT_DIR - Changed loop indicies to type LONG
-
-28-Jan-1999: PLOTERROR, OPLOTERROR - Now ignore !P.PSYM when plotting error bars
-
-27-Jan-1999: DATE_CONV - Now handles 1 digit day numbers, e.g. 6-Jan-1999
-
-25-Jan-1999: CREATE_STRUCT, RDFITS_STRUCT - now use OPENR,/DEL to remove 
-                temporary files in an OS-independent manner
-
-04-Jan-1999: DBFIND - Suppress empty database informational message with /SILENT
 

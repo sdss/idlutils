@@ -56,6 +56,7 @@ function ftget,hdr_or_ftstr,tab,field,rows,nulls
 ;       More informative error message  W. Landsman          Feb. 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Allow structure rather than FITS header  W. Landsman   May 2000
+;       No case sensitivity in TTYPE name      W. Landsman   February 2002
 ;-
 ;------------------------------------------------------------------
 ; On_error,2
@@ -78,7 +79,7 @@ function ftget,hdr_or_ftstr,tab,field,rows,nulls
 
  if sz[1] EQ 7 then begin
     field = strupcase(strtrim(field,2))
-    ttype = strtrim(ft_str.ttype,2)
+    ttype = strupcase( strtrim(ft_str.ttype,2) )
     ipos = where(ttype EQ field, Npos)
     if Npos EQ 0 then message, $ 
         'Specified field ' + strupcase(strtrim(field,2)) + ' not in table'
@@ -139,7 +140,7 @@ function ftget,hdr_or_ftstr,tab,field,rows,nulls
 
     if nvalid GT 0 then d[valid] = data[valid]
 
- endif else d[0] = data
+ endif else d[0] = strtrim(data,2)
 
     return,d
  end

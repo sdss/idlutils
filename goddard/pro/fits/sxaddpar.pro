@@ -68,8 +68,9 @@ Pro sxaddpar, Header, Name, Value, Comment, Location, before=before, $
 ;       The functions SXADDPAR() and FXADDPAR() are nearly identical, with the
 ;       major difference being that FXADDPAR forces required FITS keywords
 ;       BITPIX, NAXISi, EXTEND, PCOUNT, GCOUNT to appear in the required order
-;       in the header.    There is no particular reason for having two nearly 
-;       identical procedures, but both are too widely used to drop either one.
+;       in the header, and FXADDPAR supports the OGIP LongString convention.   
+;       There is no particular reason for having two nearly identical 
+;       procedures, but both are too widely used to drop either one.
 ;
 ;       All HISTORY records are inserted in order at the end of the header.
 ;

@@ -9,7 +9,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 ;    Carry out a Principal Components Analysis (Karhunen-Loeve Transform)
 ; EXPLANATION:
 ;    Results can be directed to the screen, a file, or output variables
-;    See notes below for comparison with the intrinisc IDL function PCOMP.
+;    See notes below for comparison with the intrinsic IDL function PCOMP.
 ;
 ; CALLING SEQUENCE:
 ;    PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, 
@@ -73,14 +73,14 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 ;      PCA uses the non-standard system variables !TEXTOUT and !TEXTUNIT.
 ;      These can be added to one's session using the procedure ASTROLIB.
 ;
-;      The intrinisc IDL function PCOMP (introduced in V5.0) duplicates most
+;      The intrinsic IDL function PCOMP (introduced in V5.0) duplicates most
 ;      most of the functionality of PCA, but uses different conventions and
 ;      normalizations.   Note the following:
 ;
 ;   (1) PCOMP requires a N_ATTRIB x N_OBJ input array; this is the transpose
 ;         of what PCA expects
 ;   (2) PCA uses standardized variables; use /STANDARIZE keyword to PCOMP
-;         for a direct comparision.
+;         for a direct comparison.
 ;   (3) PCA (unlike PCOMP) normalizes the eigenvectors by the square root
 ;         of the eigenvalues.
 ;   (4) PCA returns cumulative percentages; the VARIANCES keyword of PCOMP

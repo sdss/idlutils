@@ -93,8 +93,10 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;      Handle NSUM keyword correctly           W. Landsman    Aug 1999
 ;      Check limits for logarithmic axes       W. Landsman    Nov. 1999
 ;      Work in the presence of  NAN values     W. Landsman    Dec 2000
-;      W. Landsman  Improve logic when NSUM or !P.NSUM is set        Jan 2001
+;      Improve logic when NSUM or !P.NSUM is set  W. Landsman      Jan 2001
 ;      Remove NSUM keyword from PLOTS call    W. Landsman      March 2001
+;      Only draw error bars with in XRANGE (for speed)  W. Landsman Jan 2002
+;      Fix Jan 2002 update to work with log plots  W. Landsman Jun 2002
 ;-
 ;                  Check the parameters.
 ;
@@ -216,8 +218,16 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
     if !Y.type EQ 1 then ylo = ylo > 10^ycrange[0]
     if (!X.type EQ 1) and (np EQ 4) then xlo = xlo > 10^xcrange[0]
  sv_psym = !P.PSYM & !P.PSYM = 0     ;Turn off !P.PSYM for error bars
+; Only draw error bars for X values within XCRANGE
+    if !X.TYPE EQ 1 then xcrange = 10^xcrange
+    g = where((xx GT xcrange[0]) and (xx LE xcrange[1]), Ng)
+    if (Ng GT 0) and (Ng NE n) then begin  
+          istart = min(g, max = iend)  
+    endif else begin
+          istart = 0L & iend = n-1
+    endelse
     
- FOR i = 0L, (n-1), Nskip DO BEGIN
+ FOR i = istart, iend, Nskip DO BEGIN
 
     plots, [xx[i],xx[i]], [ylo[i],yhi[i]], LINESTYLE=est,THICK=eth,  $
            NOCLIP = noclip, COLOR = ecol

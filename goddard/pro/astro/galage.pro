@@ -55,8 +55,8 @@
 ;    March  (eq. 7)
 ; 
 ; COMMENTS:
-;    (1) Integrates using the IDL Astronomy Version procedure QSIMP.    (The 
-;    intrinsic IDL QSIMP function is not called because of its ridiculous
+;    (1) Integrates using the IDL Astronomy Library procedure QSIMP.    (The 
+;    intrinsic IDL QSIMP() function is not called because of its ridiculous
 ;    restriction that only scalar arguments can be passed to the integrating
 ;    function.)    The function 'dtdz' is defined at the beginning of the 
 ;    routine (so it can compile first).

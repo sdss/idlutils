@@ -1,4 +1,4 @@
-Miscellaneous Procedures                      pro/misc         December 2001
+Miscellaneous Procedures                      pro/misc         December 2002
 
 The procedures in this directory are general utility procedures that do not
 involve astronomy.   They are included here either because they are required
@@ -24,6 +24,8 @@ Library.)
 
 ASTROLIB - Add the non-standard system variables in use in the IDL
            Astronomy User's Library
+BLKSHIFT - Shift a block of data to a new (possibly overlapping) position in a 
+          file
 BOOST_ARRAY - Append one array onto another, adjusting dimensions if necessary
 BREAK_PATH() - break up a !PATH-like string into individual directories
 BSORT() - Like the IDL SORT function but subscript order is maintained when

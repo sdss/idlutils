@@ -9,6 +9,10 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       corresponding pixels in the input arrays.   Useful, for example to 
 ;       combine a stack of CCD images, while removing cosmic ray hits.
 ;
+;       This routine became partially obsolete in V5.6 with the introduction
+;       of the DIMENSION keyword to the intrinsic MEDIAN() function.   However,
+;       it is  still useful if a input mask is needed (though it is much 
+;       faster to set invalid pixels to NAN values.)
 ; CALLING SEQUENCE:
 ;       MEDARR, inarr, outarr, [ mask, output_mask ]
 ; INPUTS:
@@ -34,8 +38,9 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;                      pixels are valid, 0b where all the input pixels
 ;                      have been masked out.
 ; RESTRICTIONS:
-;       This procedure is *SLOW* because it must loop over each pixel of the
-;       image.   See notes below about an alternative with CALL_EXTERNAL.
+;        Prior to V5.6, this procedure was *SLOW* because it had to loop over 
+;        each pixel of the image.   See notes below about an alternative with 
+;        CALL_EXTERNAL.
 ;
 ; EXAMPLE:
 ;       Suppose one wants to combine three floating point 1024 x 1024 bias 
@@ -71,6 +76,7 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       Faster execution for odd number of images   W. Landsman July 2000
 ;       V5.4 fix for change in SIZE() definition of undefined variable 
 ;                W. Landsman/E. Young   May 2001
+;       Use MEDIAN(/DIMEN) for V5.6 or later   W. Lansdman   November 2002
 ;-
  On_error,2
 ;                       Check parameters.
@@ -83,6 +89,10 @@ PRO medarr, inarr, outarr, mask, output_mask
  s = size(inarr)
  if s[0] NE 3 then $                    ; Input array size.
         message, "Input array must have 3 dimensions"
+ if !VERSION.RELEASE GE '5.6' and (N_elements(mask) EQ 0) then begin
+        outarr = median(inarr,dimension=3)
+        return
+ endif
 
 ;                       Create the output array.
  ncol = s[1]

@@ -52,13 +52,14 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;       Accept undefined values of rows, columns   W. Landsman August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       New FTINFO calling sequence    W. Landsman   May 2000
+;       Parse scalar string with STRSPLIT   W. Landsman  July 2002
 ;-
 ; On_error,2
 ;
 ; set defaulted parameters
 ;
- npar = N_params()
- if npar LT 2 then begin
+ FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
+ if N_params() LT 2 then begin
    print,'Syntax -  FTPRINT, h, tab, [ columns, rows, TEXTOUT= ]'
    return
  endif
@@ -81,19 +82,30 @@ pro ftprint,h,tab,columns,rows,textout=textout
       if Ngood EQ 0 then message,'ERROR - No valid row numbers supplied'
       r = r[good]
  endif
+;
+; extract column info
+;
+ title1 = ''
+ title2 = ''
+ ftinfo,h,ft_str
  
 ;
 ; if columns is a string, change it to string array
 ;
- s = size(columns) & ndim = s[0] & dtype = s[ndim+1]
- if dtype EQ 7 then begin
-        colnames = strarr(30)           ;string array to hold names
-        numcol = 0                      ;number of columns
-        st = columns                    ;don't want to change columns var.
-        while st ne '' do begin
-                colnames[numcol] = gettok(st,',')
-                numcol = numcol+1
-        endwhile
+ if size(columns,/TNAME) EQ 'STRING'  then begin 
+        if !VERSION.RELEASE GE '5.3' then $
+            colnames = strsplit(columns,',',/EXTRACT) else $
+            colnames = str_sep(strtrim(columns,2),',') 
+        numcol = N_elements(colnames)
+        colnames = strupcase(strtrim(colnames,2))
+        ttype = strtrim(ft_str.ttype,2)
+        colnum = intarr(numcol)
+        for i = 0,numcol-1 do begin
+             icol = where(ttype EQ colnames[i], Nfound) 
+             if Nfound EQ 0 then message, $
+               'ERROR - Field ' + colnames[i] + ' not found in FITS ASCII table'
+             colnum[i] = icol[0] 
+       endfor
    end else begin                       ;user supplied vector
         colnum = fix(columns) -1                ;make sure it is integer
         numcol = N_elements(colnum)     ;number of elements
@@ -102,24 +114,7 @@ pro ftprint,h,tab,columns,rows,textout=textout
               colnum = indgen(tfields) & numcol = tfields
         endif & endif
  end
-;
-; extract column info
-;
- title1 = ''
- title2 = ''
- ftinfo,h,ft_str
 
- if dtype EQ 7 then begin 
-       colnames = strupcase(strtrim(colnames,2))
-       ttype = strtrim(ft_str.ttype,2)
-       colnum = intarr(numcol)
-       for i = 0,numcol-1 do begin
-             icol = where(ttype EQ colnames[i], Nfound) 
-             if Nfound EQ 0 then message, $
-               'ERROR - Field ' + colnames[i] + ' not found in FITS ASCII table'
-             colnum[i] = icol[0] 
-       endfor
- endif
  flen = ft_str.width[colnum]
  colpos = ft_str.tbcol[colnum]
  ttype = strtrim( ft_str.ttype[colnum],2)
@@ -136,7 +131,7 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;
 ; open output file
 ;
- textopen,'FTPRINT',TEXTOUT=textout
+ textopen,'FTPRINT',TEXTOUT=textout, MORE_SET = more_set
  ifmt = fix(alog10(max(r))) > 3
  title1 = strn('ROW',padtype=2,len = ifmt) +  title1
  title2 = string(replicate(32b,ifmt+1)) + title2
@@ -159,7 +154,7 @@ pro ftprint,h,tab,columns,rows,textout=textout
                 line = line+' '+ val
         endfor
         printf,!TEXTUNIT,line
-        if (TEXTOUT EQ 1) then if (!ERR EQ 1) then goto, DONE
+        if more_set then if (!ERR EQ 1) then goto, DONE
  endfor
 ;
 ; done

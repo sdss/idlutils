@@ -14,8 +14,10 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;
 ; INPUT:
 ;     Filename - Scalar string giving the name of the FITS file(s)
-;               Can include wildcards such as '*.fits'
-;
+;               Can include wildcards such as '*.fits'.   In IDL V5.5 one can
+;               use the regular expressions allowed by the FILE_SEARCH()
+;               function.     Since V5.3 one can also search gzip compressed 
+;               FITS files.
 ; OPTIONAL INPUT KEYWORDS:
 ;     /SILENT - If set, then the display of the file description on the 
 ;                terminal will be suppressed
@@ -51,16 +53,15 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;       message is displayed at the terminal and the program continues
 ;
 ; PROCEDURES USED:
-;       GETTOK(), STRN(), SXPAR(), TEXTOPEN, TEXTCLOSE 
+;       GETTOK(), MRD_SKIP, STRN(), SXPAR(), TEXTOPEN, TEXTCLOSE 
 ;
 ; SYSTEM VARIABLES:
-;       The non-standard system variables !TEXTOUT and !TEXTUNIT must be 
-;       defined before calling FITS_INFO.   
+;       The non-standard system variables !TEXTOUT and !TEXTUNIT will be  
+;       created by FITS_INFO if they are not previously defined.   
 ;
 ;       DEFSYSV,'!TEXTOUT',1
 ;       DEFSYSV,'!TEXTUNIT',0
 ;
-;       One way to define these is to call the procedure ASTROLIB.   
 ;       See TEXTOPEN.PRO for more info
 ; MODIFICATION HISTORY:
 ;       Written, K. Venkatakrishna, Hughes STX, May 1992
@@ -72,51 +73,72 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;       EXTNAME keyword can be anywhere in extension header WBL  January 1998
 ;       Correctly skip past extensions with no data   WBL   April 1998
 ;       Converted to IDL V5.0, W. Landsman, April 1998
+;       No need for !TEXTOUT if /SILENT D.Finkbeiner   February 2002
+;	Define !TEXTOUT if needed.  R. Sterner, 2002 Aug 27
+;       Work on gzip compressed files for V5.3 or later  W. Landsman 2003 Jan
+;       Improve speed by only reading first 36 lines of header 
+;       Count headers with more than 32767 lines         W. Landsman Feb. 2003
 ;-
  COMMON descriptor,fdescript
+ FORWARD_FUNCTION FILE_SEARCH       ;For pre-V5.5 compatibility
 
  if N_params() lt 1 then begin
      print,'Syntax - FITS_INFO, filename, [/SILENT, TEXTOUT =, N_ext = ]'
      return
  endif
 
- fil = findfile( filename, COUNT = nfiles)
+  defsysv,'!TEXTOUT',exists=ex                  ; Check if !TEXTOUT exists.
+  if ex eq 0 then defsysv,'!TEXTOUT',1          ; If not define it.
+
+ if !VERSION.RELEASE GE '5.5' then $
+    fil = file_search( filename, COUNT = nfiles) else $
+    fil = findfile( filename, COUNT = nfiles)
  if nfiles EQ 0 then message,'No files found'
 
  silent = keyword_set( SILENT )
- if not keyword_set( TEXTOUT ) then textout = !TEXTOUT    
- textopen, 'FITS_INFO', TEXTOUT=textout
+ if not silent then begin 
+    if not keyword_set( TEXTOUT ) then textout = !TEXTOUT    
+    textopen, 'FITS_INFO', TEXTOUT=textout
+ endif
 
  for nf = 0, nfiles-1 do begin
 
     file = fil[nf]
 
-    openr, lun1, file, /GET_LUN, /BLOCK
-
-    N_ext = -1
+    if !VERSION.RELEASE GE '5.3' then begin 
+               openr, lun1, file, /GET_LUN, /BLOCK,/compress 
+               if !VERSION.RELEASE GE '5.4' then $
+                      compress = (fstat(lun1)).compress else compress = 1   
+    endif else begin
+               openr, lun1, file, /GET_LUN, /BLOCK
+               compress = 0
+   endelse
+   N_ext = -1
     fdescript = ''
     extname = ['']
 
+   ptr = 0l
    START:  
    ON_IOerror, BAD_FILE
    descript = ''
    
-   point_lun, -lun1, pointlun
-   test = bytarr(8)
+    test = bytarr(8)
    readu, lun1, test
-
+ 
    if N_ext EQ -1 then begin
         if string(test) NE 'SIMPLE  ' then goto, BAD_FILE
    endif else begin
         if string(test) NE 'XTENSION' then goto, END_OF_FILE
    endelse
-   point_lun, lun1, pointlun
+   point_lun, lun1, ptr
 
 ;                               Read the header
    hdr = bytarr(80, 36, /NOZERO)
    N_hdrblock = 1
    readu, lun1, hdr
+   ptr = ptr + 2880
    hd = string( hdr > 32b)
+
 ;                               Get values of BITPIX, NAXIS etc.
    bitpix = sxpar(hd, 'BITPIX', Count = N_BITPIX)
    if N_BITPIX EQ 0 then $ 
@@ -165,15 +187,16 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
   end_rec = where( strtrim(strmid(hd,0,8),2) EQ  'END')
 
 ;  Read header records, till end of header is reached
-
+      
+ hdr = bytarr(80, 36, /NOZERO)
  while (end_rec[0] EQ -1) and (not eof(lun1) ) do begin
-       hdr = bytarr(80, 36, /NOZERO)
        readu,lun1,hdr
+       ptr = ptr + 2880L
        hd1 = string( hdr > 32b)
        end_rec = where( strtrim(strmid(hd1,0,8),2) EQ  'END')
-       hd = [hd,hd1]
        n_hdrblock = n_hdrblock + 1
  endwhile
+
 
    isel = where( strpos(hd,'EXTNAME =') GE 0, N_extname)  ;find extension name
    if ( N_extname GE 1 ) then begin
@@ -182,7 +205,7 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
             extname = [ extname, strtrim(hdd,2) ]
    endif else extname = [ extname, '' ]
 
- n_hdrec = 36*(n_hdrblock-1) + end_rec[0] + 1         ; size of header
+ n_hdrec = 36L*(n_hdrblock-1) + end_rec[0] + 1L         ; size of header
  descript = strn( n_hdrec ) + descript
 
 ;  If there is data associated with primary header, then find out the size
@@ -195,12 +218,8 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
  nbytes = (abs(bitpix)/8) * gcount * (pcount + ndata)
  nrec = long(( nbytes +2879)/ 2880)
 
-; Skip the headers and data records
 
-   point_lun, -lun1, pointlun
-   pointlun = pointlun + nrec*2880L
-   point_lun, lun1, pointlun
-
+ 
 ; Check if all headers have been read 
 
  if ( simple EQ 0 ) AND ( strlen(strn(exten)) EQ 1) then goto, END_OF_FILE  
@@ -212,6 +231,10 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
     fdescript = fdescript + ' ' + descript
 
 ; Check for EOF
+; Skip the headers and data records
+
+    ptr = ptr + nrec*2880L
+    if compress then mrd_skip,lun1,nrec*2880L else point_lun,lun1,ptr
     if not eof(lun1) then goto, START
 ;
  END_OF_FILE:  
@@ -278,7 +301,7 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
   endif 
   SKIP: free_lun, lun1
   endfor
-  textclose, TEXTOUT=textout
+  if not silent then textclose, TEXTOUT=textout
   return
 
  BAD_FILE:

@@ -9,7 +9,7 @@
 ;     WCSXY2SPH.    See WCS_DEMO for example of use.
 ;
 ; CATEGORY:
-;     Mapping and Auxilliary FITS Routine
+;     Mapping and Auxiliary FITS Routine
 ;
 ; CALLING SEQUENCE:
 ;      wcssph2xy, longitude, latitude, x, y, [ map_type , CTYPE = ,
@@ -110,14 +110,15 @@
 ;       FACE - a output variable used for spherical cube projections to 
 ;               designate the face of the cube on which the x and y 
 ;               coordinates lie.   Will contain the same number of elements as
-;               X and Y.    Must contain at least 1 arbitary element on input
+;               X and Y.    Must contain at least 1 arbitrary element on input
 ;               If FACE is NOT defined on input, it is assumed that the
 ;               spherical cube projection is laid out over the whole sky
 ;               in the "sideways T" configuration.
 ; NOTES:
 ;       The conventions followed here are described in more detail in 
-;       "Representations of Celestial Coordinates in FITS" by Eric Greisen 
-;       and Mark Calabretta (draft dated August 24, 1993).  The general 
+;       "Representations of Celestial Coordinates in FITS" by Mark Calabretta
+;       and Eric Greisen (2002, A&A, 395, 1077; also  see  
+;       http://www.aoc.nrao.edu/~egreisen).  The general 
 ;       scheme outlined in that article is to first use WCS_ROTATE to convert 
 ;       coordinates in one of three standard systems (celestial, galactic, 
 ;       or ecliptic) into a "native system" of latitude and longitude.  The 

@@ -43,7 +43,7 @@ function poidev, xm, SEED = seed
 ;
 ; METHOD: 
 ;     For small values (< 20) independent exponential deviates are generated 
-;     until their sum exceeds the specfied mean, the number of events 
+;     until their sum exceeds the specified mean, the number of events 
 ;     required is returned as the Poisson deviate.   For large (> 20) values,
 ;     uniform random variates are compared with a Lorentzian distribution 
 ;     function.

@@ -35,7 +35,7 @@
 ;               output.
 ;
 ; PROCEDURE CALLS:
-;      Functions:  STR_SEP()
+;      Functions:  STR_SEP() V5.3 or earlier
 ;
 ; REVISION HISTORY:
 ;       Version 1, William Thompson, GSFC, 6 May 1993.
@@ -48,15 +48,16 @@
 ;               Added trim to input
 ;       Converted to IDL V5.0   W. Landsman 25-Nov-1997
 ;       Fix directory character on Macintosh system   A. Ferro   February 2000
+;       Use STRSPLIT instead of STR_SEP  W. Landsman   July 2002
 ;-
 ;
         ON_ERROR, 2
+        FORWARD_FUNCTION strsplit             ;Pre V5.3 Compatibility
 ;
 ;  Check the number of parameters:
 ;
         IF SIZE(PATHS,/TNAME) NE 'STRING' THEN MESSAGE,       $
                 'Syntax:  Result = BREAK_PATH( PATHS )'
-        PATHS=STRTRIM(PATHS,2)
 ;
 ;  Reformat PATHS into an array.  The first element is the null string.  In
 ;  Unix, both the comma and colon character can be separators, so two passes
@@ -70,9 +71,13 @@
                 ELSE:  SEP = ':'
         ENDCASE
         PATH = ''
-        TEMP = STR_SEP(PATHS,SEP)
-        FOR I = 0,N_ELEMENTS(TEMP)-1 DO         $       ;Second pass.
+        IF !VERSION.RELEASE GE '5.3' THEN $
+           PATH = [PATH,STRSPLIT(PATHS,SEP + ',',/EXTRACT)] ELSE BEGIN
+           PATHS=STRTRIM(PATHS,2)
+           TEMP = STR_SEP(PATHS,SEP)
+           FOR I = 0,N_ELEMENTS(TEMP)-1 DO         $       ;Second pass.
                 PATH = [PATH, STR_SEP(TEMP[I],',')]
+       ENDELSE
 ;
 ;  For each path, see if it is really an environment variable.  If so, then
 ;  decompose the environmental variable into its constituent paths.
@@ -115,11 +120,15 @@
 ;  contain.
 ;
                 IF TEST NE '' THEN BEGIN
+                       IF !VERSION.RELEASE GE '5.3' THEN $
+                            PTH = STRSPLIT(TEST,SEP+',',/EXTRACT) $
+                        ELSE BEGIN
                         PTH = ''
                         TEMP = STR_SEP(TEST,SEP)
                         FOR J = 0,N_ELEMENTS(TEMP)-1 DO         $
                                 PTH = [PTH, STR_SEP(TEMP[J],',')]
                         PTH = PTH[1:*]
+                        ENDELSE 
 ;
 ;  Insert this sublist into the main path list.
 ;

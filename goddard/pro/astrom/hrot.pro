@@ -92,6 +92,8 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ;       Added ERRMSG, Use double precision formatting, W. Landsman April 2000
 ;       Consistent conversion between CROTA and CD matrix W. Landsman Oct 2000
 ;       Work for both CD001001 and CDELT defined  W. Landsman   March 2001
+;       Recognize PC matrix astrometry  W. Landsman December 2001
+;       Update astrometry correctly when /PIVOT applied W. Landsman March 2002
 ;- 
  On_error,2
  npar = N_params()
@@ -121,8 +123,8 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 
   xsize = dimen[0]  &  ysize = dimen[1]
 
- xc_new = (xsize - 1)/2.
- yc_new = (ysize - 1)/2.
+  xc_new = (xsize - 1)/2.
+  yc_new = (ysize - 1)/2.
  if npar LT 8 then begin
   if npar EQ 2 then print,'Program will modify old image and header'
   print,'Original array size is '+ strn(xsize) + ' by ' + strn(ysize)
@@ -196,13 +198,28 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
     theta = angle*cdr
     rot_mat = [ [ cos(theta), sin(theta)], $   ;Rotation matrix
                 [-sin(theta), cos(theta)] ] 
-    ncrpix = [xc_new,yc_new] + transpose(rot_mat)#(crpix-1-[xc,yc]) + 1
+    
+    ncrpix =  transpose(rot_mat)#(crpix-1-[xc,yc]) + 1
+    if not keyword_set(PIVOT) then ncrpix = [xc_new,yc_new] + ncrpix $
+                              else ncrpix = [xc,yc] + ncrpix
     sxaddpar, newhd, 'CRPIX1', ncrpix[0]
     sxaddpar, newhd, 'CRPIX2', ncrpix[1]
  
     newcd = cd # rot_mat
 
-    if noparams EQ 0 then begin
+    if noparams EQ 3 then begin     ;Transformation matrix format
+
+        sxaddpar, newhd, 'PC001001', newcd[0,0] 
+        sxaddpar, newhd, 'PC001002', newcd[0,1] 
+        sxaddpar, newhd, 'PC002001', newcd[1,0]
+        sxaddpar, newhd, 'PC002002', newcd[1,1]
+
+        crota2 = sxpar( oldhd, 'CROTA2', Count = N_crota2)
+        if N_crota2 GT 0 then sxaddpar, newhd, 'CROTA2', crota2 - angle
+        crota1 = sxpar( oldhd, 'CROTA1', Count = N_crota1)
+        if N_crota1 GT 0 then sxaddpar, newhd, 'CROTA1', crota1 - angle
+
+    endif else if noparams EQ 0 then begin
 
         sxaddpar, newhd, 'CD001001', newcd[0,0] 
         sxaddpar, newhd, 'CD001002', newcd[0,1] 

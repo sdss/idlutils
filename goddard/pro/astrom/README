@@ -1,24 +1,24 @@
-/astrom                                                  October 2000
+/astrom                                                  December 2001
 
-This directory contain IDL procedures for manipulating FITS or STSDAS images
-which include header keywords specifying the coordinate system.   The FITS or
-STSDAS header must follow the specification in the FITS draft proposal
-"Representations of Celestial Coordinates in FITS"  by Eric Greisen and Mark
-Calabretta.    Documentation for this proposal can be obtained 
-from http://fits.cv.nrao.edu/documents/wcs/wcs.html.    
+This directory contain IDL procedures for manipulating FITS images which
+include header keywords specifying the coordinate system.   The FITS header
+must follow the specification in the FITS draft proposal "Representations of
+Celestial Coordinates in FITS"  by Eric Greisen and Mark Calabretta.   
+Documentation for this proposal can be obtained  from
+http://www.aoc.nrao.edu/~egreisen/ or http://www.atnf.csiro.au/~mcalabre/.    
 
-Users should be aware that FITS defines the center of the first pixel in
-the array to have coordinates (1,1).    This differs from the IDL convention
-where the first pixel has coordinates (0,0).    Whenever an (X,Y) position
-is extracted or inserted into a FITS/STSDAS header then this difference
-must be accounted for.
+Users should be aware that FITS defines the center of the first pixel in the
+array to have coordinates (1,1).    This differs from the IDL convention where
+the first pixel has coordinates (0,0).    Whenever an (X,Y) position is
+extracted or inserted into a FITS header then this difference must be accounted
+for.
 
-Several procedures use an IDL structure than contains astrometry information in
+Several procedures use an IDL structure that contains astrometry information in
 the following tags:
 
   .CD	-  2 x 2 array containing the astrometry parameters CD1_1 CD1_2
 	   in DEGREES/PIXEL				      CD2_1 CD2_2
-  .CDELT - 2 element vector giving physical increment at reference pixel
+  .CDELT - 2 element vector giving physical increment at the reference pixel
   .CRPIX - 2 element vector giving X and Y coordinates of reference pixel
 	   (def = NAXIS/2) in FITS convention (first pixel is 1,1)
   .CRVAL - 2 element double precision vector giving R.A. and DEC of 
@@ -38,7 +38,7 @@ header.
       IDL> putast, hdr, astr     ;Put astrometry info into a FITS header 
 
 (1) Following the discussion in Section 5 of the Greisen & Calabretta paper,
-this software supports both the current WCS format (CD matrix) and the old-style
+this software supports both the current WCS format (PC matrix) and the old-style
 AIPS (CDELT + CROTA) notation.
 The CDELT tag is not used in the current CD matrix format,
 and is normally set to [1.0, 1.0].    However, for an AIPS-style header, the

@@ -26,23 +26,30 @@ pro tbhelp,h, TEXTOUT = textout
 ; NOTES:
 ;       Certain fields may be truncated in the display
 ; SYSTEM VARIABLES:
-;       Uses the non-standard system variables !TEXTOUT and !TEXTUNIT which
-;       must be defined (e.g. with ASTROLIB) before compilation.   !TEXTOUT
-;       can be used as an alternate to the TEXTOUT keyword.
+;       Uses the non-standard system variables !TEXTOUT and !TEXTUNIT.   These
+;       are automatically defined by TBHELP if they have not been defined
+;       previously. 
 ; PROCEDURES USED:
-;       GETTOK(), SXPAR(), TEXTCLOSE, TEXTOPEN, ZPARCHECK 
+;       REMCHAR, SXPAR(), TEXTCLOSE, TEXTOPEN, ZPARCHECK 
 ; HISTORY:
 ;       W. Landsman       February, 1991
 ;       Parsing of a FITS binary header made more robust    May, 1992
 ;       Added TEXTOUT keyword      August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Define !TEXTOUT if not already present   W. Landsman  November 2002
 ;-
-; On_error,2
+ On_error,2
+
 
  if N_params() LT 1 then begin
-     print,'Syntax - tbhelp, hdr'     
+     print,'Syntax - tbhelp, hdr, [TEXTOUT= ]'     
      return
  endif
+; Define !TEXTOUT and !TEXTUNIT if not already present
+ defsysv,'!TEXTOUT',exists=ex                  ; Check if !TEXTOUT exists.
+ if ex eq 0 then defsysv,'!TEXTOUT',1          ; If not define it.
+ defsysv,'!TEXTUNIT',exists=ex                 ; Check if !TEXTUNIT exists.
+ if ex eq 0 then defsysv,'!TEXTUNIT',0         ; If not define it.
 
  zparcheck, 'TBHELP', h, 1, 7, 1, 'Table Header'
 
@@ -58,7 +65,7 @@ pro tbhelp,h, TEXTOUT = textout
  if N_tfields EQ 0 then message, $
         'ERROR - Required TFIELDS keyword is missing from binary table header'
 
- if not keyword_set(TEXTOUT) then textout = 1
+ if not keyword_set(TEXTOUT) then textout = !TEXTOUT
  textopen,'tbhelp',TEXTOUT=textout
 
  printf,!TEXTUNIT,'FITS Binary Table Header'

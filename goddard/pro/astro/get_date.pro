@@ -55,7 +55,7 @@ pro get_date, dte, in_date, OLD = old, TIMETAG = timetag, LOCAL_DIFF = local_dif
 ;
 ; NOTES:
 ;       (1) A discussion of the DATExxx syntax in FITS headers can be found in
-;       ftp://fits.cv.nrao.edu/fits/data/samples/year-2000/year2000.txt
+;       http://www.cv.nrao.edu/fits/documents/standards/year2000.txt
 ;
 ;       (2) Those who wish to use need further flexibility in their date 
 ;       formats (e.g. to use TAI time) should look at Bill Thompson's time

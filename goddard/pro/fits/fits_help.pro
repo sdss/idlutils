@@ -15,7 +15,9 @@ pro fits_help,file_or_fcb
 ;
 ;*INPUTS:
 ;	FILENAME_OR_FCB - name of the fits file or the FITS Control Block (FCB)
-;		returned by FITS_OPEN.
+;		returned by FITS_OPEN.     For versions since V5.3, the 
+;               file name is allowed to be gzip compressed (with a .gz 
+;               extension)
 ;
 ;*OUTPUTS:
 ;	a summary of the fits file is printed.	
@@ -36,14 +38,14 @@ pro fits_help,file_or_fcb
 ;
 ; print calling sequence
 ;
-	if n_params(0) eq 0 then begin
+	if N_params() eq 0 then begin
 	  print,'Syntax -  FITS_HELP,file_or_fcb'
 	  return
 	endif
 ;
 ; Open file if file name is supplied
 ;
-        s = size(file_or_fcb) & fcbtype = s[s[0]+1]
+        fcbtype = size(file_or_fcb,/type) 
         fcbsize = n_elements(file_or_fcb)
         if (fcbsize ne 1) or ((fcbtype ne 7) and (fcbtype ne 8)) then begin
                 print, 'FITS_HELP: Invalid Filename or FCB supplied'

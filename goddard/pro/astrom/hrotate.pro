@@ -167,8 +167,14 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
     sxaddpar, newhd, 'CRPIX1', ncrpix[0]
     sxaddpar, newhd, 'CRPIX2', ncrpix[1]
 
+   if noparams EQ 3 then begin     ;Transformation matrix format
 
-    if noparams EQ 0 then begin
+        sxaddpar, newhd, 'PC001001', newcd[0,0] 
+        sxaddpar, newhd, 'PC001002', newcd[0,1] 
+        sxaddpar, newhd, 'PC002001', newcd[1,0]
+        sxaddpar, newhd, 'PC002002', newcd[1,1]
+
+    endif else if noparams EQ 0 then begin
 
         sxaddpar, newhd, 'CD001001', newcd[0,0] 
         sxaddpar, newhd, 'CD001002', newcd[0,1] 

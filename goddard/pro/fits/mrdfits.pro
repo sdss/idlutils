@@ -69,10 +69,12 @@
 ;               with a dimension equal to the largest actual dimension
 ;               used.  Extra values in rows are filled with 0's or blanks.
 ;               If the size of the variable length column is not
-;               a constant, then an additional column is created
-;               giving the size used in the current row.  If the length
-;               of each element of a variable length column is 0 then
-;               the column is deleted.
+;               a constant, then an additional column is created giving the 
+;               size used in the current row.  This additional column will 
+;               have a tag name of the form L#_"colname" where # is the column
+;               number and colname is the column name of the variable length
+;               column.   If the length of each element of a variable length 
+;               column is 0 then the column is deleted.
 ;
 ;               Prior to V5.0, IDL structures were limited to 128 tags.
 ;               If the version is before V5.0, or the /OLD_STRUCT is set, then
@@ -83,7 +85,7 @@
 ;               and so forth.
 ;
 ; OPTIONAL OUTPUT:
-;       Header = String array containing the header from the FITS extenion.
+;       Header = String array containing the header from the FITS extension.
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;       ALIAS    The keyword allows the user to specify the column names
@@ -296,8 +298,9 @@
 ;       V2.5a Fix problem when both the first and the last character
 ;            in a TTYPEnn value are invalid structure tag characters
 ;       V2.6 February 15, 2002 Fix error in handling unsigned numbers, $
-;                           and 64 bit unsigneds.
-;                           (Thanks to Stephane Beland)
+;                           and 64 bit unsigneds. (Thanks to Stephane Beland)
+;       V2.6a September 2, 2002 Fix possible conflicting data structure for
+;                          variable length arrays (W. Landsman)
 ;
 ;       Note to users of IDL prior to V5.0:  This version is compiled
 ;       with the [] array syntax.  To convert this version to run under
@@ -1874,7 +1877,9 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
                 if not keyword_set(old_struct) then begin
                     sz = size(curr_colx)
                     if sz[1] eq 1 then begin
-                        tablex.(i) = reform(curr_colx,n_elements(curr_colx))
+                         sz_tablex = size(tablex.(i))
+                         sdimen = sz_tablex(1:sz_tablex[0])
+                         tablex.(i) = reform(curr_colx,sdimen)
                     endif else begin
                         tablex.(i) = curr_colx
                     endelse

@@ -6,7 +6,8 @@ pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr
 ;       Compute astrometric solution using positions of 2 or 3 reference stars
 ; EXPLANATION:
 ;       Computes an exact astrometric solution using the positions and 
-;       coordinates from 2 or 3 reference stars.   If 2 stars are used, then
+;       coordinates from 2 or 3 reference stars and assuming a tangent 
+;       (gnomonic) projection.   If 2 stars are used, then
 ;       the X and Y plate scales are assumed to be identical, and the
 ;       axis are assumed to be orthogonal.   Use of three stars will
 ;       allow a unique determination of each element of the CD matrix.
@@ -42,7 +43,7 @@ pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr
 ;        IDL> putast,H,cd,crpix,crval     ;Add parameters to header
 ;
 ;        This is equivalent to the following command:
-;        IDL> starast,ra,dec,x,y,hdr=h      
+;        IDL> STARAST,ra,dec,x,y,hdr=h      
 ;  
 ; METHOD:
 ;       The CD parameters are determined by solving the linear set of equations
@@ -51,6 +52,7 @@ pro starast,ra,dec,x,y,cd, righthanded=right,hdr=hdr
 ;       Written, W. Landsman             January 1988
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /RightHanded and HDR keywords   W. Landsman   September 2000
+;       Write CTYPE values into header   W. Landsman/A. Surkov  December 2002
 ;-
  if N_params() LT 4 then begin
         print,'Syntax - STARAST, ra, dec, x, y, cd. [/Right, HDR =h]'
@@ -112,10 +114,11 @@ endelse
 
  cd = cd/cdr
  
+;Add parameters to header
  if N_elements(hdr) GT 0 then begin
         crval = [ra[0],dec[0]]         ;Use Star 0 as reference star
-        crpix = [x(0),y(0)] + 1.       ;FITS is offset 1 pixel from IDL
-        putast,hdr,cd,crpix,crval,equi=2000.0        ;Add parameters to header
+        crpix = [x(0),y(0)] + 1.       ;FITS is offset 1 pixel from ID
+        putast,hdr,cd,crpix,crval,['RA---TAN','DEC--TAN'],equi=2000.0        
  endif
      
  return

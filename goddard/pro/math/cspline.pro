@@ -56,7 +56,7 @@ function cspline,xx, yy, tt, Deriv = deriv
  On_error,2
 
  if N_params() LT 3 then begin
-        print,'Syntax:  result = cspline( x, y, t, [ DERIV = ] )
+        print,'Syntax:  result = cspline( x, y, t, [ DERIV = ] )'
         return,-1
  endif 
                 

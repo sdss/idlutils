@@ -1,4 +1,4 @@
-PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
+PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4, SELECT = select1
 ;+
 ; NAME:
 ;     EULER
@@ -8,7 +8,7 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
 ;     Use the procedure ASTRO to use this routine interactively
 ;
 ; CALLING SEQUENCE:
-;      EULER, AI, BI, AO, BO, [ SELECT, /FK4 ] 
+;      EULER, AI, BI, AO, BO, [ SELECT, /FK4, SELECT = ] 
 ;
 ; INPUTS:
 ;       AI - Input Longitude in DEGREES, scalar or vector.  If only two 
@@ -24,7 +24,8 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
 ;       2     Galactic       RA-DEC     |     5       Ecliptic      Galactic  
 ;       3     RA-Dec         Ecliptic   |     6       Galactic      Ecliptic  
 ;
-;      If omitted, program will prompt for the value of SELECT
+;      If not supplied as a parameter or keyword, then EULER will prompt for 
+;      the value of SELECT
 ;      Celestial coordinates (RA, Dec) should be given in equinox J2000 
 ;      unless the /FK4 keyword is set.
 ; OUTPUTS:
@@ -35,7 +36,8 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
 ;       /FK4 - If this keyword is set and non-zero, then input and output 
 ;             celestial and ecliptic coordinates should be given in equinox 
 ;             B1950.
-;
+;       /SELECT  - The coordinate conversion integer (1-6) may alternatively be 
+;              specified as a keyword
 ; NOTES:
 ;       EULER was changed in December 1998 to use J2000 coordinates as the 
 ;       default, ** and may be incompatible with earlier versions***.
@@ -44,12 +46,13 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
 ;       Adapted from Fortran by Daryl Yentis NRL
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Made J2000 the default, added /FK4 keyword  W. Landsman December 1998
+;       Add option to specify SELECT as a keyword W. Landsman March 2003
 ;-
  On_error,2
 
  npar = N_params()
- if npar LT 4 then begin
-    print,'Syntax - EULER, AI, BI, A0, B0, [ SELECT, /FK4 ]'
+ if npar LT 2 then begin
+    print,'Syntax - EULER, AI, BI, A0, B0, [ SELECT, /FK4, SELECT= ]'
     print,'    AI,BI - Input longitude,latitude in degrees'
     print,'    AO,BO - Output longitude, latitude in degrees'
     print,'    SELECT - Scalar (1-6) specifying transformation type'
@@ -61,6 +64,7 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
   deg_to_rad = 180.0d/!DPI
 
 ;   J2000 coordinate conversions are based on the following constants
+;   (see the Hipparcos explanatory supplement).
 ;  eps = 23.4392911111d              Obliquity of the ecliptic
 ;  alphaG = 192.85948d               Right Ascension of Galactic North Pole
 ;  deltaG = 27.12825d                Declination of Galactic North Pole
@@ -104,7 +108,9 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
 
  endelse
 ;
- if npar LT 5 then begin
+ if N_elements(select) EQ 0 then $
+          if N_elements(select1) EQ 1 then select=select1
+ if N_elements(select) EQ 0 then begin
         print,' '
         print,' 1 RA-DEC ' + equinox + ' to Galactic
         print,' 2 Galactic       to RA-DEC' + equinox

@@ -10,7 +10,7 @@
 ;	same number of dimensions, then the output array will have one
 ;	additional dimension.  Otherwise, the last dimension of DESTINATION
 ;	will be incremented by one.
-; CATEGOBY:
+; CATEGORY:
 ;	Utility
 ; CALLING SEQUENCE:
 ;	BOOST_ARRAY, DESTINATION, APPEND

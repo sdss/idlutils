@@ -1,76 +1,76 @@
 ;+
 ; NAME:
-;	WCS_DEMO
+;       WCS_DEMO
 ;
 ; PURPOSE:
-;	Demonstrate the basic capabilities of procedures WCSSPH2XY & WCSXY2SPH
+;       Demonstrate the basic capabilities of procedures WCSSPH2XY & WCSXY2SPH
 ;
 ; CATEGORY:
-;	Mapping and Auxilary FITS Demo Routine
+;       Mapping and Auxilary FITS Demo Routine
 ;
 ; CALLING SEQUENCE:
 ;
-;	.run wcs_demo: compiles wcs_demo and the supporting demo routines
-;	wcs_demo: run the demo
+;       .run wcs_demo: compiles wcs_demo and the supporting demo routines
+;       wcs_demo: run the demo
 ;
 ; INPUT PARAMETERS:
 ;
-;	none
+;       none
 ;
 ; OUTPUT PARAMETERS:
-;	none
+;       none
 ;
 ; PROCEDURE:
 ;
-;	This is a demo program which is meant to call the routines 
-;	wcssph2xy.pro and wcsxy2sph.pro.  Since the purpose of this
-;	routine is both to show what the routines can do and what the
-;	user has to do, a file is created with all of the commands 
-;	needed to complete the desired operation.  Wcs_demo actually 
-;	executes this command file, so the user can exactly duplicate
-;	the results by simply re-executing this file.  Also, this 
-;	allows a user to edit an already existing file which calls 
-;	wcssph2xy.pro and wcsxy2sph.pro properly and extend the file's
-;	usefulness.  This demo program allows several possible tests.
-;	The first option is to simply draw a grid of evenly spaced
-;	latitude and longitude lines in a particular map transformation.
-;	Another possibility is to do a full loop, creating a Cartesian
-;	grid of latitude and longitude lines and calling wcssph2xy.pro
-;	to convert them to a particular map.  Then, wcsxy2sph.pro is
-;	called to invert the process and the difference between the
-;	original and final latitudes and longitudes can be plotted.
-;	This allows one to assess the level of the numerical errors
-;	introduced by the mapping routines.  A third possible option is to
-;	look at some of the map transformations and include rotations of
-;	the reference points so that a different perspective is given.
+;       This is a demo program which is meant to call the routines 
+;       wcssph2xy.pro and wcsxy2sph.pro.  Since the purpose of this
+;       routine is both to show what the routines can do and what the
+;       user has to do, a file is created with all of the commands 
+;       needed to complete the desired operation.  Wcs_demo actually 
+;       executes this command file, so the user can exactly duplicate
+;       the results by simply re-executing this file.  Also, this 
+;       allows a user to edit an already existing file which calls 
+;       wcssph2xy.pro and wcsxy2sph.pro properly and extend the file's
+;       usefulness.  This demo program allows several possible tests.
+;       The first option is to simply draw a grid of evenly spaced
+;       latitude and longitude lines in a particular map transformation.
+;       Another possibility is to do a full loop, creating a Cartesian
+;       grid of latitude and longitude lines and calling wcssph2xy.pro
+;       to convert them to a particular map.  Then, wcsxy2sph.pro is
+;       called to invert the process and the difference between the
+;       original and final latitudes and longitudes can be plotted.
+;       This allows one to assess the level of the numerical errors
+;       introduced by the mapping routines.  A third possible option is to
+;       look at some of the map transformations and include rotations of
+;       the reference points so that a different perspective is given.
 ;
 ; COMMON BLOCKS:
-;	none
+;       none
 ;
 ; PROCEDURES CALLED:
-;	SPHDIST(), WCSXY2SPH, WCSSPH2XY
+;       SPHDIST(), WCSXY2SPH, WCSSPH2XY
 ; COPYRIGHT NOTICE:
 ;
-;	Copyright 1991, The Regents of the University of California. This
-;	software was produced under U.S. Government contract (W-7405-ENG-36)
-;	by Los Alamos National Laboratory, which is operated by the
-;	University of California for the U.S. Department of Energy.
-;	The U.S. Government is licensed to use, reproduce, and distribute
-;	this software. Neither the Government nor the University makes
-;	any warranty, express or implied, or assumes any liability or
-;	responsibility for the use of this software.
+;       Copyright 1991, The Regents of the University of California. This
+;       software was produced under U.S. Government contract (W-7405-ENG-36)
+;       by Los Alamos National Laboratory, which is operated by the
+;       University of California for the U.S. Department of Energy.
+;       The U.S. Government is licensed to use, reproduce, and distribute
+;       this software. Neither the Government nor the University makes
+;       any warranty, express or implied, or assumes any liability or
+;       responsibility for the use of this software.
 ;
 ; AUTHOR:
 ;
-;	Rick Balsano
+;       Rick Balsano
 ;
 ; MODIFICATIONS/REVISION LEVEL:
 ;
-;	1.1	8/31/93
-;	1.2     3/19/96 - J. Bloch - LANL
-;			 - Made compatible with wcslib-2.2 by Calabretta.
+;       1.1     8/31/93
+;       1.2     3/19/96 - J. Bloch - LANL
+;                        - Made compatible with wcslib-2.2 by Calabretta.
 ;
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
 
 ; PROCEDURE FOR OPTION 1
@@ -779,7 +779,7 @@ end
 ; MAIN DEMO PROGRAM
 pro wcs_demo
 print,""
-print,"This demo program demostrates the basic usage of the IDL procedures"
+print,"This demo program demonstrates the basic usage of the IDL procedures"
 print,"wcssph2xy.pro and wcsxy2sph.pro.  You will be prompted for information"
 print,"about the type of map projection you would like to try out and what"
 print,"portion of the sky you would like to view.  All of the commands"
@@ -897,7 +897,7 @@ if (option eq 3) then begin
       or (map eq 16)) then begin
     close,file_unit
     if !VERSION.OS NE 'vms' then spawn,["rm",file_name],/noshell else $
-			spawn,'delete ' + file_name
+                        spawn,'delete ' + file_name
     message,"The map type selected is not supported with coordinate rotations."
   endif else begin
     print,$

@@ -37,6 +37,12 @@ pro ftaddcol,h,tab,name,idltype,tform,tunit,tscal,tzero,tnull
 ;       Updated call to new FTINFO   W. Landsman   April 2000
 ;-
   On_error,2
+  if N_params() LT 2 then begin
+      print,'Syntax - FTADDCOL, h, tab, name, idltype, ' 
+      print,'                [ tform, tunit, tscal, tzero, tnull ]'
+      return
+  endif
+
 ; get table size
 
  ftsize,h,tab,ncols,nrows,tfields,allcols,allrows

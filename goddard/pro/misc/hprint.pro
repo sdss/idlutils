@@ -1,53 +1,53 @@
 pro hprint, h, firstline
 ;+
 ; NAME:
-;	HPRINT
+;       HPRINT
 ; PURPOSE:
-;	Print a FITS header (or other string array) one line at a time
+;       Print a FITS header (or other string array) one line at a time
 ; EXPLANATION:
-;	The string array is  printed 1 line at a time.
-;	Needed because IDL will add an extra space to the 80 character
-;	FITS lines on TTY terminals, causing a space to appear betweeen lines.
+;       The string array is  printed 1 line at a time.
+;       Needed because IDL will add an extra space to the 80 character
+;       FITS lines on TTY terminals, causing a space to appear between lines.
 ;
 ; CALLING SEQUENCE:
-;	HPRINT, h, [ firstline ]
+;       HPRINT, h, [ firstline ]
 ;
 ; INPUTS:
-;	H - FITS header (or any other string array).
+;       H - FITS header (or any other string array).
 ;
 ; OPTIONAL INPUT:
-;	FIRSTLINE - scalar integer specifying the first line to begin 
-;		displaying.   The default is FIRSTLINE = 1, i.e. display 
-;		all the lines.     If Firstline is negative, then the first
-;		line to be printed is counted backward from the last line.
+;       FIRSTLINE - scalar integer specifying the first line to begin 
+;               displaying.   The default is FIRSTLINE = 1, i.e. display 
+;               all the lines.     If Firstline is negative, then the first
+;               line to be printed is counted backward from the last line.
 ;
 ; NOTES:
-;	HPRINT has the following differences from the intrinsic PRINT procedure
+;       HPRINT has the following differences from the intrinsic PRINT procedure
 ;
-;	(1) Arrays are printed one line at a time to avoid a space between 80
-;		character lines
-;	(2) Lines are trimmed with STRTRIM before being printed to speed up 
-;		display
-;	(3) The /more option is used for output. 
+;       (1) Arrays are printed one line at a time to avoid a space between 80
+;               character lines
+;       (2) Lines are trimmed with STRTRIM before being printed to speed up 
+;               display
+;       (3) The /more option is used for output. 
 ;
 ; EXAMPLE:
-;	Read the header from a FITS file named 'test.fits' and display it at the
-;	terminal beginning with line 50
+;       Read the header from a FITS file named 'test.fits' and display it at the
+;       terminal beginning with line 50
 ;
-;	IDL> h = headfits( 'test.fits')         ;Read FITS header
-;	IDL> hprint, h, 50                      ;Display starting at line 50
+;       IDL> h = headfits( 'test.fits')         ;Read FITS header
+;       IDL> hprint, h, 50                      ;Display starting at line 50
 ;
-;	To print the last 25 lines of the header
+;       To print the last 25 lines of the header
 ;
-;	IDL> hprint, h, -25
+;       IDL> hprint, h, -25
 ;
 ; REVISION HISTORY:
-;	Written W. Landsman                     July, 1990
-;	Added test for user quit                July, 1991
-;	Added optional FIRSTLINE arguement      November, 1992
-;	Modified for when STDOUT is not a TTY W. Landsman  September 1995
-;	Converted to IDL V5.0   W. Landsman   September 1997
-;	Fixed printing in IDLDE, C. Gehman	August, 1998
+;       Written W. Landsman                     July, 1990
+;       Added test for user quit                July, 1991
+;       Added optional FIRSTLINE parameter      November, 1992
+;       Modified for when STDOUT is not a TTY W. Landsman  September 1995
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Fixed printing in IDLDE, C. Gehman      August, 1998
 ;-
   On_error,2                        ;Return to Caller
 
@@ -62,11 +62,11 @@ pro hprint, h, firstline
   stdout = fstat(-1)
 
   if stdout.isatty then $       ;Open with /MORE if a TTY
-	openw, outunit, filepath(/TERMINAL), /MORE, /GET_LUN  
+        openw, outunit, filepath(/TERMINAL), /MORE, /GET_LUN  
 
   if N_elements( firstline ) EQ 0 then firstline = 1
   if ( firstline[0] LT 0 ) then firstline = ( n + firstline[0]) > 1 < n  $
-				else firstline = firstline[0] > 1 < n
+                                else firstline = firstline[0] > 1 < n
 
 ; Now print the array one line at a time
 

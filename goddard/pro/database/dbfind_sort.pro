@@ -3,10 +3,10 @@ pro dbfind_sort,it,type,svals,list, FULLSTRING = fullstring, COUNT = number
 ; NAME:
 ;       DBFIND_SORT   
 ; PURPOSE:
-;       Subroutine of DBFIND to perform a search using sorted values
+;       Subroutine of DBFIND to perform a search using sorted values 
 ; EXPLANATION:
 ;       This is a subroutine of dbfind and is not a standalone procedure
-;       It is used to limit the search using sorted values
+;       It is used to limit the search using sorted values  V5.2 or later!
 ;
 ; CALLING SEQUENCE:
 ;       dbfind_sort, it, type, svals, list, [/FULLSTRING, COUNT = ]
@@ -38,8 +38,10 @@ pro dbfind_sort,it,type,svals,list, FULLSTRING = fullstring, COUNT = number
 ;       William Thompson, GSFC, 14 March 1995 Added keyword FULLSTRING
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Minimize use of obsolete !ERR variable   W. Landsman  February 2000
-;       Added COUNT keyword, deprecate !ERR   W. Landsman  March 2000
+;       Added COUNT keyword, deprecate !ERR W. Landsman  March 2000
+;       Use 64 bit integers V5.2 or later
 ;       Include new IDL unsigned & 64 bit integer datatypes W.Landsman July 2001
+;       Make sure returned list vector is LONG  W. Landsman August 2001
 ;-
 ;----------------------------------------------------------------------------
 ;       READ EVERY 512TH VALUE IN SORTED VALUES
@@ -65,7 +67,7 @@ pos = where(items EQ itnum) & pos=pos[0]
 ; find starting location to read
 ;
 sblock = header[3,pos]
-sbyte = 512L*sblock
+sbyte = 512LL*sblock
 nv = (db_info('ENTRIES',0)+511)/512
 ;
 ; create mapped i/o variable
@@ -170,9 +172,9 @@ end
 ; extract data values for blocks first to last
 ;
 sblock=header[4,pos]            ;starting block for sorted data
-sbyte=512L*sblock               ;starting byte
+sbyte=512LL*sblock               ;starting byte
 first=first*512L+1
-last=(last*512)<db_info('entries',0)
+last=(last*512L) < db_info('entries',0)
 number=last-first+1
 p = assoc(unit,make_array(size=[1,number,dtype,0],/nozero), $
                                              sbyte+(first-1)*num_bytes)
@@ -202,7 +204,7 @@ end else begin
 ; find starting location to read
 ;
         sblock=header[5,pos]
-        sbyte=512L*sblock
+        sbyte=512LL*sblock
 ;
 ; read values from file
 ;

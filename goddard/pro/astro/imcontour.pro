@@ -1,6 +1,6 @@
 pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
       YTITLE=ytitle, SUBTITLE = subtitle, XDELTA = xdelta, YDELTA = ydelta, $
-      ANONYMOUS_ = dummy_,_EXTRA = extra
+      ANONYMOUS_ = dummy_,_EXTRA = extra, XMID = xmid, YMID = ymid
 ;+
 ; NAME:
 ;       IMCONTOUR
@@ -16,7 +16,8 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;       By using the /NODATA keyword, IMCONTOUR can also be used to simply
 ;       provide astronomical labeling of a previously displayed image.
 ; CALLING SEQUENCE
-;       IMCONTOUR, im, hdr,[ /TYPE, /PUTINFO, XDELTA = , YDELTA =, _EXTRA = ]
+;       IMCONTOUR, im, hdr,[ /TYPE, /PUTINFO, XDELTA = , YDELTA =, _EXTRA = 
+;                            XMID=, YMID= ]
 ;
 ; INPUTS:
 ;       IM - 2-dimensional image array
@@ -33,7 +34,7 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;               TYPE = 1 astronomical labeling with Right ascension and 
 ;               declination.
 ;
-;       /PUTINFO - If set then IMCONTOUR will add information about the image
+;       /PUTINFO - If set, then IMCONTOUR will add information about the image
 ;               to the right of the contour plot.  Information includes image
 ;               name, object, image center, image center, contour levels, and
 ;               date plot was made
@@ -42,6 +43,10 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;               Default is to label every major tick (XDELTA=1) but if 
 ;               crowding occurs, then the user might wish to label every other
 ;               tick (XDELTA=2) or every third tick (XDELTA=3)
+;
+;       XMID, YMID - Scalars giving the X,Y position from which offset distances
+;               will be measured when TYPE=0.   By default, offset distances 
+;               are measured from the center of the image.
 ;
 ;       Any keyword accepted by CONTOUR may also be passed through IMCONTOUR
 ;       since IMCONTOUR uses the _EXTRA facility.     IMCONTOUR uses its own
@@ -63,7 +68,7 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;       is suggested to properly overlay plotting and image coordinates.  The
 ;       /Keep_aspect_ratio keyword must be used.
 ;
-;       IDL> tvimage,im1,/keep_aspect,position = pos
+;       IDL> tvimage,im1,/keep_aspect, position = pos
 ;       IDL> imcontour,im2,h2,nlevels=7,/Noerase,/TYPE,position = pos
 ;
 ; PROCEDURES USED:
@@ -81,16 +86,21 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;       Use SYSTIME() instead of !STIME                August, 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Remove obsolete !ERR system variable W. Landsman   May 2000 
+;       Added XMID, YMID keywords to specify central position (default is still
+;          center of image)  W. Landsman               March 2002     
+;       
 ;-
   On_error,2                                 ;Return to caller
 
   if N_params() LT 2 then begin             ;Sufficient parameters?
-      print,'Syntax - imcontour, im, hdr, [ /TYPE, /PUTINFO, XDELTA=, YDELT= ]'
+      print,'Syntax - imcontour, im, hdr, [ /TYPE, /PUTINFO, XDELTA=, YDELT= '
+      print,'                               XMID=, YMID = ]'
       print,'         Any CONTOUR keyword is also accepted by IMCONTOUR'  
      return
   endif
 
-  check_fits, im, hdr, dimen, /NOTYPE, ERRMSG = errmsg     ;Make sure header appropriate to image
+ ;Make sure header appropriate to image
+  check_fits, im, hdr, dimen, /NOTYPE, ERRMSG = errmsg    
   if errmsg NE '' then message,errmsg
 
 ; Set defaults if keywords not set
@@ -122,6 +132,8 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
   xsize1 = xsize-1 & ysize1 = ysize-1
   xratio = xsize / float(ysize)
   yratio = ysize / float(xsize)
+  if N_elements(XMID) EQ 0 then xmid = xsize1/2.
+  if N_elements(YMID) EQ 0 then ymid = ysize1/2.
 
   if ( ylength*xratio LT xlength ) then begin
 
@@ -144,7 +156,6 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 
   getrot,hdr,rot,cdelt               ;Get the rotation and plate scale
 
-  xmid = xsize1/2.   &   ymid  = ysize1/2.
   xyad,hdr,xmid,ymid,ra_cen,dec_cen         ;Get Ra and Dec of image center
   ra_dec = adstring(ra_cen,dec_cen,1)       ;Make a nice string
 
@@ -183,10 +194,12 @@ if type NE 0 then begin                  ;RA and Dec labeling
   endif else begin                          ;Label with distance from center
 
      ticpos, xsize1*cdelt[0], xsize, pixx, incrx, xunits     
-     numx = fix(xsize/(2.*pixx))  
+     numx = fix(xmid/pixx)              ;Number of ticks from left edge
      ticpos, ysize1*cdelt[1], ysize, pixy, incry, yunits
-      numy = fix(ysize/(2.*pixy))
-      nx = 2*numx & ny = 2*numy
+      numy = fix(ymid/pixy)             ;Number of ticks from bottom to center
+
+      nx = numx + fix((xsize-xmid)/pixx)    ;Total number of X ticks 
+      ny = numy + fix((ysize-ymid)/pixy)    ;Total number of Y ticks  
       xpos = xmid + (findgen(nx+1)-numx)*pixx
       ypos = ymid + (findgen(ny+1)-numy)*pixy
       xlab = string(indgen(nx+1)*incrx - incrx*numx,'(I3)')

@@ -204,7 +204,7 @@
 ;   Corrected bug in name conversion of NUTATIONS and LIBRATIONS, 18
 ;     Oct 2001, CM
 ;
-;  $Id: jplephinterp.pro,v 1.1 2002-01-04 19:11:03 schlegel Exp $
+;  $Id: jplephinterp.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $
 ;
 ;-
 ; Copyright (C) 2001, Craig Markwardt
@@ -217,7 +217,7 @@
 pro jplephinterp_calc, info, raw, obj, t, x, y, z, vx, vy, vz, $
                        velocity=vel, tbase=tbase
 
-  ; '$Id: jplephinterp.pro,v 1.1 2002-01-04 19:11:03 schlegel Exp $'
+  ; '$Id: jplephinterp.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $'
 
   if n_elements(tbase) EQ 0 then tbase = 0D
   ;; Number of coefficients (x3), number of subintervals, num of rows

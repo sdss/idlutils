@@ -59,9 +59,11 @@
 ;                                  additional support for compression from D.Palmer.
 ;       W. Landsman/D.Zarro 04-Jul-2000    Added test for !VERSION.OS EQ 'Win32' (WinNT)
 ;       W. Landsman    12-Dec-2000 Added /SILENT keyword
+;       W. Landsman April 2002     Use FILE_SEARCH for V5.5 or later
 ;-
 ;
         ON_ERROR,2
+        FORWARD_FUNCTION FILE_SEARCH       ;For pre-V5.5 compatibility
 ;
 ;  Check the number of parameters.
 ;
@@ -70,15 +72,18 @@
             RETURN,-1
         ENDIF
 
+        IF !VERSION.RELEASE GE '5.5' THEN $
+           FILE = FILE_SEARCH(XFILE, COUNT=COUNT) ELSE BEGIN
+
 ; Expand wildcards in name.    Compensate that FINDFILE doesn't recognize
 ; the meaning of the Unix tilde.
 
         IF !VERSION.OS_FAMILY EQ 'unix' THEN BEGIN
-	    IF STRPOS(XFILE,'~') NE -1 THEN BEGIN
-	        XFILE = EXPAND_TILDE(XFILE)
-	    ENDIF
-	ENDIF
-        FILE = FINDFILE(XFILE, COUNT=COUNT)
+	    IF STRPOS(XFILE,'~') NE -1 THEN XFILE = EXPAND_TILDE(XFILE)
+	    FILE = FINDFILE(REPSTR(XFILE," ","\ "), COUNT=COUNT)
+	ENDIF ELSE FILE = FINDFILE(XFILE, COUNT=COUNT)
+        ENDELSE
+
         IF COUNT EQ 0 THEN BEGIN
             RETURN, -1   ; Don't print anything out, just report an error
         ENDIF

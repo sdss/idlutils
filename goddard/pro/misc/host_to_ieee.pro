@@ -8,6 +8,8 @@ pro host_to_ieee, data, IDLTYPE = idltype
 ;     The variable is converted from the format used by the host architecture
 ;     into IEEE-754 representation (as used, for example, in FITS data ).
 ;
+;     Duplicates most of the functionality of the SWAP_ENDIAN_INPLACE procedure
+;     introduced in V5.6, with the addition of the IDLTYPE keyword.
 ; CALLING SEQUENCE:
 ;     HOST_TO_IEEE, data, [ IDLTYPE = ]
 ;
@@ -19,7 +21,7 @@ pro host_to_ieee, data, IDLTYPE = idltype
 ; OPTIONAL KEYWORD INPUTS:
 ;     IDLTYPE - scalar integer (1-15) specifying the IDL datatype according
 ;               to the code given by the SIZE function.      This keyword
-;               will usually be used when suppying a byte array that needs
+;               will usually be used when supplying a byte array that needs
 ;               to be interpreted as another data type (e.g. FLOAT).
 ;
 ; EXAMPLE:
@@ -36,6 +38,7 @@ pro host_to_ieee, data, IDLTYPE = idltype
 ;      Version for IDL V5.0  August 1997
 ;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Added new integer datatypes  C. Markwardt/W. Landsman  July 2000
+;      Use /SWAP_IF_LITTLE_ENDIAN keyword for 64bit types W. Landsman Feb 2003
 ;-
  On_error,2 
 
@@ -48,8 +51,7 @@ pro host_to_ieee, data, IDLTYPE = idltype
  if npts EQ 0 then $
      message,'ERROR - IDL data variable (first parameter) not defined'
 
- sz = size(data)
- if not keyword_set( idltype) then idltype = sz[ sz[0]+1]
+ if not keyword_set( idltype) then idltype = size(data,/type)
 
  case idltype of
 
@@ -84,13 +86,11 @@ pro host_to_ieee, data, IDLTYPE = idltype
 
      13: byteorder, data, /HTONL
 
-     14: if (long(['01'xb,'02'xb,'03'xb,'04'xb],0,1))(0) NE '01020304'x then $
-            byteorder, data, /L64swap
+     14: byteorder, data, /L64swap, /SWAP_IF_LITTLE
 
-     15: if (long(['01'xb,'02'xb,'03'xb,'04'xb],0,1))(0) NE '01020304'x then  $
-            byteorder, data, /L64swap
+     15: byteorder, data, /L64swap, /SWAP_IF_LITTLE
 
-     else: message,'Unrecognized dataype ' + strtrim(idltype,2)
+     else: message,'Unrecognized datatype ' + strtrim(idltype,2)
 
  ENDCASE
 

@@ -40,9 +40,8 @@ MonthNames = ['  ', 'January', 'February', 'March', 'April', 'May', 'June', $
           'July', 'August', 'September', 'October', 'November', 'December']
 MonthShort = strupcase(strmid(MonthNames,0,3))
 
-S = size(MonthInput)
 
-if (S[S[0]+1] eq 7) then begin
+if size(MonthInput,/TNAME) EQ 'STRING' then begin
    Result = intarr(NumElem) - 1
    ShortInput = strupcase(strmid(strtrim(MonthInput,2),0,3))
    for N=1,12 do begin
@@ -51,7 +50,7 @@ if (S[S[0]+1] eq 7) then begin
    endfor
 endif else begin
    if ( (min(MonthInput) lt 1) or (max(MonthInput) gt 12) ) then begin
-      print, "Bad input values.  Month numbers must be 1-12."
+      message, /CON, "Bad input values.  Month numbers must be 1-12."
       Result = ''
    endif else begin
       Result = MonthNames[MonthInput]

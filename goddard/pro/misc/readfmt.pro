@@ -52,7 +52,7 @@ pro readfmt,name,fmt,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;               Default is to read the entire file 
 ;
 ; EXAMPLES:
-;       Each row in a fixed-formated file POSITION.DAT contains a 5 character 
+;       Each row in a fixed-format file POSITION.DAT contains a 5 character 
 ;       star name  and 6 columns of data giving an RA and Dec in sexigesimal 
 ;       format.   A possible format for such data might be
 ;

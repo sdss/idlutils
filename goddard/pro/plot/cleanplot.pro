@@ -1,4 +1,4 @@
-Pro CleanPlot, silent=silent ;Set System Plot Variables to Default Values
+Pro CleanPlot, silent=silent, ShowOnly = showonly ;Reset System  Variables 
 ;+
 ; NAME:
 ;       CLEANPLOT
@@ -9,14 +9,18 @@ Pro CleanPlot, silent=silent ;Set System Plot Variables to Default Values
 ;       and which affect plotting to their default values.
 ;
 ; CALLING SEQUENCE:
-;       Cleanplot, [ /Silent]
+;       Cleanplot, [ /Silent, /ShowOnly]
 ;
 ; INPUTS:       
 ;       None
 ;
 ; OPTIONAL KEYWORD INPUT:
+;       /SHOWONLY - If set, then CLEANPLOT will display the plotting system
+;                 variables with nondefault values, but it will not reset them.
+;               
 ;       /SILENT - If set, then CLEANPLOT will not display a message giving the 
-;                 the system variables tags being reset.
+;                 the system variables tags being reset.    One cannot set 
+;                  both /SILENT and /SHOWONLY
 ; OUTPUTS:      
 ;       None
 ;
@@ -50,12 +54,22 @@ Pro CleanPlot, silent=silent ;Set System Plot Variables to Default Values
 ;                W. Landsman  June 2001
 ;       Default !P.color is 16777215 for 16 bit systems 
 ;                       W. Landsman/M. Hadfield   November 2001 
+;       Added ShowOnly keyword   W. Landsman      April 2002
 ;       
 ;-
  if not keyword_set(silent) then silent=0B
 
  On_error,2
- 
+ if keyword_set(showonly) then begin
+     print,'Current Plotting System Variables with non-default Values'
+     clearing = ''
+     oldvalue = ' '
+     reset = 0
+ endif else begin
+     clearing = 'Clearing '
+     oldvalue = ', old value '
+     reset = 1
+ end
 ; For !X, !Y, and !Z we will assume that the default values except for MARGIN are 
 ; either 0 or '', while for !P we explicitly write all default values in P_old
 
@@ -96,8 +110,9 @@ for i=0,n_tags(!X)-1 do $
      if i NE 3 then begin 
      n = N_elements(!P.(i))
      if ( total( (!P.(i) EQ P_old.(i))) NE n ) then Begin
-         if not silent then Print, 'Clearing !P.'+P_var[i]+', old value =',!P.(i)
-        !P.(i) = P_old.(i)
+         if not silent then $
+            Print,clearing +  '!P.'+P_var[i]+ oldvalue +'=',!P.(i)
+        if reset then !P.(i) = P_old.(i)
         EndIf
     endif
  endfor
@@ -111,18 +126,21 @@ for i=0,n_tags(!X)-1 do $
        n = N_elements(!X.(i))
 
        if ( total( (!X.(i) EQ X_old.(i))) NE n ) then Begin
-       if not silent then Print,'Clearing !X.'+X_var[i]+' old value = ', !X.(i)
-       !X.(i) = X_old.(i)
+       if not silent then $
+          Print,clearing + '!X.'+X_var[i]+ oldvalue + '=', !X.(i)
+       if reset then !X.(i) = X_old.(i)
        EndIf
  
        if (total( (!Y.(i) EQ Y_old.(i))) NE n ) then Begin
-       if not silent then Print,'Clearing !Y.'+Y_var[i]+' old value = ', !Y.(i)
-       !Y.(i) = Y_old.(i)
+       if not silent then $
+          Print,clearing + '!Y.'+Y_var[i]+ oldvalue + '=', !Y.(i)
+       if reset then !Y.(i) = Y_old.(i)
        EndIf
 
        if (total( (!Z.(i) EQ Z_old.(i))) NE n) then Begin
-       if not silent then  Print,'Clearing !Z.'+Z_var[i]+' old value = ', !Z.(i)
-       !Z.(i) = Z_old.(i)
+       if not silent then $
+          Print,clearing +'!Z.'+Z_var[i]+ oldvalue + '=',!Z.(i)
+       if reset then !Z.(i) = Z_old.(i)
        EndIf
    endif
 endfor

@@ -1,6 +1,7 @@
 pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
       v15,v16,v17,v18,TEXTOUT = textout, FORMAT = format, SILENT = SILENT, $ 
-      STARTLINE = startline, NUMLINE = numline, COMMENT = comment
+      STARTLINE = startline, NUMLINE = numline, COMMENT = comment, $
+      NoCOMMENT=Nocomment
 ;+
 ; NAME:
 ;       FORPRINT
@@ -37,18 +38,21 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
 ;
 ;       COMMENT - String to write as the first line of output file if 
 ;                TEXTOUT > 2.    By default, FORPRINT will write a time stamp
-;                on the first line.   Use /SILENT if you don't want FORPRINT
+;                on the first line.   Use /NOCOMMENT if you don't want FORPRINT
 ;                to write anything in the output file.
 ;       FORMAT - Scalar format string as in the PRINT procedure.  The use
 ;               of outer parenthesis is optional.   Ex. - format="(F10.3,I7)"
 ;               This program will automatically remove a leading "$" from
 ;               incoming format statments. Ex. - "$(I4)" would become "(I4)".
+;               If omitted, then IDL default formats are used.
+;       /NOCOMMENT  - Set this keyword if you don't want any comment line
+;               line written as the first line in a harcopy output file.
+;       /SILENT - Normally, with a hardcopy output (TEXTOUT > 2), FORPRINT will
+;                print an informational message.    If the SILENT keyword
+;               is set and non-zero, then this message is suppressed.
 ;       STARTLINE - Integer scalar specifying the first line in the arrays
 ;               to print.   Default is STARTLINE = 1, i.e. start at the
 ;               beginning of the arrays.
-;       /SILENT - Normally, with a hardcopy output (TEXTOUT > 2), FORPRINT will
-;               add a time stamp to the output file.    If the SILENT keyword
-;               is set and non-zero, then this time stamp is suppressed.
 ; OUTPUTS:
 ;       None
 ; SYSTEM VARIABLES:
@@ -83,13 +87,15 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
 ;       Much faster printing to a file   W. Landsman, RITSS, August, 2001
 ;       Use SIZE(/TNAME) instead of DATATYPE() W. Landsman SSAI October 2001
 ;       Fix skipping of first line bug introduced Aug 2001  W. Landsman Nov2001
+;       Added /NOCOMMENT keyword, the SILENT keyword now controls only 
+;       the display of informational messages.  W. Landsman June 2002
 ;-            
   On_error,2                               ;Return to caller
 
   npar = N_params()
   if npar EQ 0 then begin
       print,'Syntax - FORPRINT, v1, [ v2, v3,...v18, FORMAT =, /SILENT, '
-      print,'               COMMENT =, STARTLINE = , NUMLINE =, TEXTOUT =]'
+      print,'      /NoCOMMENT, COMMENT =, STARTLINE = , NUMLINE =, TEXTOUT =]'
       return
   endif
 
@@ -138,8 +144,8 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
    if size( textout,/TNAME) EQ 'STRING' then text_out = 6  $      ;make numeric
                                   else text_out = textout
 
-   textopen,'FORPRINT',TEXTOUT=textout
-   if ( text_out GT 2 ) and (not keyword_set(SILENT)) then begin
+   textopen,'FORPRINT',TEXTOUT=textout,SILENT=silent
+   if ( text_out GT 2 ) and (not keyword_set(NOCOMMENT)) then begin
        if N_elements(comment) GT 0 then $
         printf,!TEXTUNIT,comment else $
         printf,!TEXTUNIT,'FORPRINT: ',systime()

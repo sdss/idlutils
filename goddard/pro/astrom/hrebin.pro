@@ -6,8 +6,8 @@
 ; PURPOSE:
 ;    Expand or contract a FITS image using (F)REBIN and update the header 
 ; EXPLANATION:
-;    If output size is a multiple of input size then REBIN is used, else
-;    FREBIN is used.     User can either overwrite the input array,
+;    If the output size is an exact multiple of the input size then REBIN is 
+;    used, else FREBIN is used.     User can either overwrite the input array,
 ;    or write to new variables.
 ;
 ; CALLING SEQUENCE:
@@ -51,7 +51,7 @@
 ;     (or CDELT) parameters are updated for the new FITS header.
 ;
 ; EXAMPLE:
-;     Compress a 2048 x 2048 image array IM, with header FITS HDR, to a 
+;     Compress a 2048 x 2048 image array IM, with FITS header HDR, to a 
 ;     724 x 724 array.   Overwrite the input variables with the compressed 
 ;     image and header.
 ;
@@ -73,6 +73,8 @@
 ;     Fixed initialization of header only call broken in Apr 98 change May. 1999
 ;     Remove reference to obsolete !ERR  W. Landsman   February 2000
 ;     Use double precision formatting for CD matrix W. Landsman April 2000
+;     Recognize PC00n00m astrometry format   W. Landsman   December 2001
+;     Correct astrometry for integral contraction W. Landsman  April 2002
 ;- 
  On_error,2
 
@@ -177,11 +179,11 @@
 ; effects are introduced, which require a different calculation of the updated
 ; CRPIX1 and CRPIX2 values.
 
- if (exact) and (not keyword_set(SAMPLE)) and (xratio GT 0) then $
+ if (exact) and (not keyword_set(SAMPLE)) and (xratio GT 1) then $
       crpix1 = (crpix[0]-1.0)*xratio + 1.0                  else $
       crpix1 = (crpix[0]-0.5)*xratio + 0.5
 
- if (exact) and (not keyword_set(SAMPLE)) and (yratio GT 0) then $
+ if (exact) and (not keyword_set(SAMPLE)) and (yratio GT 1) then $
       crpix2 = (crpix[1]-1.0)*yratio + 1.0                  else $
       crpix2 = (crpix[1]-0.5)*yratio + 0.5
 
@@ -190,13 +192,13 @@
 
 ; Scale either the CDELT parameters or the CD1_1 parameters.
 
- if (noparams EQ 0) or ( noparams EQ 1) then begin 
+ if (noparams NE 2) then begin 
 
     cdelt = astr.cdelt
     sxaddpar, newhd, 'CDELT1', CDELT[0]/xratio
     sxaddpar, newhd, 'CDELT2', CDELT[1]/yratio
 
- endif else if noparams EQ 2 then begin
+ endif else begin     ;CDn_m Matrix format
 
     cd = astr.cd
     sxaddpar, newhd, 'CD1_1', cd[0,0]/xratio
@@ -204,7 +206,7 @@
     sxaddpar, newhd, 'CD2_1', cd[1,0]/xratio
     sxaddpar, newhd, 'CD2_2', cd[1,1]/yratio
 
- endif 
+ endelse
  endif
 
 ; Adjust BZERO and BSCALE for new pixel size

@@ -1,4 +1,4 @@
-pro mrd_hread, unit, header, status, SILENT = silent 
+pro mrd_hread, unit, header, status, SILENT = silent, FIRSTBLOCK = firstblock
 ;+
 ; NAME: 
 ;     MRD_HREAD
@@ -21,6 +21,12 @@ pro mrd_hread, unit, header, status, SILENT = silent
 ; OPTIONAL KEYWORD INPUT:
 ;      /SILENT - If set, then warning messages about any invalid characters in
 ;                the header are suppressed.
+;      /FIRSTBLOCK - If set, then only the first block (36 lines or less) of 
+;                the FITS header are read into the output variable.   If only
+;                size information (e.g. BITPIX, NAXIS) is needed from the
+;                header, then the use of this keyword can save time.  The 
+;                file pointer is still positioned at the end of the header,
+;                even if the /FIRSTBLOCK keyword is supplied.
 ; RESTRICTIONS: 
 ;      The file must already be positioned at the start of the header.  It
 ;      must be a proper FITS file.
@@ -38,11 +44,12 @@ pro mrd_hread, unit, header, status, SILENT = silent
 ;          are produced by poor FITS writers.
 ;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Added /SILENT keyword   W. Landsman   December 2000
+;      Added /FIRSTBLOCK keyword  W. Landsman   February 2003
 ;-
  	block = string(replicate(32b, 80, 36))
 		
-	header = ' '
 	w = [-1]
+        nblock = 0
 
 	while w[0] eq -1 do begin
 		
@@ -67,15 +74,19 @@ pro mrd_hread, unit, header, status, SILENT = silent
 			block[w] = string(replicate(32b, 80))
 		endif
 		w = where(strmid(block, 0, 8) eq 'END     ')
-		if w[0] eq -1 then begin
-			header = [header, block]
-		endif else begin
-			header = [header, block[0:w[0]]]
-		endelse
+                if nblock EQ 0 then begin
+		  if w[0] eq -1 then header = block $
+		                else header = [block[0:w[0]]]
+		  nblock = nblock + 1
+                endif else begin
+                    if not keyword_set(firstblock) then begin
+		          if w[0] eq -1 then header = [header, block] $
+		                        else header = [header, block[0:w[0]]]
+		     endif
+                endelse
 			
 	endwhile
 		
-	header = header[1:*]
 	status = 0
 	return
 error_return:

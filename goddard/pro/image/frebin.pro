@@ -67,12 +67,13 @@ function frebin,image,nsout,nlout,total=total
 ;    Added /NOZERO, use INTERPOLATE instead of CONGRID, June 98 W. Landsman  
 ;    Fixed for nsout non-integral but a multiple of image size  Aug 98 D.Lindler
 ;    DJL, Oct 20, 1998, Modified to work for floating point image sizes when
-;		expanding the image.  
+;		expanding the image. 
+;    Improve speed by addressing arrays in memory order W.Landsman Dec/Jan 2001
 ;-
 ;----------------------------------------------------------------------------
       if N_params() LT 1 then begin
-              print,'Syntax = newimage = FREBIN(image, nsout, nlout, [/TOTAL])'          
-              return,-1
+           print,'Syntax = newimage = FREBIN(image, nsout, nlout, [/TOTAL])'  
+           return,-1
        endif
 
        if n_elements(nlout) eq 0 then nlout=1
@@ -113,26 +114,23 @@ function frebin,image,nsout,nlout,total=total
                 xindex = long(lindgen(nsout)/(nsout/ns))
                 if nl EQ 1 then begin
  		if keyword_set(total) then $
-		return,interpolate(image,xindex)*sbox else $                       
+		return,interpolate(image,xindex)*sbox else $        
 		return,interpolate(image,xindex)  
                 endif
                 yindex = long(lindgen(nlout)/(nlout/nl))
  		if keyword_set(total) then $
-		return,interpolate(image,xindex,yindex,/grid)*sbox*lbox else $                       
+		return,interpolate(image,xindex,yindex,/grid)*sbox*lbox else $
 		return,interpolate(image,xindex,yindex,/grid)  
 	endif
    endif
 	    ns1 = ns-1
 	    nl1 = nl-1
-;
-; bin in first dimension
-;
-	    if dtype eq 'DOUBLE' then temp = dblarr(nsout,nl, /NOZERO) $
-			         else temp = fltarr(nsout,nl, /NOZERO)
-;
-; loop on output image samples
-;
-          
+
+; Do 1-d case separately
+
+  if nl EQ 1 then begin
+           if dtype eq 'DOUBLE' then result = dblarr(nsout,/NOZERO) $
+			        else result = fltarr(nsout,/NOZERO)
 	    for i=0L,nsout-1 do begin
 	    	    rstart = i*sbox	       ;starting position for each box
 	    	    istart = long(rstart)
@@ -144,22 +142,20 @@ function frebin,image,nsout,nlout,total=total
 ; add pixel values from istart to istop and  subtract fraction pixel 
 ; from istart to rstart and fraction pixel from rstop to istop
 ;
-		    if nl gt 1 then begin
-	   	       temp[i,*] = reform(total(image[istart:istop,*],1),1,nl) $
-	   			- frac1 * image[istart,*]  $
-	   			- frac2 * image[istop,*] 
-		     end else begin
-	   	       temp[i] = total(image[istart:istop]) $
+	   	     result[i] = total(image[istart:istop]) $
 	   			- frac1 * image[istart]  $
 	   			- frac2 * image[istop] 
-		    end
-	    end
+	    endfor
+ 	    if keyword_set(total) then return,result $
+	    			  else return,temporary(result)/(sbox*lbox)
+ endif 
+
+; Now do 2-d case
+; First, bin in second dimension
 ;
-; bin in second dimension
-;
-	    if dtype eq 'DOUBLE' then result = dblarr(nsout,nlout,/NOZERO) $
-			         else result = fltarr(nsout,nlout,/NOZERO)
-;
+	    if dtype eq 'DOUBLE' then temp = dblarr(ns,nlout, /NOZERO) $
+			         else temp = fltarr(ns,nlout, /NOZERO)
+
 ; loop on output image lines
 ;
 	    for i=0L,nlout-1 do begin
@@ -173,13 +169,46 @@ function frebin,image,nsout,nlout,total=total
 ; add pixel values from istart to istop and  subtract fraction pixel 
 ; from istart to rstart and fraction pixel from rstop to istop
 ;
-		    if istart eq istop then row = temp[*,istart] else $
-		    			    row = total(temp[*,istart:istop],2)
-		    result[*,i] = row $
+
+                     if istart EQ istop then $
+	   	       temp[0,i] = (1.0 - frac1 - frac2)*image[*,istart] $
+                       else $
+	   	       temp[0,i] = total(image[*,istart:istop],2) $
+	   			- frac1 * image[*,istart]  $
+	   			- frac2 * image[*,istop] 
+	    endfor
+           temp = transpose(temp)
+;
+; bin in first dimension
+;
+	    if dtype eq 'DOUBLE' then result = dblarr(nlout,nsout,/NOZERO) $
+			         else result = fltarr(nlout,nsout,/NOZERO)
+
+;
+; loop on output image samples
+;
+	    for i=0L,nsout-1 do begin
+	    	    rstart = i*sbox	       ;starting position for each box
+	    	    istart = long(rstart)
+	    	    rstop = rstart + sbox      ;ending position for each box
+	    	    istop = long(rstop)<ns1
+	    	    frac1 = rstart-istart
+	    	    frac2 = 1.0 - (rstop-istop)
+;
+; add pixel values from istart to istop and  subtract fraction pixel 
+; from istart to rstart and fraction pixel from rstop to istop
+;
+
+		    if istart eq istop then $
+                        result[0,i] = (1.-frac1-frac2)*temp[*,istart] else $
+		    	result[0,i] = total(temp[*,istart:istop],2)   $
 		    		- frac1 * temp[*,istart]  $
 		    		- frac2 * temp[*,istop]
 	    end
-	    if keyword_set(total) then return,result $
-	    			  else return,temporary(result)/(sbox*lbox)
+
+;            
+	    if keyword_set(total) then $
+                        return, transpose(result) $
+	    	   else return, transpose(result)/(sbox*lbox)
 	    			  
 end

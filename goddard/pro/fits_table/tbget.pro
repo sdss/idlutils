@@ -25,7 +25,7 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ;               -1 then values for all rows are returned
 ;
 ; OPTIONAL KEYWORD INPUT:
-;       NOSCALE - If this keyword is set and nonzero, then the TSCALn and
+;       /NOSCALE - If this keyword is set and nonzero, then the TSCALn and
 ;               TZEROn keywords will *not* be used to scale to physical values
 ;               Default is to perfrom scaling
 ;       CONTINUE - This keyword does nothing, it is kept for consistency with
@@ -60,7 +60,7 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ;       binary tables, and FTAB_HELP or TBHELP to determine the columns of the
 ;       table
 ; PROCEDURE CALLS:
-;       IEEE_TO_HOST, IS_IEEE_BIG(), TBINFO, TBSIZE 
+;       IS_IEEE_BIG(), TBINFO, TBSIZE 
 ; HISTORY:
 ;       Written  W. Landsman        February, 1991
 ;       Work for string and complex   W. Landsman         April, 1993
@@ -74,6 +74,9 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ;       Add IS_IEEE_BIG(), No subscripting when all rows requested
 ;                               W. Landsman    March 2000
 ;       Use SIZE(/TNAME) instead of DATATYPE()  W. Landsman October 2001
+;       Bypass IEEE_TO_HOST call for improved speed W. Landsman November 2002
+;       Cosmetic changes to SIZE() calls W. Landsman December 2002
+;       Added unofficial support for 64bit integers W. Landsman February 2003
 ;-
 ;------------------------------------------------------------------
  On_error,2
@@ -88,13 +91,13 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 
 ; get size of table
 
- sz = size(tab)
- nrows = sz[2]
+ ndimen = size(tab,/n_dimen)
+ if Ndimen EQ 1 then nrows =1 else $
+ nrows = (size(tab,/dimen))[1]
 
 ; get characteristics of specified field
 
- size_hdr = size(hdr_or_tbstr)
- case size_hdr[size_hdr[0]+1] of 
+ case size(hdr_or_tbstr,/type) of 
  7: tbinfo,hdr_or_tbstr,tb_str
  8: tb_str = hdr_or_tbstr
  else: message,'ERROR - Invalid FITS header or structure supplied' 
@@ -130,8 +133,6 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
  width = tb_str.width[i]
  idltype = tb_str.idltype[i]
  tnull = tb_str.tnull[i]
- tscale = tb_str.tscal[i]
- tzero = tb_str.tzero[i]
 
  if numval EQ 0 then begin 
         message,/INF, 'Column ' + ttype + ' has zero width'
@@ -148,8 +149,7 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ; determine if scalar supplied
 
  row = rows
- s =size(row) & ndim = s[0]   
- if ndim EQ 0 then row = lonarr(1) + row
+ ndim = size(row,/N_dimen)  
  if row[0] LT 0 then nrow = nrows else  begin
      nrow = N_elements(row)
                                               ; check for valid row numbers
@@ -194,25 +194,33 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 
  4:  begin
      d = float( d, 0, numval, nrow)
-     if bswap then ieee_to_host, d
+     if bswap then byteorder, d, /XDRTOF
      end
 
  5:  begin
      d = double( d, 0, numval, nrow)
-     if bswap then ieee_to_host, d
+     if bswap then byteorder, d, /XDRTOD
      end
 
  6:  begin
      d = complex( d, 0, numval, nrow)
-     if bswap then ieee_to_host, d
+     if bswap then byteorder, d, /XDRTOF
      end
 
  7:  d = string(d)
+
+
+ 14: begin
+     d = long64(d, 0, numval, nrow)
+     if bswap then byteorder, d, /L64swap
+     end
 
  endcase
 
 
  if not keyword_set(NOSCALE) then begin
+        tscale = tb_str.tscal[i]
+        tzero = tb_str.tzero[i]
         if ( (tscale NE 1.0) or (tzero NE 0.0) ) then $
                 d = temporary(d)*tscale + tzero
  endif

@@ -1,4 +1,4 @@
-function getopt,input,type,numopt
+function getopt,input,type,numopt,count =count
 ;+
 ; NAME:
 ;	GETOPT
@@ -8,10 +8,9 @@ function getopt,input,type,numopt
 ;	Distinct elements in the string may be
 ;	separated by either a comma or a space.  The output scalar
 ;	or vector can be specified to be  either  integer or floating
-;	point.   A null string is converted to a zero.   !ERR is set
-;	to the number of elements supplied.  
+;	point.   A null string is converted to a zero.   
 ; CALLING SEQUENCE:
-;     option = GETOPT( input, [ type, numopt ])
+;     option = GETOPT( input, [ type, numopt, COUNT = ])
 ;
 ; INPUTS:
 ;	input   - string that was input by user in response to a prompt
@@ -30,8 +29,11 @@ function getopt,input,type,numopt
 ;		the fields in the string INPUT.  If NUMOPT is not
 ;		supplied, the number of elements in OPTION will 
 ;		equal the number of distinct fields in INPUT.
+; OPTIONAL INPUT KEYWORD:
+;       Count - integer giving the number of values actually returned by
+;               GETOPT.   If the input is invalid then COUNT is set to -1
 ; NOTES:
-;	(1) If an input is invalid, !ERR is set to -1 and the result is set 
+;	(1) If an input is invalid, Count is set to -1 and the result is set 
 ;		to 999.
 ;	(2) GETOPT uses the execute function to interpret the user string.   
 ;	 	Therefore GETOPT itself cannot be called with the EXECUTE 
@@ -50,6 +52,7 @@ function getopt,input,type,numopt
 ;-
  On_error,2
 
+ Err = 0
  inp = strtrim(input,2)               ;Remove leading & trailing blanks
  comma = strpos(inp,',')              ;look for comma
 
@@ -69,7 +72,7 @@ function getopt,input,type,numopt
 
           test = execute( 'option[i] = ' + token) 
           if test NE 1 then begin
-                !ERR = -1
+                count = -1
                 return, 999.9
           endif       
          i = i+1
@@ -78,7 +81,6 @@ function getopt,input,type,numopt
    endwhile
  endelse
 ;
- !ERR = i
 
  if N_params() LT 3 then begin
 
@@ -87,6 +89,7 @@ function getopt,input,type,numopt
 
  endif else option = option[0:numopt-1] 
 
+ count = N_elements(option)
  return,option       ;Successful completion
 
  end

@@ -23,7 +23,7 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 ;               type and size as the data.    Set IM = '' to create a dummy
 ;               header with NAXIS = 0. 
 ;       TYPE - If more than 2 parameters are supplied, then the second parameter
-;               is intepreted as an integer giving the IDL datatype e.g. 
+;               is interpreted as an integer giving the IDL datatype e.g. 
 ;               1 - LOGICAL*1, 2 - INTEGER*2, 4 - REAL*4, 3 - INTEGER*4
 ;       NAXISX - Vector giving the size of each dimension (NAXIS1, NAXIS2, 
 ;               etc.).  
@@ -74,6 +74,7 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 ;       Set BZERO = 0 for unsigned integer data  W. Landsman January 2000
 ;       EXTEND keyword must immediately follow last NAXISi W. Landsman Sep 2000
 ;       Add FITS definition COMMENT to primary headers W. Landsman Oct. 2001
+;       Allow (nonstandard) 64 bit integers   W. Landsman  Feb. 2003
 ;-                          
  On_error,2
 
@@ -97,8 +98,9 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
     endfor
   endif
 
-  print,'Allowed datatypes are (1) INTEGER*1, (2) INTEGER*2, (4) REAL*4,'
-  print,'                     (3) INTEGER*4 or (6) COMPLEX*8'
+  print,'Allowed datatypes are (1) Byte, (2) 16 bit integer, (3) 32 bit integer'
+  print,'                      (4) 32bit floating, (5) 64 bit double precision' 
+  print,'                  or (14) 64bit integer'
   read,'Enter datatype: ',stype
   s[s[0] + 1] = stype
 
@@ -114,10 +116,11 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
         3:      bitpix = 32  
         4:      bitpix = -32 
         5:      bitpix = -64 
-        6:      bitpix = 64  
+        6:      message,'Complex types not allowed as FITS primary arrays'  
         7:      bitpix = 8
        12:      bitpix = 16
        13:      bitpix = 32
+       14:      bitpix = 64
         else:   message,'ERROR: Illegal Image Datatype'
         endcase
 

@@ -1,4 +1,5 @@
-pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
+pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
+           Adjustformat = adjustformat
 ;+
 ; NAME:
 ;     DBPRINT
@@ -6,7 +7,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ;     Procedure to print specified items from a list of database entries
 ;
 ; CALLING SEQUENCE:     
-;     dbprint, list, [items, FORMS= , TEXTOUT= , /NoHeader]  
+;     dbprint, list, [items, FORMS= , TEXTOUT= , /AdjustFormat, /NoHeader]  
 ;
 ; INPUTS:
 ;     list  - list of entry numbers to be printed, vector or scalar 
@@ -34,6 +35,13 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ;            on output it will contain the items interactively selected.
 ;
 ; OPTIONAL INPUT KEYWORDS:
+;       /ADJUSTFORMAT -  If set, then the format length for string items will
+;               be adjusted to the maximum length for the entries to be printed.
+;               This option will slow down DBPRINT because it requires the 
+;               string items be extracted and their maximum length determined 
+;               prior to any printing.   However, it enables the display of
+;               string items without any truncation or wasted space. 
+;
 ;       FORMS - The number of printed lines per page. If forms is not 
 ;               present, output assumed to be in PORTRAIT form, and 
 ;               a heading and 47 lines are printed on each page, with
@@ -94,6 +102,8 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ;       Entry vector can be any integer type   W. Landsman Aug. 2001
 ;       Replace DATATYPE() with size(/TNAME)   W. Landsman  Nov. 2001
 ;       No page eject for TEXTOUT =5           W. Landsman  Nov. 2001
+;       No initial page eject                  W. Landsman  Jan. 2002
+;       Added AdjustFormat keyword             W. Landsman  Sep. 2002
 ;-
 ;
  On_error,2                                ;Return to caller
@@ -188,6 +198,31 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
    formats = db_item_info( 'FORMAT', it )
    flen = db_item_info( 'FLEN', it )            ;field lengths
    nvals = db_item_info( 'NVALUES', it )        ;larger than one for vector items
+;
+; If /AdjustFormat set, then extract all string vectors and find their maximum
+; length.   Then update the formats and flen vectors accordingly
+;
+   if keyword_set(adjustFormat) then begin
+     stringvar = where(dtype EQ 7, Nstring)
+     if Nstring GT 0 then begin
+       alen = intarr(Nstring)
+       varnames = 'v' + strtrim(indgen(Nstring)+1,2)
+       if !VERSION.RELEASE GE '5.3' $
+                 then stringitems = strjoin(varnames,',') $
+                 else begin
+                 stringitems = varnames[0]
+                 if Nstring GT 1 then for i=1,Nstring-1 do $
+                    stringitems = stringitems + ',' + varnames[i]
+                 endelse
+       result = execute('dbext,list,it[stringvar],' + stringitems)
+       for i=0, Nstring-1 do begin
+            result = execute( 'alen[i] = max(strlen(strtrim(temporary(' + $
+                        varnames[i] + '),2)))') 
+     endfor
+       flen[stringvar] = alen
+       formats[stringvar] = 'A' + strtrim(alen,2)
+     endif
+  endif
 
 ; Set up format array
 
@@ -237,7 +272,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 
         if pcount GT limit then begin           ;new page?
                 pcount = 0
-                if hardcopy then $
+                if (j GT 0) and hardcopy then $
                             printf,!textunit,string(byte(12))   $;eject
                        else printf,!textunit,' '
                 printf,!textunit,title                  ;print title

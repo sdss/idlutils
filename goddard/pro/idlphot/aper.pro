@@ -69,6 +69,18 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;               flux units
 ;     SKYERR -  NSTAR element vector giving error in sky values
 ;
+; EXAMPLE:
+;       Determine the flux and error for photometry radii of 3 and 5 pixels
+;       surrounding the position 234.2,344.3 on an image array, im.   Compute
+;       the partial pixel area exactly.    Assume that the flux units are in
+;       Poisson counts, so that PHPADU = 1, and the sky value is already known
+;       to be 1.3, and that the range [-32767,80000] for bad low and bad high
+;       pixels
+;      
+;
+;       IDL> aper, im, 234.2, 344.3, flux, eflux, sky,skyerr, 1, [3,5], $
+;            [-32767,80000],/exact, /flux, setsky = 1.3
+;       
 ; PROCEDURES USED:
 ;       GETOPT, MMM, PIXWT(), STRN(), STRNUMBER()
 ; NOTES:
@@ -77,6 +89,7 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;      (2) Less than 20 valid pixels available for computing sky
 ;      (3) Modal value of sky could not be computed by the procedure MMM
 ;      (4) *Any* pixel within the aperture radius is a "bad" pixel
+;      (5) The total computed flux is negative
 ;
 ;       APER was modified in June 2000 in two ways: (1) the /EXACT keyword was
 ;       added (2) the approximation of the intersection of a circular aperture

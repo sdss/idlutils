@@ -71,16 +71,17 @@
 ;       In order to use this procedure on Windows in IDL V5.2 or earlier, you 
 ;       must obtain the procedure find_wind_dir.pro and supporting procedures
 ;       from the Solar library 
-;       http://sohowww.nascom.nasa.gov/solarsoft/gen/idl/system/find_all_dir.pro
-; REVISION HISTORY:
-;       Written     :   William Thompson, GSFC, 3 May 1993.
-;       Version 6       William Thompson, GSFC, 20 August 1996
-;       Version 7, William Thompson, GSFC, 13 February 1998
-;                       Include Windows and MacOS seperators.
-;        Version 12, William Thompson, GSFC, 02-Feb-2001
-;                       In Windows, use built-in expand_path if able.
 ;
-; Version     :	Version 12
+; REVISION HISTORY:
+;               Version 11, Zarro (SM&A/GSFC), 23-March-00
+;                       Removed all calls to IS_DIR
+;		Version 12, William Thompson, GSFC, 02-Feb-2001
+;			In Windows, use built-in expand_path if able.
+;		Version 13, William Thompson, GSFC, 23-Apr-2002
+;			Follow logical links in Unix
+;			(Suggested by Pascal Saint-Hilaire)
+;
+; Version     :	Version 13
 ;-
 ;
 	ON_ERROR, 2
@@ -119,7 +120,7 @@
 ;  that any logical names are completely translated first.  A leading $ may be
 ;  part of the name, or it may be a signal that what follows is a logical name.
 ;
-	IF !VERSION.OS EQ 'vms' THEN BEGIN
+	IF !VERSION.OS_FAMILY EQ 'vms' THEN BEGIN
 		REPEAT BEGIN
 			IF STRMID(DIR,STRLEN(DIR)-1,1) EQ ':' THEN	$
 				DIR = STRMID(DIR,0,STRLEN(DIR)-1)
@@ -133,12 +134,14 @@
 		COMMAND_FILE = FIND_WITH_DEF('FIND_ALL_DIR.COM',!PATH,'.COM')
 		SPAWN,'@' + COMMAND_FILE + ' ' + COMMAND_FILE + ' ' + DIR, $
 			DIRECTORIES
-
 ;
 ;  For windows, if IDL version 5.3 or later, use the built-in EXPAND_PATH
 ;  program.
 ;
 	END ELSE IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
+;		IF IS_DIR(DIR, OUT=TEMP) NE 1 THEN MESSAGE,	$
+;			'A valid directory must be passed'
+;		DIR = TEMP
 ;
 		IF !VERSION.RELEASE GE '5.3' THEN BEGIN
 		    TEMP = DIR
@@ -147,7 +150,6 @@
 			    TEMP = STRMID(TEMP,0,STRLEN(TEMP)-1)
 		    DIRECTORIES = EXPAND_PATH('+' + TEMP, /ALL, /ARRAY)
 		END ELSE DIRECTORIES = FIND_WIND_DIR(DIR)
-
 ;
 ;  On Unix machines spawn the Bourne shell command 'find'.  First, if the
 ;  directory name starts with a dollar sign, then try to interpret the
@@ -155,12 +157,17 @@
 ;  signal an error.
 ;
 	END ELSE BEGIN
-		IF STRMID(DIR,0,1) EQ '$' THEN	$
-			DIR = GETENV(STRMID(DIR,1,STRLEN(DIR)-1))
-		IF STRTRIM(DIR,2) EQ '' THEN MESSAGE,	$
-			'A valid directory must be passed'
+		IF STRMID(DIR,0,1) EQ '$' THEN BEGIN
+		    SLASH = STRPOS(DIR,'/')
+		    IF SLASH LT 0 THEN SLASH = STRLEN(DIR)
+		    EVAR = GETENV(STRMID(DIR,1,SLASH-1))
+		    IF SLASH EQ STRLEN(DIR) THEN DIR = EVAR ELSE	$
+			    DIR = EVAR + STRMID(DIR,SLASH,STRLEN(DIR)-SLASH)
+		ENDIF
+;		IF IS_DIR(DIR) NE 1 THEN MESSAGE,	$
+;			'A valid directory must be passed'
 		IF STRMID(DIR,STRLEN(DIR)-1,1) NE '/' THEN DIR = DIR + '/'
-		SPAWN,'find ' + DIR + ' -type d -print | sort -',	$
+		SPAWN,'find ' + DIR + ' -follow -type d -print | sort -', $
 			DIRECTORIES, /SH
 ;
 ;  Remove any trailing slash character from the first directory.

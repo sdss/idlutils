@@ -54,7 +54,9 @@ pro dbhelp,flag,TEXTOUT=textout,sort=sort
 ;       only information for that file is printed along with an
 ;       optional file zdbase:dbname.hlp.
 ; PROCEDURES USED:
-;       DB_INFO(),DB_ITEM_INFO(),FIND_WITH_DEF(), TEXTOPEN, TEXTCLOSE
+;       DB_INFO(),DB_ITEM_INFO(),FIND_WITH_DEF(), TEXTOPEN, TEXTCLOSE, UNIQ()
+; IDL VERSION:
+;       V5.3 or later (uses vectorized FDECOMP)
 ; HISTORY:
 ;       Version 2  D. Lindler  Nov 1987 (new db format)
 ;       Faster printing of title desc. W. Landsman  May 1989 
@@ -68,18 +70,20 @@ pro dbhelp,flag,TEXTOUT=textout,sort=sort
 ;       8/17/95 jkf/acc - force lowercase filenames for .hlp files.
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /SORT keyword  J. Sandoval/W. Landsman     October 1998
-;       Fixed display of number of values with /SORT W.Landsman November 2001
+;       V5.3 version use vectorized FDECOMP   W. Landsman   February 2001
+;       Recognize 64 bit, unsigned integer datatypes W. Landsman September 2001
+;       Fix display of number of bytes with /SORT W. Landsman February 2002
+;       Assume since V5.2                 W. Landsman February 2002  
 ;-
 ;****************************************************************************
 ;
 ; get flag value
 ;
-stn=''
-if N_params() GT 0 then begin
-        s=size(flag)
-        if s[s[0]+1] EQ 7 then stn=strtrim(flag)        ;item name or
-                                                        ; db name
-   end else flag=0      ;flag not supplied
+  stn=''
+  if N_params() GT 0 then begin
+      if size(flag,/TNAME) EQ 'STRING' then $   ;item name or db name
+             stn=strtrim(flag) 
+  endif else flag = 0    ;flag not supplied
 ;
 ; Are any data bases opened?
 ;
@@ -131,6 +135,7 @@ if opened then begin                    ;data base opened?
           idltype = idltype[nsort]
           desc = desc[nsort]
           nvalues = nvalues[nsort]
+          nbytes = nbytes[nsort]
      endif
 ;
 ; get names and descriptions of opened db's
@@ -156,6 +161,10 @@ if opened then begin                    ;data base opened?
                        4: type = 'real*4'
                        5: type = 'real*8'
                        7: type = 'char*'+strtrim(nbytes[i],2)
+                       12: type = 'uint*2'
+                       13: type = 'uint*4'
+                       14: type = 'int*8'
+                       15: type = 'uint*8'
                         end
                    while strlen(type) lt 8 do type=type+' '
                    qname = names[i]
@@ -215,12 +224,8 @@ if opened then begin                    ;data base opened?
                 names=list_with_path(stn+'*.dbh', 'ZDBASE', COUNT=n) ;get list
                 if n EQ 0 then message,'Unable to locate database '+stn
        endelse
-       fnames=strarr(n)
-       for i=0,n-1 do begin
-               fdecomp,names[i],disk,dir,name
-               fnames[i]=name
-        endfor
-        fsort = rem_dup(fnames)
+       fdecomp,names,disk,dir,fnames
+       fsort = uniq(fnames,sort(fnames))
         n = N_elements(fsort)
         if flag then  begin                ;print description from .DBH file
              get_lun,unit

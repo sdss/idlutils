@@ -55,7 +55,7 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 ;       (2) Column heading may be truncated to fit in space defined by
 ;               the FORMAT specified for the column
 ;       (3) Program does not check for null values
-;       (4) All columns should have the same size
+;       (4) Does not work with variable length columns
 ;
 ; HISTORY:
 ;       version 1  D. Lindler Feb. 1987
@@ -63,13 +63,13 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 ;       Use new structure returned by TBINFO    W. Landsman  August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Made formatting more robust    W. Landsman   March 2000
+;       Use STRSPLIT to parse string column listing W. Landsman July 2002
+;       Wasn't always printing last row   W. Landsman  Feb. 2003
 ;-
-; On_error,2
+ On_error,2
 
-
- npar = N_params()
-
- if npar LT 2 then begin
+ FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility 
+ if N_params() LT 2 then begin
    print,'Syntax -  TBPRINT, h, tab, [ columns, rows, device, TEXTOUT= ,FMT= ]'
    return
  endif
@@ -90,10 +90,7 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
  if r[0] eq -1 then r = lindgen(nrows)          ;default
  n = N_elements(r)
 ;
-
- size_hdr = size(hdr_or_tbstr)
-
- case size_hdr[size_hdr[0]+1] of 
+ case size(hdr_or_tbstr,/type) of 
  7: tbinfo,hdr_or_tbstr,tb_str
  8: tb_str = hdr_or_tbstr
  else: message,'ERROR - Invalid FITS header or structure supplied' 
@@ -103,16 +100,11 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 
 ; if columns is a string, change it to string array
 
- s = size(columns) & ndim = s[0] & dtype = s[ndim+1]
-
- if dtype eq 7 then begin
-        colnames = strarr(tfields)              ;string array to hold names
-        numcol = 0                      ;number of columns
-        st = columns                    ;don't want to change columns var.
-        while st ne '' do begin
-                colnames[numcol] = gettok(st,',')
-                numcol = numcol+1
-        endwhile
+ if size(columns,/tname) eq 'STRING' then begin
+           if !VERSION.RELEASE GE '5.3' then $
+           colnames = strsplit(columns,',',/extract) else $
+           colnames = str_sep(strtrim(columns,2),',')
+        numcol = N_elements(colnames) 
         colnum = intarr(numcol)
         field = strupcase(colnames)
         for i = 0,numcol-1 do begin 
@@ -195,11 +187,10 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
         format = format + ',' + form[i]
  format = '(' + format + ')'
 
-
  if minnumval EQ 1 then $
  result = execute('for i=0,n-1 do printf,!TEXTUNIT,' +  $
                    vstring + ',f=format') else $
- result = execute('for i=rows[0],rows[nrow1]-1 do printf,!TEXTUNIT,' +  $
+ result = execute('for i=rows[0],rows[nrow1] do printf,!TEXTUNIT,' +  $
                    vstring + ',f=fmt') 
  textclose, TEXTOUT = textout
  return

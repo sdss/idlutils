@@ -93,7 +93,7 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;       recompiled).  ** No error message will be generated  ***
 ;
 ; SUBROUTINES CALLED:
-;       FDECOMP, GETTOK(), REPCHR() 
+;       FDECOMP, REPCHR() 
 ;
 ; MODIFICATION HISTORY:
 ;       Version 1.0 RAS January 1992
@@ -108,12 +108,13 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Write temporary file in HOME directory if necessary  W. Landsman Jul 98
 ;       Use OPENR,/DELETE for OS-independent file removal W. Landsman Jan 99
+;       Use STRSPLIT() instead of GETTOK() W. Landsman  July 2002
 ;-
 ;-------------------------------------------------------------------------------
- npar = N_params()
+ FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
 
- if (npar LT 4) then begin
-   print,'Syntax - CREATE_STRUCT, STRUCT, strname, tagnames, tag_descript, 
+ if N_params() LT 4 then begin
+   print,'Syntax - CREATE_STRUCT, STRUCT, strname, tagnames, tag_descript,' 
    print,'                  [ DIMEN = , /CHATTER, /NODELETE ]'
    return
  endif
@@ -139,12 +140,10 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 
 ; If tagname is a scalar string separated by commas, convert to a string array
 
- tagname = tagnames
- sz_name = size( tagnames )
- if  ( sz_name[0] Eq 0 ) then begin
-         tempname = tagnames
-         tagname = gettok(tempname,',')
-         while (tempname NE '') do tagname = [ tagname, gettok(tempname,',') ]
+ if size(tagnames,/N_dimensions) EQ 0 then begin
+    if !VERSION.RELEASE GE '5.3' then $
+            tagname = strsplit(tagnames,',',/EXTRACT) else $
+            tagname = str_sep(strtrim(tagnames,2),',')
  endif else tagname = tagnames
 
  Ntags = N_elements(tagname)

@@ -14,7 +14,7 @@ FUNCTION GET_EQUINOX,HDR,CODE
 ;       (3)  If the EQUINOX keyword is not found, then GET_EQUINOX will return
 ;               the EPOCH keyword value.   This usage of EPOCH is disparaged.
 ;
-;       According Greisen & Calabretta (2000, A&A, in press) the EQUINOX should
+;       According Calabretta & Greisen (2002, A&A, 395, 1077) the EQUINOX should
 ;       be written as a numeric value, as in format (1).   However, in older 
 ;       FITS headers, the EQUINOX might have been written using formats (2) or 
 ;       (3) 

@@ -131,7 +131,8 @@
 ;       Version 1, Craig Markwardt, GSFC 18 January 1999.
 ;               Documented this routine, 18 January 1999. 
 ;       C. Markwardt, added ability to pass by handle or pointer.
-;               Some bug fixes, 20 July 2001       
+;               Some bug fixes, 20 July 2001  
+;       W. Landsman/B.Schulz  Allow more than 50 arguments when using pointers     
 ;-
 ;
 @fxbintable
@@ -266,7 +267,7 @@
 ;
 ;  Check the number of columns.  It should be fewer than 50
 ;
-        IF NUMCOLS GT 50 THEN BEGIN
+        IF (NUMCOLS GT 50) AND (PASS EQ 'ARGUMENT') THEN BEGIN
             MESSAGE = 'Maximum of 50 columns exceeded'
             IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
                 ERRMSG = MESSAGE

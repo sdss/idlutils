@@ -28,6 +28,10 @@ pro remchar,st,char	;Remove character
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;-
                                  ;Convert string to byte
+ if N_params() LT 2 then begin
+     print,'Syntax - REMCHAR, string, character'
+     return
+ endif
 
  bchar = byte(char) & bchar = bchar[0]          ;Convert character to byte
 

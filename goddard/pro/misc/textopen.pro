@@ -1,4 +1,5 @@
-PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
+PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT, MORE_SET = more_set, $
+             SILENT = silent
 ;+
 ; NAME:
 ;       TEXTOPEN
@@ -10,7 +11,7 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 ;       TEXTOUT keyword or the (nonstandard) system variable !TEXTOUT.
 ;
 ; CALLING SEQUENCE:
-;       textopen, program, [ TEXTOUT =, /STDOUT ]
+;       textopen, program, [ TEXTOUT =, /STDOUT, /SILENT, MORE_SET= ]
 ;
 ; INPUTS:
 ;       program - scalar string giving name of program calling textopen
@@ -20,7 +21,9 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 ;               opened (see below) or scalar string giving name of output file.
 ;               If TEXTOUT is not supplied, then the (non-standard) system 
 ;               variable !TEXTOUT is used.
-;
+;       /SILENT - By default, TEXTOPEN prints an informational message when
+;                opening a file for hardcopy output.   Set /SILENT (or !QUIET)
+;                to suppress this message.
 ;       /STDOUT - if this keyword is set and non-zero, then the standard output
 ;               (unit = -1) is used for TEXTOUT=1 or TEXTOUT=2.   The use
 ;               of STDOUT has  2 possible advantages:
@@ -29,9 +32,15 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 ;               printing to /dev/tty.   These characters are eliminated by 
 ;               setting /STDOUT
 ;
-;               The disavdantage of /STDOUT is that the /MORE option is not
+;               The disadvantage of /STDOUT is that the /MORE option is not
 ;               available.
 ;
+; OPTIONAL OUTPUT KEYWORD:
+;       MORE_SET - Returns 1 if the output unit was opened with /MORE.   This
+;               occurs if (1) TEXTOUT = 1 and (2) the device is a tty, and 
+;               (3) /STDOUT is not set.      User can use the returned value
+;                of MORE_SET to determine whether to end output when user
+;                presses 'Q'.
 ; SIDE EFFECTS:
 ;       The following dev/file is opened for output.    Different effects
 ;       occur depending whether the standard output is a GUI (Macintosh,
@@ -59,10 +68,11 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 ;       IDL JOURNAL session, unlike text printed with the PRINT command.
 ;
 ; NON-STANDARD SYSTEM VARIABLES:
+;       TEXTOPEN will automatically define the following system variables if
+;       they are not previously defined:
+;
 ;       DEFSYSV,'!TEXTOUT',1
 ;       DEFSYSV,'!TEXTUNIT',0
-;
-;       One way to add these variables is to use the procedure ASTROLIB
 ; HISTORY:
 ;       D. Lindler  Dec. 1986  
 ;       Keyword textout added, J. Isensee, July, 1990
@@ -76,15 +86,30 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Exit with RETURN instead of RETALL  W. Landsman  June 1999
 ;       In IDL V5.4 filepath(/TERMINAL) not allowed in the IDLDE WL August 2001
+;       Added MORE_SET output keyword   W.Landsman   January 2002
+;       Added /SILENT keyword  W. Landsman  June 2002  
+;	Define !TEXTOUT and !TEXTUNIT if needed.  R. Sterner, 2002 Aug 27
+;       Return Calling Sequence if no parameters supplied W.Landsman Nov 2002
 ;-
 ;-----------------------------------------------------------
+  On_Error,2
+
+  if N_params() LT 1 then begin
+      print,'Syntax - TEXTOPEN, program, [ TEXTOUT =, /STDOUT, /SILENT,' 
+      print,'                              MORE_SET= ]' 
+      return
+  endif
+
+  defsysv,'!TEXTOUT',exists=ex			; Check if !TEXTOUT exists.
+  if ex eq 0 then defsysv,'!TEXTOUT',1		; If not define it.
+  defsysv,'!TEXTUNIT',exists=ex			; Check if !TEXTUNIT exists.
+  if ex eq 0 then defsysv,'!TEXTUNIT',0		; If not define it.
   ;
   ; Open proper unit.
   ;
   if N_elements( textout ) NE 1 then textout = !textout ;use default output dev.
 
-  ptype = size(textout)
-  if ptype[1] EQ 7 then begin      ;text if filename entered for textout
+  if size(textout,/tname) EQ 'STRING' then begin  ;test if filename entered
         filename = textout
         j = strpos(filename,'.')        ;test if file extension given
         if j lt 0 then filename = filename + ".prt"
@@ -118,6 +143,8 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
         !TEXTUNIT = unit
 
     endif else !TEXTUNIT = -1                     ;standard output
+
+  more_set = (text_out EQ 1) and isatty
   
   case text_out of
      1: if isatty then openw, !TEXTUNIT, filepath(/TERMINAL), /MORE
@@ -129,6 +156,7 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
         if !VERSION.OS EQ "vms" then oname = strupcase(oname) $
                                 else oname = strlowcase(oname)
         openw, !TEXTUNIT, oname
+        if not keyword_set(SILENT) then $
         message,'Output is being directed to a file ' + oname,/INFORM
         end
 
@@ -136,12 +164,14 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 
      6: begin
         openw,!TEXTUNIT,filename
+        if not keyword_set(SILENT) then $
         message,'Output is being directed to a file ' + filename,/INFORM
         end
 
      7: begin
         oname = strlowcase(strtrim( PROGRAM,2) +'.prt')
         openw, !TEXTUNIT, oname, /append
+        if not keyword_set(SILENT) then $
         message,'Output is being appended to file ' + oname,/INFORM
         for i=0,3 do printf,!textunit,' '       ;added a couple of blank lines
         end

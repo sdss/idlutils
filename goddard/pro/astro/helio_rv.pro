@@ -1,15 +1,15 @@
 function helio_rv,HJD,T,P,V0,K,e,omega,single=single
 ;+ 
 ; NAME:
-;	HELIO_RV
+;       HELIO_RV
 ;
 ; PURPOSE:
-;	Return the heliocentric radial velocity of a spectroscopic binary
+;       Return the heliocentric radial velocity of a spectroscopic binary
 ;
 ; EXPLANATION:
-;	This function will return the heliocentric radial velocity of a 
-;	spectroscopic binary star at a given heliocentric Julian date (HJD) 
-;	given its orbit.
+;       This function will return the heliocentric radial velocity of a 
+;       spectroscopic binary star at a given heliocentric Julian date (HJD) 
+;       given its orbit.
 ;
 ; CALLING SEQUENCE:
 ;
@@ -80,7 +80,7 @@ function helio_rv,HJD,T,P,V0,K,e,omega,single=single
 ;  Iteration for E changed to that  given by Reidel , Feb 95,Pierre Maxted
 ;  /SINGLE keyword removed.                           May 96,Pierre Maxted
 ;
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
 ;
 ; 
@@ -131,7 +131,7 @@ function helio_rv,HJD,T,P,V0,K,e,omega,single=single
  nu=2.0D*atan(sqrt((1.D0 + e)/(1.D - e))*tan(E1/2.0D))
 ; nu=nu+((nu<0D)*(2D*!dpi))
 ;
-; Can now calculate radial velocites
+; Can now calculate radial velocities
 ;
  rv = (K*(cos(nu+!dtor*omega) + (e*cos(!dtor*omega))))+V0
  return ,rv

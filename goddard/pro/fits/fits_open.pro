@@ -15,7 +15,9 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;
 ;*INPUTS:
 ;       filename : name of the FITS file to open, scalar string
-;
+;                  FITS_OPEN can also open gzip compressed (.gz) file *for 
+;                  reading only*, in IDL V5.3 or later, although there is a 
+;                  performance penalty 
 ;*OUTPUTS:
 ;       fcb : (FITS Control Block) a IDL structure containing information
 ;               concerning the file.  It is an input to FITS_READ, FITS_WRITE
@@ -78,6 +80,7 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;               .LAST_EXTENSION - last extension number read.
 ;               .RANDOM_GROUPS - 1 if the PDU is random groups format,
 ;                               0 otherwise
+;               .NBYTES - total number of (uncompressed) bytes in the FITS file
 ;
 ;       When FITS open is called with the /WRITE or /APPEND option, FCB
 ;       contains:
@@ -109,9 +112,11 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;     	Lindler, Dec, 2001, Modified to use 64 bit words for storing byte
 ;             positions within the file to allow support for very large
 ;             files 
+;       Work with gzip compressed files W. Landsman    January 2003
 ;-
 ;--------------------------------------------------------------------
-;
+
+       FORWARD_FUNCTION strsplit                  ;Pre-V53 compatibility
 ; if no parameters supplied, print calling sequence
 ;
        if N_params() LT 1 then begin
@@ -123,6 +128,7 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;
 ; set default keyword parameters
 ;
+
         message = ''
         open_for_read = 1
         open_for_update = 0
@@ -153,8 +159,19 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;
 ; open file
 ;
+        docompress = 0
+        if !VERSION.RELEASE GT '5.3' then begin
+           if open_for_read and (not open_for_overwrite) then begin
+           len = strlen(filename)
+           if strmid(filename, len-3, 3) EQ '.gz' then docompress= 1 
+        endif
+        endif
+;
+; open file
+;
         get_lun,unit
-        case 1 of
+       if docompress then openr,unit,filename,/block, /compress else begin
+       case 1 of
                 keyword_set(append): openu,unit,filename,/block
                 keyword_set(update): openu,unit,filename,/block
                 keyword_set(write) : if !version.os eq 'vms' then $
@@ -162,9 +179,21 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
                                      else openw,unit,filename
                 else               : openr,unit,filename,/block
         endcase
+        endelse
 
         file = fstat(unit)
-        nbytes_in_file = file.size
+        if !VERSION.RELEASE GE '5.4' then docompress = file.compress
+
+; Need to spawn to "gzip -l" to get the number of uncompressed bytes in a gzip
+; compressed file.    I'm not sure how independent this code is with different
+; shells and OS's.
+
+        if docompress then begin 
+             spawn,'gzip -l ' + filename, output
+	     output = strtrim(output,2)
+	     g = where(strmid(output,0,8) EQ 'compress')
+             nbytes_in_file = long64((strsplit(output[g+1],/extract))[1])
+        endif else nbytes_in_file = file.size
 ;
 ; create vectors needed to store header information for each extension
 ;
@@ -178,15 +207,10 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
         bitpix = lonarr(n)
         naxis  = lonarr(n)
         axis = lonarr(20,n)
-        if !VERSION.RELEASE GE '5.2' then begin
-          start_header = lon64arr(n)        ; starting byte in file for header
-          start_data = lon64arr(n)          ; starting byte in file for data
-          position = long64(0)             ; current byte position in file
-        endif else begin
-          start_header = lonarr(n)
-          start_data = lonarr(n)
-          position = 0L
-       endelse 
+        start_header = lon64arr(n)        ; starting byte in file for header
+        start_data = lon64arr(n)          ; starting byte in file for data
+        position = long64(0)             ; current byte position in file
+        skip = long64(0)                 ; Amount to skip from current position
 ;
 ; read and process each header in the file if open for read or update
 ;
@@ -200,8 +224,8 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ; loop on headers in the file
 ;
             repeat begin
-            point_lun,unit,position
-            start = position
+              if skip GT 0 then point_lun,unit,position 
+              start = position
 ;
 ; loop on header blocks
 ;
@@ -250,6 +274,7 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 
                     first_block = 0
                 end until (nend gt 0)   
+
 ;
 ; print header if hprint set
 ;
@@ -316,10 +341,13 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
                                     ndata = ndata*axis[i-1,extend_number]
                 nbytes = (abs(bitpix[extend_number])/8) * $
                        (gcount[extend_number]>1)*(pcount[extend_number] + ndata)
-                position = position + (nbytes + 2879)/2880 * 2880
+                skip = (nbytes + 2879)/2880*2880
+                position = position + skip
+
 ;
 ; end loop on headers
 ;           
+
                 extend_number = extend_number + 1
             end until (position ge nbytes_in_file-2879)
         end
@@ -358,7 +386,8 @@ done_headers:
                         start_data:start_data[0:nx],hmain:hmain, $
                         open_for_write:open_for_overwrite*3,$
                         last_extension:-1, $
-                        random_groups:random_groups}
+                        random_groups:random_groups, $
+                        nbytes: nbytes_in_file }
         end
         !err = 1
         return

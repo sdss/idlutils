@@ -128,11 +128,14 @@
 ;
 ; SEE ALSO
 ;   JPLEPHREAD, JPLEPHINTERP, JPLEPHTEST
+; PROCEDURES USED:
+;     FXBCLOSE, FXBOPEN, FXPAR(), 
 ;   
 ; MODIFICATION HISTORY:
 ;   Written and Documented, CM, Jun 2001
+;   Use GETTOK() instead of STR_SEP()  W. Landsman  July 2002
 ;
-;  $Id: jplephread.pro,v 1.1 2002-01-04 19:11:03 schlegel Exp $
+;  $Id: jplephread.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $
 ;
 ;-
 ; Copyright (C) 2001, Craig Markwardt
@@ -146,7 +149,7 @@
 function jplephpar, header, parname, default=default, fatal=fatal
   forward_function fxpar
 
-  ; '$Id: jplephread.pro,v 1.1 2002-01-04 19:11:03 schlegel Exp $'
+  ; '$Id: jplephread.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $'
 
   value = fxpar(header, parname, Count = N_value)
   if N_value EQ 0 then begin
@@ -170,6 +173,7 @@ end
 pro jplephread, filename, info, raw, jdlimits, $
                 status=status, errmsg=errmsg
 
+  FORWARD_FUNCTION gettok
   status = 0
   printerror = 1 - arg_present(errmsg)
   errmsg = ''
@@ -316,7 +320,7 @@ pro jplephread, filename, info, raw, jdlimits, $
 
       ;; Trim each object name to first word only
       for i = 0, n_elements(ephobj)-1 do begin
-          ephobj[i] = strupcase((str_sep(ephobj[i], ' '))[0])
+          ephobj[i] = strupcase(gettok(ephobj[i], ' '))
       endfor
       
       ;; ---------------------------------------------

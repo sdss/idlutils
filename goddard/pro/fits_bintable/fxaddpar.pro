@@ -60,7 +60,7 @@
 ;                instead be truncated to 68 characters.    This was the default
 ;                behaviour of FXADDPAR prior to December 1999.  
 ; Calls       : 
-;       FXPAR(), FXPARPOS()
+;       DETABIFY(), FXPAR(), FXPARPOS()
 ; Common      : 
 ;       None.
 ; Restrictions: 
@@ -118,8 +118,9 @@
 ;	Version 4, D. Lindler, March 2000, modified to use capital E instead
 ;		of a lower case e for exponential format.
 ;       Version 4.1 W. Landsman April 2000, make user-supplied format uppercase
+;       Version 4.2 W. Landsman July 2002, positioning of EXTEND keyword
 ; Version     : 
-;       Version 4.1, April 2000
+;       Version 4.2, July 2002
 ;-
 ;
 
@@ -404,6 +405,19 @@ PRO FXADDPAR, HEADER, NAME, VALUE, COMMENT, BEFORE=BEFORE,      $
                 I = NUM_AXIS + 2
                 GOTO, INSERT
         ENDIF
+
+;
+;  If the keyword is EXTEND, then it must follow the last NAXIS* keyword.
+;
+
+        IF NN EQ 'EXTEND  ' THEN BEGIN
+                IF KEYWRD[2] NE 'NAXIS   ' THEN MESSAGE,        $
+                        'Required NAXIS keyword not found'
+                FOR I = 3, N-2 DO $   
+                    IF STRMID(KEYWRD[I],0,5) NE 'NAXIS' THEN GOTO, INSERT 
+                   
+         ENDIF
+    
 ;
 ;  If the first keyword is XTENSION, and has the value of either 'TABLE' or
 ;  'BINTABLE', then there are some additional required keywords.

@@ -31,21 +31,21 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
 ;       zeroes could cause routine to abort.
 ;
 ; PROCEDURE:
-;       A binary search is used to find the values XARR(I)
-;       and XARR(I+1) where XARR(I) < X < XARR(I+1).
+;       A binary search is used to find the values XARR[I]
+;       and XARR[I+1] where XARR[I] < X < XARR[I+1].
 ;       IEFF is then computed using linear interpolation 
 ;       between I and I+1.
-;               IEFF = I + (X-XARR(I)) / (XARR(I+1)-XARR(I))
+;               IEFF = I + (X-XARR[I]) / (XARR[I+1]-XARR[I])
 ;       Let N = number of elements in XARR
-;               if x < XARR(0) then IEFF is set to 0
-;               if x > XARR(N-1) then IEFF is set to N-1
+;               if x < XARR[0] then IEFF is set to 0
+;               if x > XARR[N-1] then IEFF is set to N-1
 ;
 ; EXAMPLE:
 ;       Set all flux values of a spectrum (WAVE vs FLUX) to zero
 ;       for wavelengths less than 1150 Angstroms.
 ;         
 ;       IDL> tabinv, wave, 1150.0, I
-;       IDL> flux( 0:fix(I) ) = 0.                         
+;       IDL> flux[ 0:fix(I) ] = 0.                         
 ;
 ; FUNCTIONS CALLED:
 ;       None
@@ -74,7 +74,7 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
  ; Test for monotonicity 
 
  i = xarr - shift( xarr,1)
- i = i(1:*)               ;Added 15-Aug to properly interpret 2 element
+ i = i[1:*]               ;Added 15-Aug-1992 to properly interpret 2 element
  a = where( i GE 0, N)    ;decreasing vector
 
  if ( N NE npt) then begin 
@@ -87,7 +87,7 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
 
  
  ieff = float(value_locate(xarr,x)) 
- g = where( (ieff lt npt) and (ieff GE 0), Ngood)
+ g = where( (ieff LT npt) and (ieff GE 0), Ngood)
  if Ngood GT 0 then begin
       neff = ieff[g]
      diff = x[g] - xarr[neff]

@@ -63,7 +63,9 @@
 ;	Version 6, W. Landsman GSFC 30 Aug 1997
 ; Version     : 
 ;	Version 6, 31 Aug 1997
+;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Optimized FXPAR; call FXBFIND for speed, CM 1999 Nov 18
+;       Modify DHEAP(ILUN) when opening table now, CM 2000 Feb 22
 ;-
 ;
 @fxbintable
@@ -100,12 +102,18 @@
 	NAXIS1[ILUN]  = FXPAR(HEADER,'NAXIS1', START=START)
 	NAXIS2[ILUN]  = FXPAR(HEADER,'NAXIS2', START=START)
 	TFIELDS[ILUN] = FXPAR(HEADER,'TFIELDS', START=START)
+	PCOUNT        = FXPAR(HEADER,'PCOUNT', START=START)
 ;
 ;  If THEAP is not present, then set it equal to the size of the table.
 ;
 	THEAP = FXPAR(HEADER,'THEAP', START=START)
 	IF !ERR LT 0 THEN THEAP = NAXIS1[ILUN]*NAXIS2[ILUN]
 	HEAP[ILUN] = THEAP
+;
+;  Modify DHEAP
+;
+        DDHEAP = PCOUNT - (THEAP - NAXIS1[ILUN]*NAXIS2[ILUN])
+        IF DDHEAP GT 0 THEN DHEAP[ILUN] = DDHEAP ELSE DHEAP[ILUN] = 0
 ;
 ;  Store the information about the columns.
 ;

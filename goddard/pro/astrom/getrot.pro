@@ -11,9 +11,9 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;     obtained by EXTAST.PRO)
 ;
 ; CALLING SEQUENCE:
-;     GETROT, Hdr, [ Rot, CDelt, /DEBUG  ]   
+;     GETROT, Hdr, [ Rot, CDelt, DEBUG =  ]   
 ;             or 
-;     GETROT, Astr, Rot, CDelt, /DEBUG ]       
+;     GETROT, Astr, Rot, CDelt, DEBUG = ]       
 ;
 ; INPUT PARAMETERS:
 ;     HDR - FITS Image header (string array).  Program will extract the 
@@ -33,18 +33,20 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;       will display the rotation and plate scale at the terminal.
 ;
 ; OPTIONAL INPUT KEYWORD
-;       /DEBUG - if DEBUG is set, GETROT will print the rotation for both the 
+;       DEBUG - if DEBUG is set, GETROT will print the rotation for both the 
 ;       X and Y axis when these values are unequal.  If DEBUG is set to 2, 
 ;       then the output parameter ROT will contain both X and Y rotations.
 ;
 ; PROCEDURE:
 ;       If the FITS header already contains CDELT (and CD or CROTA) keyword,
-;       (as suggested by the proposed Greisen & Calabretta FITS standard) 
-;       then this is used for the scale factor.
+;       (as suggested by the Calabretta & Greisen (2002, A&A, 395, 1077) FITS 
+;       standard) then this is used for the scale factor.
 ;       
 ;       If the header contains CD keywords but no CDELT keywords (as in IRAF
 ;       headers) then the scale factor is derived from the CD matrix. 
-;       
+;
+; PROCEDURES USED:
+;       EXTAST, GSSS_EXTAST
 ; REVISION HISTORY:
 ;       Written W. Landsman STX January 1987 
 ;       Convert to IDL V2. M. Greason, STX, May 1990
@@ -54,20 +56,22 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Correct rotation determination with unequal CDELT values WL October 1998
 ;       Consistent conversion between CROTA and CD matrix  WL  October 2000
+;       Correct CDELT computations for rotations near 90 deg WL November 2002
 ;-
  On_error,2
 
  if N_params() EQ 0 then begin
-        print,'Syntax: GETROT, Hdr, [ Rot, CDelt ]'
-        print,'    OR: GETROT, Astr, [ Rot, CDelt ]'
+        print,'Syntax: GETROT, Hdr, [ Rot, CDelt, DEBUG= ]'
+        print,'    OR: GETROT, Astr, [ Rot, CDelt, DEBUG= ]'
         return
  endif
 
  if not keyword_set(DEBUG) then debug = 0
  radeg = 180.0/!DPI
- sz = size(hdr)                ;Did user supply a FITS header or a CD matrix?
+ sz = size(hdr,/STR)                ;Did user supply a FITS header or a CD matrix?
 
- if ((sz[0] eq 1) and (sz[2] eq 7)) then begin                ;FITS header?
+ if ((sz.N_dimensions eq 1) and $
+     (sz.type_name EQ 'STRING')) then begin     ;FITS header?
 
         extast,hdr,astr             ;Extract astrometry from header,
         if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
@@ -80,7 +84,8 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
             message,'ERROR - Header is missing astrometry keywords CD or CDELT'
 
 endif else $
- if ((sz[sz[0]+1] eq 8) AND (sz[sz[0]+2] eq 1)) then begin   ;ASTROMETRY structure
+ if ((sz.N_dimensions eq 1) and $
+     (sz.type_name EQ 'STRUCT')) then begin     ;Astrometry Structure?
       astr = hdr
       cd = astr.cd/RADEG
  endif else message, $
@@ -97,7 +102,7 @@ endif else $
  if det GT 0 then $
    message,'WARNING - Astrometry is for a right-handed coordinate system',/INF
  cdelt = fltarr(2)
- if (cd[1,0] eq 0) or (cd[0,1] eq 0) then begin ;Unrotated coordinates?
+ if (cd[1,0] eq 0) and (cd[0,1] eq 0) then begin ;Unrotated coordinates?
    rot = 0.
    rot2 = 0.
    cdelt[0] = cd[0,0]
@@ -111,17 +116,16 @@ endif else $
  if (abs(rot) NE  abs(rot2)) then begin
       if keyword_set(debug) then $
         print,'X axis rotation:',rot*!RADEG, ' Y axis rotation:',rot2*!RADEG
-        if debug eq 2 then rot = [rot,rot2] else $
+      if debug eq 2 then rot = [rot,rot2] else $
       if (rot - rot2)*!RADEG LT 2 then rot = (rot + rot2)/2.
  endif
 
-  cdelt[0] =   cd[0,0]/cos(rot)
-  cdelt[1] =   cd[1,1]/cos(rot)
+  cdelt[0] =   sqrt(cd[0,0]^2 + cd[0,1]^2)
+  cdelt[1] =   sqrt(cd[1,1]^2 + cd[1,0]^2)
 
  rot = float(rot*RADEG)
  cdelt = float(cdelt*RADEG)
 
-DONE:
  if N_params() EQ 1 or keyword_set(DEBUG) then begin
         if debug LT 2 then print,'Rotation (counterclockwise)',rot,' degrees'
         print,'Sampling interval X axis',cdelt[0]*3600.,' arc seconds/pixel'

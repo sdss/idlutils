@@ -3,18 +3,19 @@
 ;	COMPARE_STRUCT  
 ; PURPOSE:
 ;	Compare all matching tag names and return differences
+;
 ; EXPLANATION:
 ; 	Compare all matching Tags names (except for "except_Tags")
-;	between two structure arrays (may be different struct.defs.),
+;	between two structure arrays (may have different struct.definitions),
 ;	and return a structured List of fields found different.
-; CATEGORY:
-;			Structures
+;
 ; CALLING SEQUENCE:
-;	diff_List = compare_struct( struct_A, struct_B )
+;	diff_List = compare_struct( struct_A, struct_B [ EXCEPT=, /BRIEF,
+;                                    /FULL, RECUR_A, RECUR_B )
 ; INPUTS:
 ;	struct_A, struct_B : the two structure arrays to compare.
 ;	Struct_Name : for internal recursion use only.
-; KeyWords:
+; OPTIONAL INPUT KEYWORDS:
 ;		EXCEPT = string array of Tag names to ignore (NOT to compare).
 ;		/BRIEF = number of differences found for each matching field
 ;						of two structures is printed.
@@ -35,6 +36,15 @@
 ;	which can be examined using print,diff_List or help,/st,diff_List.
 ; PROCEDURE:
 ;	Match Tag names and then use where function on tags.
+; EXAMPLE:
+;       Find the tags in the !X system variable which are changed after a 
+;       simple plot.
+;       IDL> x = !X              ;Save original values
+;       IDL> plot, indgen(25)    ;Make a simple plot
+;       IDL> help,/str,compare_struct(x,!X)    ;See how structure has changed
+;
+;            and one will see that the tags  !X.crange and !X.S are changed
+;            by the plot.
 ; MODIFICATION HISTORY:
 ;	written 1990 Frank Varosi STX @ NASA/GSFC (using copy_struct)
 ;	modif Aug.90 by F.V. to check and compare same # of elements only.

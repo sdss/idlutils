@@ -70,7 +70,7 @@
 ;   Written and Documented, CM, Jun 2001
 ;   Removed TRANSREAD, improved output, improved docs, CM, 9 Jul 2001
 ;
-;  $Id: jplephtest.pro,v 1.1 2002-01-04 19:11:03 schlegel Exp $
+;  $Id: jplephtest.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $
 ;
 ;-
 ; Copyright (C) 2001, Craig Markwardt

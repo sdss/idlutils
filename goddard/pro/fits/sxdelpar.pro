@@ -29,6 +29,7 @@ pro sxdelpar, h, parname
 ;	Converted to new IDL  April 1990 by D. Lindler
 ;	Test for case where all keywords are deleted    W. Landsman Aug 1995 
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Allow for headers with more than 32767 lines W. Landsman Jan. 2003
 ;------------------------------------------------------------------
  On_error,2
 
@@ -52,12 +53,12 @@ pro sxdelpar, h, parname
 	message,'FITS header (1st parameter) must be a string array'
 
  nlines = s[1]		;number of lines in header array
- pos = 0		;position in compressed header with keywords removed
+ pos = 0L		;position in compressed header with keywords removed
 
 ; loop on header lines
 
  keyword = strtrim( strmid(h,0,8), 2 )
- for i = 0, nlines-1 do begin
+ for i = 0L, nlines-1 do begin
 	for j = 0,num-1 do $
               if keyword[i] EQ par[j] then goto, DELETE ;delete it?
 	h[pos] = h[i]		;keep it

@@ -1,4 +1,4 @@
-Math and Statistics pro/math                             November 2001
+Math and Statistics pro/math                             March 2002
 _________
 
       This directory contains IDL mathematics and statistics procedures
@@ -86,6 +86,7 @@ FULSTR - Restore a row-indexed sparse matrix to full storage mode
 FZ_ROOTS - Roots of a polynomial by Laguerre's method with deflation (zroots)
 HQR    - eigenvalue of an Hessenberg matrix
 INVERT - Invert a matrix using Gaussian elimination methods
+LADFIT - Fit a straight line by minimizing absolute deviation (medfit)
 LEGENDRE - Return the value of the associated Legendre polynomial (V5.4, plgndr)
 LINBCG - Solve N linear equation in N unknowns using biconjugate gradient
 	method 

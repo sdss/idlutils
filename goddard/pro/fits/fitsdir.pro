@@ -1,45 +1,53 @@
-pro fitsdir ,directory, TEXTOUT = textout,NoTelescope = NoTelescope, $
-   EXTEN = exten
+pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $ 
+     nosize = nosize, alt1_keywords=alt1_keywords, alt2_keywords=alt2_keywords,$
+     alt3_keywords = alt3_keywords, NoTelescope = NoTelescope,exten=exten
 ;+
 ; NAME:
 ;     FITSDIR 
 ; PURPOSE:
-;     Provide a brief description of the headers of FITS disk files.  
+;     Display selected FITS keywords from the headers of FITS files.  
 ; EXPLANATION:
-;     The values of the FITS keywords NAXISi, DATE-OBS (or TDATEOBS or DATE),
-;     TELESCOPE (or TELNAME, OBSERVAT, or INSTRUME), OBJECT (or TARGNAME), 
-;     EXPTIME (or INTEG or EXPOSURE) are displayed.    All of these are 
-;     commonly used FITS keywords and all except EXPTIME are officially 
-;     reserved FITS keywords.   Keyword names in parentheses are searched if 
-;     the primary keyword is not found.
+;     The values of either user-specified or default FITS keywords are 
+;     displayed in either the primary header and/or the first extension header.
+;     Unless the /NOSIZE keyword is set, the data size is also displayed.
+;     The default keywords are as follows (with keywords in 2nd row used if
+;     those in the first row not found, and the 3rd row if neither the keywords
+;     in the first or second rows found:)
 ;
-;     In IDL V5.3 or later, FITSDIR will also recognize gzip compressed files
-;     (must have a .gz extension).
+;     DATE-OBS     TELESCOP   OBJECT    EXPTIME       
+;     TDATEOBS     TELNAME    TARGNAME  INTEG        ;First Alternative
+;     DATE         OBSERVAT             EXPOSURE     ;Second Alternative
+;                  INSTRUME             EXPTIM       ;Third Alternative
+;
+;      FITSDIR will also recognize gzip compressed files (must have a .gz 
+;      extension).
 ; CALLING SEQUENCE:
-;     FITSDIR , [ directory, TEXTOUT =, /NoTelescope, EXTEN= ] 
+;     FITSDIR , [ directory, TEXTOUT =, /FLAT, KEYWORDS=, /NOSIZE, /NoTELESCOPE
+;                            ALT1_KEYWORDS= ,ALT2_KEYWORDS = ,ALT3_KEYWORDS =  
 ;
 ; OPTIONAL INPUT PARAMETERS:
 ;     DIRECTORY - Scalar string giving file name, disk or directory to be 
 ;             searched.   Wildcard file names are allowed.    Examples of 
-;             valid VMS or Unix names include '*.fit' or 'tape*'.    An 
-;             example of a valid VMS name is  'UIT$USER2:[JONES]*.FIT' while
-;                a valid Unix string is 'iraf/*.fits'.
-;
-;             If not given, FITSDIR searches *.fits files in the default 
-;             directory.
-;
+;             valid names include 'iraf/*.fits' (Unix), d:\myfiles\f*.fits',
+;             (Windows) or 'Macintosh HD:Files:*c0f.fits' (Macintosh).  
+;            
 ; OPTIONAL KEYWORD INPUT PARAMETER
-;     /NOTELESCOPE - If this keyword is set and non-zero then the value of 
-;               the (usually less important) TELESCOPE keyword is not 
-;               displayed, and more space is available to display the other 
-;               keyword values.    The following table shows the default 
-;               output formats with and without the /NOTELESCOPE keyword.
-;
-;       File name    NAXISi    DATE-OBS    TELESCOPE    OBJECT    EXPTIME
-;          A18        A11        A10          A10        A20        F7.1
-;          A20        A12        A10                     A29        F7.1
-;
-;                                                                    
+;      KEYWORDS - FITS keywords to display, as either a vector of strings or as
+;                 a comma delimited scalar string, e.g.'testname,dewar,filter'
+;                 If not supplied, then the default keywords are 'DATE-OBS',
+;                 'TELESCOP','OBJECT','EXPTIME'
+;      ALT1_KEYWORDS - A list (either a vector of strings or a comma delimited
+;                 strings of alternative keywords to use if the default 
+;                 KEYWORDS cannot be found.   By default, 'TDATEOBS', is the 
+;                 alternative to DATE-OBS, 'TELNAME' for 'TELESCOP','TARGNAME'
+;                 for 'OBJECT', and 'INTEG' for EXPTIME
+;      ALT2_KEYWORDS - A list (either a vector of strings or a comma delimited
+;                 strings of alternative keywords to use if neither KEYWORDS 
+;                 nor ALT1_KEYWORDS can be found.    
+;      ALT3_KEYWORDS - A list (either a vector of strings or a comma delimited
+;                 strings of alternative keywords to use if neither KEYWORDS 
+;                 nor ALT1_KEYWORDS nor ALT2_KEYWORDS can be found.    
+;      /NOSIZE - if set then information about the image size is not displayed  
 ;      TEXTOUT - Controls output device as described in TEXTOPEN procedure
 ;               textout=1       TERMINAL using /more option
 ;               textout=2       TERMINAL without /more option
@@ -48,60 +56,49 @@ pro fitsdir ,directory, TEXTOUT = textout,NoTelescope = NoTelescope, $
 ;               textout=5       user must open file
 ;               textout=7       Append to existing <program>.prt file
 ;               textout = filename (default extension of .prt)
-;
-;      EXTEN - Integer>0 specifying which extension header to first read to 
-;              find the FITS keywords.   By default, FITSDIR only looks at the 
-;              primary header.   If /Exten is set, then FITSDIR first looks at
-;              the first extension (if present) for the keywords, and then
-;              looks at the primary header.   The only disadvantage to including
-;              the EXTEN keyword is that it slows the processing slightly.
-;
+;       /EXTEN - If set, then the first FITS extension is also checked for the
+;                desired keywords.    
+;       /NOTELESCOPE - If set, then if the default keywords are used, then the
+;                TELESCOPE (or TELNAME, OBSERVAT, INSTRUME) keywords are omitted
+;                to give more room for display other keywords.   The /NOTELESCOP
+;                 keyword has no effect if the default keywords are not used.
 ; OUTPUT PARAMETERS:
 ;       None.
 ;
-; RESTRICTIONS:
-;       (1) Field values may be truncated if their length exceeds the default
-;           format.
-;
-;       (2) Does not print an information about the columns in FITS tables. 
-;           Use FTAB_HELP to get this information.    Use FITS_HELP to get
-;           information about every extension in a FITS file.    
-;
-;       (3) Users may wish to modify the program to display other FITS 
-;               keywords of particular interest to them
 ; EXAMPLES:  
-;       IDL> fitsdir          ;Print info on all '*.fits' files in current 
-;                               directory.     
-;       IDL> fitsdir ,'*.fit'   ;Lists all '*.fit' files in current directory 
-;       IDL> fitsdir ,'*.fit.gz',/ext   ;Print info on all *.fit.gz files in 
-;                               ;current directory.   Files are asummed to be 
-;                               ;compressed.   The first extension header
-;                               ;will be read along with the primary header.
+;  (1) Print info on all'*.fits' files in the current  directory using default
+;          keywords.   Include information from the extension header     
+;       IDL> fitsdir,/exten
 ;
-;       Write info on all *.fits files in the Unix directory /usr2/smith, to a 
-;       file 'smith.txt' and don't display the value of the TELESCOPE keyword
+;  (2) Write a driver program to display selected keywords in HST/ACS drizzled
+;       (*drz) images
+;         pro acsdir
+;        keywords = 'date-obs,targname,detector,filter1,filter2,exptime'
+;        fitsdir,'*drz.fits',key=keywords,/exten
+;        return & end
+;
+;   (3)  Write info on all *.fits files in the Unix directory /usr2/smith, to a 
+;        file 'smith.txt' using the default keywords, but do not display the 
+;        value of the TELESCOPE keyword
 ;
 ;       IDL> fitsdir ,'/usr2/smith/*.fits',t='smith.txt', /NoTel 
 ;
 ; PROCEDURE:
-;       FINDFILE is used to find the specified FITS files.   The header of
-;       each file is read, and rejected if the file is not FITS.    Each header 
-;       searched for the parameters NAXISi, TELESCOP (or TELNAME or INSTRUME), 
-;       OBJECT (or TARGNAME), DATE-OBS (or TDATEOBS or DATE) and 
-;       EXPTIME (or TEXPTIME or EXPOSURE or INTEG).  
+;       FINDFILE (or FILE_SEARCH if since V5.5) is used to find the specified 
+;       FITS files.   The header of each file is read, and the selected 
+;       keywords are extracted.   The formatting is adjusted so that no value 
+;       is truncated on display.        
 ;
 ; SYSTEM VARIABLES:
-;       The non-standard system variables !TEXTOUT and !TEXTUNIT must be 
-;       defined before calling FITS_INFO.   
+;       TEXTOPEN (called by FITSDIR) will automatically define the following 
+;       non-standard system variables if they are not previously defined:
 ;
 ;       DEFSYSV,'!TEXTOUT',1
 ;       DEFSYSV,'!TEXTUNIT',0
 ;
-;       One way to define these is to call the procedure ASTROLIB.   
-;       See TEXTOPEN.PRO for more info
 ; PROCEDURES USED:
 ;       FDECOMP, FXMOVE, MRD_HREAD, REMCHAR,  SPEC_DIR(), 
-;       TEXTOPEN, TEXTCLOSE, ZPARCHECK
+;       TEXTOPEN, TEXTCLOSE
 ; MODIFICATION HISTORY:
 ;       Written, W. Landsman,  HSTX    February, 1993
 ;       Converted to IDL V5.0   W. Landsman   September 1997
@@ -111,16 +108,16 @@ pro fitsdir ,directory, TEXTOUT = textout,NoTelescope = NoTelescope, $
 ;       Added EXTEN keyword, work with compressed files, additional alternate
 ;       keywords W. Landsman     December 2000
 ;       Don't assume floating pt. exposure time W. Landsman   September 2001
+;       Major rewrite, KEYWORD & ALT*_KEYWORDS keywords, no truncation, 
+;             /NOSIZE keyword     W. Landsman,  SSAI   August 2002
+;
 ;-
  On_error,2
 
- if N_params() GT 0 then $
-     zparcheck, 'FITSDIR ', directory, 1, 7, 0, 'Directory Name' $
- else directory = '*.fits'
+ FORWARD_FUNCTION FILE_SEARCH, STRSPLIT      ;For pre-V5.5, V5.3 compatibility
+ if N_elements(directory) EQ 0 then directory = '*.fits'
  if N_elements(exten) EQ 0 then exten = 0 
 
- defsysv, '!TEXTOUT', exist=i
- if i EQ 0 then astrolib
  fdecomp, directory, disk, dir, filename, ext
  if filename EQ '' then begin 
       directory = disk + dir + '*.fits'
@@ -134,61 +131,113 @@ pro fitsdir ,directory, TEXTOUT = textout,NoTelescope = NoTelescope, $
         endif
  endif
 
- if keyword_set(NoTelescope) then begin 
-          namelen = 20
-          objectlen = 29 
- endif else begin 
-          namelen = 18
-          objectlen = 20
- endelse
+ if N_elements(keywords) EQ 0 then begin
+     keywords = ['date-obs','telescop','object','exptime'] 
+     if N_elements(alt1_keywords) EQ 0 then $
+          alt1_keywords = ['tdateobs','telname','targname','integ']
+     if N_elements(alt2_keywords) EQ 0 then $
+          alt2_keywords = ['date','observat','','exposure']
+     if N_elements(alt3_keywords) EQ 0 then $
+          alt3_keywords = ['','instrume','','exptim' ]
+     if keyword_set(NoTelescope) then begin
+        ii = [0,2,3]
+        keywords = keywords[ii] & alt1_keywords = alt1_keywords[ii]
+        alt2_keywords = alt2_keywords[ii] & alt3_keywords = alt3_keywords[ii]
+      endif
+ endif
+ if N_elements(keywords) EQ 1 then $
+        if !VERSION.RELEASE GE '5.3' then $
+        keys = strupcase(strsplit(keywords,',',/EXTRACT)) else $
+        keys = strupcase(str_sep(strtrim( strcompress(keywords),2),',')) else $
+  keys = strupcase(keywords)
+  Nkey = N_elements(keys)
 
- direct = spec_dir(directory)
- files = findfile( direct, COUNT = n)
+  case N_elements(alt1_keywords) of
+  0: alt1_set = bytarr(Nkey)
+  1: if !VERSION.RELEASE GE '5.3' then $
+      alt1_keys = strupcase(strsplit(alt1_keywords[0],',',/EXTRACT)) else $
+    alt1_keys = strupcase(str_sep(strtrim(strcompress(alt1_keywords[0]),2),','))
+  else: alt1_keys = strupcase(alt1_keywords) 
+  endcase
+  if N_elements(alt1_set) EQ 0 then alt1_set = strlen(strtrim(alt1_keys,2)) GT 0
+
+  case N_elements(alt2_keywords) of
+  0: alt2_set = bytarr(Nkey)
+  1: if !VERSION.RELEASE GE '5.3' then $
+      alt2_keys = strupcase(strsplit(alt2_keywords,',',/EXTRACT)) else $
+    alt2_keys = strupcase(str_sep(strtrim(strcompress(alt2_keywords[0]),2),','))
+   else: alt2_keys = strupcase(alt2_keywords) 
+  endcase
+ if N_elements(alt2_set) EQ 0 then alt2_set = strlen(strtrim(alt2_keys,2)) GT 0
+
+  case N_elements(alt3_keywords) of
+  0: alt3_set = bytarr(Nkey)
+  1: if !VERSION.RELEASE GE '5.3' then $
+      alt3_keys = strupcase(strsplit(alt3_keywords,',',/EXTRACT)) else $
+    alt3_keys = strupcase(str_sep(strtrim(strcompress(alt3_keywords[0]),2),','))    
+  else: alt3_keys = strupcase(alt3_keywords) 
+  endcase
+  if N_elements(alt3_set) EQ 0 then alt3_set = strlen(strtrim(alt3_keys,2)) GT 0
+  
+   keylen = strlen(keys)
+ 
+  direct = spec_dir(directory)
+  if !VERSION.RELEASE GE '5.5' then $
+          files = file_search(directory,COUNT = n,/full)  else $
+           files = findfile( direct, COUNT = n)
+
+
  if n EQ 0 then begin                                      ;Any files found?
-       message,'No files found on '+ direct, /CON
+       message,'No files found on '+ directory, /CON
        return
  endif 
 
   good = where( strlen(files) GT 0, Ngood)
-  if Ngood EQ 0 then message,'No FITS files found on '+ direct $
+  if Ngood EQ 0 then message,'No FITS files found on '+ directory $
                  else files = files[good]
 
 ; Set output device according to keyword TEXTOUT or system variable !TEXTOUT
 
- if not keyword_set( TEXTOUT ) then textout= !TEXTOUT
+  defsysv,'!TEXTOUT',exists=ex                  ; Check if !TEXTOUT exists.
+  if ex eq 0 then defsysv,'!TEXTOUT',1          ; If not define it.
+  defsysv,'!TEXTUNIT',exists=ex                  ; Check if !TEXTOUT exists.
+  if ex eq 0 then defsysv,'!TEXTUNIT',1          ; If not define it.
+  if not keyword_set( TEXTOUT ) then textout= !TEXTOUT
 
  dir = 'dummy'
  num = 0
 
  get_lun,unit
 
- fmt1 = '(a,t20,a,t31,a,t42,a,t52,a,t71,a)'
- fmt2 = '(a,t22,a,t34,a,t45,a,t73,a)'
+ fdecomp, files, disk, dir2, fname, qual     ;Decompose into disk+filename
+ fname = strtrim(fname,2)
+ keyvalue = strarr(n,nkey)
+ bignaxis = strarr(n)
+ namelen = max(strlen(fname))
 
  for i = 0,n-1 do begin                           ;Loop over each FITS file
-   fdecomp, files[i], disk, dir2, fname, ext     ;Decompose into disk+filenamOe
-   if !VERSION.RELEASE GT '5.3' then begin 
-      if (ext EQ 'gz') then compress = 1 else compress = 0
-      openr, unit, files[i], /block, /binary, error = error, compress = compress    
-   endif else openr, unit, files[i], /block, /binary, error = error
-   if error LT 0 then goto, BADHD
-   mrd_hread, unit, h, status, /silent
+    if (ext EQ 'gz') then compress = 1 else compress = 0
+    if !VERSION.RELEASE GE '5.3' then $
+    openr, unit, files[i], /block, /binary, error = error, compress = compress $
+    else openr, unit, files[i], /block, /binary, error = error
+    if error LT 0 then goto, BADHD
+    mrd_hread, unit, h, status, /silent
    if status LT 0 then goto, BADHD
 
    if exten GT 0 then begin 
          close,unit
-         if !VERSION.RELEASE GT '5.3' then $
             openr, unit, files[i], /block, /binary, $
-                       error = error, compress = compress else $    
-            openr, unit, files[i], /block, /binary, error = error
+                       error = error, compress = compress   
          stat = fxmove(unit, exten, /silent)
          mrd_hread, unit, h1, status, /silent
          if status EQ 0 then h = [h1,h] 
     endif 
 
    keyword = strtrim( strmid(h,0,8),2 )       ;First 8 chars is FITS keyword
-   value = strtrim( strmid(h,10,20),2 )        ;Chars 10-30 is FITS value
-
+   lvalue = strtrim(strmid(h,10,30),2 ) 
+   value = strtrim( strmid(h,10,68),2 )        ;Chars 10-30 is FITS value
+ 
+ if not keyword_set(nosize) then begin
  l= where(keyword EQ 'NAXIS',Nfound)            ;Must have NAXIS keyword
     if Nfound GT 0 then naxis  = long( value[ l[0] ] ) else goto, BADHD
 
@@ -210,72 +259,26 @@ pro fitsdir ,directory, TEXTOUT = textout,NoTelescope = NoTelescope, $
     if Nfound GT 0 then naxis3  = long( value[l[0]] ) else goto, BADHD
     naxisi = naxisi + ' ' + strtrim( naxis3, 2 )
  endif
-
- if not keyword_set(NoTelescope) then begin
- l= where(keyword EQ 'TELESCOP',Nfound)         ;Search for TELESCOP keyword
- if Nfound EQ 0 then l = where(keyword EQ 'TELNAME',Nfound)
- if Nfound EQ 0 then l = where(keyword EQ 'OBSERVAT',Nfound)
- if Nfound EQ 0 then l = where(keyword EQ 'INSTRUME',Nfound)
-    if Nfound GT 0 then begin 
-          telescop = value[l[0]] 
-          remchar,telescop,"'"
-    endif else  telescop = '   ?      ' 
+ bignaxis[i] = strtrim(naxisi)
  endif
 
- l = where(keyword eq 'EXPTIME', Nfound)           ;Search for EXPTIME keyword
- if Nfound EQ 0 then l = where(keyword EQ 'TEXPTIME',Nfound)
- if Nfound EQ 0 then l = where(keyword EQ 'EXPOSURE',Nfound)
- if Nfound EQ 0 then l = where(keyword EQ 'INTEG',Nfound)
- if Nfound EQ 0 then l = where(keyword EQ 'ONTIME',Nfound)
-    if Nfound GT 0 then begin 
-       exptim = value[l[0]]
-       remchar,exptim,"'"
-     endif else exptim ='    ? '
-
- l = where(keyword EQ 'OBJECT',Nfound)            ;Search for OBJECT keyword
- if Nfound EQ 0 then l = where(keyword EQ 'TARGNAME',Nfound)
- if Nfound EQ 0 then l = where(keyword EQ 'TARGETID',Nfound)
-    if Nfound GT 0 then begin 
-       object = strtrim(strmid(h[l],10,30),2)
-       remchar,object,"'"
-   endif else object = '  ?     '
-
- l = where(keyword EQ 'DATE-OBS', Nfound)         ;Search for DATE-OBS keyword
- if Nfound EQ 0 then l = where(keyword EQ 'TDATEOBS', Nfound)
- if Nfound EQ 0 then l = where(keyword EQ 'DATE', Nfound) 
-   if Nfound GT 0 then begin 
-       obs = value[l[0]] 
-       remchar, obs, "'"
-       obs = strmid(strtrim(obs,2),0,10)
-   endif else obs = '  ?     '
-
-
- num = num + 1
- if num EQ 1 then begin                 ;Print output header
-
-    textopen, 'fitsdir', TEXTOUT=textout,/STDOUT 
-    printf,!TEXTUNIT, f = '(a,/)', 'FITS File Directory ' + systime()
-    if keyword_set(NoTelescope) then printf, !TEXTUNIT, $              
-' NAME                 SIZE      DATE-OBS            OBJECT            EXPTIM' $
-    else printf,!TEXTUNIT, $
- ' NAME                SIZE     DATE-OBS   TELESCOP  OBJECT             EXPTIM' 
-endif
-
- if dir2 NE dir then begin                  ;Has directory changed?   
-       if disk+dir2 EQ '' then cd,current=dir else dir = dir2
-       printf, !TEXTUNIT,format='(/a/)', disk + dir + filename+'.'+ext  
-       dir = dir2                                  ;Save new directory
- endif                   
-
- fname = strmid( fname, 0, namelen ) 
- object = strmid( object, 0, objectlen )
-
-
-  if keyword_set( NOTELESCOPE) then $ 
-  printf,!textunit,f=fmt2, $
-      fname, naxisi, obs, object, exptim  else  $
-  printf,!textunit,f=fmt1, $
-      fname, naxisi, obs, telescop, object, exptim 
+ for k=0,nkey-1 do begin
+     l = where(keyword EQ keys[k], Nfound)
+     if Nfound EQ 0 then  if alt1_set[k] then $
+        l = where(keyword EQ alt1_keys[k], Nfound)
+     if Nfound EQ 0 then  if alt2_set[k] then $
+        l = where(keyword EQ alt2_keys[k], Nfound)
+     if Nfound EQ 0 then  if alt3_set[k] then $
+        l = where(keyword EQ alt3_keys[k], Nfound)
+     if nfound GT 0 then begin
+            kvalue = value[l[0]]
+            if strpos(kvalue,"'") GE 0 then begin
+               temp = gettok(kvalue,"'")
+               keyvalue[i,k] = strtrim(gettok(kvalue,"'"),2)
+            endif else keyvalue[i,k] = strtrim(gettok(kvalue,'/'),2) 
+     endif 
+        
+    endfor
 
  BADHD:  
 
@@ -283,10 +286,47 @@ endif
  endfor
  DONE: 
  free_lun, unit
- if num GT 0 then textclose, TEXTOUT=textout else begin 
-           message,'No valid FITS files found on '+ spec_dir(direct),/CON
-           return
- endelse 
+ vallen = lonarr(nkey)
+ for k=0,nkey-1 do vallen[k]  = max(strlen(keyvalue[*,k]))
 
+
+ textopen, 'fitsdir', TEXTOUT=textout,/STDOUT 
+ printf,!TEXTUNIT,'FITS File Directory ' + systime()
+ printf,!TEXTUNIT, direct
+  printf,!TEXTUNIT, ' '
+
+ pheader = ' NAME '
+ if namelen GT 5 then pheader = pheader + string(replicate(32b,namelen-5))
+ if not keyword_set(nosize) then begin 
+    pheader = pheader + 'SIZE '
+    naxislen = max(strlen(bignaxis))+1
+    if naxislen GT 5 then pheader = pheader + string(replicate(32b,naxislen-5))
+ endif
+ for k=0,nkey-1 do begin
+     pheader = pheader + keys[k] + ' '
+     if vallen[k] GT keylen[k] then  $
+        pheader = pheader + string(replicate(32b,vallen[k]-keylen[k]))
+ endfor
+  printf,!TEXTUNIT, pheader
+  printf,!TEXTUNIT, ' '
+  xx = namelen + 2
+ fmt = '(A' 
+ if not keyword_set(nosize) then begin 
+   fmt = fmt + ',T' + strtrim(xx,2)
+   xx = xx + (naxislen>4) + 1
+ endif 
+   fmt = fmt + ',A'  
+ remchar,keyvalue,"'"
+
+ for k=0,nkey-1 do begin 
+  
+   fmt = fmt + ',T' + strtrim(xx,2) + ',A'
+   xx = xx + (vallen[k]>keylen[k]) +1
+ endfor
+ fmt = fmt + ')'
+ for i=0,n-1 do printf, f= fmt, $
+      !TEXTUNIT,fname[i],bignaxis[i], keyvalue[i,*]
+    
+ textclose,textout=textout 
  return      ;Normal return   
  end

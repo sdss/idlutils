@@ -78,6 +78,8 @@
 ;                 will then look for a keyword with that name in the header.
 ;                 Such a keyword would then act as a "virtual column", with the
 ;                 same value for every row.
+;       DIMENSIONS = FXBREADM ignores this keyword.  It is here for
+;	          compatibility only.
 ;       NANVALUE= Value signalling data dropout.  All points corresponding to
 ;                 IEEE NaN (not-a-number) are converted to this number.
 ;                 Ignored unless DATA is of type float, double-precision or
@@ -102,7 +104,7 @@
 ;                 each chunk.  If a value of zero is given, then all
 ;                 of the data are transferred in one pass.  Default is
 ;                 32768 (32 kB).
-; OPTIONAL INPUT PARAMETERS:
+; OPTIONAL OUTPUT KEYWORDS:
 ;       ERRMSG  = If defined and passed, then any error messages will be
 ;                 returned to the user in this parameter rather than
 ;                 depending on the MESSAGE routine in IDL.  If no errors are
@@ -151,9 +153,15 @@
 ;                              multiple row/column technique.  Mostly
 ;                              the parameter checking and general data
 ;                              flow remain.
-;       C. Markwardt, updated to read variable length arrays, and to
+;        C. Markwardt, updated to read variable length arrays, and to
 ;                              pass columns by handle or pointer.
 ;                              20 Jun 2001
+;       C. Markwardt, try to conserve memory when creating the arrays
+;                              13 Oct 2001
+;       Handle case of GE 50 columns, C. Markwardt, 18 Apr 2002
+;       Handle case where TSCAL/TZERO changes type of column,
+;              C. Markwardt, 23 Feb 2003
+; 
 ;
 ;-
 ;
@@ -257,7 +265,7 @@ PRO FXBREADM, UNIT, COL, $
         SC = SIZE(MYCOL)
         NUMCOLS = N_ELEMENTS(MYCOL)
         OUTSTATUS = LONARR(NUMCOLS)
-        COLNAMES = 'D'+STRTRIM(LINDGEN(50),2)
+        COLNAMES = 'D'+STRTRIM(LINDGEN(NUMCOLS),2)
 
 ;
 ;  For IDL 5, it is possible to extract the data via pointers
@@ -713,10 +721,14 @@ PRO FXBREADM, UNIT, COL, $
 
             ;; Initialize the output variable on the first chunk
             IF FIRST THEN BEGIN
+                SZ = SIZE(DD)
+                ;; NOTE: type could have changed if TSCAL/TZERO were used
+                COLTYPEI = SZ(SZ[0]+1)  
                 RESULT = EXECUTE(COLNAMES[I]+' = 0')
-                DA = MAKE_ARRAY(PERROW, NROWS0, TYPE=COLTYPE[I])
                 RESULT = EXECUTE(COLNAMES[I]+' = '+$
-                                 'REFORM(DA, PERROW, NROWS0,/OVERWRITE)')
+                                 'MAKE_ARRAY(PERROW, NROWS0, TYPE=COLTYPEI)')
+                RESULT = EXECUTE(COLNAMES[I]+' = '+$
+                         'REFORM('+COLNAMES[I]+', PERROW, NROWS0,/OVERWRITE)')
             ENDIF
 
             ;; Finally, store this in the output variable

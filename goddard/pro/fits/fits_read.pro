@@ -1,5 +1,5 @@
 pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
-                NaNvalue=NaNvalue, exten_no=exten_no, extname=extname, $
+                exten_no=exten_no, extname=extname, $
                 extver=extver, extlevel=extlevel, xtension=xtension, $
                 no_abort=no_abort, message=message, first=first, last=last, $
                 group=group, header_only=header_only,data_only=data_only, $
@@ -76,11 +76,10 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;               system variable !ERR is also set to -1 in case of an error.)   
 ;               If /NO_ABORT not set, then FITS_READ will print the message and
 ;               issue a RETALL
-;       /NO_UNSIGNED - By default, if the IDL Version is 5.2 or greater, and the
-;               header indicates an unsigned integer (BITPIX = 16, BZERO=2^15,
-;               BSCALE=1) then FITS_READ will output an IDL unsigned integer 
-;               data type (UINT).   But if /NO_UNSIGNED is set, or the IDL 
-;               version is before 5.2, then the data is converted to type LONG.  
+;       /NO_UNSIGNED - By default, if  the header indicates an unsigned integer
+;              (BITPIX = 16, BZERO=2^15, BSCALE=1) then FITS_READ will output 
+;               an IDL unsigned integer data type (UINT).   But if /NO_UNSIGNED
+;               is set, or the IDL, then the data is converted to type LONG.  
 ;       EXTEN_NO - extension number to read.  If not set, the next extension
 ;               in the file is read.  Set to 0 to read the primary data unit.
 ;       XTENSION - string name of the xtension to read
@@ -92,8 +91,6 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;       LAST - set this keyword to only read a portion of the data.  It gives
 ;               the last word number of the data to read
 ;       GROUP - group number to read for GCOUNT>1.  (Default=0, the first group)
-;       NaNvalue - On non-IEEE floating point machines, it gives the value
-;               to place into words with IEEE NaN.
 ;       
 ;*OUTPUT KEYWORD PARAMETERS:
 ;       ENUM - Output extension number that was read.  
@@ -158,7 +155,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;
 ;*PROCEDURES USED:
 ;       FITS_CLOSE, FITS_OPEN, IEEE_TO_HOST, IS_IEEE_BIG() 
-;       SXADDPAR, SXDELPAR, SXPAR(), WHERENAN()
+;       SXADDPAR, SXDELPAR, SXPAR()
 ;*HISTORY:
 ;       Written by:     D. Lindler, August 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
@@ -168,6 +165,10 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;       Set BZERO = 0 for unsigned integer data   W. Landsman  January 2000
 ;       Only call IEEE_TO_HOST if needed          W. Landsman February 2000
 ;       Ensure EXTEND keyword in primary header   W. Landsman April 2001
+;       Don't erase ERROR message when closing file  W. Landsman April 2002
+;       Assume at least V5.1 remove NANValue keyword  W. Landsman November 2002
+;       Work with compress files (read file size from fcb),
+;       requires updated (Jan 2003) version of FITS_OPEN W. Landsman Jan 2003
 ;-
 ;
 ;-----------------------------------------------------------------------------
@@ -176,7 +177,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;
         if N_params() eq 0 then begin
           print,'Syntax - FITS_READ,file_or_fcb,data,header,group_par'
-          print,' Input Keywords: /noscale, NaNvalue=, exten_no=, extname=, '
+          print,' Input Keywords: /noscale, exten_no=, extname=, '
           print,'                 extver=, extlevel=, xtension=, /no_abort, '
           print,'                 first, last, group, /header_only, /no_pdu'
           print,' Output Keywords: enum =, message='
@@ -280,14 +281,13 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;
         if data_only then goto,read_data
         h = bytarr(80,36,/nozero)
-        file = fstat(fcb.unit)
-        nbytes_in_file = file.size
+        nbytes_in_file = fcb.nbytes
         position = fcb.start_header[enum]
         point_lun,fcb.unit,position
         first_block = 1         ; first block in header flag
         repeat begin
              if position ge nbytes_in_file then begin
-                 message = 'EOF ecountered while reading header'
+                 message = 'EOF encountered while reading header'
                  goto,error_exit
              endif
 
@@ -471,18 +471,14 @@ read_data:
 ;
         point_lun,fcb.unit,position
         readu,fcb.unit,data
-        if (n_elements(NaNvalue) gt 0) then NaNpts = whereNaN(data,count)
         if bswap then ieee_to_host,data
-        if (n_elements(NaNvalue) gt 0) then if (count gt 0) then $
-                                                data[NaNpts] = NaNvalue
 ;
 ; scale data if header was read and first and last not used.   Do a special
 ; check of an unsigned integer (BZERO = 2^15) or unsigned long (BZERO = 2^31) 
 ;
         if (data_only eq 0) and (last eq 0) and (noscale eq 0) then begin
 
-        if not keyword_set(No_Unsigned) and $
-               !VERSION.RELEASE GE '5.2' then begin
+        if not keyword_set(No_Unsigned) then begin
         unsgn_int = (bitpix EQ 16) and (Bzero EQ 32768) and (bscale EQ 1)
         unsgn_lng = (bitpix EQ 32) and (Bzero EQ 2147483648) and (bscale EQ 1)
         if unsgn_int then begin 
@@ -518,9 +514,6 @@ done:
 ioerror:
         message = !err_string
 error_exit:
-; Bug fix by DJS on 25-Apr-2002
-;        if (fcbtype eq 7) and (N_elements(fcb) GT 0) then  $
-;                   fits_close,fcb, no_abort=no_abort, message = message
         if (fcbtype eq 7) and (N_elements(fcb) GT 0) then  $
                    fits_close,fcb, no_abort=no_abort
         !err = -1

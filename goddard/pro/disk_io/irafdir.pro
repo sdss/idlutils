@@ -51,6 +51,8 @@ pro irafdir,directory,TEXTOUT=textout
  
  ext='*.imh'
 
+ defsysv,'!TEXTUNIT',exist=i
+ if i EQ 0 THEN astrolib
  if keyword_set(directory) then begin 
 	dir = strlowcase(directory)
 	if strpos(dir,'~') GE 0 then dir = expand_tilde(dir)

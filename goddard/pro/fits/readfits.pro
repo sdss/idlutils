@@ -4,14 +4,13 @@
 ; PURPOSE:
 ;       Read a FITS file into IDL data and header variables. 
 ; EXPLANATION:
-;       Under Unix, READFITS() can also read gzip or Unix compressed FITS files.
 ;       See http://idlastro.gsfc.nasa.gov/fitsio.html for other ways of
 ;       reading FITS files with IDL.
 ;
 ; CALLING SEQUENCE:
 ;       Result = READFITS( Filename/Fileunit,[ Header, heap, /NOSCALE, EXTEN_NO=,
-;                       NSLICE=, /SILENT, STARTROW =, NUMROW = ,
-;                       /No_Unsigned ] )
+;                       NSLICE=, /SILENT, STARTROW =, NUMROW = , HBUFFER=,
+;                       /COMPRESS, /No_Unsigned ] )
 ;
 ; INPUTS:
 ;       Filename = Scalar string containing the name of the FITS file  
@@ -37,10 +36,17 @@
 ;
 ; OPTIONAL OUTPUT:
 ;       Header = String array containing the header from the FITS file.
+;              If you don't need the header, then the speed may be improved by
+;              not supplying this parameter.
 ;       heap = For extensions, the optional heap area following the main
 ;              data array (e.g. for variable length binary extensions).
 ;
 ; OPTIONAL INPUT KEYWORDS:
+;       /COMPRESS - Signal that the file is gzip compressed.  By default, 
+;               READFITS will assume that if the file name extension ends in 
+;               '.gz' then the file is gzip compressed.   The /COMPRESS keyword
+;               is required only if the the gzip compressed file name does not 
+;               end in '.gz'.   Keyword only valid for IDL V5.3 or later.
 ;
 ;       EXTEN_NO - positive scalar integer specifying the FITS extension to
 ;               read.  For example, specify EXTEN = 1 or /EXTEN to read the 
@@ -50,11 +56,10 @@
 ;                scaled using the optional BSCALE and BZERO keywords in the 
 ;                FITS header.   Default is to scale.
 ;
-;       /NO_UNSIGNED -By default, if the IDL Version is 5.2 or greater, and the
-;               header indicates an unsigned integer (BITPIX = 16, BZERO=2^15,
-;               BSCALE=1) then FITS_READ will output an IDL unsigned integer 
-;               data type (UINT).   But if /NO_UNSIGNED is set, or the IDL 
-;               version is before 5.2, then the data is converted to type LONG.  
+;       /NO_UNSIGNED -By default, if the header indicates an unsigned integer 
+;              (BITPIX = 16, BZERO=2^15, BSCALE=1) then FITS_READ will output 
+;               an IDL unsigned integer data type (UINT).   But if /NO_UNSIGNED
+;               is set, then the data is converted to type LONG.  
 ;
 ;       NSLICE - Non-negative integer scalar specifying which N-1 dimensional 
 ;                slice of a N-dimensional array to read.   For example, if the 
@@ -83,6 +88,12 @@
 ;        STARTROW - Non-negative integer scalar specifying the row
 ;               of the image or extension table at which to begin reading. 
 ;               Useful when one does not want to read the entire table.
+;
+;        HBUFFER - Number of lines in the header, set this to slightly larger
+;                than the expected number of lines in the FITS header, to 
+;               improve performance when reading very large FITS headers. 
+;               Should be a multiple of 36 -- otherwise it will be modified
+;               to the next higher multiple of 36.   Default is 180
 ;
 ; EXAMPLE:
 ;       Read a FITS file test.fits into an IDL image array, IM and FITS 
@@ -136,28 +147,18 @@
 ;               reading the data array.
 ;
 ;       (4) On some Unix shells, one may get a "Broken pipe" message if reading
-;        a compressed file, and not reading to the end of the file (i.e. the
-;        decompression has not gone to completion).     This is an informative
-;        message only, and should not affect the output of READFITS.  
+;        a UNIX compressed file, and not reading to the end of the file (i.e. 
+;        the decompression has not gone to completion).     This is an 
+;        informative message only, and should not affect the output of 
+;        READFITS().  
 ;
-;       (5) For users of V5.3 or later, a special version of READFITS is 
-;        available at  http://idlastro.gsfc.nasa.gov/ftp/v53/readfits.pro
-;        which include additional options (e.g. gzip files can be read under
-;        any machine architecture)
 ; PROCEDURES USED:
 ;       Functions:   SXPAR() 
 ;       Procedures:  SXADDPAR, SXDELPAR
 ;
 ; MODIFICATION HISTORY:
 ;       Original Version written in 1988, W.B. Landsman   Raytheon STX
-;       Revision History prior to June 1997 removed          
-;       Recognize BSCALE, BZERO in IMAGE extensions             WBL Jun-97
-;       Added NSLICE keyword                                    WBL Jul-97
-;       Added ability to read heap area after extensions        WBL Aug-97      
-;       Suppress *all* nonfatal messages with /SILENT           WBL Dec-97
-;       Converted to IDL V5.0                                   WBL Dec-1997
-;       Fix NaN assignment for int data       C. Gehman/JPL     Mar-98
-;       Fix bug with NaNvalue = 0.0           C. Gehman/JPL     Mar-98
+;       Revision History prior to October 1998 removed          
 ;       Major rewrite to eliminate recursive calls when reading extensions
 ;                  W.B. Landsman  Raytheon STX                    October 1998
 ;       Add /binary modifier needed for Windows  W. Landsman    April 1999
@@ -173,10 +174,14 @@
 ;       Support the unofficial 64bit integer format W. Landsman   September 2001
 ;       Option to read a unit number rather than file name W.L    October 2001
 ;       Fix byte swapping problem for compressed files again (sigh...) 
-;                W. Landsman   March 2002 
+;                W. Landsman   March 2002
+;       Make sure gzip defined when using a unit number W. Landsman Oct. 2002 
+;       Assume V5.2 or later            W. Landsman        Jan. 2003
+;       Don't read entire header unless needed   W. Landsman  Jan. 2003
+;       Added HBUFFER keyword    W. Landsman   Feb. 2003
 ;-
 ;
-function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
+function READFITS, filename, header, heap, COMPRESS = compress, HBUFFER=hbuf, $
                    EXTEN_NO = exten_no, NOSCALE = noscale, NSLICE = nslice, $
                    NO_UNSIGNED = no_unsigned,  NUMROW = numrow, $
                    POINTLUN = pointlun, SILENT = silent, STARTROW = startrow
@@ -189,8 +194,8 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
 
    if N_params() LT 1 then begin                
       print,'Syntax - im = READFITS( filename, [ h, heap, /NOSCALE, /SILENT,'
-      print,'                 EXTEN_NO =, STARTROW = , NUMROW='
-      print,'                 NSLICE = , /No_UnSigned]'
+      print,'                 EXTEN_NO =, STARTROW = , NUMROW=, NSLICE = ,'
+      print,'                 HBUFFER = ,/NO_UNSIGNED, /COMPRESS]'
       return, -1
    endif
 
@@ -201,19 +206,33 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
    silent = keyword_set( SILENT )
    if N_elements(exten_no) EQ 0 then exten_no = 0
 
-;  Check if this is a compressed file.
+;  Check if this is a compressed file.    Unix compressed files or gzip 
+;  compressed files (on Unix) prior to V5.3 read through a pipe.   Gzip 
+;  compressed files since V5.3 are read using the /COMPRESS keyword to OPENR 
                 
+    unixZ = 0
     if unitsupplied then unit = filename else begin
        len = strlen(filename)
-       if len gt 3 then tail = strmid(filename, len-3, 3) else tail = ' '
-       ucmprs = ''
-       if strlowcase(strmid(tail,1,2)) eq '.z' then  $
-                  ucmprs = 'uncompress -c '
-       if strlowcase(tail) eq '.gz'  then ucmprs = 'gzip -cd '
-       gzip = ucmprs NE ''
-
+       gzip = strmid(filename,len-3,3) EQ '.gz' 
+       if (!VERSION.RELEASE GE '5.3') then $
+             compress = keyword_set(compress) or gzip else begin
+              compress = 0
+              if gzip and (!VERSION.OS_FAMILY EQ 'unix')  then begin
+                 ucmprs = 'gzip -cd '
+                 unixZ = 1
+             endif
+       endelse
+       if (strmid(filename, len-2, 2) EQ '.Z') and $
+                (!VERSION.OS_FAMILY EQ 'unix') then begin 
+                 ucmprs = 'uncompress -c '
+                 unixZ = 1
+       endif
+ 
 ;  Go to the start of the file.
 
+       if compress then $
+       openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary, $
+                COMPRESS = compress, /swap_if_little_endian else $
        openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary, $
                           /swap_if_little_endian
        if error NE 0 then begin
@@ -221,25 +240,26 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
            return, -1
        endif
 
-;  Handle compressed files.   On some Unix machines, users might wish to force
-;  use of /bin/sh in the line spawn, ucmprs+filename, unit=unit,/sh
+;  Handle Unix compressed files.   On some Unix machines, users might wish to 
+;  force use of /bin/sh in the line spawn, ucmprs+filename, unit=unit,/sh
 
-        if gzip then begin
+        if unixZ then begin
                 free_lun, unit
-                if (!version.os_family EQ 'unix') then begin
-                        spawn, ucmprs+filename, unit=unit
-                endif else begin
-                        print, 'READFITS: Only Unix IDL supports piped spawns'
-                        print, '         File must be uncompressed manually'
-                        return, -1                      
-                endelse
-                
-        endif 
-  endelse      
+                spawn, ucmprs + filename, unit=unit                 
+                gzip = 1b
+        endif
+   endelse      
   if keyword_set(POINTLUN) then begin
        if gzip then  readu,unit,bytarr(pointlun,/nozero) $
                else point_lun, unit, pointlun
   endif
+  doheader = arg_present(header)
+  if doheader  then begin
+          if N_elements(hbuf) EQ 0 then hbuf = 180 else begin
+                  remain = hbuf mod 36
+                  if remain GT 0 then hbuf = hbuf + 36-remain
+           endelse
+  endif else hbuf = 36
 
   for ext = 0L, exten_no do begin
                
@@ -247,8 +267,11 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
 
        block = string(replicate(32b,80,36))
        w = [-1]
-       header = ' '
-       
+       if ((ext EQ exten_no) and (doheader)) then header = strarr(hbuf) $
+                                             else header = strarr(36)
+       headerblock = 0L
+       i = 0L
+
        while w[0] EQ -1 do begin
           
        if EOF(unit) then begin 
@@ -259,17 +282,26 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
        endif
 
       readu, unit, block
+      headerblock = headerblock + 1
       w = where(strlen(block) NE 80, Nbad)
       if (Nbad GT 0) then begin
            message,'Warning-Invalid characters in header',/INF,NoPrint=Silent
            block[w] = string(replicate(32b, 80))
       endif
       w = where(strmid(block, 0, 8) eq 'END     ', Nend)
-      if Nend EQ 0 then header = [header, block] $
-                   else header = [header, block[0:w[0]]]
+      if (headerblock EQ 1) or ((ext EQ exten_no) and (doheader)) then begin
+              if Nend GT 0 then  begin
+             if headerblock EQ 1 then header = block[0:w[0]]   $
+                                 else header = [header[0:i-1],block[0:w[0]]]
+             endif else begin
+                header[i] = block
+                i = i+36
+                if i mod hbuf EQ 0 then $
+                              header = [header,strarr(hbuf)]
+           endelse
+          endif
       endwhile
 
-      header = header[1:*]
       if (ext EQ 0 ) and (keyword_set(pointlun) EQ 0) then $
              if strmid( header[0], 0, 8)  NE 'SIMPLE  ' then begin
               message,/CON, $
@@ -374,7 +406,7 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
         sxaddpar, header, 'NAXIS2', nax[1]
         if gzip then begin
                 if startrow GT 0 then begin
-                        tmp=bytarr(startrow*nax[0])
+                        tmp=bytarr(startrow*nax[0],/nozero)
                         readu,unit,tmp
                 endif 
         endif else begin 
@@ -421,7 +453,7 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
     data = make_array( DIM = nax, TYPE = IDL_type, /NOZERO)
 
      readu, unit, data
-    if gzip then if not is_ieee_big() then ieee_to_host,data
+    if unixZ then if not is_ieee_big() then ieee_to_host,data
     if (exten_no GT 0) and (pcount GT 0) then begin
         theap = sxpar(header,'THEAP')
         skip = theap - N_elements(data)
@@ -453,10 +485,8 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
           Bzero = float( sxpar(header, 'BZERO', Count = N_Bzero ))
  
 ; Check for unsigned integer (BZERO = 2^15) or unsigned long (BZERO = 2^31)
-; Write uint(32768) rather than 32768U to allow compilation prior to V5.2
 
-          if not keyword_set(No_Unsigned) and $
-                 !VERSION.RELEASE GE '5.2' then begin
+          if not keyword_set(No_Unsigned) then begin
             no_bscale = (Bscale EQ 1) or (N_bscale EQ 0)
             unsgn_int = (bitpix EQ 16) and (Bzero EQ 32768) and no_bscale
             unsgn_lng = (bitpix EQ 32) and (Bzero EQ 2147483648) and no_bscale
@@ -468,8 +498,8 @@ function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
                  sxaddpar, header, 'O_BZERO', bzero, $
                           'Original Data is unsigned Integer'
                    if unsgn_int then $ 
-                        data =  uint(data) - uint(32768) else $
-                   if unsgn_lng then  data = ulong(data) - ulong(2147483648) 
+                        data =  uint(data) - 32768U else $
+                   if unsgn_lng then  data = ulong(data) - 2147483648UL 
                 
           endif else begin
  

@@ -37,6 +37,9 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;               to pixels in the output image which are out of range of the
 ;               supplied imput image.  If not supplied, then linear 
 ;               extrapolation is used.   See the IDL manual on POLY_2D.
+;               ***NOTE: A bug was introduced into the POLY_2D function in IDL 
+;               V5.5 (still present in V5.6) such that the MISSING keyword
+;               may not work properly.***
 ;       INTERP - Scalar, one of 0, 1, or 2 determining type of interpolation
 ;               0 nearest neighbor, 1 (default) bilinear interpolation, 
 ;               2 cubic interpolation.

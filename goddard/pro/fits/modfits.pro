@@ -1,4 +1,5 @@
 pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
+           
 ;+
 ; NAME:
 ;      MODFITS
@@ -59,12 +60,17 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;
 ;               fits_open,'test.fits',io,/update    ;Faster to explicity open
 ;               for i = 1,nextend do begin          ;Loop over extensions
-;                   fits_read,io,0,h,/header_only,exten_no=i    ;Read header     
+;                   fits_read,io,0,h,/header_only,exten_no=i,/No_PDU ;Get header     
 ;                   date= sxpar(h,'OBSDATE')         ;Save keyword value
 ;                   sxaddpar,h,'OBS-DATE',date,after='OBSDATE' 
 ;                   sxdelpar,h,'OBSDATE'             ;Delete bad keyword
 ;                   modfits,io,0,h,exten_no=i        ;Update header
 ;               endfor
+;
+;           Note the use of the /No_PDU keyword in the FITS_READ call -- one 
+;           does *not* want to append the primary header, if the STScI 
+;           inheritance convention is adopted.
+;
 ; NOTES:
 ;       MODFITS performs numerous checks to make sure that the DATA and
 ;       HEADER are the same size as the data or header currently stored in the 
@@ -82,7 +88,7 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;
 ; PROCEDURES USED:
 ;       Functions:   IS_IEEE_BIG(), N_BYTES(), SXPAR()
-;       Procedures:  IEEE_TO_HOST, CHECK_FITS, FITS_OPEN, FITS_READ
+;       Procedures:  CHECK_FITS, FITS_OPEN, FITS_READ, HOST_TO_IEEE
 ;
 ; MODIFICATION HISTORY:
 ;       Written,    Wayne Landsman          December, 1994
@@ -93,13 +99,17 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;       Added ERRMSG output keyword     W. Landsman   May 2000
 ;       Update tests for incompatible sizes   W. Landsman   December 2000
 ;       Major rewrite to use FITS_OPEN procedures W. Landsman November 2001
+;       Add /No_PDU call to FITS_READ call  W. Landsman  June 2002
+;       Update CHECKSUM keywords if already present in header, add padding 
+;       if new data  size is smaller than old  W.Landsman December 2002
+;       Only check XTENSION value if EXTEN_NO > 1   W. Landsman Feb. 2003
 ;-
   On_error,2                    ;Return to user
 
 ; Check for filename input
 
    if N_params() LT 1 then begin                
-      print,'Syntax - MODFITS, Filename, Data, [ Header, EXTEN_NO = ]'
+      print,'Syntax - MODFITS, Filename, Data, [ Header, EXTEN_NO=, ERRMSG= ]'
       return
    endif
 
@@ -147,13 +157,26 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 
    unit = io.unit
  
-   fits_read,io,0,oldheader,/header_only, exten=exten_no,  $
+   fits_read,io,0,oldheader,/header_only, exten=exten_no, /No_PDU, $
                              message = message,/no_abort
    if message NE '' then goto, BAD_EXIT
+   dochecksum = sxpar(oldheader,'CHECKSUM', Count = N_checksum)
+   checksum = N_checksum GT 0  
  
    if nheader GT 1 then begin
       noldheader = N_elements(oldheader)
-      if ( (nheader-1)/36) NE ( (Noldheader-1)/36) then begin     ;Updated Dec. 2000
+ 
+        if dtype EQ 'UINT' then $
+              sxaddpar,header,'BZERO',32768,'Data is unsigned integer'
+        if dtype EQ 'ULONG' then $
+              sxaddpar,header,'BZERO',2147483648,'Data is unsigned long'
+        point_lun, unit, io.start_header[exten_no]      ;Position header start
+        if checksum then begin 
+               if Ndata GT 1 then fits_add_checksum, header, data else $
+                fits_add_checksum, header 
+        endif
+        nheader = N_elements(header) 
+        if ( (nheader-1)/36) NE ( (Noldheader-1)/36) then begin     ;Updated Dec. 2000
         message = 'FITS header not compatible with existing file '
         message,'Input FITS header contains '+ strtrim(nheader,2) +' lines',/inf
         message,'Current disk FITS header contains ' + strtrim(Noldheader,2) + $
@@ -161,11 +184,6 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
         goto,BAD_EXIT
         endif
 
-        if dtype EQ 'UINT' then $
-              sxaddpar,header,'BZERO',32768,'Data is unsigned integer'
-        if dtype EQ 'ULONG' then $
-              sxaddpar,header,'BZERO',2147483648,'Data is unsigned long'
-        point_lun, unit, io.start_header[exten_no]      ;Position header start
         writeu, unit, byte(header)                      ;Write new header
 
    endif 
@@ -206,6 +224,15 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
         endif
         if N_elements(newdata) GT 0 then writeu, unit, newdata  else $
                                          writeu, unit ,data
+        remain = newbytes mod 2880
+	if remain GT 0 then begin
+             padnum = 0b
+             if exten_no GT 0 then begin 
+                 exten = sxpar( oldheader, 'XTENSION')
+	         if exten EQ 'TABLE   ' then padnum = 32b
+             endif
+	     writeu, unit, replicate( padnum, 2880 - remain)
+	endif
     endif       
 
    if not fcbsupplied then fits_close,io

@@ -98,6 +98,8 @@ pro imlist, image, xc, yc, DX=dx, DY = DY, WIDTH=width, TEXTOUT = textout, $
         if (textout GE 3) and (textout NE 5) then hardcopy = 1 else hardcopy = 0
  endif else hardcopy = 1
 
+ defsysv,'!TEXTUNIT',exist=i
+ if i EQ 0 then astrolib
  textopen, 'IMLIST', TEXTOUT = textout, /STDOUT            ;Open output device
 
  sz = size(image)

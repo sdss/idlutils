@@ -27,8 +27,10 @@ pro dbfind_entry,type,svals,nentries,values,Count = count
 ;       Fixed test for final entry number  W. Landsman    Sept. 95       
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added COUNT keyword, deprecate !ERR  W. Landsman   March 2000
+;       Better checking of out of range values  W. Landsman February 2002
 ;-
 sv0=long(strtrim(svals[0],2)) & sv1=long(strtrim(svals[1],2))
+
 if values[0] eq -1 then begin           ;start with all entries
     case type of
 
@@ -39,8 +41,10 @@ if values[0] eq -1 then begin           ;start with all entries
                    end else count= 0
              end
         -1: begin
-                 values=lindgen(nentries-sv0+1) + sv0   ;value>sv0
-                 count=nentries-sv0+1
+                 if nentries LT sv0 then count = 0 else begin
+                    values=lindgen(nentries-sv0+1) + sv0   ;value>sv0
+                    count=nentries-sv0+1
+                 endelse
             end
         -2: begin
                 values= lindgen(sv1>1<nentries)+1       ;value<sv1
@@ -52,10 +56,12 @@ if values[0] eq -1 then begin           ;start with all entries
                 sv0=sv1
                 sv1=temp
             end
-            sv0=sv0>1<nentries
-            sv1=sv1>1<nentries
-            values=lindgen(sv1-sv0+1)+sv0
-            count=sv1-sv0+1
+            if (sv1 LT 1) or (sv0 GT nentries) then count = 0 else begin
+               sv0=sv0>1
+               sv1=sv1<nentries
+               values=lindgen(sv1-sv0+1)+sv0
+               count=sv1-sv0+1
+            endelse 
             end         
         -5: begin                               ;sv1 is tolerance
             minv=(sv0-abs(sv1))>1

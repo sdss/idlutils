@@ -40,6 +40,8 @@
 ;       COLOR:      The color for the vectors, axes and titles. 
 ;	            Default=!P.COLOR
 ;
+;       OVER:       Plot over the previous plot
+;
 ;       Plot        All other keywords available to PLOT are also used
 ;       Keywords:   by this procedure.
 ;
@@ -67,9 +69,10 @@
 ; MODIFICATION HISTORY:
 ;       Written by:  Joop Schaye (jschaye@astro.rug.nl), Sep 1996.
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added /OVER keyword   Theo Brauers (th.brauers@fz-juelich.de) Jul 2002
 ;-
 
-PRO partvelvec,velx,vely,posx,posy,x,y, $
+PRO partvelvec,velx,vely,posx,posy,x,y, OVER = over, $
                FRACTION=fraction,LENGTH=length,COLOR=color,_EXTRA=extra
 
 
@@ -161,12 +164,13 @@ cosangle=cos(angle)
 ;-----------
 
 IF n_elements(color) EQ 0 THEN color=!p.color
- 
+
+IF n_elements(over) EQ 0 THEN BEGIN 
 IF nparams EQ 4 THEN $
   plot,[minposx,maxposx],[minposy,maxposy], $
   /nodata,/xstyle,/ystyle,COLOR=color,_EXTRA=extra $
 ELSE plot,x,y,/nodata,/xstyle,/ystyle,COLOR=color,_EXTRA=extra
-
+ENDIF
 
 ;--------------
 ; Plot vectors

@@ -63,6 +63,7 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
 ;       Use a HISTOGRAM algorithm for integer vector inputs for improved 
 ;             performance                W. Landsman         March 2000
 ;       Work again for strings           W. Landsman         April 2000
+;       Use size(/type)                  W. Landsman         December 2002
 ;-
 ;-------------------------------------------------------------------------
  On_error,2
@@ -74,14 +75,13 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
      return
  endif
 
- sa = size(a) & sb = size(b)
- da = sa[sa[0]+1] & db = sb[ sb[0]+1] 
+ da = size(a,/type) & db =size(b,/type)
  if keyword_set(sort) then hist = 0b else $
  hist = (( da LE 3 ) or (da GE 12)) and  ((db LE 3) or (db GE 12 )) 
 
  if not hist then begin           ;Non-integer calculation
  
-na = N_elements(a)              ;number of elements in a
+ na = N_elements(a)              ;number of elements in a
  nb = N_elements(b)             ;number of elements in b
 
 ; Check for a single element array

@@ -23,6 +23,7 @@ pro dbext_ind,list,item,dbno,values
 ;               Added support for external (IEEE) data format
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Allow multiple valued (nonstring) index items W. Landsman  November 2000      
+;       Use 64bit integer index for large databases W. Landsman  February 2001
 ;       Fix sublisting of multiple valued index items W. Landsamn  March 2001
 ;-
 On_error,2
@@ -90,7 +91,7 @@ if index_type EQ 3 then $
 if index_type NE 4 then sblock=header[4,pos] else sblock=header[6,pos]
 ;
 numvals = numvals[0]
-sbyte = 512L*sblock
+sbyte = 512LL*sblock
 sbyte = sbyte+(minl-1L)*nbytes*numvals
 nv = (maxl-minl+1L) ;number of bytes to extract
 ;            

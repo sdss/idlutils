@@ -108,6 +108,8 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;     W. Landsman  Fix case of /XLOG but no X error bars            Oct 1999
 ;     W. Landsman  Work in the presence of NAN values               Nov 2000
 ;     W. Landsman  Improve logic when NSUM or !P.NSUM is set        Jan 2001
+;     W. Landsman  Only draw error bars with in XRANGE (for speed)  Jan 2002
+;     W. Landsman  Fix Jan 2002 update to work with log plots       Jun 2002
 ;-
 ;                       Check the parameters.
  On_error, 2
@@ -202,13 +204,11 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 
 
 ; If no y-range was passed via keyword or system variable, force one large 
-; enough to display all the data and the entire error bars.     If NSKIP is
-; set, then need consider only the error bars actually plotted.
+; enough to display all the data and the entire error bars.     
 ; If a reversed y-range was passed, switch ylo and yhi.
 
- ierr = ((lindgen(n) mod nskip) EQ 0)
- ylo = yy - yerror*ierr
- yhi = yy + yerror*ierr
+ ylo = yy - yerror
+ yhi = yy + yerror
 
  if not keyword_set( YRANGE ) then yrange = !Y.RANGE
  IF yrange[0] EQ yrange[1] THEN BEGIN
@@ -217,20 +217,20 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 		yrange = [min(ylo[good],/NAN), max(yhi[good], /NAN)]
 	endif else yrange = [min(ylo,/NAN), max(yhi, /NAN)]
  ENDIF ELSE IF yrange[0] GT yrange[1] THEN BEGIN
-	ylo = yy + yerror*ierr
-	yhi = yy - yerror*ierr
+	ylo = yy + yerror
+	yhi = yy - yerror
  ENDIF
 
 ;        Similarly for x-range
 
  if not keyword_set( XRANGE ) then xrange = !X.RANGE
  if NP EQ 4 then begin
-   xlo = xx - xerror*ierr
-   xhi = xx + xerror*ierr
+   xlo = xx - xerror
+   xhi = xx + xerror
    IF xrange[0] EQ xrange[1] THEN xrange = [min(xlo,/NAN), max(xhi,/NAN)]
    IF xrange[0] GT xrange[1] THEN BEGIN
-      xlo = xx + xerror*ierr
-      xhi = xx - xerror*ierr
+      xlo = xx + xerror
+      xhi = xx - xerror
    ENDIF
  endif
 
@@ -250,15 +250,23 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
        x_hi = convert_coord(xhi,yy,/TO_DEVICE)
     endif
     ycrange = !Y.CRANGE   &  xcrange = !X.CRANGE
+    sv_psym = !P.PSYM & !P.PSYM = 0
     if ylog EQ 1 then ylo = ylo > 10^ycrange[0]
     if (xlog EQ 1) and (np EQ 4) then xlo = xlo > 10^xcrange[0]
-    sv_psym = !P.PSYM & !P.PSYM = 0
-    
- FOR i = 0L, (n-1), Nskip DO BEGIN     
+; Only draw error bars for X values within XCRANGE
+    if xlog EQ 1 then xcrange = 10^xcrange
+    g = where((xx GT xcrange[0]) and (xx LE xcrange[1]), Ng)
+
+    if (Ng GT 0) and (Ng NE n) then begin  
+          istart = min(g, max = iend)  
+    endif else begin
+          istart = 0L & iend = n-1
+    endelse
+
+ FOR i = istart, iend, Nskip DO BEGIN     
 
     plots, [xx[i],xx[i]], [ylo[i],yhi[i]], LINESTYLE=est,THICK=eth,  $
 		NOCLIP = noclip, COLOR = ecol
-
 ;                                                         Plot X-error bars 
     if np EQ 4 then plots, [xlo[i],xhi[i]],[yy[i],yy[i]],LINESTYLE=est, $
 		THICK=eth, COLOR = ecol, NOCLIP = noclip

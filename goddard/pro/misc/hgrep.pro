@@ -12,7 +12,8 @@ pro hgrep, header, substring, keepcase=keepcase, linenum=linenum
 ;
 ; INPUTS: 
 ;       header -  FITS header or other string array
-;       substring - scalar string to find in header
+;       substring - scalar string to find in header; if a numeric value is 
+;                 supplied, it will be converted to type string
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;       /KEEPCASE: if set, then look for an exact match of the input substring 
@@ -33,6 +34,7 @@ pro hgrep, header, substring, keepcase=keepcase, linenum=linenum
 ; HISTORY: 
 ;       Written, Wayne Landsman (Raytheon ITSS)      August 1998
 ;       Adapted from STIS version by Phil Plait/ ACC November 14, 1997
+;       Remove trailing spaces if a non-string is supplied W. Landsman Jun 2002
 ;-
 
    if (N_params() LT 2) then begin
@@ -45,6 +47,7 @@ pro hgrep, header, substring, keepcase=keepcase, linenum=linenum
       return
    endif
    hh = strtrim(header,2)
+   if size(substring,/tname) NE 'STRING' then substring = strtrim(substring,2)
 
    if keyword_set(keepcase) then $
          flag = strpos(hh,substring) $

@@ -1,4 +1,4 @@
- pro putast, hdr, astr, crpix, crval, crtype, EQUINOX=equinox, $
+ pro putast, hdr, astr, crpix, crval, ctype, EQUINOX=equinox, $
                                 CD_TYPE = cd_type
 ;+
 ; NAME:
@@ -11,7 +11,7 @@
 ;               or
 ;     putast, hdr, astr, [EQUINOX =, CD_TYPE = ]
 ;               or
-;     putast, hdr, cd,[ crpix, crval], [ EQUINOX =, CD_TYPE = ]    ;Tangent projection assumed
+;     putast, hdr, cd,[ crpix, crval, ctype], [ EQUINOX =, CD_TYPE = ]    
 ;
 ; INPUTS:
 ;     HDR -  FITS header, string array.   HDR will be updated to contain
@@ -28,6 +28,9 @@
 ;              (e.g. FIRST PIXEL IN IMAGE IS (1,1) )
 ;     CRVAL - 2 element vector giving R.A. and DEC of reference pixel 
 ;               in degrees
+;     CTYPE - 2 element string vector giving projection types for the two axes.
+;             For example, to specify a tangent projection one should set
+;             ctype = ['RA---TAN','DEC--TAN'] 
 ;
 ; OUTPUTS:
 ;      HDR - FITS header now contains the updated astrometry parameters
@@ -43,9 +46,11 @@
 ;               (1) convert to rotation and write as a CROTA2 value
 ;               (2) as CDn_m value, this is the proposed FITS standard
 ;
-;            As described in Paper II of Greisen & Calabretta (2000, A&A, in 
-;            press; available at http://fits.cv.nrao.edu/documents/wcs/wcs.html)
+;            As described in Paper II of Calabretta & Greisen (2002, A&A, 395
+;            1077); available at http://www.aoc.nrao.edu/~egreisen/)
 ;            form (2) is the preferred representation of the CD matrix.  
+;            (The paper actually specifies an additional representation PCi_j
+;            for the CD matrix, but this is not yet implemented into PUTAST.)
 ;            Form (1) is the former AIPS standard and is now  deprecated.
 ;            If CD_TYPE is not supplied, PUTAST will try to determine the 
 ;            type of astrometry already in the header.   If there is no 
@@ -80,6 +85,7 @@
 ;       Use GET_EQUINOX to get equinox value  W.L.  January 2001
 ;       Update CTYPE keyword if previous value is 'LINEAR'  W.L. July 2001
 ;       Use SIZE(/TNAME) instead of DATATYPE()  W.L.   November 2001
+;       Allow direct specification of CTYPE W.L.        June 2002
 ;-
  npar = N_params()
 

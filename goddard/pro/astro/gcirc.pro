@@ -55,7 +55,7 @@ PRO gcirc,u,ra1,dc1,ra2,dc2,dis
 ;      Vector arguments allowed    W. Landsman    April 1989
 ;      Prints result if last argument not given.  RSH, RSTX, 3 Apr. 1998
 ;      Converted to IDL V5.0                      April 1998
-;      Remove ISARRAY(), V5.3 version        W. Landsman   August 2000
+;      Remove ISARRAY(), V5.1 version        W. Landsman   August 2000
 ;-
  On_error,2                            ;Return to caller
 

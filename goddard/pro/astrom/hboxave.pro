@@ -59,6 +59,7 @@ pro hboxave, oldim, oldhd, newim, newhd, box, ERRMSG = errmsg   ;Boxaverage and 
 ;       Update BSCALE even if no astrometry present   W. Landsman, May 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added ERRMSG keyword, Use double formatting   W. Landsman   April 2000
+;       Recognize PC matrix astrometry format    W. Landsman   December 2001
 ;- 
  On_error,2                               ;Return to caller on error
 
@@ -131,13 +132,13 @@ pro hboxave, oldim, oldhd, newim, newhd, box, ERRMSG = errmsg   ;Boxaverage and 
  sxaddpar, newhd, 'CRPIX1', crpix[0]
  sxaddpar, newhd, 'CRPIX2', crpix[1]
 
- if (noparams EQ 0) or ( noparams EQ 1) then begin 
+ if (noparams NE 2) then begin 
 
     cdelt = astr.cdelt
     sxaddpar, newhd, 'CDELT1', CDELT[0]*box
     sxaddpar, newhd, 'CDELT2', CDELT[1]*box
 
- endif else if noparams EQ 2 then begin
+ endif else begin       ;CDn_m Matrix
 
     cd = astr.cd
     sxaddpar, newhd, 'CD1_1', cd[0,0]*box
@@ -145,7 +146,7 @@ pro hboxave, oldim, oldhd, newim, newhd, box, ERRMSG = errmsg   ;Boxaverage and 
     sxaddpar, newhd, 'CD2_1', cd[1,0]*box
     sxaddpar, newhd, 'CD2_2', cd[1,1]*box
 
- endif 
+ endelse 
  endif
  
  bscale = sxpar( oldhd, 'BSCALE')

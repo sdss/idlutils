@@ -70,7 +70,7 @@
 ;
 ;
 ; PROCEDURE CALLS: 
-;       BREAK_PATH(), FIND_ALL_DIR(), STR_SEP()
+;       BREAK_PATH(), FIND_ALL_DIR()
 ; REVISION HISTORY: 
 ;       Version 1, William Thompson, GSFC, 3 May 1993.
 ;               Removed trailing / and : characters.
@@ -97,9 +97,11 @@
 ;               Added keyword RESET
 ;       Converted to IDL V5.0   W. Landsman   October 1997
 ;       Use STRTRIM instead of TRIM,   W. Landsman   November 1998
+;       Use STRSPLIT instead of STR_SEP(), V5.3 or later W.L.   July 2002
 ;-
 ;
         ON_ERROR, 2
+        FORWARD_FUNCTION strsplit            ;Pre V5.3 compatibility
 ;
 ;  Check the number of parameters:
 ;
@@ -121,11 +123,14 @@
 ;
 ;  Reformat EXTENSIONS into an array.  The first element is the null string.
 ;
-        EXT = ''
-        IF N_PARAMS() EQ 3 THEN BEGIN
+       EXT = '' 
+       IF N_PARAMS() EQ 3 THEN BEGIN
+       if !VERSION.RELEASE GE '5.3' THEN $
+            EXT = ['',STRSPLIT(EXTENSIONS,',:',/EXTRACT)] ELSE BEGIN
                 TEMP = STR_SEP(EXTENSIONS,',')
                 FOR I = 0,N_ELEMENTS(TEMP)-1 DO         $
                         EXT = [EXT, STR_SEP(TEMP[I],':')]
+        ENDELSE
         ENDIF
 ;
 ;  Make sure that the extensions begin with a period.

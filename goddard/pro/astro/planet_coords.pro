@@ -3,19 +3,18 @@ pro planet_coords, date, ra, dec, planet=planet, jd = jd, jpl = jpl
 ; NAME:
 ;    PLANET_COORDS
 ; PURPOSE:  
-;    Find low-precision RA and DEC for the planets given a date
+;    Find low or high precision RA and DEC for the planets given a date
 ;
 ; EXPLANATION:
-;    This routine uses HELIO to get the heliocentric ecliptic coordinates
-;    of the planets at the given date, then converts these to geocentric
-;    ecliptic coordinates ala "Astronomical Algorithms" by Jean Meeus
-;    (1991, p 209). These are then converted to RA and Dec using EULER.
-;    The accuracy between the years 1800 and 2050 is better than 1 arcminute for 
-;    the terrestial planets, but reaches 10 arcminutes for Saturn.    Before
-;    1850 or after 2050 the accuracy can get much worse.   
+;    For low precision this routine uses HELIO to get the heliocentric ecliptic
+;    coordinates of the planets at the given date, then converts these to 
+;    geocentric ecliptic coordinates ala "Astronomical Algorithms" by Jean 
+;    Meeus (1991, p 209). These are then converted to RA and Dec using EULER.
+;    The accuracy between the years 1800 and 2050 is better than 1 arcminute 
+;    for  the terrestial planets, but reaches 10 arcminutes for Saturn.    
+;    Before 1850 or after 2050 the accuracy can get much worse.   
 ;
-;    A /JPL option is also available to use the full JPL ephemeris for much
-;    higher accuracy.
+;    For high precision use the /JPL option ito use the full JPL ephemeris.
 ; CALLING SEQUENCE:
 ;    PLANET_COORDS, DATE, RA, DEC, [ PLANET = , /JD, /JPL]
 ;
@@ -45,8 +44,8 @@ pro planet_coords, date, ra, dec, planet=planet, jd = jd, jpl = jpl
 ;          IDL> planet_coords, [1992,12,20], ra,dec    ;Compute for all planets
 ;          IDL> print,adstring(ra[1],dec[1],1)         ;Venus is second planet
 ;     ====> RA = 21 05  2.66  Dec = -18 51 45.7
-;    This position is 40" from the full DE2000 ephemeris position of
-;          RA = 21 05  5.38        -18 51 35.6
+;    This position is 37" from the full DE406 ephemeris position of
+;          RA = 21 05  5.24        -18 51 43.1
 ;
 ;    (2) Return the current RA and Dec of all 8 planets using JPL ephemeris
 ;          IDL> get_juldate, jd                 ;Get current Julian Date
@@ -75,10 +74,11 @@ pro planet_coords, date, ra, dec, planet=planet, jd = jd, jpl = jpl
 ;        Written P.Plait & W. Landsman     August 2000
 ;        Fixed Julian date conversion   W. Landsman August 2000
 ;        Added /JPL keyword  W. Landsman   July 2001
+;        Allow vector Julian dates with JPL ephemeris W. Landsman December 2002
 ;-   
- On_error,2
+; On_error,2
  if N_params() LT 1 then begin
-     print,'Syntax - planet_coords, date, ra,dec, [PLANET =, /JD , JPL= ]'
+     print,'Syntax - PLANET_COORDS, date, ra,dec, [PLANET =, /JD , JPL= ]'
      print,'      date - either 3-6 element date or Julian date (if /JD is set)'
      print,'      ra,dec - output ra and dec in degrees'
      print,'      PLANET - name of planet (optional)'
@@ -118,31 +118,29 @@ pro planet_coords, date, ra, dec, planet=planet, jd = jd, jpl = jpl
         if jplfile EQ '' then message,'ERROR - Cannot find JPL ephemeris file' 
 ;Read ephemeris FITS file
         JPLEPHREAD,jplfile, pinfo, pdata, [long(min(jj)-1), long(max(jj)+1)]
-        n = N_elements(index)
-        ra = dblarr(n)   & dec = dblarr(n)
+        np = N_elements(index)
+        njd = n_elements(jj)
+        ra = dblarr(njd,np)   & dec = dblarr(njd,np)
 
-        for i=0, N_elements(index)-1 do begin
-        JPLEPHINTERP, pinfo, pdata, jj, x,y,z, objectname=index[i]
-        JPLEPHINTERP, pinfo, pdata, jj, xe,ye,ze, /EARTH
-       x = x-xe & y = y-ye & z = z-ze
-       ra[i] = atan(y,x) * radeg
-       g = where(ra LT 0, Ng)
-       if Ng GT 0 then ra[g] = ra[g] + 360.0d
-       dec[i]   = atan(z,sqrt(x*x + y*y)) * radeg
-       print,adstring(ra[i],dec[i],1)
-; Compute distance to planet(s) and adjust Julian date for light travel time
+        for i=0, Np-1 do begin
+        JPLEPHINTERP, pinfo, pdata, jj, x,y,z, $
+                       objectname=index[i],center='EARTH'
+;  Compute distance to planet(s) and adjust Julian date for light travel time
 ; and recompute planet positions
        dis = sqrt(x^2 + y^2 + z^2)
        jj1 = jj - dis/c/86400.0d
+
+; Compute position of Earth at current time, but position of planet at time
+; light started traveling 
+       JPLEPHINTERP, pinfo, pdata, jj, xe,ye,ze, /EARTH
        JPLEPHINTERP, pinfo, pdata, jj1, x,y,z, objectname=index[i]
        x = x-xe & y = y-ye & z = z-ze
-       ra[i] = atan(y,x) * radeg
+         ra[0,i] = atan(y,x) * radeg
        g = where(ra LT 0, Ng)
        if Ng GT 0 then ra[g] = ra[g] + 360.0d
-       dec[i]   = atan(z,sqrt(x*x + y*y)) * radeg
-       print,adstring(ra[i],dec[i],1)
-
+       dec[0,i]   = atan(z,sqrt(x*x + y*y)) * radeg
        endfor
+       ra = reform(ra) & dec = reform(dec)
        return
    endif
 

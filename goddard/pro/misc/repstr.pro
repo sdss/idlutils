@@ -33,6 +33,9 @@ function repstr,obj,in,out
 ;	Written by Robert S. Hill, ST Systems Corp., 12 April 1989.
 ;	Accept vector object strings, W. Landsman   HSTX,   April, 1996
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Convert loop to LONG, vectorize STRLEN call W. Landsman June 2002
+;       Correct bug in optimization, case where STRLEN(OBJ) EQ
+;         STRLEN(IN), C. Markwardt, Jan 2003
 ;-
  On_error,2
  if N_params() LT 3 then begin
@@ -45,12 +48,11 @@ function repstr,obj,in,out
  l2 = strlen(out)
  Nstring = N_elements(obj)
  object = obj
+ lo = strlen(object) - l1             ;Last character needed to look at 
  for i= 0L ,Nstring-1 do begin
- last_pos = 0L
- lo = 9999L
- pos = 0L
- while ( pos LT lo-l1) and (pos GE 0) do begin
-   lo = strlen(object[i])
+ last_pos = 0
+ pos = 0
+ while ( pos LE lo[i]) and (pos GE 0) do begin
    pos = strpos(object[i],in,last_pos)
    if (pos GE 0) then begin
 	      first_part = strmid(object[i],0,pos)

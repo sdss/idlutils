@@ -58,6 +58,7 @@ pro hreverse, oldim, oldhd, newim, newhd, subs, SILENT = silent, ERRMSG= errmsg
 ;       Compute CRPIX1 correctly for X reversal   W. Landsman HSTX August 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added ERRMSG, Use double precision formatting, W. Landsman April 2000
+;       Recognize PC00n00m astrometry matrix   W. Landsman   December 2001
 ;- 
  On_error, 2
  npar = N_params()
@@ -120,15 +121,15 @@ if npar GE 4 then newim = reverse( oldim,subs ) else $
                  crpix1 = xsize  - (astr.crpix[0]-1)
                  sxaddpar, newhd, 'CRPIX1', crpix1
 
-         if (noparams EQ 0) or (noparams EQ 1) then $
-                sxaddpar, newhd, 'CDELT1', -astr.cdelt[0]
+         if (noparams LT 2) or (noparams EQ 3) then $
+                sxaddpar, newhd, 'CDELT1', -astr.cdelt[0] $
 
-         if ( noparams EQ 2 ) then begin           ;If so, then convert them
+         else begin           ;If so, then convert them
 
                  sxaddpar, newhd, 'CD1_1', -astr.cd[0,0]
                  sxaddpar, newhd, 'CD2_1', -astr.cd[1,0]
 
-         endif 
+         endelse 
  endelse
 
  endif else  begin
@@ -143,15 +144,15 @@ if npar GE 4 then newim = reverse( oldim,subs ) else $
                  crpix2 = ysize  - (astr.crpix[1]-1)
                  sxaddpar, newhd, 'CRPIX2', crpix2
 
-         if (noparams EQ 0) or (noparams EQ 1) then $
-                sxaddpar, newhd, 'CDELT2', -astr.cdelt[1]
+         if (noparams LT 2) or (noparams EQ 3) then $      
+                sxaddpar, newhd, 'CDELT2', -astr.cdelt[1] $
 
-         if ( noparams EQ 2 ) then begin           ;If so, then convert them
+         else begin           ;If so, then convert them
 
                  sxaddpar, newhd, 'CD1_2', -astr.cd[0,1]
                  sxaddpar, newhd, 'CD2_2', -astr.cd[1,1]
 
-         endif 
+         endelse 
          endelse
 
  endelse

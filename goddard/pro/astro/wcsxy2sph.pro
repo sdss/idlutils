@@ -66,12 +66,12 @@
 ;               strings corresponding to the CTYPE1, CTYPE2, and CTYPE3 
 ;               FITS keywords: 
 ;
-;               CTYPE(0) - first four characters specify standard system
+;               CTYPE[0] - first four characters specify standard system
 ;               ('RA--','GLON' or 'ELON' for right ascension, galactic 
 ;               longitude or ecliptic longitude respectively), second four 
 ;               letters specify the type of map projection (eg '-AIT' for 
 ;               Aitoff projection)
-;               CTYPE(1) - first four characters specify standard system
+;               CTYPE[1] - first four characters specify standard system
 ;               ('DEC-','GLAT' or 'ELAT' for declination, galactic latitude
 ;               or ecliptic latitude respectively; these must match 
 ;               the appropriate system of ctype1), second four letters of 
@@ -102,8 +102,10 @@
 ;       latitude - latitude of data, same number of elements as x, in degrees
 ;
 ; NOTES:
-;       The conventions followed here are ;     in FITS" by Eric Greisen and 
-;       Mark Calabretta (draft dated August 16, 1994).   The general scheme 
+;       The conventions followed here are described in more detail in the paper
+;      "Representations of Celestial Coordinates in FITS" by Calabretta &
+;       Greisen (2002, A&A, 395, 1077, also see 
+;       http://www.aoc.nrao.edu/~egreisen).   The general scheme 
 ;       outlined in that article is to convert x and y coordinates into a 
 ;       "native" longitude and latitude and then rotate the system into one of 
 ;       three generally recognized systems (celestial, galactic or ecliptic).
@@ -1085,10 +1087,10 @@ endelse
 
 ; CONVERT LONGITUDE FROM -180 TO 180 TO 0 TO 360
 
- temp = where(longitude lt 0.d0)
- if (temp[0] ne -1) then longitude[temp] = longitude[temp] + 3.6d2
- temp = where(longitude ge 3.6d2-1.d-2)
- if (temp[0] ne -1) then longitude[temp] = longitude[temp] - 3.6d2
+ temp = where(longitude lt 0.d0, Nneg)
+ if (Nneg GT 0) then longitude[temp] = longitude[temp] + 3.6d2
+ temp = where(longitude ge 3.6d2-1.d-2, Nneg)
+ if (Nneg GT 0) then longitude[temp] = longitude[temp] - 3.6d2
 
 ; If input params were scalars, then convert all params back to scalar
 

@@ -1,23 +1,27 @@
-pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 ;+
 ; NAME:
 ;     FDECOMP
 ; PURPOSE:
-;     Routine to decompose a file name for any operating system
+;     Routine to decompose file name(s) for any operating system
+; EXPLANATION:
+;     A faster version of this procedure for V5.3 or later is available in 
+;     http://idlastro.gsfc.nasa.gov/ftp/v53/fdecomp.pro
 ;
 ; CALLING SEQUENCE:
 ;     FDECOMP, filename, disk, dir, name, qual, version, [OSFamily = ]
 ;
 ; INPUT:
-;     filename - string file name, scalar
+;     filename - string file name(s), scalar or vector
 ;
 ; OUTPUTS:
-;     All the output parameters are scalar strings
-;       disk - disk name, always '' on a Unix machine, scalar string
-;       dir - directory name, scalar string
-;       name - file name, scalar string
+;     All the output parameters will have the same number of elements as 
+;       input filename 
+;
+;       disk - disk name, always '' on a Unix machine, scalar or vector string
+;       dir - directory name, scalar or vector string
+;       name - file name, scalar or vector string 
 ;       qual - qualifier, set equal to the characters beyond the last "."
-;       version - version number, always '' on a non-VMS machine, scalar string
+;       version - version number, always '' on a non-VMS machine
 ;
 ; OPTIONAL INPUT KEYWORD:
 ;     OSFamily - one of the four scalar strings specifying the operating 
@@ -56,15 +60,15 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 ;     Include VMS DECNET machine name in disk    W. Landsman  HSTX  Feb. 94
 ;     Converted to Mac IDL, I. Freedman HSTX March 1994          
 ;     Converted to IDL V5.0   W. Landsman   September 1997
+;     Allow vector file name input    W. Landsman   October 2002
 ;-
 ;--------------------------------------------------------
 ;
+
+  pro fdecomp_scalar, filename, disk, dir, name, qual, version, $
+                      OSfamily = osfamily
   On_error,2                            ;Return to caller
 
-  if N_params() LT 2 then begin
-     print, 'Syntax - FDECOMP, filename, disk, [dir, name, qual, ver ] '
-     return
-  endif
 
 ; Find out what machine you're on, and take appropriate action.
  if not keyword_set(OSFAMILY) then osfamily = !VERSION.OS_FAMILY
@@ -229,7 +233,29 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
  end 
 
 ENDCASE                         ; end OTHER version
+ return
+ end
 
+  pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 
+  if N_params() LT 2 then begin
+     print, 'Syntax - FDECOMP, filename, disk, [dir, name, qual, ver ] '
+     return
+  endif
+  
+  scalar = size(filename,/N_dimen)  eq 0
+  if scalar then $
+       fdecomp_scalar, filename, disk, dir, name, qual, ver, OSfamily=osfamily $
+            else begin
+       N = N_elements(filename)
+       if N EQ 0 then message,'ERROR - Filename (first parameter) not defined'
+       dir = strarr(n) & name = dir & qual = dir & disk = dir & ver = dir
+       for i=0,n-1 do begin
+           fdecomp_scalar, filename[i], xdisk, xdir, xname, xqual, xver, $
+                  OSfamily=osfamily  
+           disk[i] = xdisk & dir[i] = xdir & name[i] = xname 
+           qual[i] = xqual & ver[i] = xver
+       endfor
+       endelse
   return
   end

@@ -36,16 +36,22 @@ pro extast,hdr,astr,noparams
 ;             -1 = Failure - Header missing astrometry parameters
 ;             0 = Success - Header contains CD00n00m + CDELT* astrometry
 ;             1 = Success - Header contains CROTA + CDELT (AIPS-type) astrometry
-;             2 = Success - Header contains CDn_m astrometry.    As of October,
-;                           2000, this is the recommend format 
-; PROCEDURE
+;             2 = Success - Header contains CDn_m astrometry.    
+;             3 = Success - Header contains PC00n00m + CDELT astrometry. As of
+;                           December 2001, this is the recommended format 
+;             4 = Success - Header contains ST  Guide Star Survey astrometry
+;                           (see gsssextast.pro )
+; PROCEDURE:
 ;       EXTAST checks for astrometry parameters in the following order:
-;       (1) the CD matrix CD1_1,CD1_2... plus CRPIX and CRVAL.   
-;       (2) the CD matrix CD001001,CD001002...plus CRPIX and CRVAL
+;
+;       (1) the CD matrix PC001001,PC001002...plus CDELT*, CRPIX and CRVAL
+;       (2) the CD matrix CD001001,CD001002...plus CDELT*, CRPIX and CRVAL
+;       (3) the CD matrix CD1_1,CD1_2... plus CRPIX and CRVAL.   
 ;       (3) CROTA2 (or CROTA1) and CDELT plus CRPIX and CRVAL.
+;
 ;       See the preprint: Representations of Celestial Coordinates in FITS by
 ;       Griesen and Calabretta, available at 
-;       http://www.cv.nrao.edu/fits/documents/wcs/wcs.html
+;       http://www.aoc.nrao.edu/~egreisen
 ;
 ; NOTES:
 ;       (1) An anonymous structure is created to avoid structure definition
@@ -66,6 +72,7 @@ pro extast,hdr,astr,noparams
 ;      Consistent conversion between CROTA and CD matrix  October 2000
 ;      CTYPE = 'PIXEL' means no astrometry params  W. Landsman January 2001
 ;      Don't choke if only 1 CTYPE value given W. Landsman  August 2001
+;      Recognize PC00n00m keywords again (sigh...)  W. Landsman December 2001
 ;      Recognize GSSS in ctype also       D. Finkbeiner Jan 2002
 ;-
  On_error,2
@@ -88,27 +95,39 @@ pro extast,hdr,astr,noparams
  check_gsss = (N_ctype EQ 0)
  if N_ctype GE 1 then check_gsss = (strmid(ctype[0], 5, 3) EQ 'GSS')
 
- if check_gsss then begin            
-    gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
-    if N_ppo1 EQ 1 then begin 
-       gsssextast, hdr, astr, noparams
-       return
-    endif
-    ctype = ['RA---TAN','DEC--TAN']
- endif
+ if check_gsss then begin
 
- if (ctype[0] EQ 'PIXEL') then return
- if N_ctype EQ 2 then if (ctype[1] EQ 'PIXEL') then return
- 
- crval = sxpar( hdr, 'CRVAL*', Count = N )
- if N LT 2 then return          ;No CRVAL parameters
- 
- crpix = sxpar( hdr, 'CRPIX*', Count = N )
- if N lt 2 then return          ;No CRPIX parameters?
+        gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
+        if N_ppo1 EQ 1 then begin 
+                gsssextast, hdr, astr, gsssparams
+                if gsssparams EQ 0 then noparams = 4
+                return
+        endif
+        ctype = ['RA---TAN','DEC--TAN']
+  endif
 
- CD11 = sxpar( hdr, 'CD001001', COUNT = N_CD001 )
+  if (ctype[0] EQ 'PIXEL') then return
+  if N_ctype EQ 2 then if (ctype[1] EQ 'PIXEL') then return
 
- if N_CD001 EQ 1 then begin 
+  crval = sxpar( hdr, 'CRVAL*', Count = N )
+     if N LT 2 then return              ;No CRVAL parameters
+
+  crpix = sxpar( hdr, 'CRPIX*', Count = N )
+     if N lt 2 then return                 ;No CRPIX parameters?
+
+ CD11 = sxpar( hdr,'PC001001', COUNT = N_PC001 )
+ if N_PC001 EQ 1 then begin 
+        CD12 = sxpar( hdr, 'PC001002')
+        CD21 = sxpar( hdr, 'PC002001')  
+        CD22 = sxpar( hdr, 'PC002002')
+        CDELT = sxpar( hdr, 'CDELT*', Count = N )
+        if N LT 2 then cdelt = [1.0D, 1.0D] 
+        noparams = 3
+ endif else begin 
+
+   CD11 = sxpar( hdr, 'CD001001', COUNT = N_CD001 )
+
+   if N_CD001 EQ 1 then begin 
         CD12 = sxpar( hdr, 'CD001002')
         CD21 = sxpar( hdr, 'CD002001')  
         CD22 = sxpar( hdr, 'CD002002')
@@ -123,7 +142,7 @@ pro extast,hdr,astr,noparams
                 noparams = 2
         endif else noparams = 0
 
- endif else begin
+  endif else begin
     CD11 = sxpar( hdr,'CD1_1', Count = N_CD1 )
     if N_CD1 EQ 1 then begin        ;If CD parameters don't exist, try CROTA
         CD12 = sxpar( hdr, 'CD1_2' )
@@ -154,6 +173,7 @@ pro extast,hdr,astr,noparams
 
     endelse
 
+  endelse
   endelse
 
   cd = [ [ cd11, cd21 ] , [ cd12, cd22] ]    ;Error in array order corrected

@@ -56,12 +56,15 @@ pro db_item,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes,errmsg=errmsg
 ;       Version 2, William Thompson, GSFC, 17-Mar-1997
 ;                       Added keyword ERRMSG
 ;       Converted to IDL V5.0   W. Landsman   October 1997
+;       Use STRSPLIT instead of GETTOK to parse form 1, W. Landsman July 2002
 ;-
 ;
 ;------------------------------------------------------------------------
- On_error,1
+ On_error,2
+ FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
+
  if N_params() LT 2 then begin
-    print,'Syntax - db_item,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes'
+    print,'Syntax - DB_ITEM,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes'
     return
  endif 
 ; data base common block
@@ -121,11 +124,10 @@ endif
 ; determine type of item list -------------------------------------------
 ;
 vector=1                                        ;vector output flag
-s=size(items)
-ndim=s[0]
-datatype=s[ndim+1]
-if datatype eq 7 then begin                     ;string(s)
-        if ndim eq 0 then begin                         ;string scalar?
+s=size(items,/str)
+ndim = s.n_dimensions
+if s.type_name eq 'STRING' then begin                     ;string(s)
+        if s.n_dimensions eq 0 then begin                         ;string scalar?
             if strtrim(items) eq '' then form=5 else $  ;null string   - form 5
             if strmid(items,0,1) eq '$' then form=3  $  ;filename      - form 3
                 else form=1                             ;scalar list   - form 1
@@ -190,16 +192,12 @@ end
 ;
 ; form 1 ----------------- scalar string list  'item1,item2,item3...'
 ;
-if form eq 1 then begin
-        st=items
-        item_names=strarr(50)
-        nitems=0
-        while st ne '' do begin                 ;loop on items
-            item_names[nitems]=gettok(st,',')   ;get next item
-            nitems=nitems+1
-        endwhile
-        item_names=item_names[0:nitems-1]       ;extract items
-end
+ if form eq 1 then begin 
+   if !VERSION.RELEASE GE '5.3' then  $
+             item_names = strsplit(items,',',/EXTRACT) else $
+             item_names = str_sep(strtrim(items,2),',') 
+   nitems = N_elements(item_names)                     
+ endif
 ;
 ; form 2 -------------------------- string array
 ;
@@ -280,6 +278,7 @@ end
             endif
 itnum[i] =j[0] +i1                              ;save item number
 endfor;i loop on items
+
 if nitems eq 1 then goto,scalar                 ;speedy method
 ;
 ;---------------------------------------------------------------------------

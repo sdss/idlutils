@@ -1,4 +1,4 @@
-Math and Statistics pro/math                             March 2001
+Math and Statistics pro/math                             March 2002
 _________
 
       This directory contains IDL mathematics and statistics procedures
@@ -15,6 +15,16 @@ chosen more descriptive names for the equivalent IDL procedure.
 Henry Freudenreich (Hughes STX) are available in the contrib/freudenreich
 directory.    These include procedures for LOWESS smoothing, robust fitting,
 bootstrap errors, and fitting to a plane.
+
+    Also note the following mathematics procedures available at Craig
+Markwardt's site ( http://astrog.physics.wisc.edu/~craigm/idl/math.html )
+
+CHEBFIT - Fit Chebyshev polynomial coefficients to a tabulated function  
+CHEBEVAL - Evaluate a Chebyshev polynomial on an interval, given the coefficients  
+CHEBCOEF - Estimate Chebyshev polynomial coefficients of a function on an interval 
+MCHOLDC - Modified Cholesky Factorization of a Symmetric Matrix 
+QPINT1D -  One dimensional numerical adaptive integration of IDL function or expression 
+
 
 ---------
 AVG() - Return the average value of an array or 1 dimension of an array.
@@ -62,7 +72,7 @@ VALUE_LOCATE() - find effective index of a function value (NR, locate)
 ZBRENT() - Find the root of a function known to lie between X1 and X2 (NR)
 ----------------------
 
-Intrinsic "Numerical Recipes"  procedures available in IDL V5.4
+Intrinsic "Numerical Recipes"  procedures available in IDL V5.5
 
 AMOEBA - Multidimensional minimization of a function via downhill simplex method
 BETA   - beta function
@@ -76,7 +86,8 @@ FULSTR - Restore a row-indexed sparse matrix to full storage mode
 FZ_ROOTS - Roots of a polynomial by Laguerre's method with deflation (zroots)
 HQR    - eigenvalue of an Hessenberg matrix
 INVERT - Invert a matrix using Gaussian elimination methods
-LEGENDRE - Return the value of the associated Legendre polynomail (V5.4, plgndr)
+LADFIT - Fit a straight line by minimizing absolute deviation (medfit)
+LEGENDRE - Return the value of the associated Legendre polynomial (V5.4, plgndr)
 LINBCG - Solve N linear equation in N unknowns using biconjugate gradient
 	method 
 LMFIT - Nonlinear least-squares fit using Levenberg-Marquardt algorithm (mrqmin)
@@ -94,6 +105,7 @@ R_CORRELATE - compute Spearman's (rho) or Kendalls's (tau) rank correlation
 (spear & kendl1)
 RK4    - integrate one step of ODEs, fourth-order Runge-Kutta 
 SAVGOL - Compute Savitsky-Golay polynomial smoothing coefficients (V5.4)
+SIMPLEX - Use the Simplex method to solve linear programming problems (V5.5)
 SPL_INIT - construct a cubic spline (spline)
 SPL_INTERP - cubic spline interpolation (splint)
 SPRSAB - Multiply two row-indexed sparse matrices (sprstm)

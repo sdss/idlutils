@@ -1,4 +1,4 @@
-pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
+pro writefits, filename, data, header, Append = Append, CheckSum = Checksum
 ;+
 ; NAME:
 ;       WRITEFITS
@@ -10,7 +10,7 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ;       WRITEFITS works for all types of FITS files except random groups
 ;
 ; CALLING SEQUENCE:
-;       WRITEFITS, filename, data [, header, /APPEND] 
+;       WRITEFITS, filename, data [, header, /APPEND, /CHECKSUM] 
 ;
 ; INPUTS:
 ;       FILENAME = String containing the name of the file to be written.
@@ -27,10 +27,15 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ; OPTIONAL INPUT KEYWORD:
 ;       /APPEND - If this keyword is set then the supplied header and data
 ;                array are assumed to be an extension and are appended onto
-;                the end of an existing FITS file.    Note that the primary
-;                header in the existing file must already have an EXTEND
+;                the end of an existing FITS file.    If the file does not 
+;                exist, then WRITEFITS will create one with a minimal primary
+;                header (and /EXTEND keyword) and then append the supplied
+;                extension header and array.     Note that the primary
+;                header in an existing file must already have an EXTEND
 ;                keyword to indicate the presence of an FITS extension.
-;
+;      /Checksum - If set, then the CHECKSUM keywords to monitor data integrity
+;                 will be included in the FITS header.    For more info, see
+;                  http://heasarc.gsfc.nasa.gov/docs/heasarc/fits/checksum.html
 ; OUTPUTS:
 ;       None
 ;
@@ -46,7 +51,8 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ;       IDL> writefits, 'test', im             ;Write to a FITS file "test"
 ;
 ; PROCEDURES USED:
-;       CHECK_FITS, HEADFITS(), MKHDR, SXDELPAR, SXADDPAR, SXPAR()
+;       CHECK_FITS, FITS_ADD_CHECKSUM, MKHDR, MRD_HREAD, SXDELPAR, SXADDPAR, 
+;       SXPAR()
 ;
 ; MODIFICATION HISTORY:
 ;       WRITTEN, Jim Wofford, January, 29 1989
@@ -64,11 +70,17 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ;       Write unsigned data types W. Landsman       December 1999
 ;       Correct BZERO value for unsigned data  W. Landsman   July 2000
 ;       Assume at least V5.1 remove NANValue keyword W. Landsman July 2001
+;       Use FILE_SEARCH for V5.5 or later     W. Landsman    April 2002
+;       Create the file if not already present and /APPEND is set
+;                                             W. Landsman    September 2002
+;       Fix MRD_HREAD call if /APPEND is set  W. Landsman    December 2002
+;       Added /CHECKSUM keyword              W. Landsman     December 2002
 ;-
   On_error, 2
+  FORWARD_FUNCTION FILE_SEARCH      ;For pre-V5.5 compatibility
 
   if N_params() LT 2 then begin 
-       print,'Syntax - WRITEFITS, filename, data,[ header, /APPEND]'
+       print,'Syntax - WRITEFITS, filename, data,[ header, /APPEND, /CHECKSUM]'
        return
   endif
 
@@ -104,8 +116,7 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
         
         unsigned = (type EQ 12) or (type EQ 13)
         if unsigned then begin
-             newdata = data
-             if type EQ 12 then begin
+              if type EQ 12 then begin
                      sxaddpar,hdr,'BZERO',32768,'Data is Unsigned Integer'
                      newdata = fix(data - 32768)
              endif else if type EQ 13 then begin 
@@ -123,18 +134,24 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
             'ERROR - "XTENSION" must be first keyword in header extension',/CON
                   return
             endif
+            if !VERSION.RELEASE GE '5.5' then $
+            test = file_search(filename, COUNT = n) else $
             test = findfile( filename, COUNT = n)
-            if n EQ 0 then message, $
-                  'ERROR - FITS file ' + filename + ' not found'
-            hprimary = headfits( filename )
-            extend = where( strmid(hprimary,0,8) EQ 'EXTEND  ', Nextend)
+            if n EQ 0 then  begin       ;Create default primary header
+                mkhdr,h0,0,/exten
+                writefits,filename,0,h0, checksum=checksum
+                openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
+            endif else begin
             openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
-            if Nextend EQ 0 then begin
+            mrd_hread, unit, hprimary
+            extend = where( strmid(hprimary,0,8) EQ 'EXTEND  ', Nextend)
+             if Nextend EQ 0 then begin
                message,'EXTEND keyword not found in primary FITS header',/CON
                message,'Recreate primary FITS header with EXTEND keyword ' + $
                        'before adding extensions', /CON
                return
             endif
+            endelse
                    
             file = fstat(unit)
             nbytes  = file.size
@@ -161,11 +178,19 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
      endline = N_elements(hdr) - 1 
 
    endif
-   nmax = endline[0] + 1
+
+; Add any CHECKSUM keywords if desired
+
+       if keyword_set(checksum) then begin 
+               FITS_ADD_CHECKSUM, hdr, data
+               endline = where( strmid(hdr,0,8) EQ 'END     ', Nend)
+       endif
+       nmax = endline[0] + 1
+
 
 ; Convert to byte and force into 80 character lines
 
-       bhdr = replicate(32b, 80l*nmax)
+      bhdr = replicate(32b, 80l*nmax)
        for n = 0l, endline[0] do bhdr[80*n] = byte( hdr[n] )
        npad = 80l*nmax mod 2880
        writeu, unit, bhdr

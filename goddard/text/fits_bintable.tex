@@ -22,11 +22,12 @@ Modified C. Markwardt 10 Jan 2000
 
 This software package was developed to support reading and writing FITS binary
 table extensions.  The primary source for a description of the FITS binary
-table extension is the document ``Binary Table Extension to FITS: A Proposal''
-by W. D.  Cotton and D. Tody, hereafter referred to as C\&T\@.  This
-information is also included almost verbatim in the draft standards document
-``Implementation of the Flexible Image Transport System (FITS)'' from the
-NASA/OSSA Office of Standards and Technology (NOST)\@.  As well as routines
+table extension is the document ``Binary Table Extension to FITS''
+by W. D.  Cotton, D. Tody and W. Pence (1995, A\&AS, 113, 159).  This
+information is also included  in the FITS standards document
+``Definition of the Flexible Image Transport System (FITS)'' by Hanisch et al.
+(2001, A\&A, 376, 359), and at the Web site \\
+{\tt http://heasarc.gsfc.nasa.gov/docs/heasarc/fits.html}.  As well as routines
 that are directly related to binary tables, there are also supporting routines
 which allow the user to read and write primary FITS header and data units
 (HDUs), and to copy FITS files to and from tapes.
@@ -60,8 +61,8 @@ Writes the primary header and (optional) data array to a FITS file on disk.
 \end{quote}
 
 There are a number of routines available to read and interpret FITS primary
-HDUs.  For example, the IDL Astronomy User's Library, available via anonymous
-FTP from idlastro.gsfc.nasa.gov, contains a number of routines including
+HDUs.  For example, the IDL Astronomy User's Library, available at \\
+{\tt http://idlastro.gsfc.nasa.gov/homepage.html}, contains a number of routines including
 READFITS\@.  The following lists two routines included in this package to
 support this function.
 \begin{quote}
@@ -361,16 +362,13 @@ After a FITS binary table has been created it may also be necessary to
 increase the number of rows in the table.  As mentioned above, one
 cannot change the number of columns.  The number of rows can be
 changed to the new value \verb|NEW_NROWS| by using the following
-FXBGROW procedure call.  However, please note that there is one very
-important restriction: {\bf the extension to be enlarged must be the
-last extension in the file.}  Any following extensions will be
-destroyed.  FXBGROW is safe for variable-length tables.
+FXBGROW procedure call.  .  FXBGROW is safe for variable-length tables.
 %
 \begin{quote}
 \begin{verbatim}
-IDL> FXBOPEN,UNIT,'sample.fits',1
+IDL> FXBOPEN,UNIT,'sample.fits',1,access='RW'
 IDL> FXBGROW,UNIT,HEADER, NEW_NROWS
-IDL> FXBCLOSE,UNIT
+IDL> FXFINISH,UNIT
 \end{verbatim}
 \end{quote}
 %
@@ -384,7 +382,8 @@ FXBGROW.
 The following routines are for writing and reading FITS files to and from tape.
 Each has a menu driven interface, so that the user only has to enter the name
 of the routine itself, and everything else is prompted for.  Currently, these
-routines are only supported under VMS.
+routines are only supported under VMS and are only available in the /obsolete
+directory of the IDL Astronomy Library
 \begin{quote}
 \begin{description}
 \item[FXTAPEREAD:]
@@ -468,9 +467,6 @@ these NaN numbers into a user-specified value, given by the NANVALUE keyword.
 Conversely, the same keyword, when used with the FXWRITE or FXBWRITE routines,
 will write out NaN for any points in the array with the value of the NANVALUE
 keyword.
-
-At present, there is no support for IEEE $\pm$Infinity and -0 special values.
-However, it would be a simple matter to add support similar to IEEE NaN.
 
 \section{Bit, Logical, and Double-precision Complex Arrays}
 

@@ -4,7 +4,8 @@ function numlines,file
 ;     NUMLINES() 
 ; PURPOSE:
 ;     Return the number of lines in a file
-;
+;     This procedures became mostly obsolete in V5.6 with the introduction of
+;     the FILE_LINES() procedure
 ; CALLING SEQUENCE:
 ;     nl = NUMLINES( filename )
 ; INPUT:
@@ -30,7 +31,8 @@ function numlines,file
         return,-1
  endif
 
- nl = -1L
+ if !VERSION.RELEASE GE '5.6' then return,file_lines(file)
+  nl = -1L
  openr,lun,file,/get_lun, ERROR = err
  if err NE 0 then begin
         if !VERSION.OS eq "vms" then file = spec_dir(file,'DAT') else $

@@ -3,7 +3,7 @@ pro dbindex,items
 ; NAME:
 ;       DBINDEX
 ; PURPOSE:
-;       Procedure to create index file for data base
+;       Procedure to create index file for data base (V5.2 or later)
 ;
 ; CALLING SEQUENCE:     
 ;       dbindex, [ items ]
@@ -36,6 +36,7 @@ pro dbindex,items
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Increase number of items to 18     W. Landsman  November 1999
 ;       Allow multiple valued (nonstring) index items W. Landsman November 2000
+;       Use 64 bit integers for V5.2 or later  W. Landsman February 2001
 ;-                                         
 ;*****************************************************************
  On_error,2                ;Return to caller
@@ -128,7 +129,7 @@ pro dbindex,items
 ;
 ; process according to index type ---------------------------------------
 ;
-        reclong = assoc(unit,lonarr(1),(iblock[pos]*512L))
+        reclong = assoc(unit,lonarr(1),(iblock[pos]*512LL))
         case indextype[i] of
  
         1: begin                                ;indexed (unsorted)
@@ -142,7 +143,7 @@ pro dbindex,items
         2: begin                                ;values are already sorted
 
                 nb=(nentries+511L)/512          ;number of 512 value blocks
-                ind=indgen(nb)*512L             ;position at start of each block
+                ind=indgen(nb)*512LL             ;position at start of each block
                 sval=v[ind]                     ;value at start of each block
                 datarec = dbindex_blk(unit, hblock[pos], 512, 0, idltype[i])
                 tmp = sval
@@ -159,7 +160,7 @@ pro dbindex,items
                 sub=bsort(v)                    ;sort values
                 v=v[sub]
                 nb=(nentries+511)/512           ;number of 512 value blocks
-                ind=indgen(nb)*512L             ;position at start of each block
+                ind=l64indgen(nb)*512LL             ;position at start of each block
                 sval=v[ind]                     ;value at start of each block
                 datarec = dbindex_blk(unit, hblock[pos], 512, 0, idltype[i])
                 tmp = sval
@@ -182,7 +183,7 @@ pro dbindex,items
                 sub=bsort(v)                    ;sort values
                 v=v[sub]
                 nb=(nentries+511)/512           ;number of 512 value blocks
-                ind=indgen(nb)*512L             ;position at start of each block
+                ind=l64indgen(nb)*512LL             ;position at start of each block
                 sval=v[ind]                     ;value at start of each block
                 datarec = dbindex_blk(unit, hblock[pos], 512, 0, idltype[i])
                 tmp = sval

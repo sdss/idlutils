@@ -1,4 +1,4 @@
-Function adstring,ra_dec,dec,precision
+Function adstring,ra_dec,dec,precision, TRUNCATE = truncate
 ;+
 ; NAME:
 ;       ADSTRING
@@ -10,9 +10,9 @@ Function adstring,ra_dec,dec,precision
 ;       of the declination in digits after the decimal point.
 ;
 ; CALLING SEQUENCE
-;       result = ADSTRING( ra_dec, precision )           
+;       result = ADSTRING( ra_dec, precision, /TRUNCATE )           
 ;               or
-;       result = ADSTRING( ra,dec,[ precision ] )
+;       result = ADSTRING( ra,dec,[ precision, /TRUNCATE ] )
 ;
 ; INPUTS:
 ;       RA_DEC - 2 element vector giving the Right Ascension and declination
@@ -32,7 +32,15 @@ Function adstring,ra_dec,dec,precision
 ;               precision larger than 4 will be truncated to 4.    If
 ;               PRECISION is 3 or 4, then RA and Dec should be input as 
 ;               double precision.
-;
+; OPTIONAL INPUT KEYWORD:
+;       /TRUNCATE - if set, then the last displayed digit in the output is 
+;               truncated in precision rather than rounded.   This option is
+;               useful if ADSTRING() is used to form an official IAU name 
+;               (see http://vizier.u-strasbg.fr/Dic/iau-spec.htx) with 
+;               coordinate specification.   The IAU name will typically be
+;               be created by applying STRCOMPRESS/REMOVE) after the ADSTRING()
+;               call, e.g. 
+;              strcompress( adstring(ra,dec,0,/truncate), /remove)   ;IAU format
 ; OUTPUT:
 ;       RESULT - Character string(s) containing HR,MIN,SEC,DEC,MIN,SEC formatted
 ;               as ( 2I3,F5.(p+1),2I3,F4.p ) where p is the PRECISION 
@@ -66,6 +74,11 @@ Function adstring,ra_dec,dec,precision
 ;       Work for Precision =4             November 1997  [W. Landsman]
 ;       Converted to IDL V5.0   W. Landsman 24-Nov-1997
 ;       Major rewrite to allow vector inputs   W. Landsman  February 2000
+;       Fix possible error in seconds display when Precision=0 
+;                               P. Broos/W. Landsman April 2002
+;       Added /TRUNCATE keyword, put leading zeros in seconds display
+;                               P. Broos/W. Landsman September 2002
+;       Hours values always less than 24   W. Landsman September 2002
 ;-
   On_error,2
 
@@ -98,6 +111,7 @@ Function adstring,ra_dec,dec,precision
      radec, ra, dec, ihr, imin, xsec, ideg, imn, xsc
      if (Npar LT 3) then precision = 0
      precision = precision > 0 < 4         ;No more than 4 decimal places
+ if not keyword_set(truncate) then begin
      roundsec = [59.5,59.95,59.995,59.9995,59.99995,59.999995]
      carry = where(xsec GT roundsec[precision+1], Ncarry)
      if Ncarry GT 0 then begin
@@ -106,15 +120,21 @@ Function adstring,ra_dec,dec,precision
         mcarry = where(imin[carry] EQ 60, Nmcarry)
         if Nmcarry GT 0 then begin
                 ic = carry[mcarry]
-                ihr[ic] = ihr[ic] + 1
+                ihr[ic] = (ihr[ic] + 1) mod 24
                 imin[ic] = 0
         endif
      endif
+  endif else xsec = (long(xsec*10L^(precision+1)))/10.0d^(precision+1)
+
      secfmt = '(F' + string( 4+precision+1,'(I1)' ) + '.' + $
                      string(   precision+1,'(I1)' ) + ')'
-     if (Npar LT 3) then precision = 1
+
+    leadzero = replicate(' ',N_elements(xsec))
+    less10 = where(xsec LT 10.,Nzero)
+    if Nzero GT 0 then leadzero[less10] = ' 0'
      result = fstring(ihr,'(I3.2)') + fstring(imin,'(I3.2)') + $
-              fstring(xsec,secfmt) + '  ' 
+              leadzero + strtrim(fstring(xsec,secfmt),2) + '  ' 
+    if (Npar LT 3) then precision = 1
 
   endif else begin
 
@@ -127,27 +147,30 @@ Function adstring,ra_dec,dec,precision
 
    if ( precision EQ 0 ) then begin 
            secfmt = '(I3.2)' 
+           if not keyword_set(truncate) then begin
            xsc = round(xsc)
            carry = where(xsc EQ 60, Ncarry)
-           if Ncarry EQ 60 then begin
+           if Ncarry GT 0 then begin                 ;Updated April 2002
                   xsc[carry] = 0
                   imn[carry] = imn[carry] + 1
            endif
-
+           endif
    endif else begin
 
-         secfmt = '(F' + string( 4+precision,'(I1)') + '.' + $
+         secfmt = '(F' + string( 3+precision,'(I1)') + '.' + $
                          string(   precision,'(I1)') + ')'
+         if not keyword_set(truncate) then begin
          ixsc = fix(xsc + 0.5/10^precision)
          carry = where(ixsc GE 60, Ncarry)
          if Ncarry GT 0 then begin
              xsc[carry] = 0.
              imn[carry] = imn[carry] + 1
          endif
- 
+         endif else $
+              xsc = (long(xsc*10^precision))/10.0d^precision
   endelse
 
-   pos = dec GT 0 
+   pos = dec GE 0 
    carry = where(imn EQ 60, Ncarry)
    if Ncarry GT 0  then begin
        ideg[carry] = ideg[carry] -1 + 2*pos[carry]
@@ -157,7 +180,7 @@ Function adstring,ra_dec,dec,precision
    deg = fstring(ideg,'(I3.2)')
    zero = where(ideg EQ 0, Nzero)
    if Nzero GT 0 then begin
-       negzero = where( (imn[zero] LT 0) or (xsc[zero] LT 0), Nneg)
+       negzero = where( dec LT 0, Nneg)
        if Nneg GT 0 then begin
          ineg = zero[negzero]
          deg[ineg] = '-00' 
@@ -167,7 +190,14 @@ Function adstring,ra_dec,dec,precision
 
    ipos = where(pos, Npos)
    if Npos GT 0 then deg[ipos] =  '+' + strtrim(deg[ipos],2)
+   
+   leadzero = replicate(' ',N_elements(xsc))
+   if precision NE 0 then begin
+      less10 = where(xsc LT 10.,Nzero)
+      if Nzero GT 0 then leadzero[less10] = ' 0'
+   endif 
 
-   return, result + deg + fstring(imn,'(I3.2)') + fstring(xsc,secfmt)
+   return, result + deg + fstring(imn,'(I3.2)') + leadzero + $
+            strtrim(fstring(xsc,secfmt),2)
 
    end

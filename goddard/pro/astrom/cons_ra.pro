@@ -33,9 +33,9 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
 ; NOTES:
 ;       The algorithm (and notation) is based on AIPS Memo 27 by Eric Greisen,
 ;       with modifications for a coordinate description (CD) matrix as 
-;       described in Paper II of Greisen & Calabretta (2000, A&A, in press).
+;       described in Paper II of Calabretta & Greisen (2002, A&A, 395, 1077).
 ;       These documents are available from 
-;       http://fits.cv.nrao.edu/documents/wcs/wcs.html
+;       http://www.cv.nrao.edu/fits/documents/wcs/wcs.html
 ;
 ; RESTRICTIONS:
 ;       Implemented only for the TANgent and SIN projections 

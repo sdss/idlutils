@@ -95,6 +95,8 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added HALF_HALF keyword  W. Landsman  February 2000
 ;       Added ERRMSG keyword, use double precision formatting W.L.  April 2000
+;       Recognize PC00n00m astrometry format  W. Landsman   December 2001
+;       Now works when both /INTERP and /HALF are set W. Landsman January 2002
 ;- 
  On_error,2
  Npar = N_params()      ;Check # of parameters
@@ -168,7 +170,7 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
  if keyword_set(half_half) then begin
    srx = (findgen(newx) + 0.5)/xratio - 0.5
    sry = (findgen(newy) + 0.5)/yratio - 0.5
-   if interp GT 1 then begin
+   if interp GT 0 then begin
       if ( npar GT 2 ) then $
         newim = interpolate(oldim, srx,sry,/GRID, CUBIC = cubic) else $
         oldim = interpolate(oldim, srx,sry,/GRID, CUBIC = cubic)
@@ -219,13 +221,13 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
      sxaddpar, newhd, 'CRPIX2', crpix[1]*yratio + 1.0, FORMAT='(G14.7)'
  endelse 
 
- if (noparams EQ 0) or ( noparams EQ 1) then begin 
+ if (noparams NE 2) then begin 
 
     cdelt = astr.cdelt
     sxaddpar, newhd, 'CDELT1', CDELT[0]/xratio
     sxaddpar, newhd, 'CDELT2', CDELT[1]/yratio
 
- endif else if noparams EQ 2 then begin
+ endif else begin
 
     cd = astr.cd
     sxaddpar, newhd, 'CD1_1', cd[0,0]/xratio
@@ -233,7 +235,7 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
     sxaddpar, newhd, 'CD2_1', cd[1,0]/xratio
     sxaddpar, newhd, 'CD2_2', cd[1,1]/yratio
 
- endif
+ endelse
  endif 
 
 ; Update BSCALE and BZERO if needed

@@ -23,8 +23,15 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
 ;                            or
 ;       Fileunit - A scalar integer specifying the unit of an already opened
 ;                  FITS file.  The unit will remain open after exiting 
-;                  READFITS().  There are two possible reasons for choosing 
+;                  HEADFITS().  There are two possible reasons for choosing 
 ;                  to specify a unit number rather than a file name:
+;          (1) For a FITS file with many extensions, one can move to the 
+;              desired extensions with FXPOSIT() and then use HEADFITS().  This
+;              is more efficient that repeatedly starting at the beginning of 
+;              the file.
+;          (2) For reading a FITS file across a Web http: address after opening
+;              the unit with the SOCKET procedure (IDL V5.4 or later,
+;              Unix and Windows only) 
 ; OPTIONAL INPUT KEYWORDS:
 ;      EXTEN  = integer scalar, specifying which FITS extension to read.
 ;               For example, to read the header of the first extension set

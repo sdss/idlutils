@@ -21,7 +21,7 @@
 ;          ceil(2*Vsini/deltav) +1 (whichever number is odd).    LSF will 
 ;          always be of type FLOAT.
 ;
-;          To actually compute the broadening. the spectrum should be convovled
+;          To actually compute the broadening. the spectrum should be convolved
 ;          with the rotational LSF. 
 ; OPTIONAL INPUT PARAMETERS:
 ;    Epsilon - numeric scalar giving the limb-darkening coefficient, 

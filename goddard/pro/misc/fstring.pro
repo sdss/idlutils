@@ -2,7 +2,11 @@
 ; NAME: 
 ;    FSTRING
 ; PURPOSE:
-;    Shell around STRING function to fix 1024 size limit on formatting strings
+;    Wrapper around STRING function to fix pre-V5.4 1024 formatting size limit
+; EXPLANATION:
+;    Prior to V5.4, the intrinsic STRING() function had a size limit of 1024 
+;    elements. FSTRING() works around this by breaking a larger array into 1024 element
+;    element chunks.
 ;
 ; CALLING SEQUENCE:
 ;    new = fstring(old, [ format, FORMAT = )
@@ -31,6 +35,7 @@
 ;    IDL> a = fstring( randomu(seed,10000), '(f6.2)') 
 ; REVISION HISTORY:
 ;     Written W. Landsman (based on program by D. Zarro)  February 2000
+;     Check if VERSION is V5.4 or later   W. Landsman     January 2002
 ;-
 
 function fstring,input,format,format=key_format
@@ -41,6 +46,8 @@ function fstring,input,format,format=key_format
 
  np = N_elements(input)
  if np LE 1024 then return,string(input,form=form)
+ if !VERSION.RELEASE GE '5.4' then return,string(input,form=form)
+
  new = make_array(/string,size = size(input))
 
 ; Now format the data in 1024 element chunks

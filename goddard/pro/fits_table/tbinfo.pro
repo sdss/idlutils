@@ -43,6 +43,7 @@ pro tbinfo,h,tb_str
 ;       Major rewrite to return a structure      W. Landsman   August 1997
 ;       Release for IDL V5.0   August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Added "unofficial" 64 bit integer "K" format W. Landsamn Feb. 2003
 ;-
 ;----------------------------------------------------------------------------
  On_error,2
@@ -139,6 +140,7 @@ NEXT_CHAR:
         'B' : begin & idltype[i] = 1 &  width[i] = 1 &  end
         'C' : begin & idltype[i] = 6 &  width[i] = 8 &  end
         'M' : begin & idltype[i] = 9 &  width[i] =16 &  end
+        'K' : begin & idltype[i] = 14 & width[i] = 8 &  end
 ;  Treat bit arrays as byte arrays with 1/8 the number of elements.
 
         'X' : begin

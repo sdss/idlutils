@@ -1,7 +1,7 @@
 PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
            PSYM = psym, Peak=Peak, Fill=Fill, FCOLOR=Fcolor, FLINE=FLINE, $
            FSPACING=Fspacing, FPATTERN=Fpattern, FORIENTATION=Forientation, $
-           NAN = NAN, _EXTRA = _extra
+           NAN = NAN, _EXTRA = _extra, Halfbin = halfbin
 ;+
 ; NAME:
 ;      PLOTHIST
@@ -23,6 +23,12 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
 ; OPTIONAL INPUT KEYWORDS:
 ;      BIN -  The size of each bin of the histogram,  scalar (not necessarily
 ;             integral).  If not present (or zero), the bin size is set to 1.
+;      HALFBIN - Set this keyword to a nonzero value to shift the binning by
+;              half a bin size.     This is useful for integer data, where e.g.
+;              the bin for values of 6 will go from 5.5 to 6.5.   The default
+;              is to set the HALFBIN keyword for integer data, and not for
+;              non-integer data.    Note: prior to May 2002, the default was 
+;              to always shift the binning by half a bin.                
 ;      /NAN - If set, then check for the occurence of IEEE not-a-number values
 ;      /NOPLOT - If set, will not plot the result.  Useful if intention is to
 ;             only get the xhist and yhist outputs.
@@ -64,14 +70,18 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
 ;        Add FILL,FCOLOR,FLINE,FPATTERN,FSPACING keywords. J.Wm.Parker Jan, 1998
 ;	 Converted to IDL V5.0   W. Landsman 21-Jan-1998
 ;        Add /NAN keyword        W. Landsman October 2001
+;        Don't plot out of range with /FILL, added HALFBIN keyword, make
+;        half bin shift default for integer only W. Landsman/J. Kurk May 2002
 ;-
 ;			Check parameters.
  On_error,2
 
  if N_params() LT 1 then begin   
-	print, 'Syntax - plothist, arr, [xhist,yhist, ' + $
-		'BIN=, PEAK=, /NOPLOT,/OVERPLOT, /FILL, FCOLOR=, FLINE=, ' + $
-                'FORIENTATION=, FPATTERN=, FSPACING=, ...plot_keywords]'
+	print,'Syntax - plothist, arr, [xhist,yhist, ' 
+        print,'         BIN=, HALFBIN=, PEAK=, /NOPLOT,/OVERPLOT, /FILL... ' +$
+              'plotting keywords' 
+        print,'Fill keywords: FCOLOR=, /FLINE, FORIENTATION=, FPATTERN=,' + $
+              'FSPACING= '
 	return
  endif
 
@@ -83,16 +93,25 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
 
  if not keyword_set(BIN) then bin = 1. else bin = float(abs(bin))
 
-; Compute the histogram and abcissa.    
-
+; Compute the histogram and abcissa.    Determine if a half bin shift is 
+; desired (default for integer data)    
+ 
+ if N_elements(halfbin) EQ 0 then begin 
+    dtype = size(arr,/type)
+    halfbin = (dtype NE 4) and (dtype NE 5)       ;Non-integer data?
+ endif 
+ halfbin = keyword_set(halfbin)
  if keyword_set(NAN) then begin
       good = where(finite(arr) )
-      y = round( ( arr[good] / bin))
- endif else y = round( ( arr / bin))
+      if halfbin then y = round( ( arr[good] / bin)) $
+                 else y = floor( ( arr[good] / bin))
+ endif else if halfbin then y = round( ( arr / bin)) $
+                       else y = floor( ( arr/ bin)) 
+ 
  yhist = histogram( y )
  N_hist = N_elements( yhist )
- xhist = lindgen( N_hist ) * bin + min(y*bin)
-
+ xhist = lindgen( N_hist ) * bin + min(y*bin) 
+ if not halfbin then xhist = xhist + 0.5*bin
 ;;;
 ;   If renormalizing the peak, do so.
 ;
@@ -124,6 +143,8 @@ if keyword_set(Peak) then yhist = yhist * (Peak / float(max(yhist)))
     Yfill = transpose([[Yhist],[Yhist]])
     Yfill = reform(Yfill, n_elements(Yfill))
     Yfill = [0, Yfill, 0]
+    Xfill = Xfill > !X.CRANGE[0] < !X.CRANGE[1]    ;Make sure within plot range
+    Yfill = Yfill > !Y.CRANGE[0] < !Y.CRANGE[1]
 
     if keyword_set(Fcolor) then Fc = Fcolor else Fc = !P.Color
     if keyword_set(Fline) then begin

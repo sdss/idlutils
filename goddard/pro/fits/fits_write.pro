@@ -1,5 +1,5 @@
 pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
-		xtension=xtension, extlevel=extlevel, NaNvalue=NaNvalue, $
+		xtension=xtension, extlevel=extlevel, $
 		no_abort=no_abort, message = message, header = header, $
 		no_data = no_data
 ;+
@@ -44,8 +44,6 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;	EXTLEVEL: EXTLEVEL for the extension.  If not supplied, it will be taken
 ;               from HEADER_IN.  If not supplied and not in HEADER_IN, no
 ;               EXTLEVEL will be written into the output extension.
-;	NaNvalue: data value in DATA to be replaced with IEEE NaN in the output
-;		file.
 ;       /NO_ABORT: Set to return to calling program instead of a RETALL
 ;               when an I/O error is encountered.  If set, the routine will
 ;               return  a non-null string (containing the error message) in the
@@ -103,16 +101,17 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;       Return Message='' to signal normal operation W. Landsman Nov. 2000
 ;       Ensure that required extension table keywords are in proper order
 ;             W.V. Dixon/W. Landsman          March 2001
+;       Assume since V5.1, remove NaNValue keyword   W. Landsman Nov. 2002
 ;-
 ;-----------------------------------------------------------------------------
 ;
 ; print calling sequence if no parameters supplied
 ;
 	if n_params(0) lt 1 then begin
-	    print,'CALLING SEQUENCE: fits_write,file_or_fcb,data,header_in'
-	    print,'KEYWORD PARAMETERS: extname, extver, xtension, extlevel'
-	    print,'                    NaNvalue, no_abort, message, header'
-	    print,'                    no_data'
+	    print,'Calling Sequence: FITS_WRITE,file_or_fcb,data,header_in'
+	    print,'Input Keywords: extname, extver, xtension, extlevel,' + $
+                                    '/no_abort, /no_data'
+	    print,'Output Keywords:  message, header ' 
 	    return
 	end
 ;
@@ -320,25 +319,12 @@ write_header:
 ;
 	if naxis gt 0 then begin
 ;
-; find NaNvalues in real*4 and real*8 data
-;
-	    if (n_elements(NaNvalue) gt 0) and (bitpix lt 0) then $
-		NaN_points = where(data eq NaNvalue, n_NaN) else n_NaN = 0
-;
 ; convert to IEEE
 ;
 	    newdata = data
             if idltype EQ 12 then newdata = fix(data - 32768)
             if idltype EQ 13 then newdata = long(data - 2147483648)
 	    host_to_ieee, newdata
-;
-; insert IEEE NaN values
-;
-  	    if n_NaN gt 0 then begin
-	      if idltype eq 4 then $
-		data[NaN_points] = float([127b,255b,255b,255b],0,1) else $
-		data[NaN_points] = double([127b,replicate(255b,7)],0,1)
-	    end
 ;
 ; write the data
 ;

@@ -17,7 +17,7 @@ function polyleg,x,coeff
 ;       C - vector of Legendre polynomial coefficients. 
 ; OUTPUTS:
 ;       POLYLEG returns a result equal to:
-;               C(0) + C(1)*P_1(x) + C(2)*P_2(x) + ...
+;               C[0] + C[1]*P_1(x) + C[2]*P_2(x) + ...
 ;
 ;       where P_j(x) is the jth Legendre polynomial.   The output will have
 ;       the same dimensions as the input X variable.
@@ -27,7 +27,7 @@ function polyleg,x,coeff
 ;       print, polyleg(x, c)    ====> [2.7375, 6.20]
 ;
 ;       The result can be checked using the first 3 Legendre polynomial terms
-;       C(0) + C(1)*x + C(2)*(0.5*(3*x^2-1))
+;       C[0] + C[1]*x + C[2]*(0.5*(3*x^2-1))
 ; METHOD:
 ;       Uses the recurrence relation of Legendre polynomials
 ;               (n+1)*P_n+1(x) = (2n+1)*x*P_n(x) - n*P_n-1(x)
@@ -46,7 +46,6 @@ function polyleg,x,coeff
         return, -1
  endif
 
- sz_x = size(x)
  N= N_elements(coeff) -1
  M = N_elements(x)
 
@@ -58,7 +57,7 @@ function polyleg,x,coeff
 
 ; If X is double then compute in double; otherwise compute in real
 
- if sz_x[sz_x[0] + 1] EQ 5 then begin        ;Fixed May 1997
+ if size(x,/TNAME) EQ 'DOUBLE'  then begin      
         y = dblarr( M, N+2)
         jj = dindgen(N) + 2.0d
  endif else begin

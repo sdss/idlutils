@@ -1,14 +1,16 @@
 			      FITS Binary Tables
 
-			  Last updated:  01 Dec 1999
+			  Last updated:  13 Dec 2002
 
 
 The routines in this directory are for reading and writing (disk) FITS binary
 table extensions.  Access to FITS files is direct, rather than passing through
 intermediate file structures (such as SDAS/Geis).  Some routines for reading
-and writing primary FITS files, and for reading and writing FITS tapes, are
-included to support writing binary tables.  Some updates to these routines are
-available in the /contrib/marquardt directory.   The various routines are:
+and writing primary FITS files are also included.  Additional information is 
+available in the LateX file fits_bintable.tex in the /text directory. 
+
+
+The various routines are:
 
 
 			 Primary FITS files -- writing
@@ -37,16 +39,18 @@ and data arrays from FITS files.
 
 			   Binary tables -- writing
 
-These routines are used write FITS binary table extensions.  The sequence to be
-used is to create the header (FXBHMAKE), define the table columns (FXBADDCOL),
-open the file and write the header (FXBCREATE), write the binary table data
-(FXBWRITE), then close the table (FXBFINISH).  See the LaTeX file
-"fits_bintable.tex" for an example of writing and reading a binary table.
+These routines are used write or modify FITS binary table extensions.  The
+sequence to be used is to create the header (FXBHMAKE), define the table
+columns (FXBADDCOL), open the file and write the header (FXBCREATE), write the
+binary table data (FXBWRITE), then close the table (FXBFINISH).  See the LaTeX
+file "fits_bintable.tex" for an example of writing and reading a binary table.
 
 	FXBHMAKE	Create FITS extension header.
 	FXBADDCOL	Create columns in the binary table extension header.
 	FXBCREATE	Open binary table file, and write header.
+        FXBGROW         Increase the number of rows in a binary table
 	FXBWRITE	Write data into binary table.
+        FXBWRITM        Write multiple columns/rows to a FITS binary table file
 	FXBFINISH	Close binary table file.
 
 One thing that sometimes confuses first time users is that the logical unit
@@ -68,6 +72,7 @@ examine information from the binary table header.
 
 	FXBOPEN		Open FITS binary table extension for reading.
 	FXBREAD		Read data from FITS binary table.
+        FXBREADM        Read multiple columns/rows from a FITS binary table file
 	FXBCLOSE	Close FITS binary table.
 	FXBTDIM		Parse keywords from binary tables with a TDIM-like
 			format.
@@ -81,15 +86,6 @@ examine information from the binary table header.
 
 The same comment above about FXBCREATE and UNIT also applies to FXBOPEN.
 
-
-				   Tape I/O
-
-The following routines are for writing and reading FITS files to and from tape.
-These routines differ from FITSRD and FITSWRT in that no conversion to or from
-the SDAS/Geis format is performed.
-
-	FXTAPEREAD	Reads FITS files from tape to disk.
-	FXTAPEWRITE	Writes FITS files from disk to tape.
 
 
 			      Associated routines
@@ -105,12 +101,11 @@ mentioned above.
 	FXHREAD		Read FITS header--called by FXBOPEN.
 	FXFINDEND	Find the last FITS record--called by FXBCREATE.
 	WHERENAN	Find points equal to IEEE NaN--called by FXBREAD.
+        BLKSHIFT        Shift a block of data to a new position in a file 
 	BOOST_ARRAY	Resize array, and append another array.
 	STORE_ARRAY	Resize array, and insert another array.
 	DETABIFY	Removes tabs from strings.
 	PRODUCT		Calculates total product of all elements of an array.
-	FXTPIO_READ	Reads a file from a tape--called from FXTAPEREAD.
-	FXTPIO_WRITE	Writes a file to a tape--called from FXTAPEWRITE.
 
 
 			Multidimensional Array Facility
@@ -219,7 +214,7 @@ in the header.
 			     Implementation notes
 
 The routines in this directory also make use internally of other routines from
-the SDAS, FITS, and MISC directories from the Astronomy User's Library.
+the /sdas, /fits, and /misc directories from the Astronomy User's Library.
 
 The file "fxbintable.pro" is an include file containing the definition of the
 IDL common block FXBINTABLE.  This file must be in one of the directories
@@ -252,7 +247,7 @@ FXBPARSE          - Parse the binary table extension header.
 FXBREAD           - Read a data array from a disk FITS binary table file.
 FXBREADM          - Read mulitple columns/rows from a FITS binary table file.
 FXBSTATE()        - Returns the state of a FITS binary table.
-FXBTDIM()         - Parse TDIM-like kwywords.
+FXBTDIM()         - Parse TDIM-like keywords.
 FXBTFORM          - Returns information about FITS binary table columns.
 FXBWRITE          - Write a binary data array to a disk FITS binary table file.
 FXBWRITEM          -Write multiple columns/rows to a FITS binary table file.
@@ -266,7 +261,9 @@ FXPARPOS()        - Finds position to insert record into FITS header.
 FXREAD            - Read basic FITS files.
 FXWRITE           - Write a disk FITS file.
 
-The procedures for supporting tape I/O are available in /tape_io
+The procedures for supporting tape I/O below are no longer available in the
+main library, but are still available in
+http://idlastro.gsfc.nasa.gov/ftp/obsolete/
 
 FITSTAPE()        - Function to perform FITS tape I/O.
 FXTAPEREAD        - Interactive procedure copies FITS files from tape to disk.
@@ -275,7 +272,7 @@ FXTPIO_READ       - Copies FITS files from tape to disk -- internal routine.
 FXTPIO_WRITE      - Copy FITS files from disk to tape -- internal routine.
 
 
-Some procedures
+Some procedures from other directories are also useful
 
 CHECK_FITS        - Checks validity of FITS header.
 GET_DATE          - Gets date in format used by FITS headers.

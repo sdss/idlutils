@@ -36,7 +36,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;		selection criteria.   If the SILENT keyword is set and 
 ;		non-zero, then this printout is suppressed.
 ;	PRINT - if set and non-zero then T_FIND will also write its results to
-;		a file FIND.PRT.   Also one can specify a different output file 
+;		a file find.prt.   Also one can specify a different output file 
 ;		name by setting PRINT = 'filename'.
 ;
 ; OPTIONAL OUTPUTS:
@@ -64,6 +64,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	Changed loop indices to type LONG       W. Landsman Aug. 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Replace DATATYPE() with size(/TNAME)   W. Landsman Nov. 2001
+;       Fix problem when PRINT= filename   W. Landsman   October 2002
 ;-
 ;
  On_error,2                         ;Return to caller
@@ -72,7 +73,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
  if npar EQ 0 then begin
     print,'Syntax - FIND, image,' + $
           '[ x, y, flux, sharp, round, hmin, fwhm, roundlim, sharplim'
-    print,'                      PRINT = , /SILENT ]'
+    print,'                      PRINT= , /SILENT ]'
     return
  endif
 
@@ -88,7 +89,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
  message,  $
     'Input Image Size is '+strtrim(n_x,2) + ' by '+ strtrim(n_y,2),/INF
 
- if not keyword_set( PRINT )  then print = 0
+ doprint = keyword_set( PRINT)
  if not keyword_set( SILENT ) then silent = 0
  if ( N_elements(fwhm) NE 1 ) then $
            read, 'Enter approximate FWHM: ', fwhm
@@ -207,15 +208,15 @@ SEARCH: 			    ;Threshold dependent search begins here
 
  nstar = 0L       	;NSTAR counts all stars meeting selection criteria
  badround = 0 & badsharp=0  &  badcntrd=0
- if (npar GE 2) or (PRINT) then begin 	;Create output X and Y arrays? 
+ if (npar GE 2) or (doprint) then begin 	;Create output X and Y arrays? 
   	x = fltarr(ngood) & y = x
  endif
 
- if (npar GE 4) or (PRINT) then begin   ;Create output flux,sharpness arrays?
+ if (npar GE 4) or (doprint) then begin   ;Create output flux,sharpness arrays?
  	flux = x & sharp = x & roundness = x
  endif
 
- if PRINT then begin	;Create output file?
+ if doprint then begin	;Create output file?
 
          if ( size(print,/TNAME) NE 'STRING' ) then file = 'find.prt' $
                                          else file = print
@@ -311,11 +312,11 @@ SEARCH: 			    ;Threshold dependent search begins here
       print,FORM = '(12x,i5,2f7.1,f9.1,2f9.2)', $ 
             nstar, xcen, ycen, d, sharp1, around
 
-   if (npar GE 2) or (PRINT) then begin
+   if (npar GE 2) or (doprint) then begin
               x[nstar] = xcen & y[nstar] = ycen
    endif
 
-   if ( npar GE 4 ) or (PRINT) then begin
+   if ( npar GE 4 ) or (doprint) then begin
 	flux[nstar] = d & sharp[nstar] = sharp1 & roundness[nstar] = around
    endif
    
@@ -327,7 +328,7 @@ REJECT:
 
  nstar = nstar-1		;NSTAR is now the index of last star found
 
- if PRINT then begin
+ if doprint then begin
   printf,lun,' No. of sources rejected by SHARPNESS criteria',badsharp
   printf,lun,' No. of sources rejected by ROUNDNESS criteria',badround
   printf,lun,' No. of sources rejected by CENTROID  criteria',badcntrd
@@ -339,16 +340,16 @@ REJECT:
 
   if nstar LT 0 then return               ;Any stars found?
 
-  if (npar GE 2) or (PRINT) then begin
+  if (npar GE 2) or (doprint) then begin
 	x=x[0:nstar]  & y = y[0:nstar]
   endif
 
-  if (npar GE 4) or (PRINT) then begin
+  if (npar GE 4) or (doprint) then begin
 	flux= flux[0:nstar] & sharp=sharp[0:nstar]  
         roundness = roundness[0:nstar]
   endif
 
- if PRINT then begin                
+ if doprint then begin                
    printf,lun, $
       format = '(/8x,a)','     STAR       X       Y     FLUX     SHARP    ROUND'
 	for i = 0, nstar do $

@@ -33,6 +33,7 @@ FUNCTION FXMOVE, UNIT, N_EXT, SILENT = Silent
 ; MODIFICATION HISTORY:
 ;      Extracted from FXPOSIT 8-March-2000 by T. McGlynn
 ;      Added /SILENT keyword  14-Dec-2000 by W. Landsman
+;      Save time by not reading the full header  W. Landsman   Feb. 2003
 ;-
   
         FOR EXT = 1, N_EXT DO BEGIN
@@ -45,7 +46,7 @@ FUNCTION FXMOVE, UNIT, N_EXT, SILENT = Silent
                 ; Can't use FXHREAD to read from pipe, since it uses
                 ; POINT_LUN.  So we read this in ourselves using mrd_hread
 
-                MRD_HREAD, UNIT, HEADER, STATUS, SILENT = Silent
+                MRD_HREAD, UNIT, HEADER, STATUS, SILENT = Silent, /FIRSTBLOCK
                 IF STATUS LT 0 THEN RETURN, -1
                         
                 ; Get parameters that determine size of data
@@ -70,7 +71,7 @@ FUNCTION FXMOVE, UNIT, N_EXT, SILENT = Silent
 ;
                 NREC = LONG((NBYTES + 2879) / 2880)
                 
-                MRD_SKIP, UNIT, NREC*2880L
+                MRD_SKIP, UNIT, NREC*2880L 
 
         ENDFOR
         

@@ -3,7 +3,7 @@ function is_ieee_big
 ; NAME:
 ;	IS_IEEE_BIG
 ; PURPOSE:
-;	Determine if the current machine is use IEEE, big-endian numbers.
+;	Determine if the current machine uses IEEE, big-endian numbers.
 ; EXPLANATION:
 ;       (Big endian implies that byteorder XDR conversions are no-ops).
 ; CALLING SEQUENCE:

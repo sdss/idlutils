@@ -1,4 +1,4 @@
-/database                                                 July 2001
+/database                                                 September 2002
 
 This subdirectory contains the IDL procedures, mostly written by Don Lindler,
 (ACC/Goddard) to create and access an IDL database.   These database procedures
@@ -22,6 +22,14 @@ integers - and at least V5.2 -- internally.     Updated versions of DBINDEX,
 DBINDEX_DBF, DBFIND_SORT, and DBEXT_IND are available in
 ftp://idlastro.gsfc.nasa.gov/pub/v53.
 
+24-Sep-2002:  DBTARGET() - Find database entries within specified radius of 
+                     supplied astronomical target name.
+                   
+20-Sep-2002: DBPRINT - New /AdjustFormat will adjust the format length for 
+                string items to the maximum length for the entries to be 
+                printed.    
+
+
 23-Jul-2001: DBCREATE, DBFIND, DBFIND_SORT, DBXVAL, DBINDEX_BLK, DBBUILD -
              Now allow user to specify items with 64 bit or unsigned integer
              datatypes.
@@ -40,13 +48,6 @@ ftp://idlastro.gsfc.nasa.gov/pub/v53.
 
 1-Nov-1999:  DBINDEX, DBEXT_DBF - Now allow a maximum of 18 instead of 15 items
 
-21-Sep-1999: DBPRINT - Fixed occasional problem when /NOHEADER supplied
-
-04-Sep-1999: DBCIRCLE - Fixed bug that could cause some entries to be missed
-
-05-Aug-1999: DBMATCH - Removed loop (faster) for substring searches
-             DBMATCH() - Change some loop indicies to type LONG
-             DBCIRCLE() - Leave output DIS vector unchanged if no entries found
 
 
  

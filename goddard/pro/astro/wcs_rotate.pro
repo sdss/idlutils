@@ -7,10 +7,10 @@
 ; EXPLANATION:
 ;       Computes a spherical coordinate rotation between native coordinates 
 ;       and  standard celestial coordinate system (celestial, Galactic, or
-;       ecliptic).   Applies the equations in Appendix B of the paper 
-;       "Representation of Celestial Coordinates in FITS" by Mark Calabretta 
-;       Eric Greisen (2001, A&AS, submitted) 
-;       See http://www.cv.nrao.edu/fits/documents/wcs/wcs.html
+;       ecliptic).   Applies the equations in Appendix A of the paper 
+;       "Representation of Celestial Coordinates in FITS" by Calabretta 
+;       Greisen (2002, A&A, 395, 1077).    Also see 
+;       http://www.aoc.nrao.edu/~egreisen
 ;
 ; CATEGORY:
 ;       Mapping and Auxiliary FITS Routine
@@ -30,7 +30,7 @@
 ;               in degrees
 ;       phi - longitude of data in the native system, in degrees, scalar or
 ;               vector
-;       theta - latitude of data in the native system, in degress, scalar or
+;       theta - latitude of data in the native system, in degrees, scalar or
 ;               vector
 ;
 ;       If the keyword(REVERSE) is set then phi and theta are input parameters
@@ -64,6 +64,8 @@
 ;       Updated to IDL V5.0   W. Landsman    December 1997
 ;       Fixed determination of alpha_p if /ORIGIN and LONGPOLE EQ 180
 ;               W. Landsman    May 1998
+;       Ensure argument of ASIN() is -1<x<-1 after roundoff 
+;               W. Landsman/R. Arendt  June 2002
 ;
 ;-
 
@@ -151,7 +153,7 @@ pro wcs_rotate, longitude, latitude, phi, theta, crval, LONGPOLE = longpole, $
 
  b0 = r[0,0]*l + r[1,0]*m + r[2,0]*n
  b1 = r[0,1]*l + r[1,1]*m + r[2,1]*n
- b2 = r[0,2]*l + r[1,2]*m + r[2,2]*n
+ b2 = (r[0,2]*l + r[1,2]*m + r[2,2]*n) > (-1) < 1 ;Account for possible roundoff
 
 ; use b0,b1,b2 to compute "native" latitude and longitude
 

@@ -9,9 +9,9 @@ such as READFITS().    The FTAB* procedures operate directly on a FITS file
 and can be used with either binary or ASCII tables.   
 
 The procedures in this directory cannot be used to write any type of binary 
-table, or to read a variable length binary table.    Users who need to these
-task should either use Bill Thompson's binary table software in the
-pro/fits_bintable directory, or Tom McGlynn's MRDFITS()/MWRFITS software to
+table, or to read a variable length binary table.    Users who need to perform 
+these tasks with IDL should either use Bill Thompson's binary table software in
+the pro/fits_bintable directory, or Tom McGlynn's MRDFITS()/MWRFITS software to
 convert between FITS tables and IDL structures, in the pro/fits directory.
 
 Below is an example session, showing the use of the FTAB_* procedures with a 
@@ -67,7 +67,7 @@ FTAB_EXT - Extract specified columns of a FITS table extension into IDL vectors
 FTAB_HELP - Print info about the fields in a FITS table extension
 FTAB_PRINT - Print specified columns and rows of a FITS table extension
 
-Lower level FITS ASCII table proceudres:
+Lower level FITS ASCII table procedures:
 
 FTADDCOL - Add a new column to a FITS ASCII table
 FTCREATE - Create an empty FITS ASCII table (H and TAB)

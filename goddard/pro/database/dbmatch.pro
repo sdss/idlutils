@@ -61,7 +61,8 @@ function dbmatch, item, values, listin, FULLSTRING = fullstring
 ;       Converted to IDL V5.0   W. Landsman 25-Nov-1997
 ;       Change some loop variables to type LONG,  W. Landsman  July 1999
 ;       Remove loop for substring searches (faster)  W. landsman August 1999
-;       Replace DATATYPE() with size(/TNAME)  W. Landsman  Novmeber 2001
+;       Replace DATATYPE() with size(/TNAME)  W. Landsman  November 2001
+;       Fixed typo when search on sorted items W. Landsman February 2002
 ;-
  On_error,2
 
@@ -107,7 +108,7 @@ function dbmatch, item, values, listin, FULLSTRING = fullstring
 
         tmplist = -1
         dbfind_sort,itnum[0],1,val, tmplist, $    ;Search all entries to start
-                fullstring=fullstring, Count = count
+                fullstring=fullstring, Count = Nmatch_sort
  
            if ( listin[0] NE -1 ) then begin
 

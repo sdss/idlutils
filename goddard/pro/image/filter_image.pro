@@ -51,7 +51,7 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
 ;                       or 2 numbers giving axes of elliptical beam.
 ;
 ;       /NO_FT_CONVOL causes the convolution to be computed directly,
-;               with intrinsci IDL CONVOL function.   The default is to use 
+;               with intrinsic IDL CONVOL function.   The default is to use 
 ;               FFT when factors of size are all LE 13.   Note that 
 ;               external function convolve.pro handles both cases)
 ;

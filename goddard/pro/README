@@ -1,4 +1,4 @@
-                                                          February 2000
+                                                          September 2002
 
 This directory (and its subdirectories) contains all the Astronomy Library
 procedures as individual ASCII files.    Each procedure is located in one
@@ -22,6 +22,6 @@ of the following subdirectories:
 /sdas  - Procedures for accessing files created by STSDAS (Hubble Space 
          Telescope format)
 /sdas_table - Procedures for accessing tables files created by STSDAS
+/sockets - Procedures using IDL SOCKET command to access Web servers
 /structure -  Procedures for manipulating IDL structures
-/tape_io - Procedures accessing different tape formats
 /tv -	 Procedures for manipulating the image display

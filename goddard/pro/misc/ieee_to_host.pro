@@ -8,6 +8,8 @@ pro ieee_to_host, data, IDLTYPE = idltype
 ;     The variable is translated from IEEE-754 (as used, for
 ;     example, in FITS data ), into the host machine architecture.
 ;
+;     Duplicates most of the functionality of the SWAP_ENDIAN_INPLACE procedure
+;     introduced in V5.6, with the addition of the IDLTYPE keyword.
 ; CALLING SEQUENCE:
 ;     IEEE_TO_HOST, data, [ IDLTYPE = , ]
 ;
@@ -38,7 +40,8 @@ pro ieee_to_host, data, IDLTYPE = idltype
 ;      VMS now handle -0.0 values under IDL V5.1    July 1998
 ;      Added new integer datatypes  C. Markwardt/W. Landsman  July 2000
 ;      Post-V5.1 version, no VMS negative zero check  W. Landsman July 2001
-;     
+;      Use size(/type)  W. Landsman December 2002
+;      Use /SWAP_IF_LITTLE_ENDIAN keyword for 64bit types W. Landsman Feb 2003
 ;-
  On_error,2 
 
@@ -51,8 +54,7 @@ pro ieee_to_host, data, IDLTYPE = idltype
  if npts EQ 0 then $
      message,'ERROR - IDL data variable (first parameter) not defined'
 
- sz = size(data)
- if not keyword_set( idltype) then idltype = sz[ sz[0]+1]
+ if not keyword_set( idltype) then idltype = size(data,/type)
  
  case idltype of
 
@@ -88,11 +90,9 @@ pro ieee_to_host, data, IDLTYPE = idltype
 
        13: byteorder, data, /NTOHL
 
-       14: if (long(['01'xb,'02'xb,'03'xb,'04'xb],0,1))(0) NE '01020304'x then $
-            byteorder, data, /L64swap
+       14: byteorder, data, /L64swap, /SWAP_IF_LITTLE
 
-       15: if (long(['01'xb,'02'xb,'03'xb,'04'xb],0,1))(0) NE '01020304'x then $  
-             byteorder, data, /L64swap
+       15: byteorder, data, /L64swap, /SWAP_IF_LITTLE
 
        ELSE: message,'Unrecognized datatype of ' + strtrim(idltype,2)
  ENDCASE

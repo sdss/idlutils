@@ -11,7 +11,8 @@ function asinh, x
 ; CALLING SEQUENCE
 ;     result = asinh( x) 
 ; INPUTS:
-;     X - hyperbolic sine, numeric scalar or vector (not complex) 
+;     X - hyperbolic sine, numeric scalar or vector or multidimensional array 
+;        (not complex) 
 ;
 ; OUTPUT:
 ;     result - inverse hyperbolic sine, same number of elements as X
@@ -24,10 +25,11 @@ function asinh, x
 ;
 ; REVISION HISTORY:
 ;     Written W. Landsman                 February, 2001
+;     Work for multi-dimensional arrays  W. Landsman    August 2002
 ;-
 
  y = x*0.      ;Output vector is at least floating pt.
- y[0] = alog( abs(x) + sqrt( x^2 + 1.d0) )
+ y[0] = reform(alog( abs(x) + sqrt( x^2 + 1.d0) ), N_elements(x))
 
  index = where(x LT 0 ,count)
  if count GT 0 then y[index] = -y[index]

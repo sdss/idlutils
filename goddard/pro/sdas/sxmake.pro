@@ -102,7 +102,7 @@ Pro sxmake, unit, File, Data, Par, Groups, Header, PSIZE = psize
 6:      begin& bitpix= 64 & d = 'COMPLEX*8' & endcase
 12:     begin & bitpix=16 & d='UNSIGNED*2' & endcase
 13:     begin & bitpix=32 & d='UNSIGNED*4' & endcase
-else:   message,'ERROR -- Unrecoginized input data type'
+else:   message,'ERROR -- Unrecognized input data type'
 
         endcase
 ;

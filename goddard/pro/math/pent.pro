@@ -34,7 +34,7 @@
 ;   
 ; PROCEDURE:
 ;       The procedure involves dividing the phase space into N^2 partitions 
-;       (NxN boxes) and then calulating:
+;       (NxN boxes) and then calculating:
 ;       
 ;               __ N^2
 ;         S = - \        mu_i . ln(mu_i)  for all mu_i <> 0

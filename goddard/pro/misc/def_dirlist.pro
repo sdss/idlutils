@@ -37,9 +37,11 @@
 ; REVISION HISTORY:	
 ;	Version 1, 06-Aug-1996, William Thompson, GSFC
 ;       Converted to IDL V5.0   June 1998    W. Landsman
+;       Use STRSPLIT instead of STR_SEP if V5.3 or later W.L.  July 2002
 ;-
 ;
 	ON_ERROR, 2
+        FORWARD_FUNCTION strsplit             ;Pre V5.3 Compatibility
 ;
 	IF N_PARAMS() NE 2 THEN MESSAGE, 'Syntax:  DEF_DIRLIST, EVAR, VALUE'
 ;
@@ -53,7 +55,9 @@
 ;  the value.
 ;
 	IF !VERSION.OS_FAMILY EQ 'vms' AND STRLEN(DIR) GE 256 THEN BEGIN
-		DIR = STR_SEP(DIR, SEP)
+                IF !VERSION.RELEASE GE '5.3' THEN $
+                   DIR = STRSPLIT(DIR,SEP,/EXTRACT) ELSE $
+		   DIR = STR_SEP(DIR, SEP)
 		SETLOG, EVAR, DIR
 ;
 ;  Otherwise, use SETENV

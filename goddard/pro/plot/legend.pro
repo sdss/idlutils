@@ -85,7 +85,8 @@
 ;       textcolors = array of colors for text (D=!P.color)
 ;       margin = margin around text measured in characters and lines
 ;       spacing = line spacing (D=bit more than character height)
-;       pspacing = psym spacing (D=3 characters)
+;       pspacing = psym spacing (D=3 characters) (when number of symbols is
+;             greater than 1)
 ;       charsize = just like !p.charsize for plot labels
 ;       charthick = just like !p.charthick for plot labels
 ;       thick = array of line thickness numbers (D = !P.thick), if used, then 
@@ -94,7 +95,8 @@
 ;       normal = use normal coordinates for position, not data
 ;       device = use device coordinates for position, not data
 ;       number = number of plot symbols to plot or length of line (D=1)
-;       usersym = 2-D array of vertices, cf. usersym in IDL manual. (D=square)
+;       usersym = 2-D array of vertices, cf. usersym in IDL manual. 
+;             (/USERSYM =square, default is to use existing USERSYM definition)
 ;       /fill = flag to fill the usersym
 ;       /left_legend = flag to place legend snug against left side of plot
 ;                 window (D)
@@ -191,20 +193,21 @@
 ;       added charthick keyword, June 96, W. Landsman HSTX
 ;       Made keyword names  left,right,top,bottom,center longer,
 ;                                 Aug 16, 2000, Kim Tolbert
-;       Added ability to have regular text lines in addition to plot legend lines in legend.
-;            If linestyle is -99 that item is left-justified .Previously, only option for no sym/line
-;            was linestyle=-1, but then text was lined up after sym/line column.
-;            10 Oct 2000, Kim Tolbert
+;       Added ability to have regular text lines in addition to plot legend 
+;       lines in legend.  If linestyle is -99 that item is left-justified.
+;       Previously, only option for no sym/line was linestyle=-1, but then text
+;       was lined up after sym/line column.    10 Oct 2000, Kim Tolbert
 ;       Make default value of thick = !P.thick  W. Landsman  Jan. 2001
+;       Don't overwrite existing USERSYM definition  W. Landsman Mar. 2002
 ;-
-pro legend,help=help,items,linestyle=linestyle,psym=psym,vectorfont=vectorfont $
-  ,horizontal=horizontal,vertical=vertical,box=box,margin=margin $
-  ,delimiter=delimiter,spacing=spacing,charsize=charsize,pspacing=pspacing $
-  ,position=position,number=number,colors=colors,textcolors=textcolors $
-  ,fill=fill,usersym=usersym,corners=corners,charthick = charthick $
-  ,left_legend=left,right_legend=right,top_legend=top,bottom_legend=bottom,center_legend=center $
-  ,data=data,normal=normal,device=device $
-   ,symsize=symsize,thick=thick,clear=clear
+pro legend, items, BOTTOM_LEGEND=bottom, BOX = box, CENTER_LEGEND=center, $
+    CHARTHICK=charthick, CHARSIZE = charsize, CLEAR = clear, COLORS = colorsi, $
+    CORNERS = corners, DATA=data, DELIMITER=delimiter, DEVICE=device, $
+    FILL=fill, HELP = help, HORIZONTAL=horizontal,LEFT_LEGEND=left, $
+    LINESTYLE=linestylei, MARGIN=margin, NORMAL=normal, NUMBER=number, $
+    POSITION=position,PSPACING=pspacing, PSYM=psymi, RIGHT_LEGEND=right, $
+    SPACING=spacing, SYMSIZE=symsize, TEXTCOLORS=textcolorsi, THICK=thicki, $
+    TOP_LEGEND=top, USERSYM=usersym,  VECTORFONT=vectorfonti, VERTICAL=vertical
 ;
 ;       =====>> HELP
 ;
@@ -213,20 +216,20 @@ if keyword_set(help) then begin & doc_library,'legend' & return & endif
 ;
 ;       =====>> SET DEFAULTS FOR SYMBOLS, LINESTYLES, AND ITEMS.
 ;
-ni = n_elements(items)
-np = n_elements(psym)
-nl = n_elements(linestyle)
-nth = n_elements(thick)
-nv = n_elements(vectorfont)
-nlpv = max([np,nl,nv])
-n = max([ni,np,nl,nv])                                  ; NUMBER OF ENTRIES
+ ni = n_elements(items)
+ np = n_elements(psymi)
+ nl = n_elements(linestylei)
+ nth = n_elements(thicki)
+ nv = n_elements(vectorfonti)
+ nlpv = max([np,nl,nv])
+ n = max([ni,np,nl,nv])                                  ; NUMBER OF ENTRIES
 strn = strtrim(n,2)                                     ; FOR ERROR MESSAGES
 if n eq 0 then message,'No inputs!  For help, type legend,/help.'
 if ni eq 0 then begin
   items = replicate('',n)                               ; DEFAULT BLANK ARRAY
 endif else begin
-  szt = size(items)
-  if (szt[szt[0]+1] ne 7) then message,'First parameter must be a string array.  For help, type legend,/help.'
+  if size(items,/TNAME) NE 'STRING' then message, $
+      'First parameter must be a string array.  For help, type legend,/help.'
   if ni ne n then message,'Must have number of items equal to '+strn
 endelse
 symline = (np ne 0) or (nl ne 0)                        ; FLAG TO PLOT SYM/LINE
@@ -237,14 +240,29 @@ symline = (np ne 0) or (nl ne 0)                        ; FLAG TO PLOT SYM/LINE
  if (nth ne 0) and (nth ne n) and (nth NE 1) then message, $
          'Must have 0, 1 or '+strn+' elements in THICK array.'
 
- if nl EQ 0 then linestyle = intarr(n) else $           D=SOLID
-         if nl EQ 1 then linestyle = intarr(n)  + linestyle
- if nth EQ 0 then thick = intarr(n) + !p.thick else  $  ; D = !P.thick
-         if nth EQ 1 then thick = intarr(n) + thick
- if np EQ 0 then psym = intarr(n) else $                ; D=SOLID
-         if np EQ 1 then psym = intarr(n) + psym
- if nv EQ 0 then vectorfont = replicate('',n) else $
-        if nv EQ 1 then vectorfont = replicate(vectorfont,n)
+ case nl of 
+ 0: linestyle = intarr(n)              ;Default = solid
+ 1: linestyle = intarr(n)  + linestylei
+ else: linestyle = linestylei
+ endcase 
+ 
+ case nth of 
+ 0: thick = replicate(!p.thick,n)      ;Default = !P.THICK
+ 1: thick = intarr(n) + thicki
+ else: thick = thicki
+ endcase 
+
+ case np of             ;Get symbols
+ 0: psym = intarr(n)    ;Default = solid
+ 1: psym = intarr(n) + psymi
+ else: psym = psymi
+ endcase 
+
+ case nv of 
+ 0: vectorfont = replicate('',n)
+ 1: vectorfont = replicate(vectorfonti,n)
+ else: vectorfont = vectorfonti
+ endcase 
 ;
 ;       =====>> CHOOSE VERTICAL OR HORIZONTAL ORIENTATION.
 ;
@@ -266,12 +284,19 @@ if n_elements(charthick) eq 0 then charthick = !p.charthick
 if charsize eq 0 then charsize = 1
 if (n_elements (symsize) eq 0) then symsize= charsize + intarr(n)
 if n_elements(number) eq 0 then number = 1
-if n_elements(colors) eq 0 then colors = !P.color + intarr(n) else $
-        if N_elements(colors) EQ 1 then colors = colors + intarr(n)
-if n_elements(textcolors) eq 0 then textcolors = replicate(!P.color,n) else $
-        if N_elements(textcolors) EQ 1 then textcolors = textcolors + intarr(n)
-fill = keyword_set(fill)
-if n_elements(usersym) eq 0 then usersym = 2*[[0,0],[0,1],[1,1],[1,0]]-1
+ case N_elements(colorsi) of 
+ 0: colors = replicate(!P.color,n)     ;Default is !P.COLOR
+ 1: colors = replicate(colorsi,n)
+ else: colors = colorsi
+ endcase 
+
+ case N_elements(textcolorsi) of 
+ 0: textcolors = replicate(!P.color,n)      ;Default is !P.COLOR
+ 1: textcolors = replicate(textcolorsi,n)
+ else: textcolors = textcolorsi
+ endcase 
+ fill = keyword_set(fill)
+if n_elements(usersym) eq 1 then usersym = 2*[[0,0],[0,1],[1,1],[1,0],[0,0]]-1
 ;
 ;       =====>> INITIALIZE SPACING
 ;
@@ -374,7 +399,8 @@ for iclr = 0,clear do begin
     xp = [min(xp),max(xp)]                      ; TO EXPOSE LINESTYLES
     yp = [min(yp),max(yp)]                      ; DITTO
     endif
-  if psym[i] eq 8 then usersym,usersym,fill=fill,color=colors[i]
+  if (psym[i] eq 8) and (N_elements(usersym) GT 1) then $
+                usersym,usersym,fill=fill,color=colors[i]
 ;; extra by djseed .. psym=88 means use the already defined usersymbol
  if psym[i] eq 88 then psym[i] =8
   if vectorfont[i] ne '' then begin

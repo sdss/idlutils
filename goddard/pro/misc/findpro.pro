@@ -80,7 +80,9 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use ROUTINE_INFO instead of undocumented ROUTINE_NAMES W.L. October 1998
 ;       Also check for save sets   W. Landsman  October 1999 
-;       Force lower case check for VMS  W. Landsman January 2000   
+;       Force lower case check for VMS  W. Landsman January 2000 
+;       Only return .pro or .sav files in PROLIST   W. Landsman  January 2002 
+;       Force lower case check for .pro and .sav    D. Swain  September 2002 
 ;
 ;-
 ;/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -100,7 +102,7 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
  fdecomp, Proc_Name, Disk, Dir, Name      ;Don't want file extensions
  Name = strtrim( Name, 2 )  
 
-; Set up separate file and directory seperators for VMS and Unix
+; Set up separate file and directory separators for VMS and Unix
 
  case !VERSION.OS_FAMILY of
  
@@ -150,25 +152,25 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 
    endif else begin                              ;Directory
      found = 0b
-      ProsFound = findfile(Dir + DirSep + Name + '.*', COUNT=Nfile)
+      ProsFound = findfile(Dir+DirSep+Name+'.*', COUNT=Nfile)
 
       if (Nfile ge 1) then begin                     ;Found by FINDFILE?
        for j = 0,nfile-1 do begin
          fdecomp, ProsFound[j], ddisk,ddir,fname,ext
-         if ((ext EQ 'pro') or (ext EQ 'sav')) then begin
-         found = 1b
-         profound = prosfound[j]
-         if strlowcase(ext) EQ 'pro' then $  
-           message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
-          'Procedure ' + fname + ' found in directory  ' + disk + Dir $
-         else if strlowcase(ext) EQ 'sav' then $ 
-     message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
-          'Save set ' + fname + '.sav found in directory  ' + disk + Dir
-         endif
+         if ((strlowcase(ext) EQ 'pro') or (strlowcase(ext) EQ 'sav')) then begin
+         	found = 1b
+         	profound = prosfound[j]
+         	if strlowcase(ext) EQ 'pro' then $  
+         	  message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
+         	 'Procedure ' + fname + ' found in directory  ' + disk + Dir $
+         	else if strlowcase(ext) EQ 'sav' then $ 
+     				message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
+         		'Save set ' + fname + '.sav found in directory  ' + disk + Dir
+         	endif
         endfor
          if found then begin
          DirList = [DirList, Dir]
-         ProList = [ProList, ProsFound[0]]
+         ProList = [ProList, ProFound]
          endif
        endif
    endelse

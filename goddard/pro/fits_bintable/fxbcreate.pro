@@ -71,6 +71,7 @@
 ;	Version 5, 25 June 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added EXTENSION parameter, C. Markwardt 1999 Jul 15
+;       More efficient zeroing of file, C. Markwardt, 26 Feb 2001
 ;-
 ;
 @fxbintable
@@ -147,8 +148,25 @@ WRITE_HEADER:
 ;
 ;  Fill out the file to size it properly.
 ;
-	BUFFER = BYTARR(NAXIS1[ILUN])
-	FOR I = 1L,NAXIS2[ILUN] DO WRITEU,UNIT,BUFFER
+        ;; This segment is now optimized to write out more than one
+        ;; row at a time, which is crucial for tables with many small
+        ;; rows.  The code heuristically chooses a buffer size which
+        ;; is 1% of the file, but no bigger than 512k, and always a
+        ;; multiple of the row size.
+
+
+        BUFSIZE = LONG(NAXIS1[ILUN]*NAXIS2[ILUN]/100) > NAXIS1[ILUN] < 524288L
+        BUFSIZE = (FLOOR(BUFSIZE/NAXIS1[ILUN])>1) * NAXIS1[ILUN]
+        BUFFER = BYTARR(BUFSIZE)
+        TOTBYTES = NAXIS1[ILUN]*NAXIS2[ILUN]
+
+        ;; TOTBYTES keeps count of bytes left to write
+        WHILE TOTBYTES GT 0 DO BEGIN
+            ;; Case of final rows which might not be EQ BUFSIZE
+            IF TOTBYTES LT BUFSIZE THEN BUFFER = BYTARR(TOTBYTES)
+            WRITEU,UNIT,BUFFER
+            TOTBYTES = TOTBYTES - BUFSIZE
+        ENDWHILE
 ;
 ;  If there's any extra space before the start of the heap, then write that out
 ;  as well.

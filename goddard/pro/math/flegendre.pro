@@ -26,7 +26,7 @@ function flegendre,x,m
 ;       (1) If x = 2.88 and M = 3 then 
 ;       IDL> print, flegendre(x,3)   ==>   [1.00, 2.88, 11.9416]
 ;
-;       This result can be checked by explicity computing the first 3 Legendre
+;       This result can be checked by explicitly computing the first 3 Legendre
 ;       terms, 1.0, x, 0.5*( 3*x^2 -1)
 ;
 ;       (2) Find the coefficients to an M term Legendre polynomial that gives

@@ -1,4 +1,4 @@
-pro radec,ra,dec,ihr,imin,xsec,ideg,imn,xsc ;Convert from decimal to hrs,min
+pro radec,ra,dec,ihr,imin,xsec,ideg,imn,xsc, hours = hours
 ;+
 ; NAME:
 ;	RADEC
@@ -9,10 +9,11 @@ pro radec,ra,dec,ihr,imin,xsec,ideg,imn,xsc ;Convert from decimal to hrs,min
 ;	degrees for declination.
 ;
 ; CALLING SEQUENCE:
-;	radec, ra, dec, ihr, imin, xsec, ideg, imn, xsc
+;	radec, ra, dec, ihr, imin, xsec, ideg, imn, xsc, [/HOURS}
 ;
 ; INPUTS:
-;	ra   - right ascension in decimal DEGREES, scalar or vector
+;	ra   - right ascension, scalar or vector, in DEGREES unless the
+;              /HOURS keyword is set
 ;	dec  - declination in decimal DEGREES, scalar or vector, same number
 ;		of elements as RA
 ;
@@ -24,12 +25,16 @@ pro radec,ra,dec,ihr,imin,xsec,ideg,imn,xsc ;Convert from decimal to hrs,min
 ;	imn  - declination minutes (INTEGER*2)
 ;	xsc  - declination seconds (REAL*4 or REAL*8)
 ;
+; OPTIONAL KEYWORD INPUT:
+;       /HOURS - if set, then the input righ ascension should be specified in
+;              hours instead of degrees.
 ; RESTRICTIONS:
 ;	RADEC does minimal parameter checking.
 ;
 ; REVISON HISTORY:
 ;	Written by B. Pfarr, STX, 4/24/87
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added /HOURS keyword W. Landsman  August 2002
 ;-
   On_error,2
 
@@ -39,13 +44,19 @@ pro radec,ra,dec,ihr,imin,xsec,ideg,imn,xsc ;Convert from decimal to hrs,min
   endif
   
 ;    Compute RA
-
-  ra = ra mod 360.          ;Make sure between 0 and 24 hours
-  ra = ra + 360*(ra lt 0)
-  ihr = fix(ra/15.)
-  xmin =abs(ra*4.0-ihr*60.0)
-  imin = fix(xmin)
-  xsec = (xmin-imin)*60.0
+  if keyword_set(hours) then begin
+      ra = ra mod 24.
+      ra = ra + 24*(ra lt 0)
+      ihr = fix(ra)
+      xmin = abs(ra*60. - ihr*60.)
+  endif else begin
+      ra = ra mod 360.          ;Make sure between 0 and 24 hours
+      ra = ra + 360*(ra lt 0)
+      ihr = fix(ra/15.)
+      xmin =abs(ra*4.0-ihr*60.0)
+  endelse 
+      imin = fix(xmin)
+      xsec = (xmin-imin)*60.0
 
 ;    Compute Dec
 

@@ -6,7 +6,7 @@ FUNCTION dbindex_blk, unit, nb, bsz, ofb, dtype
 ;       Subroutine of DBINDEX to create associated variable of correct datatype
 ; EXPLANATION:
 ;       DBINDEX_BLK will offset into the file by a specified amount in 
-;       preparation for writing to the file.
+;       preparation for writing to the file.   V5.2 or later
 ;
 ; CALLING SEQUENCE:
 ;       res = dbindex_blk(unit, nb, bsz, ofb, dtype)
@@ -27,9 +27,10 @@ FUNCTION dbindex_blk, unit, nb, bsz, ofb, dtype
 ; MODIFICATION HISTORY:
 ;       Written by Michael R. Greason, STX, 14 June 1990.
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use 64 bit integer for very large databases  W. Landsman February 2001
 ;       Added new unsigned & 64bit integer datatypes    W. Landsman July 2001
 ;-
-offset = long(nb) * long(bsz) + long(ofb)
+offset = long64(nb) * long64(bsz) + long64(ofb)
 case dtype of
         7: datarec=assoc(unit,bytarr(1),offset)         ; string
         1: datarec=assoc(unit,bytarr(1),offset)         ; byte
@@ -42,7 +43,6 @@ case dtype of
        13: datarec=assoc(unit,ulonarr(1),offset)        ; unsigned longword
        14: datarec=assoc(unit,lon64arr(1),offset)       ; 64 bit longword
        15: datarec=assoc(unit,ulon64arr(1),offset)   ; unsigned 64bit longword
-       
 endcase
 ;
 RETURN, datarec

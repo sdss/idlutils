@@ -4,7 +4,12 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;       CNTRD
 ;  PURPOSE:
 ;       Compute the centroid coordinates of a stellar object 
-;       using the algorithm in the DAOPHOT FIND subroutine.
+; EXPLANATION:
+;       CNTRD uses the DAOPHOT "FIND" centroid algorithm by locating the 
+;       position where the X and Y derivatives go to zero.   This is usually a 
+;       more "robust"  determination than a "center of mass" or fitting a 2d 
+;       Gaussian  if the wings in one direction are affected by the presence
+;       of a neighboring star .
 ;
 ;  CALLING SEQUENCE: 
 ;       CNTRD, img, x, y, xcen, ycen, [ fwhm , /SILENT, /DEBUG]
@@ -50,6 +55,7 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Better checking of edge of frame David Hogg October 2000
 ;       Avoid integer wraparound for unsigned arrays W.Landsman January 2001
+;       Handle case where more than 1 pixel has maximum value W.L. July 2002
 ;-      
  On_error,2                          ;Return to caller
 
@@ -98,9 +104,18 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 
 ;  Locate maximum pixel in 'NBIG' sized subimage 
 
- mx = max( bigbox, mx_pos )     ;Maximum pixel value in BIGBOX
+ mx = max( bigbox)     ;Maximum pixel value in BIGBOX
+ mx_pos = where(bigbox EQ mx, Nmax) ;How many pixels have maximum value?
  idx = mx_pos mod nbig          ;X coordinate of Max pixel
  idy = mx_pos / nbig            ;Y coordinate of Max pixel
+ if NMax GT 1 then begin        ;More than 1 pixel at maximum?
+     idx = round(total(idx)/Nmax)
+     idy = round(total(idy)/Nmax)
+ endif else begin
+     idx = idx[0]
+     idy = idy[0]
+ endelse
+
  xmax = ix[i] - (nhalf+3) + idx  ;X coordinate in original image array
  ymax = iy[i] - (nhalf+3) + idy  ;Y coordinate in original image array
 
@@ -143,14 +158,14 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
  sumxsq = total( w*dd^2 )
 
  if sumxd GT 0 then begin  ;Reject if X derivative not decreasing
+   
    if not keyword_set(SILENT) then message,/INF, $
         'Unable to compute X centroid around position '+ pos
    xcen[i]=-1 & ycen[i]=-1
    goto,DONE
  endif 
  dx = sumxsq*sumd/(sumc*sumxd)
-
- if ( abs(dx) GT nhalf ) then begin    ;Reject if centroid outside box
+ if ( abs(dx) GT nhalf ) then begin    ;Reject if centroid outside box  
    if not keyword_set(SILENT) then message,/INF, $
        'Computed X centroid for position '+ pos + ' out of range'
    xcen[i]=-1 & ycen[i]=-1 

@@ -31,12 +31,14 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
 ;            is not found, then WFPC2_READ first tries appending a '.fits'
 ;            extension, and then tries appending a '.c0h' extension.  
 ;
+;            The file may be gzip compressed (with a .gz extension) for IDL
+;            V5.3 or later.
 ; INPUT KEYWORD PARAMETERS:
 ;    NUM_CHIP - Integer scalar or vector, subset of 1, 2, 3, 4, specifying 
 ;               particular chip numbers to read.    Outputs will be in same 
 ;               order as specification of subset.   (See Example 2.)
-;    /TRIM   - If set, trim off areas with no image and re-orient
-;               so all chips to a common orientation suitable for insertion 
+;    /TRIM   - If set, trim off areas with no image and re-orient so that
+;              all  the chips have a common orientation suitable for insertion 
 ;               into "bat-wing" mosaic (no image distortion removal, however).
 ;    PATH   -   scalar string specifying a !PATH-like list of directories
 ;               in which to search for the file.   Default is to look only
@@ -79,6 +81,7 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
 ;     Based on code by Robert Hill, Raytheon STX
 ;     Better astrometry of PC image in "batwing" configuration, W. Landsman
 ;                August 1999
+;     Use vector call to SXADDHIST  W. Landsman   March 2003
 ;-
  if N_params() LT 2 then begin
     print,'Syntax:'
@@ -133,11 +136,10 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
         endif
         ii = strtrim(i+1,2)
         jj = strtrim(j+1,2)
-    sxaddhist,'----------------------------------------------------------', $
-      thishdr
-    sxaddhist,'      WFPC2_READ:  ' + systime(), thishdr
-    sxaddhist,'      Header parameters for chip ' + jj + $
-        ' replaced from group parameters', thishdr
+    sxaddhist, ['----------------------------------------------------------', $
+                '      WFPC2_READ:  ' + systime(),  $
+                '      Header parameters for chip ' + jj + $
+                 ' replaced from group parameters'],  thishdr
         if keyword_set(batwing) then begin
            if i EQ 0 then $
                     chip1[x1[0],y1[0]] = FREBIN(thischp,345.7,342,/total) else $
@@ -193,11 +195,10 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
     hdr = 'header' + cn_arg
     chp = 'chip' + cn_arg
     thishdr = h
-    sxaddhist,'----------------------------------------------------------', $
-      thishdr
-    sxaddhist,'      WFPC2_READ:  ' + systime(), thishdr
-    sxaddhist,'      Header parameters for chip ' + cn_str $
-      + ' replaced from table.', thishdr   
+    sxaddhist, ['----------------------------------------------------------', $
+                '      WFPC2_READ:  ' + systime(), $
+                '      Header parameters for chip ' + cn_str $
+              + ' replaced from table.'], thishdr   
  for j=0,tf-1 do begin
          value = ftget(ft_str,dtab,j+1,cn_0)
         sxaddpar, thishdr,name[j],value[0],comment[j],format=fmt[j]

@@ -46,7 +46,7 @@
 ;   neither monotonically increasing or decreasing the results of
 ;   VALUE_LOCATE are undefined.
 ;
-;   VALUE_LOCATE appears as a built-in funcion in IDL v5.3 and later.
+;   VALUE_LOCATE appears as a built-in function in IDL v5.3 and later.
 ;   This version of VALUE_LOCATE should work under IDL v4 and later,
 ;   and is intended to provide a portable solution for users who do
 ;   not have the latest version of IDL.  The algrorithm in this file
@@ -108,7 +108,7 @@
 ;   Case of XBINS having only one element, CM, 29 Apr 2001
 ;   Handle case of VALUES exactly hitting REF points, CM, 13 Oct 2001
 ; 
-;  $Id: value_locate.pro,v 1.1 2002-01-04 19:11:04 schlegel Exp $
+;  $Id: value_locate.pro,v 1.2 2003-03-27 16:19:02 dfink Exp $
 ;
 ;-
 ; Copyright (C) 2001, Craig Markwardt

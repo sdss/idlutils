@@ -45,6 +45,7 @@ FUNCTION TSUM,X,Y,IMIN,IMAX               ;Trapezoidal summation
 ;       Modified so X is not altered in a one parameter call Jan 1990
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Allow non-integer values of imin and imax  W. Landsman April 2001
+;       Fix problem if only 1 parameter supplied W. Landsman June 2002
 ;-
 ; Set default parameters
  On_error,2
@@ -54,8 +55,8 @@ FUNCTION TSUM,X,Y,IMIN,IMAX               ;Trapezoidal summation
     npts = N_elements(x)
     yy = x
     xx = lindgen(npts)
-    ilo = 0
-    ihi = npts-1
+    ilo = 0   & imin = ilo
+    ihi = npts-1 & imax = ihi
  endif else begin
 
    if ( npar LT 3 ) then imin = 0

@@ -27,6 +27,24 @@ pro ftput,h,tab,field,row,values,nulls
 ; OUTPUTS:
 ;       htab,tab will be updated as specified.
 ;
+; EXAMPLE:
+;       One has a NAME and RA  and Dec vectors for 500 stars with formats A6,
+;       F9.5 and F9.5 respectively.   Write this information to an ASCII table 
+;       named 'star.fits'.
+;
+;       IDL> FTCREATE,24,500,h,tab       ;Create table header and (empty) data
+;       IDL> FTADDCOL,h,tab,'RA',8,'F9.5','DEGREES'   ;Explicity define the
+;       IDL> FTADDCOL,h,tab,'DEC',8,'F9.5','DEGREES'  ;RA and Dec columns
+;       IDL> FTPUT,h,tab,'RA',0,ra       ;Insert RA vector into table
+;       IDL> FTPUT,h,tab,'DEC',0,dec       ;Insert DEC vector into table
+;       IDL> FTPUT, h,tab, 'NAME',0,name   ;Insert NAME vector with default
+;       IDL> WRITEFITS,'stars.fits',tab,h ;Write to a file
+;   
+;      Note that (1) explicit formatting has been supplied for the (numeric)
+;      RA and Dec vectors, but was not needed for the NAME vector, (2) A width
+;      of 24 was supplied in FTCREATE based on the expected formats (6+9+9),
+;      though the FT* will adjust this value as necessary, and (3) WRITEFITS
+;      will create a minimal primary header  
 ; NOTES:
 ;       (1) If the specified field is not already in the table, then FTPUT will
 ;       create a new column for that field using default formatting.   However,
@@ -44,6 +62,7 @@ pro ftput,h,tab,field,row,values,nulls
 ;       Work for more than 32767 elements August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Updated call to the new FTINFO   W. Landsman   May 2000
+;       Fix case where header does not have any columns yet W.Landsman Sep 2002
 ;-
 ; On_error,2
 
@@ -73,14 +92,14 @@ pro ftput,h,tab,field,row,values,nulls
 
 ; Get info on field specified
 
- sz = size(field)
- ftinfo,h,ft_str
-  if sz[1] EQ 7 then begin
+ ftinfo,h,ft_str, Count = tfields
+ if tfields EQ 0 then ipos = -1 else begin
+  if size(field,/TNAME) EQ 'STRING' then begin
     field = strupcase(strtrim(field,2))
     ttype = strtrim(ft_str.ttype,2)
     ipos = where(ttype EQ field, Npos)
  endif else ipos = field -1
-
+ endelse
 
  if ipos[0] EQ -1 then begin            ;Does it exist?
 
@@ -112,7 +131,9 @@ pro ftput,h,tab,field,row,values,nulls
         if wid-decimal LT 6 then fmt = 'F' + strmid(fmt,1,1000)
  endif
  fmt = '(' + fmt + ')'
- data = fstring(v, FORMAT = fmt)
+ if !VERSION.RELEASE LT '5.4' and (N_elements(v) GT 1024) then $
+ data = fstring(v, FORMAT = fmt) else $
+ data = string(v, FORMAT = fmt)
 
 ; insert null values
 
