@@ -31,8 +31,9 @@ typedef struct {
     double eln;		/* elevation of new pole wrt original frame
 			 = elevation of original pole wrt new frame */
     double azp;		/* azimuth of original pole wrt new frame */
-    char trunit;	/* angular units of transformation angles */
-    char *linklist;	/* angular units of transformation angles */
+	char trunit;	/* angular units of transformation angles */
+	char *linklist;	/* input file with links to check */
+	char *parents;	/* output file with parents of balkans */
 } format;
 
 #define REGION		0

@@ -194,6 +194,13 @@ void parse_args(argc, argv)
 			sscanf(optarg,"%s",fmt.linklist);
 			printf("%s\n",fmt.linklist);
 	    break;
+		case 'h':		/* read in this file to decide which 
+									 set of pairs to balkanize */
+	    if (fmt.parents) free(fmt.parents);
+	    fmt.parents = (char *) malloc(sizeof(char) * (strlen(optarg) + 1));
+			sscanf(optarg,"%s",fmt.parents);
+			printf("%s\n",fmt.parents);
+	    break;
 		case 's':		/* skip 1st skip characters of lines of data */
 	    iscan = sscanf(optarg, "%d", &fmt.skip);
 	    if (iscan != 1) {

@@ -13,7 +13,7 @@
 #define DNP		4
 
 /* getopt options */
-static char *optstr = "dqm:s:e:v:p:i:o:x:";
+static char *optstr = "dqm:s:e:v:p:i:o:x:y:";
 
 /* local functions */
 int split_poly(), fragment_poly(), mrb_balkanize();
@@ -21,7 +21,8 @@ void usage(), parse_args();
 
 /* external functions */
 extern void add_parent();
-void free_poly();
+extern void free_poly();
+extern polygon *new_poly();
 extern int partition_poly();
 extern int prune_poly(), trim_poly();
 extern int rdmask(), wrmask();
@@ -41,9 +42,10 @@ int main(argc, argv)
 		 char *argv[];
 {
 	int ifile, nfiles, npoly, npolys;
-	polygon *polys[NPOLYSMAX];
-	int npolylink, *nlinks, **links, i, j;
-	FILE *ifp;
+	polygon *polys[NPOLYSMAX], *test_poly1, *test_poly2;
+	int npolylink, *nlinks, **links, i, j, k, l, itrim,verb,ier;
+	double tol,area_tot;
+	FILE *ifp, *ofp;
 
 	/* default output format */
 	fmt.out = keywords[POLYGON];
@@ -52,17 +54,6 @@ int main(argc, argv)
 
 	/* parse arguments */
 	parse_args(argc, argv);  
-
-	/* at least one input and output filename required as arguments */
-	if (argc - optind < 2) {
-		if (optind > 1 || argc - optind == 1) {
-			printf("no input or output files, reading from stdin, writing to stdout\n");
-	    exit(1);
-		} else {
-	    usage();
-	    exit(0);
-		}
-	}
 
 	msg("---------------- mrb_balkanize ----------------\n");
 
@@ -79,7 +70,10 @@ int main(argc, argv)
 	advise_fmt(&fmt);
 
 	/* read link list */
-	ifp=fopen(fmt.linklist,"r");
+	if(fmt.linklist) 
+		ifp=fopen(fmt.linklist,"r");
+	else
+		ifp=stdin;
 	fscanf(ifp,"%d",&npolylink);
 	nlinks=(int *) malloc(npolylink*sizeof(int));
 	links=(int **) malloc(npolylink*sizeof(int *)); 
@@ -89,7 +83,8 @@ int main(argc, argv)
 		for(j=0;j<nlinks[i];j++)
 			fscanf(ifp,"%d",&(links[i][j]));   
 	}
-	fclose(ifp);
+	if(fmt.linklist) 
+		fclose(ifp);
 
 	/* read polygons */
 	npoly = 0;
@@ -101,7 +96,7 @@ int main(argc, argv)
 			npoly += npolys;
 		}
 	} else {
-		npolys = rdmask("", &fmt, &polys[npoly], NPOLYSMAX - npoly);
+		npolys = rdmask("-", &fmt, &polys[npoly], NPOLYSMAX - npoly);
 		if (npolys == -1) exit(1);
 		npoly += npolys;
 	}
@@ -123,18 +118,50 @@ int main(argc, argv)
 	if(nfiles>0) 
 		npolys = wrmask(argv[ifile], &fmt, &polys[npoly], npolys);
 	else 
-		npolys = wrmask("", &fmt, &polys[npoly], npolys);
+		npolys = wrmask("-", &fmt, &polys[npoly], npolys);
 	if (npolys == -1) exit(1);
 	/* memmsg(); */
 
-#if 0
+	/* find parents */
 	for(i=npoly;i<npoly+npolys;i++) {
-		printf("%d ",polys[i]->nparents);
-		for(j=0;j<polys[i]->nparents;j++)
-			printf("%d ",polys[i]->parent_polys[j]);
-		printf("\n");
+		/* for each parent who contributed a cap, check all the possibly 
+			 involved parties */
+		test_poly1=new_poly(polys[i]->np);
+		copy_poly(polys[i],test_poly1);
+		for(j=0;j<test_poly1->nparents;j++) {
+			k=test_poly1->parent_polys[j];
+			for(l=0;l<nlinks[k];l++) {
+				test_poly2=new_poly(test_poly1->np+polys[k]->np);
+				poly_poly(test_poly1,polys[links[k][l]],test_poly2);
+				itrim = trim_poly(test_poly2);
+				if (itrim<2) {
+					tol = mtol;
+					verb = 1;
+					ier = garea(test_poly2, &tol, &verb, &area_tot);
+					if(area_tot>0.)
+						add_parent(polys[i],links[k][l]);
+				}
+				free_poly(test_poly2);
+				test_poly2=0x0;
+			}
+		}
+		free_poly(test_poly1);
+		test_poly1=0x0;
 	}
-#endif
+
+	if(fmt.parents)
+		ofp=fopen(fmt.parents,"w");
+	else 
+		ofp=stdout;
+	fprintf(ofp,"%d\n",npolys);
+	for(i=npoly;i<npoly+npolys;i++) {
+		fprintf(ofp,"%d ",polys[i]->nparents);
+		for(j=0;j<polys[i]->nparents;j++)
+			fprintf(ofp,"%d ",polys[i]->parent_polys[j]);
+		fprintf(ofp,"\n");
+	}
+	if(fmt.parents)
+		fclose(ofp);
 
 	exit(0);
 }

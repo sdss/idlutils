@@ -21,8 +21,8 @@ void msg(char *fmt, ...)
 
     if (verbose) {
 	va_start(args, fmt);
-	vprintf(fmt, args);
+	vfprintf(stderr,fmt, args);
 	va_end(args);
-	fflush(stdout);
+	fflush(stderr);
     }
 }
