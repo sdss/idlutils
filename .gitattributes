@@ -1224,6 +1224,7 @@ src/math/g1.f -text
 src/math/g2.f -text
 src/math/h12.f -text
 src/math/idl_nnls.c -text
+src/math/memshift.c -text
 src/math/nnls.f -text
 src/math/nr.h -text
 src/math/nrecipes.c -text
