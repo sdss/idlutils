@@ -134,8 +134,9 @@ if(n_tags(faststruct) eq 0) then begin
         for j=0L, n_elements(faststruct.sersic_r50_vals)-1L do begin
             splog,i,j
             r0=(faststruct.sersic_r50_vals[j]/r50)[0]
-            profile=sersic(seestruct.radius_vals,1., $
-                           faststruct.sersic_n_vals[i],r0)
+            rv=seestruct.radius_vals
+            n=faststruct.sersic_n_vals[i]
+            profile=sersic(rv,1.,n,r0)
             for k=0L, n_elements(faststruct.seeing_width_vals)-1L do begin
                 seeing_radial,profile,faststruct.seeing_width_vals[k],1., $
                   model_profmean,seestruct=seestruct
