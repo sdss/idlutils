@@ -58,7 +58,7 @@ pro fits_purge_nans, hdr, verbose=verbose
          if (size(thisval,/tname) NE 'STRING') then begin
             if (finite(thisval) EQ 0) then begin
                if (keyword_set(verbose)) then $
-                splog, 'Warning: Disposing of FITS header keyword ' + thiskey
+                splog, 'Warning: Disposing of invalid FITS header keyword ' + thiskey
                qgood[i] = 0B
             endif
          endif
