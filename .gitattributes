@@ -25,6 +25,8 @@ pro/math/djs_iterstat.pro -text
 pro/math/djs_mean.pro -text
 pro/math/djs_median.pro -text
 pro/math/djs_posmod.pro -text
+pro/misc/djs_laxisgen.pro -text
+pro/misc/djs_readcol.pro -text
 src/math/arravsigclip.c -text
 src/math/arrmedian.c -text
 src/math/export.h -text
