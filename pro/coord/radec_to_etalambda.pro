@@ -22,7 +22,7 @@
 ;-
 pro radec_to_etalambda, ra,dec,eta,lambda,stripenumber=stripenumber
 
-if (n_params() NE 4) then $
+if (n_params() NE 2) then $
   message, 'Wrong number of parameters'
 if (n_elements(ra) NE n_elements(dec)) then $
   message, 'Number of elements in RA and DEC must agree'
