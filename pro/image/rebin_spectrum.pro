@@ -63,11 +63,18 @@ function rebin_spectrum, xflux, xwave, ywave
    ; no place to assign the flux
 
    j1 = 0L
-   j2 = 0L
    i = 0L
-   while (xwave[i] LT ywave[j1]) do i = i+1
-   if (i GT 0) then $
-    yflux[0] = xflux[i-1] * (xwave[i] - ywave[0]) / (xwave[i] - xwave[i-1])
+   while (xwave[i] LT ywave[0]) do i = i + 1
+   ; Assign some fraction of the flux from the first pixel...
+   if (i GT 0) then begin
+      dflux = xflux[i-1] / (xwave[i] - xwave[i-1])
+      while (ywave[j1+1] LT xwave[i]) do begin
+         yflux[j1] = yflux[j1] + dflux * (ywave[j1+1] - ywave[j1])
+         j1 = j1 + 1
+      endwhile
+      yflux[j1] = yflux[j1] + dflux * ((xwave[i] < ywave[j1+1]) - ywave[j1])
+   endif
+   j2 = j1
 
    ;----------
    ; Loop over each pixel in the input spectrum, and assign its flux
@@ -76,21 +83,18 @@ function rebin_spectrum, xflux, xwave, ywave
       while (ywave[j1+1] LT xwave[i] AND j1 LT nnew-1) do j1 = j1+1
       while (ywave[j2+1] LT xwave[i+1] AND j2 LT nnew-1) do j2 = j2+1
 
+      dflux = xflux[i] / (xwave[i+1] - xwave[i])
       if (j1 EQ j2) then begin
-         yflux[j1] = yflux[j1] + xflux[i]
+         yflux[j1] = yflux[j1] + dflux * ((ywave[j1+1] < xwave[i+1]) - xwave[i])
       endif else begin
-         dflux = xflux[i] / (xwave[i+1] - xwave[i])
          yflux[j1] = yflux[j1] + dflux * (ywave[j1+1] - xwave[i])
          for k=j1+1, j2-1 do $
           yflux[k] = yflux[k] + dflux * (ywave[k+1] - ywave[k])
-         if (ywave[j2+1] LT xwave[i+1]) then begin
-            ; This is the case where we've run out of the new wavelength axis
-            i = npts
-         endif else begin
-            yflux[j2] = yflux[j2] + dflux * (xwave[i+1] - ywave[j2])
-         endelse
+         if (ywave[j2+1] GT xwave[i+1]) then $
+          yflux[j2] = yflux[j2] + dflux * (xwave[i+1] - ywave[j2])
       endelse
       i = i + 1
+      if (ywave[j2+1] LT xwave[i]) then i = npts
    endwhile
 
    return, yflux
