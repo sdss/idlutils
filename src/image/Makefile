@@ -19,7 +19,9 @@ LIB = $(IDLUTILS_DIR)/lib
 OBJECTS = \
 	grow_obj.o pop_image.o \
 	idl_photfrac.o \
+	idl_reject_cr_psf.o \
 	photfrac.o \
+	reject_cr_psf.o \
 	interp_profmean.o \
 	p_cisi.o \
 	p_midpnt.o \
