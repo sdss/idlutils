@@ -88,7 +88,7 @@ pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl, $
 ;      phi = r2d $
 ;       * atan(cosdec^2 * cosmu * sini, cosnu * cosi - sinmu * sinnu * sini)
 
-      phi1 = r2d $
+      phi = r2d $
        * atan(cosmu * sini, (-sinmu * sinnu * sini + cosnu * cosi)*cosnu)
 
       ; Compute the rotation angle numerically, since the returned value
