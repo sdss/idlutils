@@ -518,8 +518,11 @@ done:
 ioerror:
         message = !err_string
 error_exit:
+; Bug fix by DJS on 25-Apr-2002
+;        if (fcbtype eq 7) and (N_elements(fcb) GT 0) then  $
+;                   fits_close,fcb, no_abort=no_abort, message = message
         if (fcbtype eq 7) and (N_elements(fcb) GT 0) then  $
-                   fits_close,fcb, no_abort=no_abort, message = message
+                   fits_close,fcb, no_abort=no_abort
         !err = -1
         if keyword_set(no_abort) then return
         print,'FITS_READ ERROR: '+message
