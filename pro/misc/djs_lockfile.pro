@@ -7,7 +7,7 @@
 ;   Test if a file is already "locked", and lock it if not.
 ;
 ; CALLING SEQUENCE:
-;   res = djs_lockfile( filename, [lun= ] )
+;   res = djs_lockfile( filename, [ lun=, append= ] )
 ;
 ; INPUT:
 ;   filename:   File name
@@ -16,6 +16,9 @@
 ;   lun:        If this argument exists, then open FILENAME for read/write
 ;               access and return the pointer (LUN number) for that file.
 ;               Do this only if we are able to lock the file.
+;   append:     If set, then append to any file that already exists if
+;               opening the file using LUN.  Ignored if the LUN argument
+;               is not present.
 ;
 ; OUTPUTS:
 ;   res:        Return 0 if file already locked, or 1 if not in which case
@@ -42,7 +45,7 @@
 ;   30-Apr-2000  Written by D. Schlegel, APO
 ;-
 ;-----------------------------------------------------------------------
-function djs_lockfile, filename, lun=lun
+function djs_lockfile, filename, lun=lun, append=append
 
    if (n_elements(filename) NE 1 OR size(filename,/tname) NE 'STRING') $
     then begin
@@ -65,7 +68,7 @@ function djs_lockfile, filename, lun=lun
       endif else begin
          res = 1
          if (arg_present(lun)) then $
-          openw, lun, filename, /get_lun, /append
+          openw, lun, filename, /get_lun, append=append
       endelse
       end
    else: begin
@@ -75,7 +78,7 @@ function djs_lockfile, filename, lun=lun
          flush, olun ; Flush output immediately
          res = 1
          if (arg_present(lun)) then begin
-            openw, lun, filename, /get_lun
+            openw, lun, filename, /get_lun, append=append
          endif
       endif else begin
          res = 0
