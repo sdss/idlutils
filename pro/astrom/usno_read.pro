@@ -64,7 +64,7 @@ function usno_read, racen, deccen, rad, path=path, catname=catname
 
 ; -------- If catname not set, or those envvars not set, then default
 ;          to usno_path
-  IF (NOT keyword_set(path)) THEN path = getenv('USNO_PATH')
+  IF (NOT keyword_set(path)) THEN path = getenv('USNO_DIR')
   IF (NOT keyword_set(path)) THEN message, 'set environment variables or path keyword'
 
 ; which catalogue?
