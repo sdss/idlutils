@@ -1,5 +1,5 @@
-MRDFITS - A multiple format FITS reader. V2.5
-Last updated: December 2001
+MRDFITS - A multiple format FITS reader. V2.7
+Last updated: July 2003
 
 
 The MRDFITS utility is intended to be a general purpose function allowing
@@ -50,7 +50,8 @@ parameters are available.
         ALIAS             Specify translation of column names to structure tags
 	/FSCALE and /DSCALE  cause scaling to single and double precision.
 	COLUMNS=  	     allows users to specify the columns desired.
-	RANGE=		     allows users to retrieve only some rows.
+	RANGE=		     allows users to retrieve only a range of rows.
+        ROWS=                allows user to retrieve only specified rows
 	STRUCTYP=	     gives the structure type for the structure
 	TEMPDIR=	     gives the directory for temporary files
 	/SILENT		     suppresses informative messages
