@@ -20,7 +20,7 @@
 ;   binval:   Byte array(s) of binary values
 ;
 ; PROCEDURES CALLED:
-;   djs_ceil()
+;   djs_floor()
 ;
 ; REVISION HISTORY:
 ;   Written D. Schlegel, 30 June 1997, Durham
