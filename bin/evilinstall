@@ -46,6 +46,10 @@ fi
 
 FLAVOR=`echo $SETUP_UPS | sed -ne 's/.*-f \([^ ]*\).*/\1/p'`
 echo Installing PRODNAME=$PRODNAME PRODVERS=$PRODVERS FLAVOR=$FLAVOR.
+if [ -z $FLAVOR ] ; then
+   echo "FLAVOR could not be determined from environment variable SETUP_UPS"
+   exit
+fi
 
 # Must have "ups" in the path and PRODUCTS and SDSS_ROOT must be defined.
 
