@@ -721,3 +721,5 @@ src/slatec/xerprn.f -text
 src/slatec/xersve.f -text
 src/slatec/xgetua.f -text
 src/slatec/xsetf.f -text
+ups/Makefile -text
+ups/idlutils.table -text
