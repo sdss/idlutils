@@ -10,36 +10,41 @@
 ;				  polynomial	
 ;
 ; CALLING SEQUENCE:
-;   
 ;   error_code = bspline_fit(x, y, invvar, sset, $
-;                fullbkpt=fullbkpt, nord=, x2=, npoly=, yfit=)
+;    fullbkpt=, nord=, x2=, npoly=, yfit=)
 ;
 ; INPUTS:
-;   x          - independent variable
-;   y          - dependent variable
-;   invvar     - inverse variance of y
+;   x          - Independent variable
+;   y          - Dependent variable
+;   invvar     - Inverse variance of Y
 ;   sset       - Structure to be returned with all fit parameters
-;
-; RETURNS:
-;   error_code - Non negative numbers indicate ill-conditioned bkpts
-;
-; OUTPUTS:
+;                (if not set, then it is created)
 ;
 ; OPTIONAL KEYWORDS:
-;   fullbkpt   - Pass fullbkpt to seed structure
-;   nord       - Order of b-splines (4 is cubic, default)
+;   fullbkpt   - Pass fullbkpt to seed structure; if not set, then
+;                this is generated with CREATE_BSPLINESET()
+;   nord       - Order of b-splines; default to 4 (cubic)
 ;   x2         - Orthogonal dependent variable
-;   npoly      - Order of x2 polynomial fit
-;   yfit       - evaluation of spline at x (& x2)
+;   npoly      - Order of x2 polynomial fit; default to the value in the
+;                SSET structure, or to 1.
+;
+; OUTPUTS:
+;   error_code - Non-negative numbers indicate ill-conditioned bkpts
+;                 0 is good
+;                -1 is dropped breakpoints, try again
+;                -2 is failure, should abort
+;   sset       - Structure with all fit parameters
 ;
 ; OPTIONAL OUTPUTS:
+;   yfit       - Evaluation of b-spline at X (and X2)
 ;
 ; COMMENTS:
-;   please sort x for this routine?  This might not be necessary
-;   replacement for efcmn and efc2d which calls slatec library
+;   This code replaces efcmn and efc2d calls in the slatec library.
+;
+; BUGS:
+;   Do we need to sort X for this routine???
 ;
 ; EXAMPLES:
-;
 ;
 ; PROCEDURES CALLED:
 ;   bspline_action()
@@ -47,68 +52,67 @@
 ;   bspline_valu()
 ;   cholesky_band()
 ;   cholesky_solve()
+;   create_bsplineset()
 ;
 ; REVISION HISTORY:
 ;   20-Aug-2000 Written by Scott Burles, FNAL
-;   12-Oct-2000  Changed return codes
-;                 0 is good
-;                -1 is dropped breakpoints, try again
-;                -2 is failure, should abort
 ;-
 ;------------------------------------------------------------------------------
-
 function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
-       x2=x2, npoly=npoly, nord=nord, yfit=yfit
+ x2=x2, npoly=npoly, nord=nord, yfit=yfit
 
-      if NOT keyword_set(nord) then nord=4L
+   if NOT keyword_set(nord) then nord = 4L
 
-      if size(sset, /tname) EQ 'UNDEFINED' then $
-          sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
+   if (size(sset, /tname) EQ 'UNDEFINED') then $
+    sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
 
-      if ((where(tag_names(sset) EQ 'NPOLY'))[0] NE -1) then npoly=sset.npoly
-      if NOT keyword_set(npoly) then npoly=1L
+   if ((where(tag_names(sset) EQ 'NPOLY'))[0] NE -1) then npoly = sset.npoly
+   if (NOT keyword_set(npoly)) then npoly = 1L
     
-      goodbk = where(sset.bkmask[nord:*] NE 0, nbkpt)
+   goodbk = where(sset.bkmask[nord:*] NE 0, nbkpt)
 
-      nord = sset.nord
+   nord = sset.nord
 
-      if nbkpt LT nord then return, -2L
+   if (nbkpt LT nord) then begin
+      if (arg_present(yfit)) then yfit = fltarr(n_elements(ydata))
+      return, -2L
+   endif
 
-      n = nbkpt 
-      nfull = n*npoly
-      bw = npoly * nord   ; this is the bandwidth
+   nn = nbkpt 
+   nfull = nn * npoly
+   bw = npoly * nord   ; this is the bandwidth
 
-      ;  The next line is REQUIRED to fill a1
+   ;  The next line is REQUIRED to fill a1
 
-      a1 = bspline_action(xdata, sset, x2=x2, lower=lower, upper=upper)
+   a1 = bspline_action(xdata, sset, x2=x2, lower=lower, upper=upper)
 
-      a2 = a1 * (invvar # replicate(1,bw))
+   a2 = a1 * (invvar # replicate(1,bw))
 
-      alpha = dblarr(bw,nfull+bw)
-      beta = dblarr(nfull+bw)
+   alpha = dblarr(bw,nfull+bw)
+   beta = dblarr(nfull+bw)
 
-      bi = lindgen(bw)
-      bo = lindgen(bw)
-      for i=1,bw-1 do bi = [bi,lindgen(bw-i)+(bw+1)*i]
-      for i=1,bw-1 do bo = [bo,lindgen(bw-i)+bw*i]
+   bi = lindgen(bw)
+   bo = lindgen(bw)
+   for i=1L, bw-1 do bi = [bi, lindgen(bw-i)+(bw+1)*i]
+   for i=1L, bw-1 do bo = [bo, lindgen(bw-i)+bw*i]
 
-      for i=0L, n-nord do begin
+   for i=0L, nn-nord do begin
 
-        itop = i*npoly
-        ibottom = (itop < nfull + bw) - 1
+      itop = i * npoly
+      ibottom = (itop < nfull + bw) - 1
        
-        ict = upper[i] - lower[i] + 1
+      ict = upper[i] - lower[i] + 1
   
-        if (ict GT 0) then begin
+      if (ict GT 0) then begin
 
-          work = a2[lower[i]:upper[i],*] ## transpose(a1[lower[i]:upper[i],*])
-          wb =  ydata[lower[i]:upper[i]] # a2[lower[i]:upper[i],*] 
+         work = a2[lower[i]:upper[i],*] ## transpose(a1[lower[i]:upper[i],*])
+         wb =  ydata[lower[i]:upper[i]] # a2[lower[i]:upper[i],*] 
 
-          alpha[bo+itop*bw] = alpha[bo+itop*bw] + work[bi]
-          beta[itop:ibottom] = beta[itop:ibottom] + wb
+         alpha[bo+itop*bw] = alpha[bo+itop*bw] + work[bi]
+         beta[itop:ibottom] = beta[itop:ibottom] + wb
 
-        endif
-      endfor
+      endif
+   endfor
 
 ;-----------------------------------------------------------------------------
 ;
@@ -126,46 +130,45 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 ;
 ;-----------------------------------------------------------------------------
 
-;
-;	This is an attempt to drop bkpts where minimal influence is located
-;
-    minimum_influence = 1.0e-10 * total(invvar)/nfull
-    yfit = ydata*0.0
+   ; Drop break points where minimal influence is located
 
-;
-;       cholesky_band operates on alpha and changes contents
-;
+   min_influence = 1.0e-10 * total(invvar) / nfull
+
+   ; This call to cholesky_band operates on alpha and changes contents
+
+   errb = cholesky_band(alpha, mininf=min_influence) 
 
 
-    errb = cholesky_band(alpha, mininf=minimum_influence) 
-
-
-    if (errb[0] NE -1) then begin 
+   if (errb[0] NE -1) then begin 
+      if (arg_present(yfit)) then $
+       yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, $
+        lower=lower)
       return, bspline_maskpoints(sset, errb, npoly)
-    endif
+   endif
  
-; this changes beta to contain the solution
+   ; this changes beta to contain the solution
 
-    errs = cholesky_solve(alpha, beta)   
-    if (errs[0] NE -1) then begin
+   errs = cholesky_solve(alpha, beta)   
+   if (errs[0] NE -1) then begin
+      if (arg_present(yfit)) then $
+       yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, $
+        lower=lower)
       return, bspline_maskpoints(sset, errs, npoly)
-    endif
+   endif
 
-    sc = size(sset.coeff)
-    if sc[0] EQ 2 then begin
+   sc = size(sset.coeff)
+   if sc[0] EQ 2 then begin
       sset.icoeff[*,goodbk] = reform(alpha[0,lindgen(nfull)],npoly,n)
       sset.coeff[*,goodbk] = reform(beta[lindgen(nfull)], npoly, n) 
-    endif else begin
+   endif else begin
       sset.icoeff[goodbk] = alpha[0,lindgen(nfull)]
       sset.coeff[goodbk] = beta[lindgen(nfull)]
-    endelse
+   endelse
 
-;
-;	Now evaluate fit just since we can
-;
-    if (arg_present(yfit)) then $
-     yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, $
-      lower=lower)
+   if (arg_present(yfit)) then $
+    yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, $
+     lower=lower)
 
-    return, 0L
-end 
+   return, 0L
+end
+;------------------------------------------------------------------------------
