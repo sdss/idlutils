@@ -470,6 +470,7 @@ goddard/pro/misc/gettok.pro -text
 goddard/pro/misc/hgrep.pro -text
 goddard/pro/misc/host_to_ieee.pro -text
 goddard/pro/misc/hprint.pro -text
+goddard/pro/misc/idl_validname.pro -text
 goddard/pro/misc/ieee_to_host.pro -text
 goddard/pro/misc/is_ieee_big.pro -text
 goddard/pro/misc/list_with_path.pro -text
