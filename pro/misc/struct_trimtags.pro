@@ -113,8 +113,14 @@ function struct_trimtags, instruct, select_tags=select_tags, $
    outstruct = replicate(outstruct, nout)
    if (keyword_set(format)) then begin
       for ii=0, nkeep-1 do begin
-         outstruct[*].(ii) = string(instruct.(indx[ii]), $
-          format='('+format[ii]+')')
+;         outstruct[*].(ii) = string(instruct.(indx[ii]), $
+;          format='('+format[ii]+')')
+; The STRING() function will drop from its output any elements that
+; are simply blank strings.  I consider this a bug, but one that can
+; be avoided by looping through one element (structure row) at a time.
+         for irow=0, nout-1 do $
+          outstruct[irow].(ii) = string(instruct[irow].(indx[ii]), $
+           format='('+format[ii]+')')
       endfor
    endif else begin
       struct_assign, instruct, outstruct
