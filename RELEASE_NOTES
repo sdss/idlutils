@@ -2,6 +2,7 @@
 GAUSS_OVERLAP: New function to calculate log integral, covariance, and
                mean of product of two gaussians.
 
+bin/evilmake: Add "LDF77=g77" or "LDF77=ld", and export it.
 src/mangle1.4/src/garea.s.f: Bug fix to send errors to stderr.  We had errors
                like "*** from garea: total failure at tol =  3.33161425"
                spilling into the output stream from the Fortran code back
