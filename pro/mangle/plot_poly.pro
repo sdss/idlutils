@@ -2,7 +2,7 @@ pro plot_poly,poly,offset=offset,xrange=xrange,yrange=yrange, $
               filename=filename,fill=fill,nooutline=nooutline, $
               xsize=xsize, ysize=ysize, over=over, color=color, $
               minside=minside, dangle=dangle, outline_thick=outline_thick, $
-              splot=splot
+              splot=splot, aitoff=aitoff
 
 if(not keyword_set(offset)) then offset=0.
 if(not keyword_set(outline_thick)) then outline_thick=0.001
@@ -64,18 +64,23 @@ for i=0L, n_elements(poly)-1L do begin
         indx=where(ramoffset lt 0.,count)
         if(count gt 0) then ramoffset[indx]=ramoffset[indx]+360.
         dec=90.-theta
+        xx=ramoffset
+        yy=dec
+        if(keyword_set(aitoff)) then begin
+            aitoff, ramoffset, dec, xx, yy
+        endif
         if(keyword_set(fill)) then begin
             if(keyword_set(splot)) then $
-              spolyfill,ramoffset,dec,color=use_color[i],noclip=0 $
+              spolyfill,xx,yy,color=use_color[i],noclip=0 $
             else $
-              polyfill,ramoffset,dec,color=use_color[i],noclip=0
+              polyfill,xx,yy,color=use_color[i],noclip=0
         endif
         if(NOT keyword_set(nooutline)) then begin
             if(keyword_set(splot)) then $
-              oplot,ramoffset,dec,color=use_color[i], $
+              oplot,xx,yy,color=use_color[i], $
               thick=outline_thick $
             else $
-              oplot,ramoffset,dec,color=use_color[i], $
+              oplot,xx,yy,color=use_color[i], $
               thick=outline_thick 
         endif
     endif
