@@ -1,4 +1,5 @@
-pro writefits, filename, data, header, Append = Append, CheckSum = Checksum
+pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
+	NaNvalue = NaNvalue
 ;+
 ; NAME:
 ;       WRITEFITS
@@ -36,6 +37,9 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum
 ;      /Checksum - If set, then the CHECKSUM keywords to monitor data integrity
 ;                 will be included in the FITS header.    For more info, see
 ;                  http://heasarc.gsfc.nasa.gov/docs/heasarc/fits/checksum.html
+;       NaNvalue - Value in the data array which represents missing pixels.
+;		 This keyword is only used when missing pixels are not
+;		 represented by NaN values in the input array.
 ; OUTPUTS:
 ;       None
 ;
@@ -75,6 +79,7 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum
 ;                                             W. Landsman    September 2002
 ;       Fix MRD_HREAD call if /APPEND is set  W. Landsman    December 2002
 ;       Added /CHECKSUM keyword              W. Landsman     December 2002
+;	Restored NANvalue keyword, William Thompson,	     October 2003
 ;-
   On_error, 2
   FORWARD_FUNCTION FILE_SEARCH      ;For pre-V5.5 compatibility
@@ -124,6 +129,17 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum
                     newdata = long(data - 2147483648)
              endif
          endif
+
+; For floating or double precision test for NaN values to write
+
+  NaNtest = keyword_set(NaNvalue) and ( (type EQ 4) or (type EQ 5) )
+  if NaNtest then begin
+     NaNpts = where( data EQ NaNvalue, N_NaN)
+     if (N_NaN GT 0) then begin
+         if type EQ 4 then data(NaNpts)  = !Values.F_NaN	$
+     else if type EQ 8 then data(NaNpts) = !Values.D_NaN
+     endif
+  endif 
  endif
 
 ; Open file and write header information
