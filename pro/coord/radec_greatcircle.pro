@@ -202,7 +202,7 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
       fitval[0] = fitval[0] + 180.d0
       fitval[1] = fitval[1] + 180.d0
       fitval[2] = -180.d0 - fitval[2]
-   endelse
+   endif
 
    ;----------
    ; Do bounds-checking on the fit coordinates
