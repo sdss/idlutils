@@ -775,6 +775,8 @@ pro/math/ex_max_probability.pro -text
 pro/math/gauss_kernel.pro -text
 pro/math/gausspix1d.pro -text
 pro/math/hogg_iter_linfit.pro -text
+pro/math/legendre_zero.pro -text
+pro/math/legendre_zero_func.pro -text
 pro/math/logsum.pro -text
 pro/math/nnls.pro -text
 pro/math/nonneg_mult_update.pro -text
