@@ -76,7 +76,7 @@ function yanny_par, hdr, keyname, count=count
    ; Remove any comments from this string
    ipos = strpos(keystring, '#')
    if (ipos EQ 0) then keystring = '' $
-    else if (ipos GT 0) then keystring = strmid(keystring, 0, ipos)
+    else if (ipos GT 0) then keystring = strtrim(strmid(keystring, 0, ipos),2)
 
    ; If any single quote exists, then split the string by looking for
    ; everything within single quotes.
@@ -96,7 +96,6 @@ function yanny_par, hdr, keyname, count=count
    endif else begin
 ; Below is the 5.3 version ???
 ;      result = strsplit(keystring, " ", /extract)
-;      result = str_sep(strcompress(keystring), " ")
 
 ; Below is the 5.2 version ???
       result = str_sep(strcompress(keystring), " ")
