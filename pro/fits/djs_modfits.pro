@@ -4,18 +4,20 @@
 ;   djs_modfits
 ;
 ; PURPOSE:
-;   Wrapper for MODFITS that allows the header to increase in size.
+;   Wrapper for MODFITS that allows the header to increase in size,
+;   and that works with g-zipped files.
 ;
 ; CALLING SEQUENCE:
 ;   djs_modfits, filename, data, [hdr, exten_no=]
 ;
 ; INPUTS:
-;   filename  -
-;   data      -
+;   filename  - FITS file name; if the name ends in the suffix ".gz",
+;               then the file is g-unzipped first, modified, then re-g-zipped.
+;   data      - New data array or structure for extension EXTEN_NO
 ;
 ; OPTIONAL INPUTS:
-;   hdr       -
-;   exten_no  -
+;   hdr       - New FITS header for extension EXTEN_NO
+;   exten_no  - FITS extension number to modify; default to 0.
 ;
 ; OUTPUTS:
 ;
@@ -55,6 +57,16 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
       return
    endif
 
+   ; If the file appears to be g-zipped, then unzip the file first
+   if (strmatch(filename, '*.gz')) then begin
+      spawn, 'gunzip '+filename
+print,'zzz'
+      thisfile = strmid(filename, 0, strlen(filename)-3)
+   endif else begin
+      thisfile = filename
+print,'yyy'
+   endelse
+
    if (NOT keyword_set(exten_no)) then exten_no = 0
 
    ;----------
@@ -71,23 +83,23 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
    qbigger = 0
 
    if (keyword_set(hdr)) then begin
-      hdr1 = headfits(filename, exten=exten_no)
+      hdr1 = headfits(thisfile, exten=exten_no)
       if (NOT keyword_set(hdr1)) then $
-       message, 'EXTEN_NO does not exist in file '+filename
+       message, 'EXTEN_NO does not exist in file '+thisfile
 ;      if ((n_elements(hdr)+79)/80 GT (n_elements(hdr1)+79)/80) then qbigger = 1
       if (n_elements(hdr) GT n_elements(hdr1)) then qbigger = 1
    endif
 
    qstruct = 0
    if (keyword_set(data)) then begin
-      data1 = mrdfits(filename, exten_no)
+      data1 = mrdfits(thisfile, exten_no)
       qstruct = size(data, /tname) EQ 'STRUCT'
       if (qstruct) then begin
          nbytes1 = n_tags(data1, /length)
          nbytes = n_tags(data, /length)
       endif else begin
-         nbytes1 = n_elements(data1) * bitsperpix(size(data1,/type))
-         nbytes = n_elements(data) * bitsperpix(size(data,/type))
+         nbytes1 = n_elements(data1) * bitsperpixel(size(data1,/type))
+         nbytes = n_elements(data) * bitsperpixel(size(data,/type))
       endelse
       if (NOT keyword_set(data1) OR $
        (nbytes+2879)/2880 GT (nbytes1+2879)/2880) then qbigger = 1
@@ -98,56 +110,67 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
    ; So don't use it in that case.
 
    if ((qbigger EQ 0) AND qstruct EQ 0) then begin
-      modfits, filename, data, hdr, exten_no=exten_no
-      return
-   endif
 
-   ;----------
-   ; Read in all the headers and data arrays for FILENAME
+      modfits, thisfile, data, hdr, exten_no=exten_no
 
-   data1 = readfits(filename, hdr1)
-   pdata = ptr_new(data1)
-   phdr = ptr_new(hdr1)
-   nhdu = 1
+   endif else begin
 
-   while (keyword_set(hdr1)) do begin
-      hdr1 = 0
-      data1 = mrdfits(filename, nhdu, hdr1)
-      if (keyword_set(hdr1)) then begin
-         phdr = [phdr, ptr_new(hdr1)]
-         pdata = [pdata, ptr_new(data1)]
-         nhdu = nhdu + 1
+      ;----------
+      ; Read in all the headers and data arrays for FILENAME
+
+      data1 = readfits(thisfile, hdr1)
+      pdata = ptr_new(data1)
+      phdr = ptr_new(hdr1)
+      nhdu = 1
+
+      while (keyword_set(hdr1)) do begin
+         hdr1 = 0
+         data1 = mrdfits(thisfile, nhdu, hdr1)
+         if (keyword_set(hdr1)) then begin
+            phdr = [phdr, ptr_new(hdr1)]
+            pdata = [pdata, ptr_new(data1)]
+            nhdu = nhdu + 1
+         endif
+      endwhile
+
+      if (exten_no GE n_elements(phdr)) then $
+       message, 'EXTEN_NO does not exist in file '+thisfile
+
+      ;----------
+      ; Re-write all the headers and data arrays to FILENAME, modifying the
+      ; one specified by EXTEN_NO
+
+      if (keyword_set(hdr)) then begin
+         ptr_free, phdr[exten_no]
+         phdr[exten_no] = ptr_new(hdr)
       endif
-   endwhile
 
-   if (exten_no GE n_elements(phdr)) then $
-    message, 'EXTEN_NO does not exist in file '+filename
+      if (keyword_set(data)) then begin
+         ptr_free, pdata[exten_no]
+         pdata[exten_no] = ptr_new(data)
+      endif
 
-   ;----------
-   ; Re-write all the headers and data arrays to FILENAME, modifying the
-   ; one specified by EXTEN_NO
+      writefits, thisfile, *(pdata[0]), *(phdr[0])
+      for ihdu=1, nhdu-1 do begin
+         mwrfits, *(pdata[ihdu]), thisfile, *(phdr[ihdu])
+      endfor
 
-   if (keyword_set(hdr)) then begin
-      ptr_free, phdr[exten_no]
-      phdr[exten_no] = ptr_new(hdr)
-   endif
+      ;----------
+      ; Free memory
 
-   if (keyword_set(data)) then begin
-      ptr_free, pdata[exten_no]
-      pdata[exten_no] = ptr_new(data)
-   endif
+      for ihdu=0, nhdu-1 do begin
+         ptr_free, phdr[ihdu]
+         ptr_free, pdata[ihdu]
+      endfor
 
-   writefits, filename, *(pdata[0]), *(phdr[0])
-   for ihdu=1, nhdu-1 do begin
-      mwrfits, *(pdata[ihdu]), filename, *(phdr[ihdu])
-   endfor
+   endelse
 
    ;----------
-   ; Free memory
-   for ihdu=0, nhdu-1 do begin
-      ptr_free, phdr[ihdu]
-      ptr_free, pdata[ihdu]
-   endfor
+   ; If the file appears to be g-zipped, then re-g-zip the file at the end
+
+   if (strmatch(filename, '*.gz')) then begin
+      spawn, 'gzip '+thisfile
+   endif
 
    return
 end 
