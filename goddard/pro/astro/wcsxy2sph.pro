@@ -59,6 +59,7 @@
 ;   QCS    24    Quadrilateralized
 ;                Spherical Cube
 ;   TSC    25    Tangential Spherical Cube
+;   HCT    26    HealCart (Cartesian approximation of Healpix)
 ;
 ; OPTIONAL KEYWORD PARAMETERS:
 ;
