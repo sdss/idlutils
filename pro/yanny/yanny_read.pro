@@ -29,6 +29,8 @@
 ;                are present.
 ;
 ; COMMENTS:
+;   Return 0's if the file does not exist.
+;
 ;   Read and write variables that are denoted INT in the Yanny file
 ;   as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
 ;   Yanny files assume type INT is a 4-byte integer, whereas in IDL
@@ -260,7 +262,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    pnumel = 0       ; Number of elements in each structure
 
    get_lun, ilun
-   openr, ilun, filename
+   openr, ilun, filename, error=err
+   if (err NE 0) then return
    rawline = ''
 
    while (NOT eof(ilun)) do begin
