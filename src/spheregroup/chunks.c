@@ -347,12 +347,12 @@ assignchunks(double ra[],        /* degrees */
 					} /* end if */
 				} /* end for raChunk */
 			} /* end for decChunk */
-			
-			/* free memory */
-			if(raChunkMin!=NULL) free((char *) raChunkMin);
-			if(raChunkMax!=NULL) free((char *) raChunkMax);
-			raChunkMin=raChunkMax=NULL;
 		} /* end if */
+
+		/* free memory */
+		if(raChunkMin!=NULL) free((char *) raChunkMin);
+		if(raChunkMax!=NULL) free((char *) raChunkMax);
+		raChunkMin=raChunkMax=NULL;
 	} /* end for i */
 
 	/* Allocate chunkList memory */
@@ -453,12 +453,12 @@ assignchunks(double ra[],        /* degrees */
 					} /* end if */
 				} /* end for raChunk */
 			} /* end for decChunk */
-			
-			/* free memory */
-			if(raChunkMin!=NULL) free((char *) raChunkMin);
-			if(raChunkMax!=NULL) free((char *) raChunkMax);
-			raChunkMin=raChunkMax=NULL;
 		} /* end if..else */
+
+		/* free memory */
+		if(raChunkMin!=NULL) free((char *) raChunkMin);
+		if(raChunkMax!=NULL) free((char *) raChunkMax);
+		raChunkMin=raChunkMax=NULL;
 	} /* end for i */
 
 	return(CH_OK);
