@@ -24,9 +24,14 @@
 ;------------------------------------------------------------------------------
 pro read_fits_polygons, infile, polygons
 
+if(n_params() ne 2) then begin
+    print, 'Syntax - read_fits_polygons, infile, polygons'
+    return
+endif
+
 if(NOT keyword_set(maxncaps)) then maxncaps=15
 
-inpoly=mrdfits(infile,1)
+inpoly=mrdfits(infile,1,/unsigned)
 intags=tag_names(inpoly)
 cap1=construct_cap()
 polygon1={caps:replicate(cap1,maxncaps)}

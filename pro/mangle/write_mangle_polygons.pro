@@ -26,6 +26,11 @@
 ;------------------------------------------------------------------------------
 pro write_mangle_polygons, outfile, polygons, id
 
+if(n_params() lt 2 or n_params() gt 3) then begin
+    print,'Syntax - write_mangle_polygons, outfile, polygons [, id]'
+    return
+endif
+
 if(n_elements(id) eq 0) then id=lindgen(n_elements(polygons))
 
 openw,unit,outfile,/get_lun

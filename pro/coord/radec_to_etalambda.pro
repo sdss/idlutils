@@ -22,8 +22,10 @@
 ;-
 pro radec_to_etalambda, ra,dec,eta,lambda,stripenumber=stripenumber
 
-if (n_params() NE 4) then $
-  message, 'Wrong number of parameters'
+if (n_params() NE 4) then begin
+  print, 'Syntax - radec_to_etalambda, ra, dec, eta, lambda [, stripenumber=]'
+  return
+endif
 if (n_elements(ra) NE n_elements(dec)) then $
   message, 'Number of elements in RA and DEC must agree'
 
