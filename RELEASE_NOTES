@@ -1,4 +1,8 @@
 
+MRDFITS: Re-cast the argument to POINT_LUN to be type LONG64, to allow
+               using MRDFITS with > 2 Gb files without errors.  This patch
+               has been sent to Landsman.
+
 pro/Makefile: Remove radprof from the SUBDIRS list, since there is nothing
                left in that directory.
 src/mangle1.4/src/Makefile: Change the "make" command to put the executables
