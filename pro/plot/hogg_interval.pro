@@ -7,6 +7,8 @@
 ;   range     - the range for the axis
 ; OPTIONAL INPUTS:
 ;   nticks    - the approximate, desired number of ticks; default 5
+; BUGS:
+;   Goes insane if range contains NaN.
 ; REVISION HISTORY:
 ;   2002-03-25  written - Hogg
 ;-

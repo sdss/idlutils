@@ -21,6 +21,7 @@
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
 ; BUGS:
+;   Can get infinite plot ranges.
 ; DEPENDENCIES:
 ; REVISION HISTORY:
 ;   2002-12-14  re-constructed from ex_max_plot -- Hogg
@@ -35,8 +36,8 @@ pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
                             _EXTRA=KeywordsForHoggScatterplot
 
 ; check dimensions
-ndata= n_elements(weight)       ; N
-dimen= n_elements(point)/n_elements(weight) ; d
+ndata= n_elements(weight)                    ; N
+dimen= n_elements(point)/n_elements(weight)  ; d
 splog, ndata,' data points,',dimen,' dimensions'
 
 ; set defaults
@@ -63,7 +64,7 @@ if NOT keyword_set(range) then begin
     var1= 0d
     for i=0L,ndata-1 do begin
         delta= point[*,i]-mean1
-        var1= var1+weight[i]*delta#delta
+        var1= var1+weight[i]*product(finite(delta))*delta#delta
     endfor
     var1= var1/amp1
     range= dblarr(2,dimen)
