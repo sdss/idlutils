@@ -33,9 +33,7 @@
 ;                i.e. tag_names(PDATA[0],/structure_name) for the 1st one.
 ;                This keyword is useful for when /ANONYMOUS must be set to
 ;                deal with structures with the same name but different defns.
-;   quick      - Quicker read using READF, but fails if continuation lines
-;                are present.  However, /QUICK must be used if there are any
-;                lines longer than 2047 characters (see bug section below).
+;   quick      - This keyword is only for backwards compatability.
 ;   errcode    - Returns as non-zero if there was an error reading the file.
 ;
 ; COMMENTS:
@@ -66,12 +64,13 @@
 ;   Not set up yet to deal with multi-dimensional arrays.
 ;
 ; PROCEDURES CALLED:
+;   hogg_strsplit
 ;   mrd_struct
 ;
 ; INTERNAL SUPPORT ROUTINES:
-;   yanny_inquotes
 ;   yanny_add_comment
 ;   yanny_getwords()
+;   yanny_inquotes()
 ;   yanny_strip_brackets()
 ;   yanny_strip_commas()
 ;   yanny_readstring
@@ -84,7 +83,7 @@
 ;                yanny_nextline)
 ;-
 ;------------------------------------------------------------------------------
-; Return an array (1-element / text character) set to 1 where a semi colon is 
+; Return an array (1-element / text character) set to 1 where a semi colon is
 ; within double quotes, -1 where it is not
 
 function yanny_inquotes, textline, bytetext = bytetext
@@ -101,8 +100,8 @@ function yanny_inquotes, textline, bytetext = bytetext
 
    ; Assume double quotes come in pairs!
    IF (ndquotes mod 2) NE 0 THEN print, 'ERROR: double quotes not in pairs!'
- 
-   IF nscolon GT 0 THEN BEGIN 
+
+   IF nscolon GT 0 THEN BEGIN
      scinquote[scolon_index] = -1
      FOR ii = 0, ndquotes - 1, 2 do BEGIN
        inquote = where(scolon_index GT dquote_index[ii] AND $
@@ -134,18 +133,6 @@ function yanny_strip_brackets, sline
    sline = repstr(sline, '{{}}', '""')
    sline = repstr(sline, '{', ' ')
    sline = repstr(sline, '}', ' ')
-
-;   i = strpos(sline, '}')
-;   while (i NE -1) do begin
-;      strput, sline, ' ', i
-;      i = strpos(sline, '}')
-;   endwhile
-;
-;   i = strpos(sline, '{')
-;   while (i NE -1) do begin
-;      strput, sline, ' ', i
-;      i = strpos(sline, '{')
-;   endwhile
 
    return, sline
 end
@@ -196,27 +183,11 @@ pro yanny_readstring, ilun, sline
 
    common yanny_linenumber, lastlinenum ; Only for debugging
 
-   sarray = strarr(2047)
-   readf, ilun, sarray, format='(2047a1)'
-
-   sline79='                                                                              '
-   sline19='                   '
-   sline = sline79+sline79+sline79+sline79+sline79+sline79+sline79+sline79 $
-    +sline79+sline79+sline79+sline79+sline79+sline79+sline79+sline79+sline79 $
-    +sline79+sline79+sline79+sline79+sline79+sline79+sline79+sline79+sline79 $
-    +sline19
-
-;   sline = string(' ', format='(a2047)') ; This format cannot be larger
-                                          ; than 255 characters.
-
-;   for i=0, 2047-1 do strput, sline, sarray[i], i
-
-   ; The following is faster than the above since IDL loops are so slow.
-   indx = where(sarray NE ' ', ct)
-   lastchar = indx[(ct-1) > 0]
-   for i=0, lastchar do strput, sline, sarray[i], i
-
+   sline = ''
+   readf, ilun, sline
    lastlinenum = lastlinenum + 1
+
+   return
 end
 ;------------------------------------------------------------------------------
 ; Read the next line from the input file, appending several lines if there
@@ -256,30 +227,7 @@ function yanny_nextline, ilun
 
    ; Attempt with a 5.2 hack
 
-
-   ; Attempt to fix quotes problem cited above -- C. Tremonti
-   ; -----------------
-
-   ; lastline = str_sep(strcompress(sline), ';')
-   csline = strcompress(sline)
-
-   quoted_semi_colon = yanny_inquotes(csline)
-   scolon_index = where(quoted_semi_colon eq -1, nscolon)
-
-   IF nscolon gt 0 THEN BEGIN
-     starti = 0
-     FOR ii = 0, nscolon - 1 DO BEGIN
-       endi = scolon_index[ii] - 1
-       IF ii EQ 0 THEN lastline = strmid(csline, starti, endi - starti + 1) $
-       ELSE lastline = [lastline, strmid(csline, starti, endi - starti + 1)]
-       starti = scolon_index[ii] + 1
-     ENDFOR
-     IF endi ne strlen(csline) then lastline = [lastline, $
-        strmid(csline, starti, strlen(csline) - starti + 1)]
-   ENDIF ELSE lastline = csline
-
-  ; ------------
-
+   lastline = str_sep(strcompress(sline), ';')
    nonblank = where(lastline NE '')
    if nonblank[0] NE -1 then lastline = lastline[nonblank]
    nlast = n_elements(lastline)
@@ -316,49 +264,14 @@ pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
    return
 end
 ;-----------------------------------------------------------------------------
-; Split SLINE into words.  First, any phrase that appears between double-
-; quotes is designated one word (and the quotes are dropped).  Then, white-
-; space is used to split the line into words.
+; Split SLINE into words using whitespace.  Anything inside double-quotes
+; is protected from being split into separate words, and is returned as
+; a single word without the quotes.
 
 function yanny_getwords, sline
 
-   words = ''
-   stemp = strtrim(sline,2)
-
-   while (keyword_set(stemp)) do begin
-      slen = strlen(stemp)
-      if (strmid(stemp,0,1) EQ '"') then begin
-         ; Found double-quote, so extract that string (w/out the quotes)
-         if (slen EQ 1) then begin
-            words = [words, '']
-            i2 = slen-1
-            stemp = ''
-         endif else begin
-            i2 = strpos(stemp, '"', 1)
-            if (i2 NE -1) then begin
-               words = [words, strmid(stemp, 1, i2-1)]
-            endif else begin
-               i2 = slen-1
-               words = [words, strmid(stemp, 1, i2)]
-            endelse
-         endelse
-      endif else begin
-         i2 = strpos(stemp, '"', 1)
-         if (i2 EQ -1) then i2 = slen-1 $
-          else i2 = i2-1
-
-         ; Divide into words based upon spaces
-         words = [words, $
-          str_sep( strcompress(strtrim(strmid(stemp,0,i2+1),2)),' ') ]
-      endelse
-      if (i2 LT slen-1) then $
-       stemp = strtrim( strmid(stemp, i2+1, slen-i2+1), 2) $
-      else $
-       stemp = ''
-   endwhile
-
-   nword = N_elements(words)
-   if (nword GT 1) then words = words[1:nword-1]
+   hogg_strsplit, sline, words
+   if (NOT keyword_set(words)) then words = ''
 
    return, words
 end
@@ -380,13 +293,6 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    ; as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
    ; Yanny files assume type INT is a 4-byte integer, whereas in IDL
    ; that type is only 2-byte.
-;   tvals = ['""'  , '0'    , '0'  , '0L'  , '0.0'  , '0.0D'  ]
-;   tarrs = ['strarr(' , $
-;            'intarr(' , $
-;            'intarr(' , $
-;            'lonarr(' , $
-;            'fltarr(' , $
-;            'dblarr(' ]
    tvals = ['""'  , '0'    , '0L'  , '0LL'  , '0.0'  , '0.0D'  ]
    tarrs = ['strarr(' , $
             'intarr(' , $
@@ -423,8 +329,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       qdone = 0
 
       ; Read the next line
-      if (keyword_set(quick)) then readf, ilun, rawline $
-       else rawline = yanny_nextline(ilun)
+      rawline = yanny_nextline(ilun)
 
       sline = yanny_strip_commas(rawline)
       words = yanny_getwords(sline) ; Divide into words and strings
@@ -438,8 +343,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
             while (strmid(sline,0,1) NE '}') do begin
                yanny_add_comment, rawline, enums
-               if (keyword_set(quick)) then readf, ilun, rawline $
-                else rawline = yanny_nextline(ilun)
+               rawline = yanny_nextline(ilun)
                sline = yanny_strip_commas(rawline)
             endwhile
 
@@ -453,8 +357,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
             ntag = 0
             yanny_add_comment, rawline, structs
-            if (keyword_set(quick)) then readf, ilun, rawline $
-             else rawline = yanny_nextline(ilun)
+            rawline = yanny_nextline(ilun)
             sline = yanny_strip_commas(rawline)
 
             while (strmid(sline,0,1) NE '}') do begin
@@ -501,8 +404,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                endif
 
                yanny_add_comment, rawline, structs
-               if (keyword_set(quick)) then readf, ilun, rawline $
-                else rawline = yanny_nextline(ilun)
+               rawline = yanny_nextline(ilun)
                sline = yanny_strip_commas(rawline)
             endwhile
 
