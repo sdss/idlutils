@@ -72,16 +72,18 @@ return,val
 end
 ;
 function nonneg_mult_update_solve,start,avfunc,b,matrix=matrix,tol=tol, $
-                                  verbose=verbose,offset=offset,value=value
+                                  verbose=verbose,offset=offset,value=value, $
+                                  maxiter=maxiter,niter=niter,skip=skip
 
 common nnmus_com
 
 if(n_params() ne 3) then begin
     print,'Syntax - result=nonneg_mult_update_solve(start, avfunc, b [, /matrix, tol=, $'
-    print,'             /verbose, offset=, value=])'
+    print,'             /verbose, offset=, value=, maxiter=, niter=])'
     return,-1
 endif
 
+if(NOT keyword_set(skip)) then skip=10
 if(NOT keyword_set(tol)) then tol=1.D-7
 b=reform(b,n_elements(b))
 start=reform(start,n_elements(start))
@@ -98,16 +100,25 @@ sol=start
 oldval=nnmus_value(sol,use_avfunc,b,offset=offset)
 if(keyword_set(verbose)) then splog,'oldval='+string(oldval)
 diff=tol*2.
+niter=0
+next=dblarr(n_elements(sol))
 while(abs(diff) gt tol) do begin
-    sol=nonneg_mult_update(sol,use_avfunc,b,factor=factor)
-    newval=nnmus_value(sol,use_avfunc,b,offset=offset)
-    if(keyword_set(verbose)) then begin
-        splog,'newval='+string(newval)
-;        splog,'sol='+string(sol)
-        splog,['min(factor)=','max(factor)']+string(minmax(factor))
+    nonneg_mult_update,sol,next,use_avfunc,b,factor=factor
+    sol=next
+    if((niter mod skip) eq 0) then begin
+        newval=nnmus_value(sol,use_avfunc,b,offset=offset)
+        diff=(newval-oldval)
+        oldval=newval
     endif
-    diff=(newval-oldval)
-    oldval=newval
+    ;if(keyword_set(verbose)) then begin
+        ;splog,'newval='+string(newval)
+;        splog,'sol='+string(sol)
+        ;splog,['min(factor)=','max(factor)']+string(minmax(factor))
+    ;endif
+    niter=niter+1L
+    if(keyword_set(maxiter)) then $
+      if(niter ge maxiter) then $
+      diff=0.D
 endwhile
 
 value=oldval

@@ -41,11 +41,11 @@
 ; MODIFICATION HISTORY:
 ;	  Written 2003-01-02 MRB (NYU) at suggestion of Sam Roweis
 ;-
-function nonneg_mult_update,old,avfunc,b,factor=factor
+pro nonneg_mult_update,old,new,avfunc,b,factor=factor
 
-if(n_params() ne 3) then begin
+if(n_params() ne 4) then begin
     print,'Syntax - new=nonneg_mult_update(old, avfunc, b [, factor=])'
-    return,-1
+    return
 endif 
 
 avpos=call_function(avfunc,old,1.)
@@ -54,15 +54,11 @@ avneg=call_function(avfunc,old,-1.)
 ; if you are at zero, multiplicative updates don't change
 ; your value, so just ignore
 nnindx=where(old gt 0.D,nncount)
-factor=dblarr(n_elements(old))
-new=dblarr(n_elements(old))
-if(nncount gt 0) then begin
-    factor[nnindx]= $
+if(nncount gt 0) then $
+    new[nnindx]=old[nnindx]* $
       (-b[nnindx]+sqrt(b[nnindx]^2+4.*avpos[nnindx]*avneg[nnindx]))/ $
       (2.*avpos[nnindx])
-  new[nnindx]=old[nnindx]*factor[nnindx]
-endif
 
-return,new
+return
 
 end
