@@ -137,3 +137,4 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
   if keyword_set(qa) AND dimen GT 1 then device, /close
   return
 end
+
