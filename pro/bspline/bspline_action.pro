@@ -22,6 +22,8 @@
 ; OPTIONAL OUTPUTS:
 ;   indx       - The index of bkpt which is just left of x[i], needed to
 ;                  complete banded algebra
+;   lower      - ???
+;   upper      - ???
 ;
 ; COMMENTS:
 ;
