@@ -47,7 +47,7 @@ PRO JULDATE, DATE, JD, PROMPT = prompt
 ;       A date of 25-DEC-1981 06:25 UT may be expressed as either
 ;
 ;       IDL> juldate, [1981, 12, 25, 6, 25], jd       
-;       IDL> juldate, [1981, 12, 25.2673611], jd 
+;       IDL> juldate, [1981, 12, 25.2673611d], jd 
 ;
 ;       In either case, one should obtain a Reduced Julian date of 
 ;       JD = 44963.7673611
