@@ -8,19 +8,24 @@ DJS_BATCH: Add a call to COUNT_FREELUN().  Do not try to use more hosts than
 GVERTS: Bug fix for the case of single-cap polygons.
 IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
+NW_RGB_MAKE: add new keyword COLORS to pass back final colors used for jpg
 RADEC_GREATCIRCLE: In the internal function RADEC_GCFN, return the
                concatenation of all the chi values in both mu+nu,
                rather than some quatrature sum of the chi^2's.
                This seems to result in much better convergence,
                especially for those runs where we don't have a good
                starting guess.
+SPLOT: add xoffset and yoffset keywords which position splot on the 
+       screen where you want it
 VMIDC,idl_vmidc.c,vmid.c: New function to return the central vector in
                a polygon.
 UNDEFINE: Fanning procedure to wrap TEMPORARY calls to delete variables
 WHERE_POLYGONS_OVERLAP: Add optional output AREAMATCH.
 
 data/sdss/sdssMaskbits.par: Remove the RESOLVE bits, which have been deprecated
-               with the RESOLVE_STATUS mask bits.
+                            with the RESOLVE_STATUS mask bits.                            
+                            Add Q_EYEBALL and T_EYEBALL, eyeball quality and 
+                            type bitmasks for SDSS galaxies
 src/idlmangle/Makefile: Add idl_garea.o
                Change the order of the line that does linking from
                "-lmangle -L$(IDLUTILS_DIR)/lib" to
