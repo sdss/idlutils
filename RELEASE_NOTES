@@ -14,6 +14,7 @@ DJS_PHOTFRAC: add documentation on /exact keyword, and report error in case
               of non-integer center given with /exact keyword set. also, 
               changed so it doesn't recenter on its own if /exact is set.
 DPF_REJECT_CR: ???
+DUST_GETMAP: use EULER_2000_FAST instead of non-existent EULER_2000
 EXACT_PHOTFRAC: fix bug involving calculation of annulus photometry
 FIND: Need to index some loops with type LONG to allow for large
                numbers of stars.

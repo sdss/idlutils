@@ -52,7 +52,7 @@ PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
                 nonlinearity,origin=origin,rebinfactor=rebinfactor, $
                 saturatetowhite=saturatetowhite,quality=quality, $
                 overlay=overlay,colors=colors,tiff=tiff,invert=invert, $
-                dpitiff=dpitiff
+                underlay=underlay, dpitiff=dpitiff
 
 ;set defaults
 IF (keyword_set(tiff)) THEN suffix='tif' ELSE suffix='jpg'
@@ -60,7 +60,7 @@ IF (NOT keyword_set(name)) THEN name = 'nw_rgb_make.'+suffix
 IF (NOT keyword_set(quality)) THEN quality = 100
 
 ;assume Rim,Gim,Bim same type, same size
-IF size(rim,/tname) eq 'STRING' THEN BEGIN
+IF size(rim[0],/tname) eq 'STRING' THEN BEGIN
     R = mrdfits(Rim[0])
     dim = size(R,/dimensions)
     NX = LONG(dim[0])
@@ -89,9 +89,11 @@ IF (NOT keyword_set(saturatetowhite)) THEN $
   splog, 'nw_cut_to_box'
   colors = nw_cut_to_box(temporary(colors),origin=origin)
 IF keyword_set(overlay) THEN colors= (colors > overlay) < 1.0
+IF keyword_set(underlay) THEN colors= (colors < (1.-underlay)) > 0.0
 splog, 'nw_float_to_byte'
 colors = nw_float_to_byte(temporary(colors))
-if(keyword_set(invert)) then colors=255B-colors
+if(keyword_set(invert)) then colors=255-colors
+print, 'WRITE_JPEG'
 
 IF keyword_set(tiff) THEN BEGIN
     colors = reverse(temporary(colors),2)

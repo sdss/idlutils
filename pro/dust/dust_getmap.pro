@@ -66,7 +66,7 @@ function dust_getmap, hdr, mapname, ipath=ipath, bhpath=bhpath
      endif else begin 
         if equinox ne 2000 then precess, ra, dec, equinox, 2000
      endelse 
-     euler_2000, ra, dec, l, b, 1
+     euler_2000_fast, ra, dec, l, b, 1
   endif 
 
   image = dust_getval(l, b, map=mapname, /noloop, /interp, ipath=ipath, bhpath=bhpath)

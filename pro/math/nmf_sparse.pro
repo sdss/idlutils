@@ -76,7 +76,7 @@ help,templates,coeffs
 
 ;; make first guess model
 mcoeffs=templates#coeffs
-mmeval, datahat, mmatrix, mcoeffs
+mmeval, datahat, transpose(mmatrix), mcoeffs
 err=total((datahat.val-data.val)^2*data_ivar.val,/double)
 splog, 'initial error= '+strtrim(string(sqrt(err/(nd*nk))),2)
 
@@ -104,7 +104,7 @@ while(iters le maxiters and abs(err-eold)/err gt tol) do begin
     templates=templates/((dblarr(nf,1)+1.)#total(templates,1))
     mcoeffs=templates#coeffs
 ;;  datahat=mmatrix#mcoeffs
-    mmeval, datahat, mmatrix, mcoeffs
+    mmeval, datahat, transpose(mmatrix), mcoeffs
 
     eold=err
     err=total((datahat.val-data.val)^2*data_ivar.val,/double)
