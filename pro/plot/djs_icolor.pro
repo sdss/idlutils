@@ -32,24 +32,52 @@ function djs_icolor, color
    if (size(color,/tname) EQ 'STRING') then begin ; Test if COLOR is a string
 
       ; Detemine the default color for the current device
-      if (!d.name EQ 'X') then defcolor = 7 $ ; white for X-windows
+      if (!d.name EQ 'X') then defcolor = 26 $ ; white for X-windows
        else defcolor = 0 ; black otherwise
 
-      ; Load a simple color table with the basic 8 colors (plus a few)
-      red   = long(255*[0, 1, 0, 0, 0, 1, 1, 1, 0.5])
-      green = long(255*[0, 0, 1, 0, 1, 0, 1, 1, 0.5])
-      blue  = long(255*[0, 0, 0, 1, 1, 1, 0, 1, 0.5])
+      ; Load a simple color table with the basic 27 colors
+;      red   = long(255.0*(indgen(8) mod 2)/1.0)
+;      green = long(255.0*(fix(findgen(8)/2) mod 2)/1.0)
+;      blue  = long(255.0*fix(findgen(8)/4)/1.0)
+;print, red, green, blue
+      red   = long(255.0*(indgen(27) mod 3)/2.0)
+      green = long(255.0*(fix(findgen(27)/3) mod 3)/2.0)
+      blue  = long(255.0*fix(findgen(27)/9)/2.0)
+
+for ii=0,26 do print, ii,red[ii],green[ii],blue[ii]
 
       tvlct, red, green, blue
       icolor = 0 * (color EQ 'black') $
-             + 1 * (color EQ 'red') $
-             + 2 * (color EQ 'green') $
-             + 3 * (color EQ 'blue') $
-             + 4 * (color EQ 'cyan') $
-             + 5 * (color EQ 'magenta') $
-             + 6 * (color EQ 'yellow') $
-             + 7 * (color EQ 'white') $
-             + 8 * (color EQ 'grey') $
+             + 1 * (color EQ 'dark red') $
+             + 1 * (color EQ 'brown') $
+             + 2 * (color EQ 'red') $
+             + 3 * (color EQ 'dark green') $
+             + 4 * (color EQ 'dark yellow') $
+             + 5 * (color EQ 'yellow red') $
+             + 5 * (color EQ 'orange') $
+             + 6 * (color EQ 'green') $
+             + 7 * (color EQ 'yellow green') $
+             + 8 * (color EQ 'yellow') $
+             + 9 * (color EQ 'dark blue') $
+             + 9 * (color EQ 'navy') $
+             + 10 * (color EQ 'dark magenta') $
+             + 11 * (color EQ 'magenta red') $
+             + 12 * (color EQ 'dark cyan') $
+             + 13 * (color EQ 'grey') $
+             + 14 * (color EQ 'light red') $
+             + 15 * (color EQ 'cyan green') $
+             + 16 * (color EQ 'light green') $
+             + 17 * (color EQ 'light yellow') $
+             + 18 * (color EQ 'blue') $
+             + 19 * (color EQ 'magenta blue') $
+             + 19 * (color EQ 'purple') $ 
+             + 20 * (color EQ 'magenta') $
+             + 21 * (color EQ 'cyan blue') $
+             + 22 * (color EQ 'light blue') $
+             + 23 * (color EQ 'light magenta') $
+             + 24 * (color EQ 'cyan') $
+             + 25 * (color EQ 'light cyan') $
+             + 26 * (color EQ 'white') $
              + defcolor * (color EQ 'default')
 
       if (!d.N_colors EQ 16777216) then begin
