@@ -1,4 +1,5 @@
 bin/balkanize
+bin/drangle
 bin/harmonize
 bin/map
 bin/mrb_balkanize

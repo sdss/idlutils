@@ -6,9 +6,9 @@
 
 SHELL = /bin/sh
 #
-CFLAGS  = -I$(IDL_DIR)/external -I$(IDLUTILS_DIR)/src/mangle1.2 -DCHECK_LEAKS
+CFLAGS  = -I$(IDL_DIR)/external -I$(IDLUTILS_DIR)/src/mangle1.4/src -DCHECK_LEAKS
 #
-.c.o : $(IDLUTILS_DIR)/src/mangle1.2/polygon.h export.h 
+.c.o : $(IDLUTILS_DIR)/src/mangle1.4/src/polygon.h export.h 
 	$(CC) -c $(CCCHK) $(CFLAGS) $(IDL_FLAG) $*.c
 
 LIB = $(IDLUTILS_DIR)/lib

@@ -64,6 +64,7 @@ nv=nvmax
 ve_p=dblarr(3L*nve*nvmax)
 angle_p=dblarr(nvmax)
 ipv_p=lonarr(nvmax)
+gp_p=lonarr(nvmax)
 ev_p=lonarr(nvmax)
 if(nused_caps eq 1) then begin
 ;   single cap is special case
@@ -78,9 +79,9 @@ if(nused_caps eq 1) then begin
     perp2=crossp(x[*,used_caps[0]],perp1)
     halfchord=sqrt(2*cm[used_caps[0]]-cm[used_caps[0]]^2)
     if(keyword_set(dangle)) then $
-      nv=long(halfchord*180./!DPI*2.*!DPI/dangle) $
-    else $
-      nv=long(minside*2.)
+      nvdangle=long(halfchord*180./!DPI*2.*!DPI/dangle) 
+    nvminside=long(minside*2.)
+    nv=max([nvdangle,nvminside])
     nvmax=nv
     nve=1L
     ve_p=dblarr(3,nv)
@@ -95,7 +96,7 @@ endif else begin
                            long(nused_caps), $
                            double(tol), long(vcirc), long(nv), long(nve), $
                            double(ve_p), double(angle_p), long(ipv_p), $
-                           long(nev), long(nev0), long(ev_p))
+                           long(gp_p), long(nev), long(nev0), long(ev_p))
     if(keyword_set(dangle)) then begin
         maxangle=max(angle_p[0L:nv-1L])
         nve=ceil(maxangle/(dangle*!DPI/180.)) > minside
@@ -105,7 +106,7 @@ endif else begin
                                long(nused_caps), $
                                double(tol), long(vcirc), long(nv), long(nve), $
                                double(ve_p), double(angle_p), long(ipv_p), $
-                               long(nev), long(nev0), long(ev_p))
+                               long(gp_p), long(nev), long(nev0), long(ev_p))
     endif
 endelse
 
@@ -143,7 +144,7 @@ if(keyword_set(continuous)) then begin
 endif
 
 if(retval) then begin
-    splog,'WARNING: gverts.c returned error message - '+string(retval)
+    splog,'WARNING: gvert.c returned error message - '+string(retval)
 endif
 
 return

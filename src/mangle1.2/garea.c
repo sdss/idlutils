@@ -42,6 +42,7 @@ polygon *poly;
     phi = (double *) malloc(sizeof(double) * poly->np * 2);
     if (!phi) {
 	fprintf(stderr, "garea: failed to allocate memory for %d doubles\n", poly->np * 2);
+  free(iord);
 	return(-1);
     }
 

@@ -4,7 +4,7 @@
 #include <polygon.h>
 #include "export.h"
 
-int garea(polygon *poly, double *tol, IDL_LONG *verb, double *area); 
+int garea(polygon *poly, double *tol, IDL_LONG verb, double *area); 
 
 #define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
 static void free_memory()
@@ -39,8 +39,7 @@ IDL_LONG idl_garea
 	area = (double *)argv[i]; i++;
 	
 	/* 1. call garea */
-	retval=garea(poly, &tol, &verbose, area);
-	
+	retval=garea(poly, &tol, verbose, area);
 	FREEVEC(poly);
 	return retval;
 }

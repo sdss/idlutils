@@ -13,9 +13,10 @@ static int *ipv_p_int=NULL;
 static int *ev_p_int=NULL;
 #endif
 
-int gverts(polygon *poly, int vcirc, double *tol, int *nv, int nve, 
-					 double **ve_p, double **angle_p, int **ipv_p, int *nev, 
-					 int *nev0, int **ev_p);
+int gvert(polygon *poly, int vcirc, double *tol, int nvmax, int per, int nve, 
+          int *nv, vec ve[/*nvmax * nve*/], double angle[/*nvmax*/], 
+          int ipv[/*nvmax*/], int gp[/*poly->np*/], int *nev, int *nev0, 
+          int ev[/*nvmax*/]);
 
 #define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
 static void free_memory()
@@ -40,9 +41,10 @@ IDL_LONG idl_gverts
 	IDL_LONG vcirc;
 	IDL_LONG *nv;
 	IDL_LONG nve;
-	double *ve_p;
+	vec *ve_p;
 	double *angle_p;
 	IDL_LONG *ipv_p;
+	IDL_LONG *gp_p;
 	IDL_LONG *nev;
 	IDL_LONG *nev0;
 	IDL_LONG *ev_p;
@@ -54,7 +56,7 @@ IDL_LONG idl_gverts
 
 	/* 0. allocate pointers from IDL */
 	i=0;
-	poly->rp = (double *)argv[i]; i++;
+	poly->rp = (vec *) argv[i]; i++;
 	poly->cm = (double *)argv[i]; i++;
 	poly->np = *((IDL_LONG *)argv[i]); i++;
 	poly->npmax = poly->np;
@@ -62,16 +64,18 @@ IDL_LONG idl_gverts
 	vcirc = *((IDL_LONG *)argv[i]); i++;
 	nv = ((IDL_LONG *)argv[i]); i++;
 	nve_int =nve = *((IDL_LONG *)argv[i]); i++;
-	ve_p = ((double *)argv[i]); i++;
+	ve_p = ((vec *)argv[i]); i++;
 	angle_p = ((double *)argv[i]); i++;
 	ipv_p = ((IDL_LONG *)argv[i]); i++;
+	gp_p = ((IDL_LONG *)argv[i]); i++;
 	nev = ((IDL_LONG *)argv[i]); i++;
 	nev0 = ((IDL_LONG *)argv[i]); i++;
 	ev_p = ((IDL_LONG *)argv[i]); i++;
 	
 	/* 1. we know sizes, so we can do the real thing */
-	retval=gvert(poly, *nv, vcirc, &tol, nv, nve, ve_p, angle_p, 
-							 ipv_p, (int *) nev, (int *) nev0, ev_p);
+	retval=gvert(poly, vcirc, &tol, *nv, 0, nve, (int *) nv, ve_p, angle_p, 
+               (int *) ipv_p, (int *) gp_p, (int *) nev, (int *) nev0, 
+               (int *) ev_p);
 	
 	FREEVEC(poly);
 	free_memory();
