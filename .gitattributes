@@ -774,6 +774,7 @@ pro/image/grow_object.pro -text
 pro/image/populate_image.pro -text
 pro/image/qzap.pro -text
 pro/mangle/angles_to_x.pro -text
+pro/mangle/cap_distance.pro -text
 pro/mangle/circle_cap.pro -text
 pro/mangle/construct_cap.pro -text
 pro/mangle/construct_polygon.pro -text
