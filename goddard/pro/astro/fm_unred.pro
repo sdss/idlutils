@@ -21,7 +21,7 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
 ;               If only 3 parameters are supplied, then this vector will
 ;               updated on output to contain the dereddened flux.
 ;      EBV  - color excess E(B-V), scalar.  If a negative EBV is supplied,
-;               then fluxes will be reddened rather than deredenned.
+;               then fluxes will be reddened rather than dereddened.
 ;
 ; OUTPUT:
 ;      FUNRED - unreddened flux vector, same units and number of elements
@@ -42,7 +42,9 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
 ;             of R_V which is poorly known for the LMC. 
 ;             
 ;      The following five input keyword parameters allow the user to customize
-;      the adopted extinction curve
+;      the adopted extinction curve.    For example, see Clayton et al. (2003,
+;      ApJ, 588, 871) for examples of these parameters in different interstellar
+;      environments.
 ;
 ;      x0 - Centroid of 2200 A bump in microns (default = 4.596)
 ;      gamma - Width of 2200 A bump in microns (default  =0.99)
