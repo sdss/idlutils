@@ -5,8 +5,8 @@ FUNCTION CONS_DEC,DEC,X,ASTR,ALPHA        ;Find line of constant Dec
 ; PURPOSE:
 ;       Obtain the X and Y coordinates of a line of constant declination
 ; EXPLANATION:
-;       Returns a set of Y pixels values, given an image with tangent projection
-;       astrometry, and either
+;       Returns a set of Y pixels values, given an image with astrometry, and 
+;            either
 ;       (1)  A set of X pixel values, and a scalar declination value, or
 ;       (2)  A set of declination values, and a scalar X value
 ;
@@ -15,7 +15,7 @@ FUNCTION CONS_DEC,DEC,X,ASTR,ALPHA        ;Find line of constant Dec
 ;       declinations, along a line of constant X.
 ;
 ; CALLING SEQUENCE:
-;       Y = CONS_DEC( DEC, X, CD, ASTR, [ ALPHA ])
+;       Y = CONS_DEC( DEC, X, ASTR, [ ALPHA ])
 ;
 ; INPUTS:
 ;       DEC - Declination value(s) in DEGREES (-!PI/2 < DEC < !PI/2).  
@@ -32,7 +32,7 @@ FUNCTION CONS_DEC,DEC,X,ASTR,ALPHA        ;Find line of constant Dec
 ;       ALPHA - the right ascensions (DEGREES) associated with the (X,Y) points
 ;
 ; RESTRICTIONS:
-;       Implemented only for the TANgent and SIN projections
+;       Implemented only for the TANgent, SIN and CAR projections
 ;
 ; NOTES:
 ;       The algorithm (and notation) is based on AIPS Memo 27 by Eric Greisen,
@@ -48,6 +48,7 @@ FUNCTION CONS_DEC,DEC,X,ASTR,ALPHA        ;Find line of constant Dec
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fix case where DEC is scalar, X is vector   W. Landsman RITSS Feb. 2000
 ;       Fix possible sign error introduced Jan. 2000   W. Landsman  May 2000
+;       Work for the CARee' projection W. Landsman   May 2003
 ;-
   On_error,2
 
@@ -59,6 +60,7 @@ FUNCTION CONS_DEC,DEC,X,ASTR,ALPHA        ;Find line of constant Dec
   RADEG = 180.0D/!DPI
  
   n = N_elements(x)
+  Ndec = N_elements(dec)
   crpix = astr.crpix -1.
   crval = astr.crval/RADEG
   cd =  astr.cd/RADEG
@@ -93,9 +95,15 @@ FUNCTION CONS_DEC,DEC,X,ASTR,ALPHA        ;Find line of constant Dec
   denom =  cos(dec/RADEG)*sqrt(aa^2+bb^2)
   alpha = crval[0] + atan(bb/aa) + $ 
      sign * asin( ( (b*c-a*d)*xx - sin(dec/RADEG)*cdel0*b ) / denom )
+  end
+
+'CAR': begin
+  alpha = crval[0] + (b*c -a*d)*xx   
+  if (N_elements(alpha) EQ 1) and (Ndec GT 1) then $
+        alpha = replicate(alpha[0],Ndec)
 end
 
-ELSE: message,'ERROR - Program only works for TAN and SIN projections'
+ELSE: message,'ERROR - Program only works for TAN, SIN and CAR projections'
   endcase
 
    alpha = alpha * RADEG

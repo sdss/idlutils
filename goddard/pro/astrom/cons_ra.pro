@@ -7,7 +7,8 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
 ; EXPLANATION:
 ;       Return a set of X pixel values given an image with astrometry, 
 ;       and either
-;       (1) a set of Y pixel values, and a scalar right ascension, or
+;       (1) a set of Y pixel values, and a scalar right ascension (or 
+;           longitude), or
 ;       (2) a set of right ascension values, and a scalar Y value.
 ;
 ;       In usage (1), CONS_RA can be used to determine the (X,Y) values
@@ -38,7 +39,7 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
 ;       http://www.cv.nrao.edu/fits/documents/wcs/wcs.html
 ;
 ; RESTRICTIONS:
-;       Implemented only for the TANgent and SIN projections 
+;       Implemented only for the TANgent, SIN and CARtesian projections 
 ;
 ; REVISION HISTORY:
 ;       Written, Wayne Landsman  STX Co.        April, 1988
@@ -47,6 +48,7 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added SIN projection    W. Landsman   January 2000
 ;       Fix possible sign error introduced Jan. 2000   W. Landsman  May 2000
+;       Work for the CARee' projection W. Landsman   May 2003
 ;-
   On_error,2
 
@@ -57,6 +59,7 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
 
   radeg = 180.0/!DPI
   n = N_elements(y)
+  nra = N_elements(ra)
   crpix = astr.crpix - 1.
   crval = astr.crval/RADEG
   cdelt = astr.cdelt
@@ -90,11 +93,22 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
 
   end
 
+  'CAR': begin
+  A = -cd[0,0]*cdelt[0] 
+  B = -cd[0,1]*cdelt[0] 
+  C =  cd[1,0]*cdelt[1]
+  D =  cd[1,1]*cdelt[1] 
+  delta = (y - crpix[1])*(b*c - a*d)  +crval[1]  ;New coordinate origin
+  if (N_elements(delta) EQ 1) and (Nra GT 1)  then $
+           delta = replicate(delta[0],Nra)
+
+  end
+
   ELSE: message,'ERROR - Program only works for TAN and SIN projections'
   endcase
 
   delta = delta*RADEG
-  if (N_elements(ra) EQ 1) and (n GT 1) then $
+  if (Nra EQ 1) and (n GT 1) then $
   ad2xy, replicate(ra,n), delta, astr, x else $
   ad2xy, ra, delta, astr, x
 
