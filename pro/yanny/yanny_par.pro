@@ -18,7 +18,7 @@
 ;   result     - Value of parameter in header; return 0 if parameter not found
 ;
 ; OPTIONAL OUTPUTS:
-;   count      - Return the number of paramters found
+;   count      - Return the number of parameters found
 ;
 ; COMMENTS:
 ;   This routine is meant to be analogous to the Goddard function SXPAR()
