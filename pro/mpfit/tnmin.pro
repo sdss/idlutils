@@ -456,7 +456,7 @@
 ;  - scale derivatives semi-automatically;
 ;  - ability to scale and offset parameters;
 ;  
-;  $Id: tnmin.pro,v 1.1 2001-08-22 22:23:06 schlegel Exp $
+;  $Id: tnmin.pro,v 1.2 2003-04-22 23:22:58 schlegel Exp $
 ;-
 ; Copyright (C) 1998-2001, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
@@ -556,7 +556,7 @@ end
 pro tnmin_tie, p, _ptied
   _wh = where(_ptied NE '', _ct)
  if _ct EQ 0 then return
-  for _i = 0, _ct-1 do begin
+  for _i = 0L, _ct-1 do begin
       _cmd = 'p('+strtrim(_wh(_i),2)+') = '+_ptied(_wh(_i))
       _err = execute(_cmd)
       if _err EQ 0 then begin
@@ -598,7 +598,7 @@ function tnmin_autoder, fcn, x, dx, dside=dside
 
   dx = x * 0.
   f = tnmin_call(fcn, x)
-  for i = 0, n_elements(x)-1 do begin
+  for i = 0L, n_elements(x)-1 do begin
       if tnconfig.pfixed(i) EQ 1 then goto, NEXT_PAR
       hh = h(i)
 
