@@ -64,7 +64,7 @@ mean= 0.0 & rms= 1.0
 if keyword_set(sigma) then $
   djs_iterstat, data(x1:x2,y1:y2),mean=mean,sigma=rms
 if lo LT hi then image= (float(data)-(lo*rms+mean))/(hi*rms-lo*rms) $
-else image= ((hi*rms+mean)-float(data))/(hi*rms-lo*rms)
+else image= ((lo*rms+mean)-float(data))/(lo*rms-hi*rms)
 image= (floor(image*255.99) > 0) < 255
 
 ; "size" is width or height in inches
@@ -77,7 +77,7 @@ margin= 0.0
 if(keyword_set(filename) and keyword_set(startps)) then begin
     set_plot, "PS"
     device, file=filename,/inches,xsize=size,ysize=size, $
-      xoffset=(7.5-size),yoffset=(10.0-size),bits_per_pixel=8
+      xoffset=(8.5-size)/2.0,yoffset=(11.0-size)/2.0,bits_per_pixel=8
     hogg_plot_defaults
 endif
 
@@ -98,7 +98,7 @@ contour, [[0,0],[1,1]],/nodata,xstyle=4,ystyle=4,title=''
 xsize=((1.0-margin)*size)
 if nx LT ny then xsize=xsize*float(nx)/float(ny)
 ysize=((1.0-margin)*size)
-if ny LT nx then ysize=ysize*float(nx)/float(ny)
+if ny LT nx then ysize=ysize*float(ny)/float(nx)
 loadct,0,/silent
 tv, image,(margin*size),(size-ysize),/inches,xsize=xsize
 
