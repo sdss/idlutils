@@ -27,7 +27,7 @@ all :
 #
 install :
 	@echo "You should be sure to have updated before doing this."
-        @echo ""
+	@echo ""
 	@if [ "$(IDLUTILS_DIR)" = "" ]; then \
 		echo You have not specified a destination directory >&2; \
 		exit 1; \
