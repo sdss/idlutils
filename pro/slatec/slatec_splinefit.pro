@@ -97,7 +97,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
        these = where(mask)
 
        if (these[0] EQ -1) then begin
-          print, 'Lost all points'
+          splog, 'Lost all points'
           return, fullbkpt
        endif
 
@@ -105,7 +105,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
               coeff, bkpt=bkpt, invsig=invsig[these], $
                  _EXTRA=KeywordsForEfc)
        yfit = slatec_bvalu(x, fullbkpt, coeff)
- 
+
        if (NOT keyword_set(rejper)) then begin
           diff = (y - yfit)*invsig
           bad = where(diff LT -lower OR diff GT upper OR invsig LE 0.0)

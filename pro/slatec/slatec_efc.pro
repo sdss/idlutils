@@ -8,7 +8,8 @@
 ; CALLING SEQUENCE:
 ;   
 ;    fullbkpt = slatec_efc(x, y, coeff, bkpt=bkpt, nord=nord, $
-;               invsig=invsig, bkspace = bkspace, nbkpts=nbkpts, /silent)
+;               invsig=invsig, bkspace = bkspace, nbkpts=nbkpts, $
+;               everyn = everyn, /silent)
 ;
 ; INPUTS:
 ;   x          - data x values
@@ -25,6 +26,7 @@
 ;   nord       - Order of b-splines (default 4: cubic)
 ;   invsig     - Inverse sigma for weighted fit
 ;   bkspace    - Spacing of breakpoints in units of x
+;   everyn     - Spacing of breakpoints in good pixels
 ;   nbkpts     - Number of breakpoints to span x range
 ;                 minimum is 2 (the endpoints)
 ;   silent     - Do not produce non-critical messages
@@ -69,30 +71,37 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 
         if (NOT keyword_set(invsig)) then begin
             invsig = fltarr(ndata) + 1.0 
-            good = lindgen(ndata)
         endif else if n_elements(invsig) NE ndata then $
             message, 'number of invsig elements does not equal ndata'
+
+        good = where(invsig GT 0.0, ngood)
+
+        if (ngood EQ 0) then begin
+          print, 'no good points'
+          return, -1
+        endif
 
 	if (NOT keyword_set(fullbkpt)) then begin $
 
 	  if (NOT keyword_set(bkpt)) then begin $
+ 
 	   range = (max(x) - min(x)) 	
            startx = min(x) 
 	   if (keyword_set(bkspace)) then begin
 	     nbkpts = long(range/float(bkspace)) + 1
 	     if (nbkpts LT 2) then nbkpts = 2
+	     tempbkspace = double(range/(float(nbkpts-1)))
+	     bkpt = (findgen(nbkpts))*tempbkspace + startx
            endif else if keyword_set(nbkpts) then begin
 	     nbkpts = long(nbkpts)
 	     if (nbkpts LT 2) then nbkpts = 2
-	   endif else message, 'No information for bkpts'
-
-	   if keyword_set(everyn) then begin
-	     xspot = lindgen(nbkpts)*ndata/(nbkpts-1) 
-             bkpt = x[xspot]
-           endif else begin
 	     tempbkspace = double(range/(float(nbkpts-1)))
 	     bkpt = (findgen(nbkpts))*tempbkspace + startx
-	   endelse
+	   endif else if keyword_set(everyn) then begin
+             nbkpts = ngood / everyn
+	     xspot = lindgen(nbkpts)*ngood/(nbkpts-1) 
+             bkpt = x[good[xspot]]
+	   endif else message, 'No information for bkpts'
         endif
 
 	bkpt = float(bkpt)
