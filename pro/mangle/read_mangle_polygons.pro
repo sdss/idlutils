@@ -5,15 +5,14 @@
 ;   Read a "polygon" format ascii file written by mangle, and return
 ;   in the IDL structure format
 ; CALLING SEQUENCE:
-;   read_mangle_polygons, infile, polygons, id, weight, str
+;   read_mangle_polygons, infile, polygons, id [, unit=]
 ; INPUTS:
 ;   infile - input file name
 ; OPTIONAL INPUTS:
+;   unit - if present, read from given unit
 ; OUTPUTS:
 ;   polygons - arrays of structures (eg those made by construct_field_polygon) 
 ;   id - array of id's for polygons (should be unique)
-;   weight - arrays of weights for each polygon
-;   str - area of each polygon?
 ; OPTIONAL INPUT/OUTPUTS:
 ; COMMENTS:
 ; EXAMPLES:
@@ -23,14 +22,15 @@
 ;   30-Nov-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-pro read_mangle_polygons, infile, polygons, id
+pro read_mangle_polygons, infile, polygons, id, unit=unit
 
 if(n_params() lt 2) then begin
-    print,'Syntax - read_mangle_polygons, infile, polygons [,id]
+    print,'Syntax - read_mangle_polygons, infile, polygons [,id, unit=]'
     return
 endif
 
-openr,unit,infile,/get_lun
+if(NOT keyword_set(unit)) then $
+  openr,unit,infile,/get_lun
 npoly=0L
 readf,unit, format='(i,"polygons")',npoly
 tmp_line=''
@@ -54,6 +54,7 @@ for i=0L, npoly-1L do begin
     set_use_caps,tmp_polygon,lindgen(tmp_polygon.ncaps)
     polygons[i]=tmp_polygon
 endfor
-free_lun,unit
+if(NOT arg_present(unit)) then $
+  free_lun,unit
 
 end
