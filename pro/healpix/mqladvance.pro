@@ -42,6 +42,8 @@
 ; REVISION HISTORY:
 ;   2003-Feb-19  Written by Douglas Finkbeiner, Princeton
 ;   2003-Nov-13  Comments fixed up - DPF
+;   2004-Aug-16  trap floating underflow - DPF
+;
 ;----------------------------------------------------------------------
 PRO mqladvance, x, m, Mql_1, Mql, lmax=lmax
 
@@ -70,6 +72,8 @@ PRO mqladvance, x, m, Mql_1, Mql, lmax=lmax
      Mql = Mql_1*0
      Mql[*, lind] = sqrt(1./((2*l)*(2*l-1))) * $
        (-1)*(2*l-1)*Mql_1[*, lind-1]*sqrt(1-x*x)
+     cm = check_math()
+     if (cm ne 0) and (cm ne 32) then stop
      if m eq lmax then return
 
   endelse 
@@ -82,6 +86,9 @@ PRO mqladvance, x, m, Mql_1, Mql, lmax=lmax
          ((l+m-1)*sqrt((l-m-1)/(l+m-1)))*Mql[*, lind-2] 
      Mql[*, lind] = sqrt((l-m)/(l+m))/(l-m) * temp
   endfor 
+
+  cm = check_math()
+  if (cm ne 0) and (cm ne 32) then stop
 
   return
 END
