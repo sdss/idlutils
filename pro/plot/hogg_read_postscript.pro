@@ -16,7 +16,8 @@
 ; REVISION HISTORY:
 ;   2003-01-31  written - Hogg
 ;-
-function hogg_read_postscript, filename,resolution=resolution
+function hogg_read_postscript, filename,resolution=resolution, $
+                               noantialias=noantialias
 
 ; set defaults
 if NOT keyword_set(resolution) then resolution= 75
