@@ -38,8 +38,14 @@
 ;       out = textoidl_strtrans(inp,from,to,ned)
 ;       Will produce out='Many bad chars in here', and set ned to 4.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.7  2000/11/19 18:25:00  dfink / Jonathan Swift
+;       Added \AA option for Anstroms
+;
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -167,8 +173,11 @@ END
 ;       table(0,*).
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -252,6 +261,11 @@ FUNCTION textoidl_table, POSTSCRIPT=ps, VECTOR=vec,  HELP=Help
     PreviousFont(VECFONT) = '!X'
     PreviousFont(PSFONT) = '!X'
 
+;  Set IDL font sequence for roman fonts.
+    RomanFont = strarr(3)
+    RomanFont(VECFONT) = '!3'
+    RomanFont(PSFONT) = '!M'
+
 ;lowercase Greek -- 
 ;    Note there is some trickery involved in getting \varphi
 ;    to work in the vector fonts, because it is actually
@@ -309,6 +323,13 @@ FUNCTION textoidl_table, POSTSCRIPT=ps, VECTOR=vec,  HELP=Help
 	[ '\Psi', 		'W'   ,	        'Y'         ],$
 	[ '\Omega', 		'X'   ,	        'W'         ]$
 			   ]
+;Roman --
+;
+;;         TeX SEQUENCE        VECTOR          POSTSCRIPT
+    Roman = [$
+	[ '\AA', ''+STRING("305B)+''   , ''+STRING("305B)+''   ]$
+			   ]
+
 ;Special symbols -- 
 ;  NOTES -- You must leave \infty before \in in the translatation
 ;           table to avoid having the \in part of \infty translated
@@ -362,8 +383,14 @@ FUNCTION textoidl_table, POSTSCRIPT=ps, VECTOR=vec,  HELP=Help
       SymbolFont(FontSelection) $
       + Symbols(FontSelection,*) $
       + PreviousFont(FontSelection)
+    Roman(1,*) = $
+      RomanFont(FontSelection) $
+      + Roman(FontSelection,*) $
+      + PreviousFont(FontSelection)
 
-    TranslationTable = [[LowercaseGreek],[UppercaseGreek],[Symbols]]
+
+
+    TranslationTable = [[LowercaseGreek],[UppercaseGreek],[Symbols],[Roman]]
     return,TranslationTable(0:1,*)
 
 END 
@@ -408,8 +435,11 @@ END
 ;       To D. Linder who wrote GETTOK, part of the goddard library,
 ;       upon which this is based.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -515,8 +545,11 @@ END
 ;       textoidl_nexttok( 'x^2 + N_j^3', '^_', position=pos ) returns '^' and sets
 ;       pos to 1.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -644,8 +677,11 @@ END
 ;        textoidl_matchdelim('{one{two}}three') returns 9, the character just
 ;        before 'three'.  
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -779,8 +815,11 @@ END
 ;       occurance. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -907,8 +946,11 @@ END
 ;       file. 
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -1004,8 +1046,11 @@ END
 ;       textoidl_strtok      -- Text/string (mcraig)
 ;       textoidl_sub_sup -- contained in this file
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
@@ -1215,8 +1260,11 @@ END
 ;       exponent of 2, then a plus sign, then an N with the subscript
 ;       ed.
 ; MODIFICATION HISTORY:
-;       $Id: textoidl.pro,v 1.6 2000-07-12 14:31:33 hogg Exp $
+;       $Id: textoidl.pro,v 1.7 2000-11-20 02:27:24 dfink Exp $
 ;       $Log: not supported by cvs2svn $
+;       Revision 1.6  2000/07/12 14:31:33  hogg
+;       fixed another ()/[] bug.
+;
 ;       Revision 1.5  2000/06/15 18:21:23  hogg
 ;       fixed tiny () -> [] bugs
 ;
