@@ -819,6 +819,7 @@ pro/healpix/ishealpix.pro -text
 pro/healpix/map_nest2ring.pro -text
 pro/healpix/map_ring2nest.pro -text
 pro/healpix/mqladvance.pro -text
+pro/healpix/ringwt.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
 pro/image/embed_stamp.pro -text
