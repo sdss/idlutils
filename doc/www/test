@@ -1,2 +1,5 @@
-$Id: test,v 1.8 2003-02-07 01:01:21 dfink Exp $
+# this is a comment
+$Id: test,v 1.9 2003-02-07 01:02:00 dfink Exp $
 $Log: not supported by cvs2svn $
+Revision 1.8  2003/02/07 01:01:21  dfink
+log test
