@@ -42,14 +42,14 @@ if [ $# != 2 ] ; then
 fi
 PRODNAME=$1
 PRODVERS=$2
-if { [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | head -1c` != "v" ] } ; then
+if [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | head -1c` != "v" ] ; then
    echo "Version name must either be \"cvs\" or begin with the character \"c\"."
    exit
 fi
 
 # Must have "ups" in the path and PRODUCTS and SDSS_ROOT must be defined.
 # Hmmm... always source this file to get the right "setup" command.
-#if { [ -z `which \ups` ] || [ -z "$PRODUCTS" ] || [ -z "$SDSS_ROOT" ] } ; then
+#if [ -z `which \ups` ] || [ -z "$PRODUCTS" ] || [ -z "$SDSS_ROOT" ] ; then
    echo "Try to run sdssfue.sh script..."
    if [ -e /u/products/etc/sdssfue.sh ] ; then
       echo source /u/products/etc/sdssfue.sh
@@ -116,7 +116,7 @@ fi
 #   of the script "install_ups_table".
 
 setup sdsstools
-if { [ -n "$SDSSTOOLS_DIR" ] && [ -e "$SDSSTOOLS_DIR/bin/sdssmake" ] } ; then
+if [ -n "$SDSSTOOLS_DIR" ] && [ -e "$SDSSTOOLS_DIR/bin/sdssmake" ] ; then
    MAKECOMMAND='sdssmake -idl -opt -debug'
    MAKEINSTALLCOMMAND='sdssmake install'
 else
