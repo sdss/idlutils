@@ -701,7 +701,10 @@ case event_name of
     END 
     'Native': BEGIN 
        IF (state.wcstype EQ 'angle') THEN BEGIN 
-          state.display_coord_sys = strmid((*state.astr_ptr).ctype[0], 0, 4)
+                             ; Check if coordinates are reversed (i.e. dec, RA)
+          rev = atv_fits_ctype_reversed(astr.ctype)
+          state.display_coord_sys = strmid((*state.astr_ptr).ctype[rev], 0, 4)
+
           state.display_equinox = state.equinox
           atv_gettrack          ; refresh coordinate window
        ENDIF 
@@ -1505,6 +1508,21 @@ endelse
 
 end
 
+; Contributed by D. Finkbeiner, August 2001.
+; Sense reversal of coordsys names in CTYPE.  This must be done to
+; comply with the FITS standard. 
+; OUTPUT: 1 if coordinates are reversed (i.e. (dec, RA)) .
+
+function atv_fits_ctype_reversed, ctype
+  csys = strmid(ctype, 0, 4)
+  reverse = ((csys[0] EQ 'DEC-') and (csys[1] EQ 'RA--')) or $
+    ((csys[0] EQ 'GLAT') and (csys[1] EQ 'GLON')) or $
+    ((csys[0] EQ 'ELON') and (csys[1] EQ 'GLAT'))
+  
+  return, reverse
+end
+
+
 ;---------------------------------------------------------------------
 
 function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox, $
@@ -1518,8 +1536,10 @@ function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox, $
 ; ctype - coord system in header
 ; disp_type - type of coords to display
 
-headtype = strmid(ctype[0], 0, 4)
-
+; Check for reversed (RA,dec) etc. 
+  reverse = atv_fits_ctype_reversed(ctype)
+  headtype = strmid(ctype[reverse], 0, 4)
+  
 ; need numerical equinox values
 IF (equinox EQ 'J2000') THEN num_equinox = 2000.0 ELSE $
   IF (equinox EQ 'B1950') THEN num_equinox = 1950.0 ELSE $
@@ -1540,7 +1560,15 @@ CASE headtype OF
         ra = lon
         dec = lat
         IF num_equinox NE 2000.0 THEN precess, ra, dec, num_equinox, 2000.0
-    END 
+    END
+    ELSE: BEGIN
+       message, string('Unsupported FITS CTYPE  ', ctype, format='(2A,X,A)'), $
+         /informational
+       ra = 0.
+       dec = 0.
+       wcsstring = 'Unsupported'
+    END
+    
 ENDCASE  
 
 ; Now convert RA,dec (J2000) to desired display coordinates:  
@@ -2744,7 +2772,10 @@ endelse
 
 ; Set default display to native system in header
 state.display_equinox = state.equinox
-state.display_coord_sys = strmid(astr.ctype[0], 0, 4)
+
+; Check if coordinates are reversed (i.e. dec, RA)
+rev = atv_fits_ctype_reversed(astr.ctype)
+state.display_coord_sys = strmid(astr.ctype[rev], 0, 4)
 
 end
 
@@ -5178,7 +5209,19 @@ if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') AND $
    (size(image, /tname) NE 'UNDEFINED')) then begin
 ; Make sure it's a 2-d array
     if ( (size(image))[0] NE 2) then begin
-        print, 'ERROR: Input data must be a 2-d array!'    
+
+; See if it is a HEALPix array
+        if ishealpix(image) then begin 
+           ind = atv_healcart_ind(image, header=header)
+           main_image = image[ind]
+           newimage = 1
+           state.imagename = 'HEALPix'
+           state.title_extras = ''
+           atv_setheader, header
+        endif else begin 
+           print, 'ERROR: Input data must be a 2-d array!'    
+        endelse
+
     endif else begin
         main_image = image
         newimage = 1
