@@ -1,6 +1,15 @@
 
+-------------------------------------------------------------------------------
+v4_10_2 (Jun 20, 2003)
+Tagged for photoop v0_9.  Make sure that mangle code builds.
+
 data/sdss/sdssMaskbits.par: Add RESOLVE_STATUS flag, which probably
                 deprecates the RESOLVE flag.
+lib/Makefile: When installing, copy over *.a files and Makefile, not 
+                that they're needed.
+src/Makefile: Note that mangle1.2 must be built before idlmangle!
+                This prevented the mangle code from building in v4_10_0,v4_10_1.
+src/idlmangle/Makfile: Copy source code when installing, not that it's needed.
 
 -------------------------------------------------------------------------------
 v4_10_1 (Jun 18, 2003)
