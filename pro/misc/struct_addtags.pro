@@ -29,6 +29,8 @@
 ; BUGS:
 ;
 ; PROCEDURES CALLED:
+;   copy_struct
+;   copy_struct_inx
 ;
 ; REVISION HISTORY:
 ;   28-Jun-2000  Written by D. Schlegel, Princeton
@@ -40,26 +42,25 @@ function struct_addtags, astruct, bstruct
 
    num1 = N_elements(astruct)
    num2 = N_elements(bstruct)
-   if (num1 NE num2) then begin
-      message, 'Both structures must have the same number of elements'
-   endif
+   if (num1 NE num2) then $
+    message, 'Both structures must have the same number of elements'
 
+   ;----------
    ; Create an empty structure with all the tags from both structures
-   obj1 = astruct[0]
-   tname = tag_names(bstruct)
-   ntag = N_tags(bstruct)
-   for i=0, ntag-1 do $
-    obj1 = create_struct(obj1, tname[i], bstruct[0].(i))
-;   outstruct = replicate(obj1, num1)
+
+   obj1 = create_struct(astruct[0], bstruct[0])
    dims = size(astruct,/dimens)
    outstruct = make_array(dimension=dims, value=obj1)
 
-   ; Assign elements from NEWDAT into the new output structure
-   newtags = tag_names(outstruct)
-   for i=0, ntag-1 do begin
-      j = (where(newtags EQ tname[i]))[0]
-      outstruct.(j) = reform(bstruct.(i), size(outstruct.(j),/dimens))
-   endfor
+   ;----------
+   ; Assign elements from ASTRUCT into the new output structure
+
+   copy_struct, astruct, outstruct
+
+   ;----------
+   ; Assign elements from BSTRUCT into the new output structure
+
+   copy_struct_inx, bstruct, outstruct
 
    return, outstruct
 end
