@@ -4,6 +4,7 @@ bin/Makefile -text
 bin/build_links -text
 bin/evilinstall -text
 bin/evilmake -text
+bin/eviltarball -text
 bin/install_ups_table -text
 bin/memtrack -text
 doc/Makefile -text
