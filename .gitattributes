@@ -741,6 +741,7 @@ pro/mangle/construct_cap.pro -text
 pro/mangle/construct_polygon.pro -text
 pro/mangle/construct_vertex.pro -text
 pro/mangle/copy_caps.pro -text
+pro/mangle/destruct_polygon.pro -text
 pro/mangle/garea.pro -text
 pro/mangle/gverts.pro -text
 pro/mangle/is_cap_used.pro -text

@@ -23,23 +23,24 @@
 ;   31-Jan-2003  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function polygon_overlap,poly1,poly2
+function polygon_overlap,poly1,poly2,newpoly=newpoly
 
 newncaps=poly1.ncaps+poly2.ncaps
-newpoly=construct_polygon(nelem=1,ncaps=newncaps)
-newpoly.ncaps=poly1.ncaps+poly2.ncaps
+if(n_tags(newpoly) eq 0) then begin
+    newpoly=construct_polygon(nelem=1,ncaps=newncaps)
+    noreturn=1
+endif
+newpoly.ncaps=newncaps
 newpoly.weight=poly1.weight
 (*newpoly.caps)[0L:poly1.ncaps-1L]=(*poly1.caps)[*]
 (*newpoly.caps)[poly1.ncaps:poly1.ncaps+poly2.ncaps-1L]=(*poly2.caps)[*]
-use_caps=(poly1.use_caps+ishft(poly2.use_caps,poly1.ncaps))
-for i=0L, newpoly.ncaps-1L do $
-  if(is_cap_used(use_caps,i)) then $
-  if(n_elements(list) gt 0) then $
-  list=[list,i] $
-else $
-  list=[i]
-set_use_caps,newpoly,list
+newpoly.use_caps=(poly1.use_caps+ishft(poly2.use_caps,poly1.ncaps))
+set_use_caps,newpoly,list,/add
 newpoly.str=garea(newpoly)
 
-return,newpoly
+if(NOT keyword_set(noreturn)) then $
+  return,newpoly $
+else $
+  return,1
+
 end

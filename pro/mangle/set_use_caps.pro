@@ -34,7 +34,7 @@ if(NOT keyword_set(add)) then polygon.use_caps=0
 if(n_elements(tol) eq 0) then tol=1.D-10
 
 for i=0L, n_elements(list)-1L do $
-  polygon.use_caps=polygon.use_caps or ulong64(2)^list[i]
+  polygon.use_caps=polygon.use_caps or (2L)^list[i]
 
 if(NOT keyword_set(allow_doubles)) then begin
     for ipoly=0L, n_elements(polygon)-1L do begin
@@ -42,17 +42,13 @@ if(NOT keyword_set(allow_doubles)) then begin
             if(is_cap_used(polygon[ipoly].use_caps,i)) then begin
                 for j=i+1L, polygon[ipoly].ncaps-1L do begin
                     if(is_cap_used(polygon[ipoly].use_caps,j)) then begin
-                        if(abs((*polygon[ipoly].caps)[i].x[0]- $
-                               (*polygon[ipoly].caps)[j].x[0]) lt tol and $
-                           abs((*polygon[ipoly].caps)[i].x[1]- $
-                               (*polygon[ipoly].caps)[j].x[1]) lt tol and $
-                           abs((*polygon[ipoly].caps)[i].x[2]- $
-                               (*polygon[ipoly].caps)[j].x[2]) lt tol) then $
-                          begin 
+                        if(total((*polygon[ipoly].caps)[i].x- $
+                                 (*polygon[ipoly].caps)[j].x)^2 lt tol^2) $
+                          then begin 
                             if(abs((*polygon[ipoly].caps)[i].cm- $
                                    (*polygon[ipoly].caps)[j].cm) lt tol) then $
                               polygon[ipoly].use_caps= $
-                              polygon[ipoly].use_caps and (NOT ulong64(2)^j) $
+                              polygon[ipoly].use_caps and (NOT (2L)^j) $
                             else if(abs((*polygon[ipoly].caps)[i].cm+ $
                                         (*polygon[ipoly].caps)[j].cm) $
                                     lt tol) then $

@@ -21,5 +21,5 @@
 ;-
 ;------------------------------------------------------------------------------
 function is_cap_used,use_caps,indx
-return, (use_caps and ulong64(2)^(indx)) gt 0
+return, (use_caps and (2L)^(indx)) gt 0
 end
