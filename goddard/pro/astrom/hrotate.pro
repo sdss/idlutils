@@ -63,7 +63,9 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
 ;     Converted to IDL V5.0  W. Landsman     June 1998
 ;     Fix for different plate scales, and CROTA2 defined, November 1998  
 ;     Added ERRMSG, Use double precision formatting, W. Landsman April 2000
-;     Consistent conversion between CROTA and CD matrix W. Landsman October 2000
+;     Consistent conversion between CROTA and CD matrix W. Landsman Oct 2000
+;     Correct update when CROTA keyword present W. Landsman  June 2003
+;     Update CDELT for AIPS-style astrometry headers M. Perrin/Landsman Jul 2003
 ;- 
  On_error,2
  npar = N_params()
@@ -169,17 +171,10 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
 
    if noparams EQ 3 then begin     ;Transformation matrix format
 
-        sxaddpar, newhd, 'PC001001', newcd[0,0] 
-        sxaddpar, newhd, 'PC001002', newcd[0,1] 
-        sxaddpar, newhd, 'PC002001', newcd[1,0]
-        sxaddpar, newhd, 'PC002002', newcd[1,1]
-
-    endif else if noparams EQ 0 then begin
-
-        sxaddpar, newhd, 'CD001001', newcd[0,0] 
-        sxaddpar, newhd, 'CD001002', newcd[0,1] 
-        sxaddpar, newhd, 'CD002001', newcd[1,0]
-        sxaddpar, newhd, 'CD002002', newcd[1,1]
+        sxaddpar, newhd, 'PC1_1', newcd[0,0] 
+        sxaddpar, newhd, 'PC1_2', newcd[0,1] 
+        sxaddpar, newhd, 'PC2_1', newcd[1,0]
+        sxaddpar, newhd, 'PC2_2', newcd[1,1]
                                   
     endif else if noparams EQ 2 then begin
 
@@ -188,16 +183,13 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
         sxaddpar, newhd, 'CD2_1', newcd[1,0]
         sxaddpar, newhd, 'CD2_2', newcd[1,1]
 
-     endif else begin
-        det = newcd[0,0]*newcd[1,1] - newcd[0,1]*newcd[1,0]
-         if det lt 0 then sgn = -1 else sgn = 1
-         cdelt[0] = sgn*sqrt(newcd[0,0]^2 + newcd[1,0]^2)
-         cdelt[1] =     sqrt(newcd[0,1]^2 + newcd[1,1]^2)
+     endif else begin ; noparams = 1. CROTA+CDELT type
         crota  = atan(-newcd[1,0], newcd[1,1] )*180.0/!DPI
+
+        if dirpar GE 4 then sxaddpar, newhd, 'CDELT1', -cdelt[0]
+
         sxaddpar, newhd,'CROTA1', crota
         sxaddpar, newhd,'CROTA2', crota
-        sxaddpar,newhd,'CDELT1',cdelt[0]
-        sxaddpar,newhd,'CDELT2',cdelt[1]
    endelse
       
    
