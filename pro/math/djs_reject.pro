@@ -165,10 +165,10 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    if (keyword_set(lower)) then begin
       if keyword_set(sigma) then begin
           qbad = ydiff LT (- lower * sigma) 
-          badness = (((-ydiff / (sigma + (sigma EQ 0))) > 0) * qbad) > badness
+          badness = (((-ydiff / (sigma + (sigma EQ 0))) > 0) * qbad) + badness
       endif else begin
           qbad = ydiff  * sqrt(invvar) LT (- lower)
-          badness = (((-ydiff * sqrt(invvar)) > 0) * qbad) > badness
+          badness = (((-ydiff * sqrt(invvar)) > 0) * qbad) + badness
       endelse
    endif
 
@@ -178,10 +178,10 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    if (keyword_set(upper)) then begin
       if keyword_set(sigma) then begin
         qbad = ydiff GT (upper * sigma) 
-        badness = (((ydiff / (sigma + (sigma EQ 0))) > 0) * qbad) > badness
+        badness = (((ydiff / (sigma + (sigma EQ 0))) > 0) * qbad) + badness
       endif else begin
         qbad = ydiff  * sqrt(invvar) GT upper
-        badness = (((ydiff * sqrt(invvar)) > 0) * qbad) > badness
+        badness = (((ydiff * sqrt(invvar)) > 0) * qbad) + badness
       endelse
    endif
 
@@ -190,7 +190,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
 
    if (keyword_set(maxdev)) then begin
       qbad = abs(ydiff) GT maxdev
-      badness = (abs(ydiff) / maxdev * qbad) > badness
+      badness = (abs(ydiff) / maxdev * qbad) + badness
    endif
 
    ;----------
