@@ -39,7 +39,7 @@ case $UNAME in
 		CC=cc
 		LD=ld
 		LDF77=ld
-    X_FFLAGS="-32 -extend_source -KPIC"
+    X_FFLAGS="-n32 -extend_source -KPIC"
     MAKE_FTNLIB="-lftn"
 		X_LD_FLAGS="-shared -n32 -mips3"
 	;;
