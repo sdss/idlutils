@@ -633,6 +633,7 @@ pro/fits/mwrfits_chunks.pro -text
 pro/fits/rdss_fits.pro -text
 pro/fits/sxcombinepar.pro -text
 pro/image/djs_maskinterp.pro -text
+pro/image/djs_sfit.pro -text
 pro/image/populate_image.pro -text
 pro/image/qzap.pro -text
 pro/math/djs_avsigclip.pro -text
