@@ -97,9 +97,9 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    ; Read the 3 images, and sanity-check that they are the same dimensions
 
    if (size(rimage,/tname) EQ 'STRING') then begin
-      rimg = mrdfits(rimage, /silent)
-      gimg = mrdfits(gimage, /silent)
-      bimg = mrdfits(bimage, /silent)
+      rimg = mrdfits(rimage+'*', /silent)
+      gimg = mrdfits(gimage+'*', /silent)
+      bimg = mrdfits(bimage+'*', /silent)
    endif else begin
       rimg = float(rimage)
       gimg = float(gimage)
