@@ -1,6 +1,7 @@
 
 GAUSS_OVERLAP: New function to calculate log integral, covariance, and
                mean of product of two gaussians.
+NW_RGB_MAKE: Top-level routine for making color images from 3 color images.
 
 bin/evilmake: Add "LDF77=g77" or "LDF77=ld", and export it.
 scr/idlmangle/Makefile: Change of $(FC) -> $(LDF77) on link line, so
