@@ -13,6 +13,8 @@
 ;   dx,dy     - size of sliding box in which means are taken
 ; OPTIONAL INPUTS:
 ;   boot_seed - if set, use as seed for a bootstrap resampling trial
+;   nearest   - use nearest few points based on this number, rather 
+;               than a fixed smoothing (use with caution!)
 ; OUTPUTS:
 ;   images    - [nx,ny,4] output images of number of contributing
 ;               points (image 0), total weight used (image 1), total
