@@ -97,7 +97,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
        these = where(mask, nthese)
 
        if (nthese LT 2) then begin
-          splog, 'Lost all points'
+;          splog, 'Lost all points'
           return, fullbkpt
        endif
 
