@@ -25,7 +25,8 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;               Poisson statistics.)  
 ;     APR    - Vector of up to 12 REAL photometry aperture radii.
 ;     SKYRAD - Two element vector giving the inner and outer radii
-;               to be used for the sky annulus
+;               to be used for the sky annulus.   Ignored if the SETSKYVAL
+;              keyword is set.
 ;     BADPIX - Two element vector giving the minimum and maximum value
 ;               of a good pix (Default [-32765,32767]).    If BADPIX[0] is
 ;               equal to BADPIX[1] then it is assumed that there are no bad
@@ -78,7 +79,7 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;       pixels
 ;      
 ;
-;       IDL> aper, im, 234.2, 344.3, flux, eflux, sky,skyerr, 1, [3,5], $
+;       IDL> aper, im, 234.2, 344.3, flux, eflux, sky,skyerr, 1, [3,5], -1, $
 ;            [-32767,80000],/exact, /flux, setsky = 1.3
 ;       
 ; PROCEDURES USED:
@@ -109,11 +110,11 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;       Set BADPIX[0] = BADPIX[1] to ignore bad pixels W. L.  January 2001     
 ;       Fix chk_badpixel problem introduced Jan 01 C. Ishida/W.L. February 2001
 ;       Set bad fluxes and error to NAN if /FLUX is set  W. Landsman Oct. 2001 
+;       Remove restrictions on maximum sky radius W. Landsman  July 2003
 ;-
  On_error,2
 ;             Set parameter limits
  minsky = 20   ;Smallest number of pixels from which the sky may be determined
- maxrad = 100.          ;Maximum outer radius permitted for the sky annulus.
  maxsky = 10000         ;Maximum number of pixels allowed in the sky annulus.
 ;                                
 if N_params() LT 3 then begin    ;Enough parameters supplied?
@@ -129,7 +130,6 @@ endif
  ncol = s[1] & nrow = s[2]           ;Number of columns and rows in image array
 
   silent = keyword_set(SILENT)
-
 
  if N_elements(badpix) NE 2 then begin ;Bad pixel values supplied
 GET_BADPIX:  
@@ -203,10 +203,6 @@ DONE:
 
  if N_elements(SETSKYVAL) EQ 0 then begin
 
- if skyrad[1] GT maxrad then begin
-     message,/INF,'WARNING - Outer sky radius being reset to '+ strn(maxrad) 
-     skyrad[1] = (maxrad-0.001)        ;Outer sky radius less than MAXRAD?
- endif
      rinsq =  (skyrad[0]> 0.)^2 
      routsq = skyrad[1]^2
  endif 
@@ -217,26 +213,28 @@ DONE:
    message,'Results will be written to a file ' + file,/INF
    openw,lun,file,/GET_LUN
    if !VERSION.OS_FAMILY EQ 'vms' then host = 'NODE' else host = 'HOST'
-   printf,lun,' Program: APER '+ systime(), '   User: ', $
-      getenv('USER'),'  HOST: ',getenv(host)
+   printf,lun,'Program: APER: '+ systime(), '   User: ', $
+      getenv('USER'),'  Host: ',getenv(host)
    for j = 0, Naper-1 do printf,lun, $
                format='(a,i2,a,f4.1)','Radius of aperture ',j,' = ',apr[j]
+   if N_elements(SETSKYVAL) EQ 0  then begin
    printf,lun,f='(/a,f4.1)','Inner radius for sky annulus = ',skyrad[0]
    printf,lun,f='(a,f4.1)', 'Outer radius for sky annulus = ',skyrad[1]
+   endif else printf,lun,'Sky values fixed at ', strtrim(setskyval[0],2)
    if keyword_set(FLUX) then begin
        printf,lun,f='(/a)', $
-           'STAR   X       Y        SKY   SKYSIG    SKYSKW   FLUXES'
+           'Star   X       Y        Sky   SkySig    SkySkw   Fluxes'
       endif else printf,lun,f='(/a)', $
-           'STAR   X       Y        SKY   SKYSIG    SKYSKW   MAGNITUDES'
+           'Star   X       Y        Sky   SkySig    SkySkw   Magnitudes'
  endif
  print = keyword_set(PRINT)
 
 ;         Print header
  if not SILENT then begin
     if (KEYWORD_SET(FLUX)) then begin
-       print, format="(/1X,'STAR',5X,'X',7X,'Y',6X,'SKY',8X,'FLUXES')"
+       print, format="(/1X,'Star',5X,'X',7X,'Y',6X,'Sky',8X,'Fluxes')"
     endif else print, $ 
-       format="(/1X,'STAR',5X,'X',7X,'Y',6X,'SKY',8X,'MAGNITUDES')" 
+       format="(/1X,'Star',5X,'X',7X,'Y',6X,'Sky',8X,'Magnitudes')" 
  endif
 
 ;  Compute the limits of the submatrix.   Do all stars in vector notation.
