@@ -13,9 +13,14 @@ DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
 DJS_PHOTFRAC: add documentation on /exact keyword, and report error in case
               of non-integer center given with /exact keyword set. also, 
               changed so it doesn't recenter on its own if /exact is set.
+DPF_REJECT_CR: ???
 EXACT_PHOTFRAC: fix bug involving calculation of annulus photometry
 FIND: Need to index some loops with type LONG to allow for large
                numbers of stars.
+FLEGENDRE: Removed from pro/trace directory, since that copy is meant
+               to be identical to that in goddard/pro/math.
+HOGG_ARROW: Hogg's version of plotting arrows (like DJS_ARROW), but with
+               more options and working in device coordinates.
 HOGG_BWIFY:  ???
 HOGG_IAU_NAME: Clean-roomed adstring out.
 HOGG_IMAGE_OVERLAY: Erase .ppm file when done.
@@ -49,6 +54,8 @@ USNOB2FITS: Compress files locally, then copy to target.
 mangle1.4/src/mrb_balkanize.c: Add QA print statement for number of caps.
 src/mangle1.4/src/manglefn.h, mrb_balkanize.c, new_poly.c:
                Flush memory usage where possible.
+src/math/Makefile, idl_mmeval.c,idl_mmsparse.c: C code to support the
+               new procedures MMEVEL and MMSPARSE respectively.
 
 -------------------------------------------------------------------------------
 v5_0_3 (August 18, 2004) running on IDL 5.4 - 6.0
