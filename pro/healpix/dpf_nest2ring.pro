@@ -26,6 +26,8 @@
 ;----------------------------------------------------------------------
 pro dpf_nest2ring, nside, ipnest, ipring
 
+  common dpf_nest2ring, dx, dy, nside_save
+
 ; -------- initialize parameters
   nside  = long(nside)
   nint   = fix(nside)
@@ -33,24 +35,35 @@ pro dpf_nest2ring, nside, ipnest, ipring
   nlevel = round(alog(nside)/alog(2))
   if 2L^nlevel NE nside then message, 'bad nside value - must be power of 2.'
 
-; -------- make i0,i1 lookup
-  p2 = 1L
-  i0 = intarr(npix/12)
-  i1 = intarr(npix/12)
-  bits = fix(ipnest)
+  maketable = 1B
+  if keyword_set(nside_save) then begin 
+     if nside_save eq nside then maketable = 0B
+  endif 
 
-  isquare = lindgen(npix/12)
-  for ilevel=0, nlevel-1 do begin
-     thisbit = 2^ilevel
-     i0 =  i0 OR (bits AND thisbit)
-     bits = fix(ishft(isquare, -(1+ilevel)))
-     i1 = i1 OR (bits AND thisbit)
-  endfor
+  if maketable then begin 
+; -------- make i0,i1 lookup
+     p2 = 1L
+     i0 = intarr(npix/12)
+     i1 = intarr(npix/12)
+     bits = fix(ipnest)
+
+     isquare = lindgen(npix/12)
+     for ilevel=0, nlevel-1 do begin
+        thisbit = 2^ilevel
+        i0 =  i0 OR (bits AND thisbit)
+        bits = fix(ishft(isquare, -(1+ilevel)))
+        i1 = i1 OR (bits AND thisbit)
+     endfor
 
 ; -------- dx,dy defined for one square of the projection; need to be
 ;          indexed off of dind when used
-  dy = i0+i1
-  dx = temporary(i0)-temporary(i1)
+     dy = i0+i1
+     dx = temporary(i0)-temporary(i1)
+
+; -------- cache dx, dy
+     nside_save = nside
+  endif 
+
   dind = ipnest AND (nside*nside-1)
 
 ; -------- square number, ring number
