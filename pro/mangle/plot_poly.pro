@@ -47,12 +47,13 @@ if(not keyword_set(xrange) OR not keyword_set(yrange) and $
 endif
 
 if(NOT keyword_set(over)) then begin
-  if(keyword_set(splot)) then $
-    splot,[0],[0],/nodata,xtitle=xtitle,ytitle='dec', $
-    xrange=xrange,yrange=yrange $
-  else $
-    plot,[0],[0],/nodata,xtitle=xtitle,ytitle='dec', $
-    xrange=xrange,yrange=yrange
+    if(keyword_set(splot)) then $
+      splot,[0],[0],/nodata,xtitle=xtitle,ytitle='dec', $
+      xrange=xrange,yrange=yrange $
+    else $
+      plot,[0],[0],/nodata,xtitle=xtitle,ytitle='dec', $
+      xrange=xrange,yrange=yrange
+endif
 
 for i=0L, n_elements(poly)-1L do begin
     if(garea(poly[i]) gt 0.) then begin
