@@ -14,7 +14,7 @@
 ;   naxis1     - width in pixels to make the label
 ; OPTIONAL INPUTS:
 ;   subtitle1  - first subtitle
-;   subtitle2  - second subtitle
+;   subtitle2  - second subtitle; defaults to idlutils plug
 ; OUTPUT:
 ;   label      - [naxis1,n2] image containing text
 ; COMMENTS:
@@ -32,24 +32,22 @@
 function hogg_make_image_label, title,naxis1, $
                                 subtitle1=subtitle1,subtitle2=subtitle2
 if not keyword_set(subtitle1) then subtitle1='~'
-if not keyword_set(subtitle2) then subtitle2='labeled by Hogg'
+if not keyword_set(subtitle2) then $
+  subtitle2='made with \texttt{idlutils} (http:$/\!/$skymaps.info)'
 prefix= 'tmp_hogg_make_image_label'
 openw, wlun,prefix+'.tex',/get_lun
 printf, wlun,'\documentclass[12pt]{article}'
-printf, wlun,'\usepackage{color,graphics}'
+printf, wlun,'\usepackage{color}'
 printf, wlun,'\setlength{\headheight}{0in}'
 printf, wlun,'\setlength{\headsep}{0in}'
 printf, wlun,'\setlength{\topmargin}{0in}'
 printf, wlun,'\setlength{\oddsidemargin}{0in}'
 printf, wlun,'\setlength{\textheight}{1truein}'
 printf, wlun,'\setlength{\textwidth}{6.5truein}'
-printf, wlun,'\pagestyle{empty}'
 printf, wlun,'\setlength{\parskip}{0ex}'
 printf, wlun,'\setlength{\parsep}{0ex}'
-printf, wlun,'\definecolor{pagecolor}{rgb}{0.0,0.0,0.0}'
-printf, wlun,'\definecolor{normalcolor}{rgb}{1.0,1.0,1.0}'
-printf, wlun,'\pagecolor{pagecolor}'
-printf, wlun,'\color{normalcolor}'
+printf, wlun,'\pagestyle{empty}'
+printf, wlun,'\pagecolor{black}\color{white}'
 printf, wlun,'\begin{document}'
 printf, wlun,'\noindent'
 printf, wlun,'\textsf{'
@@ -88,7 +86,8 @@ if (nx NE (nx/2)*2) then begin
     nx= nx+1
 endif
 label= rebin(label,ny/factor,nx/factor)
-if nx GT (0.1*naxis1) then begin
+if nx GT (0.1*factor*naxis1) then begin
+    splog, 'warning: re-sized label will not be full-width'
     newfactor= (0.03*float(naxis1))/float(nx)
     label= congrid(label,ny*newfactor,nx*newfactor,/interp)
 endif
