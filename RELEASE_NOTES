@@ -1,4 +1,11 @@
 
+ATV           - Merged with Aaron Barth's version 1.4 (by Finkbeiner).
+                Merged to include using SPLOT/SOPLOT instead of PLOT,
+                use 5 digit pixel coords, some Healpix support (though
+                the libraries are not yet in idlutils).
+                Fink did not merge in support for reversed CTYPE values
+                in FITS headers, e.g. DEC,RA instead of RA,DEC.
+
 -------------------------------------------------------------------------------
 v4_10_2 (Jun 20, 2003)
 Tagged for photoop v0_9.  Make sure that mangle code builds.
