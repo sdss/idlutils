@@ -1,4 +1,7 @@
 
+MEMSHIFT: New proc for doing raw memory copies within arrays or
+               structure arrays.  This is faster than just using
+               an IDL assignment statement.
 MRDFITS: Re-cast the argument to POINT_LUN to be type LONG64, to allow
                using MRDFITS with > 2 Gb files without errors.  This patch
                has been sent to Landsman.
