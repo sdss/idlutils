@@ -2,7 +2,7 @@
 ; NAME:
 ;   ex_max_plot
 ; PURPOSE:
-;   plot ex_max outputs
+;   plot ex_max outputs or other N-dimensional data sets
 ; INPUTS:
 ;   weight       [N] array of data-point weights
 ;   point        [d,N] array of data points - N vectors of dimension d
@@ -19,13 +19,16 @@
 ;   textpos      [d,q] array of text label positions
 ;   box          [2,d] array of coordinates for d-dimensional box
 ;   xdims,ydims  indices of data dimensions to use on each x and y axis
-;   npix_x,npix_y  number of pixels in x and y dimensions of each ;   panel
+;   npix_x,npix_y  number of pixels in x and y dimensions of each panel
 ;   sqrt         sqrt stretch on image
 ;   log          logarithmic stretch on image
 ;   axis_char_scale  size of characters on labels
-;   overpoints   [d,P] set of points to overplot a red box on each ;   panel
+;   overpoints   [d,P] set of points to overplot a red box on each panel
 ;   model_npix_factor  for gaussians, use this factor to scale model
 ;   panellabels  label string for each panel (size of xdims, ydims arrays)
+;   quant        vector of fractions at which to plot quantiles on conditional
+;                   panels
+;   quantile     output array of quantile positions; read the source code
 ; KEYWORDS:
 ;   nomodel      don't show model fits as greyscales or histograms
 ;   nodata       don't show data as greyscales or histograms
@@ -51,7 +54,7 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  npix_y=npix_y,overpoints=overpoints, $
                  model_npix_factor=model_npix_factor, $
                  panellabels=panellabels, panellabelpos=panellabelpos, $
-                 sigrejimage=sigrejimage, paneluse=paneluse, mediles=mediles
+                 sigrejimage=sigrejimage, paneluse=paneluse, quant=quant
 
 ; set defaults
 if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
@@ -78,8 +81,14 @@ mean= reform(double(mean),dimen,ngauss)
 var= reform(double(var),dimen,dimen,ngauss)
 
 ; by default show quartiles in conditional case
-if(keyword_set(conditional) and (not keyword_set(mediles))) then $
-  mediles=[0.25,0.5,0.75]
+if (keyword_set(conditional) and (not keyword_set(quant))) then $
+  quant=[0.25,0.5,0.75]
+
+; setup arrays for quantiles in conditional case
+if keyword_set(conditional) then begin
+  nquant= n_elements(quant)
+  quantile= dblarr(xdimen,ydimen,nquant,npix_x,2)
+endif
 
 ; if there is a second set of data, deal with it
 if(keyword_set(weight2)) then begin
@@ -363,34 +372,33 @@ for id2=ydimen-1,0L,-1 do begin
                                   (panelpoint[d2,*]-!Y.CRANGE[0])/ $
                                   (!Y.CRANGE[1]-!Y.CRANGE[0]))
                         amp1col=dblarr(usenpix_x)
-                        if(keyword_set(mediles)) then begin
-                            medvalue=dblarr(n_elements(mediles),usenpix_x)
-                            meduse=lonarr(n_elements(mediles),usenpix_x) 
+                        if(keyword_set(quant)) then begin
+                            meduse=lonarr(nquant,usenpix_x) 
                         endif
                         for ii=0L, usenpix_x-1L do begin
                             indx=where(xx eq ii, countin)
                             if(countin gt 1) then begin
                                 amp1col[ii]=total(panelweight[indx],/double)
                                 image[ii,*]=image[ii,*]/amp1col[ii]
-                                if(keyword_set(mediles)) then begin
+                                if(keyword_set(quant)) then begin
                                     sortindx=indx[sort(panelpoint[d2,indx])]
                                     cummed= total(weight[sortindx],/double, $
                                                   /cumulative)
                                     cummed=cummed/cummed[n_elements(cummed)-1L]
-                                    for jj=0L, n_elements(mediles)-1L do begin
+                                    for jj=0L, nquant-1L do begin
                                         indx0=lindgen(n_elements(cummed)-1L)
                                         indx1=indx0+1L
-                                        medindx=where(mediles[jj] ge cummed[indx0]  and $
-                                                      mediles[jj] lt cummed[indx1], $
+                                        medindx=where(quant[jj] ge cummed[indx0]  and $
+                                                      quant[jj] lt cummed[indx1], $
                                                       medcount)
                                         if(medcount eq 0) then begin
-                                            if(mediles[jj] lt cummed[0]) then begin
+                                            if(quant[jj] lt cummed[0]) then begin
                                                 medindx=0
                                             endif else begin
                                                 medindx=n_elements(cummed)-1L
                                             endelse
                                         endif
-                                        medvalue[jj,ii]= $
+                                        quantile[id1,id2,jj,ii,1]= $
                                           panelpoint[d2,sortindx[medindx[0]]]
                                         meduse[jj,ii]=1L
                                     endfor
@@ -448,18 +456,19 @@ for id2=ydimen-1,0L,-1 do begin
                         xline=!X.CRANGE[0]+ $
                           ((dindgen(usenpix_x)+0.5)*(!X.CRANGE[1]-!X.CRANGE[0])/ $
                            double(usenpix_x))
-                        if(keyword_set(mediles)) then begin
-                            for m=0L, n_elements(mediles)-1L do begin
+                        if(keyword_set(quant)) then begin
+                            for m=0L, nquant-1L do begin
+                                quantile[id1,id2,m,*,0]= xline
                                 outmedindx=where(meduse[m,*] ne 0,outcount)
                                 if(outcount gt 0) then begin
-                                    djs_oplot,xline[outmedindx], $
-                                      medvalue[m,outmedindx],thick=4,psym=10, $
+                                    djs_oplot,quantile[id1,id2,m,outmedindx,0], $
+                                      quantile[id1,id2,m,outmedindx,1],thick=4,psym=10, $
                                       color=djs_icolor('white')
-                                    djs_oplot,xline[outmedindx], $
-                                      medvalue[m,outmedindx],thick=1,psym=10
+                                    djs_oplot,quantile[id1,id2,m,outmedindx,0], $
+                                      quantile[id1,id2,m,outmedindx,1],thick=1,psym=10
                                 endif
                             endfor
-                        endif else begin 
+                        endif else begin
                             for c=0, n_elements(contlevel)-1L do begin
                                 for ii=0L, usenpix_x-1L do begin
 ;column=smooth(image[ii,*],3,/edge_truncate)
