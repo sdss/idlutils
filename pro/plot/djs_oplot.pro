@@ -41,7 +41,7 @@ pro djs_oplot, x, y, $
 
    ; If X values don't exist, then create them as PLOT or OPLOT would do
    npt = N_elements(x)
-   if (keyword_set(y)) then begin
+   if (n_elements(y) GT 0) then begin
       xtmp = x
       ytmp = y
    endif else begin
