@@ -832,6 +832,7 @@ pro/image/hogg_histogram.pro -text
 pro/image/interp_profmean.pro -text
 pro/image/multi_psf_fit.pro -text
 pro/image/polywarp_rotate.pro -text
+pro/image/polywarp_shift.pro -text
 pro/image/populate_image.pro -text
 pro/image/qu_to_baphi.pro -text
 pro/image/qzap.pro -text
