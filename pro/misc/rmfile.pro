@@ -25,8 +25,17 @@
 ;   14-Oct-1999  Written by D. Schlegel, APO
 ;-
 ;------------------------------------------------------------------------------
-
 pro rmfile, filename
+
+   if (NOT keyword_set(filename)) then return
+
+   ;----------
+   ; Call this routine recursively if FILENAME is an array
+   nfile = n_elements(filename)
+   if (nfile GT 1) then begin
+      for ifile=0, nfile-1 do rmfile, filename[ifile]
+      return
+   endif
 
    get_lun, ilun
    openr, ilun, filename, /delete, error=err
