@@ -17,10 +17,11 @@
 ;   xrange      - x range; default minmax(x)
 ;   yrange      - y range; default minmax(y)
 ;   levels      - contour levels; default in source code
-;   cthick      - thickness for contours
 ;   quantiles   - quantiles to plot on conditional plot; default [0.25,0.5,0.75]
-;   satfrac     - fraction of pixels to saturate in greyscale; default 0
+;   cthick      - thickness for contours
 ;   exponent    - stretch greyscale at exponent power; default 1.0
+;   satfrac     - fraction of pixels to saturate in greyscale; default 0
+;   darkest     - darkest shade at saturation; default 127; lower darker
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
 ;   conditional - normalize each column separately
@@ -46,15 +47,17 @@
 ;   2002-12-04  written --- Hogg
 ;-
 pro hogg_scatterplot, x,y,weight=weight, $
-                      xrange=xrange,yrange=yrange,xnpix=xnpix,ynpix=ynpix, $
-                      levels=levels,satfrac=satfrac, $
+                      xnpix=xnpix,ynpix=ynpix, $
+                      xrange=xrange,yrange=yrange, $
+                      levels=levels,quantiles=quantiles, $
                       cthick=cthick, $
+                      exponent=exponent, $
+                      satfrac=satfrac, $
+                      darkest=darkest, $
+                      conditional=conditional, $
+                      labelcont=labelcont, $
                       xvec=xvec,yvec=yvec,grid=grid, $
                       cumimage=cumimage, $
-                      exponent=exponent, $
-                      conditional=conditional, $
-                      quantiles=quantiles, $
-                      labelcont=labelcont, $
                       _EXTRA=KeywordsForPlot
 
 ; set defaults
@@ -69,6 +72,7 @@ if not keyword_set(quantiles) then quantiles= [0.25,0.5,0.75]
 nquantiles= n_elements(quantiles)
 if not keyword_set(satfrac) then satfrac= 0.0
 if not keyword_set(exponent) then exponent= 1.0
+if not keyword_set(darkest) then darkest= 127.0
 
 ; check inputs
 ; [tbd]
@@ -130,7 +134,7 @@ endelse
 
 ; scale greyscale
 mingrey= 255.0
-maxgrey= 127.0
+maxgrey= darkest
 maxgrid= grid[(reverse(sort(grid)))[ceil(satfrac*xnpix*ynpix)]]
 mingrid= 0.0
 tvgrid= mingrey+(maxgrey-mingrey)*((grid-mingrid)/(maxgrid-mingrid))^exponent
