@@ -192,6 +192,7 @@ goddard/pro/fits/fits_read.pro -text
 goddard/pro/fits/fits_write.pro -text
 goddard/pro/fits/fitsdir.pro -text
 goddard/pro/fits/fitsrgb_to_tiff.pro -text
+goddard/pro/fits/ftget.pro -text
 goddard/pro/fits/fxmove.pro -text
 goddard/pro/fits/fxposit.pro -text
 goddard/pro/fits/headfits.pro -text
