@@ -149,13 +149,16 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
    ; Tweak astrometry structure with cat (ra,dec) and im (x,y) comparison
 
    ; Call twice, since more stars may be matched on the 2nd call.
-   ;   The match distances are **hard-wired** to 6 arcsec on the first iteration,
-   ;   and 3 arcsec on the 2nd iteration???
+   ; The match distances are **hard-wired** to 6 arcsec on the first
+   ; iteration, and 3 arcsec on the 2nd iteration???
    gsa1 = astrom_tweak(gsa1, catlon, catlat, xpos, ypos, errflag=errflag, $
-    nmatch=nmatch, catind=catind, obsind=obsind, dtheta=6./3600., verbose=verbose)
+    nmatch=nmatch, catind=catind, obsind=obsind, dtheta=6./3600., $
+    verbose=verbose)
    gsa1 = astrom_tweak(gsa1, catlon, catlat, xpos, ypos, errflag=errflag, $
-    nmatch=nmatch, catind=catind, obsind=obsind, dtheta=3./3600., verbose=verbose)
+    nmatch=nmatch, catind=catind, obsind=obsind, dtheta=3./3600., $
+    verbose=verbose)
 
+   splog, 'Number of catalog matches = ', nmatch
    if (errflag NE 0) then begin
       splog, 'WARNING: XY shift FAILED in astrom_tweak'
       return, 0
