@@ -3,8 +3,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 		no_abort=no_abort, message = message, header = header, $
 		no_data = no_data
 ;+
-;
-;*NAME:
+; NAME:
 ;	FITS_WRITE
 ;
 ;*PURPOSE:
@@ -28,9 +27,9 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;		header will be created.  Required FITS keywords, SIMPLE,
 ;		BITPIX, XTENSION, NAXIS, ... are added by FITS_WRITE and
 ;		do not need to be supplied with the header.  If supplied,
-;		thier values will be updated as necessary to reflect DATA.
+;		their values will be updated as necessary to reflect DATA.
 ;
-;*KEYWORD PARAMETERS:
+;*INPUT KEYWORD PARAMETERS:
 ;
 ;	XTENSION: type of extension to write (Default="IMAGE"). If not
 ;		supplied, it will be taken from HEADER_IN.  If not in either
@@ -49,10 +48,11 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;		file.
 ;       /NO_ABORT: Set to return to calling program instead of a RETALL
 ;               when an I/O error is encountered.  If set, the routine will
-;               return with !err=-1 and a message in the keyword MESSAGE.
-;               If not set, FITS_READ will print the message and issue a RETALL
-;       MESSAGE: value of the error message for use with /NO_ABORT
-;	HEADER: actual output header written to the FITS file.
+;               return  a non-null string (containing the error message) in the
+;               keyword MESSAGE.    (For backward compatibility, the obsolete 
+;               system variable !ERR is also set to -1 in case of an error.)   
+;               If /NO_ABORT not set, then FITS_WRITE will print the message and
+;               issue a RETALL
 ;	/NO_DATA: Set if you only want FITS_WRITE to write a header.  The
 ;		header supplied will be written without modification and
 ;		the user is expected to write the data using WRITEU to unit
@@ -61,6 +61,10 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;		the correct amount and format of the data.  When FITS_WRITE
 ;		is used in this fashion, it will pad the data from a previously
 ;		written extension to 2880 blocks before writting the header.
+;
+;*OUTPUT KEYWORD PARAMETERS:
+;       MESSAGE: value of the error message for use with /NO_ABORT
+;	HEADER: actual output header written to the FITS file.
 ;
 ;*NOTES:
 ;	If the first call to FITS_WRITE is an extension, FITS_WRITE will
@@ -79,7 +83,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;	unit.
 ;		FITS_WRITE,'newfile.fits',ARRAY,xtension='IMAGE'
 ;
-;	Write 4 image extensions to the same file.
+;	Write 4 additional image extensions to the same file.
 ;		FITS_OPEN,'newfile.fits',fcb
 ;		FITS_WRITE,fcb,data1,extname='FLUX',extver=1
 ;		FITS_WRITE,fcb,err1,extname'ERR',extver=1
@@ -95,6 +99,10 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;	PCOUNT and GCOUNT added for IMAGE extensions   J. Graham  October 1999
 ;       Write unsigned data types      W. Landsman   December 1999
+;       Pad data area with zeros not blanks  W. McCann/W. Landsman October 2000
+;       Return Message='' to signal normal operation W. Landsman Nov. 2000
+;       Ensure that required extension table keywords are in proper order
+;             W.V. Dixon/W. Landsman          March 2001
 ;-
 ;-----------------------------------------------------------------------------
 ;
@@ -104,12 +112,13 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 	    print,'CALLING SEQUENCE: fits_write,file_or_fcb,data,header_in'
 	    print,'KEYWORD PARAMETERS: extname, extver, xtension, extlevel'
 	    print,'                    NaNvalue, no_abort, message, header'
-	    print,'                    no_data
+	    print,'                    no_data'
 	    return
 	end
 ;
 ; Open file if file name is supplied instead of a FCB
 ;
+        message = ''
         s = size(file_or_fcb) & fcbtype = s[s[0]+1]
 	fcbsize = n_elements(file_or_fcb)
         if (fcbsize ne 1) or ((fcbtype ne 7) and (fcbtype ne 8)) then begin
@@ -124,7 +133,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 		endif
                 fits_open,file_or_fcb,fcb,/write, $
 					no_abort=no_abort,message=message
-		if !err lt 0 then goto,error_exit
+		if message NE '' then goto,error_exit
            end else fcb = file_or_fcb
 ;
 ; if user did not pad data to 2880 blocks, pad it now
@@ -179,15 +188,15 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 	if n_elements(xtension) gt 0 then begin
 		Axtension = xtension
 	   end else begin
-		Axtension = sxpar(header,'xtension')
-		if !err lt 0 then Axtension = ''
+		Axtension = sxpar(header,'xtension', Count = N_Axtension)
+		if N_Axtension EQ 0 then Axtension = ''
 	end
 
 	if n_elements(extname) gt 0 then begin
 		Aextname = extname
 	   end else begin
-		Aextname = sxpar(header,'extname')
-		if !err lt 0 then Aextname = ''
+		Aextname = sxpar(header,'extname', Count = N_Aextname)
+		if N_Aextname EQ 0 then Aextname = ''
 	end
 
 	if n_elements(extver) gt 0 then $
@@ -231,7 +240,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 			if (hpos1 gt 0) and (hpos2 gt (hpos1+1)) then $
 				hmain = [header[hpos1+1:hpos2-1],'END     ']
 			fits_write,fcb,0,hmain,/no_abort,message=message
-			if !err lt 0 then goto,error_exit
+			if message NE '' then goto,error_exit
 	    end
 	end
 ;
@@ -250,27 +259,28 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 		if Axtension eq '' then Axtension = 'IMAGE   '
 		sxaddpar,h,'XTENSION',Axtension,'extension type'
 	end
-
-	sxaddpar,h,'bitpix',bitpix,'bits per data value'
-	sxaddpar,h,'naxis',naxis,'number of axes'
+	sxaddpar,h,'BITPIX',bitpix,'bits per data value'
+	sxaddpar,h,'NAXIS',naxis,'number of axes'
 	if naxis gt 0 then for i=1,naxis do $
-		sxaddpar,h,'naxis'+strtrim(i,2),axis[i-1]
+		sxaddpar,h,'NAXIS'+strtrim(i,2),axis[i-1]
 	if fcb.nextend eq -1 then begin
 		sxaddpar,h,'EXTEND','T','file may contain extensions'
-	   end else begin
- 		; PCOUNT and GCOUNT are mandatory for IMAGE extensions
- 		if Axtension eq 'IMAGE   ' then begin
- 		     sxaddpar,h,'PCOUNT',0
- 		     sxaddpar,h,'GCOUNT',1
- 		endif
-		if Aextname ne '' then sxaddpar,h,'extname',Aextname
-		if Aextver gt 0 then sxaddpar,h,'extver',Aextver
-		if Aextlevel gt 0 then sxaddpar,h,'extlevel',Aextlevel
-	end
+	end else begin    ;PCOUNT, GCOUNT are mandatory for extensions
+ 		sxaddpar,h,'PCOUNT',0
+ 		sxaddpar,h,'GCOUNT',1
+                if (Axtension eq 'BINTABLE')  or $
+                   (Axtension eq 'TABLE   ') then begin
+                       tfields = sxpar(header,'TFIELDS') > 0              
+                       sxaddpar,h,'TFIELDS',tfields
+                endif 
+		if Aextname ne '' then sxaddpar,h,'EXTNAME',Aextname
+		if Aextver gt 0 then sxaddpar,h,'EXTVER',Aextver
+		if Aextlevel gt 0 then sxaddpar,h,'EXTLEVEL',Aextlevel
+	endelse
         if idltype EQ 12 then $
                sxaddpar,header,'BZERO',32768,'Data is unsigned integer'
         if idltype EQ 13 then $
-               sxaddpar,header,'BZERO',32768,'Data is unsigned long'
+               sxaddpar,header,'BZERO',2147483648,'Data is unsigned long'
         if idltype GE 12 then sxdelpar,header,'BSCALE'
 ;
 ; delete special keywords from user supplied header
@@ -279,7 +289,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
         groups = sxpar(header,'groups')
         sxdelpar,header,['SIMPLE','BITPIX','NAXIS','NAXIS1','NAXIS2','NAXIS3', $
 			'NAXIS4','NAXIS5','NAXIS6','NAXIS7','NAXIS8','EXTEND', $
-                        'PCOUNT','GCOUNT','GROUPS']
+                        'PCOUNT','GCOUNT','GROUPS','TFIELDS']
         if groups then if (pcount gt 0) then for i=1,pcount do $
                         sxdelpar,header,['ptype','pscal','pzero']+strtrim(i,2)
 ;
@@ -336,7 +346,10 @@ write_header:
 	    npad = 2880 - (nbytes mod 2880)
 	    if npad eq 2880 then npad = 0
 	    writeu,fcb.unit,newdata
-	    if npad gt 0 then writeu,fcb.unit,replicate(32b,npad)
+            if npad gt 0 then begin
+                if Axtension EQ 'TABLE   ' then padnum = 32b else padnum = 0b
+	        writeu,fcb.unit,replicate(padnum,npad)
+            endif
 	    nbytes_data = nbytes + npad
 	  end else begin
 	    nbytes_data = 0

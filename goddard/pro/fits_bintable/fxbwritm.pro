@@ -5,16 +5,15 @@
                       D30, D31, D32, D33, D34, D35, D36, D37, D38, D39, $
                       D40, D41, D42, D43, D44, D45, D46, D47, D48, D49, $
                       NOIEEE=NOIEEE, $
+                      POINTERS=POINTERS, PASS_METHOD=PASS_METHOD, $
                       ROW=ROW, NANVALUE=NANVALUE, BUFFERSIZE=BUFFERSIZE, $
                       ERRMSG=ERRMSG, WARNMSG=WARNMSG, STATUS=OUTSTATUS
 ;+
-; Project     : RXTE/PCA
-;
-; Name        : 
+; NAME: 
 ;	FXBWRITM
-; Purpose     : 
+; PURPOSE: 
 ;       Write multiple columns/rows to a disk FITS binary table file.
-; Explanation : 
+; EXPLANATION : 
 ;       A call to FXBWRITM will write multiple rows and multiple
 ;       columns to a binary table in a single procedure call.  Up to
 ;       fifty columns may be read in a single pass.  The file should
@@ -23,29 +22,52 @@
 ;       first writing a large chunk of data to the FITS file all at
 ;       once.  FXBWRITM cannot write variable-length arrays; use
 ;       FXBWRITE instead.
-; Use         : 
-;	FXBWRITM, UNIT, COL, D0, D1, D2, ..., ROW=ROW
-; Inputs      : 
+;
+;       The number of columns is limited to 50 if data are passed by
+;       positional argument.  However, this limitation can be overcome
+;       by passing either pointers or handles to FXBWRITM.  The user
+;       should set the PASS_METHOD keyword to 'POINTER' or 'HANDLE' as
+;       appropriate, and an array of pointers or handles to the data
+;       in the POINTERS keyword.  The user is responsible for freeing
+;       the pointers.
+;
+; CALLING SEQUENCE: 
+;	FXBWRITM, UNIT, COL, D0, D1, D2, ..., [ ROW= ]
+;    
+; INPUT PARAMETERS: 
 ;	UNIT	= Logical unit number corresponding to the file containing the
 ;		  binary table.
-;	D0,...	= An IDL data array to be written to the file, one for
+;	D0,..D49= An IDL data array to be written to the file, one for
 ;                 each column.
 ;	COL	= Column in the binary table to place data in, starting from
 ;		  column one.
-; Opt. Inputs : 
-;	None.
-; Outputs     : 
-;	None.
-; Opt. Outputs: 
-;	None.
-; Keywords    : 
-;	ROW	= Either row number in the binary table to writedata to,
+; OPTIONAL INPUT KEYWORDS: 
+;	ROW	= Either row number in the binary table to write data to,
 ;		  starting from row one, or a two element array containing a
 ;		  range of row numbers to write.  If not passed, then
 ;		  the entire column is written.
 ;	NANVALUE= Value signalling data dropout.  All points corresponding to
 ;		  this value are set to be IEEE NaN (not-a-number).  Ignored
 ;		  unless DATA is of type float, double-precision or complex.
+;       PASS_METHOD = A scalar string indicating method of passing
+;                 data to FXBWRITM.  One of 'ARGUMENT' (indicating
+;                 pass by positional argument), 'POINTER' (indicating
+;                 passing an array of pointers by the POINTERS
+;                 keyword), or 'HANDLE' (indicating passing an array
+;                 of handles by the POINTERS keyword).
+;                 Default:  'ARGUMENT'
+;       POINTERS = If PASS_METHOD is 'POINTER' then the user must pass
+;                 an array of IDL pointers to this keyword, one for
+;                 each column.  If PASS_METHOD is 'HANDLE' then pass
+;                 an array of IDL handles instead.  Ultimately the
+;                 user is responsible for deallocating pointers and
+;                 handles.
+;       BUFFERSIZE = Data are transferred in chunks to conserve
+;                 memory.  This is the size in bytes of each chunk.
+;                 If a value of zero is given, then all of the data
+;                 are transferred in one pass.  Default is 32768 (32
+;                 kB).
+; OPTIONAL OUTPUT KEYWORDS:
 ;	ERRMSG	= If defined and passed, then any error messages will be
 ;		  returned to the user in this parameter rather than
 ;		  depending on the MESSAGE routine in IDL.  If no errors are
@@ -57,20 +79,39 @@
 ;			IF ERRMSG NE '' THEN ...
 ;       WARNMSG = Messages which are considered to be non-fatal
 ;                 "warnings" are returned in this  output string.
-;       BUFFERSIZE = Data are transferred in chunks to conserve
-;                 memory.  This is the size in bytes of each chunk.
-;                 If a value of zero is given, then all of the data
-;                 are transferred in one pass.  Default is 32768 (32
-;                 kB).
 ;       STATUS  = An output array containing the status for each
 ;                 read, 1 meaning success and 0 meaning failure.
 ;
-; Calls       : 
-;	HOST_TO_IEEE
-; Common      : 
+; PROCEDURE CALLS: 
+;	HOST_TO_IEEE, PRODUCT()
+; EXAMPLE:
+;      Write a binary table 'sample.fits' giving 43 X,Y positions and a 
+;      21 x 21 PSF at each position:
+;
+;      (1) First, create sample values
+;      x = findgen(43) & y = findgen(43)+1 & psf = randomn(seed,21,21,32)
+;      
+;      (2) Create primary header, write it to disk, and make extension header
+;      fxhmake,header,/initialize,/extend,/date
+;      fxwrite,'sample.fits',header
+;      fxbhmake,header,43,'TESTEXT','Test binary table extension'
+;
+;      (3) Fill extension header with desired column names
+;      fxbaddcol,1,header,x[0],'X'             ;Use first element in each array
+;      fxbaddcol,2,header,y[0],'Y'             ;to determine column properties
+;      fxbaddcol,3,header,psf[*,*,0],'PSF'
+;
+;      (4) Write extension header to FITS file
+;      fxbcreate,unit,'sample.fits',header
+;
+;      (5) Use FXBWRITM to write all data to the extension in a single call
+;      fxbwritm,unit,['X','Y','PSF'], x, y, psf
+;      fxbfinish,unit                 ;Close the file
+;
+; COMMON BLOCKS: 
 ;	Uses common block FXBINTABLE--see "fxbintable.pro" for more
 ;	information.
-; Restrictions: 
+; RESTRICTIONS: 
 ;	The binary table file must have been opened with FXBCREATE or
 ;       FXBOPEN (with write access).
 ;
@@ -80,19 +121,17 @@
 ;	The row number must be consistent with the number of rows stored in the
 ;	binary table header.
 ;
-; Side effects: 
-;	None.
-; Category    : 
+; CATEGORY: 
 ;	Data Handling, I/O, FITS, Generic.
-; Prev. Hist. : 
+; PREVIOUS HISTORY: 
 ;       C. Markwardt, based on FXBWRITE and FXBREADM (ver 1), Jan 1999
-; Written     : 
+; WRITTEN: 
 ;	Craig Markwardt, GSFC, January 1999.
-; Modified    :
+; MODIFIED:
 ;       Version 1, Craig Markwardt, GSFC 18 January 1999.
 ;               Documented this routine, 18 January 1999. 
-; Version     :
-;       Version 1, 18 January 1999.
+;       C. Markwardt, added ability to pass by handle or pointer.
+;               Some bug fixes, 20 July 2001       
 ;-
 ;
 @fxbintable
@@ -120,6 +159,83 @@
         SC = SIZE(MYCOL)
         NUMCOLS = N_ELEMENTS(MYCOL)
         OUTSTATUS = LONARR(NUMCOLS)
+        COLNAMES = 'D'+STRTRIM(LINDGEN(50),2)
+
+;
+;  For IDL 5, it is possible to extract the data via pointers
+;
+        IF N_ELEMENTS(PASS_METHOD) EQ 0 THEN PASS_METHOD = 'ARGUMENT'
+        PASS = STRUPCASE(STRTRIM(PASS_METHOD[0],2))
+        IF PASS NE 'ARGUMENT' AND PASS NE 'POINTER' $
+          AND PASS NE 'HANDLE' THEN BEGIN
+            MESSAGE = 'ERROR: PASS_METHOD must be ARGUMENT, POINTER or HANDLE'
+            IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                ERRMSG = MESSAGE
+                RETURN
+            END ELSE MESSAGE, MESSAGE
+        ENDIF
+
+        NP = N_ELEMENTS(POINTERS)
+        IF PASS NE 'ARGUMENT' AND NP LT NUMCOLS THEN BEGIN
+            MESSAGE = 'ERROR: POINTERS array contains too few elements'
+            IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                ERRMSG = MESSAGE
+                RETURN
+            END ELSE MESSAGE, MESSAGE
+        ENDIF
+
+        IF PASS EQ 'POINTER' THEN BEGIN
+            IF DOUBLE(!VERSION.RELEASE) LT 5 THEN BEGIN
+                MESSAGE = 'ERROR: pointers cannot be used for IDL < 5'
+                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                    ERRMSG = MESSAGE
+                    RETURN
+                END ELSE MESSAGE, MESSAGE
+            ENDIF
+
+            SZ = SIZE(POINTERS)
+            IF SZ[SZ[0]+1] NE 10 THEN BEGIN
+                MESSAGE = 'ERROR: POINTERS must be an array of pointers'
+                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                        ERRMSG = MESSAGE
+                        RETURN
+                END ELSE MESSAGE, MESSAGE
+            ENDIF
+
+            FORWARD_FUNCTION PTR_VALID
+            WH = WHERE(PTR_VALID(POINTERS[0:NUMCOLS-1]) EQ 0, CT)
+            IF CT GT 0 THEN BEGIN
+                MESSAGE = 'ERROR: POINTERS contains invalid pointers'
+                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                        ERRMSG = MESSAGE
+                        RETURN
+                END ELSE MESSAGE, MESSAGE
+            ENDIF
+
+        ENDIF
+        
+        IF PASS EQ 'HANDLE' THEN BEGIN
+
+            SZ = SIZE(POINTERS)
+            IF SZ[SZ[0]+1] NE 3 THEN BEGIN
+                MESSAGE = 'ERROR: POINTERS must be an array of handles'
+                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                        ERRMSG = MESSAGE
+                        RETURN
+                END ELSE MESSAGE, MESSAGE
+            ENDIF
+
+            FORWARD_FUNCTION HANDLE_INFO
+            WH = WHERE(HANDLE_INFO(POINTERS[0:NUMCOLS-1]) EQ 0, CT)
+            IF CT GT 0 THEN BEGIN
+                MESSAGE = 'ERROR: POINTERS contains invalid handles'
+                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                        ERRMSG = MESSAGE
+                        RETURN
+                END ELSE MESSAGE, MESSAGE
+            ENDIF
+        ENDIF
+
 
 ;
 ;  Find the logical unit number in the FXBINTABLE common block.
@@ -204,6 +320,7 @@
 ;
 	ENDIF ELSE BEGIN
             ICOL[*] = LONG(MYCOL) - 1
+            FOUND[ICOL] = 1
         ENDELSE
                 
 
@@ -300,7 +417,7 @@
 ;  Check the type of the data against that defined for this column.
 ;
         COLNDIM = LONARR(NUMCOLS)
-        COLDIM  = LONARR(NUMCOLS, 20) ;; Maximum of 20 dimensions in output
+        COLDIM  = LONARR(NUMCOLS, 8) ;; Maximum of 8 dimensions in output
         COLTYPE = LONARR(NUMCOLS)
         BOFF1   = LONARR(NUMCOLS)
         BOFF2   = LONARR(NUMCOLS)
@@ -317,7 +434,19 @@
             COLTYPE[I] = IDLTYPE[ICOL[I],ILUN]
 
             SZ = 0
-            RESULT = EXECUTE('SZ = SIZE(D'+STRTRIM(I,2)+')')
+            IF PASS EQ 'ARGUMENT' THEN $
+              RESULT = EXECUTE('SZ = SIZE('+COLNAMES[I]+')') $
+            ELSE IF PASS EQ 'POINTER' THEN $
+              RESULT = EXECUTE('SZ = SIZE(*(POINTERS[I]))') $ ;; IDL 4!!
+            ELSE IF PASS EQ 'HANDLE' THEN BEGIN
+                HANDLE_VALUE, POINTERS[I], DD
+                IF N_ELEMENTS(DD) LE 0 THEN RESULT = 0 $
+                ELSE BEGIN
+                    SZ = SIZE(TEMPORARY(DD))
+                    RESULT = 1
+                ENDELSE
+            ENDIF
+
             IF RESULT EQ 0 THEN BEGIN
                 MESSAGE = MESSAGE + '; Could not extract type info (column '+$
                   STRTRIM(MYCOL[I],2)+')'
@@ -331,7 +460,7 @@
                     2: STYPE = 'short integer'
                     3: STYPE = 'long integer'
                     4: STYPE = 'floating point'
-                    5: STYPE = 'double precison'
+                    5: STYPE = 'double precision'
                     6: STYPE = 'complex'
                     7: STYPE = 'string'
                 ENDCASE
@@ -456,8 +585,14 @@
             IF NOT FOUND[I] THEN GOTO, LOOP_END_WRITE
 
             ;; Copy data into DD
-            DD = 0
-            RESULT = EXECUTE('DD = D'+STRTRIM(I,2))
+            IF PASS EQ 'ARGUMENT' THEN $
+              RESULT = EXECUTE('DD = '+COLNAMES[I]) $
+            ELSE IF PASS EQ 'POINTER' THEN $
+              RESULT = EXECUTE('DD = *(POINTERS[I])') $
+            ELSE IF PASS EQ 'HANDLE' THEN BEGIN
+                HANDLE_VALUE, POINTERS[I], DD
+                RESULT = 1
+            ENDIF
             IF RESULT EQ 0 THEN BEGIN
                 GOTO, LOOP_END_WRITE
 ;                MESSAGE = 'ERROR: Could not get data (column '+$
@@ -468,7 +603,7 @@
 ;                ENDIF ELSE MESSAGE, MESSAGE
             ENDIF
             IF N_ELEMENTS(DD) EQ 1 THEN DD = [DD]
-            DD = REFORM(DD, NOUTPUT[I]/NROWS0, NROWS0)
+            DD = REFORM(DD, NOUTPUT[I]/NROWS0, NROWS0, /OVERWRITE)
             IF POS GT 0 OR NR LT NROWS0 THEN $
               DD = DD[*,POS:(POS+NR-1)]
 
@@ -499,7 +634,7 @@
                 (CT EQ 7): BEGIN
                     N_CHAR = N_DIMS[1,ICOL[I],ILUN]
                     ;; Largest string determines size of array
-                    MAXLEN = MAX(STRLEN(DD))  
+                    MAXLEN = MAX(STRLEN(DD)) > 1
                     ;; Convert to bytes
                     DD = BYTE(TEMPORARY(DD))
                     IF N_ELEMENTS(DD) EQ 1 THEN DD = [DD]

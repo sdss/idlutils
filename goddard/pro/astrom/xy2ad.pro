@@ -18,6 +18,8 @@ pro xy2ad, x, y, astr, a, d
 ; INPUTS:
 ;     X     - row position in pixels, scalar or vector
 ;     Y     - column position in pixels, scalar or vector
+;           X and Y should be in the standard IDL convention (first pixel is
+;           0), and not the FITS convention (first pixel is 1). 
 ;     ASTR - astrometry structure, output from EXTAST procedure containing:
 ;        .CD   -  2 x 2 array containing the astrometry parameters CD1_1 CD1_2
 ;               in DEGREES/PIXEL                                   CD2_1 CD2_2
@@ -48,6 +50,7 @@ pro xy2ad, x, y, astr, a, d
 ;       Perform CD  multiplication in degrees  W. Landsman   Dec 1994
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
+;       Consistent conversion between CROTA and CD matrix W. Landsman Oct. 2000
 ;-
  if N_params() LT 4 then begin
         print,'Syntax -- XY2AD, x, y, astr, a, d'
@@ -58,18 +61,23 @@ pro xy2ad, x, y, astr, a, d
  cd = astr.cd
  crpix = astr.crpix
  cdelt = astr.cdelt
+ if cdelt[0] NE 1.0 then begin 
+         cd[0,0] = cd[0,0]*cdelt[0] & cd[0,1] = cd[0,1]*cdelt[0]
+         cd[1,1] = cd[1,1]*cdelt[1] & cd[1,0] = cd[1,0]*cdelt[1]
+  endif
 
- xdif = x - (crpix[0]-1) 
+
+ xdif = x - (crpix[0]-1)            
  ydif = y - (crpix[1]-1)
- xsi = cdelt[0]*(cd[0,0]*xdif + cd[0,1]*ydif)   ;Can't use matrix notation, in
- eta = cdelt[1]*(cd[1,0]*xdif + cd[1,1]*ydif)   ;case X and Y are vectors
+ xsi = cd[0,0]*xdif + cd[0,1]*ydif   ;Can't use matrix notation, in
+ eta = cd[1,0]*xdif + cd[1,1]*ydif   ;case X and Y are vectors
 
  ctype = astr.ctype
  crval = astr.crval
  coord = strmid(ctype,0,4)
  reverse = ((coord[0] EQ 'DEC-') and (coord[1] EQ 'RA--')) or $
            ((coord[0] EQ 'GLAT') and (coord[1] EQ 'GLON')) or $
-           ((coord[0] EQ 'ELON') and (coord[1] EQ 'GLAT'))
+           ((coord[0] EQ 'ELON') and (coord[1] EQ 'ELAT'))
 
  if reverse then begin
      crval = rotate(crval,2)

@@ -5,9 +5,7 @@
 		NO_TDIM=NO_TDIM,VARIABLE=VARIABLE,DCOMPLEX=DCOMPLEX,	$
 		BIT=BIT,LOGICAL=LOGICAL,ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBADDCOL
 ; Purpose     : 
 ;	Adds a column to a binary table extension.

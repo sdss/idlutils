@@ -1,28 +1,27 @@
 
 ;+
-; Name:
+; NAME:
 ;	LEGENDTEST
-; Purpose:
+; PURPOSE:
 ;	Demo program to show capabilities of  the legend procedure.
 ; CALLING SEQUENCE:
 ;	legendtest
-; Inputs:
+; INPUTS:
 ;	none
-; Optional Inputs:
+; OPTIONAL INPUTS:
 ;	none
-; Keywords:
+; KEYWORDS:
 ;	none
-; Outputs:
+; OUTPUTS:
 ;	legends of note
-; Common blocks:
+; COMMON BLOCKS:
 ;	none
-; Procedure:
-; Side Effects:
+; SIDE EFFECTS:
 ;	Sets !20 font to symbol if PostScript and !p.font=0.
-; Restrictions:
+; RESTRICTIONS:
 ;	With the vectorfont test, you'll get different results for PostScript
 ;	depending on the value of !p.font.
-; Modification history:
+; MODIFICATION HISTORY:
 ;	write, 27 Aug 92, F.K.Knight (knight@ll.mit.edu)
 ;	add test of /left,/right,/top,/bottom keywords, 21 June 93, FKK
 ;	update based on recent changes to legend, 7 Feb 94, FKK

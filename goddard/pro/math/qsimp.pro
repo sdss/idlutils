@@ -8,7 +8,7 @@ pro qsimp, func, A, B, S, EPS=eps, MAX_ITER = max_iter, _EXTRA = _EXTRA
 ;       Integrate a function to specified accuracy using the extended 
 ;       trapezoidal rule.   Adapted from algorithm in Numerical Recipes, 
 ;       by Press et al. (1992, 2nd edition), Section 4.2.     This procedure
-;       became partly obsolete in IDL V3.5 with the introduction of the 
+;       has been partly obsolete since IDL V3.5 with the introduction of the 
 ;       intrinsic function QSIMP(), but see notes below.
 ;
 ; CALLING SEQUENCE:
@@ -39,13 +39,13 @@ pro qsimp, func, A, B, S, EPS=eps, MAX_ITER = max_iter, _EXTRA = _EXTRA
 ;       very smooth.  However, if the function has a continuous 3rd derivative
 ;       then QSIMP will likely be more efficient at performing the integral.
 ;
-;       (2) QSIMP can be much faster than the intrinsic QSIMP() function (as
-;       of IDL V5.2).   This is because the intrinisc QSIMP() function only 
+;       (2) QSIMP can be *much* faster than the intrinsic QSIMP() function (as
+;       of IDL V5.3).   This is because the intrinisc QSIMP() function only 
 ;       requires that the user supplied function accept a *scalar* variable.
 ;       Thus on the the 16th iteration, the intrinsic QSIMP() makes 32,767
 ;       calls to the user function, whereas this procedure makes one call 
-;       with a  32,767 element vector.    Unlike the intrinsic QSIMP(), this
-;       procedure allows keyword in the user-supplied function.
+;       with a  32,767 element vector.  Also, unlike the intrinsic QSIMP(), this
+;       procedure allows keywords in the user-supplied function.
 ;
 ;       (3) Since the intrinsic QSIMP() is a function, and this file contains a 
 ;       procedure, there should be no name conflict.
@@ -69,8 +69,8 @@ pro qsimp, func, A, B, S, EPS=eps, MAX_ITER = max_iter, _EXTRA = _EXTRA
  On_error,2                                  ;Return to caller
 
  if N_params() LT 4 then begin
-    print,'Syntax - QSIMP, func, A, B, S, [ MAX_ITER = , EPS = ]
-    print,' func - scalar string giving function name
+    print,'Syntax - QSIMP, func, A, B, S, [ MAX_ITER = , EPS = ]'
+    print,' func - scalar string giving function name'
     print,' A,B - endpoints of integration, S - output sum'
     return
  endif

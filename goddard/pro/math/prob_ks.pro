@@ -33,9 +33,9 @@ pro prob_ks, D, N_eff, probks
  On_error,2
 
  if N_params() LT 3 then begin
-     print,'Syntax - prob_ks, D, N_eff, prob
-     print,'  D - Komolgorov-Smirnov statistic, input
-     print,'  N_eff - effective number of data points, input
+     print,'Syntax - prob_ks, D, N_eff, prob'
+     print,'  D - Komolgorov-Smirnov statistic, input'
+     print,'  N_eff - effective number of data points, input'
      print,'  prob - Significance level of D, output'
      return
  endif

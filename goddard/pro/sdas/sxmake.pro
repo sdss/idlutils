@@ -62,6 +62,7 @@ Pro sxmake, unit, File, Data, Par, Groups, Header, PSIZE = psize
 ;       Use SYSTIME() instead of !STIME   W. Landsman   Aug 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added optional PSIZE keyword   August 1999 W. Landsman 
+;       Recognize unsigned datatype    January 2000   W. Landsman 
 ;-
         common stcommn, result, filename
 ;
@@ -84,12 +85,12 @@ Pro sxmake, unit, File, Data, Par, Groups, Header, PSIZE = psize
         if N_elements(par) EQ 0 then par = 0
         if N_elements(groups) EQ 0 then groups = 0
 ;
-        if (par eq 0) and (groups eq 0) then $
+        s = size(data)                  ;obtain size of array.
+        stype = s[s[0]+1]               ;type of data.
+        if (par eq 0) and (groups eq 0) and (stype LT 6) then $
                 sxaddpar,header,'simple','T','Written by IDL:  '+ systime() $
             else $
                 sxaddpar,header,'simple','F','Written by IDL:  '+ systime()
-        s = size(data)                  ;obtain size of array.
-        stype = s[s[0]+1]               ;type of data.
         case stype of
 0:      message,'Data parameter is not defined'
 7:      message,"Can't write strings to ST files"
@@ -99,6 +100,10 @@ Pro sxmake, unit, File, Data, Par, Groups, Header, PSIZE = psize
 3:      begin& bitpix= 32 & d = 'INTEGER*4' & endcase
 5:      begin& bitpix= 64 & d = 'REAL*8' & endcase
 6:      begin& bitpix= 64 & d = 'COMPLEX*8' & endcase
+12:     begin & bitpix=16 & d='UNSIGNED*2' & endcase
+13:     begin & bitpix=32 & d='UNSIGNED*4' & endcase
+else:   message,'ERROR -- Unrecoginized input data type'
+
         endcase
 ;
         sxaddpar,header,'BITPIX',bitpix

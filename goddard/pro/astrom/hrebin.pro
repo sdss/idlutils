@@ -1,5 +1,5 @@
  pro hrebin, oldim, oldhd, newim, newhd, newx, newy, $
-            SAMPLE=sample, OUTSIZE = outsize
+            SAMPLE=sample, OUTSIZE = outsize, ERRMSG = errmsg
 ;+
 ; NAME:
 ;    HREBIN
@@ -12,7 +12,8 @@
 ;
 ; CALLING SEQUENCE:
 ;    HREBIN, oldhd        ;Special calling sequence to just update header
-;    HREBIN, oldim, oldhd, [ newim, newhd, newx, newy, OUTSIZE = ,/SAMPLE ]
+;    HREBIN, oldim, oldhd, [ newim, newhd, newx, newy, OUTSIZE = ,/SAMPLE, 
+;                            ERRMSG =  ]
 ;
 ; INPUTS:
 ;    OLDIM - the original image array
@@ -40,6 +41,11 @@
 ;    OUTSIZE - Two element integer vector which can be used instead of the
 ;             NEWX and NEWY parameters to specify the output image dimensions
 ;
+; OPTIONAL KEYWORD OUTPUT:
+;       ERRMSG - If this keyword is supplied, then any error mesasges will be
+;               returned to the user in this parameter rather than depending on
+;               on the MESSAGE routine in IDL.   If no errors are encountered
+;               then a null string is returned.               
 ; PROCEDURE:
 ;     The parameters BSCALE, NAXIS1, NAXIS2, CRPIX1, and CRPIX2 and the CD 
 ;     (or CDELT) parameters are updated for the new FITS header.
@@ -65,16 +71,20 @@
 ;         size    W. Landsman     August 1998
 ;     Correct for "edge" effects when expanding with REBIN W. Landsman Apr. 1999
 ;     Fixed initialization of header only call broken in Apr 98 change May. 1999
+;     Remove reference to obsolete !ERR  W. Landsman   February 2000
+;     Use double precision formatting for CD matrix W. Landsman April 2000
 ;- 
  On_error,2
 
  npar = N_params()      ;Check # of parameters
  if (npar EQ 3) or (npar EQ 5) or (npar EQ 0) then begin
-   print,'Syntax: HREBIN, oldim, oldhd,[ newim, newhd, OUTSIZE=, /SAMPLE ]
-   return
+     print,'Syntax - HREBIN, oldim, oldhd,[ newim, newhd, OUTSIZE=, ' + $
+                           '/SAMPLE, ERRMSG= ]'
+     return
  endif
 
  if not keyword_set(SAMPLE) then sample = 0
+ save_err = arg_present(errmsg)      ;Does user want to return error messages?
 
 ; If only 1 parameter is supplied, then assume it is a FITS header
 
@@ -87,10 +97,16 @@
 
  endif else begin 
 
-     check_FITS, oldim, oldhd, dimen, /NOTYPE
-     if !ERR EQ -1 then message,'ERROR - Invalid image or FITS header array'
-     if N_elements(dimen) NE 2 then message, $
-               'ERROR - Input image array must be 2-dimensional'
+     check_FITS, oldim, oldhd, dimen, /NOTYPE, ERRMSG = errmsg
+     if errmsg NE '' then begin
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+     endif
+     if N_elements(dimen) NE 2 then begin 
+           errmsg = 'Input image array must be 2-dimensional'
+           if not save_err then message,'ERROR - ' + errmsg,/CON
+           return
+     endif
       xsize = dimen[0]  &  ysize = dimen[1]
  endelse
 
@@ -169,8 +185,8 @@
       crpix2 = (crpix[1]-1.0)*yratio + 1.0                  else $
       crpix2 = (crpix[1]-0.5)*yratio + 0.5
 
- sxaddpar, newhd, 'CRPIX1', crpix1, FORMAT='(E14.7)'
- sxaddpar, newhd, 'CRPIX2', crpix2, FORMAT='(E14.7)'
+ sxaddpar, newhd, 'CRPIX1', crpix1, FORMAT='(G14.7)'
+ sxaddpar, newhd, 'CRPIX2', crpix2, FORMAT='(G14.7)'
 
 ; Scale either the CDELT parameters or the CD1_1 parameters.
 
@@ -183,10 +199,10 @@
  endif else if noparams EQ 2 then begin
 
     cd = astr.cd
-    sxaddpar, newhd, 'CD1_1', cd[0,0]/xratio, FORMAT='(E14.7)'
-    sxaddpar, newhd, 'CD1_2', cd[0,1]/yratio, FORMAT='(E14.7)'
-    sxaddpar, newhd, 'CD2_1', cd[1,0]/xratio, FORMAT='(E14.7)'
-    sxaddpar, newhd, 'CD2_2', cd[1,1]/yratio, FORMAT='(E14.7)'
+    sxaddpar, newhd, 'CD1_1', cd[0,0]/xratio
+    sxaddpar, newhd, 'CD1_2', cd[0,1]/yratio
+    sxaddpar, newhd, 'CD2_1', cd[1,0]/xratio
+    sxaddpar, newhd, 'CD2_2', cd[1,1]/yratio
 
  endif 
  endif
@@ -200,8 +216,8 @@
     if (bzero NE 0) then sxaddpar, newhd, 'BZERO', bzero/pix_ratio, $
        ' Additive Constant for Calibration'
 
- pixelsiz = sxpar( oldhd,'PIXELSIZ' )
- if !ERR NE -1 then sxaddpar, newhd, 'PIXELSIZ', pixelsiz/xratio
+ pixelsiz = sxpar( oldhd,'PIXELSIZ' , Count = N_pixelsiz)
+ if N_pixelsiz GT 0 then sxaddpar, newhd, 'PIXELSIZ', pixelsiz/xratio
 
  if npar EQ 2 then oldhd = newhd else $
     if npar EQ 1 then oldim = newhd

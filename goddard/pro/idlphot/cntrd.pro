@@ -1,63 +1,64 @@
 pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;+
 ;  NAME: 
-;	CNTRD
+;       CNTRD
 ;  PURPOSE:
-;	Compute the centroid coordinates of a stellar object 
-;	using the algorithm in the DAOPHOT FIND subroutine.
+;       Compute the centroid coordinates of a stellar object 
+;       using the algorithm in the DAOPHOT FIND subroutine.
 ;
 ;  CALLING SEQUENCE: 
-;	CNTRD, img, x, y, xcen, ycen, [ fwhm , /SILENT, /DEBUG]
+;       CNTRD, img, x, y, xcen, ycen, [ fwhm , /SILENT, /DEBUG]
 ;
 ;  INPUTS:     
-;	IMG - Two dimensional image array
-;	X,Y - Scalar or vector integers giving approximate stellar center
+;       IMG - Two dimensional image array
+;       X,Y - Scalar or vector integers giving approximate stellar center
 ;
 ;  OPTIONAL INPUT:
-;	FWHM - floating scalar; Centroid is computed using a box of half
-;		width equal to 1.5 sigma = 0.637* FWHM.  CNTRD will prompt
-;		for FWHM if not supplied
+;       FWHM - floating scalar; Centroid is computed using a box of half
+;               width equal to 1.5 sigma = 0.637* FWHM.  CNTRD will prompt
+;               for FWHM if not supplied
 ;
 ;  OUTPUTS:   
-;	XCEN - the computed X centroid position, same number of points as X
-;	YCEN - computed Y centroid position, same number of points as Y
+;       XCEN - the computed X centroid position, same number of points as X
+;       YCEN - computed Y centroid position, same number of points as Y
 ;
-;	Values for XCEN and YCEN will not be computed if the computed
-;	centroid falls outside of the box, or if the computed derivatives
-;	are non-decreasing.   If the centroid cannot be computed, then a 
-;	message is displayed and XCEN and YCEN are set to -1.
+;       Values for XCEN and YCEN will not be computed if the computed
+;       centroid falls outside of the box, or if the computed derivatives
+;       are non-decreasing.   If the centroid cannot be computed, then a 
+;       message is displayed and XCEN and YCEN are set to -1.
 ;
 ;  OPTIONAL OUTPUT KEYWORDS:
-;	SILENT - Normally CNTRD prints an error message if it is unable
-;		to compute the centroid.   Set /SILENT to suppress this.
-;	DEBUG - If this keyword is set, then CNTRD will display the subarray
-;		it is using to compute the centroid.
+;       /SILENT - Normally CNTRD prints an error message if it is unable
+;               to compute the centroid.   Set /SILENT to suppress this.
+;       /DEBUG - If this keyword is set, then CNTRD will display the subarray
+;               it is using to compute the centroid.
 ;
 ;  PROCEDURE: 
-;	Maximum pixel within distance from input pixel X, Y  determined 
-;	from FHWM is found and used as the center of a square, within 
-;	which the centroid is computed as the value (XCEN,YCEN) at which 
-;	the derivatives of the partial sums of the input image over (y,x)
-;	with respect to (x,y) = 0.
+;       Maximum pixel within distance from input pixel X, Y  determined 
+;       from FHWM is found and used as the center of a square, within 
+;       which the centroid is computed as the value (XCEN,YCEN) at which 
+;       the derivatives of the partial sums of the input image over (y,x)
+;       with respect to (x,y) = 0.
 ;
 ;  MODIFICATION HISTORY:
-;	Written 2/25/86, by J. K. Hill, S.A.S.C., following
-;	algorithm used by P. Stetson in DAOPHOT.
-;	Allowed input vectors        G. Hennessy       April,  1992
-;	Fixed to prevent wrong answer if floating pt. X & Y supplied
-;		W. Landsman        March, 1993
-;	Convert byte, integer subimages to float  W. Landsman  May 1995
-;	Converted to IDL V5.0   W. Landsman   September 1997
-;       Bug fix by Hogg October 2000; search for "Hogg"
+;       Written 2/25/86, by J. K. Hill, S.A.S.C., following
+;       algorithm used by P. Stetson in DAOPHOT.
+;       Allowed input vectors        G. Hennessy       April,  1992
+;       Fixed to prevent wrong answer if floating pt. X & Y supplied
+;               W. Landsman        March, 1993
+;       Convert byte, integer subimages to float  W. Landsman  May 1995
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Better checking of edge of frame David Hogg October 2000
+;       Avoid integer wraparound for unsigned arrays W.Landsman January 2001
 ;-      
  On_error,2                          ;Return to caller
 
  if N_params() LT 5 then begin
-	print,'Syntax: CNTRD, img, x, y, xcen, ycen, [ fwhm, /SILENT, /DEBUG ]'
+        print,'Syntax: CNTRD, img, x, y, xcen, ycen, [ fwhm, /SILENT, /DEBUG ]'
         PRINT,'img - Input image array'
         PRINT,'x,y - Input scalars giving approximate X,Y position'
         PRINT,'xcen,ycen - Output scalars giving centroided X,Y position'
-	return
+        return
  endif else if N_elements(fwhm) NE 1 then $
       read,'Enter approximate FWHM of image in pixels: ',fwhm
 
@@ -72,9 +73,9 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;   Compute size of box needed to compute centroid
 
  nhalf =  fix(0.637*fwhm) > 2  ;
- nbox = 2*nhalf+1  	      ;Width of box to be used to compute centroid
+ nbox = 2*nhalf+1             ;Width of box to be used to compute centroid
  nhalfbig = nhalf +3
- nbig = nbox + 6	;Extend box 3 pixels on each side to search for max pixel value
+ nbig = nbox + 6        ;Extend box 3 pixels on each side to search for max pixel value
  npts = N_elements(x) 
  xcentroid = fltarr(npts)  & ycentroid = xcentroid
  xcen = float(x) & ycen = float(y)
@@ -97,12 +98,13 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 
 ;  Locate maximum pixel in 'NBIG' sized subimage 
 
- mx = max( bigbox, mx_pos )  	;Maximum pixel value in BIGBOX
- idx = mx_pos mod nbig  	;X coordinate of Max pixel
- idy = mx_pos / nbig  		;Y coordinate of Max pixel
+ mx = max( bigbox, mx_pos )     ;Maximum pixel value in BIGBOX
+ idx = mx_pos mod nbig          ;X coordinate of Max pixel
+ idy = mx_pos / nbig            ;Y coordinate of Max pixel
  xmax = ix[i] - (nhalf+3) + idx  ;X coordinate in original image array
  ymax = iy[i] - (nhalf+3) + idy  ;Y coordinate in original image array
 
+; ---------------------------------------------------------------------
 ; check *new* center location for range
 ; added by Hogg
 
@@ -113,14 +115,15 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
      xcen[i] = -1   & ycen[i] = -1
      goto, DONE
  endif
+; ---------------------------------------------------------------------
 
 ;  Extract smaller 'STRBOX' sized subimage centered on maximum pixel 
 
  strbox = img[xmax-nhalf : xmax+nhalf, ymax-nhalf : ymax+nhalf]
- if dtype LT 3 then strbox = long(strbox)
+ if (dtype NE 4) and (dtype NE 5) then strbox = float(strbox)
 
  if keyword_set(DEBUG) then begin
-       PRINT,'Subarray used to compute centroid:'
+       message,'Subarray used to compute centroid:',/inf
        print,strbox
  endif  
 
@@ -132,9 +135,9 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 
 ; Find X centroid
 
- deriv = shift(strbox,-1,0) - strbox  	;Shift in X & subtract to get derivative
+ deriv = shift(strbox,-1,0) - strbox    ;Shift in X & subtract to get derivative
  deriv = deriv[0:nbox-2,nhalf-ir:nhalf+ir] ;Don't want edges of the array
- deriv = total( deriv, 2 )			  ;Sum X derivatives over Y direction
+ deriv = total( deriv, 2 )                        ;Sum X derivatives over Y direction
  sumd   = total( w*deriv )
  sumxd  = total( w*dd*deriv )
  sumxsq = total( w*dd^2 )
@@ -154,7 +157,7 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
    goto, DONE
  endif
 
- xcen[i] = xmax - dx 	;X centroid in original array
+ xcen[i] = xmax - dx    ;X centroid in original array
 
 ;  Find Y Centroid
 
@@ -168,15 +171,15 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
    if not keyword_set(SILENT) then message,/INF, $
         'Unable to compute Y centroid around position '+ pos
         xcen[i] = -1   & ycen[i] = -1
-	goto, DONE
+        goto, DONE
  endif
 
  dy = sumxsq*sumd/(sumc*sumxd)
  if (abs(dy) GT nhalf) then begin ;Reject if computed Y centroid outside box
    if not keyword_set(SILENT) then message,/INF, $
        'Computed X centroid for position '+ pos + ' out of range'
-	xcen[i]=-1 & ycen[i]=-1
-	goto, DONE
+        xcen[i]=-1 & ycen[i]=-1
+        goto, DONE
  endif 
  
  ycen[i] = ymax-dy
@@ -187,4 +190,5 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 
  return
  end
+
 

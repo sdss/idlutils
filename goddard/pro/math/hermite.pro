@@ -38,12 +38,12 @@ function hermite,xx,ff,x, FDERIV = fderiv
 ;       Interpolate the function 1/x at x = 0.45 using tabulated values
 ;       with a spacing of 0.1
 ;
-;       IDL> x = indgen(20)*0.1 + 0.1
+;       IDL> x = findgen(20)*0.1 + 0.1
 ;       IDL> y = 1/x
 ;       IDL> print,hermite(x,y,0.45)         
 ;               This gives 2.2188 compared to the true value 1/0.45 = 2.2222
 ;
-;       IDL> yprime = -/x^2      ;But in this case we know the first derivatives
+;       IDL> yprime = -1/x^2      ;But in this case we know the first derivatives
 ;       IDL> print,hermite(x,y,0.45,fderiv = yprime)
 ;             == 2.2219            ;and so can get a more accurate interpolation
 ; NOTES:
@@ -54,12 +54,13 @@ function hermite,xx,ff,x, FDERIV = fderiv
 ;       HERMITE() will return an error if one tries to interpolate any values 
 ;       outside of the range of the input table XX
 ; PROCEDURES CALLED:
-;       TABINV
+;       None
 ; REVISION HISTORY:
 ;       Written,    B. Dorman (GSFC) Oct 1993, revised April 1996
 ;       Added FDERIV keyword,  W. Landsman (HSTX)  April 1996
 ;       Test for out of range values  W. Landsman (HSTX) May 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use VALUE_LOCATE instead of TABINV   W. Landsman   February 2001
 ;-
    On_error,2 
 
@@ -68,12 +69,12 @@ function hermite,xx,ff,x, FDERIV = fderiv
         return,0
    endif
 
-   n = N_elements(xx)           ;Number knot points
+   n = N_elements(xx)           ;Number of knot points
    m = N_elements(x)            ;Number of points at which to interpolate
 
-   tabinv,xx,x,l                ;Integer index of interpolation points
+   l = value_locate(xx,x)       ;Integer index of interpolation points 
 
-   bad = where( (l EQ 0) or (l EQ n-1), Nbad)
+   bad = where( (l LT 0) or (l EQ n-1), Nbad)
         if Nbad GT 0 then message, 'ERROR - Valid interpolation range is ' + $
         strtrim(xx[0],2) + ' to ' + strtrim(xx[n-1],2)
 

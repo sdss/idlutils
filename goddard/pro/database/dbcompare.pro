@@ -47,17 +47,18 @@ pro dbcompare,list1,list2, items, TEXTOUT=textout, DIFF = diff
 ;               IDL> dbcompare,3624,3625,/diff
 ;
 ; PROCEDURES USED:
-;     DATATYPE(), DB_INFO(), DB_ITEM, DB_ITEM_INFO(), DBRD, DBXVAL()
+;     DB_INFO(), DB_ITEM, DB_ITEM_INFO(), DBRD, DBXVAL()
 ;     TEXTOPEN, TEXTCLOSE
 ; HISTORY:
 ;     Written,  W. Landsman            July 1996
 ;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Fix documentation, add Syntax display    W. Landsman   November 1998   
+;     Replace DATATYPE() with size(/TNAME)   W. Landsman    November 2001
 ;-
 ;
  On_error,2                                ;Return to caller
  if N_params() LT 2 then begin
-       print,'Syntax - DBCOMPARE, list1, list2, [items, TEXTOUT= ,/DIFF]  
+       print,'Syntax - DBCOMPARE, list1, list2, [items, TEXTOUT= ,/DIFF]'  
        return
  endif
  
@@ -88,7 +89,7 @@ pro dbcompare,list1,list2, items, TEXTOUT=textout, DIFF = diff
  if not keyword_set(TEXTOUT) then textout = !textout  ;use default output dev.
 
  textopen, dbname, TEXTOUT = textout
- if datatype(TEXTOUT) EQ 'STR' then text_out = 5 else $
+ if size(TEXTOUT,/TNAME) EQ 'STRING' then text_out = 5 else $
         text_out = textout <!TEXTUNIT
 
 ; Create table listing of each item specified. -------------------------

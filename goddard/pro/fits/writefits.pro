@@ -1,41 +1,38 @@
 pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ;+
 ; NAME:
-;	WRITEFITS
+;       WRITEFITS
 ; PURPOSE:
-;	Write IDL array and header variables to a disk FITS file.    
+;       Write IDL array and header variables to a disk FITS file.    
 ;
 ; EXPLANATION:
-;	A minimal FITS header is created if not supplied.
-;	WRITEFITS works for all types of FITS files except random groups
+;       A minimal FITS header is created if not supplied.
+;       WRITEFITS works for all types of FITS files except random groups
 ;
 ; CALLING SEQUENCE:
-;	WRITEFITS, filename, data [, header, NaNvalue = , /APPEND] 
+;       WRITEFITS, filename, data [, header, /APPEND] 
 ;
 ; INPUTS:
-;	FILENAME = String containing the name of the file to be written.
+;       FILENAME = String containing the name of the file to be written.
 ;
-;	DATA = Image array to be written to FITS file.    If DATA is 
+;       DATA = Image array to be written to FITS file.    If DATA is 
 ;              undefined or a scalar, then only the FITS header (which
 ;              must have NAXIS = 0) will be written to disk
 ;
 ; OPTIONAL INPUT:
-;	HEADER = String array containing the header for the FITS file.
-;		 If variable HEADER is not given, the program will generate
-;		 a minimal FITS header.
+;       HEADER = String array containing the header for the FITS file.
+;                If the variable HEADER is not supplied, the program will 
+;                generate a minimal FITS header.
 ;
 ; OPTIONAL INPUT KEYWORD:
-;       NaNvalue - Value in the data array to be set to the IEEE NaN
-;                 condition.   This is the FITS representation of undefined
-;                 values 
-;       APPEND - If this keyword is set then the supplied header and data
+;       /APPEND - If this keyword is set then the supplied header and data
 ;                array are assumed to be an extension and are appended onto
 ;                the end of an existing FITS file.    Note that the primary
 ;                header in the existing file must already have an EXTEND
 ;                keyword to indicate the presence of an FITS extension.
 ;
 ; OUTPUTS:
-;	None
+;       None
 ;
 ; RESTRICTIONS:
 ;       (1) It recommended that BSCALE and BZERO not be used (or set equal
@@ -49,28 +46,29 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ;       IDL> writefits, 'test', im             ;Write to a FITS file "test"
 ;
 ; PROCEDURES USED:
-;       CHECK_FITS, HEADFITS(), HOST_TO_IEEE, IS_IEEE_BIG(), MKHDR, SXDELPAR, 
-;	SXADDPAR, SXPAR()
+;       CHECK_FITS, HEADFITS(), MKHDR, SXDELPAR, SXADDPAR, SXPAR()
 ;
 ; MODIFICATION HISTORY:
-;	WRITTEN, Jim Wofford, January, 29 1989
+;       WRITTEN, Jim Wofford, January, 29 1989
 ;       MODIFIED, Wayne Landsman, added BITPIX = -32,-64 support for UNIX
 ;       Use new BYTEODER keywords 22-Feb-92
 ;       Modify OPENW for V3.0.0   W. Landsman       Dec 92
 ;       Work for "windows"   R. Isaacman            Jan 93
-;	More checks for null data                   Mar 94
-;	Work for Linux  W. Landsman                 Sep 95
-;	Added call to IS_IEEE_BIG()  W. Landsman  Apr 96
-;	Make sure SIMPLE is written in first line of header  W. Landsman Jun 97
-;	Use SYSTIME() instead of !STIME    W. Landsman  July 97
-;	Create a default image extension header if needed W. Landsman June 98
-;	Converted to IDL V5.0   W. Landsman         June 98
+;       More checks for null data                   Mar 94
+;       Work for Linux  W. Landsman                 Sep 95
+;       Added call to IS_IEEE_BIG()  W. Landsman  Apr 96
+;       Make sure SIMPLE is written in first line of header  W. Landsman Jun 97
+;       Use SYSTIME() instead of !STIME    W. Landsman  July 97
+;       Create a default image extension header if needed W. Landsman June 98
+;       Converted to IDL V5.0   W. Landsman         June 98
 ;       Write unsigned data types W. Landsman       December 1999
+;       Correct BZERO value for unsigned data  W. Landsman   July 2000
+;       Assume at least V5.1 remove NANValue keyword W. Landsman July 2001
 ;-
   On_error, 2
 
   if N_params() LT 2 then begin 
-       print,'Syntax - WRITEFITS, filename, data,[ header, NaNvalue =, /APPEND ]
+       print,'Syntax - WRITEFITS, filename, data,[ header, /APPEND]'
        return
   endif
 
@@ -85,8 +83,8 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ;Create a primary or image extension header if not supplied by the user
 
         if N_elements(header) LT 2 then begin 
-		if keyword_set(append) then mkhdr, header, data, /IMAGE  $
-		                       else mkhdr, header, data, /EXTEND
+                if keyword_set(append) then mkhdr, header, data, /IMAGE  $
+                                       else mkhdr, header, data, /EXTEND
         endif else if naxis GT 0 then $         
               check_FITS, data, header, /UPDATE, /FITS
 
@@ -94,43 +92,27 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 
   hdr = header
   if not keyword_set( APPEND) then begin 
-	 simple = 'SIMPLE  =                    T / Written by IDL:  ' $
-			+ systime()  
-	 hdr[0] =  simple + string( replicate(32b,80-strlen(simple) ) )
+         simple = 'SIMPLE  =                    T / Written by IDL:  ' $
+                        + systime()  
+         hdr[0] =  simple + string( replicate(32b,80-strlen(simple) ) )
          sxdelpar, hdr, [ 'GCOUNT', 'GROUPS', 'PCOUNT', 'PSIZE' ]
   endif
   
-; For floating or double precision test for NaN values to write
+; If necessary,convert unsigned to signed.    Do not destroy the original data
 
   if naxis NE 0 then begin
-
-  NaNtest = keyword_set(NaNvalue) and ( (type EQ 4) or (type EQ 5) )
-  if NaNtest then NaNpts = where( data EQ NaNvalue, N_NaN)
-      
-; If necessary, byte-swap the data, and convert unsigned to signed.    Do not 
-; destroy the original data
-
-        vms = (!VERSION.OS EQ "vms")
-        Big_endian = IS_IEEE_BIG()
         
         unsigned = (type EQ 12) or (type EQ 13)
-        if (not Big_endian) or unsigned then begin
+        if unsigned then begin
              newdata = data
-             if type EQ 12 then newdata = fix(data - 32768)
-             if type EQ 13 then newdata = long(data - 2147483648)
-             if not Big_endian then host_to_ieee, newdata
-        endif
-
-; Write the NaN values, if necessary
-
-      if NaNtest then begin
-     if (N_NaN GT 0) then begin
-         if type EQ 4 then data[NaNpts] = $
-             float( [ 127b, 255b, 255b, 255b ], 0, 1 ) $
-     else if type EQ 8 then data[NaNpts] = $
-             double( [ 127b, replicate( 255b,7)], 0 ,1)
-      endif
- endif
+             if type EQ 12 then begin
+                     sxaddpar,hdr,'BZERO',32768,'Data is Unsigned Integer'
+                     newdata = fix(data - 32768)
+             endif else if type EQ 13 then begin 
+                    sxaddpar,hdr,'BZERO',2147483648,'Data is Unsigned Long'
+                    newdata = long(data - 2147483648)
+             endif
+         endif
  endif
 
 ; Open file and write header information
@@ -146,7 +128,7 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
                   'ERROR - FITS file ' + filename + ' not found'
             hprimary = headfits( filename )
             extend = where( strmid(hprimary,0,8) EQ 'EXTEND  ', Nextend)
-            openu, unit, filename, /BLOCK, /GET_LUN
+            openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
             if Nextend EQ 0 then begin
                message,'EXTEND keyword not found in primary FITS header',/CON
                message,'Recreate primary FITS header with EXTEND keyword ' + $
@@ -163,8 +145,9 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
     endif else begin
 
         if !VERSION.OS EQ "vms" then $
-          	openw, unit, filename, /NONE, /BLOCK, /GET_LUN, 2880 else $
-                openw, unit, filename, /GET_LUN
+                openw, unit, filename, /NONE, /BLOCK, /GET_LUN, 2880, $
+                       /swap_if_little_endian   else $
+                openw, unit, filename, /GET_LUN, /swap_if_little_endian
 
     endelse
 
@@ -194,12 +177,9 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
         nbytes = N_elements( data) * (abs(bitpix) / 8 )
         npad = nbytes mod 2880
 
-        if not big_endian then $
-
-          writeu, unit, newdata  $
-
-       else writeu, unit, data 
-
+        if unsigned then writeu, unit, newdata $
+                    else writeu, unit, data 
+   
 ; ASCII Tables padded with blanks (32b) otherwise pad with zeros
         if keyword_set( APPEND) then begin
              exten = sxpar( header, 'XTENSION')
@@ -208,7 +188,7 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
          
         if npad GT 0 then writeu, unit, replicate( padnum, 2880 - npad)
 DONE:
-	free_lun, unit  
+        free_lun, unit  
 
   return
   end

@@ -49,6 +49,7 @@ function spec_dir,filename,extension
 ;      Work for relative Unix directory            W. Landsman  May, 1997
 ;      Expand Unix tilde if necessary              W. Landsman  September 1997
 ;      Converted to IDL V5.0   W. Landsman   September 1997
+;      Fix VMS call to TRNLOG()  W. Landsman       September 2000
 ;-
  On_error,2                                     ;Return to user
 
@@ -87,7 +88,7 @@ function spec_dir,filename,extension
      if disk EQ '' then disk = curdisk else begin
        if !VERSION.OS EQ "vms" then begin
          logname = strmid(disk,0,strpos(disk,':'))
-         test = trnlog[logname,fname]
+         test = trnlog(logname,fname)
          if test then begin
             if strmid(fname,strlen(fname)-1,1) EQ ']' then begin
                if strmid(fname,strlen(fname)-2,1) NE '.' then $

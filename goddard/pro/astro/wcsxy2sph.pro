@@ -212,7 +212,7 @@ endif else if (n_params() eq 4) then begin
   if N_elements( ctype ) GE 1 then begin
         ctype1 = strtrim(ctype[0],2)     
         if strlen(ctype1) LT 8 then message,'ERROR - ' + strupcase(ctype1) + $
-               ' is not a valid spherical projection type.  
+               ' is not a valid spherical projection type.'  
         projection_type = strupcase(strmid(ctype1,5,3))
   endif
 
@@ -1061,7 +1061,7 @@ case strupcase(projection_type) of
 
 endcase
 
-; Convert form "native" coordinate system to "standard" coordinate system
+; Convert from "native" coordinate system to "standard" coordinate system
 ; if the CRVAL keyword is set.  Otherwise, assume the map projection is 
 ; complete 
 

@@ -51,6 +51,8 @@ PRO CT2LST, lst, lng, tz, tme, day, mon, year
 ;
 ;               ==> lst =  8.5825249 hours  (= 8h 34m 57.0896s)
 ;
+;       The Web site  http://tycho.usno.navy.mil/sidereal.html contains more
+;       info on sidereal time, as well as an interactive calculator.
 ; PROCEDURES USED:
 ;       jdcnv - Convert from year, month, day, hour to julian date
 ;
@@ -65,9 +67,9 @@ PRO CT2LST, lst, lng, tz, tme, day, mon, year
  On_error,2
 
  if N_params() LT 3 THEN BEGIN
-        print,'Syntax - CT2LST, Lst, Lng, Tz, Time, Day, Mon, Year 
+        print,'Syntax - CT2LST, Lst, Lng, Tz, Time, Day, Mon, Year' 
         print,'                 or'
-        print,'         CT2LST, Lst, Lng, Tz, JD
+        print,'         CT2LST, Lst, Lng, Tz, JD'
         return
  endif
 ;                            If all parameters were given, then compute

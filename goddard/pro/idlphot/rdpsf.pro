@@ -1,35 +1,35 @@
 pro rdpsf,psf,hpsf,psfname
 ;+
 ; NAME:
-;	RDPSF
+;       RDPSF
 ; PURPOSE:
-;	Read the FITS file created by GETPSF in the DAOPHOT sequence 
+;       Read the FITS file created by GETPSF in the DAOPHOT sequence 
 ; EXPLANATION:
-;	Combines the Gaussian with the residuals to create an output PSF array.
+;       Combines the Gaussian with the residuals to create an output PSF array.
 ;
 ; CALLING SEQUENCE:
-;	RDPSF, PSF, HPSF, [ PSFNAME]
+;       RDPSF, PSF, HPSF, [ PSFname]
 ;
 ; OPTIONAL INPUTS
-;	psfname - string giving the name of the FITS file containing the PSF
-;		residuals
+;       PSFname - string giving the name of the FITS file containing the PSF
+;               residuals
 ;
 ; OUTPUTS
-;	psf - array containing the actual PSF
-;	hpsf - header associated with psf
+;       psf - array containing the actual PSF
+;       hpsf - header associated with psf
 ;
 ; PROCEDURES CALLED:
-;	DAO_VALUE(), MAKE_2D, SXADDPAR, READFITS(), SXPAR()
+;       DAO_VALUE(), MAKE_2D, SXADDPAR, READFITS(), SXPAR()
 ; REVISION HISTORY:
-;	Written W. Landsman              December, 1988
-;	Checked for IDL Version 2, J. Isensee & J. Hill, December, 1990
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written W. Landsman              December, 1988
+;       Checked for IDL Version 2, J. Isensee & J. Hill, December, 1990
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  On_error,2
 
  if N_params() LT 2 then begin
-    print,'Syntax - PSFRD, PSF, HPSF, [ PSFNAME ]
-    print,'    PSF,HPSF - are the output PSF array and header
+    print,'Syntax - RDPSF, psf, Hpsf, [ PSFname ]'
+    print,'    PSF,HPSF - are the output PSF array and header'
     print,'    PSFNAME - the name of the file containing the PSF, input'
    return
  endif

@@ -5,8 +5,8 @@ function helio_jd,date,ra,dec, B1950 = B1950, TIME_DIFF = time_diff
 ; PURPOSE:
 ;      Convert geocentric (reduced) Julian date to heliocentric Julian date
 ; EXPLANATION:
-;      This procedure corrects for the extra light travel time between the 
-;      Earth and the Sun.
+;      This procedure correct for the extra light travel time between the Earth 
+;      and the Sun.
 ;
 ; CALLING SEQUENCE:
 ;       jdhelio = HELIO_JD( date, ra, dec, /B1950, /TIME_DIFF)
@@ -18,18 +18,18 @@ function helio_jd,date,ra,dec, B1950 = B1950, TIME_DIFF = time_diff
 ;               Equinox is J2000 unless the /B1950 keyword is set
 ;
 ; OUTPUTS:
-;       jdhelio - heliocentric Julian date.   If /TIME_DIFF is set, then
+;       jdhelio - heliocentric reduced Julian date.  If /TIME_DIFF is set, then
 ;                 HELIO_JD() instead returns the time difference in seconds
 ;                 between the geocentric and heliocentric Julian date.
 ;                 
 ; OPTIONAL INPUT KEYWORDS 
 ;       /B1950 - if set, then input coordinates are assumed to be in equinox 
 ;                B1950 coordinates.
-;       /TIME_DIFF - if set, then HELIO_JD() instead the time difference in 
-;                seconds between the geocentric and heliocentric Julian date.
-           
+;       /TIME_DIFF - if set, then HELIO_JD() returns the time difference
+;                (heliocentric JD - geocentric JD ) in seconds 
+;
 ; EXAMPLE:
-;       What is heliocentric julian date of an observation of V402 Cygni
+;       What is the heliocentric Julian date of an observation of V402 Cygni
 ;       (J2000: RA = 20 9 7.8, Dec = 37 09 07) taken June 15, 1973 at 11:40 UT?
 ;
 ;       IDL> juldate, [1973,6,15,11,40], jd      ;Get geocentric Julian date
@@ -65,7 +65,7 @@ function helio_jd,date,ra,dec, B1950 = B1950, TIME_DIFF = time_diff
     print,'      Ra and Dec must be in degrees'
  endif
 
-;Because 
+;Because XYZ uses default B1950 coordinates, we'll convert everything to B1950
 
  if not keyword_set(B1950) then bprecess,ra,dec,ra1,dec1 else begin
         ra1 = ra

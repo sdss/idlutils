@@ -1,68 +1,69 @@
 pro mmm, sky_vector, skymde, sigma , skew, HIGHBAD = highbad, DEBUG = debug
 ;+
 ; NAME:
-;	MMM
+;       MMM
 ; PURPOSE: 
-;	Estimate the sky background in a stellar contaminated field.
+;       Estimate the sky background in a stellar contaminated field.
 ; EXPLANATION:  
-;	MMM assumes that contaminated sky pixel values overwhelmingly display 
-;	POSITIVE departures from the true value.  Adapted from DAOPHOT 
-;	routine of the same name.
+;       MMM assumes that contaminated sky pixel values overwhelmingly display 
+;       POSITIVE departures from the true value.  Adapted from DAOPHOT 
+;       routine of the same name.
 ;
 ; CALLING SEQUENCE:
-;	MMM, sky, [ skymde, sigma, skew, HIGHBAD = , DEBUG =  ]
+;       MMM, sky, [ skymde, sigma, skew, HIGHBAD = , /DEBUG  ]
 ;
 ; INPUTS:
-;	SKY - Array or Vector containing sky values.  This version of
-;		MMM does not require SKY to be sorted beforehand.  SKY
-;		is unaltered by this program.
+;       SKY - Array or Vector containing sky values.  This version of
+;               MMM does not require SKY to be sorted beforehand.  SKY
+;               is unaltered by this program.
 ;
 ; OPTIONAL OUTPUTS:
-;	SKYMDE - Scalar giving estimated mode of the sky values
-;	SIGMA -  Scalar giving standard deviation of the peak in the sky
-;		histogram.  If for some reason it is impossible to derive
-;		SKYMDE, then SIGMA = -1.0
-;	SKEW -   Scalar giving skewness of the peak in the sky histogram
-;		If no output variables are supplied or if /DEBUG is set
-;		then the values of SKYMDE, SIGMA and SKEW will be printed.
+;       SKYMDE - Scalar giving estimated mode of the sky values
+;       SIGMA -  Scalar giving standard deviation of the peak in the sky
+;               histogram.  If for some reason it is impossible to derive
+;               SKYMDE, then SIGMA = -1.0
+;       SKEW -   Scalar giving skewness of the peak in the sky histogram
+;               If no output variables are supplied or if /DEBUG is set
+;               then the values of SKYMDE, SIGMA and SKEW will be printed.
 ;
 ; OPTIONAL KEYWORD INPUTS:
-;	HIGHBAD - scalar value of the high "bad" pixel level (e.g. cosmic rays)
-;		If not supplied, then there is assumed to be no high bad
-;		pixels.
-;	DEBUG - If this keyword is set and non-zero, then additional information
-;		is displayed at the terminal.
+;       HIGHBAD - scalar value of the high "bad" pixel level (e.g. cosmic rays)
+;               If not supplied, then there is assumed to be no high bad
+;               pixels.
+;       /DEBUG - If this keyword is set and non-zero, then additional information
+;               is displayed at the terminal.
 ;
 ; RESTRICTIONS:
-;	Program assumes that low "bad" pixels (e.g. bad CCD columns) have
-;	already been deleted from the SKY vector.
+;       Program assumes that low "bad" pixels (e.g. bad CCD columns) have
+;       already been deleted from the SKY vector.
 ;
 ; METHOD:
-;	The algorithm used by MMM consists of roughly two parts:
-;	(1) The average and sigma of the sky pixels is computed.   These values
-;	are used to eliminate outliers, i.e. values with a low probability
-;	given a Gaussian with specified average and sigma.   The average
-;	and sigma are then recomputed and the process repeated up to 20
-;	iterations:
-;	(2) The amount of contamination by stars is estimated by comparing the 
-;	mean and median of the remaining sky pixels.   If the mean is larger
-;	than the median then the true sky value is estimated by
-;	3*median - 2*mean
+;       The algorithm used by MMM consists of roughly two parts:
+;       (1) The average and sigma of the sky pixels is computed.   These values
+;       are used to eliminate outliers, i.e. values with a low probability
+;       given a Gaussian with specified average and sigma.   The average
+;       and sigma are then recomputed and the process repeated up to 20
+;       iterations:
+;       (2) The amount of contamination by stars is estimated by comparing the 
+;       mean and median of the remaining sky pixels.   If the mean is larger
+;       than the median then the true sky value is estimated by
+;       3*median - 2*mean
 ;         
 ; REVISION HISTORY:
-;	Adapted to IDL from 1986 version of DAOPHOT in STSDAS, 
-;	W. Landsman, STX Feb 1987
-;	Adapted for IDL Version 2, J. Isensee, STX, Sept 1990
-;	Added HIGHBAD keyword, W. Landsman January, 1991
-;	Fixed occasional problem with integer inputs    W. Landsman  Feb, 1994
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Adapted to IDL from 1986 version of DAOPHOT in STSDAS, 
+;       W. Landsman, STX Feb 1987
+;       Adapted for IDL Version 2, J. Isensee, STX, Sept 1990
+;       Added HIGHBAD keyword, W. Landsman January, 1991
+;       Fixed occasional problem with integer inputs    W. Landsman  Feb, 1994
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Avoid possible 16 bit integer overflow   W. Landsman  November 2001
 ;-
  On_error,2               ;Return to caller
  mxiter = 30              ;Maximum number of iterations allowed
  minsky = 20              ;Minimum number of legal sky elements
- if N_params() EQ 0 then begin		
-	print,"Syntax:  MMM, sky, skymde, sigma, skew, [HIGHBAD = , /DEBUG] "
-	return
+ if N_params() EQ 0 then begin          
+        print,"Syntax:  MMM, sky, skymde, sigma, skew, [HIGHBAD = , /DEBUG] "
+        return
  endif
 
  nsky = N_elements( sky_vector )            ;Get number of sky elements     
@@ -94,10 +95,10 @@ pro mmm, sky_vector, skymde, sigma , skew, HIGHBAD = highbad, DEBUG = debug
 
 ; Compute mean and sigma (from the first pass).
 
- skymed = 0.5*(sky[(minmum+maxmum+1)/2] + sky[(minmum+maxmum)/2  +1]) ;median 
- skymn = sum/(maxmum-minmum)	 			;mean       
+ skymed = 0.5*sky[(minmum+maxmum+1)/2] + 0.5*sky[(minmum+maxmum)/2 + 1] ;median 
+ skymn = sum/(maxmum-minmum)                            ;mean       
  sigma = sqrt(sumsq/(maxmum-minmum)-skymn^2)             ;sigma          
- skymn = skymn + skymid 	;Add median which was subtracted off earlier 
+ skymn = skymn + skymid         ;Add median which was subtracted off earlier 
 
  skymde = skymn                        
 
@@ -117,7 +118,7 @@ START_LOOP:
       return
    endif
 
-   if ( maxmum-minmum LT minsky ) then begin 	;Error?	
+   if ( maxmum-minmum LT minsky ) then begin    ;Error? 
 
       sigma = -1.0 &  skew = 0.0   
       message,'ERROR - Too few ('+strtrim(maxmum-minmum,2) +  $
@@ -137,42 +138,42 @@ START_LOOP:
 ;       
     redo = 0B
 ;
-    newmin = minmum		
-    tst_min = sky[newmin+1] GE cut1	 ;Is MINMUM+1 above current CUT?
+    newmin = minmum             
+    tst_min = sky[newmin+1] GE cut1      ;Is MINMUM+1 above current CUT?
     done = (newmin EQ -1) and tst_min    ;Are we at first pixel of SKY?
     if not done then  $
         done =  (sky[newmin>0] LT cut1) and tst_min
     if not done then begin
-	istep = 1 - 2*fix(tst_min)
-	repeat begin
-        	newmin = newmin + istep
-	        done = (newmin EQ -1)
-	        if not done then $
-		    done = (sky[newmin] LE cut1) and (sky[newmin+1] GE cut1)
-	endrep until done
-	if tst_min then delta = sky[newmin+1:minmum] - skymid $
-	           else delta = sky[minmum+1:newmin] - skymid
+        istep = 1 - 2*fix(tst_min)
+        repeat begin
+                newmin = newmin + istep
+                done = (newmin EQ -1)
+                if not done then $
+                    done = (sky[newmin] LE cut1) and (sky[newmin+1] GE cut1)
+        endrep until done
+        if tst_min then delta = sky[newmin+1:minmum] - skymid $
+                   else delta = sky[minmum+1:newmin] - skymid
         sum = sum - istep*total(delta)
-	sumsq = sumsq - istep*total(delta^2)
-	redo = 1b
-	minmum = newmin
+        sumsq = sumsq - istep*total(delta^2)
+        redo = 1b
+        minmum = newmin
      endif
 ;       
    newmax = maxmum
-   tst_max = sky[maxmum] LE cut2	   ;Is current maximum below upper cut?
-   done = (maxmum EQ nlast) and tst_max	   ;Are we at last pixel of SKY array?
-   if not done then $ 	
+   tst_max = sky[maxmum] LE cut2           ;Is current maximum below upper cut?
+   done = (maxmum EQ nlast) and tst_max    ;Are we at last pixel of SKY array?
+   if not done then $   
        done = ( tst_max ) and (sky[(maxmum+1)<nlast] GT cut2) 
-    if not done then begin		   ;Keep incrementing NEWMAX
-       istep = -1 + 2*fix(tst_max)	   ;Increment up or down?
+    if not done then begin                 ;Keep incrementing NEWMAX
+       istep = -1 + 2*fix(tst_max)         ;Increment up or down?
        Repeat begin
           newmax = newmax + istep
-	  done = (newmax EQ nlast)
-	  if not done then $
-		done = ( sky[newmax] LE cut2 ) and ( sky[newmax+1] GE cut2 )
+          done = (newmax EQ nlast)
+          if not done then $
+                done = ( sky[newmax] LE cut2 ) and ( sky[newmax+1] GE cut2 )
        endrep until done
        if tst_max then delta = sky[maxmum+1:newmax] - skymid $
-	       else delta = sky[newmax+1:maxmum] - skymid
+               else delta = sky[newmax+1:maxmum] - skymid
        sum = sum + istep*total(delta)
        sumsq = sumsq + istep*total(delta^2)
        redo = 1b
@@ -202,9 +203,9 @@ START_LOOP:
  skew = float( (skymn-skymde)/max([1.,sigma]) )
 
  if keyword_set(DEBUG) or ( N_params() EQ 1 ) then begin
-        print, 'Number of unrejected sky elements: ', strtrim(nsky,2), $
+        print, '% MMM: Number of unrejected sky elements: ', strtrim(nsky,2), $
               '    Number of iterations: ', strtrim(niter,2)
-	print, 'MODE, SIGMA, SKEW of sky vector:', skymde, sigma, skew   
+        print, '% MMM: Mode, Sigma, Skew of sky vector:', skymde, sigma, skew   
  endif
  
  return

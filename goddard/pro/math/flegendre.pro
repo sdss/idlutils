@@ -47,7 +47,7 @@ function flegendre,x,m
  On_Error,2
 
  if N_params() LT 2 then begin
-        print,'Syntax - result = FLEGENDRE( x, m)
+        print,'Syntax - result = FLEGENDRE( x, m)'
         return,0
  endif  
 

@@ -8,7 +8,7 @@
 ;               when both x and y data have errors
 ;
 ; CALLING EXAMPLE:
-;       FITEXY, x, y, A, B, X_SIG=sigx, Y_SIG=sigy, [sigma_A_B, chi_sq, q, TOL=]
+;       FITEXY, x, y, A, B, X_SIG= , Y_SIG= , [sigma_A_B, chi_sq, q, TOL=]
 ;
 ; INPUTS:
 ;       x = array of values for independent variable.
@@ -56,6 +56,8 @@
 ;       Now returns q rather than 1-q   W. Landsman  December 1992
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use CHISQR_PDF, MOMENT instead of STDEV,CHI_SQR1 W. Landsman April 1998
+;       Fixed typo for initial guess of slope, this error was nearly
+;             always insignificant          W. Landsman   March 2000
 ;-
 function chisq_fitexy, B_angle
 ;
@@ -76,7 +78,7 @@ function chisq_fitexy, B_angle
 ;       From "Numerical Recipes" column: Computer in Physics Vol.6 No.3
 ; MODIFICATION HISTORY:
 ;       Written, Frank Varosi NASA/GSFC 1992.
-;
+
   common fitexy, xx, yy, sigx, sigy, ww, Ai, offs
 
         B_slope = tan( B_angle )
@@ -94,12 +96,12 @@ pro fitexy, x, y, A_intercept, B_slope, sigma_A_B, chi_sq, q, TOLERANCE=Tol, $
   common fitexy, xx, yy, sigx, sigy, ww, Ai, offs
 
   if N_params() LT 4 then begin
-     print,'Syntax -  fitexy, x, y, A, B, X_SIG=sigx, Y_SIG=sigy, 
-     print,'                  [sigma_A_B, chi_sq, q, TOLERANCE = ]
+     print,'Syntax -  fitexy, x, y, A, B, X_SIG=sigx, Y_SIG=sigy,' 
+     print,'                  [sigma_A_B, chi_sq, q, TOLERANCE = ]'
      return
   endif
         dummy = moment(x,sdev=stdevx) & dummy = moment(y,sdev=stdevy)
-        scale = sqrt( stdevx/stdevy )
+        scale =  stdevx/stdevy       ;Updated 14-Mar-2000
         xx = x
         yy = y * scale
         sigx = x_sigma

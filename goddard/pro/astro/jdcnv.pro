@@ -5,14 +5,21 @@ PRO JDCNV, YR, MN, DAY, HR, JULIAN
 ; PURPOSE:
 ;	Converts Gregorian dates to Julian days   
 ;
+; EXPLANATION:
+;       For IDL versions V5.1 or greater, this procedure is superceded by
+;       JULDAY() function in the standard IDL distribution.   Note, however,
+;       that prior to V5.1 there wasa bug in JULDAY() that gave answers off
+;       by 0.5 days. 
+;        
 ; CALLING SEQUENCE:
 ;	JDCNV, YR, MN, DAY, HR, JULIAN
 ;
 ; INPUTS:
-; 	YR = Year (integer)  
-;	MN = Month (integer 1-12)
-;	DAY = Day  (integer 1-31) 
-;	HR  = Hours and fractions of hours of universal time (U.T.)
+; 	YR = Year, integer scalar or vector
+;	MN = Month  integer (1-12) scalar or vector
+;	DAY = Day   integer 1-31) scalar or vector 
+;	HR  = Hours and fractions of hours of universal time (U.T.), scalar
+;              or vector
 ;		
 ; OUTPUTS:
 ;	JULIAN = Julian date (double precision) 
@@ -35,11 +42,11 @@ PRO JDCNV, YR, MN, DAY, HR, JULIAN
  On_error,2
 
  if N_params() LT 5 then begin
-	print,'Syntax -  JDCNV, yr, mn, day, hr, julian   
-	print,'   yr - Input Year (e.g. 1978), scalar or vector
-	print,'   mn - Input Month (1-12), scalar or vector
-	print,'   day - Input Day (1-31), scalar or vector
-	print,'   hr - Input Hour (0-24), scalar or vector
+	print,'Syntax -  JDCNV, yr, mn, day, hr, julian'  
+	print,'   yr - Input Year (e.g. 1978), scalar or vector'
+	print,'   mn - Input Month (1-12), scalar or vector'
+	print,'   day - Input Day (1-31), scalar or vector'
+	print,'   hr - Input Hour (0-24), scalar or vector'
 	print,'   julian - output Julian date'
         return
  endif

@@ -12,13 +12,14 @@ function poidev, xm, SEED = seed
 ;     NOTE: This routine became partially obsolete in V5.0 with the 
 ;     introduction of the POISSON keyword to the intrinsic functions 
 ;     RANDOMU and RANDOMN.     However, POIDEV is still useful for adding 
-;     Poisson noise to an image array. 
+;     Poisson noise to an existing image array, for which the coding is much 
+;     simpler than it would be using RANDOMU (see example 1) 
 ; CALLING SEQUENCE:
 ;     result = POIDEV( xm, [ SEED = ] )
 ;
 ; INPUTS:
-;     xm - numeric scalar or vector, specifying the mean of the Poisson 
-;               distribution
+;     xm - numeric scalar, vector or array, specifying the mean(s) of the 
+;          Poisson distribution
 ;
 ; OUTPUT:
 ;     result - Long integer scalar or vector, same size as xm

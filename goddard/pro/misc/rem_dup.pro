@@ -53,7 +53,7 @@ function rem_dup, a, flag
  On_error,2
  npar = N_params()		;number of input parameters supplied
  if npar EQ 0 then begin
- 	print,'Syntax -  b = rem_dup( a, [ flag ] )
+ 	print,'Syntax -  b = rem_dup( a, [ flag ] )'
  	return, -1
  end
 

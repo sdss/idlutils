@@ -1,8 +1,8 @@
-Math and Statistics pro/math                              February 1999
+Math and Statistics pro/math                             November 2001
 _________
 
       This directory contains IDL mathematics and statistics procedures
-thought to be of interest in astronomy.    Twelve of the procedures,
+thought to be of interest in astronomy.    Fifteen of the procedures,
 are adapted from algorithms in "Numerical Recipes 2nd Edition" by Press, 
 Flannery,Teukolsky, and Vetterling (1992, Cambridge University Press).    
 These procedures are marked below with an "NR"
@@ -16,21 +16,35 @@ Henry Freudenreich (Hughes STX) are available in the contrib/freudenreich
 directory.    These include procedures for LOWESS smoothing, robust fitting,
 bootstrap errors, and fitting to a plane.
 
+    Also note the following mathematics procedures available at Craig
+Markwardt's site ( http://astrog.physics.wisc.edu/~craigm/idl/math.html )
+
+CHEBFIT - Fit Chebyshev polynomial coefficients to a tabulated function  
+CHEBEVAL - Evaluate a Chebyshev polynomial on an interval, given the coefficients  
+CHEBCOEF - Estimate Chebyshev polynomial coefficients of a function on an interval 
+MCHOLDC - Modified Cholesky Factorization of a Symmetric Matrix 
+QPINT1D -  One dimensional numerical adaptive integration of IDL function or expression 
+
+
 ---------
 AVG() - Return the average value of an array or 1 dimension of an array.
+ASINH() - Return the inverse hyperbolic sine of its argument
 CIC - Cloud in Cell interpolation of irregularly gridded data onto a regular grid
 CSPLINE() - Interpolate using Numerical Recipes natural cubic spline
 FACTOR - Find the prime factors of a given number (in /jhuapl)
 FITEXY - Straight-line fit to data with errors in both coordinates
-FLEGENDRE() - Compute the first M terms in a Legendre polynomial expansion
+FLEGENDRE() - Compute the first M terms in a Legendre polynomial expansion (FLEG in NR)
 GAUSSIAN() - Evaluate a 1-d Gaussian, and optionally its derivative
 HERMITE() - Interpolate a tabulated function using a Hermite spline
 KSONE - Compute the one-sided Kolmogorov statistic (NR)
 KSTWO - Compute the two-sided Kolmogorov statistic (NR)
-LINTERP - Linearly interpolate X,Y vectors onto a new X grid
+LINTERP - Linearly interpolate X,Y vectors onto a new X gri
+MEANCLIP - Compute an iteratively sigma-clipped mean on a data set
 MINF_BRACKET - Find 3 points which bracket a function minimum  (MNBRAK in NR)
 MINF_PARABOLIC - Minimize a function using Brent's method with parabolic
         interpolation (BRENT in NR)
+MINF_PARABOL_D - Minimize a function using a modification of Brent's method 
+        which uses derivatives (DBRENT in NR)
 MINF_CONJ_GRAD - Find local minimum of a scalar valued function of several
         variables using conjugate gradient method (FRPRMN in NR)
 NGP - Nearest Grid Point interpolation of irregularly gridded data onto a regular grid
@@ -41,7 +55,7 @@ POIDEV() - Generate a Poisson random deviate
 POLINT - Polynomial interpolation of an (X,Y) pair (NR)
 POLYLEG() - Evaluate a Legendre polynomial with specified coefficients
 POLY_SMOOTH() - Apply a least-squares (Savitzky-Golay) polynomial smoothing 
-	filter (SAVGOL in NR)
+	filter (SAVGOL in NR; also see SAVGOL introduced in IDL V5.4 )
 PROB_KS - Return the significance of the K-S statistic (PROBKS in NR)
 RANDOMP - Create a vector of random numbers distributed as a power law
 QSIMP - Integrate using Simpson's rule to specified accuracy (NR)
@@ -53,10 +67,12 @@ TABINV - Find the effective index of a function value.
 TRAPZD - Compute Nth iteration of trapezoidal rule. Called by QSIMP, QTRAP (NR)
 TSC - Triangular Shaped Cloud interpolation of irregularly gridded data onto a regular grid
 TSUM() - Trapezoidal integration of the area under a curve
+VALUE_LOCATE() - find effective index of a function value (NR, locate)
+       This emulates the intrinsic function available since V5.3
 ZBRENT() - Find the root of a function known to lie between X1 and X2 (NR)
 ----------------------
 
-Intrinsic "Numerical Recipes"  procedures available in IDL V5.1
+Intrinsic "Numerical Recipes"  procedures available in IDL V5.5
 
 AMOEBA - Multidimensional minimization of a function via downhill simplex method
 BETA   - beta function
@@ -70,6 +86,7 @@ FULSTR - Restore a row-indexed sparse matrix to full storage mode
 FZ_ROOTS - Roots of a polynomial by Laguerre's method with deflation (zroots)
 HQR    - eigenvalue of an Hessenberg matrix
 INVERT - Invert a matrix using Gaussian elimination methods
+LEGENDRE - Return the value of the associated Legendre polynomial (V5.4, plgndr)
 LINBCG - Solve N linear equation in N unknowns using biconjugate gradient
 	method 
 LMFIT - Nonlinear least-squares fit using Levenberg-Marquardt algorithm (mrqmin)
@@ -85,17 +102,19 @@ QROMO  - integrate using open Romberg adaptive method
 QSIMP  - integrate using Simpson's rule
 R_CORRELATE - compute Spearman's (rho) or Kendalls's (tau) rank correlation
 (spear & kendl1)
-RK4    - integrate one step of ODEs, fourth-order Runge-Kutta
-SVSOL - singular value backsubstitution (svbksb)
+RK4    - integrate one step of ODEs, fourth-order Runge-Kutta 
+SAVGOL - Compute Savitsky-Golay polynomial smoothing coefficients (V5.4)
+SIMPLEX - Use the Simplex method to solve linear programming problems (V5.5)
 SPL_INIT - construct a cubic spline (spline)
 SPL_INTERP - cubic spline interpolation (splint)
-SPRSAB - Multiply two row-indexed sparse matrices 
+SPRSAB - Multiply two row-indexed sparse matrices (sprstm)
 SPRSAX - Multiply a row-indexed sparse matrix by an N-element vector 
-SPRXIN - Convert a matrix to row-indexed sparse matrix mode 
-SVDC    - singular value decomposition of a matrix
+SPRSIN - Convert a matrix to row-indexed sparse matrix mode 
+SVDC    - singular value decomposition of a matrix (svdcmp)
 SVDFIT - General least-square fit with optional error estimates 
-SVDSOL - Solve simultaneous linear equations via back-substitution (svbksb)
+SVSOL - Solve simultaneous linear equations via back-substitution (svbksb)
 TRIQL   - eigensolution of a symmetric tridiagonal matrix (tqli)
 TRIRED  - Householder reduction of a real, symmetric matrix (tred2)
 TRISOL  - solution of tridiagonal systems (tridag)
+VALUE_LOCATE - find effective index of a function value (V5.3, locate)
 WTN    - multi-dimensional discrete wavelet transform

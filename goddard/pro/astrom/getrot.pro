@@ -33,7 +33,7 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;       will display the rotation and plate scale at the terminal.
 ;
 ; OPTIONAL INPUT KEYWORD
-;       DEBUG - if DEBUG is set, GETROT will print the rotation for both the 
+;       /DEBUG - if DEBUG is set, GETROT will print the rotation for both the 
 ;       X and Y axis when these values are unequal.  If DEBUG is set to 2, 
 ;       then the output parameter ROT will contain both X and Y rotations.
 ;
@@ -53,6 +53,7 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
 ;       Recognize a GSSS header        W. Landsman  June 1994
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Correct rotation determination with unequal CDELT values WL October 1998
+;       Consistent conversion between CROTA and CD matrix  WL  October 2000
 ;-
  On_error,2
 
@@ -74,27 +75,25 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug      ;Get rotation and scale factor f
                 gsss_stdast, hdr1
                 extast, hdr1, astr
         endif
-        cd = astr.cd / RADEG        ;then extract CD matrix from astrometry.
+        cd = astr.cd/RADEG      ;then extract CD matrix from astrometry.
         if N_elements(cd) NE 4 then $
             message,'ERROR - Header is missing astrometry keywords CD or CDELT'
 
 endif else $
  if ((sz[sz[0]+1] eq 8) AND (sz[sz[0]+2] eq 1)) then begin   ;ASTROMETRY structure
       astr = hdr
-      cd = astr.cd/RADEG                                        
+      cd = astr.cd/RADEG
  endif else message, $
         'ERROR - First parameter must be an image header or astrometry structure'
 
  if astr.cdelt[0] NE 1.0 then begin
         cdelt = astr.cdelt
-        S = cdelt[1]/cdelt[0]
-        rot = atan( cd[1,0]*S, cd[0,0])*RADEG
-        rot2 = atan(-cd[0,1]/S, cd[1,1])*RADEG
-        goto, DONE
- endif else begin
+        cd[0,0] = cd[0,0]*cdelt[0] & cd[0,1] =   cd[0,1]*cdelt[0]
+        cd[1,1] = cd[1,1]*cdelt[1] & cd[1,0] =   cd[1,0]*cdelt[1]
+ endif else  cd = astr.cd/RADEG                                        
 
  det = cd[0,0]*cd[1,1] - cd[0,1]*cd[1,0]
- if det lt 0 then sgn = -1 else sgn = 1
+ if det LT 0 then sgn = -1 else sgn = 1
  if det GT 0 then $
    message,'WARNING - Astrometry is for a right-handed coordinate system',/INF
  cdelt = fltarr(2)
@@ -104,23 +103,23 @@ endif else $
    cdelt[0] = cd[0,0]
    cdelt[1] = cd[1,1]
  endif else begin
-   cdelt[0] = sgn*sqrt(cd[0,0]^2 + cd[1,0]^2)
-   cdelt[1] =     sqrt(cd[0,1]^2 + cd[1,1]^2)
-   if cdelt[0] gt 0 then sgn1 = 1 else sgn1 = -1
-   rot  = atan(      -cd[1,0],sgn1*cd[0,0] ) 
-   rot2 = atan(  sgn1*cd[0,1],     cd[1,1] ) 
- endelse
+   rot  = atan(  sgn*cd[0,1],  sgn*cd[0,0] ) 
+   rot2 = atan( -cd[1,0],  cd[1,1] )
+  
  endelse
 
- if (rot ne rot2) then begin
+ if (abs(rot) NE  abs(rot2)) then begin
       if keyword_set(debug) then $
-        print,'X axis rotation:',rot*!radeg, ' Y axis rotation:',rot2*!radeg
+        print,'X axis rotation:',rot*!RADEG, ' Y axis rotation:',rot2*!RADEG
         if debug eq 2 then rot = [rot,rot2] else $
       if (rot - rot2)*!RADEG LT 2 then rot = (rot + rot2)/2.
  endif
 
- rot = float(rot*radeg)
- cdelt = float(cdelt*radeg)
+  cdelt[0] =   cd[0,0]/cos(rot)
+  cdelt[1] =   cd[1,1]/cos(rot)
+
+ rot = float(rot*RADEG)
+ cdelt = float(cdelt*RADEG)
 
 DONE:
  if N_params() EQ 1 or keyword_set(DEBUG) then begin

@@ -29,21 +29,23 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 ;               etc.).  
 ;
 ; OUTPUT:
-;       HDR - image header, (string array) with required keywords
+;       HEADER - image header, (string array) with required keywords
 ;               BITPIX, NAXIS, NAXIS1, ... Further keywords can be added
 ;               to the header with SXADDPAR. 
 ;
 ; OPTIONAL INPUT KEYWORDS:
-;       IMAGE   = If set, then a minimal header for a FITS IMAGE extension
+;       /IMAGE   = If set, then a minimal header for a FITS IMAGE extension
 ;               is created.    An IMAGE extension header is identical to
 ;               a primary FITS header except the first keyword is 
 ;               'XTENSION' = 'IMAGE' instead of 'SIMPLE  ' = 'T'
-;       EXTEND  = If set, then the keyword EXTEND is inserted into the file,
-;               with the value of "T" (true).
+;       /EXTEND  = If set, then the keyword EXTEND is inserted into the file,
+;               with the value of "T" (true).    The EXTEND keyword must be
+;               included in a primary header, if the FITS file contains 
+;               extensions.
 ;
 ; RESTRICTIONS:
 ;       (1)  MKHDR should not be used to make an STSDAS header or a FITS
-;               ASCII or Binary Table header.   Instead use
+;               ASCII or Binary Table extension header.   Instead use
 ;
 ;               SXHMAKE - to create a minimal STSDAS header
 ;               FXHMAKE - to create a minimal FITS binary table header
@@ -52,13 +54,13 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 ;       (2)  Any data already in the header before calling MKHDR
 ;               will be destroyed.
 ; EXAMPLE:
-;       Create a minimal FITS header, HDR, for a 30 x 40 x 50 INTEGER*2 array
+;       Create a minimal FITS header, Hdr, for a 30 x 40 x 50 INTEGER*2 array
 ;
-;             IDL> MKHDR, HDR, 2, [30,40,50]
+;             IDL> mkhdr, Hdr, 2, [30,40,50]
 ;
-;       Alternatively, if the array already exists as an IDL variable, ARRAY,
+;       Alternatively, if the array already exists as an IDL variable, Array,
 ;
-;              IDL> MKHDR, HDR, ARRAY
+;              IDL> mkhdr, Hdr, Array
 ;
 ; PROCEDURES CALLED:
 ;       SXADDPAR, GET_DATE
@@ -69,14 +71,17 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 ;       Aug, 1997, Use SYSTIME(), new DATE format  W. Landsman
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Allow unsigned data types    W. Landsman   December 1999
+;       Set BZERO = 0 for unsigned integer data  W. Landsman January 2000
+;       EXTEND keyword must immediately follow last NAXISi W. Landsman Sep 2000
+;       Add FITS definition COMMENT to primary headers W. Landsman Oct. 2001
 ;-                          
  On_error,2
 
  npar = N_params()
  if npar LT 1 then begin
    print,'Syntax:  MKHDR, header, [ im, /IMAGE, /EXTEND ]'
-   print,'    or   MKHDR, header, [ type, naxisx, /IMAGE, /EXTEND ]
-   print,'   header - output FITS header to be created
+   print,'    or   MKHDR, header, [ type, naxisx, /IMAGE, /EXTEND ]'
+   print,'   header - output FITS header to be created'
    return
  endif
 
@@ -103,6 +108,7 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 
  stype = s[s[0]+1]              ;Type of data    
         case stype of
+        0:      message,'ERROR: Input data array is undefined'
         1:      bitpix = 8  
         2:      bitpix = 16  
         3:      bitpix = 32  
@@ -112,7 +118,7 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
         7:      bitpix = 8
        12:      bitpix = 16
        13:      bitpix = 32
-        else:   message,'Illegal Image Datatype'
+        else:   message,'ERROR: Illegal Image Datatype'
         endcase
 
  header = strarr(s[0] + 7) + string(' ',format='(a80)')      ;Create empty array
@@ -123,8 +129,8 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
  else $
     sxaddpar, header, 'SIMPLE', 'T',' Written by IDL:  '+ systime()
 
- sxaddpar, header, 'BITPIX', bitpix
- sxaddpar, header, 'NAXIS', S[0]        ;# of dimensions
+ sxaddpar, header, 'BITPIX', bitpix, ' Number of bits per data pixel'
+ sxaddpar, header, 'NAXIS', S[0],' Number of data axes'       ;# of dimensions
 
  if ( s[0] GT 0 ) then begin
    for i = 1, s[0] do sxaddpar,header,'NAXIS' + strtrim(i,2),s[i]
@@ -134,14 +140,23 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
      sxaddpar, header, 'PCOUNT', 0, ' No Group Parameters'
      sxaddpar, header, 'GCOUNT', 1, ' One Data Group'
  endif else begin
-     Get_date, dte                       ;Get current date as CCYY-MM-DD
-     sxaddpar, header, 'DATE', dte,' Creation date (CCYY-MM-DD) of FITS header'
      if keyword_set( EXTEND) or (s[0] EQ 0) then $
-          sxaddpar, header, 'EXTEND', 'T', ' File May Contain Extensions'
- endelse
+          sxaddpar, header, 'EXTEND', 'T', ' FITS data may contain extensions'
+     Get_date, dte                       ;Get current date as CCYY-MM-DD
+     sxaddpar, header, 'DATE', dte, $
+           ' Creation UTC (CCCC-MM-DD) date of FITS header'
+  endelse
 
- if stype EQ 12 then sxaddpar, header,'BZERO',32768,' Data is Unsigned Integer'
- if stype EQ 13 then sxaddpar, header,'BZERO',2147483648,' Data is Unsigned Long'
+ if stype EQ 12 then sxaddpar, header,'O_BZERO',32768, $
+            ' Original Data is Unsigned Integer'
+ if stype EQ 13 then sxaddpar, header,'O_BZERO',2147483648, $
+            ' Original Data is Unsigned Long'
  header = header[0:s[0]+7]
 
+ if not keyword_set(IMAGE) then begin   ;Add FITS definition for primary header
+     sxaddpar,header,'COMMENT ', $
+      "FITS (Flexible Image Transport System) format is defined in 'Astronomy"
+     sxaddpar,header,'COMMENT ', $
+      "and Astrophysics', volume 376, page 359; bibcode 2001A&A...376..359H"
+ endif 
  end

@@ -21,7 +21,7 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 ;
 ; OPTIONAL INPUT KEYWORD:
 ;     OSFamily - one of the four scalar strings specifying the operating 
-;             system:  'vms','windows','MacOS' or 'unix'.    If not supplied,
+;             system:  'vms','Windows','MacOS' or 'unix'.    If not supplied,
 ;             then !VERSION.OS_FAMILY is used to determine the OS.
 ; EXAMPLES:
 ;     Consider the following file names 
@@ -47,6 +47,8 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 ;     (2) On VMS the filenames "MOTD" and "MOTD." are distinguished by the 
 ;         fact that qual = '' for the former and qual = ' ' for the latter.
 ;
+;     A version of FDECOMP that accepts vector input strings is available for
+;     IDL V5.3 or later from http://idlastro.gsfc.nasa.gov/ftp/v53/
 ; ROUTINES CALLED:
 ;     Function GETTOK()
 ; HISTORY

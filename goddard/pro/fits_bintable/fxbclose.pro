@@ -1,8 +1,6 @@
 	PRO FXBCLOSE, UNIT, ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBCLOSE
 ; Purpose     : 
 ;	Close a FITS binary table extension opened for read.

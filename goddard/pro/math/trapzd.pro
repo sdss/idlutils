@@ -1,6 +1,6 @@
 pro trapzd, func, a, b, s, step, _EXTRA = _EXTRA
 ;+
-; NAME
+; NAME:
 ;       TRAPZD
 ; PURPOSE:
 ;       Compute the nth stage of refinement of an extended trapezoidal rule.

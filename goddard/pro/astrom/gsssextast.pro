@@ -37,6 +37,7 @@ pro GSSSExtAst, h, astr, noparams
 ;       June 94 Change astrometry tags to better agree with EXTAST  W. Landsman
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       29-JUN-99 Added support for AMD[X,Y]1[2-3] for DSS images by E. Deutsch
+;       Eliminate use of obsolete !ERR  W. Landsman    February 2000
 ;-
  
  On_error,2
@@ -63,9 +64,9 @@ pro GSSSExtAst, h, astr, noparams
   astr.xsz = sxpar(h,'XPIXELSZ')
   astr.ysz = sxpar(h,'YPIXELSZ')
   astr.ppo3 = sxpar(h,'PPO3')
-  astr.ppo6 = sxpar(h,'PPO6')
+  astr.ppo6 = sxpar(h,'PPO6', Count = N)
 
-  if (!ERR eq -1) then message,'Header does not contain GSSS astrometry'
+  if (N Eq 0) then message,'Header does not contain GSSS astrometry'
 
   astr.pltscl = sxpar(h,'PLTSCALE')
 

@@ -20,26 +20,27 @@ pro unzoom_xy,xtv,ytv,xim,yim,OFFSET=offset, ZOOM = zoom
 ;
 ; OPTIONAL KEYWORD INPUT:
 ;      OFFSET - 2 element vector giving the location of the image pixel (0,0) 
-;		on the window display.   OFFSET can be positive (e.g if the 
-;		image is centered in a larger window) or negative (e.g. if the
-;		only the central region of an image much larger than the window
-;		is being displayed. 
-;		Default value is [0,0], or no offset.
+;               on the window display.   OFFSET can be positive (e.g if the 
+;               image is centered in a larger window) or negative (e.g. if the
+;               only the central region of an image much larger than the window
+;               is being displayed. 
+;               Default value is [0,0], or no offset.
 ; OUTPUTS:
 ;      XIM,YIM - X and Y coordinates of the image corresponding to the
 ;            cursor position on the TV display.
 ; NOTES:
-;	The integer value of a pixel is assumed to refer to the *center*
-;	of a pixel.
+;       The integer value of a pixel is assumed to refer to the *center*
+;       of a pixel.
 ; REVISON HISTORY:
-;	Adapted from MOUSSE procedure  W. Landsman       March 1996
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Adapted from MOUSSE procedure  W. Landsman       March 1996
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Proper handling of offset option          S. Ott/W. Landsman May 2000
 ;-
 
  On_error,2
 
  if N_params() LT 2 then begin
-        print,'Syntax - UNZOOM_XY, xtv, ytv, xim, yim, [OFFSET= ,ZOOM = ]
+        print,'Syntax - UNZOOM_XY, xtv, ytv, xim, yim, [OFFSET= ,ZOOM = ]'
         return
  endif
     
@@ -47,12 +48,12 @@ pro unzoom_xy,xtv,ytv,xim,yim,OFFSET=offset, ZOOM = zoom
  if N_elements(zoom) NE 1 then zoom = 1
 
  cen =  (zoom-1)/2.
- xim =  float((xtv-cen)/zoom) - offset[0]
- yim =  float((ytv-cen)/zoom) - offset[1]
-
+ xim =  float((xtv-cen)/zoom) - offset[0]/float(zoom)
+ yim =  float((ytv-cen)/zoom) - offset[1]/float(zoom)
  if N_Params() LT 3 then begin
    xtv = xim & ytv = yim
  endif
 
 return
 end                                    
+

@@ -5,6 +5,17 @@ PRO JULDATE, DATE, JD, PROMPT = prompt
 ; PURPOSE:                                   
 ;     Convert from calendar to Reduced Julian Date
 ;
+; EXPLANATION:
+;     Julian Day Number is a count of days elapsed since Greenwich mean noon 
+;     on 1 January 4713 B.C.  The Julian Date is the Julian day number
+;     followed by the fraction of the day elapsed since the preceding noon. 
+;
+;     This procedure duplicates the functionality of the JULDAY() function in
+;     in the standard IDL distribution, but also allows interactive input and
+;     gives output as Reduced Julian date (=JD - 2400000.)  
+;     (Also note that prior to V5.1 there was a bug in JULDAY() that gave 
+;     answers offset by 0.5 days.)
+;
 ; CALLING SEQUENCE:
 ;     JULDATE, /PROMPT           ;Prompt for calendar Date, print Julian Date
 ;               or
@@ -13,10 +24,10 @@ PRO JULDATE, DATE, JD, PROMPT = prompt
 ; INPUT:
 ;     DATE -  3 to 6-element vector containing year,month (1-12),day, and 
 ;              optionally hour, minute, and second all specified as numbers
-;              (Universal Time). Year after 1900 can be specified 2 ways, 
-;              either for example, as 83 or 1983.
-;              Years B.C should be entered as negative numbers.  If Hour,
-;              minute or seconds are not supplied, they will default to 0. 
+;              (Universal Time).   Year should be supplied with all digits.
+;              Years B.C should be entered as negative numbers (and note that
+;              Year 0 did not exist).  If Hour, minute or seconds are not 
+;              supplied, they will default to 0. 
 ;
 ;  OUTPUT:
 ;       JD - Reduced Julian date, double precision scalar.  To convert to
@@ -29,17 +40,14 @@ PRO JULDATE, DATE, JD, PROMPT = prompt
 ;               for the calendar date at the terminal.
 ;
 ;  RESTRICTIONS:
-;       Will not work for years between 0 and 99 A.D.  (since these are
-;       interpreted as years 1900 - 1999).  Will not work for year 1582.
-;
 ;       The procedure HELIO_JD can be used after JULDATE, if a heliocentric
 ;       Julian date is required.
 ;
 ;  EXAMPLE:
 ;       A date of 25-DEC-1981 06:25 UT may be expressed as either
 ;
-;       IDL> juldate, [81,12,25,6,25], jd       
-;       IDL> juldate, [1981,12,25.2673611], jd 
+;       IDL> juldate, [1981, 12, 25, 6, 25], jd       
+;       IDL> juldate, [1981, 12, 25.2673611], jd 
 ;
 ;       In either case, one should obtain a Reduced Julian date of 
 ;       JD = 44963.7673611
@@ -51,6 +59,8 @@ PRO JULDATE, DATE, JD, PROMPT = prompt
 ;       Algorithm from Sky and Telescope April 1981   
 ;       Added /PROMPT keyword, W. Landsman    September 1992
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Make negative years correspond to B.C. (no year 0), work for year 1582
+;       Disallow 2 digit years.    W. Landsman    March 2000
 ;-
  On_error,2 
 
@@ -80,11 +90,12 @@ PRO JULDATE, DATE, JD, PROMPT = prompt
 
   endcase   
 
- iy = fix( date[0] )                     
+ iy = floor( date[0] ) 
+ if iy lt 0 then iy = iy +1  else $
+    if iy EQ 0 then message,'ERROR - There is no year 0'                   
  im = fix( date[1] )
  date = double(date)
  day = date[2] + ( date[3] + date[4]/60.0d + date[5]/3600.0d) / 24.0d
- if iy LT 100 then iy = iy + 1900    
 ;
  if ( im LT 3 ) then begin   ;If month is Jan or Feb, don't include leap day
 
@@ -92,19 +103,17 @@ PRO JULDATE, DATE, JD, PROMPT = prompt
 
  end
 
- a = fix(iy/100)
+ a = long(iy/100)
  ry = float(iy)
- if ( iy LT 1582 ) then b = 0 else b = 2 - a + fix(a/4)     
 
- if ( iy EQ 1582 ) then $
-   message,'ERROR: Year 1582 not covered'   
-
- jd = fix(ry*0.25d) + 365.0d*(ry -1860.d) + fix(30.6001d*(im+1.)) + b + $
+ jd = floor(ry*0.25d) + 365.0d*(ry -1860.d) + fix(30.6001d*(im+1.)) + $
       day  - 105.5d
+
+;Gregorian Calendar starts on Oct. 15, 1582 (= RJD -100830.5)
+ if jd GT -100830.5 then jd = jd + 2 - a + floor(a/4)
 
  if N_params() LT 2 or keyword_set( PROMPT) then begin      
     yr = fix( date[0] )
-    if yr LT 100 then yr = yr+1900
     print, FORM='(A,I4,A,I3,A,F9.5)',$ 
        ' Year ',yr,'    Month', fix(date[1] ),'    Day', day 
     print, FORM='(A,F15.5)',' Reduced Julian Date:',JD                       

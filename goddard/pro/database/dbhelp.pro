@@ -68,6 +68,7 @@ pro dbhelp,flag,TEXTOUT=textout,sort=sort
 ;       8/17/95 jkf/acc - force lowercase filenames for .hlp files.
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /SORT keyword  J. Sandoval/W. Landsman     October 1998
+;       Fixed display of number of values with /SORT W.Landsman November 2001
 ;-
 ;****************************************************************************
 ;
@@ -129,6 +130,7 @@ if opened then begin                    ;data base opened?
           names = names[nsort]
           idltype = idltype[nsort]
           desc = desc[nsort]
+          nvalues = nvalues[nsort]
      endif
 ;
 ; get names and descriptions of opened db's

@@ -30,28 +30,37 @@ pro ftdelcol,h,tab,name
 ;	Written   W. Landsman        STX Co.     August, 1988
 ;	Adapted for IDL Version 2, J. Isensee, July, 1990
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Updated call to new FTINFO   W. Landsman  May 2000
 ;- 
- On_error,2
+; On_error,2
 
  if N_params() LT 3 then begin
-     print,'Syntax - ftdelcol, h, tab, name'
+     print,'Syntax - FTDELCOL, h, tab, name'
      return
  endif
-
- s = size(name)
 
  ftsize,h,tab,ncol,nrows,tfields,allcols,allrows
 
 ; Make sure column exists
 
- ftinfo, h, name, tbcol, width     ;Get starting column and width (in bytes)
- field = !ERR                      ;Field number specified
- if field lt 1 then message,'Specified field "'+name+'" does not exist'
+ ftinfo, h, ft_str     ;Get starting column and width (in bytes)
+ sz = size(name)
+ if ((sz[0] ne 0) or (sz[1] EQ 0)) then $
+      message,'Invalid field specification, it must be a scalar'
+
+ if sz[1] EQ 7 then begin        ;If a string, get the field number
+    ttype = strtrim(ft_str.ttype,2)
+    field = where(ttype EQ strupcase(strtrim(name,2)), Npos) + 1
+    if Npos EQ 0 then message, $ 
+        'Specified field ' + strupcase(strtrim(field,2)) + ' not in table'
+ endif
+ 
 
 ; Eliminate relevant columns from TAB
 
- tbcol = tbcol-1                     ;Convert to IDL indexing
-
+ field = field[0]
+ tbcol = ft_str.tbcol[field-1]-1                     ;Convert to IDL indexing
+ width = ft_str.width[field-1]
  case 1 of 
  tbcol eq 0: tab = tab[width:*,*]                     ;First column
  tbcol eq ncol-width: tab = tab[0:tbcol-1,*]          ;Last column
@@ -62,18 +71,19 @@ pro ftdelcol,h,tab,name
 ; the index of subsequent keywords.  Update the TBCOL*** index of
 ; subsequent keywords
 
- hnew = strarr(n_elements(h))
+ nh = N_elements(h)
+ hnew = strarr(nh)
  j = 0
- for i= 0,N_elements(h)-1 do begin    ;Loop over each element in header
- key = strupcase(strmid(h[i],0,5))
- if (key eq 'TTYPE') OR (key eq 'TFORM') or (key eq 'TUNIT') or $
-    (key eq 'TNULL') OR (key eq 'TBCOL') then begin
+ key = strupcase(strmid(h,0,5))
+ for i= 0,nh-1 do begin    ;Loop over each element in header
+ if (key[i] eq 'TTYPE') OR (key[i] eq 'TFORM') or (key[i] eq 'TUNIT') or $
+    (key[i] eq 'TNULL') OR (key[i] eq 'TBCOL') then begin
     row = h[i]                    
     ifield = fix(strtrim(strmid(row,5,3)))    
-    if ifield gt field then begin    ;Subsequent field?
+    if ifield GT field then begin    ;Subsequent field?
       if ifield le 10 then fmt = "(I1,' ')" else fmt ='(I2)'
       strput,row,string(ifield-1,format=fmt),5
-      if key eq 'TBCOL' then begin
+      if key[i] eq 'TBCOL' then begin
          value = fix(strtrim(strmid(row,10,20)))-width
          v = string(value)
          s = strlen(v)
@@ -91,7 +101,7 @@ pro ftdelcol,h,tab,name
  sxaddpar,hnew,'NAXIS1',ncol-width ;Reduce num. of columns by WIDTH
 
  h = hnew[0:j-1]
- print,'Field ',strupcase(name),' has been deleted from the FITS table
+ message,'Field '+strupcase(name)+' has been deleted from the FITS table',/INF
 
  return  
  end

@@ -1,4 +1,4 @@
-pro dbsearch,type,svals,values,good, FULLSTRING = fullstring
+pro dbsearch,type,svals,values,good, FULLSTRING = fullstring, COUNT = count
 ;+
 ; NAME:
 ;	DBSEARCH
@@ -6,7 +6,7 @@ pro dbsearch,type,svals,values,good, FULLSTRING = fullstring
 ;	Subroutine of DBFIND() to search a vector for specified values
 ;
 ; CALLING SEQUENCE:
-;	dbsearch, type, svals, values, good, FULLSTRING = fullstring
+;	dbsearch, type, svals, values, good, [ /FULLSTRING, COUNT = ] 
 ;
 ; INPUT: 
 ;	type - type of search (output from dbfparse)
@@ -15,18 +15,22 @@ pro dbsearch,type,svals,values,good, FULLSTRING = fullstring
 ;
 ; OUTPUT:
 ;	good - indices of good values
-;	!err is set to number of good values
 ;
 ; OPTIONAL INPUT KEYWORD:
-;	FULLSTRING - By default, one has a match if a search string is 
+;	/FULLSTRING - By default, one has a match if a search string is 
 ;		included in any part of a database value (substring match).   
 ;		But if /FULLSTRING is set, then all characters in the database
 ;		value must match the search string (excluding leading and 
 ;		trailing blanks).    Both types of string searches are case
 ;		insensitive.
+; OPTIONAL OUTPUT KEYWORD:
+;       COUNT  - Integer scalar giving the number of valid matches
+;  SIDE EFFECTS:
+;	The obsolete system variable !ERR is set to number of good values
 ; REVISION HISTORY:
 ;	D. Lindler  July,1987
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added COUNT keyword, deprecate !ERR   W. Landsman   March 2000
 ;-
 ;-----------------------------------------------------------
  On_error,2
@@ -41,10 +45,10 @@ pro dbsearch,type,svals,values,good, FULLSTRING = fullstring
  nvals = type>2
  if datatype NE 7 then sv = replicate(values[0],nvals) else $
                       sv = replicate(' ',nvals)
-On_ioerror, BADVAL              ;Trap any type conversions
-sv[0]= svals[0:nvals-1]
-On_ioerror, NULL
-sv0=sv[0] & sv1=sv[1]
+ On_ioerror, BADVAL              ;Trap any type conversions
+ sv[0]= svals[0:nvals-1]
+ On_ioerror, NULL
+ sv0=sv[0] & sv1=sv[1]
 ;
 ; -----------------------------------------------------------
 ;      STRING SEARCHES (Must use STRPOS to search for substring match)
@@ -78,7 +82,7 @@ if datatype EQ 7 then begin
 		endelse
                 end
 	endcase
-	good = where(valid)
+	good = where(valid, count)
 	return
 end
 ;
@@ -86,34 +90,34 @@ end
 ;		ALL OTHER DATA TYPES
 case type of
  
-	 0: good = where( values EQ sv0 )               ;value=sv0
-	-1: good = where( values GE sv0 )		;value>sv0
-	-2: good = where( values LE sv1 )		;value<sv1
+	 0: good = where( values EQ sv0, count )               ;value=sv0
+	-1: good = where( values GE sv0, count )		;value>sv0
+	-2: good = where( values LE sv1, count )		;value<sv1
 	-3: begin				;sv0<value<sv1
 	    if sv1 lt sv0 then begin
 	        temp=sv0
 		sv0=sv1
 		sv1=temp
 	    end
-	    good=where((values GE sv0) and (values LE sv1))
+	    good=where((values GE sv0) and (values LE sv1), count)
 	    end 	
 	-5: begin				;sv1 is tolerance
 	    minv=sv0-abs(sv1)
 	    maxv=sv0+abs(sv1)
-	    good=where( (values GE minv) and (values LE maxv) )
+	    good=where( (values GE minv) and (values LE maxv), count)
 	    end
-	-4: good=where(values)			;non-zero
+	-4: good=where(values, count)		;non-zero
 	else: begin				;set of values	
-	      nf=0				;number found
+	      count=0				;number found
 	      for i=0L,type-1 do begin		;loop on possible values    
-		g = where( values EQ sv[i])
-		if !err gt 0 then begin
-			if nf eq 0 then good=g else good=[good,g]
-			nf=nf+!err
+		g = where( values EQ sv[i], Ng)
+		if Ng gt 0 then begin
+			if count eq 0 then good=g else good=[good,g]
+			count = count + Ng
 		endif
 	      end
-	      !err=nf
-              if nf EQ 0 then good = intarr(1)-1   ;Make sure good is defined
+	      !err=count
+              if count EQ 0 then good = intarr(1)-1   ;Make sure good is defined
 	      end
 endcase
 return

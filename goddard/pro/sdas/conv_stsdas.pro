@@ -1,67 +1,68 @@
 pro conv_stsdas, sdas_name, FROM_IEEE = from_ieee
 ;+
 ; NAME:
-;	CONV_STSDAS
+;       CONV_STSDAS
 ; PURPOSE:
-;	Convert internal format of an STSDAS image to host machine architecture
+;       Convert internal format of an STSDAS image to host machine architecture
 ; EXPLANATION:
-;	Converts the internal format of an STSDAS image (.hhh and .hhd file)
-;	to the host machine architecture.     Useful for copying STSDAS files
-;	between different machines.     If the host is not a VMS machine, then
-;	by default CONV_STSDAS assumes the image originated on VMS.   If the
-;	host is VMS, then CONV_STSDAS assumes that the image originated on
-;	an IEEE machine (e.g. SparcStation).
+;       Converts the internal format of an STSDAS image (.hhh and .hhd file)
+;       to the host machine architecture.     Useful for copying STSDAS files
+;       between different machines.     If the host is not a VMS machine, then
+;       by default CONV_STSDAS assumes the image originated on VMS.   If the
+;       host is VMS, then CONV_STSDAS assumes that the image originated on
+;       an IEEE machine (e.g. SparcStation).
 ;
 ; CALLING SEQUENCE:
-;	CONV_STSDAS, sdas_name, [ /FROM_IEEE]
+;       CONV_STSDAS, sdas_name, [ /FROM_IEEE]
 ;
 ; INPUTS:
-;	sdas_name - scalar string giving name of the STSDAS image
-;		CONV_STSDAS assumes a default header extension of .hhh -- 
-;		otherwise the header extension should be included in sdas_name.
-;		The internal format of the file will be modified by CONV_STSDAS.
+;       sdas_name - scalar string giving name of the STSDAS image
+;               CONV_STSDAS assumes a default header extension of .hhh -- 
+;               otherwise the header extension should be included in sdas_name.
+;               The internal format of the file will be modified by CONV_STSDAS.
 ;
 ; OPTIONAL KEYWORD INPUT:
-;	/FROM_IEEE - On little endian machines (OSF, windows) this keyword
-;		indicates that the STSDAS file originated on an IEEE machine
-;		(e.g SparcStation) rather than a VMS machine
+;       /FROM_IEEE - On little endian machines (OSF, windows) this keyword
+;               indicates that the STSDAS file originated on an IEEE machine
+;               (e.g SparcStation) rather than a VMS machine
 ;
 ; EXAMPLE:
-;	Suppose files test.hhd and test.hhh have been copied with FTP from
-;	a Vax to a Sparcstation.   Convert these files to the SparcStation
-;	internal format.
+;       Suppose files test.hhd and test.hhh have been copied with FTP from
+;       a Vax to a Sparcstation.   Convert these files to the SparcStation
+;       internal format.
 ;
-;	IDL> conv_stsdas, 'test'
+;       IDL> conv_stsdas, 'test'
 ;
 ; METHOD:
-;	CONV_STSDAS reads each group image and parameter block and uses 
-;	IEEE_TO_HOST or CONV_VAX_UNIX to convert the internal format.   The
-;	converted images and parameter blocks are written back to the orginal
-;	file.
+;       CONV_STSDAS reads each group image and parameter block and uses 
+;       IEEE_TO_HOST or CONV_VAX_UNIX to convert the internal format.   The
+;       converted images and parameter blocks are written back to the orginal
+;       file.
 ;
 ; PROCEDURE CALLS
-;	sxopen, fdecomp, datatype(), sxgpar(), ieee_to_host, conv_vax_unix()
+;       sxopen, fdecomp, sxgpar(), sxpar(), ieee_to_host, conv_vax_unix()
 ;
 ; NOTES:
-;	(1)  When copying STSDAS files to VMS, be sure the .hhh file is 
-;		formatted as fixed block 80 byte.
-;	(2)  CONV_STSDAS has no way of knowing if a file really came from
-;		a different machine architecture.    If it is applied to a file
-;		that already has the correct internal format, then CONV_STSDAS
-;		will "convert" this file and corrupt the internal format.
-;	(3)  Note that CONV_STSDAS currently does not support conversion *from*
-;		a little-endian machine (OSF, windows)		
+;       (1)  When copying STSDAS files to VMS, be sure the .hhh file is 
+;               formatted as fixed block 80 byte.
+;       (2)  CONV_STSDAS has no way of knowing if a file really came from
+;               a different machine architecture.    If it is applied to a file
+;               that already has the correct internal format, then CONV_STSDAS
+;               will "convert" this file and corrupt the internal format.
+;       (3)  Note that CONV_STSDAS currently does not support conversion *from*
+;               a little-endian machine (OSF, windows)          
 ;
 ; REVISION HISTORY:
-;	Written   W. Landsman                     January, 1993
-;	Don't require .hhh extension		April, 1993
-;	Increase speed by calling SXGINFO	May, 1993
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written   W. Landsman                     January, 1993
+;       Don't require .hhh extension            April, 1993
+;       Increase speed by calling SXGINFO       May, 1993
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Replace DATATYPE() with size(/TNAME)  W. Landsman   November 2001
 ;-
  On_error,2
 
  if N_params() EQ 0 then begin
-     print,'Syntax - CONV_STSDAS, sdas_name, [ /FROM_IEEE ]
+     print,'Syntax - CONV_STSDAS, sdas_name, [ /FROM_IEEE ]'
      return
  endif
 
@@ -97,7 +98,7 @@ pro conv_stsdas, sdas_name, FROM_IEEE = from_ieee
        parval = sxgpar(h, par,i+1, pdtype[i], pdsbyte[i], nbyte[i] )
        if fromieee then ieee_to_host, parval $
                   else parval = conv_vax_unix( parval)
-       if datatype( parval ) NE 'STR' then $
+       if size( parval,/TNAME ) NE 'STRING' then $
           par[pdsbyte[i] ] = byte( parval, 0, nbyte[i] )
   endfor
 

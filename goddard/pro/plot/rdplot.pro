@@ -49,11 +49,15 @@ pro RDPLOT, x, y, WaitFlag, DATA=Data, DEVICE=Device, NORMAL=Normal, $
 ;		WaitFlag=2 sets the CHANGE keyword
 ;		WaitFlag=3 sets the DOWN keyword
 ;
-; OPTIONAL KEYWORD PARAMETERS:
-;   DATA = Data coordinates are displayed and returned.
-;   DEVICE = device coordinates are displayed and returned.
-;   NORMAL = normal coordinates are displayed and returned.
-;   NOWAIT = if non-zero the routine will immediately return the cursor's
+; OPTIONAL OUTPUTS:
+;    X - a named variable to receive the final cursor X position, scalar
+;    Y - a named variable to receive the final cursor Y position, scalar
+; OPTIONAL KEYWORD INPUT PARAMETERS:
+;   /DATA = Data coordinates are displayed and returned.
+;   /DEVICE = device coordinates are displayed and returned.
+;   /NORMAL = normal coordinates are displayed and returned.
+;          Default is to use DATA coordinates if available (see notes).
+;   /NOWAIT = if non-zero the routine will immediately return the cursor's
 ;      present position.
 ;   WAIT = if non-zero will wait for a mouse key click before returning.  If
 ;      cursor key is already down, then procedure immediately exits.
@@ -61,11 +65,10 @@ pro RDPLOT, x, y, WaitFlag, DATA=Data, DEVICE=Device, NORMAL=Normal, $
 ;      when the procedure is called, the procedure will wait until the mouse
 ;      key is clicked down again.
 ;   CHANGE = returns when the mouse is moved OR a key is clicked up or down.
-;   ERR = returns the most recent value of the !Err value.
-;   PRINT = if non-zero will continuously print out the data values of the
-;      cursor's position.  If PRINT>1, program will printout a brief header
-;      describing the mouse button functions.  However, note that the
-;      button functions are overridden if any of the DOWN, WAIT, mouse
+;   PRINT = if non-zero will continuously print out (at the terminal) the data 
+;      values of the cursor's position.  If PRINT>1, program will printout a 
+;      brief header describing the mouse button functions.  However, note that 
+;      the button functions are overridden if any of the DOWN, WAIT, mouse
 ;      or CHANGE values are non-zero.
 ;   XTITLE = label used to describe the values of the abscissa if PRINT>0.
 ;   YTITLE = label used to describe the values of the ordinate if PRINT>0.
@@ -88,6 +91,9 @@ pro RDPLOT, x, y, WaitFlag, DATA=Data, DEVICE=Device, NORMAL=Normal, $
 ;   THICK = thickness of the line that makes the full-screen cursor.
 ;   COLOR = color of the full-screen cursor.
 ;   CROSS = if non-zero will show the regular cross AND full screen cursors.
+;
+; OPTIONAL KEYWORD OUTPUT PARAMETER:
+;   ERR = returns the most recent value of the !mouse.button value.
 ;
 ; NOTES:
 ;   Note that this procedure does not allow the "UP" keyword/flag...which 
@@ -144,6 +150,8 @@ pro RDPLOT, x, y, WaitFlag, DATA=Data, DEVICE=Device, NORMAL=Normal, $
 ;      generic CURSOR procedure.   J.Wm.Parker  1995 April 24
 ;   Added XVALUES, YVALUES keywords and cleanup.   J.Wm.Parker  1995 April 24
 ;   Convert to IDL V5.0,  W. Landsman    July 1998
+;   Change !D.NCOLORS to !D.TABLE_SIZE for 24 bit displays W. Landsman May 2000
+;   Skip translation table for TrueColor visuals   W. Landsman  March 2001
 ;-
 ;*******************************************************************************
 On_error,2
@@ -189,16 +197,18 @@ if UndefinedPlot then plot, [0,!D.X_Size], [0,!D.Y_Size], /NODATA, $
 
 
 ;;;
-;   Initialize the !Err variable.  The value of !Err corresponds to the BYTE 
-; value of the buttons on the mouse from left to right, lowest bit first.  So,
-; the left button gives !Err = 1, next button gives !Err = 2, then 4.
-;   Read in the cursor with no wait.  If the user does not want to wait, or if 
+;   Initialize the !mouse.button variable.  The value of !mouse.button 
+; corresponds to the BYTE  value of the buttons on the mouse from left to right,
+; lowest bit first.  So, the left button gives !mouse.button = 1, next button 
+; gives !mouse.button = 2, then 4.
+;  Read in the cursor with no wait.  If the user does not want to wait, or if 
 ; the DOWN or WAIT keywords are set AND the mouse key is depressed, then we're
 ; done (I hate GOTO's, but it is appropriate here).
 ;
-!Err = 0
+!mouse.button = 0
 cursor, X, Y, /NOWAIT, DATA=Data, DEVICE=Device, NORMAL=Normal
-if (keyword_set(NoWait) or (Wait and (!Err gt 0))) then goto, LABEL_DONE
+if (keyword_set(NoWait) or (Wait and (!mouse.button gt 0))) then $
+            goto, LABEL_DONE
 
 
 ;;;
@@ -348,12 +358,15 @@ if FullCursor then begin
 ; have to talk to the IDL support people about this {as soon as our support
 ; license is renewed!}
 ;
-   device, TRANSLATION=TTab, BYPASS_TRANSLATION=1
-   if ((size(Color))[1] eq 0) then Color = !D.N_Colors - 1   ;  if undefined
-   DevColor = TTab[Color < (!D.N_Colors - 1)]
-   DevBack  = TTab[!P.Background]
-   OColor = DevColor xor DevBack
-endif
+   if ((size(Color))[1] eq 0) then Color = !D.Table_size - 1   ;  if undefined
+   device, get_visual_name=visualName
+   if visualName NE 'TrueColor' then begin
+    device, TRANSLATION=TTab, BYPASS_TRANSLATION=1
+    DevColor = TTab[Color < (!D.Table_size - 1)]
+    DevBack  = TTab[!P.Background]
+    OColor = DevColor xor DevBack
+   endif else Ocolor = color
+endif 
 
 
 
@@ -378,7 +391,7 @@ if ((X lt 0) or (Y lt 0)) then cursor, X, Y, /CHANGE
 ; if we don't exit the loop, repeat and draw new lines.
 ;
 cursor, X, Y, /NOWAIT, DATA=Data, DEVICE=Device, NORMAL=Normal
-Err0 = !Err
+Err0 = !mouse.button
 
 
 repeat begin	; here we go!
@@ -397,7 +410,7 @@ repeat begin	; here we go!
 
 ;;;
 ;   If printing out data values, do so.
-;   !Err=1 is the signal for a new line.
+;   !mouse.button=1 is the signal for a new line.
 ;
    if (Print gt 0) then begin
 
@@ -412,16 +425,16 @@ repeat begin	; here we go!
 
       print, CR, Xst, Yst, format='($,3A)'
 
-      if ((!Err eq 1) and not(Down or Change)) then begin  ;  new line?
+      if ((!mouse.button eq 1) and not(Down or Change)) then begin  ;  new line?
          print, LF, format="($,a)"
-         while (!Err gt 0) do begin  ; if button is held down, don't print
+         while (!mouse.button gt 0) do begin  ; if button is held down, don't print
             wait, 0.1
             cursor, X, Y, /NOWAIT
          endwhile
       endif
    endif
 
-   Err0 = Err0 < !Err
+   Err0 = Err0 < !mouse.button
 
 ;;;
 ;   Check to see that the cursor's current position is really the last measured 
@@ -446,10 +459,10 @@ repeat begin	; here we go!
 ;
    X = XX
    Y = YY
-   Err = !Err
+   Err = !mouse.button
 
-   if Down then ExitFlag = (!Err gt 0) and (Err0 eq 0) else $
-                ExitFlag = (!Err gt 1) or Change
+   if Down then ExitFlag = (!mouse.button gt 0) and (Err0 eq 0) else $
+                ExitFlag = (!mouse.button gt 1) or Change
 
 endrep until ExitFlag
 

@@ -78,6 +78,7 @@ pro IMGread,image,h,filename,group,NoAssoc=NoAssoc,silent=silent, $
 ;	01-APR-93 Made a few minor adjustments.  EWD.  (No, really)
 ;	July 93 Added /NoAssoc, MAKE_ARRAY, removed GET_FILE W. Landsman (HSTX)
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Remove use of !ERR  W. Landsman   January 2001
 ;-
 
   On_error,2
@@ -120,7 +121,7 @@ GET_FILE:
     endif
 
   if (strupcase(strmid(ext,2,1)) ne 'H') then begin
-    print,err,'SDAS filename must have extension .xxh"
+    print,err,'SDAS filename must have extension .xxh'
     filename='' & goto,GET_FILE
     endif
 
@@ -161,11 +162,12 @@ GET_FILE:
   if (SIMPLE eq 1) or (PCOUNT eq 0) then begin
     NAXIS=sxpar(h,'NAXIS') & NAXIS1=sxpar(h,'NAXIS1') & NAXIS2=sxpar(h,'NAXIS2')
     BSCALE=sxpar(h,'BSCALE') & BZERO=sxpar(h,'BZERO')
-    ORIGIN='?' & tmp1=sxpar(h,'ORIGIN') & if (!ERR ge 0) then ORIGIN=tmp1
+    ORIGIN='?' & tmp1 = sxpar(h,'ORIGIN', Count = N_Origin) 
+    if (N_Origin ge 1) then ORIGIN=tmp1
 
     dtype=0
-    DATATYPE=strn(sxpar(h,'DATATYPE'))
-    if (!ERR ge 0) then begin
+    DATATYPE=strn(sxpar(h,'DATATYPE', Count = N_Datatype))
+    if (N_Datatype GE 1) then begin
       case DATATYPE of        ;Convert datatype to type code
         'BYTE':                 dtype=1
         'LOGICAL*1':            dtype=1 ;Byte

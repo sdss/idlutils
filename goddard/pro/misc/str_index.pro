@@ -28,7 +28,7 @@ FUNCTION STR_INDEX, str, substr, offset
 ;                 within STR. If no substring is found, it is -1.
 ;
 ; CALLS:
-;       DATATYPE(), DELVARX
+;       DELVARX
 ;
 ; COMMON BLOCKS:
 ;       STR_INDEX -- internal common block. The variable save in the block is
@@ -40,6 +40,8 @@ FUNCTION STR_INDEX, str, substr, offset
 ; MODIFICATION HISTORY:
 ;       Written January 3, 1995, Liyun Wang, GSFC/ARC
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use size(/TNAME) instead of DATATYPE()   W. Landsman   October 2001
+;       
 ;-
 ;
    ON_ERROR, 2
@@ -47,7 +49,7 @@ FUNCTION STR_INDEX, str, substr, offset
 
    IF N_PARAMS() LT 2 THEN MESSAGE,'Syntax: str_index, str, substr [,offset]'
 
-   IF datatype(str) NE 'STR' OR datatype(substr) NE 'STR' THEN $
+   IF size(str,/TNAME) NE 'STRING' OR size(substr,/TNAME) NE 'STRING' THEN $
       MESSAGE, 'The first two input parameters must be of string type.'
 
    IF N_ELEMENTS(offset) EQ 0 THEN pos = 0 ELSE pos = offset

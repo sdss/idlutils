@@ -24,7 +24,7 @@ pro ftkeeprow,h,tab,subs
  On_error,2                          ;Return to caller
  
  if N_params() LT 3 then begin
-     print,'Syntax - ftkeeprow, h, tab, subs
+     print,'Syntax - ftkeeprow, h, tab, subs'
      return
  endif
 

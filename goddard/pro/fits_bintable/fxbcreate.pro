@@ -1,8 +1,6 @@
 	PRO FXBCREATE, UNIT, FILENAME, HEADER, EXTENSION, ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBCREATE
 ; Purpose     : 
 ;	Open a new binary table at the end of a FITS file.

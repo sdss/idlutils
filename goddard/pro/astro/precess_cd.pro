@@ -1,51 +1,51 @@
 pro PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new, FK4 = FK4     
 ;+
 ; NAME:
-;	PRECESS_CD
+;       PRECESS_CD
 ;
 ; PURPOSE:
-;	Precess the CD (coordinate description) matrix from a FITS header 
+;       Precess the CD (coordinate description) matrix from a FITS header 
 ; EXPLANATION:
-;	The CD matrix is precessed from EPOCH1 to EPOCH2.  Called by HPRECESS
+;       The CD matrix is precessed from EPOCH1 to EPOCH2.  Called by HPRECESS
 ;
 ; CALLING SEQUENCE:
-;	PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new  
+;       PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new, [/FK4]  
 ;
 ; INPUTS/OUTPUT:
-;	CD - 2 x 2 CD (coordinate description) matrix in any units
-;		(degrees or radians).  CD will altered on output to contain 
-;		precessed values in the same units.    On output CD will always
-;		be double precision no matter how input.
+;       CD - 2 x 2 CD (coordinate description) matrix in any units
+;               (degrees or radians).  CD will altered on output to contain 
+;               precessed values in the same units.    On output CD will always
+;               be double precision no matter how input.
 ;
 ; INPUTS:
-;	EPOCH1 - Original equinox of coordinates, scalar (e.g. 1950.0).  
-;	EPOCH2 - Equinox of precessed coordinates, scalar (e.g. 2000.0)
-;	CRVAL_OLD - 2 element vector containing RA and DEC in DEGREES
-;		of the reference pixel in the original equinox
-;	CRVAL_NEW - 2 elements vector giving CRVAL in the new equinox 
+;       EPOCH1 - Original equinox of coordinates, scalar (e.g. 1950.0).  
+;       EPOCH2 - Equinox of precessed coordinates, scalar (e.g. 2000.0)
+;       CRVAL_OLD - 2 element vector containing RA and DEC in DEGREES
+;               of the reference pixel in the original equinox
+;       CRVAL_NEW - 2 elements vector giving CRVAL in the new equinox 
 ;
 ; INPUT KEYWORD:
-;	If this keyword is set, then the precession constants are taken in
-;	the FK4 reference frame.   The default is the FK5 frame.
+;       /FK4 - If this keyword is set, then the precession constants are taken
+;             in the FK4 reference frame.   The default is the FK5 frame.
 ;
 ; RESTRICTIONS:
-;	PRECESS_CD should not be used more than 2.5 centuries from the
-;	year 1900.      
+;       PRECESS_CD should not be used more than 2.5 centuries from the
+;       year 1900.      
 ;
 ; PROCEDURE:
-;	Adapted from the STSDAS program FMATPREC.  Precession changes the
-;	location of the north pole, and thus changes the rotation of
-;	an image from north up.  This is reflected in the precession of the
-;	CD matrix.   This is usually a very small change. 
+;       Adapted from the STSDAS program FMATPREC.  Precession changes the
+;       location of the north pole, and thus changes the rotation of
+;       an image from north up.  This is reflected in the precession of the
+;       CD matrix.   This is usually a very small change. 
 ;
 ; PROCEDURE CALLS:
-;	PRECESS
+;       PRECESS
 ;
 ; REVISION HISTORY:
-;	Written, Wayne Landsman, ST Systems  February 1988
-;	Fixed sign error in computation of SINRA     March 1992
-;	Added /FK4 keyword                           Feb 1994
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written, Wayne Landsman, ST Systems  February 1988
+;       Fixed sign error in computation of SINRA     March 1992
+;       Added /FK4 keyword                           Feb 1994
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-    
   On_error,2
 
@@ -66,17 +66,17 @@ pro PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new, FK4 = FK4
 
    if keyword_set(FK4) then begin
 
-	st = 0.001d0 * (epoch1-1900.d0)
+        st = 0.001d0 * (epoch1-1900.d0)
 
-	C = sec_to_rad * T * ( 20046.85D0 - ST*(85.33D0 + 0.37D0*ST) $
-		+ T*(-42.67D0 - 0.37D0*ST -41.8D0*T))
+        C = sec_to_rad * T * ( 20046.85D0 - ST*(85.33D0 + 0.37D0*ST) $
+                + T*(-42.67D0 - 0.37D0*ST -41.8D0*T))
 
    endif else begin
 
-	st = 0.001d0*( epoch1 - 2000.d0)
+        st = 0.001d0*( epoch1 - 2000.d0)
 
-	C = sec_to_rad * T * (20043.109D0 - ST*(85.33D0 + 0.217D0*ST) $
-		+ T*(-42.665D0 - 0.217D0*ST -41.833D0*T))
+        C = sec_to_rad * T * (20043.109D0 - ST*(85.33D0 + 0.217D0*ST) $
+                + T*(-42.665D0 - 0.217D0*ST -41.833D0*T))
    endelse
 
 ; Get RA of old pole in new coordinates
@@ -91,7 +91,7 @@ pro PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new, FK4 = FK4
   sinfi = ( abs(sin(c) ) * sinra) / cosd1 
   r = [ [cosfi, sinfi], [-sinfi, cosfi] ]
 
-  cd = r # cd     	 ;Rotate to new north pole
+  cd = r # cd            ;Rotate to new north pole
 
   return
   end

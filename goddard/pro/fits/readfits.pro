@@ -9,16 +9,28 @@
 ;       reading FITS files with IDL.
 ;
 ; CALLING SEQUENCE:
-;       Result = READFITS( Filename,[ Header, heap, /NOSCALE, EXTEN_NO=,
-;                       NSLICE=, /SILENT , NaNVALUE =, STARTROW =, NUMROW = ] )
+;       Result = READFITS( Filename/Fileunit,[ Header, heap, /NOSCALE, EXTEN_NO=,
+;                       NSLICE=, /SILENT, STARTROW =, NUMROW = ,
+;                       /No_Unsigned ] )
 ;
 ; INPUTS:
-;       FILENAME = Scalar string containing the name of the FITS file  
+;       Filename = Scalar string containing the name of the FITS file  
 ;                 (including extension) to be read.   If the filename has
 ;                  a *.gz extension, it will be treated as a gzip compressed
 ;                  file.   If it has a .Z extension, it will be treated as a
 ;                  Unix compressed file.
-;
+;                                   OR
+;       Fileunit - A scalar integer specifying the unit of an already opened
+;                  FITS file.  The unit will remain open after exiting 
+;                  READFITS().  There are two possible reasons for choosing 
+;                  to specify a unit number rather than a file name:
+;          (1) For a FITS file with many extensions, one can move to the 
+;              desired extensions with FXPOSIT() and then use READFITS().  This
+;              is more efficient that repeatedly starting at the beginning of 
+;              the file.
+;          (2) For reading a FITS file across a Web http: address after opening
+;              the unit with the SOCKET procedure (IDL V5.4 or later,
+;              Unix and Windows only) 
 ; OUTPUTS:
 ;       Result = FITS data array constructed from designated record.
 ;                If the specified file was not found, then Result = -1
@@ -30,40 +42,34 @@
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;
-;       EXTEN_NO - scalar integer specify the FITS extension to read.  For
-;               example, specify EXTEN = 1 or /EXTEN to read the first 
-;               FITS extension.    Extensions are read using recursive
-;               calls to READFITS.
+;       EXTEN_NO - positive scalar integer specifying the FITS extension to
+;               read.  For example, specify EXTEN = 1 or /EXTEN to read the 
+;               first FITS extension.   
 ;
-;       NaNVALUE - This scalar is only needed on architectures (such as VMS
-;               prior to IDL V5.1) that do not recognize the IEEE "not a number"
-;               (NaN) convention.   It specifies the value to translate any IEEE
-;               NAN values in the FITS data array.  
-;   
 ;       /NOSCALE - If present and non-zero, then the ouput data will not be
 ;                scaled using the optional BSCALE and BZERO keywords in the 
 ;                FITS header.   Default is to scale.
 ;
-;       /NO_UNSIGNED - By default, if theIDL Version is 5.2 or greater, and the
+;       /NO_UNSIGNED -By default, if the IDL Version is 5.2 or greater, and the
 ;               header indicates an unsigned integer (BITPIX = 16, BZERO=2^15,
 ;               BSCALE=1) then FITS_READ will output an IDL unsigned integer 
 ;               data type (UINT).   But if /NO_UNSIGNED is set, or the IDL 
 ;               version is before 5.2, then the data is converted to type LONG.  
 ;
-;       NSLICE - An integer scalar specifying which N-1 dimensional slice of a 
-;                N-dimensional array to read.   For example, if the primary 
-;                image of a file 'wfpc.fits' contains a 800 x 800 x 4 array, 
-;                then 
+;       NSLICE - Non-negative integer scalar specifying which N-1 dimensional 
+;                slice of a N-dimensional array to read.   For example, if the 
+;                primary image of a file 'wfpc.fits' contains a 800 x 800 x 4 
+;                array, then 
 ;
 ;                 IDL> im = readfits('wfpc.fits',h, nslice=2)
 ;                           is equivalent to 
 ;                 IDL> im = readfits('wfpc.fits',h)
-;                 IDL> im = im(*,*,2)
+;                 IDL> im = im[*,*,2]
 ;                 but the use of the NSLICE keyword is much more efficient.
 ;
 ;       NUMROW -  Scalar non-negative integer specifying the number of rows 
-;                 of the image or table to read.   Useful when one does not 
-;                 want to read the entire image or table.
+;                 of the image or table extension to read.   Useful when one 
+;                 does not want to read the entire image or table.    
 ;
 ;       POINT_LUN  -  Position (in bytes) in the FITS file at which to start
 ;                 reading.   Useful if READFITS is called by another procedure
@@ -79,20 +85,20 @@
 ;               Useful when one does not want to read the entire table.
 ;
 ; EXAMPLE:
-;       Read a FITS file TEST.FITS into an IDL image array, IM and FITS 
+;       Read a FITS file test.fits into an IDL image array, IM and FITS 
 ;       header array, H.   Do not scale the data with BSCALE and BZERO.
 ;
-;              IDL> im = READFITS( 'TEST.FITS', h, /NOSCALE)
+;              IDL> im = READFITS( 'test.fits', h, /NOSCALE)
 ;
-;       If the file contain a FITS extension, it could be read with
+;       If the file contains a FITS extension, it could be read with
 ;
-;              IDL> tab = READFITS( 'TEST.FITS', htab, /EXTEN )
+;              IDL> tab = READFITS( 'test.fits', htab, /EXTEN )
 ;
 ;       The function TBGET() can be used for further processing of a binary 
 ;       table, and FTGET() for an ASCII table.
 ;       To read only rows 100-149 of the FITS extension,
 ;
-;              IDL> tab = READFITS( 'TEST.FITS', htab, /EXTEN, 
+;              IDL> tab = READFITS( 'test.fits', htab, /EXTEN, 
 ;                                   STARTR=100, NUMR = 50 )
 ;
 ;       To read in a file that has been compressed:
@@ -132,10 +138,15 @@
 ;       (4) On some Unix shells, one may get a "Broken pipe" message if reading
 ;        a compressed file, and not reading to the end of the file (i.e. the
 ;        decompression has not gone to completion).     This is an informative
-;        message only, and should not affect the output of READFITS.   
+;        message only, and should not affect the output of READFITS.  
+;
+;       (5) For users of V5.3 or later, a special version of READFITS is 
+;        available at  http://idlastro.gsfc.nasa.gov/ftp/v53/readfits.pro
+;        which include additional options (e.g. gzip files can be read under
+;        any machine architecture)
 ; PROCEDURES USED:
-;       Functions:   SXPAR(), WHERENAN()
-;       Procedures:  IEEE_TO_HOST, SXADDPAR, SXDELPAR
+;       Functions:   SXPAR() 
+;       Procedures:  SXADDPAR, SXDELPAR
 ;
 ; MODIFICATION HISTORY:
 ;       Original Version written in 1988, W.B. Landsman   Raytheon STX
@@ -151,25 +162,37 @@
 ;                  W.B. Landsman  Raytheon STX                    October 1998
 ;       Add /binary modifier needed for Windows  W. Landsman    April 1999
 ;       Read unsigned datatypes, added /no_unsigned   W. Landsman December 1999
+;       Output BZERO = 0 for unsigned data types   W. Landsman   January 2000
+;       Open with /swap_if_little_endian if since V5.1 W. Landsman February 2000
+;       Fixed logic error when using NSLICE keyword W. Landsman March 2000
+;       Fixed byte swapping problem for compressed files on little endian 
+;             machines introduced in Feb 2000     W. Landsman       April 2000
+;       Fix error handling so FREE_LUN is called in case of READU error
+;						W. Landsman N. Rich, Aug. 2000
+;       Assume since V5.1, remove NANvalue keyword  W. Landsman   July 2001 
+;       Support the unofficial 64bit integer format W. Landsman   September 2001
+;       Option to read a unit number rather than file name W.L    October 2001
 ;-
-
-function READFITS, filename, header, heap, NOSCALE = noscale, $
-                   SILENT = silent, EXTEN_NO = exten_no, NUMROW = numrow, $
-                   POINTLUN = pointlun, STARTROW = startrow, $
-                   NaNvalue = NaNvalue, NSLICE = nslice, $
-                   NO_UNSIGNED = no_unsigned
+;
+function READFITS, filename, header, heap, NaNVALUE = NaNVALUE, $
+                   EXTEN_NO = exten_no, NOSCALE = noscale, NSLICE = nslice, $
+                   NO_UNSIGNED = no_unsigned,  NUMROW = numrow, $
+                   POINTLUN = pointlun, SILENT = silent, STARTROW = startrow
 
 
   On_error,2                    ;Return to user
+  ON_IOerror, BAD
 
 ; Check for filename input
 
    if N_params() LT 1 then begin                
-      print,'Syntax - im = READFITS( filename, [ h, heap, /NOSCALE, /SILENT,
-      print,'                 NaNValue = ,EXTEN_NO =, STARTROW = , NUMROW='
-      print,'                 NSLICE = ]
+      print,'Syntax - im = READFITS( filename, [ h, heap, /NOSCALE, /SILENT,'
+      print,'                 EXTEN_NO =, STARTROW = , NUMROW='
+      print,'                 NSLICE = , /No_UnSigned]'
       return, -1
    endif
+
+   unitsupplied = size(filename,/TNAME) NE 'STRING'
 
 ; Set default keyword values
 
@@ -178,21 +201,23 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
 
 ;  Check if this is a compressed file.
                 
-    len = strlen(filename)
-    if len gt 3 then tail = strmid(filename, len-3, 3) else tail = ' '
-    ucmprs = ''
-    if strlowcase(strmid(tail,1,2)) eq '.z' then  $
+    if unitsupplied then unit = filename else begin
+       len = strlen(filename)
+       if len gt 3 then tail = strmid(filename, len-3, 3) else tail = ' '
+       ucmprs = ''
+       if strlowcase(strmid(tail,1,2)) eq '.z' then  $
                   ucmprs = 'uncompress -c '
-    if strlowcase(tail) eq '.gz'  then ucmprs = 'gzip -cd '
-    gzip = ucmprs NE ''
+       if strlowcase(tail) eq '.gz'  then ucmprs = 'gzip -cd '
+       gzip = ucmprs NE ''
 
 ;  Go to the start of the file.
 
-   openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary
-   if error NE 0 then begin
-        message,/con,' ERROR - Unable to locate file ' + filename
-        return, -1
-   endif
+       openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary, $
+                          /swap_if_little_endian
+       if error NE 0 then begin
+           message,/con,' ERROR - Unable to locate file ' + filename
+           return, -1
+       endif
 
 ;  Handle compressed files.   On some Unix machines, users might wish to force
 ;  use of /bin/sh in the line spawn, ucmprs+filename, unit=unit,/sh
@@ -207,15 +232,14 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
                         return, -1                      
                 endelse
                 
-        endif else begin
-   endelse
-         
+        endif 
+  endelse      
   if keyword_set(POINTLUN) then begin
        if gzip then  readu,unit,bytarr(pointlun,/nozero) $
                else point_lun, unit, pointlun
   endif
 
-  for ext = 0, exten_no do begin
+  for ext = 0L, exten_no do begin
                
 ;  Read the next header, and get the number of bytes taken up by the data.
 
@@ -228,7 +252,7 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
        if EOF(unit) then begin 
             message,/ CON, $
                'EOF encountered attempting to read extension ' + strtrim(ext,2)
-            free_lun,unit
+            if not unitsupplied then free_lun,unit
             return,-1
        endif
 
@@ -248,7 +272,7 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
              if strmid( header[0], 0, 8)  NE 'SIMPLE  ' then begin
               message,/CON, $
                  'ERROR - Header does not contain required SIMPLE keyword'
-                free_lun, unit
+                if not unitsupplied then free_lun, unit
                 return, -1
       endif
 
@@ -289,12 +313,13 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
            8:   IDL_type = 1          ; Byte
           16:   IDL_type = 2          ; Integer*2
           32:   IDL_type = 3          ; Integer*4
+          64:   IDL_type = 14         ; Integer*8   (unofficial)
          -32:   IDL_type = 4          ; Real*4
          -64:   IDL_type = 5          ; Real*8
         else:   begin
                 message,/CON, 'ERROR - Illegal value of BITPIX (= ' +  $
                 strtrim(bitpix,2) + ') in FITS header'
-                free_lun,unit
+                if not unitsupplied then free_lun,unit
                 return, -1
                 end
   endcase     
@@ -313,7 +338,7 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
   if nbytes EQ 0 then begin
         if not SILENT then message, $
                 "FITS header has NAXIS or NAXISi = 0,  no data array read",/CON
-        free_lun, unit
+        if not unitsupplied then free_lun, unit
         return,-1
  endif
 
@@ -339,7 +364,7 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
         if startrow GE nax[1] then begin
            message,'ERROR - Specified starting row ' + strtrim(startrow,2) + $
           ' but only ' + strtrim(nax[1],2) + ' rows in extension',/CON
-           free_lun,unit
+           if not unitsupplied then free_lun,unit
            return,-1
         endif 
         nax[1] = nax[1] - startrow    
@@ -354,7 +379,7 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
               point_lun, -unit, pointlun          ;Current position
               point_lun, unit, pointlun + startrow*nax[0]
     endelse
-    endif else if keyword_set(NSLICE) then begin
+    endif else if (N_elements(NSLICE) EQ 1) then begin
         lastdim = nax[naxis-1]
         if nslice GE lastdim then message,/CON, $
         'ERROR - Value of NSLICE must be less than ' + strtrim(lastdim,2)
@@ -364,9 +389,11 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
         sxaddpar,header,'NAXIS',naxis
         ndata = ndata/lastdim
         nskip = nslice*ndata*abs(bitpix/8) 
-        if gzip then if (Ndata GT 0) then  begin 
+        if gzip then begin 
+            if (Ndata GT 0) then  begin 
                   buf = bytarr(nskip,/nozero)
                   readu,unit,buf   
+             endif
         endif else begin 
                    point_lun, -unit, currpoint          ;Current position
                    point_lun, unit, currpoint + nskip
@@ -403,15 +430,7 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
         readu, unit, heap
     endif
 
-    free_lun, unit
-
-; If necessary, replace NaN values, and convert to host byte ordering
-        
-   check_NaN = (bitpix LT 0) and ( N_elements(NaNvalue) GT 0 )
-   if check_NaN then NaNpts = whereNaN( data, Count)
-   ieee_to_host, data
-   if check_NaN then $
-        if ( Count GT 0 ) then data[ NaNpts] = NaNvalue
+    if not unitsupplied then free_lun, unit
 
 ; Scale data unless it is an extension, or /NOSCALE is set
 ; Use "TEMPORARY" function to speed processing.  
@@ -442,8 +461,12 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
            endif else unsgn = 0
 
           if unsgn then begin
-                 if unsgn_int then  data =  uint(data) - uint(32768) else $
-                 if unsgn_lng then  data = ulong(data) - ulong(2147483648) 
+                 sxaddpar, header, 'BZERO', 0
+                 sxaddpar, header, 'O_BZERO', bzero, $
+                          'Original Data is unsigned Integer'
+                   if unsgn_int then $ 
+                        data =  uint(data) - uint(32768) else $
+                   if unsgn_lng then  data = ulong(data) - ulong(2147483648) 
                 
           endif else begin
  
@@ -470,5 +493,11 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
 
 ; Return array
 
-        return, data    
+        return, data
+
+; Come here if there was an IO_ERROR
+    
+ BAD:   print,!ERROR_STATE.MSG
+        if (not unitsupplied) and (N_elements(unit) GT 0) then free_lun, unit
+        if N_elements(data) GT 0 then return,data else return, -1
  end 

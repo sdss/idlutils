@@ -58,7 +58,7 @@ pro dist_circle ,im, n, xcen ,ycen, DOUBLE = double
 
  if N_params() LT 2  then begin
      print,'Syntax - DIST_CIRCLE, im, n,[ xcen, ycen, /DOUBLE ]' 
-     print,'IM - output image array
+     print,'IM - output image array'
      print,'N - size of the output image array, scalar or 2 element vector'
      print,'XCEN,YCEN - position from which to specify distances'
      return

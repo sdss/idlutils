@@ -11,7 +11,7 @@ function poly_smooth, data, width, DEGREE=degree, NLEFT=nl, NRIGHT=nr,  $
 ;       dynamic range of variations in the data by applying a least squares 
 ;       smoothing polynomial filter,
 ;
-;       also called the Savitzky-Golay smoothing filter, cf. Numerical
+;       Also called the Savitzky-Golay smoothing filter, cf. Numerical
 ;       Recipes (Press et al. 1992, Sec.14.8)
 ;
 ;       The low-pass filter coefficients are computed by effectively
@@ -25,6 +25,9 @@ function poly_smooth, data, width, DEGREE=degree, NLEFT=nl, NRIGHT=nr,  $
 ;       with the data array to result in smoothed data with reduced noise,
 ;       but retaining higher order variations (better than SMOOTH).
 ;
+;       This procedure became partially obsolete in IDL V5.4 with the 
+;       introduction of the SAVGOL function, which computes the smoothing
+;       coefficients.
 ; CALLING SEQUENCE:
 ;
 ;       spectrum = poly_smooth( data, [ width, DEGREE = , NLEFT = , NRIGHT = 

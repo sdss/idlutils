@@ -153,15 +153,14 @@ if not keyword_set(SUBLIST) then sublist = -1
  print,'IMDBASE: Now searching ',catname,' catalogue - be patient'
  print,search
 
- list = dbfind(search,sublist,/SILENT)        ;Search for stars in field
- nstar = !ERR                                 ;Number of stars found
+ list = dbfind(search,sublist,/SILENT, Count = nstar)        ;Search for stars in field
  if redo then begin
-     search = '0 < ra < ' + strtrim(newmax) + ', ' + $
-               strtrim(decmin) + '< dec <' + strtrim(decmax)
+     search = '0 < ra < ' + strtrim(newmax,2) + ', ' + $
+               strtrim(decmin,2) + '< dec <' + strtrim(decmax,2)
      print,search
-     newlist = dbfind(search,sublist,/SILENT)
-     if !ERR gt 0 then list = [list,newlist]
-     nstar = nstar + !ERR
+     newlist = dbfind(search,sublist,/SILENT, Count = count)
+     if count GT 0 then list = [list,newlist]
+     nstar = nstar + count
  endif
  print,''
 

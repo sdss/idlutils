@@ -3,7 +3,7 @@ function minmax,array,NAN=nan
 ; NAME:
 ;      MINMAX
 ; PURPOSE:
-;      Return a 2 element array giving the minimum and maximum of a vector
+;      Return a 2 element array giving the minimum and maximum of an array
 ; EXPLANATION:
 ;      Using MINMAX() is faster than doing a separate MAX and MIN.
 ;
@@ -14,13 +14,13 @@ function minmax,array,NAN=nan
 ;
 ; OUTPUTS:
 ;      value = a two element vector, 
-;            value(0) = minimum value of array
-;            value(1) = maximum value of array
+;            value[0] = minimum value of array
+;            value[1] = maximum value of array
 ;
-; KEYWORDS:
-;      NAN   - Set this keyword to cause the routine to check for occurrences of
-;            the IEEE floating-point value NaN in the input data.  Elements with
-;            the value NaN are treated as missing data.
+; OPTIONAL INPUT KEYWORD:
+;      /NAN   - Set this keyword to cause the routine to check for occurrences
+;            of the IEEE floating-point value NaN in the input data.  Elements 
+;            with the value NaN are treated as missing data.
 ;
 ; EXAMPLE:
 ;      Print the minimum and maximum of an image array, im

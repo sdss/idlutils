@@ -18,7 +18,7 @@ if (value EQ 'DONE') or (exclusive) then begin
  END
 END
 
-PRO select_w, items, iselected, comments, command_line, only_one
+PRO select_w, items, iselected, comments, command_line, only_one, Count = count
 ;+
 ; NAME:
 ;	SELECT_W    
@@ -49,6 +49,8 @@ PRO select_w, items, iselected, comments, command_line, only_one
 ;	iselected - list of indices in selections giving the selected
 ;		items.
 ;
+; OPTIONAL OUTPUT KEYWORD:
+;       COUNT  - Integer scalar giving the number of items selected
 ; COMMON BLOCKS:
 ;	SELECT_W - Used to communicate with the SELECT_W_EVENT procedure 
 ;
@@ -85,7 +87,8 @@ PRO select_w, items, iselected, comments, command_line, only_one
 ; Hand off to the XMANAGER, i.e.,event-handler,:
   XMANAGER, 'select_w', base, GROUP_LEADER = GROUP
  if val[0] NE -1 then iselected = val
- !ERR = N_elements( iselected)
+ count = N_elements( iselected)
+ !ERR = count
 
  return
  end

@@ -9,6 +9,7 @@ pro jprecess, ra, dec, ra_2000, dec_2000, MU_RADEC = mu_radec,  $
 ;      Calculate the mean place of a star at J2000.0 on the FK5 system from the
 ;      mean place at B1950.0 on the FK4 system.
 ;
+;      Use BPRECESS for the reverse direction J2000 ==> B1950
 ; CALLING SEQUENCE:
 ;      jprecess, ra, dec, ra_2000, dec_2000, [ MU_RADEC = , PARALLAX = 
 ;               RAD_VEL =, EPOCH =   ]
@@ -81,20 +82,21 @@ pro jprecess, ra, dec, ra_2000, dec_2000, MU_RADEC = mu_radec,  $
 ;       Written,    W. Landsman                September, 1992
 ;       Corrected a couple of typos in M matrix   October, 1992
 ;       Vectorized, W. Landsman                   February, 1994
-;       Implement Appendix 2 of Aoki et al. (1981) for case where proper
+;       Implement Appendix 2 of Aoki et al. (1983) for case where proper
 ;       motion unknown or exactly zero     W. Landsman    November, 1994
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fixed typo in updating proper motion   W. Landsman   April 1999
+;       Make sure proper motion is floating point  W. Landsman December 2000
 ;-   
   On_error,2
 
   if N_params() LT 4 then begin
-       print,'Syntax - jprecess, ra,dec, ra_2000, dec_2000, [MU_RADEC = 
-       print,'                            PARALLAX = , RAD_VEL = ]
+       print,'Syntax - JPRECESS, ra,dec, ra_2000, dec_2000, [MU_RADEC =' 
+       print,'                            PARALLAX = , RAD_VEL = ]'
        print,'Input RA and Dec should be given in DEGREES for B1950'
        print,'Proper motion, MU_RADEC, (optional) in arc seconds per *century*'
        print,'Parallax (optional) in arc seconds'      
-       print,'Radial Velocity (optional) in km/s
+       print,'Radial Velocity (optional) in km/s'
        return
 
   endif
@@ -107,6 +109,13 @@ pro jprecess, ra, dec, ra_2000, dec_2000, MU_RADEC = mu_radec,  $
         if N_elements( RAD_VEL ) NE N then message, $
         'ERROR - RAD_VEL keyword vector must contain ' + strtrim(N,2) + ' values'
   endelse
+
+  if keyword_set( MU_RADEC) then begin
+         if (N_elements( mu_radec) NE 2*N ) then message, $
+    'ERROR - MU_RADEC keyword (proper motion) be dimensioned (2,' + $
+                 strtrim(N,2) + ')'
+        mu_radec = mu_radec*1.      ;Make sure at least float
+  endif
 
   if not keyword_set(epoch) then epoch = 1950.0d0
 

@@ -1,8 +1,6 @@
 	PRO FXBGROW, UNIT, HEADER, NROWS, ERRMSG=ERRMSG, NOZERO=NOZERO
 ;+
-; Project     : RXTE/PCA
-;
-; Name        : 
+; NAME: 
 ;	FXBGROW
 ; Purpose     : 
 ;	Increase the number of rows in a binary table.

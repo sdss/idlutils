@@ -6,7 +6,7 @@ PRO gcirc,u,ra1,dc1,ra2,dc2,dis
 ;     Computes rigorous great circle arc distances.  
 ; EXPLANATION:
 ;     Input/Output can either be either sexigesimal RA, Dec, or in radians. 
-;     All computations are double precision.
+;     All computations are double precision. 
 ;
 ; CALLING SEQUENCE:
 ;      GCIRC, U, RA1, DC1, RA2, DC2, DIS
@@ -36,15 +36,18 @@ PRO gcirc,u,ra1,dc1,ra2,dc2,dis
 ;       is a vector giving the distance of each element of RA1, DC1 to 
 ;       RA2, DC2.    If both RA1,DC1 and RA2,DC2 are vectors then DIS is a
 ;       vector giving the distance of each element of RA1,DC1 to the 
-;       corresponding element of RA2,DC2.    If then vectors are not the same
-;       length, then excess elements of the longer ones will be ignored.
+;       corresponding element of RA2,DC2.    If the input vectors are not the 
+;       same length, then excess elements of the longer ones will be ignored.
 ;
 ;       (2) Coordinates closer together than a few milliarcsec cannot
 ;       be distinguished.  If you are in this realm, you should be
 ;       using special-purpose algorithms.
 ;
+;       (3) The function SPHDIST provides an alternate method of computing
+;        a spherical distance.
+;
 ; PROCEDURE CALLS:
-;      ISARRAY()
+;      None
 ;
 ;   MODIFICATION HISTORY:
 ;      Written in Fortran by R. Hill -- SASC Technologies -- January 3, 1986
@@ -52,6 +55,7 @@ PRO gcirc,u,ra1,dc1,ra2,dc2,dis
 ;      Vector arguments allowed    W. Landsman    April 1989
 ;      Prints result if last argument not given.  RSH, RSTX, 3 Apr. 1998
 ;      Converted to IDL V5.0                      April 1998
+;      Remove ISARRAY(), V5.3 version        W. Landsman   August 2000
 ;-
  On_error,2                            ;Return to caller
 
@@ -64,7 +68,7 @@ PRO gcirc,u,ra1,dc1,ra2,dc2,dis
    RETURN
  ENDIF
 
- scalar = (not isarray(ra1) ) and (not isarray(ra2) )
+ scalar = (size(ra1,/N_Dimen) EQ 0) and (size(ra2,/N_dimen) EQ 0)
  IF scalar THEN BEGIN
     IF (ra1 eq ra2) and (dc1 eq dc2) THEN BEGIN
        dis = 0.0d0

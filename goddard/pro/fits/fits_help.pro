@@ -1,7 +1,6 @@
 pro fits_help,file_or_fcb
 ;+
-;
-;*NAME:
+; NAME:
 ;	FITS_HELP
 ;
 ;*PURPOSE:
@@ -38,8 +37,8 @@ pro fits_help,file_or_fcb
 ; print calling sequence
 ;
 	if n_params(0) eq 0 then begin
-	  print,'CALLING SEQUENCE: fits_help,file_or_fcb
-	  retall
+	  print,'Syntax -  FITS_HELP,file_or_fcb'
+	  return
 	endif
 ;
 ; Open file if file name is supplied

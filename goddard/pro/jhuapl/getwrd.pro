@@ -9,6 +9,7 @@
 ;       wrd = getwrd(txt, n, [m])
 ; INPUTS:
 ;       txt = text string to extract from.         in
+;         The first element is used if txt is an array.
 ;       n = word number to get (first = 0 = def).  in
 ;       m = optional last word number to get.      in
 ; KEYWORD PARAMETERS:
@@ -41,6 +42,7 @@
 ;       R. Sterner, 20 May, 1991 --- Added common and NULL string.
 ;       R. Sterner, 13 Dec, 1992 --- Made tabs equivalent to spaces.
 ;       R. Sterner,  4 Jan, 1993 --- Added NWORDS keyword.
+;       R. Sterner, 2001 Jan 15 --- Fixed to use first element if not a scalar.
 ;       Johns Hopkins University Applied Physics Laboratory.
 ;
 ; Copyright (C) 1985, Johns Hopkins University/Applied Physics Laboratory
@@ -48,7 +50,6 @@
 ; sold and this copyright notice is reproduced on each copy made.  This
 ; routine is provided as is without any express or implied warranties
 ; whatsoever.  Other limitations apply as described in the file disclaimer.txt.
-;	Converted to IDL V5.0   W. Landsman   September 1997
 ;-
 ;-------------------------------------------------------------
  
@@ -62,6 +63,7 @@
 	  print," Return the n'th word from a text string."
 	  print,' wrd = getwrd(txt, n, [m])'
 	  print,'   txt = text string to extract from.         in'
+	  print,'     The first element is used if txt is an array.'
 	  print,'   n = word number to get (first = 0 = def).  in'
 	  print,'   m = optional last word number to get.      in'
 	  print,'   wrd = returned word or words.              out'
@@ -86,11 +88,11 @@
 	if n_params(0) lt 2 then nth = 0		; Def is first word.
 	IF N_PARAMS(0) LT 3 THEN MTH = NTH		; Def is one word.
  
-	if strlen(txtstr) gt 0 then begin
+	if strlen(txtstr[0]) gt 0 then begin
 	  ddel = ' '					; Def del is a space.
 	  if n_elements(delim) ne 0 then ddel = delim	; Use given delimiter.
-	  TST = (byte(ddel))[0]				; Del to byte value.
-	  tb = byte(txtstr)				; String to bytes.
+	  TST = (byte(ddel))(0)				; Del to byte value.
+	  tb = byte(txtstr[0])				; String to bytes.
 	  if ddel eq ' ' then begin		        ; Check for tabs?
 	    w = where(tb eq 9B, cnt)			; Yes.
 	    if cnt gt 0 then tb[w] = 32B		; Convert any to space.
@@ -103,7 +105,7 @@
 	  Y2 = (X-SHIFT(X,-1)) EQ 1			; Diff=1: word end.
 	  Z2 = WHERE(SHIFT(Y2,1) EQ 1)			; Word end locations.
  
-	  txtstr0 = txtstr				; Move string to common.
+	  txtstr0 = txtstr[0]				; Move string to common.
 	  NWDS = long(TOTAL(Y))				; Number of words.
 	  LOC = Z					; Word start locations.
 	  LEN = Z2 - Z - 1				; Word lengths.

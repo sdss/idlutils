@@ -70,6 +70,7 @@
 ;	mod Aug.95 by W. Landsman to fix match of a single selected tag.
 ;	mod Mar.97 by F.V. do not pass the SELECT_TAGS keyword in recursion.
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       mod May 01 by D. Schlegel use long integers
 ;-
 
 pro copy_struct, struct_From, struct_To, NT_copied, Recur_Level,            $

@@ -1,4 +1,5 @@
-pro dbupdate,list,items,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14
+pro dbupdate,list,items,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14, $
+             NOINDEX = noindex
 ;+
 ; NAME:
 ;	DBUPDATE
@@ -19,6 +20,11 @@ pro dbupdate,list,items,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14
 ;		specified.   The number of elements in each vector should be
 ;		the same.
 ;
+; OPTIONAL KEYWORD INPUT:
+;       /NOINDEX - If set, then DBUPDATE will not update the index file.   This
+;               keyword is useful to save if additional updates will occur,
+;               and the index file need only be updated on the last call.
+;            
 ; EXAMPLES:
 ;	A database STAR contains RA and DEC in radians, convert to degrees
 ;
@@ -44,6 +50,7 @@ pro dbupdate,list,items,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14
 ;	Transpose multiple array items back on output        December 1993
 ;	Faster update of external databases on big endian machines November 1997
 ;	Converted to IDL V5.0   W. Landsman 24-Nov-1997
+;       Added /NOINDEX keyword  W. Landsman  July 2001
 ;-
  On_error,2                             ;Return to caller
 
@@ -80,7 +87,7 @@ pro dbupdate,list,items,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14
     if good NE 1 then $
         message,'Supplied values for item ' + $
            strtrim(db_item_info('name',itnum[i]),2) + ' must contain '+ $
-                              strtrim(nlist,2)+' elements'  
+                              strtrim(nlist*numvals[i],2)+' elements'  
 
     test = execute('s=size(v' + ii +')' )
     if s[s[0] + 1] NE idltype[i] then $
@@ -142,6 +149,8 @@ pro dbupdate,list,items,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14
  endfor
 
 ;   Check if the indexed file needs to be updated
+
+ if keyword_set(NOINDEX) then return
 
  indextype = db_item_info( 'INDEX', itnum)
  index = where( indextype, nindex)                  ;Indexed items

@@ -105,6 +105,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 ;      Wayne Landsman, modified I/O              December 1993
 ;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Fix MATRIX output, remove GOTO statements   W. Landsman August 1998      
+;      Changed some index variable to type LONG    W. Landsman March 2000
 ;- 
   On_Error,2     ;return to user if error
 
@@ -174,7 +175,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 
 ;... Cumulative percentage variance
  C = replicate(1., Mattr, Mattr) 
- for j = 1, Mattr-1 do C[0,j] = fltarr(j)
+ for j = 1L, Mattr-1 do C[0,j] = fltarr(j)
  W = C # W1
 
 ;Define returned parameters
@@ -196,7 +197,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
         printf,!TEXTUNIT, " "
         printf,!TEXTUNIT, $ 
                 '   Eigenvalues     As Percentages       Cumul. percentages'
-        for i = 0, Mattr-1 do $
+        for i = 0L, Mattr-1 do $
         printf,!TEXTUNIT, eigenval[i], W1[i], percentages[i] ,f = '(3f15.4)'
         printf,!TEXTUNIT," "
         printf,!TEXTUNIT, 'Corresponding eigenvectors follow...'
@@ -204,7 +205,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
         header = ' VBLE  '
         for i = 1, Mprint do header = header + '  EV-' + strtrim(i,2) + '   '
         printf,!TEXTUNIT, header
-        for i = 1, Mattr do printf,!TEXTUNIT, $
+        for i = 1L, Mattr do printf,!TEXTUNIT, $
                  i, eigenvect[0:Mprint-1,i-1],f='(i4,7f9.4)'
   endif
 
@@ -223,7 +224,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
          header = ' VBLE  '
          for i = 1, Mprint do header = header + 'PROJ-' + strtrim(i,2) + '   '
          printf,!TEXTUNIT, header 
-         for i = 0, Nobj-1 do printf,!TEXTUNIT, $
+         for i = 0L, Nobj-1 do printf,!TEXTUNIT, $
                 i+1, proj_obj[0:Mprint-1,i], f='(i4,7f9.4)'
  endif
 
@@ -243,7 +244,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
         printf,!TEXTUNIT,'Projection of attributes on principal axes ...'
         printf,!TEXTUNIT,' '
         printf,!TEXTUNIT, header
-        for i = 0, Mattr-1 do printf,!TEXTUNIT, $
+        for i = 0L, Mattr-1 do printf,!TEXTUNIT, $
                 i+1, proj_atr[0:Mprint-1,i], f='(i4,7f9.4)'
          textclose, TEXTOUT = textout           ; Close output file  
  endif

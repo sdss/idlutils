@@ -23,7 +23,7 @@ pro extast,hdr,astr,noparams
 ;               in DEGREES/PIXEL                                   CD2_1 CD2_2
 ;      .CDELT - 2 element vector giving physical increment at reference pixel
 ;      .CRPIX - 2 element vector giving X and Y coordinates of reference pixel
-;               (def = NAXIS/2)
+;               (def = NAXIS/2) in FITS convention (first pixel is 1,1)
 ;      .CRVAL - 2 element double precision vector giving R.A. and DEC of 
 ;             reference pixel in DEGREES
 ;      .CTYPE - 2 element string vector giving projection types, default
@@ -36,14 +36,14 @@ pro extast,hdr,astr,noparams
 ;             -1 = Failure - Header missing astrometry parameters
 ;             0 = Success - Header contains CD00n00m + CDELT* astrometry
 ;             1 = Success - Header contains CROTA + CDELT (AIPS-type) astrometry
-;             2 = Success - Header contains CDn_m astrometry.    As of Nov 1998,
-;                           this is the recommend format 
+;             2 = Success - Header contains CDn_m astrometry.    As of October,
+;                           2000, this is the recommend format 
 ; PROCEDURE
 ;       EXTAST checks for astrometry parameters in the following order:
 ;       (1) the CD matrix CD1_1,CD1_2... plus CRPIX and CRVAL.   
 ;       (2) the CD matrix CD001001,CD001002...plus CRPIX and CRVAL
 ;       (3) CROTA2 (or CROTA1) and CDELT plus CRPIX and CRVAL.
-;       See the Memo: Representations of Celestial Coordinates in FITS by
+;       See the preprint: Representations of Celestial Coordinates in FITS by
 ;       Griesen and Calabretta, available at 
 ;       http://www.cv.nrao.edu/fits/documents/wcs/wcs.html
 ;
@@ -63,7 +63,9 @@ pro extast,hdr,astr,noparams
 ;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Get correct sign, when converting CDELT* to CD matrix for right-handed
 ;      coordinate system                  W. Landsman   November 1998
-;      Recognize GSSS in ctype also       W. Landsman, D. Finkbeiner Nov 2000
+;      Consistent conversion between CROTA and CD matrix  October 2000
+;      CTYPE = 'PIXEL' means no astrometry params  W. Landsman January 2001
+;      Don't choke if only 1 CTYPE value given W. Landsman  August 2001
 ;-
  On_error,2
 
@@ -78,27 +80,28 @@ pro extast,hdr,astr,noparams
  noparams = -1                                    ;Assume no astrometry to start
 
  ctype = strtrim( sxpar( hdr, 'CTYPE*', Count = N_ctype), 2)
- check_gsss = (N_ctype EQ 0)
- if N_ctype GE 1 then check_gsss = (strmid(ctype[0], 5, 3) EQ 'GSS')
 
 ; If the standard CTYPE* astrometry keywords not found, then check if the
 ; ST guidestar astrometry is present
 
- if check_gsss then begin            
-    gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
-    if N_ppo1 EQ 1 then begin 
-       gsssextast, hdr, astr, noparams
-       return
-    endif
-    ctype = ['RA---TAN','DEC--TAN']
- endif
+ if N_ctype EQ 0 then begin            
+         gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
+         if N_ppo1 EQ 1 then begin 
+                gsssextast, hdr, astr, noparams
+                return
+        endif
+        ctype = ['RA---TAN','DEC--TAN']
+  endif
 
- crval = sxpar( hdr, 'CRVAL*', Count = N )
- if N LT 2 then return          ;No CRVAL parameters
- 
- crpix = sxpar( hdr, 'CRPIX*', Count = N )
- if N lt 2 then return          ;No CRPIX parameters?
- 
+  if (ctype[0] EQ 'PIXEL') then return
+  if N_ctype EQ 2 then if (ctype[1] EQ 'PIXEL') then return
+
+  crval = sxpar( hdr, 'CRVAL*', Count = N )
+     if N LT 2 then return              ;No CRVAL parameters
+
+  crpix = sxpar( hdr, 'CRPIX*', Count = N )
+     if N lt 2 then return                 ;No CRPIX parameters?
+
  CD11 = sxpar( hdr, 'CD001001', COUNT = N_CD001 )
 
  if N_CD001 EQ 1 then begin 
@@ -137,10 +140,9 @@ pro extast,hdr,astr,noparams
         if N EQ 0 then  crota = sxpar(hdr, 'CROTA1', COUNT = N )
         if N EQ 0 then crota = 0.0
         crota = crota /  RADEG 
-        S = cdelt[1]/cdelt[0]         ;Sign Term      
         CD11 = cos(crota)
-        CD12 = -sin(crota)*S
-        CD21 = sin(crota)/S
+        CD12 = sin(crota)
+        CD21 = -sin(crota)
         CD22 = cos(crota)
 
        noparams = 1           ;Signal AIPS-type astrometry found

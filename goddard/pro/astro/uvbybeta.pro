@@ -1,78 +1,78 @@
 pro uvbybeta,by,m1,c1,beta,n,name,Te,MV,eby,delm0,radius,TEXTOUT=textout
 ;+
 ; NAME:
-;	UVBYBETA
+;       UVBYBETA
 ; PURPOSE:
-;	Derive dereddened colors, metallicity, and Teff from Stromgren colors.
+;       Derive dereddened colors, metallicity, and Teff from Stromgren colors.
 ; EXPLANATION:
-;	Adapted from FORTRAN routine of same name
-;	published by T.T. Moon, Communications of University of London
-;	Observatory, No. 78.  Can be used either interactively or called
-;	from a main procedure.
+;       Adapted from FORTRAN routine of same name
+;       published by T.T. Moon, Communications of University of London
+;       Observatory, No. 78.  Can be used either interactively or called
+;       from a main procedure.
 ;
 ; CALLING SEQUENCE:
-;	uvbybeta                    ;Prompt for all parameters
-;	uvbybeta,by,m1,c1,beta,n    ;Supply inputs, print outputs
-;	uvbybeta, by, m1, c1, beta, n, name, Te, Mv, Eby, delm0, radius, 
-;			[ TEXTOUT= ]
+;       uvbybeta                    ;Prompt for all parameters
+;       uvbybeta,by,m1,c1,beta,n    ;Supply inputs, print outputs
+;       uvbybeta, by, m1, c1, beta, n, name, Te, Mv, Eby, delm0, radius, 
+;                       [ TEXTOUT= ]
 ;
 ; INPUTS:
-;	by - Stromgren b-y color, scalar
-;	m1 - Stromgren line-blanketing parameter, scalar
-;	c1 - Stromgren Balmer discontinuity parameter, scalar
-;	beta - H-beta line strength index.  If beta is not know UVBYBETA
-;		will compute a value based on by, m1,and c1.
-;	n -  Integer (1-8) giving approximate stellar classification
+;       by - Stromgren b-y color, scalar
+;       m1 - Stromgren line-blanketing parameter, scalar
+;       c1 - Stromgren Balmer discontinuity parameter, scalar
+;       beta - H-beta line strength index.  If beta is not know UVBYBETA
+;               will compute a value based on by, m1,and c1.
+;       n -  Integer (1-8) giving approximate stellar classification
 ;
-;	(1) B0 - A0, classes III - V, 2.59 < BETA < 2.88,-0.20 <   c0  < 1.00
-;	(2) B0 - A0, class   Ia     , 2.52 < BETA < 2.59,-0.15 <   c0  < 0.40
-;	(3) B0 - A0, class   Ib     , 2.56 < BETA < 2.61,-0.10 <   c0  < 0.50
-;	(4) B0 - A0, class   II     , 2.58 < BETA < 2.63,-0.10 <   c0  < 0.10
-;	(5) A0 - A3, classes III - V, 2.87 < BETA < 2.93,-0.01 < (b-y)o< 0.06
-;	(6) A3 - F0, classes III - V, 2.72 < BETA < 2.88, 0.05 < (b-y)o< 0.22
-;	(7) F1 - G2, classes III - V, 2.60 < BETA < 2.72, 0.22 < (b-y)o< 0.39
-;	(8) G2 - M2, classes  IV _ V, 0.20 < m0   < 0.76, 0.39 < (b-y)o< 1.00
+;       (1) B0 - A0, classes III - V, 2.59 < BETA < 2.88,-0.20 <   c0  < 1.00
+;       (2) B0 - A0, class   Ia     , 2.52 < BETA < 2.59,-0.15 <   c0  < 0.40
+;       (3) B0 - A0, class   Ib     , 2.56 < BETA < 2.61,-0.10 <   c0  < 0.50
+;       (4) B0 - A0, class   II     , 2.58 < BETA < 2.63,-0.10 <   c0  < 0.10
+;       (5) A0 - A3, classes III - V, 2.87 < BETA < 2.93,-0.01 < (b-y)o< 0.06
+;       (6) A3 - F0, classes III - V, 2.72 < BETA < 2.88, 0.05 < (b-y)o< 0.22
+;       (7) F1 - G2, classes III - V, 2.60 < BETA < 2.72, 0.22 < (b-y)o< 0.39
+;       (8) G2 - M2, classes  IV _ V, 0.20 < m0   < 0.76, 0.39 < (b-y)o< 1.00
 ;
-;	name - scalar string giving name of star.  Used only when writing to 
-;		disk for identification purposes.
+;       name - scalar string giving name of star.  Used only when writing to 
+;               disk for identification purposes.
 ;
 ; OPTIONAL INPUT KEYWORD:
-;	TEXTOUT   Used to determine output device.  If not present, the
-;	value of !TEXTOUT system variable is used (see TEXTOPEN)
-;		textout=1	Terminal with /MORE
-;		textout=2	Terminal without /MORE
-;		textout=3	uvbybeta.prt   (output file)
-;		textout=4	Laser Printer 
-;		textout=5      User must open file         
-;		textout=7	Append to existing uvbybeta.prt file
-;		textout = filename (default extension of .prt)
+;       TEXTOUT   Used to determine output device.  If not present, the
+;       value of !TEXTOUT system variable is used (see TEXTOPEN)
+;               textout=1       Terminal with /MORE
+;               textout=2       Terminal without /MORE
+;               textout=3       uvbybeta.prt   (output file)
+;               textout=4       Laser Printer 
+;               textout=5      User must open file         
+;               textout=7       Append to existing uvbybeta.prt file
+;               textout = filename (default extension of .prt)
 ;
 ; OPTIONAL OUTPUTS:
-;	Te - approximate effective temperature
-;	MV - absolute visible magnitude
-;	Eby - Color excess b-y
-;	delm0 - metallicity index, delta m0, may not be calculable for early
-;		B stars.
-;	radius - Stellar radius (R/R(solar))
+;       Te - approximate effective temperature
+;       MV - absolute visible magnitude
+;       Eby - Color excess b-y
+;       delm0 - metallicity index, delta m0, may not be calculable for early
+;               B stars.
+;       radius - Stellar radius (R/R(solar))
 ;
 ; SYSTEM VARIABLES:
-;	If keyword textout not used, the non-standard system variable !TEXTOUT 
-;	becomes the output device indicator.
-;	Set  !TEXTOUT =3 to have results directed to a file UVBYBETA.PRT 
-;	If all output parameters were supplied, then type TEXTCLOSE to close
-;	this file
+;       If keyword textout not used, the non-standard system variable !TEXTOUT 
+;       becomes the output device indicator.
+;       Set  !TEXTOUT =3 to have results directed to a file UVBYBETA.PRT 
+;       If all output parameters were supplied, then type TEXTCLOSE to close
+;       this file
 ;
 ; REVISION HISTORY:                                           
-;	W. Landsman          IDL coding              February, 1988
-;	Keyword textout added, J. Isensee, July, 1990
-;	Made some constants floating point.   W. Landsman    April, 1994
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       W. Landsman          IDL coding              February, 1988
+;       Keyword textout added, J. Isensee, July, 1990
+;       Made some constants floating point.   W. Landsman    April, 1994
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  npar = N_params()
 
  if not keyword_set( TEXTOUT ) then textout = !TEXTOUT  ;default output dev.
 
- Rm1 = -0.33 & Rc1 = 0.19 & Rub = 1.53  	;Parameter values
+ Rm1 = -0.33 & Rc1 = 0.19 & Rub = 1.53          ;Parameter values
  init = 0
 
  READ_PAR:  if ( npar LT 4 ) then begin 
@@ -114,7 +114,7 @@ pro uvbybeta,by,m1,c1,beta,n,name,Te,MV,eby,delm0,radius,TEXTOUT=textout
    print,$ 
      '(7) F1 - G2, classes III - V, 2.60 < BETA < 2.72, 0.22 < (b-y)o< 0.39'
    print, $ 
-     '(8) G2 - M2, classes  IV _ V, 0.20 < m0   < 0.76, 0.39 < (b-y)o< 1.00
+     '(8) G2 - M2, classes  IV _ V, 0.20 < m0   < 0.76, 0.39 < (b-y)o< 1.00'
    n = 0                   
    read,'Enter group number to which star belongs: ',n
 
@@ -177,29 +177,29 @@ pro uvbybeta,by,m1,c1,beta,n,name,Te,MV,eby,delm0,radius,TEXTOUT=textout
 
  6: begin
     if flag1 then begin
-	print,' Estimate of Beta only valid if star is unreddened'
+        print,' Estimate of Beta only valid if star is unreddened'
         beta = 3.06 - 1.221*by - 0.104*c1
     endif
     m1zams = -2.158*beta^2 +12.26*beta-17.209
     if ( beta LE 2.74 ) then begin
 
-	c1zams = 3.0*beta - 7.56
-	MVzams = 22.14 - 7*beta
+        c1zams = 3.0*beta - 7.56
+        MVzams = 22.14 - 7*beta
 
    endif else if ( ( beta GT 2.74 ) and ( beta LE 2.82 ) ) then begin
 
-	c1zams = 2.0*beta - 4.82
-	MVzams = 11.16-3*beta
+        c1zams = 2.0*beta - 4.82
+        MVzams = 11.16-3*beta
 
    endif else begin
-	c1zams = 2.0*beta-4.83
-	MVzams =-88.4*beta^2+497.2*beta-696.41
+        c1zams = 2.0*beta-4.83
+        MVzams =-88.4*beta^2+497.2*beta-696.41
 
    endelse        
    delm1 = m1zams - m1
    delc1 = c1-c1zams
    if delm1 lt 0. then $
-	by0 = 2.946 - beta - 0.1*delc1 - 0.25*delm1 else $
+        by0 = 2.946 - beta - 0.1*delc1 - 0.25*delm1 else $
         by0 = 2.946 - beta - 0.1*delc1
    Eby = by - by0
    Deredd, eby, by, m1, c1, ub, by0, m0, c0, ub0
@@ -211,15 +211,15 @@ pro uvbybeta,by,m1,c1,beta,n,name,Te,MV,eby,delm0,radius,TEXTOUT=textout
 
  7: begin
    if flag1 then begin 
-	byinit = by
-	m1init = m1
-	for i = 1,10 do begin
+        byinit = by
+        m1init = m1
+        for i = 1,10 do begin
           m1by = 2.5*byinit^2 - 1.32*byinit + 0.345
           bycorr = byinit + (m1by-m1init) / 2.0
           if ( abs(bycorr-byinit) LE 0.001 ) then goto,T71
-	  byinit = bycorr
-	  m1init = m1by
-	endfor
+          byinit = bycorr
+          m1init = m1by
+        endfor
         T71: beta = 1.01425*bycorr^2 - 1.32861*bycorr + 2.96618  
     endif
 
@@ -227,8 +227,8 @@ pro uvbybeta,by,m1,c1,beta,n,name,Te,MV,eby,delm0,radius,TEXTOUT=textout
     MVzams = 5.48012*beta^3 + 11.0494*beta^2 - 188.748*beta + 324.482
 
     if beta le 2.65 then $
-	c1zams = 2*beta - 4.91 else $
-	c1zams = 11.1555*beta^2-56.9164*beta+72.879
+        c1zams = 2*beta - 4.91 else $
+        c1zams = 11.1555*beta^2-56.9164*beta+72.879
 
      delm1 = m1zams - m1
      delc1 = c1 - c1zams
@@ -271,20 +271,20 @@ pro uvbybeta,by,m1,c1,beta,n,name,Te,MV,eby,delm0,radius,TEXTOUT=textout
         m1zams = 42.93678*by0^4 - 122.466*by0^3 + 122.1875*by0^2 $
                - 49.43695*by0 + 7.18436
         IF by0 lt 0.65 THEN BEGIN
-		c1zams = -28.7056*by0^3 +42.7486*by0^2 -21.278*by0 + 3.78514
+                c1zams = -28.7056*by0^3 +42.7486*by0^2 -21.278*by0 + 3.78514
                 MVzams = -552.48*by0^4 + 1272.503*by0^3-1101.257*by0^2 $
                        +  432.156*by0 - 59.2095
         ENDIF ELSE IF (by0 GE 0.65) and (by0 lt 0.79) THEN BEGIN
-		c1zams = -0.631821*by0^2+0.116031*by0+0.33657
+                c1zams = -0.631821*by0^2+0.116031*by0+0.33657
                 MVzams = 1.37632*by0^2 + 4.97911*by0+3.4305
         ENDIF ELSE BEGIN
                 c1zams = -0.010028*by0^2 + 0.530426*by0 - 0.37237
                 MVzams =  1.18298*by0^2  + 3.92776*by0 + 4.37507
         ENDELSE
-	delm0 = m1zams - m0
-	delc0 =c0 - c1zams
-	IF (by0 LE 0.505) THEN BEGIN
-		f = 10. - 80.*(by0-0.38)
+        delm0 = m1zams - m0
+        delc0 =c0 - c1zams
+        IF (by0 LE 0.505) THEN BEGIN
+                f = 10. - 80.*(by0-0.38)
                 Te = 10^(-0.416*by0+3.924)
         ENDIF ELSE BEGIN
                 f = 0.0
@@ -293,7 +293,7 @@ pro uvbybeta,by,m1,c1,beta,n,name,Te,MV,eby,delm0,radius,TEXTOUT=textout
         MV = MVzams - f*delc0 + 3.2*delm0 - 0.07
       END 
  ELSE: BEGIN
-      print,'A stellar group of',n,' is not available
+      print,'A stellar group of',n,' is not available'
       npar = npar<4
       goto, READ_GROUP 
       end

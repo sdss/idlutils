@@ -1,8 +1,6 @@
 	PRO FXBFINISH, UNIT, ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBFINISH
 ; Purpose     : 
 ;	Close a FITS binary table extension file opened for write.

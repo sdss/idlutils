@@ -1,5 +1,5 @@
 pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
-                             CUBIC = cubic, DEGREE = Degree, NGRID = Ngrid
+                  ERRMSG = errmsg,CUBIC = cubic, DEGREE = Degree, NGRID = Ngrid
 ;+
 ; NAME:
 ;       HASTROM
@@ -34,8 +34,8 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;       MISSING - Set this keyword to a scalar value which will be assigned
-;               to pixels in the output image which do not correspond to 
-;               existing imput images.  If not supplied, then linear 
+;               to pixels in the output image which are out of range of the
+;               supplied imput image.  If not supplied, then linear 
 ;               extrapolation is used.   See the IDL manual on POLY_2D.
 ;       INTERP - Scalar, one of 0, 1, or 2 determining type of interpolation
 ;               0 nearest neighbor, 1 (default) bilinear interpolation, 
@@ -51,6 +51,11 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;       DEGREE - Integer scalar specifying the degree of the transformation.
 ;               See the routine POLYWARP for more info.   Default = 1
 ;              (linear transformation).
+; OPTIONAL OUTPUT KEYWORD:
+;       ERRMSG - If this keyword is supplied, then any error mesasges will be
+;               returned to the user in this parameter rather than depending on
+;               on the MESSAGE routine in IDL.   If no errors are encountered
+;               then a null string is returned.               
 ; NOTES:
 ;       (1) The 3 parameter calling sequence is less demanding on virtual 
 ;               memory.
@@ -80,12 +85,16 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;       Converted to IDL V5.0   W. Landsman        September 1997
 ;       Accept INTERP=0, Convert output GSS header to standard astrometry
 ;                               W. Landsman        June 1998
+;       Remove calls to obsolete !ERR system variable   March 2000
+;       Added ERRMSG output keyword  W. Landsman    April 2000
+;       Need to re-extract astrometry after precession  W. Landsman Nov. 2000
+;       
 ;-
  On_error,2                              ;Return to caller
  npar = N_params()
 
  if (npar LT 3) or (npar EQ 4) then begin        ;3 parameter calling sequence?
-        print,'Syntax:  HASTROM, oldim, oldhd, refhd
+        print,'Syntax:  HASTROM, oldim, oldhd, refhd'
         print,'     or  HASTROM, oldim, oldhd, newim, newhd, refhd'
         print,'                 [ MISSING=, DEGREE=, INTERP=, NGRID=, CUBIC = ]'
         return
@@ -99,11 +108,21 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 
  radeg = 180.D/!DPI                      ;Double precision !RADEG
 
- check_FITS, oldim, oldhd, dimen
- if !ERR EQ -1 then message,'ERROR - Invalid image or FITS header array'
+save_err = arg_present(errmsg)     ;Does user want error msgs returned?
 
- if N_elements(dimen) NE 2 then message, $
-     'ERROR - Input image array must be 2-dimensional'
+;                                    Check for valid 2-D image & header
+ check_FITS, oldim, oldhd, dimen, /NOTYPE, ERRMSG = errmsg
+  if errmsg NE '' then begin
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+  endif
+
+  if N_elements(dimen) NE 2 then begin 
+        errmsg =  'ERROR - Input image array must be 2-dimensional'
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+ endif
+
  xsize_old = dimen[0]  &  ysize_old = dimen[1]
 
  xsize_ref = sxpar( refhd, 'NAXIS1' )                ;Get output image size
@@ -111,24 +130,31 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
  if (xsize_ref LT 1) or (ysize_ref LT 1) then message, $
         'ERROR - Reference header must be for a 2-dimensional image'
 
-;   Precess the header if necessary
+
+; Extract CD, CRPIX and CRVAL value from image header and reference header
 
  newhd = oldhd
+ extast, newhd, astr_old, par_old    
+ if ( par_old LT 0 ) then $  
+        message,'ERROR - Input FITS Header does not contain astrometry'
+ extast, refhd, astr_ref, par_ref    
+ if ( par_old LT 0 ) or ( par_ref LT 0 ) then $  
+        message,'ERROR -Reference FITS Header does not contain astrometry'
+
+
+;   Precess the header if necessary
+
  refeq = get_equinox( refhd, code)
  if code EQ -1 then message, $
    'WARNING - Equinox not specified in reference header',/CON else begin
    oldeq = get_equinox( oldhd, code)
    if code EQ -1 then message, $
       'WARNING - Equinox not specified in original header',/CON else $
-   if oldeq NE refeq then hprecess, newhd, refeq
+   if oldeq NE refeq then begin      ;Precess header and re-extract structure
+           hprecess, newhd, refeq
+           extast, newhd, astr_old, par_old
+   endif    
  endelse
-
-; Extract CD, CRPIX and CRVAL value from image header and reference header
-
- extast, newhd, astr_old, par_old    
- extast, refhd, astr_ref, par_ref    
- if ( par_old LT 0 ) or ( par_ref LT 0 ) then $  
-        message,'FITS Headers do not contain sufficient astrometry'
 
 ; Make a grid of points in the reference image to be used for the transformation
 
@@ -205,8 +231,8 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
                                      ' Y: '  + strtrim(ysize_old,2), newhd
 ; Update BSCALE and BZERO factors in header if necessary
 
- bscale = sxpar( newhd, 'BSCALE')
- if ( !ERR NE -1 ) and ( bscale NE 1. ) then begin
+ bscale = sxpar( newhd, 'BSCALE', Count = N_Bscale)
+ if (N_bscale GT 0 ) and ( bscale NE 1. ) then begin
     getrot, astr_old, rot, cdelt_old
     getrot, astr_ref, rot, cdelt_ref
     pix_ratio = ( cdelt_old[0]*cdelt_old[1]) / (cdelt_ref[0]*cdelt_ref[1] )

@@ -2,58 +2,61 @@ pro GET_COORDS, Coords, PromptString, NumVals, InString=InString, Quiet=Quiet
 ;*******************************************************************************
 ;+
 ; NAME:
-;	GET_COORDS
+;       GET_COORDS
 ;
 ; PURPOSE:
-;	Converts a string with angular coordinates  to floating point values.  
+;       Converts a string with angular coordinates  to floating point values.  
 ; EXPLANATION:
-;	Although called by ASTRO.PRO, this is a general purpose routine.
-;	The user may input as floating point or sexigesimal.  If user inputs 
-;	calling procedure's job to convert hours to degrees if needed.
-;	Since the input string is parsed character-by-character, ANY character
-;	that is not a digit, minus sign or decimal point may be used as a 
-;	delimiter, i.e. acceptable examples of user input are:
+;       Although called by ASTRO.PRO, this is a general purpose routine.
+;       The user may input as floating point or sexigesimal.  If user inputs 
+;       calling procedure's job to convert hours to degrees if needed.
+;       Since the input string is parsed character-by-character, ANY character
+;       that is not a digit, minus sign or decimal point may be used as a 
+;       delimiter, i.e. acceptable examples of user input are:
 ;
-;	1:03:55 -10:15:31
-;	1 3 55.0 -10 15 31
-;	1*3 55              -10abcd15efghij31
-;	1.065278  hello   -10.25861
+;       1:03:55 -10:15:31
+;       1 3 55.0 -10 15 31
+;       1*3 55              -10abcd15efghij31
+;       1.065278  hello   -10.25861
 ;
 ; CALLING SEQUENCE:
-;	GET_COORDS, Coords, [ PromptString, NumVals, INSTRING =, /QUIET ]
+;       GET_COORDS, Coords, [ PromptString, NumVals, INSTRING =, /QUIET ]
 ;
 ; OPTIONAL INPUT:
-;	PromptString - A string to inform the user what data are to be entered
+;       PromptString - A string to inform the user what data are to be entered
+;
+; OPTIONAL KEYWORD INPUT:
 ;       InString - a keyword that, if set, is assumed to already contain the
-;		input data string to be parsed.  If this keyword is set, then
-;		the user is not prompted for any input.
-;	Quiet - if set the program won't printout any error messages, but bad
-;		input is still flagged by Coords=[-999,-999].
+;               input data string to be parsed.  If this keyword is set, then
+;               the user is not prompted for any input.
+;       /Quiet - if set the program won't printout any error messages, but bad
+;               input is still flagged by Coords=[-999,-999].
 ;
 ; OUTPUT:
-;	Coords - a 2 element floating array containing the coordinates.  The
-;		vector [-999,-999] is returned if there has been an error.
+;       Coords - a 2 element floating array containing the coordinates.  The
+;               vector [-999,-999] is returned if there has been an error.
 ;
 ; OPTIONAL OUTPUT:
-;	NumVals - the number of separate values entered by the user:  2 if the
-;		user entered the coordinates as floating point numbers, 6 if 
-;		the user entered the coordinates as sexigesimal numbers.  Some
-;		calling procedures might find this information useful (e.g., to
-;		to print some output in the same format as the user's input).
+;       NumVals - the number of separate values entered by the user:  2 if the
+;               user entered the coordinates as floating point numbers, 6 if 
+;               the user entered the coordinates as sexigesimal numbers.  Some
+;               calling procedures might find this information useful (e.g., to
+;               to print some output in the same format as the user's input).
 ;
-; REVISION HISTORY
-;	Written by Joel Parker, 5 MAR 90
-;	Included InString and Quiet keywords.  Cleaned up some of the code and
-;	comments.  JWmP,  16 Jun 94
+; REVISION HISTORY:
+;       Written by Joel Parker, 5 MAR 90
+;       Included InString and Quiet keywords.  Cleaned up some of the code and
+;       comments.  JWmP,  16 Jun 94
 ;
 ;*******************************************************************************
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
 
 On_error,2
 
 if (N_params() eq 0) then begin
-      print,'Syntax - GET_COORDS, Coords, [PromptString, NumVals, INSTRING =, /QUIET]
+      print,'Syntax - ' + $
+         'GET_COORDS, Coords, [PromptString, NumVals, INSTRING=, /QUIET]'
       return
 endif 
 

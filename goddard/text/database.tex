@@ -25,27 +25,30 @@
 \newcommand{\ea}{{\em et~al.} {}}
 \newcommand{\apjl}{{\em Ap.~J. (Letters)}}
 \begin{document}
-\title{The UIT Database System}
-\author{W.B. Landsman \\ ST Systems Co.}
+\title{The IDLAstro Database System \\(Version July  2001)}
+\author{W.B. Landsman \\ Raytheon ITSS}
 \maketitle
 \section{INTRODUCTION}
-This document describes the use of an IDL database system that has
-been implemented on the UIT computers.  The database software was designed
-by Don Lindler of the GHRS group, and has been adopted by the GHRS, STIS and IUE
-groups.
-The software is noteworthy for its speed
-and versatility.  An example of its speed is provided by a position search 
-of the 245,000 entries in the IRAS point source
-catalog, which can be performed in a couple of seconds on a SparcStation 2.  
-The versatility arises because
-the database software shares the IDL programming, plotting, and 
-image display syntax.   The software will run on any computer that has IDL
-installed, and has been used on Vaxes, Unix workstations, and PC/Windows
-machines.
+
+This document describes the use of an IDL database system that is available in
+the IDL Astronomy Library ({\tt http://idlastro.gsfc.nasa.gov/}).   The
+database software was designed by Don Lindler of the GHRS (Goddard
+High-Resolution Spectrograph) group, and  has been adopted by several
+astronomy  groups.      The software was originally written in 1987 (though
+modest improvements are  made each year) and is a ``flat'' (as opposed to a
+relational or object-oriented) database system.   It is thus a ``primitive''
+database system compared to modern commercial alternatives but remains useful
+because  it shares the IDL programming, plotting, and image display syntax.   
+This makes the database system very versatile and easy to learn for those
+already familiar with IDL programming.
+In addition, the database software can be run on any computer 
+with IDL installed (Unix, Windows, MacOS, or VMS).
 
 In discussing the database software, it is useful to have in mind a
 book copy of, for example, the Yale Bright Star Catalogue 5th Edition 
-(called `YALE\_BS' in the computer database).  The data for a specific star
+called `YALE\_BS' in the computer database.  (A copy of YALE\_BS and other 
+IDL databases is available at \\
+{\tt http://idlastro.gsfc.nasa.gov/ftp/zdbase/}).  The data for a specific star
 is contained in one row, while column headings are placed at the top of
 a page.  Similar concepts apply to the computer database, and the following
 terms will be referred to constantly.
@@ -85,9 +88,9 @@ while sitting at a terminal, where the numerous examples can be worked out.
 
 \section{DATABASE FUNDAMENTALS}
 All of the database procedures begin with the letters ``DB''.  
-As with all other MOUSSE procedures,
+As with all other IDL procedures,
 help on a specific database procedure can be obtained by typing
-?$<$procedure\_name$>$.  These help files provide more detailed information
+{\tt man,`$<$procedure\_name$>$'}.  These help files provide more detailed information
 than is given in this document.
 Although there exist a total of 35 database procedures,
 the following
@@ -164,7 +167,7 @@ to a disk file.
 \exbegin
 \exs{DBHELP,1,TEXT = 3}{;Write a one line description of all catalogues to a
 disk file DBHELP.PRT}
-\exs{DBHELP,1,T='DB.TXT'}{;Write a one line description to a file DB.TXT}
+\exs{DBHELP,1,T='db.txt'}{;Write a one line description to a file db.txt}
 \subsection{DBFIND}
 
 The function DBFIND is used to select the entries of interest in a catalogue.
@@ -258,12 +261,14 @@ is 30 degrees, then conversion to hours must be done before the DBFIND call
 \exc{list = dbfind('ra=30/15.')}{;ILLEGAL statement  - do not try this!}
 \exend
 
-String searches are matched whenever the supplied string appears anywhere in
+By default, string searches are matched whenever the supplied string appears anywhere in
 an item.   Thus, in the YALE\_BS catalog
 \exone{list = dbfind('name = tau')}
 will find all stars with the three characters `tau' appearing anywhere in
 their name.    The search is case insensitive and leading and trailing blanks 
-are ignored.   One can also use the same item twice in a search.   Thus
+are ignored.   The /FULLSTRING keyword to DBFIND can be used if you want all
+characters in the database value to match the search string (i.e. no substring
+matches).  One can also use the same item twice in a search.   Thus
 \exone{list = dbfind(`name = tau,name=eri')}
 will find all stars (nine of them!) with the substrings `tau' and `eri' in
 their name.
@@ -597,18 +602,18 @@ Example of a Database catalogue \\
 \#items       \\
 CAT\_NO    \>   I*2  \>   Catalogue Number  \\
 BS\_NO     \>   I*4  \>   Bright Star Number \\
-RA\_1950   \>   C*10 \>   RA (1950)... Use RA for search  \\
-DEC\_1950  \>   C*9  \>   Dec (1950)... Use Dec for search  \\
+RA\_2000   \>   C*10 \>   RA (2000)... Use RA for search  \\
+DEC\_2000  \>   C*9  \>   Dec (2000)... Use Dec for search  \\
 FLUX(61)   \>   R*4  \>   Flux (x 10[-10]), 1380A - 2740A) \\
-RA         \>   R*4  \>   RA (B1950, hours)...Use for Search          \\
-DEC        \>   R*4  \>   Dec (B1950, degrees)...Use for Search       \\
+RA         \>   R*4  \>   RA (J2000, hours)...Use for Search          \\
+DEC        \>   R*4  \>   Dec (J2000, degrees)...Use for Search       \\
  \> \> \\
 \#formats       \\
 ENTRY       \>   I6   \>   Entry               \\
 CAT\_NO     \>   I4   \>   TD1,No             \\
 BS\_NO      \>   I6   \>   Bright,Star,No    \\
-RA\_1950    \>   A10  \>   RA,(1950)          \\
-DEC\_1950   \>   A10  \>   Dec,(1950)         \\
+RA\_2000   \>   A10  \>   RA,(2000)          \\
+DEC\_2000   \>   A10  \>   Dec,(2000)         \\
  \> \> \\
 \#index  \\
 CAT\_NO    \>     index  \\
@@ -644,7 +649,9 @@ should have the number of values per entry put in parentheses next to the
 item name.
 The second column
 gives the datatype of every item.  Acceptable values of datatype include
-R*4, I*2, I*4, R*8, L*1 or B*1.   The datatype of a string item should be
+R*4, I*2, I*4, R*8, L*1 or B*1.   Since IDL V5.2 64 bit integers (I*8) and
+unsigned integers (U*2, U*4, U*8) are also allowed datatypes. The datatype 
+of a string item should be
 written as C*[n] where [n] is the string length.  The last column
 gives a brief description of the item that will be used with DBHELP.
 \item [\#formats] This block lists the item name, print format, and print
@@ -656,9 +663,7 @@ commas.   However, each word must fit into the space allocated by the
 print format; e.g. a heading for the item BS\_NO (format I6) will be
 truncated after 6 characters.
 \item [\#index]  
-This block lists the indexed items and their index types.  Multiple
-valued items cannot be listed here since they are not allowed to be 
-indexed.
+This block lists the indexed items and their index types.    
 There are four acceptable index types; ``index'', ``sorted'',
 ``sort'', and ``sort/index''.   
 The values of an ``index'' item are copied in 
@@ -670,7 +675,8 @@ searched very quickly.  `Sorted' items are assumed to have entry order
 already coincident with numeric order, and the ``sorted'' index should be
 used whenever it is allowed. For example, some catalogs are
 listed by increasing right ascension, which would allow RA to be a
-``sorted'' item.  String items are not allowed an index type of ``sort'' or
+``sorted'' item.  Neither multiple-valued items nor string items are allowed 
+an index type of ``sort'' or
 ``sorted''.  Finally, the values of a ``sort/index'' item are copied in both
 entry order and numeric order to the index file.  This type is mainly used
 for items which are used to ``point'' at another database (see below).
@@ -683,8 +689,8 @@ Type & Space  & Speed & Speed & \\ \hline\hline
 None & 1 &  Slow & Slow & \\ \hline
 Index & 2 & Moderate & Fast & \\ \hline
 Sorted & 3 & Very Fast & Fast & Item must be in entry order \\ \hline 
-Sort & 4 & Fast & Slow & String items not allowed \\   \hline
-Sort/Index & 5 & Fast & Fast & String items not allowed \\ \hline
+Sort & 4 & Fast & Slow & Multiple and String items not allowed \\   \hline
+Sort/Index & 5 & Fast & Fast & Multiple and String items not allowed \\ \hline
 \end{tabular}
 \vspace{0.1in}
 \item [\#pointers] The \#pointers block contains the names of items
@@ -718,7 +724,7 @@ It assumed that the user has been able to read the data into IDL vectors.
 (The procedures READCOL, RDFLOAT, and READFMT are extremely useful for 
 reading raw data from ASCII files into IDL vectors.)   For example, to create 
 the EXAMPLE database from the previous section, the user should have vectors
-named, say, CAT,BS,RA\_1950,DEC\_1950,FLUX,RA, and DEC corresponding to 
+named, say, CAT,BS,RA\_2000,DEC\_2000,FLUX,RA, and DEC corresponding to 
 each of the items.   The database must then be opened for update by
 adding a second parameter to the DBOPEN command.  It is also necessary
 for the user to have sole access to the database; an error message will
@@ -755,12 +761,12 @@ first calling DBCREATE, since the data in the existing .dbx and .dbf files
 must remain.  The procedure DBUPDATE can be used to load new item values into
 a database.  DBUPDATE can be viewed as the inverse of DBEXT -- instead of
 extracting item vectors, it will insert them.  For example, suppose the RA and
-DEC items are in 1900 equinox, and one wants to convert them to 1950 equinox.
+DEC items are in 1950 equinox, and one wants to convert them to 2000 equinox.
 \exbegin
 \exc{!PRIV=2 \& dbopen,'EXAMPLE',1}{;Ultimately, will update database}
 \exc{dbext,-1,'RA,DEC',ra,dec}{;Extract RA and Dec vectors}
 \exc{ra = ra*15.}{;Convert to degrees}
-\exc{precess,ra,dec,1900,1950}{;Convert to 1950 equinox}
+\exc{precess,ra,dec,1950,2000}{;Convert to 2000 equinox}
 \exc{dbupdate,-1,'RA,DEC',ra/15.,dec}{;Load new values of RA and Dec} 
 
 Finally, the procedure DBEDIT is useful for editing individual item
@@ -774,9 +780,13 @@ known they can be inserted by hand into the database:
 \exend
 DBEDIT will display the existing value of an item, and prompt the user
 whether to keep or replace it.
+
+\newpage
 \section{APPENDIX:  ONLINE CATALOGS}
-This appendix lists some of the more important on-line catalogues.  Use
-DBHELP to obtain a more complete and up-to-date listing.   
+This appendix lists the IDL databases available at 
+{\tt http://idlastro.gsfc.nasa.gov/ftp/zdbase/}.  Use
+DBHELP to obtain a more complete and up-to-date listing.at your local
+installation.   
 
 \vspace{0.15in}
 
@@ -784,49 +794,29 @@ DBHELP to obtain a more complete and up-to-date listing.
  General Catalogues and Databases & \# of Entries & Name       \\
          &          &        \\
 
- {\em ANS} UV Catalogue & 3,573 & ANS                    \\
  Abell Rich Clusters of Galaxies & 5250 & ABELL  \\
  EUVE 2nd Source List (1996) & 514 & EUVE \\
  Gliese Catalog of Nearby Stars & 3,802 & GLIESE \\
  ~~Preliminary 3rd Edition (1991) & & \\
- Galactic Globular Cluster Database & 121 & GLOBULAR \\
- Hipparcos Catalog (1997) & 118218 & HIPPARCOS \\
+  Hipparcos Catalog (1997) & 118218 & HIPPARCOS \\
  Hipparcos Input Catalog (1992) & 118218 & HIC \\
- Catalogue of HST observations (1998) & 130,435 & HST\_CATALOG \\
+ Catalogue of HST observations (2000) & 234,069 & HST\_CATALOG \\
  {\em IRAS} Point Source Catalogue & 255,578 & IRAS\_PSC \\
- {\em IUE} Merged Log Catalogue (1997) & 117,506 & IUE           \\ 
- Kurucz Model Atmospheres (1992) & 6,455 & KURUCZ \\
- Library of Stellar Spectra (Jacoby 1984) & 161 & LSS \\
- Brightest Stars in M31 field (1988) & 20,216 & M31STARS \\
- OB stars in M33 (Wilson 1991) & 3,005 & M33STARS \\
- Magellanic Catalog of Stars (Tucholke 1996) & 243,561 & MACS \\
+ {\em IUE} Merged Log Catalogue (1997) & 116,736 & IUE           \\ 
+ Nearby Galaxies Tully (1988) & 2367 & NEARBY\_GAL  \\
  New General Catalog (NGC) objects (1988) & 13,226 & NGC2000 \\
  Position and Proper Motion (PPM) catalog & 468,907 & PPM \\
  Catalogue of Principal Galaxies (Paturel et al. 1989) & 73,197 & PRIN\_GAL \\
- Quasars and AGN $8^{th}$ ed. & 15,049 & QUASAR\_AGN \\
- ~~Veron-Cetty and Veron (1998) & & \\
+ Quasars and AGN $10^{th}$ ed. & 30,119 & QUASAR\_AGN \\
+ ~~Veron-Cetty and Veron (2001) & & \\
  Catalog of Quasars and BL Lac Objects & 7,315 & QUASARS \\
  ~~Hewitt and Burbidge (1993) \\
- CFA Redshift Survey & 31,224 & REDSHIFT            \\
- ROSAT Wide Field Camera Survey & 479 & ROSAT\_WFC2 \\
- SAO/CFA Star Catalogue & 255,988 & SAO            \\
- Seyfert Galaxies (Weedman 1977) & 121 & SEYFERT \\
- Stellar Evolution Sequences & 50 & MAEDER \\
- ~~Schaller et al. (1992) & & \\
  3rd Reference Catalog of Galaxies  & 23,022 & RC3 \\
- SKYMAP V3.7 (1993) & 248,558 & SKYMAP \\
- Sweigart (1987) Horizontal Branch Models & 120 & SWEIGART \\
- TD-1 UV Photometry Catalogue & 31,114 & TD1                 \\
- TD-1 Spectrophotometry Catalogue & 1,356 & TD1\_SPEC \\
- Ultraviolet Spectral Synthesis    & 15 & UV\_SPEC\_LIB \\
- ~~Library (Fanelli \ea 1987) & & \\
- Virgo Cluster Catalog (Binggeli 1987) & 2,096 & VIRGO \\
- Catalogue of White Dwarfs   & 1,282 & WDWARF \\
- ~~McCook and Sion (1987) & & \\
- IUE spectra of white dwarfs (Wegner \& Swanson 1991) & 184 & WDWARF\_IUE \\
+  CFA Redshift Survey (1995) & 57,536 & REDSHIFT            \\
+  Catalogue of White Dwarfs 4th ed   & 4,401 & WDWARF \\
+ ~~McCook and Sion (1998) & & \\
  Yale Bright Star Catalogue & 9,110 & YALE\_BS        \\  
  ~~Preliminary 5th Edition (1991) & & \\
- Yale Bright Star (Remarks) & 8,300 & YALE\_BS\_RMKS    \\
 
 \end{tabular}
                                                       

@@ -1,9 +1,7 @@
 	PRO FXHMODIFY, FILENAME, NAME, VALUE, COMMENT, BEFORE=BEFORE,	$
 		AFTER=AFTER, FORMAT=FORMAT, EXTENSION=EXTENSION, ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXHMODIFY
 ; Purpose     : 
 ;	Modify a FITS header in a file on disk.

@@ -1,8 +1,6 @@
 	FUNCTION FXBTDIM, TDIM_KEYWORD
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBTDIM()
 ; Purpose     : 
 ;	Parse TDIM-like kwywords.

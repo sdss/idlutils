@@ -345,7 +345,7 @@ if (((n_elements(crval1) eq 1) and (n_elements(crval2) eq 0)) or $
    ENDIF
   ENDIF
 
-; Convert form standard coordinate system to "native" coordinate system
+; Convert from standard coordinate system to "native" coordinate system
 ; if the CRVAL keyword is set.  Otherwise, assume the latitude and longitude 
 ; given are in "native" coordinates already (this is  essentially what is done
 ; in the procedure AITOFF).

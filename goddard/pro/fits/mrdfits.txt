@@ -1,5 +1,5 @@
-MRDFITS - A multiple format FITS reader. V2.1d
-Last updated: August 1997
+MRDFITS - A multiple format FITS reader. V2.5
+Last updated: December 2001
 
 
 The MRDFITS utility is intended to be a general purpose function allowing
@@ -26,6 +26,17 @@ of the FITS data is possible:
 	  Note that the default is no scaling.
 	- Only a subset of the columns may be retrieved for ASCII
 	  and binary tables.
+        - Automatic mapping into IDL unsigned data types (/UNSIGNED) when the
+          appropriate BSCALE(TSCAL) and BZERO(TZERO) keywords appear in the 
+          header
+        - Variable length binary tables may read either into a fixed length
+          column (default) or into a IDL pointers (with /POINTER_VAR) for 
+          maximum efficiency
+
+MRDFITS has been tested to work on IDL Version V4.0 through V5.5, although not
+all of its capabilities are available in earlier IDL Versions.   For example,
+output of unsigned data types requires at least V5.2, and use of the
+/POINTER_VAR keyword requires at least V5.0. 
 
 MRDFITS is called as a function similar to the old READFITS utility, e.g.,
 
@@ -36,6 +47,7 @@ primary data array) and header is an optional variable in which the
 header information will be stored.  A number of optional keyword
 parameters are available.
 
+        ALIAS             Specify translation of column names to structure tags
 	/FSCALE and /DSCALE  cause scaling to single and double precision.
 	COLUMNS=  	     allows users to specify the columns desired.
 	RANGE=		     allows users to retrieve only some rows.
@@ -45,6 +57,7 @@ parameters are available.
 	/USE_COLNUM          makes tag names of the form C#
 	/NO_TDIM             disable processing of TDIM keywords.
 	ERROR_ACTION         Set the ON_ERROR action to this value
+        /UNSIGNED            Convert to IDL unsigned integer type when possible
 	
 MRDFITS uses the EXECUTE function where possible but creates temporary
 procedures when complex structures are needed.  The MRD_STRUCT
@@ -94,13 +107,14 @@ On Unix systems MRDFITS can handle files compressed with either
 the `standard' Unix compress utility or with the Gnu gzip utility.
 It assumes that files ending with .Z, .gz and .GZ are to be
 decompressed.  Decompression is done using a sub-process and pipes
-so that no temporary file is created.
+so that no temporary file is created.     Users with IDL V5.3 or later can use
+the gzip facilty on any OS (not just Unix). 
 
 Please send comments and bug reports to:
 
 	Tom McGlynn
-	Compton Observatory Science Support Center
-        mcglynn@grossc.gsfc.nasa.gov
+	High Energy Astrophysics Science Archive Research Center (HEASARC)
+        tam@lheapop.gsfc.nasa.gov
 	301-286-7743
 
         or Wayne Landsman   landsman@mpb.gsfc.nasa.gov

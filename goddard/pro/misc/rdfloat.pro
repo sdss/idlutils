@@ -4,13 +4,14 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
 ; NAME:
 ;      RDFLOAT
 ; PURPOSE:
-;      Quickly read a numeric ASCII data file into IDL floating pt. vectors.  
+;      Quickly read a numeric ASCII data file into IDL floating/double vectors.  
 ; EXPLANATION:
 ;      Columns of data may be separated by commas or spaces.      This 
 ;      program is fast but is restricted to data files where all columns can 
-;      be read as floating point (or all double precision).   Use READCOL if 
-;      greater flexibility is desired.   Use READFMT to read a fixed-format 
-;      ASCII file.
+;      be read as floating point (or all double precision).   
+;
+;      Use READCOL if  greater flexibility is desired.   Use READFMT to read a 
+;      fixed-format ASCII file.   Use FORPRINT to print columns of data.
 ;
 ; CALLING SEQUENCE:
 ;      RDFLOAT, name, v1, [ v2, v3, v4, v5, ...  v19] 
@@ -21,11 +22,11 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
 ;              .DAT is assumed, if not supplied.
 ;
 ; OPTIONAL INPUT KEYWORDS:
-;      SKIPLINE - Scalar specifying number of lines to skip at the top of file
-;              before reading.   Default is to start at the first line.
-;      NUMLINE - Scalar specifying number of lines in the file to read.  
+;      SKIPLINE - Integer scalar specifying number of lines to skip at the top
+;              of file before reading.   Default is to start at the first line.
+;      NUMLINE - Integer scalar specifying number of lines in the file to read.  
 ;             Default is to read the entire file
-;      DOUBLE - If this keyword is set, then all variables are read in as
+;      /DOUBLE - If this keyword is set, then all variables are read in as
 ;              double precision.
 ;
 ; OUTPUTS:
@@ -55,6 +56,7 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
 ;      Call NUMLINES() function                    February 1996
 ;      Read up to 19 columns                       August 1997
 ;      Converted to IDL V5.0   W. Landsman         September 1997
+;      Allow to skip more than 32767 lines  W. Landsman  June 2001
 ;-
   On_error,2                           ;Return to caller
 
@@ -64,11 +66,7 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
      return
   endif
 
-  nskip = 0
-
 ; Get number of lines in file
-
-   get_lun,lun
 
    nlines = NUMLINES( name )
    if nlines LT 0 then return
@@ -79,10 +77,10 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
 
 ;Read first line, and determine number of columns of data
 
-   openr, lun, name
+   openr, lun, name, /GET_LUN
    temp = ''
    if skipline GT 0 then $
-        for i=0,skipline-1 do readf, lun, temp
+        for i=0L,skipline-1 do readf, lun, temp
    readf,lun,temp
    colval = str_sep( strtrim( strcompress(temp),2),' ')
    ncol = N_elements(colval)
@@ -95,7 +93,7 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
    close,lun
    openr, lun, name
    if skipline GT 0 then $
-        for i=0,skipline-1 do readf, lun, temp
+        for i=0L,skipline-1 do readf, lun, temp
 
    readf, lun, bigarr
    free_lun, lun

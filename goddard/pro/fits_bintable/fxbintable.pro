@@ -1,7 +1,5 @@
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBINTABLE
 ; Purpose     : 
 ;	Common block FXBINTABLE used by "FXB" routines.

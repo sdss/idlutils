@@ -1,4 +1,4 @@
-FUNCTION AVG,ARRAY,DIMENSION
+FUNCTION AVG,ARRAY,DIMENSION, NAN = NAN, DOUBLE = DOUBLE
 ;+
 ; NAME:
 ;       AVG
@@ -10,7 +10,7 @@ FUNCTION AVG,ARRAY,DIMENSION
 ;       dimensions.
 ;
 ; CALLING SEQUENCE:
-;       RESULT = AVG( ARRAY, [ DIMENSION ] )
+;       RESULT = AVG( ARRAY, [ DIMENSION, /NAN, /DOUBLE ] )
 ;
 ; INPUTS:
 ;       ARRAY = Input array.  May be any type except string.
@@ -18,6 +18,15 @@ FUNCTION AVG,ARRAY,DIMENSION
 ; OPTIONAL INPUT PARAMETERS:
 ;       DIMENSION = Optional dimension to do average over, scalar
 ;
+; OPTIONAL KEYWORD INPUT:
+;      /NAN - Set this keyword to cause the routine to check for occurrences of
+;            the IEEE floating-point value NaN in the input data.  Elements with
+;            the value NaN are treated as missing data.
+;      /DOUBLE - By default, if the input Array is double-precision, complex, 
+;                or double complex, the result is of the same type;  otherwise,
+;                the  result is floating-point.   Use of the /DOUBLE keyword 
+;                forces a double precision output -- this is equivalent to (but
+;                faster than) first converting the input array to double.
 ; OUTPUTS:
 ;       The average value of the array when called with one parameter.
 ;
@@ -49,20 +58,28 @@ FUNCTION AVG,ARRAY,DIMENSION
 ;       Converted to Version 2      July, 1990
 ;       Replace SUM call with TOTAL    W. Landsman    May, 1992
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Added /NAN keyword   W. Landsman      July 2000
+;       Accept a scalar input value    W. Landsman/jimm@berkeley   November 2000
 ;-
-ON_ERROR,2
-S = SIZE(ARRAY)
-IF S[0] EQ 0 THEN $
+ ON_ERROR,2
+ S = SIZE(ARRAY)
+ IF N_ELEMENTS(array) EQ 1 THEN RETURN, array[0]
+ IF S[0] EQ 0 THEN $
         MESSAGE,'Variable must be an array, name= ARRAY'
 ;
-IF N_PARAMS() EQ 1 THEN BEGIN
-        AVERAGE = TOTAL(ARRAY) / N_ELEMENTS(ARRAY)
-END ELSE BEGIN
+    IF N_PARAMS() EQ 1 THEN BEGIN
+        IF KEYWORD_SET(NAN) THEN NPTS = TOTAL(FINITE(ARRAY)) $
+                            ELSE NPTS = N_ELEMENTS(ARRAY)
+        AVERAGE = TOTAL(ARRAY, NAN=NAN,DOUBLE = DOUBLE) / NPTS
+    ENDIF ELSE BEGIN
         IF ((DIMENSION GE 0) AND (DIMENSION LT S[0])) THEN BEGIN
-                AVERAGE = TOTAL(ARRAY,DIMENSION+1) / S[DIMENSION+1]
+                IF KEYWORD_SET(NAN) $
+                   THEN  NPTS = TOTAL(FINITE(ARRAY),DIMENSION+1) $
+                   ELSE  NPTS = S[DIMENSION+1]
+                AVERAGE = TOTAL(ARRAY,DIMENSION+1,NAN=NAN,DOUBLE=DOUBLE) / NPTS
         END ELSE $
                 MESSAGE,'*** Dimension out of range, name= ARRAY'
-ENDELSE
+    ENDELSE
 ;
-RETURN, AVERAGE
-END
+ RETURN, AVERAGE
+ END

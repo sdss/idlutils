@@ -1,5 +1,5 @@
-pro plotsym, psym, psize, FILL=fill,thick=thick    ;Define some plotting symbols
-;+
+pro plotsym, psym, psize, FILL=fill,thick=thick,Color = color
+   ;+
 ; NAME:
 ;     PLOTSYM
 ; PURPOSE:
@@ -8,8 +8,9 @@ pro plotsym, psym, psize, FILL=fill,thick=thick    ;Define some plotting symbols
 ;     After a symbol has been defined with PLOTSYM, a plotting command should
 ;     follow with either PSYM = 8 or !P.PSYM = 8 (see USERSYM)
 ;
+;     For additional rotationally symmetric plotting symbols, see VSYM.PRO
 ; CALLING SEQUENCE:
-;     PLOTSYM, PSYM,[ PSIZE, /FILL, THICK=]
+;     PLOTSYM, PSYM,[ PSIZE, /FILL, THICK=, COLOR=]
 ;
 ; INPUTS:
 ;     PSYM -  The following integer values of PSYM will create the
@@ -35,7 +36,7 @@ pro plotsym, psym, psize, FILL=fill,thick=thick    ;Define some plotting symbols
 ;             The default is 0, unfilled symbol.  Does not affect arrows
 ;             or character symbols.
 ;     THICK -  Thickness of unfilled symbols. Default is 1.
-;
+;     COLOR - Color of the symbols, Default is !P.color
 ; OUTPUTS:
 ;     None
 ;
@@ -58,12 +59,13 @@ pro plotsym, psym, psize, FILL=fill,thick=thick    ;Define some plotting symbols
 ;      Written       W. Landsman         June 1992
 ;      18-JAN-1996    Added a square symbol, HCW.
 ;      98Aug20         Added keyword thick parameter - RCB.
+;      April 2001     Added COLOR keyword    WBL
 ;-
  On_error,2
 
  if N_elements(psym) LT 1 then begin
      print,'Syntax - PLOTSYM, psym, [ size, /FILL, THICK= ]'
-     print,'  PSYM values 0 - circle, 1 - down arrow, 2 - up arrow, 3 - star
+     print,'  PSYM values 0 - circle, 1 - down arrow, 2 - up arrow, 3 - star'
      print,'       4 - triangle, 5 - upside down triangle, 6 - left arrow'
      print,'       7 - right arrow, 8 - square'
      return
@@ -90,10 +92,15 @@ pro plotsym, psym, psize, FILL=fill,thick=thick    ;Define some plotting symbols
     fill = 0
     end
 3:  begin                                     ;Star
-    r = psize
-    ang = (720. / 5*findgen(6) + 45) / !RADEG  ;Define star angles every 144 deg
-    xarr = r*cos(ang)  & yarr = r*sin(ang)
-    end
+   ang = (360. / 10 * findgen(11) + 90) / !RADEG  ;star angles every 36 deg
+   r = ang*0
+   r[2*indgen(6)] = 1.
+   cp5 = cos(!pi/5.)
+   r1 = 2. * cp5 - 1. / cp5
+   r[2*indgen(5)+1] = r1
+   r = r * psize / sqrt(!pi/4.) * 2. / (1.+r1)
+   xarr = r * cos(ang)   &   yarr = r * sin(ang)
+   end
 4:  begin                                     ;Triangle
     xarr = [-1,0,1,-1]*psize
     yarr = [-1,1,-1,-1]*psize
@@ -119,8 +126,9 @@ pro plotsym, psym, psize, FILL=fill,thick=thick    ;Define some plotting symbols
  else: message,'Unknown plotting symbol value of '+strtrim(psym,2)
  endcase
 
+ if N_elements(color) GT 0 then $
+ usersym, xarr, yarr, FILL = fill,thick=thick, color = color else $
  usersym, xarr, yarr, FILL = fill,thick=thick
-
  return
  end
 

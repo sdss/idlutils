@@ -53,7 +53,7 @@ pro sixlin,xx,yy,a,siga,b,sigb
  On_error, 2                                   ;Return to Caller
 
  if N_params() LT 5 then begin   
-    print,'Syntax - SIXLIN, xx, yy, a, siga, b, sigb   
+    print,'Syntax - SIXLIN, xx, yy, a, siga, b, sigb'   
     return
   endif
 

@@ -1,18 +1,18 @@
 ;+
-; Project     : SOHO - CDS     
-;                   
-; Name        : VALID_NUM()
-;               
-; Purpose     : Check if a string is a valid number representation.
-;               
-; Explanation : The input string is parsed for characters that may possibly
-;               form a valid number.  It is more robust than simply checking
-;               for an IDL conversion error because that allows strings such
-;               as '22.3qwert' to be returned as the valid number 22.3
-;               See also the original NUM_CHK which returns the status in 
-;               the opposite sense.
+; NAME: 
+;     VALID_NUM
+; PURPOSE:               
+;     Check if a string is a valid number representation.
+; EXPLANATION:              
+;     The input string is parsed for characters that may possibly
+;     form a valid number.  It is more robust than simply checking
+;     for an IDL conversion error because that allows strings such
+;     as '22.3qwert' to be returned as the valid number 22.3
+;     See also the original NUM_CHK which returns the status in 
+;     the opposite sense.
 ;
-; Use         : IDL> status = valid_num(string  [,value]  [,/integer])
+; CALLING SEQUENCE: 
+;     IDL> status = valid_num(string  [,value]  [,/integer])
 ;    
 ; Inputs      : string  -  the string to be tested
 ;               
@@ -29,8 +29,6 @@
 ; Calls       : None
 ;               
 ; Restrictions: None
-;               
-; Side effects: None
 ;               
 ; Category    : Utilities, Numerical
 ;               

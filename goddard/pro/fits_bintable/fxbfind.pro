@@ -1,8 +1,6 @@
 	PRO FXBFIND,P1,KEYWORD,COLUMNS,VALUES,N_FOUND,DEFAULT
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBFIND
 ; Purpose     : 
 ;	Find column keywords in a FITS binary table header.

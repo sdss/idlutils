@@ -6,81 +6,86 @@ pro readfmt,name,fmt,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ; NAME:
 ;     READFMT
 ; PURPOSE:
-;	Quickly read a fixed format ASCII data file into IDL variables. 
+;       Quickly read a fixed format ASCII data file into IDL variables. 
 ; EXPLANATION:
-;	Lines of data not meeting the specified format (e.g. comments) are
-;	ignored.  To read a free format ASCII data file use the procedures 
-;	READCOL or RDFLOAT. 
+;       Lines of data not meeting the specified format (e.g. comments) are
+;       ignored.  
+;      
+;       To read a free format ASCII data file use the procedures 
+;       READCOL or RDFLOAT.     To print (formatted or free) columns of data
+;       use the procedure FORPRINT.   
 ;
 ; CALLING SEQUENCE:
-;	READFMT, name, fmt, v1,[ v2, v3, v4, ..., v25 , 
+;       READFMT, name, fmt, v1,[ v2, v3, v4, ..., v25 , 
 ;                          /SILENT, /DEBUG, SKIPLINE= , NUMLINE =]
 ;
 ; INPUTS:
-;	NAME - Name of ASCII data file.  An extension of .DAT is assumed,
-;		if not supplied.
-;	FMT - scalar string containing a valid FORTRAN read format.
-;		Must include a field length specification.   Cannot include
-;		internal parenthesis.  A format field must be included for 
-;		each output vector.   Multiple format fields are allowed, but
-;		the repetition factor must be less than 100, (.i.e. 19X is 
-;		allowed but 117X is illegal) 
+;       NAME - Name of ASCII data file.  An extension of .DAT is assumed,
+;               if not supplied.
+;       FMT - scalar string containing a valid FORTRAN read format.
+;               Must include a field length specification.   Cannot include
+;               internal parenthesis.  A format field must be included for 
+;               each output vector.   Multiple format fields are allowed, but
+;               the repetition factor must be less than 100, (.i.e. 19X is 
+;               allowed but 117X is illegal) 
 ;
-;	Examples of valid FMT values are
-;		FMT = 'A7,3X,2I4'  or FMT = '1H ,5I7,2A7'
-;	Examples of INVALID FMT values are
-;		FMT = 'A7,B3'           ;'B' is not a valid FORTRAN format
-;		FMT = 'A7,2(I3,F5.1)'   ;Internal parenthesis not allowed
-;		FMT = 'A7,F,I'          ;Field length not included
+;       Examples of valid FMT values are
+;               FMT = 'A7,3X,2I4'  or FMT = '1H ,5I7,2A7'
+;       Examples of INVALID FMT values are
+;               FMT = 'A7,B3'           ;'B' is not a valid FORTRAN format
+;               FMT = 'A7,2(I3,F5.1)'   ;Internal parenthesis not allowed
+;               FMT = 'A7,F,I'          ;Field length not included
 ;
 ; OUTPUTS:
-;	V1,V2,V3,V4... - IDL vectors to contain columns of data.
-;		Up to 25 output vectors may be read.  The type of the output 
-;		vectors are specified by FMT.
+;       V1,V2,V3,V4... - IDL vectors to contain columns of data.
+;               Up to 25 output vectors may be read.  The type of the output 
+;               vectors are specified by FMT.
 ;
 ; OPTIONAL KEYWORD INPUTS:
-;	SILENT - If this keyword is set and non-zero, then certain terminal
-;		output is suppressed while reading the file
-;	DEBUG - Set this keyword to display additional information while
-;		reading the file.
-;	SKIPLINE - Scalar specifying number of lines to skip at the top of
-;		file before reading. Default is to start at first line
-;	NUMLINE - Scalar specifying number of lines in the file to read.
-;		Default is to read the entire file 
+;       /SILENT - If this keyword is set and non-zero, then certain terminal
+;               output is suppressed while reading the file
+;       /DEBUG - Set this keyword to display additional information while
+;               reading the file.
+;       SKIPLINE - Scalar specifying number of lines to skip at the top of
+;               file before reading. Default is to start at first line
+;       NUMLINE - Scalar specifying number of lines in the file to read.
+;               Default is to read the entire file 
 ;
 ; EXAMPLES:
-;	Each row in a fixed-formated file POSITION.DAT contains a 5 character 
-;	star name  and 6 columns of data giving an RA and Dec in sexigesimal 
-;	format.   A possible format for such data might be
+;       Each row in a fixed-formated file POSITION.DAT contains a 5 character 
+;       star name  and 6 columns of data giving an RA and Dec in sexigesimal 
+;       format.   A possible format for such data might be
 ;
-;	IDL> FMT = 'A5,2I3,F5.1,2x,3I3'    
-;	and the file could be quickly read with
+;       IDL> FMT = 'A5,2I3,F5.1,2x,3I3'    
+;       and the file could be quickly read with
 ;
-;	IDL> READFMT,'POSITION', fmt, name, hr, min, sec, deg, dmin, dsec 
+;       IDL> READFMT,'POSITION', fmt, name, hr, min, sec, deg, dmin, dsec 
 ;    
-;	NAME will be a string vector,SEC will be a floating point vector, and
-;	the other vectors will be of integer type.
+;       NAME will be a string vector,SEC will be a floating point vector, and
+;       the other vectors will be of integer type.
 ;
 ; RESTRICTIONS:
-;	This procedure is designed for generality and not for speed.
-;	If a large ASCII file is to be read repeatedly, it may be worth
-;	writing a specialized reader.
+;       This procedure is designed for generality and not for speed.
+;       If a large ASCII file is to be read repeatedly, it may be worth
+;       writing a specialized reader.
 ;
 ; NOTES:
-;	When reading a field with an integer format I<n>, the output vector is
-;		byte  - if n = 1
-;		integer*2 - if 1 < n < 5
-;		integer*4  - in all other cases
+;       When reading a field with an integer format I<n>, the output vector is
+;               byte  - if n = 1
+;               integer*2 - if 1 < n < 5
+;               integer*4  - in all other cases
+;       Octal ('O') and hexadecimal ('Z') formats are read into longwords
 ;
 ; PROCEDURE CALLS:
-;	GETTOK(), NUMLINES(), REMCHAR, ZPARCHECK
+;       GETTOK(), NUMLINES(), REMCHAR, ZPARCHECK
 ;
 ; REVISION HISTORY:
-;	Written         W. Landsman                 November, 1988
-;	Added SKIPLINE and NUMLINE keywords         March 92
-;	Allow up to 25 columns to be read           June 92
-;	Call NUMLINES() function                    Feb 1996
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written         W. Landsman                 November, 1988
+;       Added SKIPLINE and NUMLINE keywords         March 92
+;       Allow up to 25 columns to be read           June 92
+;       Call NUMLINES() function                    Feb 1996
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Recognize 'O' and 'Z' formats  W. Landsman   September 1997
 ;-
   On_error,2
 
@@ -174,6 +179,10 @@ pro readfmt,name,fmt,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
          end
 
    'H':  goto, NO_VAR 
+   
+   'O':  idltype = 3
+   
+   'Z':  idltype = 3
 
    'X':  goto, NO_VAR               ;No variable declaration needed
 
@@ -254,7 +263,7 @@ DONE:
 
     for i = 0L, ncol-1 do begin
 
-        st ='v' + ii[i] + '(ngood) = x'+ii[i]
+        st ='v' + ii[i] + '[ngood] = x'+ii[i]
         tst = execute(st)
 
      endfor

@@ -1,4 +1,4 @@
-pro hreverse, oldim, oldhd, newim, newhd, subs, SILENT = silent
+pro hreverse, oldim, oldhd, newim, newhd, subs, SILENT = silent, ERRMSG= errmsg
 ;+
 ; NAME:
 ;       HREVERSE
@@ -32,6 +32,12 @@ pro hreverse, oldim, oldhd, newim, newhd, subs, SILENT = silent
 ; OPTIONAL KEYWORD INPUT:
 ;       SILENT - if set and non-zero, then informative messages are suppressed.
 ;
+; OPTIONAL KEYWORD OUTPUT:
+;       ERRMSG - If this keyword is supplied, then any error mesasges will be
+;               returned to the user in this parameter rather than depending on
+;               on the MESSAGE routine in IDL.   If no errors are encountered
+;               then a null string is returned.               
+;
 ; SIDE EFFECTS:
 ;       A right-handed coordinate system is converted into a left-
 ;       handed one, and vice-versa.
@@ -51,20 +57,30 @@ pro hreverse, oldim, oldhd, newim, newhd, subs, SILENT = silent
 ;       Work for ST Guide Star images, W. Landsman   HSTX, May 1995
 ;       Compute CRPIX1 correctly for X reversal   W. Landsman HSTX August 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Added ERRMSG, Use double precision formatting, W. Landsman April 2000
 ;- 
  On_error, 2
  npar = N_params()
  if npar LE 1 then begin
-     print,'Syntax: HREVERSE, oldim, oldhd, [ subs, /SILENT]
-     print,'    or  HREVERSE, oldim, oldhd, newim, newhd, [ subs, /SILENT]
+     print,'Syntax: HREVERSE, oldim, oldhd, [ subs, /SILENT, ERRMSG = ]'
+     print,'    or  HREVERSE, oldim, oldhd, newim, newhd, [ subs, /SILENT]'
      return
  endif 
 
+ save_err = arg_present(errmsg)     ;Does user want error msgs returned?
 ;                                    Check for valid 2-D image & header
- check_FITS, oldim, oldhd, dimen, /NOTYPE
-  if !ERR EQ -1 then message,'ERROR - Invalid image or FITS header array'
-  if N_elements(dimen) NE 2 then message, $
-        'ERROR - Input image array must be 2-dimensional'
+ check_FITS, oldim, oldhd, dimen, /NOTYPE, ERRMSG = errmsg
+  if errmsg NE '' then begin
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+  endif
+
+  if N_elements(dimen) NE 2 then begin 
+        errmsg =  'ERROR - Input image array must be 2-dimensional'
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+ endif
+
   xsize = dimen[0]  &  ysize = dimen[1]
 
  if npar EQ 3 then subs = newim 
@@ -109,8 +125,8 @@ if npar GE 4 then newim = reverse( oldim,subs ) else $
 
          if ( noparams EQ 2 ) then begin           ;If so, then convert them
 
-                 sxaddpar, newhd, 'CD1_1', -astr.cd[0,0],format='(E14.7)'
-                 sxaddpar, newhd, 'CD2_1', -astr.cd[1,0], format='(E14.7)'
+                 sxaddpar, newhd, 'CD1_1', -astr.cd[0,0]
+                 sxaddpar, newhd, 'CD2_1', -astr.cd[1,0]
 
          endif 
  endelse
@@ -132,8 +148,8 @@ if npar GE 4 then newim = reverse( oldim,subs ) else $
 
          if ( noparams EQ 2 ) then begin           ;If so, then convert them
 
-                 sxaddpar, newhd, 'CD1_2', -astr.cd[0,1],format='(E14.7)'
-                 sxaddpar, newhd, 'CD2_2', -astr.cd[1,1], format='(E14.7)'
+                 sxaddpar, newhd, 'CD1_2', -astr.cd[0,1]
+                 sxaddpar, newhd, 'CD2_2', -astr.cd[1,1]
 
          endif 
          endelse

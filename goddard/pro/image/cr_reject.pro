@@ -9,13 +9,14 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
                NOSKYADJUST=noskyadjust,NOCLEARMASK=noclearmask, $
                XMEDSKY=xmedsky, RESTORE_SKY=restore_sky, $
                SKYVALS=skyvals, NULL_VALUE=null_value, $
-               INPUT_MASK=input_mask, WEIGHTING=weighting
+               INPUT_MASK=input_mask, WEIGHTING=weighting, SKYBOX=skybox
 ;+
 ; NAME:
 ;     CR_REJECT
 ;
 ; PURPOSE:
 ;     General, iterative cosmic ray rejection using two or more input images.
+;
 ; EXPLANATION:
 ;     Uses a noise model input by the user, rather than
 ;     determining noise empirically from the images themselves.
@@ -31,15 +32,19 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;
 ; MODIFIED ARGUMENT:
 ;     input_cube - Cube in which each plane is an input image.
-;                  On output, contains individual cleaned-up images.
 ;                  If the noise model is used (rd_noise_dn, dark_dn,
 ;                  gain), then input_cube must be in units of DN.
 ;                  If an input noise cube is supplied (rd_noise_dn
 ;                  <0), then the units of input_cube and noise_cube
-;                  merely need to be consistent
+;                  merely need to be consistent.  
+;
+;                  This array is used as a buffer and its contents 
+;                  are not guaranteed on output (although for now, 
+;                  weighting=0 with /restore_sky should give you back 
+;                  your input unaltered).
 ;
 ; INPUT ARGUMENTS:
-;     rd_noise_dn - Read noise per pixel.  Units of DN.
+;     rd_noise_dn - Read noise per pixel.  Units are DN.
 ;                   If negative, then the user supplies an error cube
 ;                   via the keyword noise_cube.  In the latter case,
 ;                   mult_noise still applies, since it is basically a fudge.
@@ -74,13 +79,10 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;                  for this parameter is 0.5.
 ;     bias       - Set if combining biases (divides through by number
 ;                  of images at end, since exposure time is 0).
-;     tracking_set - Subscripts of pixels, in terms of one component
-;                    image, to be followed through the computation.
-;     verbose    - Set to get messages.
+;     tracking_set - Subscripts of pixels to be followed through the 
+;                    computation.
 ;     noskyadjust  - Sky not to be subtracted before rejection tests.  Default
-;                  is to do the subtraction.  The sky
-;                  is added back in at the end so bias can be subtracted
-;                  later if need be.
+;                  is to do the subtraction.
 ;     xmedsky    - Flag.  If set, the sky is computed as a 1-d array
 ;                  which is a column-by-column median.  This is intended
 ;                  for STIS slitless spectra.  If sky adjustment is
@@ -114,7 +116,8 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;                    as the default.  For this procedure, the default
 ;                    was NOT to clear the flags, until 20 Oct. 1997.
 ;     restore_sky  - Flag.  If set, the routine adds the sky back into
-;                    the datacube before returning.
+;                    input_cube before returning.  Works only if
+;                    weighting=0.
 ;     null_value   - Value to be used for output pixels to which no
 ;                    input pixels contribute.  Default=0
 ;     weighting    - Selects weighting scheme in final image
@@ -153,7 +156,7 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;     combined_noise - Noise in combined image according to noise model
 ;                      or supplied noise cube.
 ;
-; OUTPUT KEYWORD:
+; OUTPUT KEYWORDS:
 ;     mask_cube      - CR masks for each input image.  1 means
 ;                      good pixel; 0 means CR pixel.
 ;     skyvals        - Sky value array.  For an image cube with N planes,
@@ -165,18 +168,26 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;     noise_cube     - Estimated noise in each pixel of input_cube as
 ;                      returned (if rd_noise_dn ge 0), or input noise
 ;                      per pixel of image_cube (if rd_noise_dn lt 0).
+;     skybox         - X0, X1, Y0, Y1 bounds of image section used
+;                      to compute sky.  If supplied by user, this 
+;                      region is used.  If not supplied, the
+;                      image bounds are returned.  This parameter might
+;                      be used (for instance) if the imaging area
+;                      doesn't include the whole chip.
 ;
 ; COMMON BLOCKS:  none
 ;
-; PROCEDURES USED:
-;     MEDARR, SKYADJ_CUBE
+; SIDE EFFECTS:  none
+;
 ; METHOD: 
 ;     
 ;     COMPARISON WITH STSDAS
 ;
 ;     Cr_reject emulates the crrej routine in stsdas.hst_calib.wfpc.
 ;     The two routines have been verified to give identical results
-;     under the following conditions:
+;     (except for some pixels along the edge of the image) under the 
+;     following conditions:
+;
 ;          no sky adjustment
 ;          no dilation of CRs
 ;          initialization of trial image with minimum
@@ -273,8 +284,9 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;                    in preceding update).  Input_mask passed to
 ;                    skyadj_cube.  RSH
 ;      5 Mar. 1999 - Force init_min for 2 planes.  RSH
-;        Jun  1999 - Exit with Return instead of RETALL.  --WBL
 ;      1 Oct. 1999 - Make sure weighting=1 not given with noise cube.  RSH
+;      1 Dec. 1999 - Corrections to doc; restore_sky needs weighting=0.  RSH
+;     17 Mar. 2000 - SKYBOX added.  RSH
 ;-
 on_error,0
 IF n_params(0) LT 6 THEN BEGIN
@@ -286,7 +298,7 @@ IF n_params(0) LT 6 THEN BEGIN
     print,'   init_med, init_mean, init_min,'
     print,'   mask_cube, noise_cube, dilation, dfactor, noclearmask, '
     print,'   noskyadjust, xmedsky, restore_sky, skyvals, null_value'
-    print,'   input_mask, weighting'
+    print,'   input_mask, weighting, skybox'
     return
 ENDIF
 
@@ -401,12 +413,12 @@ etot = total(exptime)
 
 IF n_elements(weighting) GT 0 THEN BEGIN
     wgt = weighting
+    wgt = round(wgt)
     IF wgt ne 0 and wgt ne 1 THEN BEGIN
         print, 'CR_REJECT:  Weighting must be 0 or 1'
         print,'             Executing return'
         return
     ENDIF
-    wgt = round(wgt)
 ENDIF ELSE BEGIN
     wgt = 0
 ENDELSE
@@ -434,7 +446,7 @@ ENDIF
 ;  Process dilation specs
 ;
 IF keyword_set(dilation) OR keyword_set(dfactor) THEN BEGIN
-    DO_dilation = 1b
+    do_dilation = 1b
     IF n_elements(dilation) LT 1 THEN dilation = 1
     IF n_elements(dfactor) LT 1 THEN dfactor = 0.5
     IF (dilation LE 0) OR (dfactor LE 0) THEN BEGIN
@@ -457,7 +469,7 @@ IF keyword_set(dilation) OR keyword_set(dfactor) THEN BEGIN
         print,kernel
     ENDIF      
 ENDIF ELSE BEGIN
-    DO_dilation = 0b
+    do_dilation = 0b
     IF verbose THEN print,'CR_REJECT:  Mask dilation will not be done.' 
 ENDELSE
 
@@ -478,10 +490,9 @@ ENDIF ELSE BEGIN
     IF wgt EQ 1 THEN BEGIN
         print, 'CR_REJECT:  WEIGHTING=1 incompatible with supplying ', $
             'noise cube.'
-        print, '            Executing RETALL.'
-        RETURN
+        print, '            Executing return.'
+        return
     ENDIF
-
 ENDELSE
 ;
 ;  Mask flags CR with zeroes
@@ -496,7 +507,8 @@ IF keyword_set(noskyadjust) THEN BEGIN
 ENDIF ELSE BEGIN
     IF verbose THEN print,'CR_REJECT:  Sky adjustment being made.'
     skyadj_cube, input_cube, skyvals, totsky, $
-      verbose=verbose, xmedsky=xmed, input_mask=input_mask
+      verbose=verbose, xmedsky=xmed, input_mask=input_mask, $
+      region=skybox
 ENDELSE
 
 IF verbose THEN print,'CR_REJECT:  Scaling by exposure time.'
@@ -630,7 +642,7 @@ FOR i=0, nimg-1 DO BEGIN
 ;  Dilation of mask
 ;
     count2 = 0
-    IF DO_dilation THEN BEGIN
+    IF do_dilation THEN BEGIN
         tempw = where(dilate(1b-mask_cube[*,*,i], kernel),dct)
         IF dct GT 0 THEN BEGIN
             ic1 = input_cube[npix*i + tempw]
@@ -768,7 +780,7 @@ IF track THEN BEGIN
     print,'   Combined_image:  '
     print,combined_image[tracking_set]
 ;    print,'   Current_var:  '
-;    print,current_var(tracking_set)
+;    print,current_var[tracking_set]
     FOR i = 0, nimg-1 DO BEGIN
         print,'   Image ', strtrim(i,2), ':'
         print,(input_cube[*,*,i])[tracking_set]
@@ -851,15 +863,20 @@ ENDIF
 IF c0 GT 0 THEN combined_image[wh0] = null_value
 
 IF keyword_set(restore_sky) THEN BEGIN
-    IF verbose THEN print,'CR_REJECT:  Adding sky back into data cube'
-    IF xmed THEN BEGIN
-        FOR i=0,nimg-1 DO BEGIN
-            FOR j=0, ydim-1 DO input_cube[0,j,i] = input_cube[*,j,i] $
-                                                   + skyvals[*,i]
-        ENDFOR
+    IF wgt EQ 0 THEN BEGIN
+        IF verbose THEN print,'CR_REJECT:  Adding sky back into data cube'
+        IF xmed THEN BEGIN
+            FOR i=0,nimg-1 DO BEGIN
+                FOR j=0, ydim-1 DO input_cube[0,j,i] = input_cube[*,j,i] $
+                                                       + skyvals[*,i]
+            ENDFOR
+        ENDIF ELSE BEGIN
+            FOR i=0,nimg-1 DO $
+                input_cube[0,0,i] = input_cube[*,*,i] + skyvals[i]
+        ENDELSE
     ENDIF ELSE BEGIN
-        FOR i=0,nimg-1 DO $
-            input_cube[0,0,i] = input_cube[*,*,i] + skyvals[i]
+        print, 'CR_REJECT:  /RESTORE_SKY ignored because weighting spec ' $
+            + 'not zero.'
     ENDELSE
 ENDIF
 

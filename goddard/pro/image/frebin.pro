@@ -18,10 +18,10 @@ function frebin,image,nsout,nlout,total=total
 ;
 ; INPUTS:
 ;    image - input image, 1-d or 2-d numeric array
-;    nsout - number of samples in the output image, integer scalar
+;    nsout - number of samples in the output image, numeric scalar
 ;
 ; OPTIONAL INPUT:
-;    nlout - number of lines in the output image, integer scalar
+;    nlout - number of lines in the output image, numeric scalar
 ;            If not supplied, then set equal to 1
 ;
 ; OPTIONAL KEYWORD INPUTS:
@@ -61,7 +61,7 @@ function frebin,image,nsout,nlout,total=total
 ;     edges of the input image will be ignored.
 ; 
 ; PROCEDURE CALLS:
-;    DATATYPE()
+;    None.
 ; HISTORY:
 ;    Adapted from May 1998 STIS  version, written D. Lindler, ACC
 ;    Added /NOZERO, use INTERPOLATE instead of CONGRID, June 98 W. Landsman  
@@ -71,7 +71,7 @@ function frebin,image,nsout,nlout,total=total
 ;-
 ;----------------------------------------------------------------------------
       if N_params() LT 1 then begin
-              print,'Syntax = newimage = FREBIN(image, nsout, nlout, [/TOTAL])          
+              print,'Syntax = newimage = FREBIN(image, nsout, nlout, [/TOTAL])'          
               return,-1
        endif
 
@@ -84,8 +84,8 @@ function frebin,image,nsout,nlout,total=total
 ;
 ; determine if we can use the standard rebin function
 ;
-        dtype = datatype(image)
-	if dtype EQ 'DOU' then begin
+        dtype = size(image,/TNAME)
+	if dtype EQ 'DOUBLE' then begin
 		sbox = ns/double(nsout) 
 		lbox = nl/double(nlout)
 	   end else begin
@@ -97,7 +97,7 @@ function frebin,image,nsout,nlout,total=total
 
 	if (nsout eq long(nsout)) and (nlout eq long(nlout)) then begin
 	if ((ns mod nsout) EQ 0) and ((nl mod nlout) EQ 0) then $
-                if (dtype EQ 'DOU') or (dtype EQ 'FLO') then begin
+                if (dtype EQ 'DOUBLE') or (dtype EQ 'FLOAT') then begin
  		   if keyword_set(total) then $
 		   return,rebin(image,nsout,nlout)*sbox*lbox else $
 		   return,rebin(image,nsout,nlout) 
@@ -127,8 +127,8 @@ function frebin,image,nsout,nlout,total=total
 ;
 ; bin in first dimension
 ;
-	    if dtype eq 'DOU' then temp = dblarr(nsout,nl, /NOZERO) $
-			      else temp = fltarr(nsout,nl, /NOZERO)
+	    if dtype eq 'DOUBLE' then temp = dblarr(nsout,nl, /NOZERO) $
+			         else temp = fltarr(nsout,nl, /NOZERO)
 ;
 ; loop on output image samples
 ;
@@ -157,8 +157,8 @@ function frebin,image,nsout,nlout,total=total
 ;
 ; bin in second dimension
 ;
-	    if dtype eq 'DOU' then result = dblarr(nsout,nlout,/NOZERO) $
-			      else result = fltarr(nsout,nlout,/NOZERO)
+	    if dtype eq 'DOUBLE' then result = dblarr(nsout,nlout,/NOZERO) $
+			         else result = fltarr(nsout,nlout,/NOZERO)
 ;
 ; loop on output image lines
 ;

@@ -18,11 +18,11 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ; OPTIONAL KEYWORD INPUTS:
 ;       COLOR - integer scalar specifying the color to draw the arcbar (using
 ;               PLOTS), default = !P.COLOR
-;       DATA - if set and non-zero, then the POSITION keyword is given in data
+;       /DATA - if set and non-zero, then the POSITION keyword is given in data
 ;              units
 ;       LABEL - string giving user defined label for bar.  Default label is size
 ;               of bar in arcminutes
-;       NORMAL - if this keyword is set and non-zero, then POSITION is given in
+;       /NORMAL - if this keyword is set and non-zero, then POSITION is given in
 ;               normalized units
 ;       POSITION - 2 element vector giving the (X,Y) position in device units 
 ;               (or normalized units if /NORMAL is set, or data units if /DATA
@@ -44,7 +44,7 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ;       If data coordinates are not set, then ARCBAR assumes that the displayed
 ;       image size is given by the NAXIS1 keyword in the FITS header.
 ; PROCEDURE CALLS:
-;       AD2XY, EXTAST, GSSSADXY
+;       AD2XY, EXTAST, GSSSADXY, SXPAR()
 ; REVISON HISTORY:
 ;       written by L. Taylor (STX) from ARCBOX (Boothman)
 ;       modified for Version 2 IDL,                     B. Pfarr, STX, 4/91
@@ -56,13 +56,14 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ;       Account for zeropoint offset in postscript  W. Landsman   Apr 97
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /DATA, /SECONDS keywords   W. Landsman    July 1998
+;       Use device-independent label offset  W. Landsman   August 2001
 ;-
 ;
  On_error,2                                  ;Return to caller
 
  if N_params() LT 1 then begin
-      print, $
- "Syntax - ARCBAR, hdr,[ arclen, COLOR=, /DATA, LABEL=, SIZE=, THICK =, POS =, /NORM ]
+      print, 'Syntax - ' + $
+     'ARCBAR, hdr,[ arclen, COLOR=, /DATA, LABEL=, /NORM, POS=, SIZE=, THICK= ]'
       return
  endif
 
@@ -135,8 +136,9 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
      label = strtrim(arcstr,2) + arcsym 
  endif
 
- xyouts,(xi+xf)/2, yi+2, label, SIZE = size,COLOR=color,/DEV, alignment=.5, $
-        CHARTHICK=thick
+ yoffset = round(!D.Y_CH_SIZE/3.)
+ xyouts,(xi+xf)/2, yi+yoffset, label, SIZE = size,COLOR=color,/DEV,  $
+       alignment=0.5, CHARTHICK=thick
 
  return
  end

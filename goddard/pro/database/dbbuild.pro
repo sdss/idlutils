@@ -64,17 +64,22 @@ pro dbbuild,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, $
 ;	Faster build of external databases on big endian machines 
 ;				  W. Landsman    GSFC, November 1997  
 ;	Converted to IDL V5.0   W. Landsman 24-Nov-1997
+;       Use SIZE(/TNAME) for error mesage display  W.Landsman   July 2001
+;       Fix message display error introduced July 2001  W. Landsman   Oct. 2001 
 ;-
   On_error,2                            ;Return to caller
   npar = N_params()
   if npar LT 1 then begin
-    print,'Syntax - DBBUILD, v1, [ v2, v3, v4, v5, ... v30, /NOINDEX, /SILENT ]'
+    print,'Syntax - DBBUILD, v1, [ v2, v3, v4, v5, ... v30,' 
+    print,'         /NOINDEX, /SILENT, STATUS =  ]'
     return
   endif
 
-  dtype = ['UNDEFINED','BYTE','INTEGER*2','INTEGER*4','REAL*4','REAL*8', $
-            'COMPLEX','STRING','STRUCTURE' ]
+ dtype = ['UNDEFINED','BYTE','INTEGER*2','INTEGER*4','REAL*4','REAL*8', $
+        'COMPLEX','STRING','STRUCTURE','DCOMPLEX','POINTER','OBJECT', $ 
+        'UNSIGNED*2', 'UNSIGNED*4', 'INTEGER*8','UNSIGNED*8']
 
+ 
 ;  Initialize STATUS as unsuccessful (0).  If the routine is successful, this
 ;  will be updated below.
 
@@ -85,18 +90,16 @@ pro dbbuild,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, $
 
    items = indgen(nitem)
    db_item, items, itnum, ivalnum, idltype, sbyte, numvals, nbyte
-
   for i = 1,npar do begin    ;Get the dimensions and type of each input vector
 
     ii = strtrim(i,2)
     test = execute('s=size(v' + ii +')' )
 
     if s[s[0] + 1] NE idltype[i] then begin
- 
         message, 'Item ' + strtrim( db_item_info('NAME',i),2) + $
            ' - parameter '+strtrim(i,2) + ' - has an incorrect data type',/INF
-        message, 'Required data type is ' + dtype[idltype[i]], /INF
-        message, 'Supplied data type is ' + dtype[ s[s[0] + 1] ], /INF
+        message, 'Required data type is ' + dtype(idltype[i]), /INF
+        message, 'Supplied data type is ' + dtype(s[s[0]+1]), /INF
         return
      endif
 

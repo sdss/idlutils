@@ -1,8 +1,6 @@
 	FUNCTION FXBFINDLUN, UNIT
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBFINDLUN()
 ; Purpose     : 
 ;	Find logical unit number UNIT in FXBINTABLE common block.

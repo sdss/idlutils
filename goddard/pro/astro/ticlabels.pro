@@ -5,12 +5,12 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 ; PURPOSE:
 ;	Create tic labels for labeling astronomical images.
 ; EXPLANATION: 
-;	Used to display images with right ascension and declination
+;	Used to display images with right ascension or declination
 ;	axes.  This routine creates labels for already determined tic
-;	marks (every other tic mark)
+;	marks (every other tic mark by default)
 ;
 ; CALLING SEQUENCE:
-;	ticlabels, minval, numtics, incr, ticlabs, [ RA = ,DELTA = ]
+;	TICLABELS, minval, numtics, incr, ticlabs, [ RA = ,DELTA = ]
 ;
 ; INPUTS:
 ;	minval  - minimum value for labels (degrees)
@@ -21,7 +21,7 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 ;	ticlabs - array of charater string labels
 ;
 ; OPTIONAL INPUT KEYWORDS:
-;	RA - if this keyword is set then the grid axis is assumed to be
+;	/RA - if this keyword is set then the grid axis is assumed to be
 ;		a Right Ascension.   Otherwise a declination axis is assumed
 ;	DELTA - Scalar specifying spacing of labels.   The default is 
 ;		DELTA = 2 which means that a label is made for every other tic
@@ -44,6 +44,7 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 ;	Fix DELTA keyword so that it behaves according to the documentation
 ;			W. Landsman  Hughes STX,  Nov 95  
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Allow sub arcsecond formatting  W. Landsman   May 2000
 ;-
  On_error,2
 ;                               convert min to hours, minutes, secs
@@ -63,7 +64,7 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 	neg = 1  & sgn = '' 
   endelse
 
-  firstval = minval + neg*0.00014              ;Roundoff to nearest arc-second
+   firstval = minval
 
   if not keyword_set( DELTA ) then delta = 2
 
@@ -93,13 +94,30 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
  
  endelse
 
- if incr LT 0 then rnd = -0.008333 else rnd = 0.008333  ;(30" = 0.0083333deg)
+      inc = incr*60.0d*delta           ;increment in arc seconds
+      if abs(inc) GE 1.0 then begin 
+            sfmt = '(i2.2)'
+             inc = round(inc)
+             mins = round(mins)
+     endif else if abs(inc) GT 0.1 then  sfmt = '(f4.1)' else sfmt = '(f5.2)'
+ 
+     while (mins GE 60) do begin
+            mins = mins - 60
+            minm = minm + 1
+     endwhile
+     
+     if (minm ge 60) then begin
+             minm = minm - 60
+             minh = minh + neg
+     endif
+
 
  if (abs(mins) GT 1) or (abs(incr) LT 1.0/DELTA)  then begin      ;Seconds
 
-      inc = fix( incr*60.0000*DELTA + rnd)
-      ticlabs[0] = sgn + string( abs(minh), '(i2.2)') + sd + ' ' + $
-               string(minm,'(i2.2)') + sm + ' ' + string( fix(mins), '(i2)') + ss
+    ticlabs[0] = sgn + string( abs(minh), '(i2.2)') + sd + ' ' + $
+            string(minm,'(i2.2)') + sm + ' ' + string( mins, sfmt) + ss  
+ 
+  
       for i = delta,numtics-1, delta do begin
          mins = mins + neg*inc
 
@@ -120,14 +138,15 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
              minh = minh + neg
              ticlabs[i]= sgn + string(abs(minh),'(i2.2)') + sd + ' ' + $ 
                          string(minm,'(i2.2)') + sm
-         endif else if (minm LT 0) then begin
+ 
+        endif else if (minm LT 0) then begin
 
 	     if minh EQ 0 then begin
 		if keyword_set(RA) then begin
 			minh = 23
 			minm = minm + 60
 		endif else begin
-			 minm = -minm
+		 	 minm = -minm
 	                 neg = -neg
 		         if neg EQ 1 then sgn = '' else sgn = '-'
 		endelse
@@ -135,14 +154,16 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 	             minm = minm + 60
 	             minh = minh - neg
              endelse
-	 ticlabs[i]= sgn + string(abs(minh),'(i2.2)') + sd + ' ' + $ 
-              string((minm),'(i2)') + sm + string(fix(mins),'(i2.2)') + ss
+	     ticlabs[i]= sgn + string(abs(minh),'(i2.2)') + sd + ' ' + $ 
+              string((minm),'(i2)') + sm + ' ' +string(mins,sfmt) + ss
 
 
         endif else ticlabs[i] = string( minm, '(i2.2)' ) + sm + ' '+ $
-                         string( fix(mins), '(i2.2)') + ss
+                         string( mins, sfmt) + ss
 
-         endif else ticlabs[i] = string( fix(mins), '(i2.2)' ) + ss
+         endif else ticlabs[i] = string( mins, sfmt ) + ss
+   
+ 
 
       endfor
 
@@ -179,11 +200,8 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
              endelse
 	     ticlabs[i]= sgn + string(abs(minh),'(i2.2)') + sd + ' ' + $
 			string((minm),'(i2.2)') + sm
-
-         endif else ticlabs[i] = string(minm,'(i5.2)')
-
+      endif else ticlabs[i] = string(minm,'(i2.2)')
       endfor
-
  endif else begin                        ;Hours/Degrees
 
       inc = fix(DELTA*incr/60.0)

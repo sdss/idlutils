@@ -1,53 +1,54 @@
 pro dbedit_basic,list,items
 ;+
 ; NAME:
-;	DBEDIT_BASIC
+;       DBEDIT_BASIC
 ; PURPOSE:
-;	Subroutine of DBEDIT_BASIC to edit a database on a dumb terminal.
+;       Subroutine of DBEDIT_BASIC to edit a database on a dumb terminal.
 ; EXPLANATION:
-;	Interactively edit specified fields in a database.  The
-;	value of each field is displayed, and the user has the option
-;	of changing or keeping the value.
+;       Interactively edit specified fields in a database.  The
+;       value of each field is displayed, and the user has the option
+;       of changing or keeping the value.
 ;
 ; CALLING SEQUENCE:
-;	dbedit_basic, list, [ items ]
+;       dbedit_basic, list, [ items ]
 ;
 ; INPUTS:
-;	list - scalar or vector of database entry numbers.  Set LIST=0
-;		to interactively add a new entry to a database.
+;       list - scalar or vector of database entry numbers.  Set LIST=0
+;               to interactively add a new entry to a database.
 ;
 ; OPTIONAL INPUTS
-;	items - list of items to be edited.  If not supplied, then the
-;		value of every field will be displayed.
+;       items - list of items to be edited.  If not supplied, then the
+;               value of every field will be displayed.
 ;
 ; NOTES:
-;	(1) Database must be opened for update (dbopen,<dbname>,1) before
-;	calling DBEDIT_BASIC.  User must have write privileges on the database
-;	files.
-;	(2) User gets a second chance to look at edited values, before
-;	they are actually written to the database
+;       (1) Database must be opened for update (dbopen,<dbname>,1) before
+;       calling DBEDIT_BASIC.  User must have write privileges on the database
+;       files.
+;       (2) User gets a second chance to look at edited values, before
+;       they are actually written to the database
 ;
 ; PROMPTS:
-;	The item values for each entry to be edited are first displayed
-;	User is the asked "EDIT VALUES IN THIS ENTRY (Y(es), N(o), or Q(uit))?
-;	If user answers 'Y' or hits RETURN, then each item is displayed
-;	with its current value, which the user can update.  If user answered
-;	'N' then DBEDIT_BASIC skips to the next  entry.   If user answers 'Q'
-;	then DBEDIT will exit, saving all previous changes.
+;       The item values for each entry to be edited are first displayed
+;       User is the asked "EDIT VALUES IN THIS ENTRY (Y(es), N(o), or Q(uit))?
+;       If user answers 'Y' or hits RETURN, then each item is displayed
+;       with its current value, which the user can update.  If user answered
+;       'N' then DBEDIT_BASIC skips to the next  entry.   If user answers 'Q'
+;       then DBEDIT will exit, saving all previous changes.
 ;
 ; EXAMPLE:
-;	Suppose V magnitudes (V_MAG) in a database STARS with unknown values 
-;	were assigned a value of 99.9.  Once the true values become known, the
-;	database can be edited
+;       Suppose V magnitudes (V_MAG) in a database STARS with unknown values 
+;       were assigned a value of 99.9.  Once the true values become known, the
+;       database can be edited
 ;
-;	IDL> !PRIV=2 & dbopen,'STARS',1         ;Open database for update
-;	IDL> list =  dbfind('V_MAG=99.9')       ;Get list of bad V_MAG values
-;	IDL> dbedit,list,'V_MAG'       ;Interactively insert good V_MAG values
+;       IDL> !PRIV=2 & dbopen,'STARS',1         ;Open database for update
+;       IDL> list =  dbfind('V_MAG=99.9')       ;Get list of bad V_MAG values
+;       IDL> dbedit,list,'V_MAG'       ;Interactively insert good V_MAG values
 ;
 ; REVISION HISTORY:
-;	Written  W. Landsman     STX        April, 1989
-;	Rename DBEDIT_BASIC from DBEDIT            July, 1993
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written  W. Landsman     STX        April, 1989
+;       Rename DBEDIT_BASIC from DBEDIT            July, 1993
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Change DATATYPE() to size(/TNAME)  W. Landsman   November 2001
 ;-
  On_error,2
 
@@ -148,7 +149,7 @@ UPDATE:
  endif
  return
 BADVAL:  
-  print,'Item '+name+ ' must be of type '+ datatype(oldval[0],1)
+  print,'Item '+name+ ' must be of type '+ size(oldval[0],/TNAME)
          val = ''
          j = j-1
          goto, TESTVAL      

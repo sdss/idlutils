@@ -1,8 +1,6 @@
 	PRO FXBHELP,UNIT
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBHELP
 ; Purpose     : 
 ;	Prints short description of columns in a FITS binary table.

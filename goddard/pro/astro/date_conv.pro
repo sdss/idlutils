@@ -12,17 +12,18 @@ function date_conv,date,type
 ;               year*1000 + day + hour/24. + min/24./60 + sec/24./60/60
 ;               where day is the day of year (1 to 366)
 ;       format 2: Vector encoded as:
-;               date(0) = year (eg. 1987)
-;               date(1) = day of year (1 to 366)
-;               date(2) = hour
-;               date(3) = minute
-;               date(4) = second
+;               date[0] = year (eg. 1987)
+;               date[1] = day of year (1 to 366)
+;               date[2] = hour
+;               date[3] = minute
+;               date[4] = second
 ;       format 3: string (ascii text) encoded as
 ;               DD-MON-YEAR HH:MM:SS.SS
 ;               (eg.  14-JUL-1987 15:25:44.23)
 ;            OR
 ;               YYYY-MM-DD HH:MM:SS.SS  (ISO standard)
-;               (eg.  1987-07-14 15:25:44.23)
+;               (eg.  1987-07-14 15:25:44.23 or 1987-07-14T15:25:44.23)
+;	            
 ;       format 4: three element vector giving spacecraft time words
 ;       from a Hubble Space Telescope (HST) telemetry packet.
 ;
@@ -37,8 +38,9 @@ function date_conv,date,type
 ;                       'REAL'  - format 1
 ;                       'VECTOR' - format 2
 ;                       'STRING' - format 3
+;			'FITS' - YYYY-MM-DDTHH:MM:SS.SS'
 ;               TYPE can be abbreviated to the single character strings 'R',
-;               'V', and 'S'.
+;               'V', 'S' and 'F'.
 ;               Nobody wants to convert TO spacecraft time (I hope!)
 ; OUTPUTS:
 ;       The converted date is returned as the function value.
@@ -56,6 +58,7 @@ function date_conv,date,type
 ;      Made year 2000 compliant; allow ISO format input  jls/acc Oct 1998
 ;      DJL/ACC Jan 1998, Modified to work with dates such as 6-JAN-1996 where
 ;		day of month has only one digit.
+;      DJL, Nov. 2000, Added input/output format YYYY-MM-DDTHH:MM:SS.SS
 ;-
 ;-------------------------------------------------------------
 ;
@@ -260,6 +263,30 @@ case form of
                 DAY=DAY+1
            END
 ENDCASE
+;
+;            correction for leap years
+;
+        if form ne 3 then begin         ;Was it already done?
+           lpyr = ((year mod 4) eq 0) and ((year mod 100) ne 0) $
+                or ((year mod 400) eq 0)
+           if lpyr eq 1 then days[2] = 29 ; if leap year, add day to Feb.
+        end
+;
+;            find month which day occurs
+;
+        day_of_month = day
+        month_num = 1
+        while day_of_month gt days[month_num] do begin
+               day_of_month = day_of_month - days[month_num]
+               month_num = month_num+1
+        end
+;
+;            check for valid day
+;
+        if (day lt 1) or (day gt total(days)) then begin
+           print,'DATE_CONV -- There are only',total(days),' in year ',year
+           retall
+        end
 ;           ---------------------------------------
 ;
 ;   *****       Now convert to output format
@@ -292,44 +319,23 @@ case strmid(strupcase(type),0,1) of
               end
 
         'S' : begin                             ;string output 
-;
-;            correction for leap years
-;
-                if form ne 3 then begin         ;Was it already done?
-;                       if (fix(year) mod 4) eq 0 then days(2) = 29
-                   lpyr = ((year mod 4) eq 0) and ((year mod 100) ne 0) $
-                        or ((year mod 400) eq 0)
-                   if lpyr eq 1 then days[2] = 29 ; if leap year, add day to Feb.
-                end
-;
-;            check for valid day
-;
-                if (day lt 1) or (day gt total(days)) then begin
-                   print,'DATE1-- There are only',total(days),' in year ',year
-                   retall
-                end
-;
-;            find month which day occurs
-;
-                day_of_month = day
-                month_num = 1
-                while day_of_month gt days[month_num] do begin
-                        day_of_month = day_of_month - days[month_num]
-                        month_num = month_num+1
-                end
 
                 month_name = months[month_num]
 ;
 ;            encode into ascii_date
 ;
-;               if year lt 1900 then year = year+1900
                 out = string(day_of_month,'(i2)') +'-'+ month_name +'-' + $
                         string(year,'(i4)') + ' '+ $
                         string(hour,'(i2)') +':'+ $
                         strmid(string(minute+100,'(i3)'),1,2) + ':'+ $
                         strmid(string(sec+100,'(f6.2)'),1,5)
            end
-
+	'F' : begin
+		out = string(year,'(i4)')+'-'+string(month_num,'(I2)')+'-'+ $
+			string(day_of_month,'(i2)')+'T'+string(hour,'(i2)') +':'+ $
+                        string(minute,'(i2.2)') + ':'+ $
+                        strmid(string(sec+100,'(f6.2)'),1,5)
+	      end
         else: begin                     ;invalid type specified
                 print,'DATE_CONV-- Invalid output type specified'
                 print,' It must be ''REAL'', ''STRING'', or ''VECTOR'''

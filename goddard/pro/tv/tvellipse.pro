@@ -66,7 +66,7 @@ pro tvellipse, rmax, rmin, xc, yc, pos_ang, color, DATA = data, THICK = thick, $
  On_error,2                              ;Return to caller
 
  if N_params() lt 2 then begin
-   print,'Syntax - TVELLIPSE, rmax, rmin, xc, yc,[ pos_ang, color, COLOR = 
+   print,'Syntax - TVELLIPSE, rmax, rmin, xc, yc,[ pos_ang, color, COLOR = '
    print,'                         NPOINTS =, LINESTYLE = ,THICK=, /DATA ]'
    return
  endif

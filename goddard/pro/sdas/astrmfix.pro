@@ -1,36 +1,39 @@
 pro astrmfix, hdr, chip
 ;+
 ; NAME:
-;	ASTRMFIX
+;       ASTRMFIX
 ; PURPOSE:
-;	Calculate a rough HST WFPC or FOC astrometry solution
+;       Calculate a rough HST WFPC or FOC astrometry solution
 ; EXPLANATION:
-;	This program will calculate a rough HST WFPC or FOC astrometry solution
-;	using the keyword PSANGLEV3 which gives the angle of the V3 axis of
-;	HST.    Called by WFPCREAD.
+;       This program will calculate a rough HST WFPC or FOC astrometry solution
+;       using the keyword PSANGLEV3 which gives the angle of the V3 axis of
+;       HST.    Called by WFPCREAD.
 ;
 ; CALLING SEQUENCE:
-;	AstrmFix, hdr, chip
+;       AstrmFix, hdr, chip
 ;
 ; INPUT - OUTPUT:
-;	hdr - FITS header (string array) from either WFPC or FOC.   Header will
-;		be updated with rough astrometry 
+;       hdr - FITS header (string array) from either WFPC or FOC.   Header will
+;               be updated with rough astrometry 
 ;
-; INPUT:	
-;	chip - Scalar (typically 0-3) giving the WFPC chip to read.
+; INPUT:        
+;       chip - Scalar (typically 0-3) giving the WFPC chip to read.
 ;
+; PROCEDURES CALLED:
+;       EXTAST, SXPAR(), SXADDPAR
 ; HISTORY:
-;	??-???-???? Written by Eric W. Deutsch
-;	22-OCT-1992 Changed all calculations to double precision. (E. Deutsch)
-;	22-OCT-1992 Updated PC Pixel size of 0.04389 from WFPC IDT OV/SV manual(EWD)
-;	22-OCT-1992 Updated WF Pixel size of 0.1016 from WFPC IDT OV/SV manual(EWD)
-;	11-JAN-1993 Added warning message and changed CD001001... to CD1_1... (EWD)
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       ??-???-???? Written by Eric W. Deutsch
+;       22-OCT-1992 Changed all calculations to double precision. (E. Deutsch)
+;       22-OCT-1992 Updated PC Pixel size of 0.04389 from WFPC IDT OV/SV manual(EWD)
+;       22-OCT-1992 Updated WF Pixel size of 0.1016 from WFPC IDT OV/SV manual(EWD)
+;       11-JAN-1993 Added warning message and changed CD001001... to CD1_1... (EWD)
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Remove calls to obsolete !ERR variable  W. Landsman   December 2000
 ;-
 
   if (n_params(0) lt 2) then begin
     print,'Call: ASTRMFIX,header_array,chip_number (1-8)'
-    print,'e.g.> ASTRMFIX,h,3
+    print,'e.g.> ASTRMFIX,h,3'
     return
     endif
 
@@ -40,11 +43,11 @@ pro astrmfix, hdr, chip
     return
     endif
   V3word='PSANGLV3'
-  angle=sxpar(hdr,'PSANGLV3')
-  if (!err lt 0) then begin
+  angle=sxpar(hdr,'PSANGLV3',Count = N_angle)
+  if (N_angle EQ 0) then begin
     V3word='PA_V3'
-    angle=sxpar(hdr,'PA_V3')
-    if (!err lt 0) then begin
+    angle = sxpar(hdr,'PA_V3', Count = N_pa_v3)
+    if (N_pa_v3 EQ 0) then begin
       print,'ASTRMFIX: Keyword PSANGLV3 or PA_V3 must be in header.  [END]'
       return
       endif
@@ -85,10 +88,10 @@ pro astrmfix, hdr, chip
 
   if (cam eq 'PC') then begin
     base_angle=270
-    pix_size=.04389d			; from WFPC IDL OV/SV report
+    pix_size=.04389d                    ; from WFPC IDL OV/SV report
   endif else begin
     base_angle=315
-    pix_size=.1016			; from WFPC IDL OV/SV report
+    pix_size=.1016                      ; from WFPC IDL OV/SV report
     endelse
 
   chip_rot=[3,0,1,2]
@@ -107,11 +110,11 @@ CONVERT:
       endif
     endwhile
 
-  extast,hdr,astr,noparams			; to do CD1_1 -> CD001001
-						;  if necessary
-						; out of date (at 1/11/93) but
-						; will the reverse become
-						; fashionable again?
+  extast,hdr,astr,noparams                      ; to do CD1_1 -> CD001001
+                                                ;  if necessary
+                                                ; out of date (at 1/11/93) but
+                                                ; will the reverse become
+                                                ; fashionable again?
   cd = dblarr(2,2)
   print,'North Points to angle: ',angle
   tmp='Left' & if (hand eq -1) then tmp='Right'

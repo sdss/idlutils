@@ -1,33 +1,34 @@
 pro tbdelcol,h,tab,name                                               
 ;+
 ; NAME:
-;	TBDELCOL
+;       TBDELCOL
 ; PURPOSE:
-;	Delete a column of data from a FITS binary table
+;       Delete a column of data from a FITS binary table
 ;
 ; CALLING SEQUENCE:
-;	tbdelcol, h, tab, name
+;       TBDELCOL, h, tab, name
 ;
 ; INPUTS-OUPUTS
-;	h,tab - FITS binary table header and data array.  H and TAB will
-;		be updated with the specified column deleted
+;       h,tab - FITS binary table header and data array.  H and TAB will
+;               be updated with the specified column deleted
 ;
 ; INPUTS:
-;	name - Either (1) a string giving the name of the column to delete
-;			or (2) a scalar giving the column number to delete
+;       name - Either (1) a string giving the name of the column to delete
+;                       or (2) a scalar giving the column number to delete
 ;
 ; EXAMPLE:
-;	Delete the column "FLUX" from FITS binary table
+;       Delete the column "FLUX" from FITS binary table
 ;
-;	IDL> TBDELCOL, H, TAB, 'FLUX'
+;       IDL> TBDELCOL, H, TAB, 'FLUX'
 ;
 ; PROCEDURES USED:
-;	DATATYPE(), TBINFO
+;       SXADDPAR, TBINFO, TBSIZE
 ; REVISION HISTORY:                                           
-;	Written   W. Landsman        STX Co.     August, 1988
-;	Adapted for IDL Version 2, J. Isensee, July, 1990
-;	Use new structure returned by TBINFO,  August, 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written   W. Landsman        STX Co.     August, 1988
+;       Adapted for IDL Version 2, J. Isensee, July, 1990
+;       Use new structure returned by TBINFO,  August, 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use SIZE(/TNAME) instead of DATATYPE()   October 2001
 ;- 
 
  On_error, 2
@@ -45,13 +46,13 @@ pro tbdelcol,h,tab,name
 
  tbinfo,h,tb_str
 
- case DATATYPE(name) of
- 'STR': begin
+ case size(name,/TNAME) of
+ 'STRING': begin
       field = where(tb_str.ttype eq strupcase(name),nfound)
       if nfound eq 0 then $ 
          message,'Field '+strupcase(name) + ' not found in header'
       end
- 'UND':message,'Third parameter must be field name or number'
+ 'UNDEFINED':message,'Third parameter must be field name or number'
  ELSE: begin
       field = name-1
       if (field LT 0 ) or (field GT tfields) then $
@@ -67,9 +68,9 @@ pro tbdelcol,h,tab,name
  tcol = tb_str.tbcol[field] & w = tb_str.width[field]*tb_str.numval[field]
 
  case 1 of 
-	tcol eq 0: tab = tab[w:*,*]                     ;First column
-	tcol eq ncol-w: tab = tab[0:tcol-1,*]          ;Last column
-	else: tab = [tab[0:tcol-1,*],tab[tcol+w:*,*]]  ;All other columns
+        tcol eq 0: tab = tab[w:*,*]                     ;First column
+        tcol eq ncol-w: tab = tab[0:tcol-1,*]          ;Last column
+        else: tab = [tab[0:tcol-1,*],tab[tcol+w:*,*]]  ;All other columns
  endcase
 
 ; Parse the header.  Remove specified keyword from header.  Lower
@@ -85,13 +86,13 @@ pro tbdelcol,h,tab,name
  key = strupcase(strmid(h[i],0,5))
  if (key eq 'TTYPE') OR (key eq 'TFORM') or (key eq 'TUNIT') or $
    (key eq 'TNULL')  then begin
-	row = h[i]                    
-	ifield = fix(strtrim(strmid(row,5,3)))    
-	if ifield gt field then begin    ;Subsequent field?
-		if ifield le 10 then fmt = "(I1,' ')" else fmt ='(I2)'
-		strput,row,string(ifield-1,format=fmt),5
-	endif 
-	if ifield ne field then hnew[j] = row else j=j-1
+        row = h[i]                    
+        ifield = fix(strtrim(strmid(row,5,3)))    
+        if ifield gt field then begin    ;Subsequent field?
+                if ifield le 10 then fmt = "(I1,' ')" else fmt ='(I2)'
+                strput,row,string(ifield-1,format=fmt),5
+        endif 
+        if ifield ne field then hnew[j] = row else j=j-1
   endif else hnew[j] = h[i]      
 
  j = j+1

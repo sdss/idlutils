@@ -1,9 +1,10 @@
+                                                              December 2001
 This directory contains documentation for the procedures in the 
 IDL Astronomy Library.
 
-*.doc  -- these files duplicate the README files in individual subdirectories
+*.readme  -- these files duplicate the README files in individual subdirectories
           in the IDL Astronomy Library, and give a brief description of the
-          procedures in the directory.   For example, astrom.doc describes
+          procedures in the directory.   For example, astrom.readme describes
           the IDL procedure dealing with astrometry.
 
 daophot.tex -- A LaTeX file describing an early (1987) adaptation of the
@@ -27,9 +28,9 @@ mrdfits.txt - A text file describing the use of the large program MRDFITS.PRO
           in the /fits directory.   This program will directly map a FITS table
           into an IDL structure.
 
-idl_stsdas.ps  --  a postscript file describing how to manipulate STSDAS
+idl_stsdas.tex --  a LaTeX file describing how to manipulate STSDAS
           images and tables using IDL procedures in the /sdas and /sdas_table
-          directories.   The postscript file is taken from Chapter 10 of the 
+          directories.   The file is taken from Chapter 10 of the 
           Goddard High Resolution Spectrograph (GHRS) manual, written by 
           J. Blackwell, S.N. Shore, R.D. Robinson, K. Feggans, D. Lindler,
           E. Malamuth, J. Sandoval, and T.B. Ake.     It is also available

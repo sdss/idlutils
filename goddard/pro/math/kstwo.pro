@@ -43,21 +43,22 @@
 ;       Written     W. Landsman                August, 1992
 ;       FP computation of N_eff      H. Ebeling/W. Landsman  March 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Fix for arrays containing equal values J. Ballet/W. Landsman Oct. 2001
 ;-
   On_error, 2
 
  if ( N_params() LT 4 ) then begin
-    print,'Syntax - kstwo, data1, data2, d, prob'
+    print,'Syntax - KSTWO, data1, data2, d, prob'
     return
  endif
 
  n1 = N_elements( data1 )
  if ( N1 LE 3 ) then message, $
-   'ERROR - Input data values (first param) must contain at least 4 values
+   'ERROR - Input data values (first param) must contain at least 4 values'
 
  n2 = N_elements( data2 )
  if ( n2 LE 3 ) then message, $
-   'ERROR - Input data values (second param) must contain at least 4 values
+   'ERROR - Input data values (second param) must contain at least 4 values'
 
  sortdata1 = data1[ sort( data1 ) ]        ;Sort input arrays into 
  sortdata2 = data2[ sort( data2 ) ]        ;ascending order
@@ -74,8 +75,10 @@
 
  while ( j1 LT N1 ) and ( j2 LT n2 ) do begin
 
-     if sortdata1[j1] LE sortdata2[j2] then j1 = j1 +1 else $
-     if sortdata2[j2] LE sortdata1[j1] then j2 = j2 +1
+     d1 = sortdata1[j1]
+     d2 = sortdata2[j2]
+     if d1 LE d2 then j1 = j1 +1
+     if d2 LE d1 then j2 = j2 +1
             
      id1[i] = j1   & id2[i] = j2
      i = i+1
@@ -87,8 +90,7 @@
 ; The K-S statistic D is the maximum difference between the two distribution
 ; funtions
 
- D = max( abs( fn1[id1] - fn2[id2] ) )        
-
+ D = max( abs( fn1[id1] - fn2[id2] ) ) 
  N_eff =  n1*n2/ float(n1 + n2)              ;Effective # of data points
  PROB_KS, D, N_eff, prob                ;Compute significance of statistic
 

@@ -28,11 +28,11 @@
 ;       IDL> f = concat_dir(dir,file)
 ;
 ; RESTRICTIONS: 
-;       Assumes Unix type format if os is not VMS or windows.
+;       Assumes Unix type format if os is not vms, MacOS or Windows.
 ;               
 ;       The version of CONCAT_DIR available at 
 ;       http://sohowww.nascom.nasa.gov/solarsoft/gen/idl/system/concat_dir.pro
-;       includes additional VMS-specific keywords.
+;       includes (mostly) additional VMS-specific keywords.
 ;
 ; CATEGORY    
 ;        Utilities, Strings
@@ -45,6 +45,8 @@
 ;       Add V4.0 support for Windows    W. Landsman   Aug 95
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Changed loops to long integer   W. Landsman   December 1998
+;       Added Mac support, translate Windows environment variables, 
+;       & treat case where dirname ends in '/' W. Landsman  Feb. 2000
 ;-            
 ;
 function concat_dir, dirname, filnam
@@ -72,13 +74,40 @@ function concat_dir, dirname, filnam
         endif
     endfor
 
- endif else if (!version.os_family EQ 'Windows')  then begin
+;
+;  Under Windows, if the directory starts with a dollar sign, then check to see
+;  the if it's really an environment variable.  If it is, then substitute the
+;  the environment variable for the directory name.
+;
+   ENDIF ELSE IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
+      FOR i = 0l, n_dir-1 DO BEGIN
+         FIRST = STRMID(DIR0[I], 0, 1)
+         IF FIRST EQ '$' THEN BEGIN
+             SLASH = STRPOS(DIR0[I]+'/','/') < STRPOS(DIR0[I]+'\','\')
+             TEST = GETENV(STRMID(DIR0[I],1,SLASH-1))
+             IF TEST NE '' THEN BEGIN
+                 IF STRLEN(DIR0[I]) GT SLASH THEN TEST = TEST + $
+                         STRMID(DIR0[I],SLASH,STRLEN(DIR0[I])-SLASH)
+                 DIR0[I] = TEST
+             ENDIF
+         ENDIF
+;
+         last = STRMID(dir0[i], STRLEN(dir0[i])-1, 1)
+         IF (last NE '\') AND (last NE '/') AND (last NE ':') THEN BEGIN
+            dir0[i] = dir0[i] + '\' ;append an ending '\' 
+         ENDIF
+      ENDFOR
+
+; Macintosh version
+
+ endif else if (!version.os_family EQ 'MacOS')  then begin
     for i = 0l, n_dir-1 do begin
         last = strmid(dir0[i], strlen(dir0[i])-1, 1)
-        if (last ne '\') and (last ne ':') then begin
-           dir0[i] = dir0[i] + '\'                       ;append an ending '\' 
+        if(last ne ':') then begin
+           dir0[i] = dir0[i] + ':'                       ;append an ending ':' 
         endif
     endfor
+
 
  endif else begin
     for i=0l, n_dir-1 do begin

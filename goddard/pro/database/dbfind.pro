@@ -1,5 +1,5 @@
 function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
-        errmsg=errmsg
+        errmsg=errmsg, Count = count
 ;+
 ; NAME: 
 ;    DBFIND()
@@ -10,7 +10,7 @@ function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
 ;     search characteristics.
 ;
 ; CALLING SEQUENCE:     
-;     result = dbfind(spar,[ listin, /SILENT, /FULLSTRING, ERRMSG= ])
+;     result = dbfind(spar,[ listin, /SILENT, /FULLSTRING, ERRMSG=, Count = ])
 ;
 ; INPUTS:       
 ;     spar - search_parameters (string)...each search parameter 
@@ -76,10 +76,10 @@ function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
 ;               is returned as the function value.
 ;
 ; OPTIONAL INPUT KEYWORDS:      
-;       SILENT  - If the keyword SILENT is set and non-zero, then DBFIND
+;       /SILENT  - If the keyword SILENT is set and non-zero, then DBFIND
 ;               will not print the number of entries found.
 ;
-;       FULLSTRING - By default, one has a match if a search string is 
+;       /FULLSTRING - By default, one has a match if a search string is 
 ;               included in any part of a database value (substring match).   
 ;               But if /FULLSTRING is set, then all characters in the database
 ;               value must match the search string (excluding leading and 
@@ -97,6 +97,8 @@ function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
 ;                       DB_ITEM, ERRMSG=ERRMSG, ...
 ;                       IF ERRMSG NE '' THEN ...;
 ;
+; OPTIONAL OUTPUT KEYWORD:
+;       COUNT - Integer scalar giving the number of valid matches
 ; PROCEDURE CALLS:
 ;       DB_INFO, DB_ITEM, DB_ITEM_INFO, DBEXT, DBEXT_IND, DBFIND_ENTRY,
 ;       DBFIND_SORT, DBFPARSE, DBRD, DBSEARCH, ZPARCHECK,IS_IEEE_BIG
@@ -105,7 +107,7 @@ function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
 ;       The data base must be previously opened with DBOPEN.
 ;
 ; SIDE EFFECTS: 
-;       !ERR is set to number of entries found
+;       The obsolete system variable !ERR is set to number of entries found
 ;
 ; REVISION HISTORY:
 ;       Written     :   D. Lindler, GSFC/HRS, November 1987
@@ -133,14 +135,18 @@ function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
 ;       Converted to IDL V5.0   W. Landsman   October 1997
 ;       Update documentation for new Y2K compliant DBFPARSE W. Landsman Nov 1998
 ;       Suppress empty database message with /SILENT, W. Landsman Jan 1999
+;       Added COUNT keyword, deprecate !ERR        W. Landsman March 2000
+;       Added new unsigned & 64bit datatypes       W. Landsman July 2001
 ;-
 ;
 ; ---------------------------------------------------------------------
+
 On_error,2                          ;return to caller
 ;
 ; Check parameters.  If LISTIN supplied, make sure all entry values are
 ; less than total number of entries.
 ;
+ count = 0
  zparcheck,'dbfind',spar,1,7,[0,1],'search parameters'
 
  catch, error_status
@@ -159,7 +165,7 @@ On_error,2                          ;return to caller
       endif
  endelse
  if nentries eq 0 then begin                    ;Return if database is empty
-        !err = 0
+        !err = 0 
         if not keyword_set(SILENT) then message, $
             'ERROR - No entries in database ' + db_info("NAME",0),/INF
         return,listin
@@ -201,22 +207,23 @@ done=bytarr(nitems)                                     ;flag for completed
 ;
 for pos = 0,nitems-1 do begin
     if (it[pos] eq 0) then begin
-        dbfind_entry,stype[pos],search_values[pos,*],nentries,list
+        dbfind_entry,stype[pos],search_values[pos,*],nentries,list,count=count
         done[pos]=1                           ;flag as done
-        if !err LT 1 then goto, FINI            ;any found
+        if count LT 1 then goto, FINI            ;any found
      end
 end     
 ;----------------------------------------------------------------------
 ;
 ; perform search on sorted items in the first db
 ;
+
 for pos=0,nitems-1 do begin
      if(not done[pos]) and (dbno[pos] eq 0) and $
         (index[pos] ge 2) then begin
                 dbfind_sort,it[pos],stype[pos],search_values[pos,*],list, $
-                        fullstring=fullstring
+                        fullstring=fullstring, Count = count
                 if !err ne -2 then begin
-                        if !err lt 1 then goto,FINI 
+                        if count lt 1 then goto,FINI 
                         done[pos]=1
                 end
      end
@@ -229,17 +236,18 @@ for pos=0,nitems-1 do begin
     if(not done[pos]) and (dbno[pos] eq 0) and (index[pos] ne 0) then begin
             dbext_ind,list,it[pos],0,values
             dbsearch, stype[pos], search_values[pos,*], values, good, $
-                Fullstring = fullstring
+                Fullstring = fullstring, Count = count
             if !err eq -2 then begin 
                 print,'DBFIND - Illegal search value for item ', $
                        db_item_info('name',it[pos])
                        return,listin
             endif
-            if !err lt 1 then goto, FINI        ;any found
+            if count lt 1 then goto, FINI        ;any found
             if list[0] ne -1 then list=list[good] else list=good+1
             done[pos]=1                         ; DONE with that item
     end
 end
+
 ;------------------------------------------------------------------------
 ;
 ; search index items in other opened data bases (if any)
@@ -264,13 +272,13 @@ if Nfound gt 0 then begin
                               and (index[pos] ne 3) then begin
                     dbext_ind,list2,it[pos],dbno[pos],values
                     dbsearch, stype[pos], search_values[pos,*], values, good, $
-                        fullstring = fullstring
+                        fullstring = fullstring, count = count
                     if !err eq -2 then begin
                        message = 'Illegal search value for item ' + $
                                db_item_info('name',it[pos])
                        goto, handle_error
                     endif
-                    if !err lt 1 then goto, FINI        ;any found
+                    if count lt 1 then goto, FINI        ;any found
                     if list[0] ne -1 then list=list[good] else list=good+1
                     list2=list2[good]
                     done[pos]=1                         ; DONE with that item
@@ -281,8 +289,10 @@ endif
 ;---------------------------------------------------------------------------
 ; search remaining items
 ;
+
   if list[0] eq -1 then list= lindgen(nentries)+1       ;Fixed WBL Feb. 1989
-  !err = N_elements(list)
+  count = N_elements(list)
+  !err = count
   if total(done) eq nitems then goto, FINI      ;all items searched
 
   nlist     = N_elements(list)        ;number of entries to search
@@ -339,26 +349,30 @@ endif
                    if nlist EQ 1 then v[0] = string(val) else $
                    for ii=0l,nlist-1l do v[ii]=string(val[*,ii])
                    end
-        endcase
+               12: v = uint(val,0,nlist)         ;u*2
+               13: v = ulong(val,0,nlist)        ;u*4
+               14: v = long64(val,0,nlist)       ;i*8
+               15: v = ulong64(val,0,nlist)      ;u*8
+         endcase
         v=v[stillgood]
         if bswap[i] then ieee_to_host, v, idltype=idltype[i]
         dbsearch, stype[left[i]], search_values[left[i],*], v, good, $
-                Fullstring = fullstring
-        if !err LT 1 then goto, FINI 
+                Fullstring = fullstring, count = count
+        if count LT 1 then goto, FINI 
         stillgood=stillgood[good]
   endfor
   list = list[stillgood]
-  !err = N_elements(list)
+  count = N_elements(list) & !ERR = count
 
 FINI:
 if not keyword_set(SILENT) then begin
   print,' ' & print,' '
-  if !err LE 0  then $
+  if count LE 0  then $
         print,'No entries found by dbfind in '+ db_info('name',0) $
   else $
-        print,!ERR,' entries found in '+ db_info('name',0)
+        print,count,' entries found in '+ db_info('name',0)
 endif
-if !ERR LE 0 then return,intarr(1) else return,list[sort(list)]
+if count LE 0 then return,intarr(1) else return,list[sort(list)]
 ;
 ;  Error handling point.
 ;

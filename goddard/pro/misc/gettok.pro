@@ -24,6 +24,9 @@ function gettok,st,char
 ;	If ST is 'abc=999' then gettok(ST,'=') would return
 ;	'abc' and ST would be left as '999' 
 ;
+; NOTES:
+;       A version of GETTOK that accepts vector strings is available for users 
+;       of IDL V5.3 or later from  http://idlastro.gsfc.nasa.gov/ftp/v53/
 ; HISTORY
 ;	version 1  by D. Lindler APR,86
 ;	Remove leading blanks    W. Landsman (from JKF)    Aug. 1991

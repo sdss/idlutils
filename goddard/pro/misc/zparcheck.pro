@@ -16,6 +16,10 @@ pro zparcheck,progname,parameter,parnum,types,dimens,message
 ;                1 - byte        2 - integer   3 - int*4
 ;                4 - real*4      5 - real*8    6 - complex
 ;                7 - string      8 - structure 9 - double complex
+;               10 - pointer    11 - object ref 12 - Unsigned integer
+;               13 - unsigned int*4 
+;               14 - int*8  
+;               15 - Unsigned int*8
 ;       dimens   - integer scalar or vector giving number
 ;                     of allowed dimensions.
 ; OPTIONAL INPUT:
@@ -44,6 +48,7 @@ pro zparcheck,progname,parameter,parnum,types,dimens,message
 ;       documentation updated.  M. Greason, May 1990.
 ;       Recognize double complex datatype    W. Landsman   September 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Check for new data types (e.g. unsigned) W. Landsman February 2000
 ;-
 ;----------------------------------------------------------
 
@@ -103,14 +108,20 @@ ABORT:
   for i = 0, N_elements( types )-1 do begin
         case types[i] of
                 1: stype = stype + ' byte'
-                2: stype = stype + ' integer'
-                3: stype = stype + ' longword'
+                2: stype = stype + ' int*2'
+                3: stype = stype + ' int*4'
                 4: stype = stype + ' real*4'
                 5: stype = stype + ' real*8'
                 6: stype = stype + ' complex'
                 7: stype = stype + ' string'
                 8: stype = stype + ' structure'
                 9: stype = stype + ' dcomplex'
+               10: stype = stype + ' pointer'
+               11: stype = stype + ' Object'
+               12: stype = stype + ' Unsigned(i*2)'
+               13: stype = stype + ' Unsigned(i*4)'
+               14: stype = stype + ' int*8'
+               15: stype = stype + ' Unsigned(i*8)'
         endcase
   endfor
   print,'Valid types are:' + stype

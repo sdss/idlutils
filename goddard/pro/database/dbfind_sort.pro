@@ -1,40 +1,45 @@
-pro dbfind_sort,it,type,svals,list, FULLSTRING = fullstring
+pro dbfind_sort,it,type,svals,list, FULLSTRING = fullstring, COUNT = number
 ;+
 ; NAME:
-;	DBFIND_SORT   
+;       DBFIND_SORT   
 ; PURPOSE:
-;	Subroutine of DBFIND to perform a search using sorted values
+;       Subroutine of DBFIND to perform a search using sorted values
 ; EXPLANATION:
-;	This is a subroutine of dbfind and is not a standalone procedure
-;	It is used to limit the search using sorted values
+;       This is a subroutine of dbfind and is not a standalone procedure
+;       It is used to limit the search using sorted values
 ;
 ; CALLING SEQUENCE:
-;	dbfind_sort, it, type, svals, list
+;       dbfind_sort, it, type, svals, list, [/FULLSTRING, COUNT = ]
 ;
 ; INPUT: 
-;	it - item number, scalar
-;	type - type of search (output from dbfparse)
-;	svals - search values (output from dbfparse)
+;       it - item number, scalar
+;       type - type of search (output from dbfparse)
+;       svals - search values (output from dbfparse)
 ;
 ; INPUT/OUTPUT:
-;	list - found entries
-;	!err is set to number of good values
-;	!ERR = -2 for an invalid search
+;       list - found entries
 ;
-; INPUT KEYWORD:
-;	FULLSTRING - By default, one has a match if a search string is 
-;		included in any part of a database value (substring match).   
-;		But if /FULLSTRING is set, then all characters in the database
-;		value must match the search string (excluding leading and 
-;		trailing blanks).    Both types of string searches are case
-;		insensitive.
-;
+; OPTIONAL INPUT KEYWORD:
+;       /FULLSTRING - By default, one has a match if a search string is 
+;               included in any part of a database value (substring match).   
+;               But if /FULLSTRING is set, then all characters in the database
+;               value must match the search string (excluding leading and 
+;               trailing blanks).    Both types of string searches are case
+;               insensitive.
+; OPTIONAL OUTPUT KEYWORD
+;       Count - Integer scalar giving the number of matches found
+; SYSTEM VARIABLES:
+;       The obsolete system variable !err is set to number of good values
+;       !ERR = -2 for an invalid search
 ; REVISION HISTORY:
-;	D. Lindler  July,1987
-;	William Thompson, GSFC/CDS (ARC), 30 May 1994
-;		Added support for external (IEEE) data format
+;       D. Lindler  July,1987
+;       William Thompson, GSFC/CDS (ARC), 30 May 1994
+;               Added support for external (IEEE) data format
 ;       William Thompson, GSFC, 14 March 1995 Added keyword FULLSTRING
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Minimize use of obsolete !ERR variable   W. Landsman  February 2000
+;       Added COUNT keyword, deprecate !ERR   W. Landsman  March 2000
+;       Include new IDL unsigned & 64 bit integer datatypes W.Landsman July 2001
 ;-
 ;----------------------------------------------------------------------------
 ;       READ EVERY 512TH VALUE IN SORTED VALUES
@@ -67,7 +72,7 @@ nv = (db_info('ENTRIES',0)+511)/512
 ;
 dtype = db_item_info('IDLTYPE',it)
 p = assoc(unit,make_array( size=[1,nv,dtype[0],0],/NOZERO), sbyte)
-numbyte = [0,1,2,4,4,8,0]
+numbyte = [0,1,2,4,4,8,0,0,16,0,0,0,2,4,8,8]
 num_bytes = numbyte[ dtype[0] ]
 ;
 ; read values from file (for every 512th entry)
@@ -96,21 +101,21 @@ sv0 = sv[0] & sv1 = sv[1]
 case type of
  
         0: begin                                ;value=sv0
-                good = where(values LT sv0)
-                if !err LT 1 then first=0 else first=!err-1
-                good=where(values GT sv0)
-                if !err LT 1 then last=nv else last=good[0]
+                good = where(values LT sv0, N)
+                if N LT 1 then first=0 else first= N-1
+                good = where(values GT sv0, N)
+                if N LT 1 then last=nv else last=good[0]
            end
 
         -1: begin                               ;value>sv0
-                good = where(values LT sv0)
-                if !err LT 1 then first=0 else first=!err-1
+                good = where(values LT sv0, N)
+                if N LT 1 then first=0 else first= N-1
                 last = nv
             end
 
         -2: begin                               ;value<sv1
-                good = where(values GT sv1)
-                if !err LT 1 then last=nv else last=good[0]
+                good = where(values GT sv1, N)
+                if N LT 1 then last=nv else last=good[0]
                 first = 0
             end
 
@@ -121,25 +126,25 @@ case type of
                 sv0 = sv1
                 sv1 = temp
             end
-                good = where(values LT sv0)
-                if !err LT 1 then first=0 else first=!err-1
-                good = where(values GT sv1)
-                if !err LT 1 then last=nv else last=good[0]
+                good = where(values LT sv0, N)
+                if N LT 1 then first=0 else first=N-1
+                good = where(values GT sv1, N)
+                if N LT 1 then last=nv else last=good[0]
             end 
         -5: begin                               ;sv1 is tolerance
 
             minv = sv0-abs(sv1)
             maxv = sv0+abs(sv1)
-                good = where(values LT minv)
-                if !err LT 1 then first=0 else first=!err-1
-                good = where(values GT maxv)
-                if !err LT 1 then last=nv else last=good[0]
+                good = where(values LT minv, N)
+                if N LT 1 then first=0 else first=N-1
+                good = where(values GT maxv, N)
+                if N LT 1 then last=nv else last=good[0]
             end
 
         -4: begin                       ;non-zero
                 if values[0] EQ 0 then begin
-                        good=where(values EQ 0)
-                        first=!err-1
+                        good=where(values EQ 0, N)
+                        first=N-1
                         last=nv
                  end else begin ;not allowed
                         !err=-2
@@ -148,10 +153,10 @@ case type of
            end
         else: begin                             ;set of values
               sv0 = min(sv[0:type-1]) & sv1 = max(sv[0:type-1])
-                good=where(values LT sv0)
-                if !err LT 1 then first=0 else first=!err-1
-                good=where(values GT sv1)
-                if !err LT 1 then last=nv else last=good[0]
+                good=where(values LT sv0, N)
+                if N LT 1 then first=0 else first=N-1
+                good=where(values GT sv1, N)
+                if N LT 1 then last=nv else last=good[0]
               end
 endcase
 ;-----------------------------------------------------------------------------
@@ -208,10 +213,9 @@ p = assoc(unit,make_array(size=[1,number,3,0],/nozero),sbyte+(first-1)*4)
            end else begin
                 list2=p[0]
                 if external then ieee_to_host,list2
-                match,list,list2,suba,subb
-                number=!err
+                match,list,list2,suba,subb, Count = number
                 if number GT 0 then begin
-                        list=list[suba]
+                         list=list[suba]
                         values=values[subb]
                 end
         end
@@ -220,8 +224,7 @@ end
 ; now search indiviual entries
 ;
 if number GT 0 then begin
-        dbsearch,type,svals,values,good,fullstring=fullstring
-        number=!err
+        dbsearch,type,svals,values,good,fullstring=fullstring, Count = number
         if number GT 0 then list=list[good]
 end
 !err=number

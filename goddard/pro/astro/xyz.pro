@@ -1,7 +1,7 @@
 pro xyz,date,x,y,z,xvel,yvel,zvel,equinox=equinox
 
 ;+
-; NAME
+; NAME:
 ;       XYZ
 ; PURPOSE:
 ;       Calculate geocentric X,Y, and Z  and velocity coordinates of the Sun
@@ -67,8 +67,8 @@ pro xyz,date,x,y,z,xvel,yvel,zvel,equinox=equinox
    On_error,2
   
    if (n_params() eq 0) then begin
-      print,'Syntax - XYZ, date, x, y, z, [ xvel, yvel, zvel, EQUINOX= ]
-      print,'     (date is REDUCED Julian date (JD - 2400000.0) )
+      print,'Syntax - XYZ, date, x, y, z, [ xvel, yvel, zvel, EQUINOX= ]'
+      print,'     (date is REDUCED Julian date (JD - 2400000.0) )'
       return
    endif
 

@@ -45,6 +45,8 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
 ;       If the keyword FILENAME is defined, the date and time, and a heading 
 ;       will be printed in the file before the data.
 ;
+; MINIMUM IDL VERSION:
+;       V5.0   (uses !MOUSE, square brackets)
 ; PROCEDURES CALLED:
 ;       EXTAST, GSSSXYAD, RADEC, SXPAR(), UNZOOM_XY, XY2AD
 ; REVISION HISTORY:
@@ -56,6 +58,8 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
 ;       Allow for zoomed or offset image  W. Landsman      Mar 1996
 ;       Proper rounding of zoomed pixel values   W. Landsman/R. Hurt  Dec. 1997
 ;       Converted to IDL V5.0   W. Landsman 10-Dec-1997
+;       Remove unneeded calls to obsolete !ERR   W. Landsman   December 2000
+;       Replace remaining !ERR calls with !MOUSE.BUTTON W. Landsman Jan 2001
 ;-
  On_error,2    ;if an error occurs, return to caller
 
@@ -139,8 +143,8 @@ endif
   bscale = sxpar(hd,'BSCALE')
   if (bscale ne 0) then begin
     bzero = sxpar(hd,'BZERO')
-    bunit = sxpar(hd,'BUNIT')
-    if !ERR ge 0 then $ 
+    bunit = sxpar(hd,'BUNIT', Count = N_Bunit)
+    if N_Bunit GE 1 then $ 
     if f_astrom then line3 = line3 + '('+bunit+ ')' else $
                      line5 = line5 + '('+bunit+')'
     f_bscale = 1b
@@ -149,7 +153,7 @@ endif
  endif
 
  print,'Press left or center mouse button for new output line,'
- print,'... right mouse button to exit.  
+ print,'... right mouse button to exit.'  
 
 ; different print statements, depending on the parameters
 
@@ -175,10 +179,10 @@ endif
 
 endcase
 
- LOOP: sv_err = !ERR
- !ERR = 0
+ LOOP: sv_err = !MOUSE.BUTTON
+ !MOUSE.BUTTON = 0
  cursor,x,y,2,/DEVICE,/CHANGE                                 
- cr_err = !ERR
+ cr_err = !MOUSE.BUTTON
 
  if cr_err EQ 4 then begin
     print,' '

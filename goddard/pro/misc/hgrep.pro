@@ -36,7 +36,7 @@ pro hgrep, header, substring, keepcase=keepcase, linenum=linenum
 ;-
 
    if (N_params() LT 2) then begin
-      print,'Syntax - HGREP, header, substring, [/KEEPCASE, /LINENUM ]
+      print,'Syntax - HGREP, header, substring, [/KEEPCASE, /LINENUM ]'
       return
    endif
 

@@ -4,9 +4,7 @@
 		YSTEP=Y_STEP, NOSCALE=NOSCALE, NOUPDATE=NOUPDATE,	$
 		ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXREAD
 ; Purpose     : 
 ;	Read basic FITS files.

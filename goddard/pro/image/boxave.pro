@@ -3,10 +3,8 @@ function boxave, array, xsize, ysize
 ; NAME:
 ;	BOXAVE
 ; PURPOSE:
-;	Box-average a 1 or 2 dimensional array.  
-; EXPLANATION:
-;	This procedure differs from the intrinsic REBIN function in the 
-;	following two ways: 
+;	Box-average a 1 or 2 dimensional array.   This procedure differs from
+;	the intrinsic REBIN function in the follow 2 ways: 
 ;
 ;	(1) the box size parameter is specified rather than the output 
 ;		array size
@@ -56,7 +54,7 @@ function boxave, array, xsize, ysize
 ;	Call REBIN for REAL*4 and REAL*8 input arrays, W. Landsman Jan, 1992
 ;	Removed /NOZERO in output array definition     W. Landsman 1995
 ;	Fixed occasional integer overflow problem      W. Landsman Sep. 1995
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Allow unsigned data types                      W. Landsman Jan. 2000
 ;-
  On_error,2
 
@@ -64,34 +62,35 @@ function boxave, array, xsize, ysize
      message,'Syntax -   out =  BOXAVE( array, xsize, [ysize ])',/NoName
 
  s = size(array)
- if ( s[0] NE 1 ) and ( s[0] NE 2 ) then $
+ if ( s(0) NE 1 ) and ( s(0) NE 2 ) then $
      message,'Input array (first parameter) must be 1 or 2 dimensional'
 
  if N_elements(xsize) EQ 0 then read,'BOXAVE: Enter box size: ',xsize 
  if N_elements(ysize) EQ 0 then ysize = xsize
 
  s = size(array)
- ninx = s[1]                                  
+ ninx = s(1)                                  
  noutx = ninx/xsize	
- type = s[ s[0] + 1]
+ type = s( s(0) + 1)
+ integer = (type LT 4) or (type EQ 12) or (type EQ 13)
 
- if s[0] EQ 1 then begin		; 1 dimension?
+ if s(0) EQ 1 then begin		; 1 dimension?
 
-     if type LT 4  then begin 
+     if integer then begin 
 
 	if xsize LT 2 then return, array
 	counter = lindgen(noutx)*xsize
-	output = array[counter]
-	for i=1,xsize-1 do output = output + array[counter + i]
+	output = array(counter)
+	for i=1,xsize-1 do output = output + array(counter + i)
 	nboxsq = float(xsize)
 
       endif else return, rebin( array, noutx)     ;Use REBIN if not integer
 
   endif else begin		; 2 dimensions
 
-	niny = s[2]
+	niny = s(2)
 	nouty = niny/ysize
-        if type LT 4 then begin                        ;Byte, Integer, or Long
+        if integer then begin                        ;Byte, Integer, or Long
 
 	   
 	   nboxsq = float( xsize*ysize )
@@ -100,15 +99,17 @@ function boxave, array, xsize, ysize
 	   counter = xsize*(counter mod noutx) + $
                     (ysize*ninx)*long((counter/noutx))
 
-	   for i = 0,xsize-1 do $
-	   for j = 0,ysize-1 do $
-	         output = output + array[counter + (i + j*ninx)]
+	   for i = 0L,xsize-1 do $
+	   for j = 0L,ysize-1 do $
+	         output = output + array(counter + (i + j*ninx))
 
         endif else $
            return, rebin( array, noutx, nouty)       ;Use REBIN if not integer
  endelse
 
  case type of 
+ 12:  return, uint(round( output/nboxsq ))               ;Unsigned Integer
+ 13:  return, ulong( round(output/nboxsq))               ;Unsigned Long
   2:  return, fix( round( output/ nboxsq ))              ;Integer
   3:  return, round( output / nboxsq )                   ;Long
   1:  return, byte( round( output/nboxsq) )              ;Byte

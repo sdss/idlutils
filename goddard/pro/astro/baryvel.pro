@@ -1,65 +1,104 @@
-pro baryvel, dje, deq, dvelh, dvelb
+pro baryvel, dje, deq, dvelh, dvelb, JPL = JPL
 ;+
 ; NAME:
-;	BARYVEL
+;       BARYVEL
 ; PURPOSE:
-;	Calculates heliocentric and barycentric velocity components of Earth.
+;       Calculates heliocentric and barycentric velocity components of Earth.
 ;
 ; EXPLANATION:
-;	BARYVEL takes into account the Earth-Moon motion, and is useful for 
-;	radial velocity work to an accuracy of 	~1 m/s.
+;       BARYVEL takes into account the Earth-Moon motion, and is useful for 
+;       radial velocity work to an accuracy of  ~1 m/s.
 ;
 ; CALLING SEQUENCE:
-;	BARYVEL, dje, deq, dvelh, dvelb
+;       BARYVEL, dje, deq, dvelh, dvelb, [ JPL =  ] 
 ;
 ; INPUTS:
-;	DJE - (scalar) julian ephemeris date.
-;	DEQ - (scalar) epoch of mean equinox of dvelh and dvelb. If deq=0
-;		then deq is assumed to be equal to dje.
+;       DJE - (scalar) Julian ephemeris date.
+;       DEQ - (scalar) epoch of mean equinox of dvelh and dvelb. If deq=0
+;               then deq is assumed to be equal to dje.
 ; OUTPUTS: 
-;	DVELH: (vector(3)) heliocentric velocity component. in km/s 
-;	DVELB: (vector(3)) barycentric velocity component. in km/s
+;       DVELH: (vector(3)) heliocentric velocity component. in km/s 
+;       DVELB: (vector(3)) barycentric velocity component. in km/s
 ;
-;	The 3-vectors DVELH and DVELB are given in a right-handed coordinate 
-;	system with the +X axis toward the Vernal Equinox, and +Z axis 
-;	toward the celestial pole.   	
+;       The 3-vectors DVELH and DVELB are given in a right-handed coordinate 
+;       system with the +X axis toward the Vernal Equinox, and +Z axis 
+;       toward the celestial pole.      
 ;
-; PROCEDURE CALLED:
-;	Function PREMAT() -- computes precession matrix
-;
+; OPTIONAL KEYWORD SET:
+;       JPL - if /JPL set, then BARYVEL will call the procedure JPLEPHINTERP
+;             to compute the Earth velocity using the full JPL ephemeris.   
+;             The JPL ephemeris FITS file JPLEPH.405 must exist in either the 
+;             current directory, or in the directory specified by the 
+;             environment variable ASTRO_DATA.   Alternatively, the JPL keyword
+;             can be set to the full path and name of the ephemeris file.
+;             A copy of the JPL ephemeris FITS file is available in
+;                 http://idlastro.gsfc.nasa.gov/ftp/data/         
+; PROCEDURES CALLED:
+;       Function PREMAT() -- computes precession matrix
+;       JPLEPHREAD, JPLEPHINTERP, TDB2TDT - if /JPL keyword is set
 ; NOTES:
-;	Algorithm taken from FORTRAN program of Stumpff (1980, A&A Suppl, 41,1)
-;	Stumpf claimed an accuracy of 42 cm/s for the velocity.    A 
-;	comparison with the JPL FORTRAN planetary ephemeris program PLEPH
+;       Algorithm taken from FORTRAN program of Stumpff (1980, A&A Suppl, 41,1)
+;       Stumpf claimed an accuracy of 42 cm/s for the velocity.    A 
+;       comparison with the JPL FORTRAN planetary ephemeris program PLEPH
 ;       found agreement to within about 65 cm/s between 1986 and 1994
 ;
+;       If /JPL is set (using JPLEPH.405 ephemeris file) then velocities are 
+;       given in the ICRS system; otherwise in the FK4 system.   
 ; EXAMPLE:
-;	Compute the radial velocity of the Earth toward Altair on 15-Feb-1994
+;       Compute the radial velocity of the Earth toward Altair on 15-Feb-1994
+;          using both the original Stumpf algorithm and the JPL ephemeris
 ;
-;	IDL> jdcnv, 1994, 2, 15, 0, jd          ;==> JD = 2449398.5
-;	IDL> baryvel, jd, 2000, vh, vb          
-;		==> vh = [-17.07809, -22.80063, -9.885281]  ;Heliocentric km/s
-;		==> vb = [-17.08083, -22.80471, -9.886582]  ;Barycentric km/s
+;       IDL> jdcnv, 1994, 2, 15, 0, jd          ;==> JD = 2449398.5
+;       IDL> baryvel, jd, 2000, vh, vb          ;Original algorithm
+;               ==> vh = [-17.07809, -22.80063, -9.885281]  ;Heliocentric km/s
+;               ==> vb = [-17.08083, -22.80471, -9.886582]  ;Barycentric km/s
+;       IDL> baryvel, jd, 20000, vh, vb, /jpl   ;JPL ephemeris
+;               ==> vh = [-17.10746, -22.78912, -9.879800]  ;Heliocentric km/s
+;               ==> vb = [-17.11591, -22.78269, -9.876785]  ;Barycentric km/s
 ;
-;	IDL> ra = ten(19,50,46.77)*15/!RADEG    ;RA  in radians
-;	IDL> dec = ten(08,52,3.5)/!RADEG        ;Dec in radians
-;	IDL> v = vb(0)*cos(dec)*cos(ra) + $   ;Project velocity toward star
-;		vb(1)*cos(dec)*sin(ra) + vb(2)*sin(dec) 
+;       IDL> ra = ten(19,50,46.77)*15/!RADEG    ;RA  in radians
+;       IDL> dec = ten(08,52,3.5)/!RADEG        ;Dec in radians
+;       IDL> v = vb(0)*cos(dec)*cos(ra) + $   ;Project velocity toward star
+;               vb(1)*cos(dec)*sin(ra) + vb(2)*sin(dec) 
 ;
 ; REVISION HISTORY:
-;	Jeff Valenti,  U.C. Berkeley    Translated BARVEL.FOR to IDL.
-;	W. Landsman, Cleaned up program sent by Chris McCarthy (SfSU) June 1994
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Jeff Valenti,  U.C. Berkeley    Translated BARVEL.FOR to IDL.
+;       W. Landsman, Cleaned up program sent by Chris McCarthy (SfSU) June 1994
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;        Added /JPL keyword  W. Landsman   July 2001
 ;-
  On_Error,2
 
  if N_params() LT 4 then begin
-	print,'Syntax: BARYVEL, dje, deq, dvelh, dvelb'
-	print,'    dje - input Julian ephemeris date
-	print,'    deq - input epoch of mean equinox of dvelh and dvelb
-	print,'    dvelh - output vector(3) heliocentric velocity comp in km/s 
-	print,'    dvelb - output vector(3) barycentric velocity comp in km/s
-	return
+        print,'Syntax: BARYVEL, dje, deq, dvelh, dvelb'
+        print,'    dje - input Julian ephemeris date'
+        print,'    deq - input epoch of mean equinox of dvelh and dvelb'
+        print,'    dvelh - output vector(3) heliocentric velocity comp in km/s' 
+        print,'    dvelb - output vector(3) barycentric velocity comp in km/s'
+        return
+ endif
+
+ if keyword_set(JPL) then begin
+      if size(jpl,/TNAME) EQ 'STRING' then jplfile = jpl else $
+            jplfile = find_with_def('JPLEPH.405','ASTRO_DATA')
+      if jplfile EQ '' then message,'ERROR - Cannot find JPL ephemeris file' 
+      JPLEPHREAD,jplfile, pinfo, pdata, [long(dje), long(dje)+1]
+      JPLEPHINTERP, pinfo, pdata, dje, x,y,z,vx,vy,vz, /EARTH,/VELOCITY, $
+                 VELUNITS = 'KM/S'
+      dvelb = [vx,vy,vz]
+      JPLEPHINTERP, pinfo, pdata, dje, x,y,z,vx,vy,vz, /SUN,/VELOCITY, $
+                 VELUNITS = 'KM/S'
+      dvelh = dvelb - [vx,vy,vz]
+      if deq NE 2000 then begin
+             if deq EQ 0 then begin
+                     DAYCNV, dje , year, month, day, hour
+                     deq = year + month/12.d + day/365.25d + hour/8766.0d
+             endif
+             prema = premat(2000.0d,deq )
+             dvelh =  prema # dvelh 
+             dvelb =  prema # dvelb 
+      endif         
+      return
  endif
 
 ;Define constants
@@ -67,9 +106,9 @@ pro baryvel, dje, deq, dvelh, dvelb
   cc2pi = 2*!PI 
   dc1 = 1.0D0
   dcto = 2415020.0D0
-  dcjul = 36525.0D0			;days in julian year
+  dcjul = 36525.0D0                     ;days in Julian year
   dcbes = 0.313D0
-  dctrop = 365.24219572D0		;days in tropical year (...572 insig)
+  dctrop = 365.24219572D0               ;days in tropical year (...572 insig)
   dc1900 = 1900.0D0
   AU = 1.4959787D8
 
@@ -151,8 +190,8 @@ pro baryvel, dje, deq, dvelh, dvelb
   ccsec = reform(ccsec,3,4)
 
 ;Sidereal rates.
-  dcsld = 1.990987D-7			;sidereal rate in longitude
-  ccsgd = 1.990969E-7			;sidereal rate in mean anomaly
+  dcsld = 1.990987D-7                   ;sidereal rate in longitude
+  ccsgd = 1.990969E-7                   ;sidereal rate in mean anomaly
 
 ;Constants used in the calculation of the lunar contribution.
   cckm = 3.122140E-5
@@ -184,11 +223,11 @@ pro baryvel, dje, deq, dvelh, dvelb
   temp = (tvec # dcfel) mod dc2pi
   dml = temp[0]
   forbel = temp[1:7]
-  g = forbel[0]				;old fortran equivalence
+  g = forbel[0]                         ;old fortran equivalence
 
   deps = total(tvec*dceps) mod dc2pi
   sorbel = (tvec # ccsel) mod dc2pi
-  e = sorbel[0]				;old fortran equivalence
+  e = sorbel[0]                         ;old fortran equivalence
 
 ;Secular perturbations in longitude.
 dummy=cos(2.0)

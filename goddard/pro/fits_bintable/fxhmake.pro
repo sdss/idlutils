@@ -1,9 +1,7 @@
 	PRO FXHMAKE, HEADER, DATA, EXTEND=EXTEND, DATE=DATE,	$
 		INITIALIZE=INITIALIZE, ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXHMAKE
 ; Purpose     : 
 ;	Create a basic FITS header array.

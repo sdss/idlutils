@@ -12,7 +12,7 @@ function psf_gaussian, parameters, NPIXEL=npix, NDIMENSION=ndim, FWHM=fwhm,  $
 ;	as either a 1D vector, a 2D image, or 3D volumetric-data.
 ;
 ; CALLING SEQUENCE:
-;	psf = psf_Gaussian( NPIXEL=, FWHM= , [/NORMALIZE, /ST_DEV,  )
+;	psf = psf_Gaussian( NPIXEL=, FWHM= , [/NORMALIZE, /ST_DEV,  NDIMEN=)
 ; or:
 ;	psf = psf_Gaussian( parameters, NPIXEL =  )
 ;
@@ -48,7 +48,7 @@ function psf_gaussian, parameters, NPIXEL=npix, NDIMENSION=ndim, FWHM=fwhm,  $
 ;	Create a 31 x 31 array containing a normalized centered gaussian 
 ;	with an X FWHM = 4.3 and a Y FWHM = 3.6
 ;
-;	IDL> array = PSF_GAUSSIAN( Npixel=31, FWHM=[4.3,3.6], /NORMAL
+;	IDL> array = PSF_GAUSSIAN( Npixel=31, FWHM=[4.3,3.6], /NORMAL )
 ;
 ; EXTERNAL CALLS:
 ;	function Gaussian
@@ -60,7 +60,7 @@ function psf_gaussian, parameters, NPIXEL=npix, NDIMENSION=ndim, FWHM=fwhm,  $
 	On_error,2
 
 	if (N_params() LT 1 ) and not keyword_set( FWHM) then begin
-		print,'Syntax - psf = PSF_GAUSSIAN( parameters, NPIXEL = )
+		print,'Syntax - psf = PSF_GAUSSIAN( parameters, NPIXEL = )'
 		print, $
 	'or       psf = PSF_GAUSSIAN( FWHM = ,STDEV = ,NPIXEL = ,[CENTROID = ])'
 		return, -1

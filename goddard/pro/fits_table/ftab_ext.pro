@@ -7,16 +7,20 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;	Routine to extract columns from a FITS (binary or ASCII) table
 ;
 ; CALLING SEQUENCE:
-;	FTAB_EXT, name, columns, v1, [v2,..,v9, ROWS=, EXTEN_NO= ]
+;	FTAB_EXT, name_or_fcb, columns, v1, [v2,..,v9, ROWS=, EXTEN_NO= ]
 ; INPUTS:
-;	name - name of a FITS file containing a (binary or ASCII) table 
-;		extension, scalar string
+;       name_or_fcb - either a scalar string giving the name of a FITS file 
+;               containing a (binary or ASCII) table, or an IDL structure 
+;               containing as file control block (FCB) returned by FITS_OPEN 
+;               If FTAB_EXT is to be called repeatedly on the same file, then
+;               it is quicker to first open the file with FITS_OPEN, and then
+;               pass the FCB structure to FTAB_EXT
 ;	columns - table columns to extract.  Can be either 
 ;		(1) String with names separated by commas
 ;		(2) Scalar or vector of column numbers
 ;
 ; OUTPUTS:
-;	v1,...,v9 - values for the columns
+;	v1,...,v9 - values for the columns.   Up to 9 columns can be extracted
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;	ROWS -  scalar or vector giving row number(s) to extract
@@ -36,10 +40,13 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;	IDL> ftab_ext,'spec.fit',[1,2],w,f
 ;	
 ; PROCEDURES CALLED:
-;	FITS_READ, FITS_CLOSE, FTGET(), GETTOK(), TBINFO, TBGET()
+;	FITS_READ, FITS_CLOSE, FTINFO, FTGET(), GETTOK(), TBINFO, TBGET()
 ; HISTORY:
 ;	version 1        W.   Landsman         August 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Improve speed processing binary tables  W. Landsman   March 2000
+;       Use new FTINFO calling sequence  W. Landsman   May 2000  
+;       Don't call fits_close if fcb supplied W. Landsman May 2001  
 ;-
 ;---------------------------------------------------------------------
  if N_params() LT 3 then begin
@@ -54,7 +61,7 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
  sz = size(file_or_fcb)
  if sz[sz[0]+1] NE 8 then fits_open,file_or_fcb,fcb else fcb=file_or_fcb
  if fcb.nextend EQ 0 then $
-	message,'ERROR - FITS file contains no table extensions
+	message,'ERROR - FITS file contains no table extensions'
  if fcb.nextend LT exten_no then $
 	message,'ERROR - FITS file contains only ' + strtrim(fcb.nextend,2) + $
 		' extensions'
@@ -66,12 +73,13 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 	last = naxis1*(maxrow+1)-1
 	xrow = rows - minrow
 	fits_read,fcb,tab,htab,exten_no=exten_no,first=first,last=last,/no_pdu
-	tab = reform(tab,naxis1,maxrow-minrow+1)
+	tab = reform(tab,naxis1,maxrow-minrow+1,/overwrite)
  endif else begin
 	fits_read, fcb, tab, htab, exten_no=exten_no,/no_pdu 
 	xrow = -1
  endelse
- fits_close,fcb
+ if sz[sz[0]+1] NE 8 then fits_close,fcb else $
+         file_or_fcb.last_extension = exten_no
  ext_type = fcb.xtension[exten_no]
 
  case ext_type of
@@ -83,13 +91,15 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
  endcase
 
  colnames= columns
+ if binary then tbinfo,htab,tb_str else ftinfo,htab,ft_str
+
  for i = 0, N_ext-1 do begin
 	if strng then colname = strtrim( GETTOK(colnames,','),2) $
 		 else colname = colnames[i]
-        if binary then begin
-		tbinfo,htab,tb_str
-		v = TBGET( tb_str,tab,colname,xrow,nulls) 
-	endif else v = FTGET( htab,tab,colname,xrow,nulls)
+        if binary then $
+		v = TBGET( tb_str,tab,colname,xrow,nulls) $
+        else $
+                v = FTGET( ft_str,tab,colname,xrow,nulls)
 	command = 'v'+strtrim(i+1,2)+'=v'
 	istat = execute(command)
 	endfor

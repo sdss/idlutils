@@ -30,13 +30,24 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ; METHOD:
 ;       3-point Lagrangian interpolation.  The average of the two quadratics 
 ;       derived from the four nearest  points is returned in YTAB.   A single
-;       quadratic is used near the end points.   The procedure TABINV is used 
+;       quadratic is used near the end points.   VALUE_LOCATE is used 
 ;       to locate center point of the interpolation.
 ;
+; NOTES:
+;       QUADTERP provides one method of high-order interpolation.   In IDL V5.3
+;           the following alternatives became available:
+;
+;       interpol(/LSQUADRATIC) - least squares quadratic fit to a 4 pt 
+;               neighborhood
+;       interpol(/QUADRATIC) - quadratic fit to a 3 pt neighborhood
+;       interpol(/SPLINE) - cubic spline fit to a 4 pt neighborhood
+;
+;       Also, the IDL Astro function HERMITE fits a cubic polynomial and its
+;             derivative to the two nearest points. 
 ; RESTRICTIONS:
 ;       Unless MISSING keyword is set, points outside the range of Xtab in 
 ;       which valid quadratics can be computed are returned at the value 
-;       of the nearest end point of Ytab (i.e. Ytab(0) and Ytab(NPTS-1) ).
+;       of the nearest end point of Ytab (i.e. Ytab[0] and Ytab[NPTS-1] ).
 ;
 ; EXAMPLE:
 ;       A spectrum has been defined using a wavelength vector WAVE and a
@@ -49,7 +60,10 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ;       interpolated values of FLUX at the wavelengths given in WGRID.
 ;
 ;  EXTERNAL ROUTINES:
-;       TABINV, ZPARCHECK, DATATYPE(), ISARRAY()
+;       VALUE_LOCATE -- this is an intrinsic function in IDL V5.3 and later.
+;           For earlier IDL versions one can substitute the emulation procedure 
+;           http://idlastro.gsfc.nasa.gov/ftp/pro/math/value_locate.pro
+;       ZPARCHECK
 ;  REVISION HISTORY:
 ;       31 October 1986 by B. Boothman, adapted from the IUE RDAF
 ;       12 December 1988 J. Murthy, corrected error in Xint
@@ -59,6 +73,7 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fix occasional problem with integer X table,  
 ;       YINT is a scalar if XINT is a scalar   W. Landsman Dec 1999
+;       Use VALUE_LOCATE instead of TABINV W. Landsman  Feb. 2000
 ;-
  On_error,0
 
@@ -73,99 +88,42 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
  npts = min( [N_elements(xtab), N_elements(ytab) ] )
  m = n_elements(xint)
 
- if datatype(xtab) NE 'DOU' then xt = float(xtab) else xt = xtab
- if datatype(xint) NE 'DOU' then yint = fltarr(m) else yint = dblarr(m)  
-
- decreasing =  (xt[npts-1] - xt[0]) lt 0 
+ if size(xtab,/TNAME) NE 'DOUBLE' then xt = float(xtab) else xt = xtab
+ 
+ Xmin = min( [ Xtab[0],Xtab[npts-1] ], max = Xmax)
+ u = xint > Xmin < Xmax 
 
  if npts LT 3 then  $
      message,' ERROR - At least 3 points required for quadratic interpolation'
 
- icen = where( (xint-xt[1])*(xt[npts-2]-xint) GT 0, no )
-
- if no gt 0 then begin
-        x = xint[icen]
-
 ; Determine index of data-points from which interpolation is made 
 
-        tabinv, xtab, x, index 
-        index = long( index < (npts-3) )
+        index = value_locate(xtab,xint) > 0L < (npts-2)
 
-; Extract XTAB-YTAB values  
+; First quadratic   
+ 
+        i0 = (index-1) > 0   & i1 = i0+1 & i2 = (i1 +1)
+        x0  = xt[i0]  & x1 = xt[i1] & x2 = xt[i2]
+        p1 = ytab[i0] * (u-x1) * (u-x2) / ((x0-x1) * (x0-x2)) + $
+             ytab[i1] * (u-x0) * (u-x2) / ((x1-x0) * (x1-x2)) + $
+             ytab[i2] * (u-x0) * (u-x1) / ((x2-x0) * (x2-x1))
 
-        x3 = xt[index+2]   &   y3 = ytab[index+2]
-        x2 = xt[index+1]   &   y2 = ytab[index+1]
-        x1 = xt[index]     &   y1 = ytab[index]
-        x0 = xt[index-1]   &   y0 = ytab[index-1]
+; Second Quadratic
 
-        g0 = x-x0 & g1 = x-x1 & g2 = x-x2 & g3 = x-x3
-        x01 = x0-x1 & x02 = x0-x2 & x12 = x1-x2 & x23 = x2-x3 & x13 = x1-x3
+        i2 = (index+2) < (npts-1) & i1 = i2-1 & i0 = (i1-1)
+        x0  = xt[i0]  & x1 = xt[i1] & x2 = xt[i2]
+        p2 =  ytab[i0] * (u-x1) * (u-x2) / ((x0-x1) * (x0-x2)) + $
+              ytab[i1] * (u-x0) * (u-x2) / ((x1-x0) * (x1-x2)) + $
+              ytab[i2] * (u-x0) * (u-x1) / ((x2-x0) * (x2-x1))
+  
+  
+      yint = (p1 + p2) / 2.    ;Average of two quadratics
 
-; Use average of two quadratic interpolations for interior points 
-
-        a= g1 * g2 /(x01*x02)
-        b=(-g0 / x01 + g3 / x13) * g2 / x12
-        c=( g0 / x02 - g3 / x23) * g1 / x12
-        d= (g1*g2)/(x13*x23)
-
-        yint[icen] = (y0*a + y1*b + y2*c + y3*d) / 2. 
- endif
-
-; Use single quadratic interpolation near end points 
-
- if decreasing then begin
-        ifirst = where (xint ge xtab[1],no)
- endif else begin
-        ifirst = where (xint le xtab[1],no)
- endelse
-
- if  no gt 0 then begin
-        if decreasing then xf = xint[ifirst] < xtab[0] else $
-                           xf = xint[ifirst] > xtab[0]
-        
-        x0 = xt[0] & x1 = xt[1] & x2 = xt[2]
-        y0 = ytab[0] & y1 = ytab[1] & y2 = ytab[2]
-        g0 = xf-x0 & g1 = xf-x1 & g2 = xf-x2
-        x01 = x0-x1 & x02 = x0-x2 & x12 = x1-x2
-        
-        a = g1*g2/(x01*x02)
-        b = -g0*g2/(x01*x12)
-        c = g0*g1/(x02*x12)
-        
-        yint[ifirst] = a*y0 + b*y1 + c*y2
- endif
-
- if decreasing then begin
-        ilast = where (xint le xtab[npts-2],no)
- endif else begin
-        ilast = where (xint ge xtab[npts-2],no)
- endelse
-
- if no gt 0 then begin
-        if decreasing then xl = xint[ilast] > xtab[npts-1] else $
-                           xl = xint[ilast] < xtab[npts-1]
-
-        x0 = xt[npts-3] & x1 = xt[npts-2] & x2 = xt[npts-1]
-        y0 = ytab[npts-3] & y1 = ytab[npts-2] & y2 = ytab[npts-1]
-        g0 = xl-x0 & g1 = xl-x1 & g2 = xl-x2
-        x01 = x0-x1 & x02 = x0-x2 & x12 = x1-x2
-        
-        a = g1*g2/(x01*x02)
-        b = -g0*g2/(x01*x12)
-        c = g0*g1/(x02*x12)
-        
-        yint[ilast] = a*y0 + b*y1 + c*y2
- endif
-
-; Any points outside of table range?
-
- if N_elements(missing) EQ 1 then begin
-        Xmin = min( [ Xtab[0],Xtab[npts-1] ], max = Xmax)
+  if N_elements(missing) EQ 1 then begin
         bad = where( (Xint LT Xmin) or (Xint GT Xmax ), Nbad)
         if Nbad GT 0 then Yint[bad] = missing
- endif
-
- if not ISARRAY(xint) then yint = yint[0]
+  endif
+ 
 
  return
  end

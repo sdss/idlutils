@@ -1,16 +1,16 @@
 pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
-                INTERP = interp, CUBIC = cubic
+                INTERP = interp, CUBIC = cubic, PIVOT = pivot,ERRMSG= errmsg
 ;+
 ; NAME:
 ;       HROT
 ; PURPOSE:
-;       Rotate an image and create new FITS header with update astrometry.
+;       Rotate an image and create new FITS header with updated astrometry.
 ; EXPLANATION: 
 ;       Cubic, bilinear or nearest neighbor interpolation can be used.
 ;
 ; CALLING SEQUENCE:
 ;       HROT, oldim, oldhd, [ newim, newhd, angle, xc, yc, int, 
-;                       MISSING =, INTERP =, CUBIC = ]
+;                       MISSING =, INTERP =, CUBIC = , /PIVOT]
 ; INPUTS:
 ;       OLDIM - the original image array                             
 ;       OLDHD - the original FITS image header, string array
@@ -46,12 +46,26 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ;               which is equivalent to setting INT = 2.   In IDL V5.0 and later,
 ;                this keyword can also be set to a value between -1 and 0.
 ;
+;       /PIVOT - Setting this keyword causes the image to pivot around the point
+;		XC, YC, so that this point maps into the same point in the
+;		output image.  If this keyword is set to 0 or omitted, then the
+;		point XC, YC in the input image is mapped into the center of
+;		the output image.
+;
+; OPTIONAL OUTPUT KEYWORD:
+;       ERRMSG - If this keyword is supplied, then any error mesasges will be
+;               returned to the user in this parameter rather than depending on
+;               on the MESSAGE routine in IDL.   If no errors are encountered
+;               then a null string is returned.               
 ; EXAMPLE:
 ;       Rotate an image non-interactively 30 degrees clockwise.  Use
 ;       bilinear interpolation, and set missing values to 0.
 ;
 ;       IDL>  HROT, im_old, h_old, im_new, h_new, 30, -1, -1, 1, MIS = 0
 ;
+;       As above but update the input image and header and pivot about (100,120)
+;
+;       IDL>  HROT, im_old, h_old, -1, -1, 30, 100, 120, 1, MIS = 0, /PIVOT
 ; RESTRICTIONS:
 ;       Unlike the ROT procedure, HROT cannot be used to magnify or
 ;       or demagnify an image. Use HCONGRID or HREBIN instead.
@@ -74,23 +88,37 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fix for CROTA2 defined and CDELT1 NE CDELT2, W. Landsman  November 1998
 ;       Fix documentation  to specify clockwise rotation W. Landsman Dec. 1999
+;       Added /PIVOT keyword    W. Landsman  January 2000
+;       Added ERRMSG, Use double precision formatting, W. Landsman April 2000
+;       Consistent conversion between CROTA and CD matrix W. Landsman Oct 2000
+;       Work for both CD001001 and CDELT defined  W. Landsman   March 2001
 ;- 
  On_error,2
  npar = N_params()
 
  if (npar LT 2) or (npar EQ 3) then begin       ;Check # of parameters
-  print,'Syntax: HROT, oldim, oldhd, [ newim, newhd, angle, xc, yc, int, 
-  print,'                              CUBIC =, INTERP = , MISSING = ]'
+  print,'Syntax: HROT, oldim, oldhd, [ newim, newhd, angle, xc, yc, int,'
+  print,'                   CUBIC =, INTERP = , MISSING = ,/PIVOT, ERRMSG= ]'
   print, 'Oldim and Oldhd will be updated if only 2 parameters supplied '
      return
  endif 
 
  cdr = !DPI/180.0D              ;Change degrees to radians
 ;                               Check that input header matches input image
- check_FITS, oldim, oldhd, dimen, /NOTYPE
-  if !ERR EQ -1 then message,'ERROR - Invalid image or FITS header array'
-  if N_elements(dimen) NE 2 then message, $
-     'ERROR - Input image array must be 2-dimensional'
+ save_err = arg_present(errmsg)     ;Does user want error msgs returned?
+;                                    Check for valid 2-D image & header
+ check_FITS, oldim, oldhd, dimen, /NOTYPE, ERRMSG = errmsg
+  if errmsg NE '' then begin
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+  endif
+
+  if N_elements(dimen) NE 2 then begin 
+        errmsg =  'ERROR - Input image array must be 2-dimensional'
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+ endif
+
   xsize = dimen[0]  &  ysize = dimen[1]
 
  xc_new = (xsize - 1)/2.
@@ -133,19 +161,21 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
   if N_elements(MISSING) NE 1 then begin
 
         if npar EQ 2 then begin 
-               oldim = rot( oldim, angle, 1, xc,yc, CUBIC = cubic, INTERP = int)
+               oldim = rot( oldim, angle, 1, xc,yc, $
+                            CUBIC = cubic, INTERP = int, PIVOT = pivot)
         endif else begin
-               newim = rot( oldim, angle, 1, xc,yc, CUBIC = cubic, INTERP = int)
+               newim = rot( oldim, angle, 1, xc,yc, $
+                            CUBIC = cubic, INTERP = int, PIVOT = pivot)
         endelse
  
  endif else begin
 
         if npar EQ 2 then begin
            oldim = rot( oldim,angle,1,xc,yc, $
-                CUBIC = cubic, MISSING = missing, INTERP = int) 
+                CUBIC = cubic, MISSING = missing, INTERP = int, PIVOT = pivot) 
         endif else begin
            newim = rot( oldim, angle, 1, xc, yc, $
-                CUBIC = cubic, MISSING = missing, INTERP = int)
+                CUBIC = cubic, MISSING = missing, INTERP = int, PIVOT = pivot)
         endelse
   endelse
 
@@ -169,35 +199,30 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
     ncrpix = [xc_new,yc_new] + transpose(rot_mat)#(crpix-1-[xc,yc]) + 1
     sxaddpar, newhd, 'CRPIX1', ncrpix[0]
     sxaddpar, newhd, 'CRPIX2', ncrpix[1]
-
-   if cdelt[0] NE 1.0 then begin
-         cd[0,0] = cd[0,0]*cdelt[0] & cd[0,1] = cd[0,1]*cdelt[0]
-         cd[1,1] = cd[1,1]*cdelt[1] & cd[1,0] = cd[1,0]*cdelt[1]
-     endif
-
+ 
     newcd = cd # rot_mat
 
     if noparams EQ 0 then begin
 
-        sxaddpar, newhd, 'CD001001', newcd[0,0], format='(E14.7)' 
-        sxaddpar, newhd, 'CD001002', newcd[0,1], format='(E14.7)' 
-        sxaddpar, newhd, 'CD002001', newcd[1,0], format='(E14.7)'
-        sxaddpar, newhd, 'CD002002', newcd[1,1], format='(E14.7)'
+        sxaddpar, newhd, 'CD001001', newcd[0,0] 
+        sxaddpar, newhd, 'CD001002', newcd[0,1] 
+        sxaddpar, newhd, 'CD002001', newcd[1,0]
+        sxaddpar, newhd, 'CD002002', newcd[1,1]
                                   
     endif else if noparams EQ 2 then begin
 
-        sxaddpar, newhd, 'CD1_1', newcd[0,0], format='(E14.7)' 
-        sxaddpar, newhd, 'CD1_2', newcd[0,1], format='(E14.7)' 
-        sxaddpar, newhd, 'CD2_1', newcd[1,0], format='(E14.7)'
-        sxaddpar, newhd, 'CD2_2', newcd[1,1], format='(E14.7)'
+        sxaddpar, newhd, 'CD1_1', newcd[0,0]
+        sxaddpar, newhd, 'CD1_2', newcd[0,1]
+        sxaddpar, newhd, 'CD2_1', newcd[1,0]
+        sxaddpar, newhd, 'CD2_2', newcd[1,1]
 
      endif else begin   
         det = newcd[0,0]*newcd[1,1] - newcd[0,1]*newcd[1,0]
         if det lt 0 then sgn = -1 else sgn = 1
-        cdelt[0] = sgn*sqrt(newcd[0,0]^2 + newcd[1,0]^2)
-        cdelt[1] =     sqrt(newcd[0,1]^2 + newcd[1,1]^2)
+        cdelt[0] = sgn*sqrt(newcd[0,0]^2 + newcd[0,1]^2)
+        cdelt[1] =     sqrt(newcd[1,0]^2 + newcd[1,1]^2)
         if cdelt[0] gt 0 then sgn1 = 1 else sgn1 = -1  
-        crota  = atan(-newcd[1,0],sgn1*newcd[0,0] )*!RADEG
+        crota  = atan( -newcd[1,0],newcd[1,1] )*180.0/!DPI
         sxaddpar, newhd,'CROTA1', crota
         sxaddpar, newhd,'CROTA2', crota
         sxaddpar,newhd,'CDELT1',cdelt[0]

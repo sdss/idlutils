@@ -12,6 +12,10 @@ pro get_juldate,jd
 ;     for most machines, GET_JULDATE returns  Universal Time (i.e. Greenwich
 ;     mean time.)
 ;
+;     In V5.4, GET_JULDATE became completely obsolete with the introduction
+;     of the /UTC keyword to SYSTIME().   So GET_JULDATE,jd is equivalent to
+;     jd = SYSTIME(/JULIAN,/UTC).
+;
 ; CALLING SEQUENCE:
 ;       GET_JULDATE,jd
 ;
@@ -43,7 +47,7 @@ pro get_juldate,jd
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  if N_Params() LT 1 then begin
-     Print,'Syntax - GET_JULDATE, JD
+     Print,'Syntax - GET_JULDATE, JD'
      return
  endif
 

@@ -49,7 +49,7 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4
 
  npar = N_params()
  if npar LT 4 then begin
-    print,'Syntax - EULER, AI, BI, A0, B0, [ SELECT, /FK4 ]
+    print,'Syntax - EULER, AI, BI, A0, B0, [ SELECT, /FK4 ]'
     print,'    AI,BI - Input longitude,latitude in degrees'
     print,'    AO,BO - Output longitude, latitude in degrees'
     print,'    SELECT - Scalar (1-6) specifying transformation type'

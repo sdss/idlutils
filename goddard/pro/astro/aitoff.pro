@@ -1,39 +1,39 @@
 pro aitoff,l,b,x,y
 ;+
 ; NAME:
-;	AITOFF
+;       AITOFF
 ; PURPOSE:
-;	Convert Right Ascension, Declination to X,Y using an AITOFF projection.
+;       Convert longitude, latitude to X,Y using an AITOFF projection.
 ; EXPLANATION:
-;	This procedure can be used to create an all-sky map in Galactic 
-;	coordinates with an equal-area Aitoff projection.  Output map 
-;	coordinates are zero longitude centered.
+;       This procedure can be used to create an all-sky map in Galactic 
+;       coordinates with an equal-area Aitoff projection.  Output map 
+;       coordinates are zero longitude centered.
 ;
 ; CALLING SEQUENCE:
-;	AITOFF, L, B, X, Y 
+;       AITOFF, L, B, X, Y 
 ;
 ; INPUTS:
-;	L - longitude - scalar or vector, in degrees
-;	B - latitude - same number of elements as L, in degrees
+;       L - longitude - scalar or vector, in degrees
+;       B - latitude - same number of elements as L, in degrees
 ;
 ; OUTPUTS:
-;	X - X coordinate, same number of elements as L.   X is normalized to
-;		be between -180 and 180
-;	Y - Y coordinate, same number of elements as L.  Y is normalized to
-;		be between -90 and 90.
+;       X - X coordinate, same number of elements as L.   X is normalized to
+;               be between -180 and 180
+;       Y - Y coordinate, same number of elements as L.  Y is normalized to
+;               be between -90 and 90.
 ;
 ; NOTES:
-;	See AIPS memo No. 46, page 4, for details of the algorithm.  This
-;	version of AITOFF assumes the projection is centered at b=0 degrees.
+;       See AIPS memo No. 46, page 4, for details of the algorithm.  This
+;       version of AITOFF assumes the projection is centered at b=0 degrees.
 ;
 ; REVISION HISTORY:
-;	Written  W.B. Landsman  STX          December 1989
-;	Modified for Unix:
-;		J. Bloch	LANL SST-9	5/16/91	1.1
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written  W.B. Landsman  STX          December 1989
+;       Modified for Unix:
+;               J. Bloch        LANL SST-9      5/16/91 1.1
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  if N_params() ne 4 then begin
-     print,'Syntax - AITOFF, L, B, X, Y
+     print,'Syntax - AITOFF, L, B, X, Y'
      return
  endif
 

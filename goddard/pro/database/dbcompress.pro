@@ -1,6 +1,6 @@
 pro dbcompress, dbname
 ;+
-; NAME
+; NAME:
 ;       DBCOMPRESS
 ; PURPOSE:
 ;       Compress a .dbf database file after a call to DBDELETE

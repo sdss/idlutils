@@ -1,35 +1,35 @@
 pro tics,min,max,numx,ticsize,incr,RA=ra
 ;+
 ; NAME:
-;	TICS
+;       TICS
 ; PURPOSE:
-;	Compute a nice increment between tic marks for astronomical images.
-; EXPLANATION:
-;	For use in labelling a displayed image with right ascension
-;	and declination axes.  An approximate distance between tic 
-;	marks is input, and a new value is computed such that the 
-;	distance between tic marks is in simple increments of the 
-;	tic label values.
+;       Compute a nice increment between tic marks for astronomical images.
+; EXPLANATION:       
+;       For use in labelling a displayed image with right ascension
+;       or declination axes.  An approximate distance between tic 
+;       marks is input, and a new value is computed such that the 
+;       distance between tic marks is in simple increments of the 
+;       tic label values.
 ;
 ; CALLING SEQUENCE:
-;	tics, min, max, numx, ticsize, incr, [RA = ]
+;       tics, radec_min, radec_max, numx, ticsize, incr, [ /RA ]
 ;
 ; INPUTS:
-;	min - minimum axis value (degrees)
-;	max - maximum axis value (degrees)
-;	numx  - number of pixels in x direction
+;       radec_min - minimum axis value (degrees)
+;       radec_max - maximum axis value (degrees)
+;       numx  - number of pixels in x direction
 ;
 ; INPUT/OUTPUT  
-;	ticsize - distance between tic marks (pixels)
+;       ticsize - distance between tic marks (pixels)
 ;
 ; OUTPUTS:
-;	incr    - incremental value for tic labels (in minutes of 
-;		time for R.A., minutes of arc for dec.)
+;       incr    - incremental value for tic labels (in minutes of 
+;               time for R.A., minutes of arc for dec.)
 ;
 ; REVISON HISTORY:
-;	written by B. Pfarr, 4/14/87
-;	Added some more tick precision (i.e. 1 & 2 seconds in case:) EWD May92
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       written by B. Pfarr, 4/14/87
+;       Added some more tick precision (i.e. 1 & 2 seconds in case:) EWD May92
+;       Added sub arcsecond tick precision   W. Landsman   May 2000
 ;-
   On_error,2
 
@@ -38,7 +38,7 @@ pro tics,min,max,numx,ticsize,incr,RA=ra
 ;     Convert total distance to arc minutes for dec. or to
 ;     minutes of time for r.a.
 
-  if keyword_set( RA ) then mul = 4.0 else mul = 60.0
+  if keyword_set(RA) then mul = 4.0 else mul = 60.
   mins = abs(min-max)*mul                  ;total distance in minutes
   rapix = numx/mins                        ;pixels per minute
   incr = mins/numtics                      ;minutes per tic
@@ -55,15 +55,21 @@ pro tics,min,max,numx,ticsize,incr,RA=ra
     incr GE   1.0  : incr =   2.0       ;  2 minutes
     incr GE   0.5  : incr =   1.0       ;  1 minute
     incr GE   0.25 : incr =   0.5       ; 30 seconds
-    incr GE   0.16 : incr =   0.25      ; 15 seconds
-    incr GE   0.08 : incr =   0.16666667; 10 seconds
-    incr GE   0.03 : incr =   0.08333333;  5 seconds
-    incr GE   0.015: incr =   0.03333333;  2 seconds
-    incr GE   0.00 : incr =   0.01666667;  1 seconds
+    incr GE   10/60.0d  : incr =   0.25      ; 15 seconds
+    incr GE   5/60.0d   : incr =   10/60.0d  ; 10 seconds
+    incr GE   2/60.0d   : incr =   5/60.0d   ;  5 seconds
+    incr GE   1/60.0d   : incr =   2/60.0d   ;  2 seconds
+    incr GE   0.5/60.0d : incr =   1./60.0d  ;  1 seconds
+    incr GE   0.2/60.0d : incr = 0.5/60.0d   ;  0.5 seconds
+    incr GE   0.1/60.0d  : incr = 0.2/60.0d    ;  0.2 seconds
+    incr GE   0.05/60.0d : incr = 0.1/60.0d    ;  0.1 seconds
+    incr GE   0.02/60.0d : incr = 0.05/60.0d   ;  0.05 seconds
+    incr GE   0.01/60.0d : incr = 0.02/60.0d   ;  0.02 seconds
+    incr GE   0          : incr = 0.01/60.0d   ;  0.01 seconds
   endcase
 
    ticsize = rapix*incr                 ;determine ticsize
-   if ( min GT max ) then incr = -incr
+   if ( min GT max ) then incr = -incr 
 
    return 
   end

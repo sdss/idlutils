@@ -44,7 +44,7 @@ function planck,wave,temp
   endif    
 
   if ( N_elements( temp ) NE 1 ) then $
-      read,'Enter a blackbody temperture',temp
+      read,'Enter a blackbody temperature', temp
 
   bbflux = wave*0.
 

@@ -1,34 +1,51 @@
-pro sxaddhist,history,header,pdu=pdu
+pro sxaddhist,history,header,blank = blank,comment= comment, pdu=pdu
 ;+
 ; NAME:
 ;	SXADDHIST                           
 ; PURPOSE:
-;	Procedure to add history line(s) to a FITS header
+;	Procedure to add HISTORY (or COMMENT) line(s) to a FITS header
+;
+; EXPLANATION:
+;       The advantage of using SXADDHIST instead of SXADDPAR is that with 
+;       SXADDHIST many HISTORY or COMMENT records can be added in a single call.
 ;
 ; CALLING SEQUENCE
-;	sxaddhist, history, header, [ /PDU ]
+;	sxaddhist, history, header, [ /PDU, /COMMENT ]
 ;
 ; INPUTS:
-;	history - string or string array containing history line(s)
-;		to add to the header
-;	header - string array containing the FITS header
+;	history - string or string array containing history or comment line(s)
+;		to add to the FITS header
+; INPUT/OUTPUT
+;	header - FITS header (string array).   Upon output, it will contain the
+;               specified HISTORY records added to the end
 ;
-; KEYWORD INPUTS:
+; OPTIONAL KEYWORD INPUTS:
+;       /BLANK - If specified then blank ('       ') keywords will be written
+;              rather than 'HISTORY ' keywords.
+;       /COMMENT - If specified, then 'COMMENT ' keyword will be written rather
+;              than 'HISTORY ' keywords.    
+;              Note that according to the FITS definition, any number of 
+;              'COMMENT' and 'HISTORY' or blank keywords may appear in a header,
+;              whereas all other keywords may appear only once.   
 ;	/PDU - if specified, the history will be added to the primary
-;		data unit header, (before the line beginning BEGIN EXTENSION...)
-;		Otherwise, it will be added to the end of the header
+;		data unit header, (before the line beginning BEGIN EXTENSION...)               
+;		Otherwise, it will be added to the end of the header.
+;               This has meaning only for extension headers using the STScI
+;               inheritance convention. 
 ; OUTPUTS:
-;	header - unpdated header
+;	header - updated FITS header
 ;
 ; EXAMPLES:
-;	sxaddhist, 'I DID THIS', header
+;	sxaddhist, 'I DID THIS', header      ;Add one history record
 ;
 ;	hist = strarr(3)
-;	hist(0) = 'history line number 1'
-;	hist(1) = 'the next history line'
-;	hist(2) = 'the last history line'
-;	sxaddhist, hist, header
+;	hist[0] = 'history line number 1'
+;	hist[1[ = 'the next history line'
+;	hist[2] = 'the last history line'
+;	sxaddhist, hist, header              ;Add three history records
 ;
+; SIDE EFFECTS:
+;       Header array is truncated to the final END statement
 ; HISTORY:
 ;	D. Lindler  Feb. 87
 ;	April 90  Converted to new idl  D. Lindler
@@ -50,6 +67,9 @@ pro sxaddhist,history,header,pdu=pdu
  	if type NE 7 then message, $
  	    'Invalid history lines specified; must be a string or string array'
  
+        if keyword_set(COMMENT) then keyword = 'COMMENT ' else $
+        if keyword_set(BLANK) then keyword = ' ' else $
+                                   keyword = 'HISTORY '
  	nadd = N_elements(history)	      ;Number of lines to add
 
  	s = size(header) & ndim2 = s[0] & type = s[ndim2+1]
@@ -87,7 +107,7 @@ pro sxaddhist,history,header,pdu=pdu
  	for i = 0, nadd-1 do begin
 	
 		newline = blank
-		strput, newline, 'HISTORY ' + history[i]
+		strput, newline, keyword + history[i]
 		header[n1+i] = newline
 
  	endfor

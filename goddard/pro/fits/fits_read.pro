@@ -6,8 +6,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
                 no_pdu=no_pdu, enum = enum, no_unsigned = no_unsigned
 
 ;+
-;
-;*NAME:
+; NAME:
 ;       FITS_READ
 ;*PURPOSE:
 ;       To read a FITS file.
@@ -61,7 +60,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;               Any scale factors in the header (PSCALn and PZEROn) are not
 ;               applied to the group parameters.
 ;
-;*KEYWORD PARAMETERS:
+;*INPUT KEYWORD PARAMETERS:
 ;
 ;       /NOSCALE: Set to return the FITS data without applying the scale
 ;               factors BZERO and BSCALE.
@@ -72,14 +71,16 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;               output header.
 ;       /NO_ABORT: Set to return to calling program instead of a RETALL
 ;               when an I/O error is encountered.  If set, the routine will
-;               return with !err=-1 and a message in the keyword MESSAGE.
-;               If not set, FITS_READ will print the message and issue a RETALL
+;               return  a non-null string (containing the error message) in the
+;               keyword MESSAGE.    (For backward compatibility, the obsolete 
+;               system variable !ERR is also set to -1 in case of an error.)   
+;               If /NO_ABORT not set, then FITS_READ will print the message and
+;               issue a RETALL
 ;       /NO_UNSIGNED - By default, if the IDL Version is 5.2 or greater, and the
 ;               header indicates an unsigned integer (BITPIX = 16, BZERO=2^15,
 ;               BSCALE=1) then FITS_READ will output an IDL unsigned integer 
 ;               data type (UINT).   But if /NO_UNSIGNED is set, or the IDL 
 ;               version is before 5.2, then the data is converted to type LONG.  
-;       MESSAGE = value: Output error message
 ;       EXTEN_NO - extension number to read.  If not set, the next extension
 ;               in the file is read.  Set to 0 to read the primary data unit.
 ;       XTENSION - string name of the xtension to read
@@ -93,8 +94,11 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;       GROUP - group number to read for GCOUNT>1.  (Default=0, the first group)
 ;       NaNvalue - On non-IEEE floating point machines, it gives the value
 ;               to place into words with IEEE NaN.
-;       ENUM - Output extension number that was read.  
 ;       
+;*OUTPUT KEYWORD PARAMETERS:
+;       ENUM - Output extension number that was read.  
+;       MESSAGE = value: Output error message
+;
 ;*NOTES:
 ;       Determination or which extension to read.
 ;               case 1: EXTEN_NO specified. EXTEN_NO will give the number of the
@@ -153,26 +157,30 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;               FITS_CLOSE
 ;
 ;*PROCEDURES USED:
-;       IEEE_TO_HOST, SXADDPAR, SXDELPAR, SXPAR()
+;       FITS_CLOSE, FITS_OPEN, IEEE_TO_HOST, IS_IEEE_BIG() 
+;       SXADDPAR, SXDELPAR, SXPAR(), WHERENAN()
 ;*HISTORY:
 ;       Written by:     D. Lindler, August 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Avoid use of !ERR       W. Landsman   August 1999
 ;       Read unsigned datatypes, added /no_unsigned   W. Landsman December 1999
+;       Don't call FITS_CLOSE unless fcb is defined   W. Landsman January 2000
+;       Set BZERO = 0 for unsigned integer data   W. Landsman  January 2000
+;       Only call IEEE_TO_HOST if needed          W. Landsman February 2000
+;       Ensure EXTEND keyword in primary header   W. Landsman April 2001
 ;-
-
 ;
 ;-----------------------------------------------------------------------------
 ;
 ; print calling sequence
 ;
-        if n_params(0) eq 0 then begin
-          print,'CALLING SEQUENCE: fits_read,file_or_fcb,data,header,group_par,'
-          print,'KEYWORD PARAMETERS: noscale, NaNvalue, exten_no, extname, '
-          print,'                    extver, extlevel, xtension, no_abort, '
-          print,'                    message, first, last, group, header_only,'
-          print,'                    no_pdu, enum'
-          retall
+        if N_params() eq 0 then begin
+          print,'Syntax - FITS_READ,file_or_fcb,data,header,group_par'
+          print,' Input Keywords: /noscale, NaNvalue=, exten_no=, extname=, '
+          print,'                 extver=, extlevel=, xtension=, /no_abort, '
+          print,'                 first, last, group, /header_only, /no_pdu'
+          print,' Output Keywords: enum =, message='
+          return
         endif
 ;
 ; I/O error processing
@@ -181,6 +189,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;
 ; set defaults
 ;
+        message = ''
         if n_elements(noscale) eq 0 then noscale = 0
         if n_elements(exten_no) eq 0 then exten_no = -1
         if n_elements(extname) eq 0 then extname = ''
@@ -188,13 +197,13 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
         if n_elements(extlevel) eq 0 then extlevel = 0
         if n_elements(first) eq 0 then first = 0
         if n_elements(last) eq 0 then last = 0
-        if n_elements(message) eq 0 then message = ''
         if n_elements(no_abort) eq 0 then no_abort = 0
         if n_elements(group) eq 0 then group = 0
         if n_elements(header_only) eq 0 then header_only = 0
         if n_elements(data_only) eq 0 then data_only = 0
         if n_elements(no_pdu) eq 0 then no_pdu = 0
         if n_elements(xtension) eq 0 then xtension = ''
+        bswap = 1 - is_ieee_big()          ;Need to byte swap
 ;
 ; Open file if file name is supplied
 ;
@@ -207,7 +216,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 
         if fcbtype eq 7 then begin
                 fits_open,file_or_fcb,fcb,no_abort=no_abort,message=message
-                if !err lt 0 then goto,error_exit
+                if message NE '' then goto,error_exit
            end else fcb = file_or_fcb
 ;
 ; determine which extension to read ==========================================
@@ -331,13 +340,14 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
         sxaddpar,hreq,'naxis',naxis,'number of axes'
         if naxis gt 0 then for i=1,naxis do $
                 sxaddpar,hreq,'naxis'+strtrim(i,2),axis[i-1]
-        if fcb.nextend eq 0 then $
+        if (enum eq 0)and (fcb.nextend GE 1) then $
                 sxaddpar,hreq,'EXTEND','T','file may contain extensions'
         if groups then sxaddpar,hreq,'GROUPS','T','Group format'
-        if gcount gt 0 then sxaddpar,hreq,'GCOUNT',gcount,'Number of groups'
-        if pcount gt 0 then $
+        if (enum gt 0) or (pcount gt 0) then $
                      sxaddpar,hreq,'PCOUNT',pcount,'Number of group parameters'
-        n0 = where(strmid(hreq,0,8) eq 'END     ') & n0=n0[0]
+        if (enum gt 0) or (gcount gt 0) then $
+                    sxaddpar,hreq,'GCOUNT',gcount,'Number of groups'
+       n0 = where(strmid(hreq,0,8) eq 'END     ') & n0=n0[0]
 ;
 ; add Primary Data Unit header to it portion of the header to it
 ;
@@ -424,7 +434,7 @@ read_data:
                 group_par = make_array( dim = [pcount], type = idl_type, /nozero)
                 point_lun,fcb.unit,position
                 readu,fcb.unit,group_par
-                ieee_to_host,group_par
+                if bswap then ieee_to_host,group_par
             endif
             position = position + pcount * bytes_per_word
         endif
@@ -462,7 +472,7 @@ read_data:
         point_lun,fcb.unit,position
         readu,fcb.unit,data
         if (n_elements(NaNvalue) gt 0) then NaNpts = whereNaN(data,count)
-        ieee_to_host,data
+        if bswap then ieee_to_host,data
         if (n_elements(NaNvalue) gt 0) then if (count gt 0) then $
                                                 data[NaNpts] = NaNvalue
 ;
@@ -477,10 +487,12 @@ read_data:
         unsgn_lng = (bitpix EQ 32) and (Bzero EQ 2147483648) and (bscale EQ 1)
         if unsgn_int then begin 
                 data =  uint(data) - uint(32768) 
-                sxaddpar, header,'BZERO',32768,' Data is Unsigned Integer'
+                sxaddpar, header, 'O_BZERO',32768, $
+                          ' Original Data is Unsigned Integer'
         endif else if unsgn_lng then begin 
                 data = ulong(data) - ulong(2147483648)
-                sxaddpar, header,'BZERO',2147483648,' Data is Unsigned Long'
+                sxaddpar, header,'O_BZERO', 2147483648, $
+                          ' Original Data is Unsigned Long'
         endif
         if unsgn_int or unsgn_lng then goto, DONE
         endif
@@ -506,7 +518,8 @@ done:
 ioerror:
         message = !err_string
 error_exit:
-        if fcbtype eq 7 then fits_close,fcb
+        if (fcbtype eq 7) and (N_elements(fcb) GT 0) then  $
+                   fits_close,fcb, no_abort=no_abort, message = message
         !err = -1
         if keyword_set(no_abort) then return
         print,'FITS_READ ERROR: '+message

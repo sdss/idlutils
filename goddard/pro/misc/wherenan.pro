@@ -17,7 +17,7 @@
 ;          result = where(array NE array)
 ;      If this notation seems too bizarre, then since V5.2 one can use the /NAN
 ;      keyword to the FINITE function
-;          result = where(finite(array,/NAN)
+;          result = where( finite(array,/NAN) )
 ;
 ; CALLING SEQUENCE:
 ;      Result = WHERENAN( ARRAY [, COUNT ] )

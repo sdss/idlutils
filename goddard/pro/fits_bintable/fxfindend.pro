@@ -1,8 +1,6 @@
 	PRO FXFINDEND,UNIT, EXTENSION
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXFINDEND
 ; Purpose     : 
 ;	Find the end of a FITS file.

@@ -1,4 +1,4 @@
-pro mrd_hread, unit, header, status 
+pro mrd_hread, unit, header, status, SILENT = silent 
 ;+
 ; NAME: 
 ;     MRD_HREAD
@@ -9,15 +9,18 @@ pro mrd_hread, unit, header, status
 ;     Like FXHREAD but also works with compressed Unix files
 ;
 ; CALLING SEQUENCE: 
-;     MRD_HREAD, UNIT, HEADER  [, STATUS ]
+;     MRD_HREAD, UNIT, HEADER  [, STATUS, /SILENT ]
 ; INPUTS: 
 ;     UNIT    = Logical unit number of an open FITS file
 ; OUTPUTS: 
 ;     HEADER  = String array containing the FITS header.
 ; OPT. OUTPUTS: 
 ;     STATUS  = Condition code giving the status of the read.  Normally, this
-;                 is zero, but is set to !ERR if an error occurs, or if the
+;                 is zero, but is set to -1 if an error occurs, or if the
 ;                 first byte of the header is zero (ASCII null).
+; OPTIONAL KEYWORD INPUT:
+;      /SILENT - If set, then warning messages about any invalid characters in
+;                the header are suppressed.
 ; RESTRICTIONS: 
 ;      The file must already be positioned at the start of the header.  It
 ;      must be a proper FITS file.
@@ -34,9 +37,9 @@ pro mrd_hread, unit, header, status
 ;          such characters are illegal in the header but frequently
 ;          are produced by poor FITS writers.
 ;      Converted to IDL V5.0   W. Landsman   September 1997
+;      Added /SILENT keyword   W. Landsman   December 2000
 ;-
- 
-	block = string(replicate(32b, 80, 36))
+ 	block = string(replicate(32b, 80, 36))
 		
 	header = ' '
 	w = [-1]
@@ -59,7 +62,8 @@ pro mrd_hread, unit, header, status
 		; Issue a warning but continue if problems are found.
 		w = where(strlen(block) ne 80)
 		if (w[0] ne -1) then begin
-			print, 'MRD_HREAD: Warning-Invalid characters in header'
+			if not keyword_set(SILENT) then message, /INF, $
+                            'Warning-Invalid characters in header'
 			block[w] = string(replicate(32b, 80))
 		endif
 		w = where(strmid(block, 0, 8) eq 'END     ')

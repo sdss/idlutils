@@ -2,75 +2,76 @@ pro nstar,image,id,xc,yc,mags,sky,group,phpadu,readns,psfname,DEBUG=debug, $
           errmag,iter,chisq,peak,PRINT=print,SILENT=silent, VARSKY = varsky
 ;+
 ; NAME:
-;	NSTAR
+;       NSTAR
 ; PURPOSE:
-;	Simultaneous point spread function fitting (adapted from DAOPHOT)
+;       Simultaneous point spread function fitting (adapted from DAOPHOT)
 ; CALLING SEQUENCE:
-;	NSTAR, image, id, xc, yc, mags, sky, group, [ phpadu, readns, psfname,
-;		magerr, iter, chisq, peak, /PRINT , /SILENT, /VARSKY, /DEBUG ]
+;       NSTAR, image, id, xc, yc, mags, sky, group, [ phpadu, readns, psfname,
+;               magerr, iter, chisq, peak, /PRINT , /SILENT, /VARSKY, /DEBUG ]
 ;
 ; INPUTS:
-;	image - image array
-;	id    - vector of stellar ID numbers given by FIND
-;	xc    - vector containing X position centroids of stars (e.g. as found
-;		by FIND)
-;	yc    - vector of Y position centroids
-;	mags  - vector of aperture magnitudes (e.g. as found by APER)
-;		If 9 or more parameters are supplied then, upon output
-;		ID,XC,YC, and MAGS will be modified to contain the new
-;		values of these parameters as determined by NSTAR.
-;		Note that the number of output stars may be less than 
-;		the number of input stars since stars may converge, or 
-;		"disappear" because they are too faint.
-;	sky   - vector of sky background values (e.g. as found by APER)
-;	group - vector containing group id's of stars as found by GROUP
+;       image - image array
+;       id    - vector of stellar ID numbers given by FIND
+;       xc    - vector containing X position centroids of stars (e.g. as found
+;               by FIND)
+;       yc    - vector of Y position centroids
+;       mags  - vector of aperture magnitudes (e.g. as found by APER)
+;               If 9 or more parameters are supplied then, upon output
+;               ID,XC,YC, and MAGS will be modified to contain the new
+;               values of these parameters as determined by NSTAR.
+;               Note that the number of output stars may be less than 
+;               the number of input stars since stars may converge, or 
+;               "disappear" because they are too faint.
+;       sky   - vector of sky background values (e.g. as found by APER)
+;       group - vector containing group id's of stars as found by GROUP
 ;
 ; OPTIONAL INPUT:
-;	phpadu - numeric scalar giving number of photons per digital unit.  
-;		Needed for computing Poisson error statistics.   
-;	readns - readout noise per pixel, numeric scalar.   If not supplied, 
-;		NSTAR will try to read the values of READNS and PHPADU from
-;		the PSF header.  If still not found, user will be prompted.
-;	psfname - name of FITS image file containing the point spread
-;		function residuals as determined by GETPSF, scalar string.  
-;		If omitted, then NSTAR will prompt for this parameter.
+;       phpadu - numeric scalar giving number of photons per digital unit.  
+;               Needed for computing Poisson error statistics.   
+;       readns - readout noise per pixel, numeric scalar.   If not supplied, 
+;               NSTAR will try to read the values of READNS and PHPADU from
+;               the PSF header.  If still not found, user will be prompted.
+;       psfname - name of FITS image file containing the point spread
+;               function residuals as determined by GETPSF, scalar string.  
+;               If omitted, then NSTAR will prompt for this parameter.
 ;
 ; OPTIONAL OUTPUTS:
-;	MAGERR - vector of errors in the magnitudes found by NSTAR
-;	ITER - vector containing the number of iterations required for
-;		each output star.  
-;	CHISQ- vector containing the chi square of the PSF fit for each
-;		output star.
-;	PEAK - vector containing the difference of the mean residual of
-;		the pixels in the outer half of the fitting circle and
-;		the mean residual of pixels in the inner half of the
-;		fitting circle
+;       MAGERR - vector of errors in the magnitudes found by NSTAR
+;       ITER - vector containing the number of iterations required for
+;               each output star.  
+;       CHISQ- vector containing the chi square of the PSF fit for each
+;               output star.
+;       PEAK - vector containing the difference of the mean residual of
+;               the pixels in the outer half of the fitting circle and
+;               the mean residual of pixels in the inner half of the
+;               fitting circle
 ;
 ; OPTIONAL KEYWORD INPUTS:
-;	SILENT - if set and non-zero, then NSTAR will not display its results
-;		at the terminal
-;	PRINT - if set and non-zero then NSTAR will also write its results to
-;		a file NSTAR.PRT.   One also can specify the output file name
-;		by setting PRINT = 'filename'.
-;	VARSKY - if this keyword is set and non-zero, then the sky level of
-;		each group is set as a free parameter.
-;	DEBUG - if this keyword is set and non-zero, then the result of each
-;		fitting iteration will be displayed.
+;       /SILENT - if set and non-zero, then NSTAR will not display its results
+;               at the terminal
+;       /PRINT - if set and non-zero then NSTAR will also write its results to
+;               a file nstar.prt.   One also can specify the output file name
+;               by setting PRINT = 'filename'.
+;       /VARSKY - if this keyword is set and non-zero, then the sky level of
+;               each group is set as a free parameter.
+;       /DEBUG - if this keyword is set and non-zero, then the result of each
+;               fitting iteration will be displayed.
 ;
 ; PROCEDURES USED:
-;	DAO_VALUE(), READFITS(), REMOVE, SPEC_DIR(), STRN(), SXPAR()
+;       DAO_VALUE(), READFITS(), REMOVE, SPEC_DIR(), STRN(), SXPAR()
 ;
 ; COMMON BLOCK:
-;	RINTER - contains pre-tabulated values for cubic interpolation
+;       RINTER - contains pre-tabulated values for cubic interpolation
 ; REVISION HISTORY
-;	W. Landsman                 ST Systems Co.       May, 1988
-;	Adapted for IDL Version 2, J. Isensee, September, 1990
-;	Minor fixes so that PRINT='filename' really prints to 'filename', and
-;	it really silent if SILENT is set.  J.Wm.Parker HSTX 1995-Oct-31
-;	Added /VARSKY option   W. Landsman   HSTX      May 1996
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       W. Landsman                 ST Systems Co.       May, 1988
+;       Adapted for IDL Version 2, J. Isensee, September, 1990
+;       Minor fixes so that PRINT='filename' really prints to 'filename', and
+;       it really silent if SILENT is set.  J.Wm.Parker HSTX 1995-Oct-31
+;       Added /VARSKY option   W. Landsman   HSTX      May 1996
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Replace DATATYPE() with size(/TNAME)  W. Landsman November 2001
 ;-
- common rinter,c1,c2,c3,init	        ;Save time in RINTER()
+ common rinter,c1,c2,c3,init            ;Save time in RINTER()
  npar = N_params()
  if npar LT 7 then begin
    print,'Syntax - NSTAR, image, id, xc, yc, mags, sky, group, [phpadu, '
@@ -101,18 +102,18 @@ pro nstar,image,id,xc,yc,mags,sky,group,phpadu,readns,psfname,DEBUG=debug, $
 ; Read in the FITS file containing the PSF
 
  s = size(image)
- icol = s[1]-1 & irow = s[2]-1	;Index of last row and column
+ icol = s[1]-1 & irow = s[2]-1  ;Index of last row and column
  psf = readfits(psfname, hpsf)
- if ( N_elements(phpadu) EQ 0 ) then begin 
-    par = sxpar(hpsf,'PHPADU')
-    if !ERR eq -1 $
+ if  N_elements(phpadu) EQ 0 then begin 
+    par = sxpar(hpsf,'PHPADU', Count = N_phpadu)
+    if N_phpadu eq 0 $
         then read, 'Enter photons per analog digital unit: ',phpadu $
         else phpadu = par
 endif
 
  if ( N_elements(readns) EQ 0 ) then begin 
-    par = sxpar(hpsf,'RONOIS')
-    if !ERR eq -1 $
+    par = sxpar(hpsf,'RONOIS', Count = N_ronois)
+    if N_ronois EQ 0 $
         then read, 'Enter the readout noise per pixel: ',readns $
         else readns = par
  endif
@@ -122,7 +123,7 @@ endif
  psfrad = sxpar(hpsf,'PSFRAD')
  fitrad = sxpar(hpsf,'FITRAD')
  npsf = sxpar(hpsf,'NAXIS1')
-;				Compute RINTER common block arrays
+;                               Compute RINTER common block arrays
  p_1 = shift(psf,1,0) & p1 = shift(psf,-1,0) & p2 = shift(psf,-2,0)
  c1 = 0.5*(p1 - p_1)
  c2 = 2.*p1 + p_1 - 0.5*(5.*psf + p2)
@@ -139,9 +140,9 @@ endif
  pkerr = 0.027/(gauss[3]*gauss[4])^2     
  sharpnrm = 2.*gauss[3]*gauss[4]/gauss[0]
  if (N_elements(group) EQ 1) then groupid = group[0] else $
-     groupid = where(histogram(group,min=0))	;Vector of distinct group id's
+     groupid = where(histogram(group,min=0))    ;Vector of distinct group id's
 
- mag = mags			   ;Save original magnitude vector
+ mag = mags                        ;Save original magnitude vector
  bad = where( mag GT 99, nbad )     ;Undefined magnitudes assigned 99.9
  if nbad GT 0 then mag[bad] = psfmag + 7.5
  mag = 10.^(-0.4*(mag-psfmag)) ;Convert magnitude to brightness, scaled to PSF
@@ -151,7 +152,8 @@ endif
  VARSKY = keyword_set(VARSKY)
 
  if keyword_set(PRINT) then begin
-     if ( datatype(print) NE 'STR' ) then file = 'nstar.prt' else file = print
+     if ( size(print,/TNAME) NE 'STRING' ) then file = 'nstar.prt' $
+                                           else file = print
      if !VERSION.OS EQ "vms" then begin
               fdecomp,file,disk,dir,name,ext
               if ( ext EQ '') then ext = 'prt'
@@ -173,6 +175,7 @@ endif
  index = where(group EQ groupid[igroup],nstr) 
  if not SILENT then print,'Processing group ', $
                strtrim(groupid[igroup],2),'    ',strtrim(nstr,2),' stars'
+ if nstr EQ 0 then stop
  magerr = fltarr(nstr)
  chiold = 1.0
  niter = 0
@@ -189,7 +192,7 @@ endif
 START_IT : 
    niter = niter+1
 RESTART: 
- case 1 of		;Set up critical error for star rejection
+ case 1 of              ;Set up critical error for star rejection
    niter GE 4 : wcrit = 1
    niter GE 8 : wcrit = 0.4444444
    niter GE 12: wcrit = 0.25             
@@ -220,10 +223,10 @@ RESTART:
  while (j LT nstr-1) do begin
    sep = (xg[j] - xg[j+1:*])^2 + (yg[j] - yg[j+1:*])^2
    bad = where(sep LT sepmin,nbad)
-   if nbad GT 0 then begin	;Do any star overlap?
+   if nbad GT 0 then begin      ;Do any star overlap?
       for l = 0,nbad-1 do begin
       k = bad[l] + j + 1
-      if magg[k] LT magg[j] then imin = k else imin = j	;Identify fainter star
+      if magg[k] LT magg[j] then imin = k else imin = j ;Identify fainter star
       if ( sep[l] LT 0.14*sepmin) or  $
          ( magerr[imin]/magg[imin]^2 GT wcrit ) then begin
       if  imin EQ j then imerge = k else imerge = j
@@ -233,13 +236,13 @@ RESTART:
       totmag = magg[imerge] + magg[imin]
       xg[imerge] = (xg[imerge]*magg[imerge] + xg[imin]*magg[imin])/totmag
       yg[imerge] = (yg[imerge]*magg[imerge] + yg[imin]*magg[imin])/totmag
-      magg[imerge] = totmag	
-      remove,imin,idg,xg,yg,magg,skyg,magerr	;Remove fainter star from group
-      nterm = nstr*3 + varsky			;Update matrix size
+      magg[imerge] = totmag     
+      remove,imin,idg,xg,yg,magg,skyg,magerr    ;Remove fainter star from group
+      nterm = nstr*3 + varsky                   ;Update matrix size
       xold = dblarr(nterm) 
-      clamp = replicate(1.,nterm)		;Release all clamps
+      clamp = replicate(1.,nterm)               ;Release all clamps
       clip = 0b
-      niter = niter-1				;Back up iteration counter
+      niter = niter-1                           ;Back up iteration counter
       goto, RESTART 
       endif
    endfor
@@ -345,7 +348,7 @@ RESTART:
  c = transpose(x) # ( ( wt # replicate(1.,nterm) ) * x )
 
  if grpwt GT 3 then begin
-	chiold = 1.2533*sumres*sqrt(1./(grpwt*(grpwt-3.)))
+        chiold = 1.2533*sumres*sqrt(1./(grpwt*(grpwt-3.)))
         chiold = ((grpwt-3.)*chiold+3.)/grpwt
  endif
 
@@ -363,8 +366,8 @@ if ngood GT 0 then chi[chibad] = chiold
 
  if (not clip) or (niter LE 1) then redo = 1b else redo = 0b 
  if varsky then begin
-	skybar = skybar - x[nterm-1]
-	if abs(x[nterm-1]) GT  0.01 then redo = 1b
+        skybar = skybar - x[nterm-1]
+        if abs(x[nterm-1]) GT  0.01 then redo = 1b
  endif
  clip = 1b
 
@@ -375,12 +378,12 @@ if ngood GT 0 then chi[chibad] = chiold
    if redo EQ 0 then redo = max( abs([x[k], x[l]]) GT 0.01)
  endif
 
- sgn = where( xold[j]*x[j]/magg^2 LT -1.E-37 )	
- if !ERR GT 0 then clamp[j[sgn]] = 0.5*clamp[j[sgn]]
- sgn = where( xold[k]*x[k]        LT -1.E-37 )
- if !ERR GT 0 then clamp[k[sgn]] = 0.5*clamp[k[sgn]]
- sgn = where( xold[l]*x[l]        LT -1.E-37 )
- if !ERR GT 0 then clamp[l[sgn]] = 0.5*clamp[l[sgn]]
+ sgn = where( xold[j]*x[j]/magg^2 LT -1.E-37, Nclamp )  
+ if Nclamp GT 0 then clamp[j[sgn]] = 0.5*clamp[j[sgn]]
+ sgn = where( xold[k]*x[k]        LT -1.E-37, Nclamp )
+ if Nclamp GT 0 then clamp[k[sgn]] = 0.5*clamp[k[sgn]]
+ sgn = where( xold[l]*x[l]        LT -1.E-37, Nclamp )
+ if Nclamp GT 0 then clamp[l[sgn]] = 0.5*clamp[l[sgn]]
 
  magg = magg-x[j] / (1.+ ( (x[j]/(0.84*magg)) > (-x[j]/(5.25*magg)) )/ clamp[j] )
  xg = xg - x[k]   /(1.+abs(x[k])/( clamp[k]*0.5))
@@ -389,7 +392,7 @@ if ngood GT 0 then chi[chibad] = chiold
 
  magerr = c[j+nterm*j]*(nstr*chi^2 + (nstr-1)*chiold^2)/(2.*nstr-1.)
 
- dx = (-xg) > ( (xg - nx) > 0.)	;Find stars outside subarray
+ dx = (-xg) > ( (xg - nx) > 0.) ;Find stars outside subarray
  dy = (-yg) > ( (yg-  ny) > 0.)
  badcen = where(    $                     ;Remove stars with bad centroids
      (dx GT 0.001) or (dy GT 0.001) or ( (dx+1)^2 + (dy+1)^2 GE radsq ), nbad)
@@ -397,7 +400,7 @@ if ngood GT 0 then chi[chibad] = chiold
         nstr = nstr - nbad
         print,strn(nbad),' stars eliminated by centroid criteria'
         if nstr LE 0 then goto, DONE_GROUP 
-	remove, badcen, idg, xg, yg, magg, skyg, magerr
+        remove, badcen, idg, xg, yg, magg, skyg, magerr
         nterm = nstr*3 + varsky
         redo = 1b
  endif
@@ -409,7 +412,7 @@ if ngood GT 0 then chi[chibad] = chiold
          faint = min( magg[toofaint], min_pos )
          ifaint = toofaint[ min_pos ]
          magg[toofaint] = 1.e-5
-         goto, REM_FAINT		;Remove faintest star
+         goto, REM_FAINT                ;Remove faintest star
  endif else begin
          faint = 0.
          ifaint = -1

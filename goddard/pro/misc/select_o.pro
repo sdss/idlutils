@@ -1,4 +1,5 @@
-PRO SELECT_O, selections, iselected, comments, command_line, only_one
+PRO SELECT_O, selections, iselected, comments, command_line, only_one, $
+              COUNT = n_select
 ;+
 ; NAME:
 ;	SELECT_O
@@ -8,7 +9,8 @@ PRO SELECT_O, selections, iselected, comments, command_line, only_one
 ;	This is the non-widget version of SCREEN_SELECT
 ;
 ; CALLING SEQUENCE:
-;	select_o, selections, iselected, comments, command_line, only_one
+;	select_o, selections, iselected, comments, command_line, only_one, $
+;                            [ COUNT = ]
 ;
 ; INPUTS:
 ;	selections - string array giving list of items that can be
@@ -32,13 +34,16 @@ PRO SELECT_O, selections, iselected, comments, command_line, only_one
 ; OUTPUTS:
 ;	iselected - list of indices in selections giving the selected
 ;		items.
+; OPTIONAL OUTPUT KEYWORD:
+;       COUNT - Integer scalar giving the number of selections
 ; SIDE EFFECTS:
-;	!err is set to the number of selections made
+;	The obsolete system variable !err is set to the number of selections
 ; HISTORY:
 ;	version 1, D. Lindler  April 88.
 ;	modified to IDL V2 (from screen_select).  M. Greason, May 1990.
 ;	changed name from screen_select_o         W. Landsman January 1993
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added COUNT keyword, deprecate !ERR   W. Landsman   March 2000
 ;-
 ;--------------------------------------------------------------------------
 ;			set defaults
@@ -259,7 +264,7 @@ ENDWHILE
 ;
 done:
 scr_other, '[?25h'			;enable visible cursor
-!err=n_select
+!err = n_select
 scr_erase, 5
 ;
 RETURN

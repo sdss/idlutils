@@ -20,13 +20,18 @@
 ;	range respectively.
 ; OPTIONAL INPUT KEYWORDS: 
 ;	FRACTION = Fraction of data to consider most significant.
-;		   Defaults to 0.9
+;		   Defaults to 0.99
 ;	MISSING	 = Value used to flag missing points.  Data points with this
 ;		   value are not considered or changed.
 ; OPTIONAL OUTPUT KEYWORD
 ;	RANGE    = 2 element vector, giving the range (minimum and maxmimum) 
 ;		used
 ;
+; NOTES:
+;       If the image array contains more than 10,000 points then SIGRANGE() 
+;       uses random indexing of a subset of the points to determine the range
+;       (for speed).    Thus identical calls to SIGRANGE() might not yield
+;       identical results (although they should be very close).     
 ; RESTRICTIONS: 
 ;	ARRAY must have more than two points.  Fraction must be greater than 0 
 ;	and less than 1.
@@ -49,10 +54,11 @@
 ;	Version 5, 13-Jan-1998, William Thompson, GSFC
 ;		Use random numbers to improve statistics when only using a
 ;		fraction of the array.
-;	Converted to IDL V5.0,     February, 1998
+;	Version 6, 06-Mar-1998, William Thompson, GSFC
+;		Change default to 0.99
 ;-
 ;
-	IF N_ELEMENTS(FRACTION) NE 1 THEN FRACTION = 0.9
+	IF N_ELEMENTS(FRACTION) NE 1 THEN FRACTION = 0.99
 	IF N_ELEMENTS(ARRAY) LE 2 THEN BEGIN
 	    MESSAGE, /CONTINUE, 'Not enough points to form histogram'
 	    RETURN, ARRAY

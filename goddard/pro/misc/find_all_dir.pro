@@ -2,23 +2,24 @@
 		PLUS_REQUIRED=PLUS_REQUIRED, RESET=RESET
 ;+
 ; NAME:
-;      FIND_ALL_DIR()
+;       FIND_ALL_DIR()
 ; PURPOSE:
-;     Finds all directories under a specified directory.
+;       Finds all directories under a specified directory.
 ; EXPLANATION:
-;     This routine finds all the directories in a directory tree when the
-;     root of the tree is specified.  This provides the same functionality as
-;     having a directory with a plus in front of it in the environment
-;     variable IDL_PATH.
+;       This routine finds all the directories in a directory tree when the
+;       root of the tree is specified.  This provides the same functionality as
+;       having a directory with a plus in front of it in the environment
+;       variable IDL_PATH.
 ;
+;       Users with Windows OS and V5.2 or earlier should see the warning below.
 ; CALLING SEQUENCE:
-;     Result = FIND_ALL_DIR( PATH )
+;       Result = FIND_ALL_DIR( PATH )
 ;
-;             PATHS = FIND_ALL_DIR('+mypath', /PATH_FORMAT)
-;             PATHS = FIND_ALL_DIR('+mypath1:+mypath2')
+;               PATHS = FIND_ALL_DIR('+mypath', /PATH_FORMAT)
+;               PATHS = FIND_ALL_DIR('+mypath1:+mypath2')
 ;
 ; INPUTS:
-;     PATH    = The path specification for the top directory in the tree.
+;       PATH    = The path specification for the top directory in the tree.
 ;               Optionally this may begin with the '+' character but the action
 ;               is the same unless the PLUS_REQUIRED keyword is set.
 ;
@@ -60,19 +61,26 @@
 ;       DEF_DIRLIST, FIND_WITH_DEF(), BREAK_PATH()
 ;
 ; RESTRICTIONS:
-;      PATH must point to a directory that actually exists.
+;       PATH must point to a directory that actually exists.
 ;
-;      On VMS computers this routine calls a command file, FIND_ALL_DIR.COM
-;      (available only on VMS distribution) to find the directories.  This
-;      command file must be in one of the directories in IDL's standard search
-;      path, !PATH.
+;       On VMS computers this routine calls a command file, FIND_ALL_DIR.COM
+;       (available only on VMS distribution) to find the directories.  This
+;       command file must be in one of the directories in IDL's standard search
+;       path, !PATH.
 ;
+;       In order to use this procedure on Windows in IDL V5.2 or earlier, you 
+;       must obtain the procedure find_wind_dir.pro and supporting procedures
+;       from the Solar library 
+;       http://sohowww.nascom.nasa.gov/solarsoft/gen/idl/system/find_all_dir.pro
 ; REVISION HISTORY:
 ;       Written     :   William Thompson, GSFC, 3 May 1993.
 ;       Version 6       William Thompson, GSFC, 20 August 1996
 ;       Version 7, William Thompson, GSFC, 13 February 1998
 ;                       Include Windows and MacOS seperators.
-;	Converted to V5.0, March 1998
+;        Version 12, William Thompson, GSFC, 02-Feb-2001
+;                       In Windows, use built-in expand_path if able.
+;
+; Version     :	Version 12
 ;-
 ;
 	ON_ERROR, 2
@@ -125,6 +133,21 @@
 		COMMAND_FILE = FIND_WITH_DEF('FIND_ALL_DIR.COM',!PATH,'.COM')
 		SPAWN,'@' + COMMAND_FILE + ' ' + COMMAND_FILE + ' ' + DIR, $
 			DIRECTORIES
+
+;
+;  For windows, if IDL version 5.3 or later, use the built-in EXPAND_PATH
+;  program.
+;
+	END ELSE IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
+;
+		IF !VERSION.RELEASE GE '5.3' THEN BEGIN
+		    TEMP = DIR
+		    TEST = STRMID(TEMP, STRLEN(TEMP)-1, 1)
+		    IF (TEST EQ '/') OR (TEST EQ '\') THEN	$
+			    TEMP = STRMID(TEMP,0,STRLEN(TEMP)-1)
+		    DIRECTORIES = EXPAND_PATH('+' + TEMP, /ALL, /ARRAY)
+		END ELSE DIRECTORIES = FIND_WIND_DIR(DIR)
+
 ;
 ;  On Unix machines spawn the Bourne shell command 'find'.  First, if the
 ;  directory name starts with a dollar sign, then try to interpret the

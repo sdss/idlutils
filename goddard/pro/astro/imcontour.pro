@@ -3,86 +3,84 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
       ANONYMOUS_ = dummy_,_EXTRA = extra
 ;+
 ; NAME:
-;	IMCONTOUR
+;       IMCONTOUR
 ; PURPOSE:
-;	Make a contour plot labeled with astronomical coordinates.
+;       Make a contour plot labeled with astronomical coordinates.
 ; EXPLANATION:
-;	The type of coordinate display is controlled by the keyword TYPE
-;	Set TYPE=0 (default) to measure distances from the center of the image
-;	(IMCONTOUR will decide whether the plotting units will be in
-;	arc seconds, arc minutes, or degrees depending on image size.)
-;	Set /TYPE for standard RA and Dec labeling
+;       The type of coordinate display is controlled by the keyword TYPE
+;       Set TYPE=0 (default) to measure distances from the center of the image
+;       (IMCONTOUR will decide whether the plotting units will be in
+;       arc seconds, arc minutes, or degrees depending on image size.)
+;       Set /TYPE for standard RA and Dec labeling
 ;
+;       By using the /NODATA keyword, IMCONTOUR can also be used to simply
+;       provide astronomical labeling of a previously displayed image.
 ; CALLING SEQUENCE
-;	IMCONTOUR, im, hdr,[ /TYPE, /PUTINFO, XDELTA = , YDELTA =, _EXTRA = ]
+;       IMCONTOUR, im, hdr,[ /TYPE, /PUTINFO, XDELTA = , YDELTA =, _EXTRA = ]
 ;
 ; INPUTS:
-;	IM - 2-dimensional image array
-;	HDR - FITS header associated with IM, string array, must include
-;		astrometry keywords.   IMCONTOUR will also look for the
-;		OBJECT and IMAGE keywords, and print these if found and the 
-;		PUTINFO keyword is set.
+;       IM - 2-dimensional image array
+;       HDR - FITS header associated with IM, string array, must include
+;               astrometry keywords.   IMCONTOUR will also look for the
+;               OBJECT and IMAGE keywords, and print these if found and the 
+;               PUTINFO keyword is set.
 ;
 ; OPTIONAL PLOTTING KEYWORDS:
-;	TYPE - the type of astronomical labeling to be displayed.   Either set
-;		TYPE = 0 (default), distance to center of the image is
-;		marked in units of Arc seconds, arc minutes, or degrees
+;       /TYPE - the type of astronomical labeling to be displayed.   Either set
+;               TYPE = 0 (default), distance to center of the image is
+;               marked in units of Arc seconds, arc minutes, or degrees
 ;
-;		TYPE = 1 astronomical labeling with Right ascension and 
-;		declination.
+;               TYPE = 1 astronomical labeling with Right ascension and 
+;               declination.
 ;
-;	PUTINFO - If set then IMCONTOUR will add information about the image
-;		to the right of the contour plot.  Information includes image
-;		name, object, image center, image center, contour levels, and
-;		date plot was made
+;       /PUTINFO - If set then IMCONTOUR will add information about the image
+;               to the right of the contour plot.  Information includes image
+;               name, object, image center, image center, contour levels, and
+;               date plot was made
 ;
-;	XDELTA, YDELTA - Integer scalars giving spacing of labels for TYPE=1.  
-;		Default is to label every major tick (XDELTA=1) but if 
-;		crowding occurs, then the user might wish to label every other
-;		tick (XDELTA=2) or every third tick (XDELTA=3)
+;       XDELTA, YDELTA - Integer scalars giving spacing of labels for TYPE=1.  
+;               Default is to label every major tick (XDELTA=1) but if 
+;               crowding occurs, then the user might wish to label every other
+;               tick (XDELTA=2) or every third tick (XDELTA=3)
 ;
-;	Any keyword accepted by CONTOUR may also be passed through IMCONTOUR
-;	since IMCONTOUR uses the _EXTRA facility.     IMCONTOUR uses its own
-;	defaults for the XTITLE, YTITLE XMINOR, YMINOR, and SUBTITLE keywords
-;	but these may be overridden.
+;       Any keyword accepted by CONTOUR may also be passed through IMCONTOUR
+;       since IMCONTOUR uses the _EXTRA facility.     IMCONTOUR uses its own
+;       defaults for the XTITLE, YTITLE XMINOR, YMINOR, and SUBTITLE keywords
+;       but these may be overridden.
 ;
 ; NOTES:
-;	(1) The contour plot will have the same dimensional ratio as the input
-;		image array
-;	(2) To contour a subimage, use HEXTRACT before calling IMCONTOUR
+;       (1) The contour plot will have the same dimensional ratio as the input
+;               image array
+;       (2) To contour a subimage, use HEXTRACT before calling IMCONTOUR
+;       (3) Use the /NODATA keyword to simply provide astronomical labeling
+;           of a previously displayed image.
 ;
 ; EXAMPLE:
-;	Overlay the contour of an image, im2, with FITS header, h2, on top
-;	of the display of a different image, im1.   Use RA, Dec labeling, and
-;	seven equally spaced contour levels.    Follow the method in Section
-;	15-7 of the IDL manual to scale the image to fit the plot display.
+;       Overlay the contour of an image, im2, with FITS header, h2, on top
+;       of the display of a different image, im1.   Use RA, Dec labeling, and
+;       seven equally spaced contour levels.    The use of a program like
+;       David Fanning's TVIMAGE  http://www.dfanning.com/programs/tvimage.pro
+;       is suggested to properly overlay plotting and image coordinates.  The
+;       /Keep_aspect_ratio keyword must be used.
 ;
-;	IDL> imcontour,im2,h2      ;Do it once just to get the plot size
-;	IDL> py = !y.window*!D.y_vsize
-;	IDL> sx = px(1)-px(0)+1 & sy = py(1)-py(0)+1
-;	IDL> erase
-;	IDL> tv,congrid(im2,sx,sy),px(0),py(0)
-;	IDL> imcontour,im2,h2,nlevels=7,/Noerase,/TYPE    ;Now do it for real
+;       IDL> tvimage,im1,/keep_aspect,position = pos
+;       IDL> imcontour,im2,h2,nlevels=7,/Noerase,/TYPE,position = pos
 ;
 ; PROCEDURES USED:
-;	CHECK_FITS, EXTAST, GETROT, TICPOS, TICLABEL, TIC_ONE, TICS, XYAD
-;	CONS_RA(), CONS_DEC(), ADSTRING()
+;       CHECK_FITS, EXTAST, GETROT, TICPOS, TICLABEL, TIC_ONE, TICS, XYAD
+;       CONS_RA(), CONS_DEC(), ADSTRING()
 ;
-; RESTRICTIONS:
-;	V3.6a of IDL contained a serious bug, that would cause roundoff, even
-;	with XSTYLE = 1.    IMCONTOUR may display incorrect coordinates under
-;	IDL V3.6a.     Users should upgrade to at least IDL V3.6c to ensure 
-;	the proper output of IMCONTOUR
 ; REVISION HISTORY:
-;	Written   W. Landsman   STX                    May, 1989
-;	Fixed RA,Dec labeling  W. Landsman             November, 1991
-;	Fix plottting keywords  W.Landsman             July, 1992
-;	Recognize GSSS headers  W. Landsman            July, 1994
-;	Removed Channel keyword for V4.0 compatibility June, 1995
-;	Add _EXTRA CONTOUR plotting keywords  W. Landsman  August, 1995
-;	Add XDELTA, YDELTA keywords  W. Landsman   November, 1995
-;	Use SYSTIME() instead of !STIME                August, 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written   W. Landsman   STX                    May, 1989
+;       Fixed RA,Dec labeling  W. Landsman             November, 1991
+;       Fix plottting keywords  W.Landsman             July, 1992
+;       Recognize GSSS headers  W. Landsman            July, 1994
+;       Removed Channel keyword for V4.0 compatibility June, 1995
+;       Add _EXTRA CONTOUR plotting keywords  W. Landsman  August, 1995
+;       Add XDELTA, YDELTA keywords  W. Landsman   November, 1995
+;       Use SYSTIME() instead of !STIME                August, 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Remove obsolete !ERR system variable W. Landsman   May 2000 
 ;-
   On_error,2                                 ;Return to caller
 
@@ -92,8 +90,8 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
      return
   endif
 
-  check_fits, im, hdr, dimen, /NOTYPE     ;Make sure header appropriate to image
-  if !ERR EQ -1 then return
+  check_fits, im, hdr, dimen, /NOTYPE, ERRMSG = errmsg     ;Make sure header appropriate to image
+  if errmsg NE '' then message,errmsg
 
 ; Set defaults if keywords not set
 
@@ -111,9 +109,9 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
  if noparams LT 0 then $                       ;Does astrometry exist?
       message,'FITS header does not contain astrometry'
  if strmid( astr.ctype[0], 5, 3) EQ 'GSS' then begin
-	hdr1 = hdr
-	gsss_STDAST, hdr1
-	extast, hdr1, astr, noparams
+        hdr1 = hdr
+        gsss_STDAST, hdr1
+        extast, hdr1, astr, noparams
  endif
 
 ; Adjust plotting window so that contour plot will have same dimensional 
@@ -179,14 +177,14 @@ if type NE 0 then begin                  ;RA and Dec labeling
 
      xpos = cons_ra( ra_grid,0,astr )     ;Line of constant RA
      ypos = cons_dec( dec_grid,0,astr)   ;Line of constant Dec
-     xunits = 'RIGHT ASCENSION'
-     yunits = 'DECLINATION'
+     xunits = 'Right Ascension'
+     yunits = 'Declination'
 
   endif else begin                          ;Label with distance from center
 
      ticpos, xsize1*cdelt[0], xsize, pixx, incrx, xunits     
      numx = fix(xsize/(2.*pixx))  
-     ticpos, ysize1*cdelt[0], ysize, pixy, incry, yunits
+     ticpos, ysize1*cdelt[1], ysize, pixy, incry, yunits
       numy = fix(ysize/(2.*pixy))
       nx = 2*numx & ny = 2*numy
       xpos = xmid + (findgen(nx+1)-numx)*pixx
@@ -207,15 +205,16 @@ if type NE 0 then begin                  ;RA and Dec labeling
       if !Y.TITLE eq '' then ytitle = yunits else ytitle = !Y.TITLE
 
   if (not keyword_set( SUBTITLE) ) and (putinfo LT 1) then $
-      subtitle = 'CENTER:  R.A. '+ strmid(ra_dec,1,13)+'  DEC ' + $
+      subtitle = 'Center:  R.A. '+ strmid(ra_dec,1,13)+'  Dec ' + $
                strmid(ra_dec,13,13)
   if (not keyword_set( SUBTITLE) ) then subtitle = !P.SUBTITLE
+   
 
   contour,im, $
          XTICKS = nx, YTICKS = ny, POSITION=pos, XSTYLE=1, YSTYLE=1,$
          XTICKV = xpos, YTICKV = ypos, XTITLE=xtitle, YTITLE=ytitle, $
          XTICKNAME = xlab, YTICKNAME = ylab, SUBTITLE = subtitle, $
-	 XMINOR = xminor, YMINOR = yminor, _EXTRA = extra
+         XMINOR = xminor, YMINOR = yminor, _EXTRA = extra
 
 ;  Write info about the contour plot if desired
 
@@ -223,11 +222,11 @@ if type NE 0 then begin                  ;RA and Dec labeling
 
      xmax = xmax + 0.01
 
-     object = sxpar( hdr, 'OBJECT' )
-     if !ERR ne -1 then xyouts, xmax, 0.95, object, /NORM
+     object = sxpar( hdr, 'OBJECT', Count = N_object )
+     if N_object GT 0  then xyouts, xmax, 0.95, object, /NORM
 
-     name = sxpar( hdr, 'IMAGE' )
-     if !ERR ne -1 then xyouts,xmax,0.90,name, /NORM
+     name = sxpar( hdr, 'IMAGE', Count = N_image )
+     if N_image GT 0 then xyouts,xmax,0.90,name, /NORM
 
      xyouts, xmax, 0.85,'CENTER:',/NORM
      xyouts, xmax, 0.80, 'R.A. '+ strmid(ra_dec,1,13),/NORM

@@ -10,7 +10,7 @@ pro GSSSxyad, gsa, xin, yin, ra, dec, PRINT = print
 ; CALLING SEQUENCE:
 ;       GSSSxyad, gsa, x, y, ra, dec, [ /PRINT ]
 ; INPUT:
-;       GSA  - The GSSS Astrometry structure extract from the FITS header 
+;       GSA  - The GSSS Astrometry structure extracted from a FITS header 
 ;              by GSSSEXTAST
 ;       X - The X pixel coordinate(s) of the image, scalar or vector
 ;       Y - The Y pixel coordinate(s) of the image, scalar or vector
@@ -22,7 +22,7 @@ pro GSSSxyad, gsa, xin, yin, ra, dec, PRINT = print
 ;       Both RA and Dec will be returned as double precision
 ;
 ; OPTIONAL KEYWORD INPUT:
-;       PRINT - If this keyword is set and non-zero, then coordinates will be
+;       /PRINT - If this keyword is set and non-zero, then coordinates will be
 ;               displayed at the terminal
 ; EXAMPLE:
 ;       Given a FITS header,hdr, from a GSSS image, print the astronomical

@@ -7,11 +7,11 @@
 ;       Combine separate red, green, and blue FITS images into TIFF format
 ; EXPLANATION:
 ;       The output TIFF (class R) file can have colors interleaved either
-;       either by pixel or image.  The colour mix is also adjustable.
+;       by pixel or image.  The colour mix is also adjustable.
 ;
 ; CALLING SEQUENCE:
 ;       FITSRGB_to_TIFF, path, rgb_files, tiff_name [,/BY_PIXEL, /PREVIEW,
-;                         R=red_mix, G=green_mix, B=blue_mix]
+;                         RED= , GREEN =, BLUE =]
 ;
 ; INPUTS:
 ;       path = file system directory path to the RGB files required.
@@ -59,31 +59,29 @@
 ;       None
 ;
 ; PROCEDURES USED:
-;     Functions:   SXPAR, WHERENAN, READFITS, STRNUMBER, CONCAT_DIR
-;     Procedures:  IEEE_TO_HOST, SXADDPAR, WRITE_TIFF
+;     Functions:   READFITS, CONCAT_DIR
+;     Procedures:  WRITE_TIFF
 ;
 ; MODIFICATION HISTORY:
 ;     16th January 1995 - Written by Carl Shaw, Queen's University Belfast
 ;	27 Jan 1995 - W. Landsman, Add CONCAT_DIR for VMS, Windows compatibility
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;    Use WRITE_TIFF instead of obsolete TIFF_WRITE  W. Landsman  December 1998
+;    Cosmetic changes  W. Landsman    February 2000
 ;-
 ;
 ;  Make sure user has supplied valid parameters
 ;
  IF N_PARAMS() LT 3 THEN BEGIN
       print, 'Syntax -  FITSRGB_to_TIFF, path, rgb_files, tiff_name'
-      print,'                     [/BY_PIXEL,/PREVIEW, RED=, GREEN=, BLUE= ]
+      print,'                     [/BY_PIXEL,/PREVIEW, RED=, GREEN=, BLUE= ]'
       return
  ENDIF
 ;
  IF N_ELEMENTS(rgb_files) LT 3 THEN $
   MESSAGE, 'Three filenames for the colour components have not been supplied'
 ;
- IF KEYWORD_SET(BY_PIXEL) THEN $
-  by_pixel = 1 $
- ELSE $
-  by_pixel = 0
+  by_pixel =  KEYWORD_SET(BY_PIXEL)
 ;
  IF NOT KEYWORD_SET(r_mix) THEN r_mix = 1.0
  IF NOT KEYWORD_SET(g_mix) THEN g_mix = 1.0

@@ -1,7 +1,7 @@
 PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
            PSYM = psym, Peak=Peak, Fill=Fill, FCOLOR=Fcolor, FLINE=FLINE, $
            FSPACING=Fspacing, FPATTERN=Fpattern, FORIENTATION=Forientation, $
-           ANONYMOUS_ = dummy_, _EXTRA = _extra
+           NAN = NAN, _EXTRA = _extra
 ;+
 ; NAME:
 ;      PLOTHIST
@@ -23,6 +23,7 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
 ; OPTIONAL INPUT KEYWORDS:
 ;      BIN -  The size of each bin of the histogram,  scalar (not necessarily
 ;             integral).  If not present (or zero), the bin size is set to 1.
+;      /NAN - If set, then check for the occurence of IEEE not-a-number values
 ;      /NOPLOT - If set, will not plot the result.  Useful if intention is to
 ;             only get the xhist and yhist outputs.
 ;      /OVERPLOT - If set, will overplot the data on the current plot.  User
@@ -62,6 +63,7 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
 ;        Add Peak keyword.   J.Wm.Parker  Jan, 1998
 ;        Add FILL,FCOLOR,FLINE,FPATTERN,FSPACING keywords. J.Wm.Parker Jan, 1998
 ;	 Converted to IDL V5.0   W. Landsman 21-Jan-1998
+;        Add /NAN keyword        W. Landsman October 2001
 ;-
 ;			Check parameters.
  On_error,2
@@ -81,9 +83,12 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, OVERPLOT=Overplot, $
 
  if not keyword_set(BIN) then bin = 1. else bin = float(abs(bin))
 
-; Compute the histogram and abcissa.
+; Compute the histogram and abcissa.    
 
- y = round( ( arr / bin))
+ if keyword_set(NAN) then begin
+      good = where(finite(arr) )
+      y = round( ( arr[good] / bin))
+ endif else y = round( ( arr / bin))
  yhist = histogram( y )
  N_hist = N_elements( yhist )
  xhist = lindgen( N_hist ) * bin + min(y*bin)

@@ -9,8 +9,12 @@ function datatype,var, flag0, descriptor=desc, help=hlp, Tname = tname
 ; EXPLANATION: 
 ;      This routine returns the data type of a variable in a format specified
 ;      by the optional flag parameter.    Can also be used to emulate, in 
-;      earlier versions of IDL, the SIZE(/TNAME) option introduced in V5.2.
+;      earlier versions of IDL, the SIZE(/TNAME) option introduced in V5.1.
 ;
+;      This routine was originally derived from the JHUAPL library ***but has 
+;      diverged from the JHUAPL library for the newer data types.***  For this
+;      reason DATATYPE is no longer used in any other procedure in the IDL 
+;      Astronomy Library.
 ; CALLING SEQUENCE         : 
 ;      Result = DATATYPE( VAR  [, FLAG , /TNAME, /DESC ] )
 ;
@@ -60,6 +64,7 @@ function datatype,var, flag0, descriptor=desc, help=hlp, Tname = tname
 ;       Original Version: R. Sterner, JHU/APL, 24 October 1985.
 ;       Major rewrite, add /TNAME keyword, unsigned and 64 bit datatypes
 ;       W. Landsman   August 1999
+;       Zarro (SM&A/GSFC) - November 2001, replace error stops by continues
 ;-
 ;-------------------------------------------------------------
  
@@ -88,7 +93,7 @@ function datatype,var, flag0, descriptor=desc, help=hlp, Tname = tname
           print,'      L64       Long64     14       LON64       LONG64'
           print,'      U64       ULong64    15       ULON64      ULONG64'
           print,' Keywords:'                                     
-          print,'  /TNAME - Identical output to SIZE(/TNAME) 
+          print,'  /TNAME - Identical output to SIZE(/TNAME) '
           print,'  /DESCRIPTOR returns a descriptor for the given variable.'
           print,'     If the variable is a scalar the value is returned as'
           print,'     a string.  If it is an array a description is return'
@@ -114,8 +119,10 @@ function datatype,var, flag0, descriptor=desc, help=hlp, Tname = tname
  
        s = size(var)
        stype =  s[s[0]+1]
-        if stype GT N_elements(s_tname) then message, $
-             'ERROR - Unrecognized IDL datatype'
+        if stype GT N_elements(s_tname) then begin
+         message,'ERROR - Unrecognized IDL datatype',/cont
+         stype=0
+        endif
 
         if keyword_set(TNAME) then return, s_tname[stype]          
 
@@ -132,7 +139,10 @@ function datatype,var, flag0, descriptor=desc, help=hlp, Tname = tname
   endcase 
   
  if keyword_set(desc) then begin
-          if stype EQ 0 then message,'ERROR - Input variable is undefined'
+          if stype EQ 0 then begin
+           message,'ERROR - Input variable is undefined',/cont
+           return,'Undefined'
+          endif
           if s[0] eq 0 then return,strtrim(var,2)       ; Return scalar desc.
           aa = typ+'ARR('
           for i = 1, s[0] do begin                      

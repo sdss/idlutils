@@ -2,9 +2,7 @@
 		INITIALIZE=INITIALIZE,EXTVER=EXTVER,EXTLEVEL=EXTLEVEL,	$
 		ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBHMAKE
 ; Purpose     : 
 ;	Create basic FITS binary table extension (BINTABLE) header.

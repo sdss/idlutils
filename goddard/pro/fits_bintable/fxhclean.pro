@@ -1,8 +1,6 @@
 	PRO FXHCLEAN,HEADER,ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXHCLEAN
 ; Purpose     : 
 ;	Removes required keywords from FITS header.

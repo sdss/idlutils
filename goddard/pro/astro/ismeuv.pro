@@ -1,68 +1,69 @@
 function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
 ;+
 ; NAME:
-;	ISMEUV
-; PURPOSE
-;	Compute the interstellar EUV optical depth 
+;       ISMEUV
+; PURPOSE:
+;       Compute the interstellar EUV optical depth 
+;
 ; EXPLANATION:
-;	The EUV optical depth is computed from the photoionization of
-;	hydrogen and helium.
+;       The EUV optical depth is computed from the photoionization of
+;       hydrogen and helium.
 ;
 ; CALLING SEQUENCE:
-;	tau = ISMEUV( wave, Hcol, [ HeIcol, HeIIcol, /Fano ]
+;       tau = ISMEUV( wave, Hcol, [ HeIcol, HeIIcol, /Fano ]
 ;
 ; INPUTS:
-;	wave - Vector of wavelength values (in Angstroms).   Useful range is
-;		40 - 912 A; at shorter wavelengths metal opacity should be
-;		considered, at longer wavelengths there is no photoionization.
-;	Hcol - Scalar specifying interstellar hydrogen column density in cm-2.
-;		  Typical values are 1E17 to 1E20.
+;       wave - Vector of wavelength values (in Angstroms).   Useful range is
+;               40 - 912 A; at shorter wavelengths metal opacity should be
+;               considered, at longer wavelengths there is no photoionization.
+;       Hcol - Scalar specifying interstellar hydrogen column density in cm-2.
+;                 Typical values are 1E17 to 1E20.
 ;
 ; OUTPUT:
-;	tau - Vector giving resulting optical depth, same number of elements 
-;		as wave, non-negative values.   To obtain the attenuation of 
-;		an input spectrum, multiply by exp(-tau).
+;       tau - Vector giving resulting optical depth, same number of elements 
+;               as wave, non-negative values.   To obtain the attenuation of 
+;               an input spectrum, multiply by exp(-tau).
 ;
 ; OPTIONAL INPUTS:
-;	HeIcol - Scalar specifying neutral helium column density in cm-2.    
-;		Default is 0.1*Hcol (10% of hydrogen column)
-;	HeIIcol - Scalar specifying ionized helium column density in cm-2
-;		Default is 0 (no HeII)
+;       HeIcol - Scalar specifying neutral helium column density in cm-2.    
+;               Default is 0.1*Hcol (10% of hydrogen column)
+;       HeIIcol - Scalar specifying ionized helium column density in cm-2
+;               Default is 0 (no HeII)
 ;
 ; OPTIONAL INPUT KEYWORDS:
-;	FANO - If this keyword is set and non-zero, then the 4 strongest 
-;		auto-ionizing resonances of He I are included.   The shape 
-;		of these resonances is given by a Fano profile - see Rumph, 
-;		Bowyer, & Vennes 1994, AJ, 107, 2108.  If these resonances are
-;		included then the input wavelength vector should have
-;		a fine (>~0.01 A) grid between 190 A and 210 A, since the
-;		resonances are very narrow.
+;       /FANO - If this keyword is set and non-zero, then the 4 strongest 
+;               auto-ionizing resonances of He I are included.   The shape 
+;               of these resonances is given by a Fano profile - see Rumph, 
+;               Bowyer, & Vennes 1994, AJ, 107, 2108.  If these resonances are
+;               included then the input wavelength vector should have
+;               a fine (>~0.01 A) grid between 190 A and 210 A, since the
+;               resonances are very narrow.
 ; EXAMPLE:
-;	(1) One has a model EUV spectrum with wavelength, w (in Angstroms) and 
-;	flux,f .  Plot the model flux after attenuation by 1e18 cm-2 of HI, 
-;	with N(HeI)/N(HI) = N(HeII)/N(HI) = 0.05
+;       (1) One has a model EUV spectrum with wavelength, w (in Angstroms) and 
+;       flux,f .  Plot the model flux after attenuation by 1e18 cm-2 of HI, 
+;       with N(HeI)/N(HI) = N(HeII)/N(HI) = 0.05
 ;
-;	IDL> Hcol = 1e18
-;	IDL> plot, w, f*exp(-ismeuv(w, Hcol, .05*Hcol, .05*Hcol))
+;       IDL> Hcol = 1e18
+;       IDL> plot, w, f*exp(-ismeuv(w, Hcol, .05*Hcol, .05*Hcol))
 ;
-;	(2)  Plot the cross-section of HeI from 180 A to 220 A for 1e18 cm-2
-;		of HeI, showing the auto-ionizing resonances.   This is 
-;		Figure 1 in Rumph et al. (1994)
+;       (2)  Plot the cross-section of HeI from 180 A to 220 A for 1e18 cm-2
+;               of HeI, showing the auto-ionizing resonances.   This is 
+;               Figure 1 in Rumph et al. (1994)
 ;
-;	IDL> w = 180 + findgen(40000)*0.001        ;Need a fine wavelength grid
-;	IDL> plot, w, ismeuv(w, 0, 1e18, /Fano)          
+;       IDL> w = 180 + findgen(40000)*0.001        ;Need a fine wavelength grid
+;       IDL> plot, w, ismeuv(w, 0, 1e18, /Fano)          
 ;
 ; HISTORY
-;	Written,    W. Landsman                  October, 1994
-;	Adapted from ism.c at anonymous ftp site cea-ftp.cea.berkeley.edu
-;	by Pat Jelinsky, Todd Rumph & others.
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written,    W. Landsman                  October, 1994
+;       Adapted from ism.c at anonymous ftp site cea-ftp.cea.berkeley.edu
+;       by Pat Jelinsky, Todd Rumph & others.
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  On_error,2
 
  if N_params() LT 2 then begin
-	print,'Syntax - tau = ISMEUV( wave, Hcol, [ HeIcol, HeIIcol ] ) 
-	return,-1
+        print,'Syntax - tau = ISMEUV( wave, Hcol, [ HeIcol, HeIIcol, /FANO] )'
+        return,-1
  endif
 
  if N_elements( HeIcol) EQ 0 then HeIcol = 0.1*Hcol
@@ -75,9 +76,9 @@ function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
  tauh = wave*0.
  good = where(ratio LT 1, Ngood)
  if Ngood GT 0 then begin
-	r = ratio[good]
-	z = sqrt( r/(1.0-r) )
-	tauh[good] = Hcol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) /  $
+        r = ratio[good]
+        z = sqrt( r/(1.0-r) )
+        tauh[good] = Hcol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) /  $
                  (1.0 - exp(-2*!PI*z)) 
  endif
 
@@ -88,9 +89,9 @@ function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
  ratio = 4. * wave/911.75
  good = where(ratio LT 1, Ngood)
  if Ngood GT 0 then begin
-	r = ratio[good]
-	z = sqrt( r/(1.0-r) )
-	tauheII[good] = heiicol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) /  $
+        r = ratio[good]
+        z = sqrt( r/(1.0-r) )
+        tauheII[good] = heiicol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) /  $
                 ((1.0 - exp(-2*!PI*z))* 4.) 
  endif
 
@@ -110,34 +111,34 @@ function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
 ; Numbers are from Oza (1986), Phys Rev. A, 33, 824 -- nu and gamma
 ; and Fernley et al., J. Phys. B., 20, 6457, 1987 -- q
 
-	q  = [2.81d, 2.51d, 2.45d, 2.44d ]
-	nu = [1.610d, 2.795d, 3.817d, 4.824d ]
-	fano_gamma = [2.64061d-03, 6.20116d-04, 2.56061d-04, 1.320159d-04 ]
-	esubi = 3.0d - 1.0d/nu^2 + 1.807317d
+        q  = [2.81d, 2.51d, 2.45d, 2.44d ]
+        nu = [1.610d, 2.795d, 3.817d, 4.824d ]
+        fano_gamma = [2.64061d-03, 6.20116d-04, 2.56061d-04, 1.320159d-04 ]
+        esubi = 3.0d - 1.0d/nu^2 + 1.807317d
 
  tauHeI = wave*0.
  good = where( wave LT 503.97, Ngood )
  if Ngood GT 0 then begin
 
-	x = alog10(wave[good])
-	y = x*0.
+        x = alog10(wave[good])
+        y = x*0.
 
- 	good1 = where(wave LT 46.0, Ngood1 )
-  	if Ngood1 GT 0 then y[good1] = poly( x[good1], c2)	
+        good1 = where(wave LT 46.0, Ngood1 )
+        if Ngood1 GT 0 then y[good1] = poly( x[good1], c2)      
 
- 	good2 = where(wave GE 46.0, Ngood2 )
-  	if Ngood2 GT 0 then begin 
+        good2 = where(wave GE 46.0, Ngood2 )
+        if Ngood2 GT 0 then begin 
 
-		y[good2] = poly( x[good2], c1)
+                y[good2] = poly( x[good2], c1)
 
-	if keyword_set(fano) then begin
-		epsilon = 911.2671/wave
-		for i=0,3 do begin       ;Loop over first four HeI resonances
-			x = 2.0 * ((epsilon-esubi[i] )/ fano_gamma[i] ) 
-			y = y + alog10( (x - q[i])^2/ (1 + x*x ) )
-		endfor
-	endif
-	endif
+        if keyword_set(fano) then begin
+                epsilon = 911.2671/wave
+                for i=0,3 do begin       ;Loop over first four HeI resonances
+                        x = 2.0 * ((epsilon-esubi[i] )/ fano_gamma[i] ) 
+                        y = y + alog10( (x - q[i])^2/ (1 + x*x ) )
+                endfor
+        endif
+        endif
 
   tauHeI[good] = HeIcol * 10^y
 

@@ -1,4 +1,4 @@
-        Contents of IDL Astronomy User's Library                December, 1999
+        Contents of IDL Astronomy User's Library              December, 2001
         (also see http://idlastro.gsfc.nasa.gov/contents.html)
 
 Astronomical Utilities    in pro/astro
@@ -16,8 +16,10 @@ ASTRO - Interactive driver to compute astronomical precession,
         or coordinate conversions (calls EULER and PRECESS).
 BARYVEL - Compute components of barycentric Earth velocity, given Julian date
 BPRECESS - Precess coordinates, proper motion from J2000 to B1950
+CALZ_UNRED - Deredden a galaxy spectrum using the Calzetti et al. (2000) formula
 CCM_UNRED - Deredden a spectrum using the Cardelli, Clayton and Mathis (1989)
          parameterization.
+COSMO_PARAM - Derive a full set of cosmological parameters given a subset
 CT2LST- Convert from civil time to local sidereal time
 DATE()  - Convert day of year to a DY-MON-CCYY string (FITS standard)
 DATE_CONV() - Function to perform various date format conversions
@@ -29,7 +31,9 @@ EULER - Astronomical coordinate system conversions
 FLUX2MAG() - Convert from flux units to magnitudes
 FM_UNRED - Deredden a spectrum using the Fitzpatrick & Massa (1998)
          parameterization.
+GAL_UVW - Calculate the Galactic space velocity (U,V,W) of a star
 GAL_FLAT()  - Correct a galaxy image for inclination effects.
+GALAGE - Derive a galaxy age as a function of redshift for a cosmological model
 GCIRC - Compute rigorous great circle distance
 GET_COORDS - Read in angular input in decimal or sexigesimal format
 GET_DATE - Get the current date in CCYY-MM-DD format (FITS standard)
@@ -44,14 +48,20 @@ IMCONTOUR - Contour plots with astronomical labeling (either RA,Dec or
 IMF() - Return values for a multi-component power law initial mass function
 ISMEUV() - Compute EUV optical depth due to photoionization of HI, HeI and HeII
 JDCNV - Convert from calendar date to Julian date.
+JPLEPHINTERP - Interpolate position and motion of planetary bodies (JPL Ephemeris)
+JPLEPHREAD - Open and read JPL DE200 or DE405 Ephemeride FITS File
 JPRECESS - Precess positions & proper motions from B1950 to J2000
 JULDATE-Convert from calendar date to reduced Julian date. 
+LSF_ROTATE - Create a 1-d convolution kernel to broaden a spectrum from a rotating star
+LUMDIST - Return luminosity distance for a given redshift & cosmological model
 MAG2FLUX() - Convert from magnitudes to flux units
 MONTH_CNV() Convert a month name to the equivalent number or vice-versa 
 MOONPOS- Compute the RA and Dec (and distance) of the Moon at a given date
 MPHASE - Compute illuminated fraction of the Moon's disk for given Julian dates
 NUTATE - Compute the nutation in longitude and latitude for given Julian date(s)
+OBSERVATORY - Return coordinates, altitude & time zones of an observatory
 PLANCK() - Returns a blackbody flux for a given effective temperature
+PLANET_COORDS - Return low-precision RA and Dec of planets give a date(s)
 POSANG - Compute the position angle between sources of specified RA and Dec
 PRECESS - Precess RA and Dec to a new equinox
 PRECESS_XYZ - Precess equatorial geocentric rectangular coordinates
@@ -63,6 +73,7 @@ REDSHIFT - Interactively convert between redshift, distance, and velocity
 SIXTY - Convert decimal number to sexigesimal                 
 SPHDIST() - Find angular distance on a sphere (in /jhuapl)
 SUNPOS - Compute the RA and Dec of the Sun at a given date
+TDB2TDT() - Relativistic clock corrections due to Earth motion in solar system
 TEN() - Convert sexigesimal number to decimal             
 TENV() -  Like TEN but will work on a vector of sexigesimal numbers.
 TICPOS - Specify distance between tic marks for astronomical coordinates
@@ -79,7 +90,7 @@ WCS_DEMO - Demo program for WCSSPH2XY and WCSXY2SPH
 WCS_ROTATE - Rotate between standard (e.g. celestial) and native coordinates
 XYZ - Compute heliocentric rectangular coordinates at given Julian date.
 YMD2DN() - Convert year,month,day to day number of the year (in /jhuapl)
-YDN2MD - Convert day number of the year to year, month,day (in /jhuapl)
+YDN2MD - Convert day number of the year to year, month,day
 ZANG() - Compute angular size as a function of redshift in a Friedman cosmology
 ZENPOS - Compute the RA and Dec of the local zenith at a given date
 
@@ -97,6 +108,7 @@ GETPSF - Obtain a PSF (Gaussian + residuals) from isolated stars.
 GROUP -  Place stars with non-overlapping PSF's in distinct groups
 MMM -    (Mean, Median, Mode) sophisticated sky background computation
 NSTAR -  Simultaneous PSF fitting of a group of stars 
+PIXWT -  Compute the area of the intersection of a circle on a rectangle
 PKFIT -  Fit a Gaussian + residuals to a isolated star (called by GETPSF)
 RDPSF -  Read a PSF file that was created by GETPSF into an IDL array.
 RINTER - Cubic Interpolation at a set of reference points, optionally
@@ -242,7 +254,7 @@ FTDELROW - Delete specified row(s) from a FITS ASCII table data array
 FTGET() - Extract a specified field from a column in a FITS ASCII table array
 FTHELP - Display the fields in a FITS ASCII table header
 FTHMOD - Modify the attributes of a field in a FITS ASCII table
-FTINFO - Give information about a specified field in a FITS ASCII table array
+FTINFO - Return an informational structure from a FITS ASCII table header
 FTKEEPROW - Subscript (and reorder) a FITS ASCII table array
 FTPRINT - Print specified columns and rows in a FITS ASCII table array
 FTPUT - Update or add data to a field in a FITS ASCII table array
@@ -252,7 +264,7 @@ TBDELCOL - Delete specified column from a FITS Binary table array
 TBDELROW - Delete specified row(s) from a FITS Binary table array
 TBGET() - Extract a specified field from a column in a FITS Binary table
 TBHELP - Display the fields in a FITS Binary table header
-TBINFO - Give information about the fields in a FITS  Binary table array
+TBINFO - Return an informational structure from a FITS Binary table header
 TBPRINT - Print specified columns and rows in a FITS Binary table array
 TBSIZE - Return the size and number of fields in a FITS Binary table array
 
@@ -307,6 +319,7 @@ FITS_OPEN - Open a FITS file and define a FITS Control Block (FCB)
 FITS_READ - Read a FITS file specified by name or FITS Control Block (FCB)
 FITS_WRITE - Write a FITS primary data unit or extension
 FITS_INFO - Display info about disk FITS file(s) at a terminal or in Common 
+FXMOVE() - Skip a specified number of extensions in a FITS file
 FXPOSIT() - Open a FITS file positioned to beginning of a specified extension
 HEADFITS() - Read a FITS header from a disk FITS file.
 MKHDR - Make a minimal FITS header for an image array.
@@ -353,6 +366,7 @@ Math and Statistics    in pro/math
 _________
 ---------
 AVG() - Return the average value of an array or 1 dimension of an array.
+ASINH() - Return the inverse hyperbolic sine of its argument
 CIC - Cloud In Cell interpolation of irregularly gridded data
 CSPLINE() - Interpolate using the Numerical Recipes natural cubic spline
 FACTOR - Find the prime factors of a given number (in /jhuapl)
@@ -363,8 +377,10 @@ HERMITE() - Interpolate a tabulated function using a Hermite spline
 KSONE -  Compute the one-sided Kolmogorov-Smirnov statistic
 KSTWO -  Compute the two-sided Kolmogorov-Smirnov statistic
 LINTERP - Linearly interpolate X,Y vectors onto a new X grid      
+MEANCLIP - Compute an iteratively sigma-clipped mean on a data set
 MINF_BRACKET - Find 3 points which bracket the minimum of a function
 MINF_PARABOLIC - Minimize a function using Brent's method with parabolic interpolation 
+MINF_PARABOL_D - Minimize a function using Brent's method with derivatives
 MINF_CONJ_GRAD - Find local minimum of a scalar valued function of several
         variables using conjugate gradient method 
 NGP - Nearest Grid Point interpolation of irregularly gridded data
@@ -385,6 +401,7 @@ TABINV - Find the effective index of a function value.
 TRAPZD - Compute Nth iteration of trapezoidal rule.  Called by QSIMP, QTRAP
 TSC - Triangular Shaped Cloud interpolation of irregularly gridded data onto a regular grid
 TSUM() - Trapezoidal integration of the area under a curve
+VALUE_LOCATE() - Emulate V5.3 intrinsic function to find an effective index
 ZBRENT() - Find the root of a function known to lie between specified limits
 
 ----------------------------------------------------------------------------
@@ -403,6 +420,7 @@ PLOTSYM - Define useful plotting symbols not in the standard PSYM definition
 PARTVELVEC - Plot the velocity vectors of a set of particles
 RDPLOT - Like intrinsic CURSOR procedure but with a full-screen cursor
 SUNSYMBOL() - Return the character string to plot a subscripted Sun symbol
+VSYM - Create "Mongo"-like plotting symbols, rotationally symmetric polygons
 
 ----------------------------------------------------------------------------
 IDL Structure procedures    in pro/structure
@@ -450,25 +468,6 @@ TAB_VAL() - Extract values from a single column of an STSDAS table
 TAB_WRITE - Write a STSDAS table to a disk file
 
 ----------------------------------------------------------------------------
-Tape IO Procedures  (Unix and VMS only)            in pro/tape_io
-________
---------
-CHECK_TAPE_DRV - Associate a unit number with a Unix tape drive
-DISMOUNT - Unix emulation of VMS DISMOUNT command
-FITSLIST - List the headers on a FITS tape. 
-FITSTAPE() - Lower-level function to perform FITS tape I/O.
-FXTAPEWRITE - Copy a disk FITS file to tape 
-FXTAPEREAD - Copy a FITS file from tape to disk 
-FXTPIO_READ -	Reads a file from a tape--called from FXTAPEREAD.
-FXTPIO_WRITE  -	Writes a file to a tape--called from FXTAPEWRITE.
-REWIND - Unix emulation of intrinsic IDL VMS REWIND command 
-SKIPF - Unix emulation of intrinsic IDL VMS SKIPF command  
-TAPRD - Unix emulation of intrinsic IDL VMS TAPRD command  
-TAPWRT - Unix emulation of intrinsic IDL VMS TAPWRT command 
-WEOF - Unix emulation of intrinsic IDL VMS WEOF command  
-TINIT - Position a tape between final double EOF for appending new files
-
-----------------------------------------------------------------------------
 TV Display Procedures                    in pro/tv                   
 ___________
 -----------
@@ -494,6 +493,7 @@ BOOST_ARRAY - Append one array onto another, adjusting dimensions if necessary
 BREAK_PATH() - break up a !PATH-like string into individual directories
 BSORT() - Like the IDL SORT function but subscript order is maintained when
         value are equal -- like a bubble sort.
+CHECKSUM32 - Compute the 32bit checksum of an array (ones-complement arithmetic)
 CIRRANGE - Force an angle to be in the range 0 to 360 (or 0 to 2*!PI).
 CONCAT_DIR - concatenate directory and file name for current OS
 CONV_UNIX_VAX - Convert IEEE datatype to VMS datatypes
@@ -509,6 +509,7 @@ FINDPRO - Find all occurrences of a procedure in one's !PATH
 FIND_ALL_DIR - Find all directories under a specified directory
 FIND_WITH_DEF - Search for files with default path and extension
 FORPRINT -Print a set of vectors by looping over each index value
+FSTRING - Wrapper to STRING function to get around 1024 element formatted limit 
 GETFILES -Interactively specify a list of file numbers.
 GETLOG() - Format the input name as a logical directory in the host OS
 GETOPT() -  Parse a user supplied string into numeric value(s).
@@ -526,6 +527,7 @@ MAKE_2D - Change from 1-D indexing to 2-D indexing
 MATCH -   Find the subscripts where the values of two vectors match.
 MRD_SKIP - Skip a number of bytes from current location in a file or a Unix pipe
 MINMAX() -  Return the min and max of an array in an 2 element vector
+N_BYTES() - Return the number of bytes in an IDL variable
 NINT() - Like intrinsic ROUND() function but returns integer instead of long
 NULLTRIM() -Delete all characters after, and including, the the first null
           byte(0).  Called by TAB_PUT.
@@ -538,8 +540,8 @@ POLREC - Convert from polar to rectangular coordinates (in /jhuapl)
 PRODUCT() - Return the product of all the elements of an array.
 QGET_STRING() - Read a string (eg. password) from the keyboard without echoing it
 RDFLOAT - Quickly read an ASCII file with columns of data into IDL vectors
-READCOL - Read a file of free-format  ASCII data into IDL vectors
-READFMT - Quickly read a file of fixed-format ASCII data into IDL vectors
+READCOL - Read a file of free-format  ASCII columns into IDL vectors
+READFMT - Quickly read a file of fixed-format ASCII columns into IDL vectors
 READ_KEY() - Like GET_KBRD but returns a code for escape sequences.
 RECPOL - Convert from rectangular to polar coordinates (in /jhuapl)
 REMCHAR - Remove all appearances of a character from a string.
@@ -560,6 +562,7 @@ TEXTCLOSE - Close a file that had been opened by TEXTOPEN.
 TRIM() - Convert numbers to strings, without trailing zeros
 TO_HEX()    - Translate a decimal integer to a hex string.  Called by AIPSNAME.
 VALID_NUM() - Determine if a string is a valid number (cf. STRNUMBER)
+VALUE_LOCATE() - Emulate intrinsic VALUE_LOCATE function for V5.2 & earlier
 VECT() - Display a set of numbers to a string with delimiters
 WHERENAN() - Find points equal to IEEE NaN (not a number) values
 WHERE_NEGZERO() - Find locations of IEEE -0.0 values

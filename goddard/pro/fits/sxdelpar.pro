@@ -41,7 +41,7 @@ pro sxdelpar, h, parname
 
  s = size(parname) & ndim = s[0] & type = s[ndim+1]
 
- if type NE 7 then message,'Keyword name(s) must a string or string array'
+ if type NE 7 then message,'Keyword name(s) must be a string or string array'
 
  num = N_elements( parname )
  par = strtrim( strupcase(parname),2 ) 

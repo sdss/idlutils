@@ -33,6 +33,7 @@ function sunsymbol
 ;		the circle
 ;	(2) SUNSYMBOL() includes subscript output positioning commands in the 
 ;		output string.
+;       (3) True type fonts (!p.font = 1) are not supported
 ; REVISION HISTORY:
 ;	Written,  W. Landsman,    HSTX          April, 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997

@@ -21,7 +21,7 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 ;               If TEXTOUT is not supplied, then the (non-standard) system 
 ;               variable !TEXTOUT is used.
 ;
-;       STDOUT - if this keyword is set and non-zero, then the standard output
+;       /STDOUT - if this keyword is set and non-zero, then the standard output
 ;               (unit = -1) is used for TEXTOUT=1 or TEXTOUT=2.   The use
 ;               of STDOUT has  2 possible advantages:
 ;               (1) the output will appear in a journal file
@@ -75,6 +75,7 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
 ;       added textout=7 option, D. Lindler, July, 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Exit with RETURN instead of RETALL  W. Landsman  June 1999
+;       In IDL V5.4 filepath(/TERMINAL) not allowed in the IDLDE WL August 2001
 ;-
 ;-----------------------------------------------------------
   ;
@@ -107,7 +108,8 @@ PRO TEXTOPEN,PROGRAM,TEXTOUT=TEXTOUT, STDOUT = STDOUT
      return
   end
    stndout = fstat(-1)
-   isatty = (stndout.isatty) and (not keyword_set(STDOUT))
+   isatty = (stndout.isatty) and (not stndout.isagui) and $
+             (not keyword_set(STDOUT))
 
    if isatty or (text_out GT 2) then begin 
 

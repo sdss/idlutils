@@ -36,6 +36,8 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;     ProList - The list (full pathnames) of procedures found.  Useful if you
 ;             are looking for the name of a procedure using wildcards.
 ;
+;     The order of the names in DirList and ProList is identical to the order
+;     in which the procedure name appears in the !PATH
 ; PROCEDURE:
 ;     The system variable !PATH is parsed using EXPAND_PATH into individual 
 ;     libraries or directories.   Each library or directory is then 
@@ -77,7 +79,8 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;       Don't include duplicate directories  in !PATH  WL   May 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use ROUTINE_INFO instead of undocumented ROUTINE_NAMES W.L. October 1998
-;       Also check for save sets   W. Landsman  October 1999    
+;       Also check for save sets   W. Landsman  October 1999 
+;       Force lower case check for VMS  W. Landsman January 2000   
 ;
 ;-
 ;/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -155,10 +158,10 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
          if ((ext EQ 'pro') or (ext EQ 'sav')) then begin
          found = 1b
          profound = prosfound[j]
-         if ext EQ 'pro' then $  
+         if strlowcase(ext) EQ 'pro' then $  
            message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
           'Procedure ' + fname + ' found in directory  ' + disk + Dir $
-         else if ext EQ 'sav' then $ 
+         else if strlowcase(ext) EQ 'sav' then $ 
      message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
           'Save set ' + fname + '.sav found in directory  ' + disk + Dir
          endif

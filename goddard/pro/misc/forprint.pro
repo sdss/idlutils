@@ -1,87 +1,95 @@
 pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
       v15,v16,v17,v18,TEXTOUT = textout, FORMAT = format, SILENT = SILENT, $ 
-      STARTLINE = startline, NUMLINE = numline
+      STARTLINE = startline, NUMLINE = numline, COMMENT = comment
 ;+
 ; NAME:
-;	FORPRINT
-; PURPOSE
-;	Print a set of vectors by looping over each index value.
+;       FORPRINT
+; PURPOSE:
+;       Print a set of vectors by looping over each index value.
+;
 ; EXPLANATION:
-;	If W and F are equal length vectors, then the statement
-;		IDL> forprint, w, f   
-;	is equivalent to 
-;		IDL> for i = 0L, N_elements(w)-1 do print,w[i],f[i]    
+;       If W and F are equal length vectors, then the statement
+;               IDL> forprint, w, f   
+;       is equivalent to 
+;               IDL> for i = 0L, N_elements(w)-1 do print,w[i],f[i]    
 ;
 ; CALLING SEQUENCE:
-;	forprint, v1,[ v2, v3, v4,....v18, FORMAT = , TEXTOUT = ,STARTLINE =,
-;					   NUMLINE =, /SILENT ] 
+;       forprint, v1,[ v2, v3, v4,....v18, FORMAT = , TEXTOUT = ,STARTLINE =,
+;                                          NUMLINE =, /SILENT, COMMENT= ] 
 ;
 ; INPUTS:
-;	V1,V2,...V18 - Arbitary IDL vectors.  If the vectors are not of
-;		equal length then the number of rows printed will be equal
-;		to the length of the smallest vector.   Up to 18 vectors
-;		can be supplied.
+;       V1,V2,...V18 - Arbitary IDL vectors.  If the vectors are not of
+;               equal length then the number of rows printed will be equal
+;               to the length of the smallest vector.   Up to 18 vectors
+;               can be supplied.
 ;
 ; OPTIONAL KEYWORD INPUTS:
 ;
-;	TEXTOUT - Controls print output device, defaults to !TEXTOUT
+;       TEXTOUT - Controls print output device, defaults to !TEXTOUT
 ;
-;		textout=1	TERMINAL using /more option
-;		textout=2	TERMINAL without /more option
-;		textout=3	<program>.prt
-;		textout=4	laser.tmp
-;		textout=5      user must open file
-;		textout = filename (default extension of .prt)
-;		textout=7	Append to <program>.prt file if it exists
+;               textout=1       TERMINAL using /more option if available
+;               textout=2       TERMINAL without /more option
+;               textout=3       file 'forprint.prt'
+;               textout=4       file 'laser.tmp' 
+;               textout=5      user must open file
+;               textout =      filename (default extension of .prt)
+;               textout=7       Append to <program>.prt file if it exists
 ;
-;	FORMAT - Scalar format string as in the PRINT procedure.  The use
-;		of outer parenthesis is optional.   Ex. - format="(F10.3,I7)"
-;		This program will automatically remove a leading "$" from
-;		incoming format statments. Ex. - "$(I4)" would become "(I4)".
-;	STARTLINE - Integer scalar specifying the first line in the arrays
-;		to print.   Default is STARTLINE = 1, i.e. start at the
-;		beginning of the arrays.
-;	SILENT - Normally, with a hardcopy output (TEXTOUT > 2), FORPRINT will
-;		add a time stamp to the output file.    If the SILENT keyword
-;		is set and non-zero, then this time stamp is suppressed.
+;       COMMENT - String to write as the first line of output file if 
+;                TEXTOUT > 2.    By default, FORPRINT will write a time stamp
+;                on the first line.   Use /SILENT if you don't want FORPRINT
+;                to write anything in the output file.
+;       FORMAT - Scalar format string as in the PRINT procedure.  The use
+;               of outer parenthesis is optional.   Ex. - format="(F10.3,I7)"
+;               This program will automatically remove a leading "$" from
+;               incoming format statments. Ex. - "$(I4)" would become "(I4)".
+;       STARTLINE - Integer scalar specifying the first line in the arrays
+;               to print.   Default is STARTLINE = 1, i.e. start at the
+;               beginning of the arrays.
+;       /SILENT - Normally, with a hardcopy output (TEXTOUT > 2), FORPRINT will
+;               add a time stamp to the output file.    If the SILENT keyword
+;               is set and non-zero, then this time stamp is suppressed.
 ; OUTPUTS:
-;	None
+;       None
 ; SYSTEM VARIABLES:
-;	If keyword TEXTOUT is not used, the default is the nonstandard 
-;	keyword !TEXTOUT.    If you want to use FORPRINT to write more than 
-;	once to the same file, or use a different file name then set 
-;	TEXTOUT=5, and open and close then file yourself (see documentation 
-;	of TEXTOPEN for more info).
-;	
-;	One way to add the non-standard system variables !TEXTOUT and !TEXTUNIT
-;	is to use the procedure ASTROLIB
+;       If keyword TEXTOUT is not used, the default is the nonstandard 
+;       keyword !TEXTOUT.    If you want to use FORPRINT to write more than 
+;       once to the same file, or use a different file name then set 
+;       TEXTOUT=5, and open and close then file yourself (see documentation 
+;       of TEXTOPEN for more info).
+;       
+;       One way to add the non-standard system variables !TEXTOUT and !TEXTUNIT
+;       is to use the procedure ASTROLIB
 ; EXAMPLE:
-;	Suppose W,F, and E are the wavelength, flux, and epsilon vectors for
-;	an IUE spectrum.   Print these values to a file 'output.dat' in a nice 
-;	format.
+;       Suppose W,F, and E are the wavelength, flux, and epsilon vectors for
+;       a spectrum.   Print these values to a file 'output.dat' in a nice 
+;       format.
 ;
-;	IDL> fmt = '(F10.3,1PE12.2,I7)'
-;	IDL> forprint, F = fmt, w, f, e, TEXT = 'output.dat'
+;       IDL> fmt = '(F10.3,1PE12.2,I7)'
+;       IDL> forprint, F = fmt, w, f, e, TEXT = 'output.dat'
 ;
 ; PROCEDURES CALLED:
-;	DATATYPE(), TEXTOPEN, TEXTCLOSE
+;       TEXTOPEN, TEXTCLOSE
 ; REVISION HISTORY:
-;	Written    W. Landsman             April, 1989
-;	Keywords textout and format added, J. Isensee, July, 1990
-;	Made use of parenthesis in FORMAT optional  W. Landsman  May 1992
-;	Added STARTLINE keyword W. Landsman    November 1992
-;	Set up so can handle 18 input vectors. J. Isensee, HSTX Corp. July 1993
-;	Handle string value of TEXTOUT   W. Landsman, HSTX September 1993
-;	Added NUMLINE keyword            W. Landsman, HSTX February 1996
-;	Added SILENT keyword             W. Landsman, RSTX, April 1998
-;	Converted to IDL V5.0            W. Landsman, RSTX, April, 1998
+;       Written    W. Landsman             April, 1989
+;       Keywords textout and format added, J. Isensee, July, 1990
+;       Made use of parenthesis in FORMAT optional  W. Landsman  May 1992
+;       Added STARTLINE keyword W. Landsman    November 1992
+;       Set up so can handle 18 input vectors. J. Isensee, HSTX Corp. July 1993
+;       Handle string value of TEXTOUT   W. Landsman, HSTX September 1993
+;       Added NUMLINE keyword            W. Landsman, HSTX February 1996
+;       Added SILENT keyword             W. Landsman, RSTX, April 1998
+;       Converted to IDL V5.0            W. Landsman, RSTX, April, 1998
+;       Much faster printing to a file   W. Landsman, RITSS, August, 2001
+;       Use SIZE(/TNAME) instead of DATATYPE() W. Landsman SSAI October 2001
+;       Fix skipping of first line bug introduced Aug 2001  W. Landsman Nov2001
 ;-            
   On_error,2                               ;Return to caller
 
   npar = N_params()
   if npar EQ 0 then begin
       print,'Syntax - FORPRINT, v1, [ v2, v3,...v18, FORMAT =, /SILENT, '
-      print,'                         STARTLINE = , NUMLINE =, TEXTOUT =]'
+      print,'               COMMENT =, STARTLINE = , NUMLINE =, TEXTOUT =]'
       return
   endif
 
@@ -127,15 +135,29 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
 
 ; Use default output dev.
    if not keyword_set( TEXTOUT ) then textout = !TEXTOUT 
-   if datatype( textout) EQ 'STR' then text_out = 6  $      ;make numeric
+   if size( textout,/TNAME) EQ 'STRING' then text_out = 6  $      ;make numeric
                                   else text_out = textout
 
    textopen,'FORPRINT',TEXTOUT=textout
-   if ( text_out GT 2 ) and (not keyword_set(SILENT)) then $
-	printf,!TEXTUNIT,'FORPRINT: ',systime()
+   if ( text_out GT 2 ) and (not keyword_set(SILENT)) then begin
+       if N_elements(comment) GT 0 then $
+        printf,!TEXTUNIT,comment else $
+        printf,!TEXTUNIT,'FORPRINT: ',systime()
+  endif 
 
+; Determine whether we are printing to a terminal with /MORE capabilities.  If
+; we are then we need to test for the user response at each pause.   Otherwise,
+; we can print using a single EXECUTE call.
+
+   more_term = (text_out EQ 1)          
+   if more_term then begin
+        stdout = fstat(-1)
+        more_term =  stdout.isatty and (not stdout.isagui)
+   endif
+ 
    if fmt EQ "F" then begin            ;Use default formats
 
+   if more_term then begin      
       for i = startline-1, npts-1 do begin 
 
           test = execute('printf,!TEXTUNIT,' + str) 
@@ -143,9 +165,13 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
                if !ERR EQ 1 then goto,DONE
 
       endfor
+   endif else test = $
+          execute('for i=startline-1,npts-1 do printf,!TEXTUNIT,' + str)
 
    endif else begin                    ;User specified format
  
+     if more_term then begin
+
       for i = startline-1, npts-1 do begin 
 
          test = execute( 'printf, !TEXTUNIT,  FORMAT=frmt,' + str ) 
@@ -153,6 +179,10 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
                if !ERR EQ 1 then goto,DONE
 
       endfor
+
+    endif else test = $
+        execute('for i=startline-1,npts-1 do printf,!TEXTUNIT,FORMAT=frmt,'+str)
+        
 
   endelse
 

@@ -43,8 +43,9 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ;               page eject, set forms = 0.   This is the default for output
 ;               to the terminal.
 ;
-;       TEXTOUT - Integer (0-7) used to determine output device (see TEXTOPEN
-;       for more info).  If not present, the !TEXTOUT system variable is used.
+;       TEXTOUT - Integer (0-7) or string used to determine output device (see 
+;               TEXTOPEN for more info).  If not present, the !TEXTOUT system 
+;               variable is used.
 ;               textout=0       Nowhere
 ;               textout=1       if a TTY then TERMINAL using /more option
 ;                                   otherwise standard (Unit=-1) output
@@ -74,7 +75,9 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ; NOTES:
 ;       Users may want to adjust the default lines_per_page value given at
 ;       the beginning of the program for their own particular printer.
-;
+; PROCEDURE CALLS:
+;       db_info(), db_item_info(), dbtitle(), dbxval(), textopen, textclose
+;       zparcheck
 ; HISTORY:
 ;       version 2  D. Lindler  Nov. 1987 (new db format)
 ;       Test if user pressed 'Q' in response to /MORE W. Landsman  Sep 1991
@@ -86,6 +89,11 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Removed STRTRIM in table format output to handle byte values April 1999
 ;       Fixed occasional problem when /NOHEADER is supplied   Sep. 1999
+;       Only byteswap when necessary for improved performance  Feb. 2000
+;       Change loop index for table listing to type LONG  W. Landsman Aug 2000
+;       Entry vector can be any integer type   W. Landsman Aug. 2001
+;       Replace DATATYPE() with size(/TNAME)   W. Landsman  Nov. 2001
+;       No page eject for TEXTOUT =5           W. Landsman  Nov. 2001
 ;-
 ;
  On_error,2                                ;Return to caller
@@ -97,7 +105,8 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
  endif
 
  lines_per_page = 47                 ;Default # of lines per page
- zparcheck, 'DBPRINT', list, 1, [1,2,3,4,5], [0,1], 'Entry List Vector'
+ zparcheck, 'DBPRINT', list, 1, [1,2,3,4,5,12,13,14,15], [0,1],  $
+            'Entry List Vector'
 
  catch, error_status
  if error_status NE 0 then begin 
@@ -116,6 +125,12 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
  if max(list) GT nentry then message, dbname + $
      ' entry numbers must be between 1 and ' + strtrim( nentry, 2 )
   nv = N_elements(list)                 ;number of entries requested
+
+; No need for byteswapping if data is not external or it is a big endian machine
+
+  convert= db_info('EXTERNAL')
+  noconvert = 1 - convert[0]
+  if convert[0] then noconvert = is_ieee_big() 
 
 ; Determine items to print
 
@@ -139,13 +154,13 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
  if not keyword_set(TEXTOUT) then textout = !textout  ;use default output dev.
 
  textopen, dbname, TEXTOUT = textout
- if datatype(TEXTOUT) EQ 'STR' then text_out = 5 else text_out = textout
+ if size(TEXTOUT,/TNAME) EQ 'STRING' then text_out = 5 else text_out = textout
  if (nitems EQ qnumit)  then begin
 
 ; Create table listing of each item specified. -------------------------
 
- for i = 0, nv-1 do begin
-      dbrd, list[i], entry                         ; read an entry.
+ for i = 0L, nv-1 do begin
+      dbrd, list[i], entry, noconvert = noconvert   ; read an entry.
       printf, !TEXTUNIT, ' '                        ; print  blank line.
 
 ; display name and value for each entry 
@@ -208,10 +223,11 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 
 ; Loop on entries
 
+ hardcopy = (text_out GE 2) and (text_out NE 5)     ;Keep track of page eject?
  if ( N_elements(forms) GT 0 ) then begin
         if ( forms GT 0 ) then pcount = forms $ ;lines per page
         else pcount = N_elements(list)          ;no page breaks
- endif else if text_out LE 2 then pcount = N_elements(list) $
+ endif else if not hardcopy then pcount = N_elements(list) $
       else pcount = lines_per_page                ;Portrait form default
  limit = pcount - 1
 
@@ -221,7 +237,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 
         if pcount GT limit then begin           ;new page?
                 pcount = 0
-                if text_out GT 2 then $
+                if hardcopy then $
                             printf,!textunit,string(byte(12))   $;eject
                        else printf,!textunit,' '
                 printf,!textunit,title                  ;print title
@@ -233,7 +249,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
         endif
 
     endif
-        dbrd, list[j], entry                    ;read entry
+        dbrd, list[j], entry, noconvert = noconvert        ;read entry
         ;
         ; loop on items
         ;

@@ -1,12 +1,12 @@
 pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
 ;+
-; NAME
+; NAME:
 ;	TVLIST
 ; PURPOSE:
 ;	Cursor controlled listing of image pixel values in a window. 
 ;
 ; CALLING SEQUENCE:
-;	TVLIST, [image, dx, dy, TEXTOUT =, OFFSET = , ZOOM = ]
+;	TVLIST, [image, dx, dy, TEXTOUT=, OFFSET= , ZOOM= ]
 ;
 ; OPTIONAL INPUTS:
 ;	IMAGE - Array containing the image currently displayed on the TV.
@@ -65,8 +65,10 @@ pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
 ;	TVLIST may not be able to correctly format all pixel values if the
 ;	dynamic range near the cursor position is very large.
 ;
+;       Probably does not work under Mac IDL which does not allow the cursor
+;       to be positioned with TVCRS
 ; PROCEDURES CALLED:
-;	F_FORMAT(), UNZOOM_XY
+;	IMLIST, UNZOOM_XY
 ; REVISION HISTORY:
 ;	Written by rhc, SASC Tech, 3/14/86.
 ;	Added textout keyword option, J. Isensee, July, 1990
@@ -77,25 +79,25 @@ pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
 ;		W. Landsman  April, 1996
 ;	Added check for valid dx value  W. Landsman   Mar 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Major rewrite to call IMLIST, recognize new integer data types
+;                                           W. Landsman Jan 2000
+;       Remove all calls to !TEXTUNIT   W. Landsman   Sep 2000
 ;-
  On_error,2
 
  npar = N_params()
 
- if not keyword_set(TEXTOUT) then textout = !TEXTOUT ;Use default
  unzoom = (N_elements(offset) NE 0) or (N_elements(zoom) NE 0)
 
  if npar GE 2 then $
     if N_elements( dx) NE 1 then $
           message, 'ERROR - Second parameter (format width) must be a scalar'
 
- textopen,'TVLIST', TEXTOUT = textout, /STDOUT        ;Use standard output
-
  if npar EQ 0 then begin 	;Read pixel values from TV
 
         if (!D.FLAGS and 128) NE 128 then message, $
              'ERROR -- Unable to read pixels from current device ' + !D.NAME
-	printf,!TEXTUNIT,'No image array supplied, pixel values read from TV' 
+	message,'No image array supplied, pixel values read from TV',/INF 
 	type = 1		;Byte format
 
  endif else begin
@@ -106,14 +108,6 @@ pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
     	type = sz[sz[0]+1]	     ;Byte or Integer image?
 
  endelse 
-
- if textout GE 3 then begin   ;Direct output to a disk file
-	printf,!TEXTUNIT,'TVLIST: '+strmid(systime(),4,20)
-        descr = ''
-	read,'Enter a brief description to be written to disk: ',descr
-        printf,!TEXTUNIT,descr
-	printf,!TEXTUNIT,' '
- endif                 
 
  if (!D.FLAGS AND 256) EQ 256 THEN wshow,!D.WINDOW
 
@@ -142,7 +136,6 @@ pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
 	yim = fix(yim+0.5)
  endif else cursor, xim, yim, /WAIT, /DEVICE
 
-
  if npar LT 3 then dy = dx
 ; Don't try to print outside the image
   xmax = (xim + dx/2) < xdim
@@ -157,67 +150,15 @@ pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
  if ymin GE ymax then $
     message,'ERROR - The cursor is off the image in the y-direction'
 
- fmtsz = (80-4)/dx
- sfmt = strtrim(fmtsz,2)
- cdx = string(dx,'(i2)')
- flt_to_int = 0                   ;Convert floating point to integer?
-
-; For Integer and Byte datatypes we already know the best output format
-; For other datatypes the function F_FORMAT is used to get the best format
-; If all values of a LONG image can be expressed with 5 characters 
-; (-9999 < IM < 99999) then treat as an integer image.
-
-REDO:
- case 1 of                                    ;Get proper print format
-	type EQ 1 or (npar EQ 0):  fmt = '(i4,' + cdx + 'i' + sfmt + ')'
-	type EQ 2:  fmt = '(i4,1x,' + cdx + 'i' + sfmt + ')'
-	(type EQ 4) or (type EQ 3) or (type EQ 5):  begin
-		temp = image[xmin:xmax,ymin:ymax]
-		minval = min(temp, max=maxval) 
-		if type EQ 3 then if (maxval LT 99999) and (minval GT -9999) $
-		then begin
-			type = 2
-			goto, REDO
-		endif
-		realfmt =  f_format(minval,maxval,factor,fmtsz)
-	        if strmid(realfmt,0,1) EQ 'I' then flt_to_int = 1
-                fmt = '(i4,1x,' + cdx + realfmt + ')'
-		if factor NE 1 then $                                   
-       printf,!TEXTUNIT,form='(/,A,E7.1,/)',' TVLIST: Scale Factor ',factor
-      end
- endcase 
-; Compute and print x-indices above array
 
  if npar EQ 0 then begin 
-    xmin = xmin - (xmin mod 2)
-    dx = dx - (dx mod 2)
+    image = tvrd( xmin,ymin,dx,dy)
+    xim = dx/2
+    yim = dy/2
+    zoffset = [xmin,ymin]
  endif
 
- index = indgen(dx)+ xmin
-
- if type NE 1 then $
-     printf,!TEXTUNIT,form='(A,'+ cdx + 'i' + sfmt + ')', ' col ', index  $
- else printf,!TEXTUNIT,form='(A,'+ cdx + 'i' + sfmt + ')', ' col', index 
- printf,!TEXTUNIT,' row'
-
- if npar EQ 0 then begin 
-    row = fix( tvrd( xmin,ymin,dx,dy) )
-    for i = dy-1,0,-1 do printf, !TEXTUNIT, FORM=fmt, i+ymin, row[*,i]
-
- endif else begin
-
- for i = ymax,ymin,-1 do begin	;list pixel values
-
-        row = image[i*sz[1]+xmin:i*sz[1]+xmax]
-	if type EQ 1 then row = fix(row)             ;Convert byte array
-	if (type EQ 4) or (type EQ 3) or (type EQ 5) then row = row/factor
-	if flt_to_int then row = round( row )
-        printf,!TEXTUNIT, FORM=fmt, i, row
- endfor
-
- endelse
-
- textclose,TEXTOUT = textout
-
+ imlist,image,xim,yim,dx=dx,dy=dy,textout=textout,offset=zoffset
+ 
  return
  end

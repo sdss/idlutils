@@ -1,8 +1,6 @@
 	FUNCTION FXPARPOS, KEYWRD, IEND, BEFORE=BEFORE, AFTER=AFTER
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXPARPOS()
 ; Purpose     : 
 ;	Finds position to insert record into FITS header.

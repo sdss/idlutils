@@ -2,7 +2,7 @@ pro dbdelete, list, name, DEBUG = debug
 ;+
 ; NAME:
 ;	DBDELETE
-; PURPOSE
+; PURPOSE:
 ;	Deletes specified entries from data base
 ;
 ; CALLING SEQUENCE:

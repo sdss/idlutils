@@ -68,6 +68,7 @@
 ;	mod Mar.97 by F.V. do not pass the SELECT_TAGS keyword in recursion,
 ;		and check validity of INDEX_FROM and INDEX_TO in more detail.
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Use long integers W. Landsman May 2001  
 ;-
 
 pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $

@@ -1,4 +1,4 @@
-pro hrotate, oldim, oldhd, newim, newhd, direction      
+pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg     
 ;+
 ; NAME:
 ;     HROTATE
@@ -37,6 +37,11 @@ pro hrotate, oldim, oldhd, newim, newhd, direction
 ;               will modify the input parameters OLDIM and OLDHD
 ;               to contain the rotated image and updated header.
 ;
+; OPTIONAL KEYWORD OUTPUT:
+;     ERRMSG - If this keyword is supplied, then any error mesasges will be
+;               returned to the user in this parameter rather than depending on
+;               on the MESSAGE routine in IDL.   If no errors are encountered
+;               then a null string is returned.               
 ; EXAMPLE:
 ;     Rotate an image exactly 90 degrees counterclockwise and update the
 ;     FITS image array and header. 
@@ -57,6 +62,8 @@ pro hrotate, oldim, oldhd, newim, newhd, direction
 ;     Work for non-square images   W. Landsman   June 1998 Raytheon STX
 ;     Converted to IDL V5.0  W. Landsman     June 1998
 ;     Fix for different plate scales, and CROTA2 defined, November 1998  
+;     Added ERRMSG, Use double precision formatting, W. Landsman April 2000
+;     Consistent conversion between CROTA and CD matrix W. Landsman October 2000
 ;- 
  On_error,2
  npar = N_params()
@@ -64,7 +71,7 @@ pro hrotate, oldim, oldhd, newim, newhd, direction
  if (npar NE 3) and (npar NE 5) then begin      ;Check # of parameters
   print,'Syntax - HROTATE, oldim, oldhd, newim, newhd, direction'
   print,'                            or '
-  print,'         HROTATE, oldim, oldhd, direction
+  print,'         HROTATE, oldim, oldhd, direction, {ERRMSG = ]'
   return
  endif 
 
@@ -76,8 +83,20 @@ pro hrotate, oldim, oldhd, newim, newhd, direction
 
 ;                               Check that input header matches input image
 
- check_FITS, oldim, oldhd, dimen, /NOTYPE
-  if !ERR EQ -1 then message,'ERROR - Invalid image or FITS header array'
+ save_err = arg_present(errmsg)     ;Does user want error msgs returned?
+;                                    Check for valid 2-D image & header
+ check_FITS, oldim, oldhd, dimen, /NOTYPE, ERRMSG = errmsg
+  if errmsg NE '' then begin
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+  endif
+
+  if N_elements(dimen) NE 2 then begin 
+        errmsg =  'ERROR - Input image array must be 2-dimensional'
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+ endif
+
   if N_elements(dimen) NE 2 then message, $
      'ERROR - Input image array must be 2-dimensional'
   xsize = dimen[0]  &  ysize = dimen[1]
@@ -151,27 +170,25 @@ pro hrotate, oldim, oldhd, newim, newhd, direction
 
     if noparams EQ 0 then begin
 
-        sxaddpar, newhd, 'CD001001', newcd[0,0], format='(E14.7)' 
-        sxaddpar, newhd, 'CD001002', newcd[0,1], format='(E14.7)' 
-        sxaddpar, newhd, 'CD002001', newcd[1,0], format='(E14.7)'
-        sxaddpar, newhd, 'CD002002', newcd[1,1], format='(E14.7)'
+        sxaddpar, newhd, 'CD001001', newcd[0,0] 
+        sxaddpar, newhd, 'CD001002', newcd[0,1] 
+        sxaddpar, newhd, 'CD002001', newcd[1,0]
+        sxaddpar, newhd, 'CD002002', newcd[1,1]
                                   
     endif else if noparams EQ 2 then begin
 
-        sxaddpar, newhd, 'CD1_1', newcd[0,0], format='(E14.7)' 
-        sxaddpar, newhd, 'CD1_2', newcd[0,1], format='(E14.7)' 
-        sxaddpar, newhd, 'CD2_1', newcd[1,0], format='(E14.7)'
-        sxaddpar, newhd, 'CD2_2', newcd[1,1], format='(E14.7)'
+        sxaddpar, newhd, 'CD1_1', newcd[0,0] 
+        sxaddpar, newhd, 'CD1_2', newcd[0,1] 
+        sxaddpar, newhd, 'CD2_1', newcd[1,0]
+        sxaddpar, newhd, 'CD2_2', newcd[1,1]
 
      endif else begin
         det = newcd[0,0]*newcd[1,1] - newcd[0,1]*newcd[1,0]
          if det lt 0 then sgn = -1 else sgn = 1
          cdelt[0] = sgn*sqrt(newcd[0,0]^2 + newcd[1,0]^2)
          cdelt[1] =     sqrt(newcd[0,1]^2 + newcd[1,1]^2)
-         if cdelt[0] gt 0 then sgn1 = 1 else sgn1 = -1  
-       crota  = atan(-newcd[1,0],sgn1*newcd[0,0] )*!RADEG
-       if dirpar GE 4 then crota = -crota
-       sxaddpar, newhd,'CROTA1', crota
+        crota  = atan(-newcd[1,0], newcd[1,1] )*180.0/!DPI
+        sxaddpar, newhd,'CROTA1', crota
         sxaddpar, newhd,'CROTA2', crota
         sxaddpar,newhd,'CDELT1',cdelt[0]
         sxaddpar,newhd,'CDELT2',cdelt[1]

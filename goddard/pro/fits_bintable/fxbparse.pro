@@ -1,8 +1,6 @@
 	PRO FXBPARSE, ILUN, HEADER, NO_TDIM=NO_TDIM, ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBPARSE
 ; Purpose     : 
 ;	Parse the binary table extension header.

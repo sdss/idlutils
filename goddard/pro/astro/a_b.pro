@@ -8,8 +8,8 @@ function A_b,l,b
 ;     The predicted B band extinction is computed as a function of  
 ;     Galactic position  using the 21 parameter function given by
 ;     deVaucouleurs in the 2nd Reference Catalog of Galaxies (RC2).   Note 
-;     that this formula is no longer used in the RC3 and that reddenings
-;     are instead obtained from the Burstein-Heiles 21 cm maps.
+;     that this formula was not used for the RC3 and that reddenings
+;     were instead obtained from the Burstein-Heiles 21 cm maps.
 ;
 ; CALLING SEQUENCE:
 ;     result = A_b( l2, b2)

@@ -22,6 +22,7 @@ pro GSSSadxy,gsa,ra,dec,x,y, PRINT = print
 ;       X - the corresponding X pixel coordinate(s), double precision
 ;       Y - the corresponding Y pixel coordinate(s), double precision
 ;
+;       X and Y will be in IDL convention (first pixel 0,0)
 ; EXAMPLE:
 ;       Given a FITS header, hdr, from the STScI Guidestar Survey, determine
 ;       the X,Y coordinates of 3C 273 (RA = 12 29 6.7  +02 03 08)
@@ -31,7 +32,7 @@ pro GSSSadxy,gsa,ra,dec,x,y, PRINT = print
 ;
 ; NOTES:
 ;       For most purpose users can simply use ADXY, which will call GSSSADXY
-;       if it is passed a GSS header.
+;       if it is passed a GSSS header.
 ;
 ; PROCEDURES CALLED:
 ;       ASTDISP - Print RA, Dec in standard format
@@ -48,8 +49,8 @@ pro GSSSadxy,gsa,ra,dec,x,y, PRINT = print
   On_error,2
   arg = N_params()
   if (arg lt 5) then begin
-    print,'Syntax - GSSSADXY, GSSS_Astrom_struct, ra, dec, x, y, print_flag
-    print,'e.g.: IDL> GSSSADXY, gsa, ra, dec, x, y, 1
+    print,'Syntax - GSSSADXY, GSSS_Astrom_struct, ra, dec, x, y, print_flag'
+    print,'e.g.: IDL> GSSSADXY, gsa, ra, dec, x, y, 1'
     return
     endif
 

@@ -21,7 +21,7 @@
 ;
 ; OUTPUTS:
 ;	Function value returned = double real scalar, decimal equivalent of
-;	input sexigesimal quantity.  A minus sign on any element
+;	input sexigesimal quantity.  A minus sign on any nonzero element
 ;	of the input vector causes all the elements to be taken as
 ;	< 0.
 ;

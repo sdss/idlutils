@@ -1,8 +1,6 @@
 	FUNCTION FXBCOLNUM, UNIT, COL, ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBCOLNUM()
 ; Purpose     : 
 ;	Returns a binary table column number.

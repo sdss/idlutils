@@ -26,8 +26,10 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
 ;	X     - row position in pixels, same number of elements as A and D
 ;	Y     - column position in pixels
 ;
+;       X and Y will be in standard IDL convention (first pixel is 0) and not
+;       the FITS convention (first pixel is 1).
 ; OPTIONAL KEYWORD INPUT:
-;	PRINT - If this keyword is set and non-zero, then results are displayed
+;	/PRINT - If this keyword is set and non-zero, then results are displayed
 ;		at the terminal.
 ;
 ; OPERATIONAL NOTES:
@@ -51,8 +53,8 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
  npar = N_params()
 
  if ( npar EQ 0 ) then begin
-	print,'Syntax - adxy, hdr, [a, d, x, y ]
-        print,'If supplied, A and D must be in decimal DEGREES
+	print,'Syntax - adxy, hdr, [a, d, x, y ]'
+        print,'If supplied, A and D must be in decimal DEGREES'
 	return
  endif                                                                  
  
@@ -61,7 +63,7 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
  
  if npar lt 3 then begin
    RD: print,'Coordinates must be entered with either 2 or 6 parameters'
-   print,'Either RA,DEC or  HR,MIN,SEC,DEG,MIN,SEC'
+   print,'Either RA,DEC or  HR,MIN,SEC,DEG,MIN,SEC
    inp = ''
    read,'ADXY: Enter coordinates: ',inp
    radec = getopt(inp,'F')
@@ -87,9 +89,10 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
  if (npar lt 5) or keyword_set( PRINT ) then begin
 	npts = N_elements(a)
         fmt = '(2F9.4,A,2X,2F8.2)'
+        str = adstring(a,d,1)
 	print,'    RA       DEC       RA         DEC          X       Y'
 	for i = 0l, npts-1 do $
-	print,FORMAT = fmt, a[i], d[i], adstring( [a[i],d[i]], 1 ), x[i], y[i] 
+	print,FORMAT = fmt, a[i], d[i], str[i], x[i], y[i] 
   endif
  
  return

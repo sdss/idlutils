@@ -1,25 +1,25 @@
 pro precess_xyz,x,y,z,equinox1,equinox2
 ;+
-;NAME
+; NAME:
 ;	PRECESS_XYZ
 ;
-;PURPOSE:
+; PURPOSE:
 ;	Precess equatorial geocentric rectangular coordinates. 
 ;
-;CALLING SEQUENCE:
+; CALLING SEQUENCE:
 ;	precess_xyz, x, y, z, equinox1, equinox2
 ;
-;INPUT/OUTPUT:
+; INPUT/OUTPUT:
 ;	x,y,z: scalars or vectors giving heliocentric rectangular coordinates
 ;              THESE ARE CHANGED UPON RETURNING.
 ; INPUT:
-;	EQUINOX1: equinox of input coordinates
-;       EQUINOX2: equinox of output coordinates
+;	EQUINOX1: equinox of input coordinates, numeric scalar
+;       EQUINOX2: equinox of output coordinates, numeric scalar
 ;
-;OUTPUT:
+; OUTPUT:
 ;	x,y,z are changed upon return
 ;
-;NOTES:
+; NOTES:
 ;   The equatorial geocentric rectangular coords are converted
 ;      to RA and Dec, precessed in the normal way, then changed
 ;      back to x, y and z using unit vectors.
@@ -31,32 +31,28 @@ pro precess_xyz,x,y,z,equinox1,equinox2
 ;HISTORY:
 ;	Written by P. Plait/ACC March 24 1999 
 ;	   (unit vectors provided by D. Lindler)
-;
+;       Use /Radian call to PRECESS     W. Landsman     November 2000
+;       Use two parameter call to ATAN   W. Landsman    June 2001
 ;-
-
 ;check inputs
    if N_params() NE 5 then begin
-      print,'Syntax - precess_xyz,x,y,z,equinox1,equinox2
-      retall
+      print,'Syntax - PRECESS_XYZ,x,y,z,equinox1,equinox2'
+      return
    endif
 
-; make a double precision radian to degree converter
-   dtor = !dpi / 180.d0
+;take input coords and convert to ra and dec (in radians)
 
-;take input coords and convert to ra and dec. Note PRECESS
-;   routine takes input in decimal degrees.
-
-   ra = atan(y/x) / dtor
+   ra = atan(y,x)
    del = sqrt(x*x + y*y + z*z)  ;magnitude of distance to Sun
-   dec = asin(z/del)  / dtor
+   dec = asin(z/del) 
 
 ;   precess the ra and dec
-    precess, ra, dec, equinox1, equinox2
+    precess, ra, dec, equinox1, equinox2, /Radian
 
 ;convert back to x, y, z
-   xunit = cos(ra*dtor)*cos(dec*dtor)
-   yunit = sin(ra*dtor)*cos(dec*dtor)
-   zunit = sin(dec*dtor)
+   xunit = cos(ra)*cos(dec)
+   yunit = sin(ra)*cos(dec)
+   zunit = sin(dec)
 
    x = xunit * del
    y = yunit * del

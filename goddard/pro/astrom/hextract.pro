@@ -1,4 +1,5 @@
-pro hextract, oldim, oldhd, newim, newhd, x0, x1, y0, y1, SILENT = silent
+pro hextract, oldim, oldhd, newim, newhd, x0, x1, y0, y1, SILENT = silent, $
+    ERRMSG = errmsg
 ;+
 ; NAME:
 ;	HEXTRACT
@@ -10,7 +11,7 @@ pro hextract, oldim, oldhd, newim, newhd, x0, x1, y0, y1, SILENT = silent
 ; CALLING SEQUENCE:
 ;	HEXTRACT, Oldim, Oldhd, [ Newim, Newhd, x0, x1, y0, y1, /SILENT ]
 ;		or
-;	HEXTRACT, Oldim, Oldhd, [x0, x1, y0, y1, /SILENT ]	 
+;	HEXTRACT, Oldim, Oldhd, [x0, x1, y0, y1, /SILENT, ERRMSG =  ]	 
 ;
 ; INPUTS:
 ;	Oldim - the original image array
@@ -29,9 +30,15 @@ pro hextract, oldim, oldhd, newim, newhd, x0, x1, y0, y1, SILENT = silent
 ;		OLDIM and OLDHD to contain the subarray and updated header.
 ;
 ; OPTIONAL INPUT KEYWORD:
-;	SILENT - If set and non-zero, then a message describing the extraction
+;	/SILENT - If set and non-zero, then a message describing the extraction
 ;		is not printed at the terminal.   This message can also be 
 ;		suppressed by setting !QUIET.
+; OPTIONAL KEYWORD OUTPUT:
+;       ERRMSG - If this keyword is supplied, then any error mesasges will be
+;               returned to the user in this parameter rather than depending on
+;               on the MESSAGE routine in IDL.   If no errors are encountered
+;               then a null string is returned.               
+;
 ; PROCEDURE:
 ;	The FITS header parameters NAXIS1, NAXIS2, CRPIX1, and CRPIX2 are
 ;	updated for the extracted image.
@@ -52,22 +59,32 @@ pro hextract, oldim, oldhd, newim, newhd, x0, x1, y0, y1, SILENT = silent
 ;	Minor fix if bad Y range supplied   W. Landsman    Feb, 1996
 ;	Added /SILENT keyword              W. Landsman     March, 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added ERRMSG keyword    W. Landsman   May 2000
 ;- 
  On_error, 2
  npar = N_params()
 
  if (npar EQ 3) or (npar LT 2) then begin	;Check # of parameters
-     print,'Syntax - HEXTRACT, oldim, oldhd, [ newim, newhd, x0, x1, y0, y1]'
-     print,'   or    HEXTRACT, oldim, oldhd, x0, x1, y0, y1, [/SILENT ]
-     return
+    print,'Syntax - HEXTRACT, oldim, oldhd, [ newim, newhd, x0, x1, y0, y1]'
+    print,'   or    HEXTRACT, oldim, oldhd, x0, x1, y0, y1, [/SILENT, ERRMSG=]'
+    return
  endif
+ 
+ save_err = arg_present(errmsg)      ;Does user want to return error messages?
 ;                                    Check for valid 2-D image & header
- check_FITS, oldim, oldhd, dimen, /NOTYPE
- if !ERR EQ -1 then message,'ERROR - Invalid image or FITS header array'
+  check_FITS, oldim, oldhd, dimen, /NOTYPE, ERRMSG = errmsg
+  if errmsg NE '' then begin
+        if not save_err then message,'ERROR - ' + errmsg,/CON
+        return
+  endif
 
- if N_elements( dimen ) NE 2 then message, $
-         'ERROR - Input image array must be 2-dimensional'
- xsize = dimen[0]  &  ysize = dimen[1]
+  if N_elements(dimen) NE 2 then begin 
+           errmsg = 'Input image array must be 2-dimensional'
+           if not save_err then message,'ERROR - ' + errmsg,/CON
+           return
+  endif
+
+  xsize = dimen[0]  &  ysize = dimen[1]
 
 
  if ( npar LT 4 ) then Update = 1 else Update = 0     ;Update old array?

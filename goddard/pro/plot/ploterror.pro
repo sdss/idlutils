@@ -34,8 +34,8 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;              compatibility with the previous version of PLOTERROR.
 ;     /NOHAT     = if specified and non-zero, the error bars are drawn
 ;              without hats.
-;     HATLENGTH = the length of the hat lines used to cap the error bars.
-;              Defaults to !D.X_VSIZE / 100).
+;     HATLENGTH = the length of the hat lines in device units used to cap the 
+;              error bars.   Defaults to !D.X_VSIZE / 100).
 ;     ERRTHICK  = the thickness of the error bar lines.  Defaults to the
 ;              THICK plotting keyword.
 ;     ERRSTYLE  = the line style to use when drawing the error bars.  Uses
@@ -46,12 +46,12 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;              if NSKIP = 2 then every other error bar is plotted; if NSKIP=3
 ;              then every third error bar is plotted.   Default is to plot
 ;              every error bar (NSKIP = 1)
-;     NSUM =  Number of points to average over before plotting.   The errors
-;             are also averaged, and then divided by sqrt(NSUM).   This 
-;             approximation is useful when the neighboring error bars have
-;             similar sizes.    PLOTERROR does not pass the NSUM keyword to the
-;             PLOT command, but rather computes the binning itself using the 
-;             FREBIN function.
+;     NSUM =  Number of points to average over before plotting, default=!P.NSUM
+;             The errors are also averaged, and then divided by sqrt(NSUM).   
+;             This  approximation is meaningful only when the neighboring error
+;             bars have similar sizes.    PLOTERROR does not pass the NSUM 
+;             keyword to the PLOT command, but rather computes the binning 
+;             itself using the  FREBIN function.
 ;
 ;     Any valid keywords to the PLOT command (e.g. PSYM, YRANGE) are also 
 ;     accepted by PLOTERROR via the _EXTRA facility.
@@ -61,6 +61,11 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;       If only three parameters are input, they will be taken as X, Y and
 ;       YERR respectively.
 ;
+;       PLOTERROR cannot be used for asymmetric error bars.   Instead use
+;       OPLOTERROR with the /LOBAR and /HIBAR keywords.
+;
+;       Any data points with NAN values in the X, Y, or error vectors are 
+;       ignored.
 ; EXAMPLE:
 ;       Suppose one has X and Y vectors with associated errors XERR and YERR
 ;
@@ -101,6 +106,8 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;     W. Landsman  Ignore !P.PSYM when drawing error bars           Jan 1999
 ;     W. Landsman  Handle NSUM keyword correctly                    Aug 1999
 ;     W. Landsman  Fix case of /XLOG but no X error bars            Oct 1999
+;     W. Landsman  Work in the presence of NAN values               Nov 2000
+;     W. Landsman  Improve logic when NSUM or !P.NSUM is set        Jan 2001
 ;-
 ;                       Check the parameters.
  On_error, 2
@@ -115,12 +122,12 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ; later, when it is time to deal with the error bar hats).
 
  IF (keyword_set(hat)) THEN hat = 0 ELSE hat = 1
- if not keyword_set( THICK ) then thick = !P.THICK
- if (n_elements(eth) EQ 0) THEN eth = thick
+ if (n_elements(eth) EQ 0) THEN eth = !P.THICK
  IF (n_elements(est) EQ 0) THEN est = 0
  IF (n_elements(ecol) EQ 0) THEN ecol = !P.COLOR
  if N_elements( NOCLIP ) EQ 0 then noclip = 0
  if not keyword_set(NSKIP) then nskip = 1
+ if N_elements(nsum) EQ 0 then nsum = !P.NSUM
 
 ;				Other keywords.
 
@@ -142,22 +149,25 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;			is which.
 
  IF np EQ 2 THEN BEGIN			; Only Y and YERR passed.
-	yerr = abs(y)
+	yerr = y
 	yy = x
-	xx = indgen(n_elements(yy))
+	xx = lindgen(n_elements(yy))
         xerr = make_array(size=size(xx))
 
  ENDIF ELSE IF np EQ 3 THEN BEGIN 	; X, Y, and YERR passed.
-        yerr = abs(xerr)
+        yerr = xerr
         yy = y
         xx = x
 
  ENDIF ELSE BEGIN                        ; X, Y, XERR and YERR passed.
-	yerr = abs(yerr)
 	yy = y
-        xerr = abs(xerr)
+        g = where(finite(xerr))
+        xerr[g] = abs(xerr[g])
 	xx = x
  ENDELSE
+
+ g = where(finite(yerr))               ;Don't take absolute value of NAN values
+ yerr[g] = abs(yerr[g])
 
 ;			Determine the number of points being plotted.  This
 ;			is the size of the smallest of the three arrays
@@ -176,7 +186,9 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  yerr = yerr[0:n-1]
  IF np EQ 4 then xerr = xerr[0:n-1]
 
- if N_elements(nsum) EQ 1 then begin
+; If NSUM is greater than one, then we need to smooth ourselves (using FREBIN)
+
+ if nsum GT 1 then begin
       n1 = float(n) / nsum
       n  = long(n1)
       xx = frebin(xx, n1)
@@ -202,8 +214,8 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  IF yrange[0] EQ yrange[1] THEN BEGIN
 	if keyword_set( XRANGE ) then  begin
 		good = where( (xx GT min(xrange)) and (xx LT max(xrange)) )
-		yrange = [min(ylo[good]),max(yhi[good])]
-	endif else yrange = [min(ylo), max(yhi)]
+		yrange = [min(ylo[good],/NAN), max(yhi[good], /NAN)]
+	endif else yrange = [min(ylo,/NAN), max(yhi, /NAN)]
  ENDIF ELSE IF yrange[0] GT yrange[1] THEN BEGIN
 	ylo = yy + yerror*ierr
 	yhi = yy - yerror*ierr
@@ -215,17 +227,18 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  if NP EQ 4 then begin
    xlo = xx - xerror*ierr
    xhi = xx + xerror*ierr
-   IF xrange[0] EQ xrange[1] THEN xrange = [min(xlo), max(xhi)]
+   IF xrange[0] EQ xrange[1] THEN xrange = [min(xlo,/NAN), max(xhi,/NAN)]
    IF xrange[0] GT xrange[1] THEN BEGIN
       xlo = xx + xerror*ierr
       xhi = xx - xerror*ierr
    ENDIF
  endif
 
-;			Plot the positions.
+; Plot the positions.    Always set NSUM = 1 since we already took care of 
+; smoothing with FREBIN
 
  plot, xx, yy, XRANGE = xrange, YRANGE = yrange, XLOG = xlog, YLOG = ylog, $
-         _EXTRA = pkey, NOCLIP = noclip
+         _EXTRA = pkey, NOCLIP = noclip, NSum= 1
 
 ;	Plot the error bars.   Compute the hat length in device coordinates
 ;       so that it remains fixed even when doing logarithmic plots.

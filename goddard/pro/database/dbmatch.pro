@@ -61,11 +61,12 @@ function dbmatch, item, values, listin, FULLSTRING = fullstring
 ;       Converted to IDL V5.0   W. Landsman 25-Nov-1997
 ;       Change some loop variables to type LONG,  W. Landsman  July 1999
 ;       Remove loop for substring searches (faster)  W. landsman August 1999
+;       Replace DATATYPE() with size(/TNAME)  W. Landsman  Novmeber 2001
 ;-
  On_error,2
 
  if N_params() LT 2 then begin
-     print,"Syntax --  list = dbmatch( item, values, [ listin, /FULLSTRING] )
+     print,'Syntax --  list = DBMATCH( item, values, [ listin, /FULLSTRING] )'
      return,-1
  endif 
 
@@ -106,9 +107,8 @@ function dbmatch, item, values, listin, FULLSTRING = fullstring
 
         tmplist = -1
         dbfind_sort,itnum[0],1,val, tmplist, $    ;Search all entries to start
-                fullstring=fullstring
-        Nmatch_sort = !ERR
-
+                fullstring=fullstring, Count = count
+ 
            if ( listin[0] NE -1 ) then begin
 
                 if Nmatch_sort EQ 0 then goto, FOUND_MATCH
@@ -138,8 +138,8 @@ function dbmatch, item, values, listin, FULLSTRING = fullstring
     if listin[0] EQ -1 then tmplist = lindgen( nentries[0] )+1 else $
                             tmplist = listin
     dbext, tmplist, itnum, itvals
-    typ = datatype(itvals)
-    if typ EQ 'STR' then begin
+    typ = size(itvals,/TNAME)
+    if typ EQ 'STRING' then begin
                 itvals = strupcase( strtrim(itvals,2) )
                 vals   = strupcase( strtrim(values,2) )
     endif else vals = values

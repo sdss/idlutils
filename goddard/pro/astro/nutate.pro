@@ -1,49 +1,56 @@
 pro nutate, jd, nut_long, nut_obliq
 ;+
 ; NAME:
-;	NUTATE
+;       NUTATE
 ; PURPOSE:
-;	Return the nutation in longitude and obliquity for a given Julian date
+;       Return the nutation in longitude and obliquity for a given Julian date
 ;
 ; CALLING SEQUENCE:
-;	NUTATE, jd, Nut_long, Nut_obliq
+;       NUTATE, jd, Nut_long, Nut_obliq
 ;
 ; INPUT:
-;	jd - Julian ephemeris date, scalar or vector, double precision	
+;       jd - Julian ephemeris date, scalar or vector, double precision  
 ; OUTPUT:
-;	Nut_long - the nutation in longitude, same # of elements as jd
-;	Nut_obliq - nutation in latitude, same # of elements as jd
+;       Nut_long - the nutation in longitude, same # of elements as jd
+;       Nut_obliq - nutation in latitude, same # of elements as jd
 ;
 ; EXAMPLE:
-;	Plot the large-scale variation of the nutation in longitude 
-;		during the 20th century
+;       (1) Find the nutation in longitude and obliquity 1987 on Apr 10 at Oh.
+;              This is example 22.a from Meeus
+;        IDL> jdcnv,1987,4,10,0,jul
+;        IDL> nutate, jul, nut_long, nut_obliq
+;             ==> nut_long = -3.788    nut_obliq = 9.443
+;            
+;       (2) Plot the large-scale variation of the nutation in longitude 
+;               during the 20th century
 ;
-;	IDL> yr = 1900 + indgen(100)        
-;	IDL> jdcnv,yr,1,1,0,jul          ;Find Julian date of first day of year
-;	IDL> nutate,jul, nut_long        ;Nutation in longitude
-;	IDL> plot, yr, nut_long
+;       IDL> yr = 1900 + indgen(100)     ;Compute once a year        
+;       IDL> jdcnv,yr,1,1,0,jul          ;Find Julian date of first day of year
+;       IDL> nutate,jul, nut_long        ;Nutation in longitude
+;       IDL> plot, yr, nut_long
 ;
-;	This plot will reveal the dominant (18.6 year) period, but a finer
-;	grid is needed to display the shorter periods in the nutation.
+;       This plot will reveal the dominant (18.6 year) period, but a finer
+;       grid is needed to display the shorter periods in the nutation.
 ; METHOD:
-;	Uses the formula in Chapter 21 of ``Astronomical Algorithms'' by Jean 
-;	Meeus which is based on the 1980 IAU Theory of Nutation and includes 
-;	all terms larger than 0.0003".
+;       Uses the formula in Chapter 22 of ``Astronomical Algorithms'' by Jean 
+;       Meeus (1998, 2nd ed.) which is based on the 1980 IAU Theory of Nutation
+;       and includes all terms larger than 0.0003".
 ;
 ; PROCEDURES CALLED:
-;	POLY()                       (from IDL User's Library)
-;	CIRRANGE, ISARRAY()          (from IDL Astronomy Library)
+;       POLY()                       (from IDL User's Library)
+;       CIRRANGE, ISARRAY()          (from IDL Astronomy Library)
 ;
 ; REVISION HISTORY:
-;	Written, W.Landsman (Goddard/HSTX)      June 1996
-;	
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written, W.Landsman (Goddard/HSTX)      June 1996       
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Corrected minor typos in values of d_lng W. Landsman  December 2000
+;       Updated typo in cdelt term              December 2000
 ;-
  On_error,2
  
  if N_params() LT 2 then begin
-	print,'Syntax - NUTATE, jd, nut_long, nut_obliq
-	return
+        print,'Syntax - NUTATE, jd, nut_long, nut_obliq'
+        return
  endif
 
  dtor = !DPI/180.0d
@@ -72,8 +79,7 @@ pro nutate, jd, nut_long, nut_obliq
 
 ; Moon's argument of latitude
 
-    coeff4 = [93.27191d, 483202.017538d, -0.0036825, -1.0d/3.27270d5, $
-             1.0d/8.6331d8 ]
+    coeff4 = [93.27191d, 483202.017538d, -0.0036825, -1.0d/3.27270d5 ]
     F = poly(T, coeff4 )*dtor 
     cirrange, F,/RAD
 
@@ -85,7 +91,7 @@ pro nutate, jd, nut_long, nut_obliq
   cirrange,omega,/RAD
 
  d_lng = [0,-2,0,0,0,0,-2,0,0,-2,-2,-2,0,2,0,2,0,0,-2,0,2,0,0,-2,0,-2,0,0,2,$
-   -2,0,-2,0,0,2,2,0,-2,0,2,2,-2,-2,2,2,0,-2,-2,0,-2,-2,2,0,-1,-2,1,0,0,-1,0, $
+   -2,0,-2,0,0,2,2,0,-2,0,2,2,-2,-2,2,2,0,-2,-2,0,-2,-2,0,-1,-2,1,0,0,-1,0,0, $
      2,0,2]
 
  m_lng = [0,0,0,0,1,0,1,0,0,-1,intarr(17),2,0,2,1,0,-1,0,0,0,1,1,-1,0, $
@@ -113,7 +119,7 @@ pro nutate, jd, nut_long, nut_obliq
     -33, 26, 32, 27, 0, -24, 16,13,0,-12,0,0,-10,0,-8,7,9,7,6,0,5,3,-3,0,3,3,$
      0,-3,-3,3,3,0,3,3,3, intarr(14) ]
 
- cdelt = [8.9, -3.1, -0.5, 0.5, -0.1, 0.0, -0.6, -0.1, 0.3, dblarr(54) ]
+ cdelt = [8.9, -3.1, -0.5, 0.5, -0.1, 0.0, -0.6, 0.0, -0.1, 0.3, dblarr(53) ]
 
 
 ; Sum the periodic terms 
@@ -125,12 +131,12 @@ pro nutate, jd, nut_long, nut_obliq
  sarg = sin(arg)
  carg = cos(arg)
  for i=0,n-1 do begin
-	nut_long[i] =  0.0001d*total( (sdelt*t[i] + sin_lng)*sarg[*,i] )
-	nut_obliq[i] = 0.0001d*total( (cdelt*t[i] + cos_lng)*carg[*,i] )
+        nut_long[i] =  0.0001d*total( (sdelt*t[i] + sin_lng)*sarg[*,i] )
+        nut_obliq[i] = 0.0001d*total( (cdelt*t[i] + cos_lng)*carg[*,i] )
  end
  if not isarray(jd) then begin
-	nut_long = nut_long[0]
-	nut_obliq = nut_obliq[0]
+        nut_long = nut_long[0]
+        nut_obliq = nut_obliq[0]
  endif
 
  return

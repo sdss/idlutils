@@ -1,8 +1,6 @@
 	PRO FXBTFORM,HEADER,TBCOL,IDLTYPE,FORMAT,NUMVAL,MAXVAL,ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBTFORM
 ; Purpose     : 
 ;	Returns information about FITS binary table columns.

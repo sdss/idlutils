@@ -1,9 +1,9 @@
 ;+
-; Name:
+; NAME:
 ;	MULTIPLOT
-; Purpose:
+; PURPOSE:
 ;	Create multiple plots with shared axes.
-; Explanation:
+; EXPLANATION:
 ;	This procedure makes a matrix of plots with *SHARED AXES*, either using
 ;	parameters passed to multiplot or !p.multi in a non-standard way.
 ;	It is good for data with one or two shared axes and retains all the
@@ -17,7 +17,7 @@
 ;	by RSI.  For now, it's a good way to gang plots together.
 ; CALLING SEQUENCE:
 ;	multiplot[pmulti][,/help][,/initialize][,/reset][,/rowmajor]
-; Examples:
+; EXAMPLES:
 ;	multiplot,/help			; print this header.
 ;	; Then copy & paste, from your xterm, the following lines to test:
 ;
@@ -49,13 +49,13 @@
 ;
 ;	multiplot,[1,1],/init,/verbose	; one way to return to single plot
 ;	% MULTIPLOT: Initialized for 1x1, plotted across then down (column major).
-; Optional Inputs:
+; OPTIONAL INPUTS:
 ;	pmulti = 2-element or 5-element vector giving number of plots, e.g.,
 ;	  multiplot,[1,6]		; 6 plots vertically
 ;	  multiplot,[0,4,2,0,0]		; 4 plots along x and 2 along y
 ;	  multiplot,[0,4,2,0,1]		; ditto, except rowmajor (down 1st)
 ;	  multiplot,[4,2],/rowmajor 	; identical to previous line
-; Optional Keywords:
+; OPTIONAL KEYWORDS:
 ;	help = flag to print header
 ;	initialize = flag to begin only---no plotting, just setup,
 ;	  e.g., multiplot,[4,2],/init,/verbose & multiplot & plot,x,y
@@ -74,7 +74,7 @@
 ;	Multiplot sets a number of system variables: !p.position, !p.multi,
 ;	!x.tickname, !y.tickname, !P.noerase---but all can be reset with
 ;	the call: multiplot,/reset
-; Restrictions:
+; RESTRICTIONS:
 ;	1. If you use !p.multi as the method of telling how many plots
 ;	are present, you have to set !p.multi at the beginning each time you
 ;	use multiplot or call multiplot with the /reset keyword.
@@ -82,7 +82,7 @@
 ;	except by adding spaces to shift it or to add it manually with xyouts.
 ;	3. There is no way to make plots of different sizes; each plot
 ;	covers the same area on the screen or paper.
-; Procedure:
+; PROCEDURE:
 ;	This routine makes a matrix of plots with common axes, as opposed to
 ;	the method of !p.multi where axes are separated to allow labels.
 ;	Here the plots are joined and labels are suppressed, except at the
@@ -90,7 +90,7 @@
 ;	using either !p.multi (which is then reset) or the parameter pmulti.
 ;	However, multiplot keeps track of the position by itself because
 ;	!p.multi interacts poorly with !p.position.
-; Modification history:
+; MODIFICATION HISTORY:
 ;	write, 21-23 Mar 94, Fred Knight (knight@ll.mit.edu)
 ;	alter plot command that sets !x.window, etc. per suggestion of
 ;	  Mark Hadfield (hadfield@storm.greta.cri.nz), 7 Apr 94, FKK

@@ -1,5 +1,5 @@
 ;+
-; Name        : 
+; NAME: 
 ;       FXADDPAR
 ; Purpose     : 
 ;       Add or modify a parameter in a FITS header array.
@@ -53,6 +53,7 @@
 ;                 scalar string should be used.  For complex numbers the format
 ;                 should be defined so that it can be applied separately to the
 ;                 real and imaginary parts.
+;
 ;       /NOCONTINUE = By default, FXADDPAR will break strings longer than 68 
 ;                characters into multiple lines using the continuation
 ;                convention.    If this keyword is set, then the line will
@@ -114,8 +115,11 @@
 ;               interpreted the following characters as a comment.
 ;       Version 3, Craig Markwardt, GSFC,  December 1997
 ;               Allow long values to extend over multiple lines
+;	Version 4, D. Lindler, March 2000, modified to use capital E instead
+;		of a lower case e for exponential format.
+;       Version 4.1 W. Landsman April 2000, make user-supplied format uppercase
 ; Version     : 
-;       Version 3, 1 December 1999
+;       Version 4.1, April 2000
 ;-
 ;
 
@@ -568,8 +572,8 @@ REPLACE:
 ;
         END ELSE IF TYPE[1] EQ 6 THEN BEGIN
                 IF N_ELEMENTS(FORMAT) EQ 1 THEN BEGIN   ;use format keyword
-                        VR = STRING(FLOAT(VALUE),    '('+FORMAT+')')
-                        VI = STRING(IMAGINARY(VALUE),'('+FORMAT+')')
+                        VR = STRING(FLOAT(VALUE),    '('+STRUPCASE(FORMAT)+')')
+                        VI = STRING(IMAGINARY(VALUE),'('+STRUPCASE(FORMAT)+')')
                 END ELSE BEGIN
                         VR = STRTRIM(FLOAT(VALUE),2)
                         VI = STRTRIM(IMAGINARY(VALUE),2)
@@ -585,8 +589,8 @@ REPLACE:
 ;
         END ELSE BEGIN
                 IF (N_ELEMENTS(FORMAT) EQ 1) THEN $ ;use format keyword
-                        V = STRING(VALUE,'('+FORMAT+')' ) ELSE $
-                        V = STRTRIM(VALUE,2)    ;default format
+                        V = STRING(VALUE,'('+STRUPCASE(FORMAT)+')' ) ELSE $
+                        V = STRTRIM(strupcase(VALUE),2)    ;default format
                 S = STRLEN(V)                 ;right justify
                 STRPUT,H,V,(30-S)>10          ;insert
         ENDELSE

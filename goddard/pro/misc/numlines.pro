@@ -26,7 +26,7 @@ function numlines,file
  On_error,2
 
  if N_params() EQ 0 then begin
-        print,'Syntax - nl = NUMLINES( file)
+        print,'Syntax - nl = NUMLINES( file)'
         return,-1
  endif
 
@@ -49,9 +49,9 @@ function numlines,file
         nl = 0l
         tmp = ' '
          while not eof(lun) do begin
-          readf,lun,tmp
-          nl = nl + 1
-          endwhile
+           readf,lun,tmp
+           nl = nl + 1
+         endwhile
          free_lun,lun
          return,nl
  endelse

@@ -1,80 +1,82 @@
 ;+
 ; NAME:
-;	DBEDIT
+;      DBEDIT
 ;
 ; PURPOSE:
-;	Interactively edit specified fields in a database. 
+;       Interactively edit specified fields in a database. 
 ; EXPLANATION:
-;	The value of each field is displayed, and the user has the option
-;	of changing or keeping the value.  Widgets will be used if they
-;	are available.
+;       The value of each field is displayed, and the user has the option
+;       of changing or keeping the value.  Widgets will be used if they
+;       are available.
 ;
 ; CALLING SEQUENCE:
-;	dbedit, list, [ items ]
+;       dbedit, list, [ items ]
 ;
 ; INPUTS:
-;	list - scalar or vector of database entry numbers.  Set list = 0 to 
-;	interactively add a new entry to a database.  Set list = -1 to edit 
-;	all entries.
+;       list - scalar or vector of database entry numbers.  Set list = 0 to 
+;       interactively add a new entry to a database.  Set list = -1 to edit 
+;       all entries.
 ;
 ; OPTIONAL INPUTS:
-;	items - list of items to be edited.  If omitted, all fields can be 
-;		edited.      
+;       items - list of items to be edited.  If omitted, all fields can be 
+;               edited.      
 ;
 ; COMMON BLOCKS:
-; 	DB_COM -- contains information about the opened database.
-;  	DBW_C -- contains information intrinsic to this program.
+;       DB_COM -- contains information about the opened database.
+;       DBW_C -- contains information intrinsic to this program.
 ;
 ; SIDE EFFECTS:
-;  	Will update the database files.
+;       Will update the database files.
 ;
 ; RESTRICTIIONS:
-;  	Database must be opened for update prior to running
-;  	this program.  User must be running DBEDIT from an 
-;  	account that has write privileges to the databases.  
+;       Database must be opened for update prior to running
+;       this program.  User must be running DBEDIT from an 
+;       account that has write privileges to the databases.  
 ;
-;	If one is editing an indexed item, then after all edits are complete,
-;	DBINDEX will be called to reindex the entire item.    This may
-;	be time consuming.
+;       If one is editing an indexed item, then after all edits are complete,
+;       DBINDEX will be called to reindex the entire item.    This may
+;       be time consuming.
 ;
-;	Cannot be used to edit items with multiple values
+;       Cannot be used to edit items with multiple values
 ;
 ; EXAMPLE:
-;	Suppose one had new parallaxes for all stars fainter than 5th magnitude
-;	in the Yale Bright Star Catalog and wanted to update the PRLAX and
-;	PRLAX_CODE fields with these new numbers
+;       Suppose one had new parallaxes for all stars fainter than 5th magnitude
+;       in the Yale Bright Star Catalog and wanted to update the PRLAX and
+;       PRLAX_CODE fields with these new numbers
 ;
-;	IDL> !priv=2			
-;	IDL> dbopen, 'yale_bs', 1            ;Open catalog for update
-;	IDL> list = dbfind( 'v>5')     ;Find fainter than 5th magnitude
-;	IDL> dbedit, list, 'prlax, prlax_code'   ;Manual entry of new values
+;       IDL> !priv=2                    
+;       IDL> dbopen, 'yale_bs', 1            ;Open catalog for update
+;       IDL> list = dbfind( 'v>5')     ;Find fainter than 5th magnitude
+;       IDL> dbedit, list, 'prlax, prlax_code'   ;Manual entry of new values
 ;
 ; PROCEDURE:
-;	(1) Use the cursor and point to the value you want to edit.   
-;	(2) Type the new field value over the old field value.
-;	(3) When you are done changing all of the field values for each entry
-;	save the entry to the databases by pressing 'SAVE ENTRY TO DATABASES'.
-;	Here all of the values will be checked to see if they are the correct
-;	data type.  If a field value is not of the correct data type, it will
-;	not be saved.  
+;       (1) Use the cursor and point to the value you want to edit.   
+;       (2) Type the new field value over the old field value.
+;       (3) When you are done changing all of the field values for each entry
+;       save the entry to the databases by pressing 'SAVE ENTRY TO DATABASES'.
+;       Here all of the values will be checked to see if they are the correct
+;       data type.  If a field value is not of the correct data type, it will
+;       not be saved.  
 ;
-;	Use the buttons "PREV ENTRY" and "NEXT ENTRY" to move between entry 
-;	numbers.  You must save each entry before going on to another entry in 
-;	order for your changes to be saved.
+;       Use the buttons "PREV ENTRY" and "NEXT ENTRY" to move between entry 
+;       numbers.  You must save each entry before going on to another entry in 
+;       order for your changes to be saved.
 ;
-;	Pressing "RESET THIS ENTRY" will remove any unsaved changes to the 
-;	current entry.
+;       Pressing "RESET THIS ENTRY" will remove any unsaved changes to the 
+;       current entry.
 ;
 ;REVISION HISTORY:
-;	Adapted from Landsman's DBEDIT
-;	added widgets,  Melissa Marsh, HSTX, August 1993
-;	do not need to press return after entering each entry,
-;			fixed layout problem on SUN,
-;			Melissa Marsh, HSTX, January 1994
-;	Only updates the fields which are changed. Joel Offenberg, HSTX, Mar 94
-;	Corrected test for changed fields  Wayne Landsman  HSTX, Mar 94
-;	Removed a couple of redundant statements W. Landsman HSTX Jan 96
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Adapted from Landsman's DBEDIT
+;       added widgets,  Melissa Marsh, HSTX, August 1993
+;       do not need to press return after entering each entry,
+;                       fixed layout problem on SUN,
+;                       Melissa Marsh, HSTX, January 1994
+;       Only updates the fields which are changed. Joel Offenberg, HSTX, Mar 94
+;       Corrected test for changed fields  Wayne Landsman  HSTX, Mar 94
+;       Removed a couple of redundant statements W. Landsman HSTX Jan 96
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Replace DATAYPE() with size(/TNAME)   W. Landsman   November 2001
+;       Work for entry numbers > 32767     W. Landsman   December 2001
 ;-
 
 
@@ -100,69 +102,69 @@ common db_com,qdb,QITEMS,QDBREC
 common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
         it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
         endbut,nextbut,mid,minlist,maxlist,savebut,bigmid,entry,wid_warn,$
-       	holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
+        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
 
 CASE event.id OF
 
     endbut: widget_control,event.top,/destroy ;destory main widget--end session
 
-    prevbut:begin	;go to previous entry
-	if wereat ne 0 then wereat= wereat-1
-	liston = thislist[wereat]
-	widedit
+    prevbut:begin       ;go to previous entry
+        if wereat ne 0 then wereat= wereat-1
+        liston = thislist[wereat]
+        widedit
     end
 
-    nextbut:begin  	;go to next entry
-	if wereat lt nlist-1 then wereat = wereat+1 else $
+    nextbut:begin       ;go to next entry
+        if wereat lt nlist-1 then wereat = wereat+1 else $
               widget_control,event.top,/destroy          ;end session
-	liston = thislist[wereat]
-	widedit
+        liston = thislist[wereat]
+        widedit
     end
 
-    resetbut:begin	;reset this entry
-	liston = liston
-	widedit	
+    resetbut:begin      ;reset this entry
+        liston = liston
+        widedit 
     end
 
-    savebut: begin	;save entry to databases
-	  ;update database
- 	for i = 0, nitems -1 do begin
-	  widget_control,widtext[i],get_value=val
-	  ;test value
-	  valid = 0
+    savebut: begin      ;save entry to databases
+          ;update database
+        for i = 0, nitems -1 do begin
+          widget_control,widtext[i],get_value=val
+          ;test value
+          valid = 0
            oldval = dbxval(entry,dtype[i],numvals[i],sbyte[i],nbytes[i])
 
-	  on_ioerror,BADVAL
-	  IF (strtrim(oldval[0],2) ne (strtrim(val[0],2))) THEN BEGIN
-	      oldval[0] = strtrim(val,2)
-	      valid = 1
-	      dbxput,oldval,entry,dtype[i],sbyte[i],nbytes[i]
-	      print,strcompress('Entry ' + string(liston) +':  '  + $
+          on_ioerror,BADVAL
+          IF (strtrim(oldval[0],2) ne (strtrim(val[0],2))) THEN BEGIN
+              oldval[0] = strtrim(val,2)
+              valid = 1
+              dbxput,oldval,entry,dtype[i],sbyte[i],nbytes[i]
+              print,strcompress('Entry ' + string(liston) +':  '  + $
               names[i] + ' = ' + string(val))
               newflag[ wereat, i ] = 1b
-    BADVAL: 	if (not valid) then begin
-	    	bad_base = widget_base(/column,title='Bad Value')
-	    	m = 'Item '+ strcompress(names[i],/rem) + $ 
-			' must be of type ' + datatype(oldval[0],1)
-	    	w1 = widget_label( bad_base,value=m )
-	    	w2 = widget_button( bad_base,value='ACKNOWLEDGED' )
-	    	widget_control,bad_base,/realize
-	    	xmanager,'acknow',bad_base,/modal
-	    	str = dbxval(entry,dtype[i],numvals[i],sbyte[i],nbytes[i])
-	    	str = '    '+string(str[0])
-	    	widget_control,widtext[i],set_value=str		
-	  	endif
-	  endIF 
-	  on_ioerror,NULL
-	endfor
-	
-	if (liston EQ 0) then begin
-                 dbwrt,entry,0,1	;new entry
+    BADVAL:     if (not valid) then begin
+                bad_base = widget_base(/column,title='Bad Value')
+                m = 'Item '+ strcompress(names[i],/rem) + $ 
+                        ' must be of type ' + size(oldval[0],/TNAME)
+                w1 = widget_label( bad_base,value=m )
+                w2 = widget_button( bad_base,value='ACKNOWLEDGED' )
+                widget_control,bad_base,/realize
+                xmanager,'acknow',bad_base,/modal
+                str = dbxval(entry,dtype[i],numvals[i],sbyte[i],nbytes[i])
+                str = '    '+string(str[0])
+                widget_control,widtext[i],set_value=str         
+                endif
+          endIF 
+          on_ioerror,NULL
+        endfor
+        
+        if (liston EQ 0) then begin
+                 dbwrt,entry,0,1        ;new entry
         endif else begin
                  dbwrt,entry
         endelse
-	widedit
-	;create widget telling the user that the changes have been made.
+        widedit
+        ;create widget telling the user that the changes have been made.
     end
 
     else: ;donothing
@@ -179,9 +181,9 @@ common db_com,qdb,QITEMS,QDBREC
                            
 
 common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
-	it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
-	endbut,nextbut,mid,minlist,maxlist,savebut,bigmid,entry,wid_warn,$
-	holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
+        it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
+        endbut,nextbut,mid,minlist,maxlist,savebut,bigmid,entry,wid_warn,$
+        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
 
 
 ;get entry number
@@ -192,14 +194,14 @@ common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
  for i = 0,nitems-1 do begin
         str = dbxval(entry,dtype[i],numvals[i],sbyte[i],nbytes[i])
         str = '    '+string(str[0])
-	widget_control,widtext[i],set_value=str
+        widget_control,widtext[i],set_value=str
  endfor
 
 ;check to see if this entry is the minimum or maximum entry 
  if (liston EQ minlist) then widget_control,prevbut,sensitive=0 else $
-		widget_control,prevbut,sensitive=1 
+                widget_control,prevbut,sensitive=1 
  if (liston EQ maxlist) then widget_control,nextbut,sensitive=0 else $
-		widget_control,nextbut,sensitive=1
+                widget_control,nextbut,sensitive=1
 
  end
 ;-------------------------------------------------------------------------
@@ -221,19 +223,19 @@ common db_com,qdb,QITEMS,QDBREC
 ;    NOTE: dtype, sbyte, numvals are dimensioned for *all* entries 
 
 common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
-	it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
+        it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
         endbut,nextbut,mid,minlist,maxlist,savebut,bigmid,entry,wid_warn,$
-	holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
+        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
                           
  On_error,2
  if N_params() LT 1 then begin
-	print,'Syntax - dbedit, list, [ items ]'
-	return
+        print,'Syntax - dbedit, list, [ items ]'
+        return
  endif
-	
+        
 ;make sure widgets are available
  if (!D.FLAGS AND 65536) EQ 0 then begin  
-	dbedit_basic, list, items
+        dbedit_basic, list, items
         return
  endif
 
@@ -243,24 +245,24 @@ w1 = widget_base(/column)
     s = size(qdb)
     if (s[0] EQ 0) then begin
     no_open = widget_base(/column,title='NO DATABASE OPEN')
-    	m1 = 'No open database currently exists.'
-    	w1 = widget_label(no_open,VALUE=m1)
-    	w2 = widget_button(no_open,VALUE='ACKNOWLEDGED')
-    	widget_control, no_open, /realize
-    	xmanager, 'acknow', no_open, /modal
-	goto, PROEND  
+        m1 = 'No open database currently exists.'
+        w1 = widget_label(no_open,VALUE=m1)
+        w2 = widget_button(no_open,VALUE='ACKNOWLEDGED')
+        widget_control, no_open, /realize
+        xmanager, 'acknow', no_open, /modal
+        goto, PROEND  
     endif
 ;check to make sure the database is opened for update
     dbname = db_info('NAME',0)
     if not db_info('UPDATE') then begin
 
-    	no_open = widget_base(/column,title='NOT OPEN FOR UPDATE')	 
-    	m1 = 'Database ' + dbname + ' must be opened for update.'
-    	w1 = widget_label(no_open,VALUE=m1)
+        no_open = widget_base(/column,title='NOT OPEN FOR UPDATE')       
+        m1 = 'Database ' + dbname + ' must be opened for update.'
+        w1 = widget_label(no_open,VALUE=m1)
         w2 = widget_button(no_open,VALUE='ACKNOWLEDGED')
         widget_control,no_open,/realize
         xmanager,'acknow',no_open,/MODAL
-	goto,PROEND
+        goto,PROEND
 
     endif
 
@@ -270,32 +272,32 @@ w1 = widget_base(/column)
 
     ;get items.  If items not specified use all items except ENTRY
     if ( N_params() LT 2 ) then begin       
-    	nitems = db_info('ITEMS',0) -1       
-    	items = indgen(nitems) + 1
+        nitems = db_info('ITEMS',0) -1       
+        items = indgen(nitems) + 1
     endif
 
     nlist = N_elements(list)
 
     if nlist gt 1 then begin ;sort entry numbers
 
-   	sar = sort(list)
-   	thislist = list[sar]
+        sar = sort(list)
+        thislist = list[sar]
 
     endif else begin
 
-	thislist = intarr(1) 
-	thislist[0] = list
+        thislist = lonarr(1) 
+        thislist[0] = list
 
     endelse
 
     ;edit all entries?  get number of entries
     if ( list[0] EQ -1 ) then begin          
-    	nlist = db_info('ENTRIES',0)           
+        nlist = db_info('ENTRIES',0)           
         if nlist le 0 then begin
            print,'Empty database cannot be edited. Use list=0 to add new entry'
            goto, PROEND
         endif
-    	thislist = lindgen(nlist) + 1
+        thislist = lindgen(nlist) + 1
     endif
 
     minlist = min(thislist)
@@ -304,13 +306,13 @@ w1 = widget_base(/column)
 
     nentry = db_info('ENTRIES',0)
     if (maxlist gt nentry) then begin
-    	m = dbname + ' entry numbers must be less than ' + strtrim(nentry+1,2)
-	wrongno = widget_base(/column,title='NOT VALID ENTRY NUMBER')
-	w1 = widget_label( wrongno, VALUE=m)
+        m = dbname + ' entry numbers must be less than ' + strtrim(nentry+1,2)
+        wrongno = widget_base(/column,title='NOT VALID ENTRY NUMBER')
+        w1 = widget_label( wrongno, VALUE=m)
         w2 = widget_button( wrongno, VALUE='ACKNOWLEDGED')
         widget_control, wrongno, /realize
         xmanager, 'acknow', wrongno, /modal
-	goto, PROEND
+        goto, PROEND
     endif
 
     nitems = db_info('ITEMS',0) -1
@@ -322,7 +324,7 @@ w1 = widget_base(/column)
 
     db_item,items,it
 
-    nit = n_elements(it)		      ;Number of items to be edited
+    nit = n_elements(it)                      ;Number of items to be edited
     names = db_item_info('name',itnum)        ;Get names of each item
     newflag = bytarr(nlist,nitems)  ;Keeps track of fields actually updated
 
@@ -363,14 +365,14 @@ w1 = widget_base(/column)
         ed = 'N'
         str1 = names[i]
 
-	;add spaces if version is vms to make layout "look better"
-	if (!version.os EQ 'vms') then begin
-        	str1 = strcompress(str1,/remove_all)
-        	str1len = strlen(str1)
-        	b = 20.-str1len
-        	n = b*2.
-        	for j = 0,n do str1 = str1+' '
-	endif
+        ;add spaces if version is vms to make layout "look better"
+        if (!version.os EQ 'vms') then begin
+                str1 = strcompress(str1,/remove_all)
+                str1len = strlen(str1)
+                b = 20.-str1len
+                n = b*2.
+                for j = 0,n do str1 = str1+' '
+        endif
 
         for j = 0, N_elements(it)-1 do begin
                 if it[j] EQ itnum[i] then ed = 'Y'
@@ -386,7 +388,7 @@ w1 = widget_base(/column)
                 holder[i] = widget_base(middle,/row)
                 widlabel[i] = widget_label(holder[i],value = str1,/frame)
                 widtext[i] = widget_label(holder[i],value=str)
-        endelse	
+        endelse 
     endfor
 
     if (liston EQ minlist) then widget_control,prevbut,sensitive=0 else $
@@ -405,8 +407,8 @@ w1 = widget_base(/column)
       indextype = db_item_info('INDEX',indexnum);Index type of modified fields 
       good = where(indextype GE 1, Ngood)         ;Which fields are indexed?
       if Ngood GT 0 then begin 
-	message, 'Now updating index file', /INF
-	dbindex, indexnum[good]
+        message, 'Now updating index file', /INF
+        dbindex, indexnum[good]
       endif
       dbopen,strlowcase(dbname),1
     endif

@@ -35,7 +35,7 @@
 ;               output.
 ;
 ; PROCEDURE CALLS:
-;      Functions:  DATATYPE(), STR_SEP()
+;      Functions:  STR_SEP()
 ;
 ; REVISION HISTORY:
 ;       Version 1, William Thompson, GSFC, 6 May 1993.
@@ -47,13 +47,14 @@
 ;       Version 4, Zarro, GSFC, 4 August 1997
 ;               Added trim to input
 ;       Converted to IDL V5.0   W. Landsman 25-Nov-1997
+;       Fix directory character on Macintosh system   A. Ferro   February 2000
 ;-
 ;
         ON_ERROR, 2
 ;
 ;  Check the number of parameters:
 ;
-        IF DATATYPE(PATHS) NE 'STR' THEN MESSAGE,       $
+        IF SIZE(PATHS,/TNAME) NE 'STRING' THEN MESSAGE,       $
                 'Syntax:  Result = BREAK_PATH( PATHS )'
         PATHS=STRTRIM(PATHS,2)
 ;
@@ -146,6 +147,8 @@
                                                 THEN PATH[I] = PATH[I] + ':'
                                 'Windows':  IF LAST NE '\' THEN $
                                                 PATH[I] = PATH[I] + '\'
+                                'MacOS': IF LAST NE ':' THEN $
+                                 			PATH[I] = PATH[I] + ':'
                                 ELSE:  IF LAST NE '/' THEN      $
                                                 PATH[I] = PATH[I] + '/'
                             ENDCASE

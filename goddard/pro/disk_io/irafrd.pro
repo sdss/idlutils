@@ -60,6 +60,7 @@ pro irafrd,im,hd,filename, SILENT=silent    ;Read in IRAF image array and header
 ;       Accept names with multiple extensions    W. Landsman   April 98 
 ;       Test for big endian machine under V2.11 format W. Landsman Feb. 1999
 ;       Don't read past the end of file for V5.4 compatilibity  W.L.  Jan. 2001
+;       Convert to square brackets W.L   May 2001
 ;-
  On_error,2                    ;Return to caller
  npar = N_params() 
@@ -107,7 +108,7 @@ FINDER:
 
  point_lun, lun1, 0             ;Back to top of the header
  tmp = assoc(lun1,bytarr(hdrsize))
- hdr = tmp(0)
+ hdr = tmp[0]
  hdr2 = hdr
 
  if not newformat then begin       ;Old format is not machine independent
@@ -127,8 +128,8 @@ FINDER:
         dimen = long(hdr2,24,ndim)       ;Get vector of image dimensions 
         physdim = long(hdr2,52,ndim)     ;Get vector of physical dimensions
 
-        if big_endian then pixname = string( hdr(412+indgen(80)*2) ) else $
-                           pixname = string( hdr2(413+indgen(80)*2) )
+        if big_endian then pixname = string( hdr[412+indgen(80)*2] ) else $
+                           pixname = string( hdr2[413+indgen(80)*2] )
  endif else begin
 
         hdrlen =   long(hdr,6)         ;Length (in words) of header
@@ -149,7 +150,7 @@ FINDER:
                byteorder,dimen,/NTOHL
                byteorder,physdim, /NTOHL
         endif
-        pixname = string(hdr(126:126+255))
+        pixname = string(hdr[126:126+255])
  endelse 
 
  expos = strpos(pixname,'!')
@@ -178,9 +179,9 @@ FINDER:
 
  if not keyword_set(SILENT) then begin 
                                             
-        sdim = strtrim(dimen(0),2)
+        sdim = strtrim(dimen[0],2)
         if ( ndim GT 1 ) then for i = 1,ndim-1 do $
-                sdim = sdim + ' by ' + strtrim(dimen(i),2) $
+                sdim = sdim + ' by ' + strtrim(dimen[i],2) $
         else sdim = sdim + ' element' 
         message,'Now reading '+sdim+' IRAF array', /INFORM
  endif 
@@ -201,9 +202,9 @@ FINDER:
 ; Read the .pix file, skipping the first 1024 bytes.   The last physical 
 ; dimension can be set equal to the image dimension.
 
- physdim(ndim-1) = dimen(ndim-1)
+ physdim[ndim-1] = dimen[ndim-1]
  tmp = assoc (lun2, make_array(DIMEN = physdim, TYPE= dtype, /NOZERO), doffset)
- im = tmp(0)
+ im = tmp[0]
 
 ; If the physical dimension of an IRAF image is larger than the image size,
 ; then extract the appropriate subimage
@@ -212,28 +213,28 @@ FINDER:
  pdim = physdim - 1
  case ndim of
         1 :
-        2 : if dimen(0) LT pdim(0) then im = im( 0:dimen(0), *)
-        3 : if total(dimen LT pdim) then im = im( 0:dimen(0), 0:dimen(1), * )
+        2 : if dimen[0] LT pdim[0] then im = im[ 0:dimen[0], *]
+        3 : if total(dimen LT pdim) then im = im[ 0:dimen[0], 0:dimen[1], * ]
         4 : if total(dimen LT pdim) then $
-                im = im( 0:dimen(0), 0:dimen(1), 0:dimen(2), * )
+                im = im[ 0:dimen[0], 0:dimen[1], 0:dimen[2], * ]
         5 : if total(dimen LT pdim) then $
-                im = im( 0:dimen(0), 0:dimen(1), 0:dimen(2), 0:dimen(3), *)
+                im = im[ 0:dimen[0], 0:dimen[1], 0:dimen[2], 0:dimen[3], *]
         6:  if total(dimen LT pdim) then $
-                im = im( 0:dimen(0), 0:dimen(1), 0:dimen(2), 0:dimen(3), $
-                         0:dimen(4), *)
+                im = im[ 0:dimen[0], 0:dimen[1], 0:dimen[2], 0:dimen[3], $
+                         0:dimen[4], *]
         7: if total(dimen LT pdim) then $
-                im = im( 0:dimen(0), 0:dimen(1), 0:dimen(2), 0:dimen(3), $
-                         0:dimen(4), 0:dimen(5), *)
+                im = im[ 0:dimen[0], 0:dimen[1], 0:dimen[2], 0:dimen[3], $
+                         0:dimen[4], 0:dimen[5], *]
  endcase
 
  hd = strarr(ndim + 5) + string(' ',format='(a80)')      ;Create empty FITS hdr
- hd(0) = 'END' + string(replicate(32b,77))
+ hd[0] = 'END' + string(replicate(32b,77))
   
  sxaddpar, hd, 'SIMPLE', 'T',' Read by IDL:  '+ systime()
  sxaddpar, hd, 'BITPIX', bitpix
  sxaddpar, hd, 'NAXIS', ndim        ;# of dimensions
  if ( ndim GT 0 ) then $
-   for i = 1, ndim do sxaddpar,hd,'NAXIS' + strtrim(i,2),dimen(i-1)+1
+   for i = 1, ndim do sxaddpar,hd,'NAXIS' + strtrim(i,2),dimen[i-1]+1
 
  sxaddpar,hd,'irafname',name + '.imh'   ;Add history records
 
@@ -242,34 +243,34 @@ FINDER:
         if newformat then nfits = (hdrlen*2l - 2049)/81 else $
                           nfits = (hdrlen*4l - 2054)/162
         tmp = assoc(lun1,bytarr(hdrlen*4l < (fstat(lun1)).size ))
-        hdr = tmp(0)
+        hdr = tmp[0]
         if not newformat then if not big_endian then byteorder, hdr, /SSWAP 
 SKIP1:  
         if newformat then $
-                object = string( hdr(638 + indgen(67)) ) else $
-                object = string( hdr(732 + indgen(67)*2) ) 
+                object = string( hdr[638 + indgen(67)] ) else $
+                object = string( hdr[732 + indgen(67)*2] ) 
         if (object NE '') then $
         sxaddpar, hd, 'OBJECT', object,' Object Name'     ;Add object name
 
         endline = where( strmid(hd,0,8) EQ 'END     ')     
-        endline = endline(0)
-        endfits = hd(endline)
-        hd = [ hd(0:endline-1), strarr(nfits+1) ]
+        endline = endline[0]
+        endfits = hd[endline]
+        hd = [ hd[0:endline-1], strarr(nfits+1) ]
 
         if newformat then begin
                 index = indgen(80)
                 for i = 0l,nfits-1 do $
-                        hd(endline+i) = string( hdr(2046 + 81*i + index) )
+                        hd[endline+i] = string( hdr[2046 + 81*i + index] )
         endif else begin 
                 index = indgen(80)*2
                 for i = 0l,nfits-1 do $
-                        hd(endline+i) = string( hdr( 2052 + 162*i + index) )
+                        hd[endline+i] = string( hdr[ 2052 + 162*i + index] )
         endelse
 
-        hd(endline + nfits) = endfits         ;Add back END keyword
+        hd[endline + nfits] = endfits         ;Add back END keyword
         
         if not newformat then begin
-        history = string(hdr ( 892 + indgen(580)*2))
+        history = string(hdr[ 892 + indgen(580)*2] )
         st1 = gettok( history, string(10B))             
         if big_endian then $
                 origin = gettok( strmid( st1, 1, strlen(st1)),"'") else $

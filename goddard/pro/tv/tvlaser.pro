@@ -132,7 +132,7 @@ PRO TVLASER, hdr, Image, BARPOS=BarPos, CARROWS=CArrows, CLABELS=CLabels, $
 ;               header (if present).
 ;       TRUECOLOR - if present and non-zero, the postscript file is created
 ;               using the truecolor switch (i.e. true=3). The colorbar is
-;               not displayed in this mode.
+;               not displayed in this mode.  
 ;       XDIM,YDIM - Number of pixels.  Default is from !d.x_size and !d.y_size,
 ;               or size of image if passed with IMAGE keyword.
 ;       XSTART,YSTART - lower left corner (default of (0,0))
@@ -171,11 +171,13 @@ PRO TVLASER, hdr, Image, BARPOS=BarPos, CARROWS=CArrows, CLABELS=CLabels, $
 ;       Cleaner output when no astrometry in header  W. Landsman  June 97
 ;       Added /INFO to final MESSAGE  W. Landsman   July 1997
 ;       12/4/97	jkf/acc	- added TrueColor optional keyword.
-;       Converted to IDL V5.0   W. Landsman 10-Dec-1997
 ;       Added /NoClose keyword, trim Equinox format  W. Landsman 9-Jul-1998
 ;       Don't display coordinate labels if no astrometry, more flexible
 ;       formatting of exposure time W. Landsman 30-Aug-1998
 ;       BottomDW and NColorsDW added.  R. S. Hill, 1-Mar-1999
+;       Apply func tab to color bar if not colorps.  RSH, 21 Mar 2000
+;       Fix problem with /NOCLOSE and unequal X,Y sizes  W. Landsman Feb 2001
+;       Use TVRD(True=3) if /TRUECOLOR set    W. Landsman   November 2001
 ;-
 
  on_error,2
@@ -188,7 +190,7 @@ PRO TVLASER, hdr, Image, BARPOS=BarPos, CARROWS=CArrows, CLABELS=CLabels, $
    print, '           /NoDELETE, NO_PERS_INFO, /NoEIGHT, /NoPRINT, /NORETAIN,'
    print, '           /PORTRAIT,PRINTER=,/REVERSE, /SCALE, TITLE= , /TRUECOLOR,' 
    print, '           XDIM= ,XSTART=, YDIM= , YSTART= ] '
-   print, '           
+   print, '   '        
    return
  endif
 
@@ -241,7 +243,7 @@ PRO TVLASER, hdr, Image, BARPOS=BarPos, CARROWS=CArrows, CLABELS=CLabels, $
 	wset,!D.WINDOW
 	device,copy=[0,0,xsize,ysize,0,0,chan]
    endif
-   ImageOut = tvrd(XStart,YStart,XDim,YDim)
+   ImageOut = tvrd(XStart,YStart,XDim,YDim,true = truevalue)
    if not keyword_set(noretain) then begin
 	wdelete,!D.WINDOW
 	wset,chan
@@ -369,6 +371,9 @@ sv_font = !P.FONT
    if ( (NumEls eq 4) or (NumEls eq 5) ) then begin
     ColorBar = byte(round(congrid(findgen(nc)+BottomDW, 256))) $
        # make_array(20,val=1b)
+    if not(ColorPS) then $
+       ColorBar = 0.299 * sv_rr[ColorBar] + 0.587 * sv_gg[ColorBar] $
+                  + 0.114 * sv_bb[ColorBar]
     ColorBar[0:*,[0,19]]  = 0
     ColorBar[[0,255],0:*] = 0
     if (NumEls eq 4) then ColorBar = transpose(ColorBar)
@@ -530,6 +535,7 @@ if (strtrim(CLabels[0],2) ne '-1') then begin
 ;TELESCOPE
     scop = sxpar( hdr,'INSTRUME', Count = N_Scop)
     if N_Scop EQ 0 then scop = sxpar( hdr,'TELESCOP', Count = N_Scop)
+    if N_Scop EQ 0 then scop = sxpar( hdr,'OBSERVAT', Count = N_Scop)
     if N_Scop EQ 0 then scop = '' else scop = strtrim(scop,2)
     detector = sxpar( hdr,'DETECTOR', Count = N_det)
     if N_det EQ 0 then detector = '' else detector = strtrim(detector,2)
@@ -545,6 +551,7 @@ if (strtrim(CLabels[0],2) ne '-1') then begin
 ;FILTER
     filter = sxpar(hdr, 'FILTER', Count= N_filter)
     if N_filter EQ 0 then filter = sxpar(hdr, 'FILTNAM1', Count= N_filter)
+    if N_filter EQ 0 then filter = sxpar(hdr, 'FILTER1', Count= N_filter)
     if N_filter EQ 0 then FILTER = 'N/A' else filter = strtrim(filter,2)
     XYOUTS,LabX1s,LabYs,['CAMERA/FILTER:',FILTER],/NORMAL
 
@@ -665,7 +672,7 @@ endif
  endif
 
  if keyword_set(NoClose) then begin
-       plot,lindgen(xdim),lindgen(ydim),/noerase,xsty=5,ysty=5,/nodata, $
+       plot,[0,xdim-1],[0,ydim-1],/noerase,xsty=5,ysty=5,/nodata, $
        pos = [0,0,1,1]
        return
  endif 

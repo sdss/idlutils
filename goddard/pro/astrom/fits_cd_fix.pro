@@ -13,7 +13,7 @@ pro fits_cd_fix,hdr, REVERSE = reverse
 ;    the rotation of an image from standard coordinates is represented by a 
 ;    coordinate description (CD) matrix.    However, there have been several
 ;    different representations proposed for the CD matrix.   Currently, 
-;    (November 1998), the preferred form is CDn_m (as used in IRAF), which 
+;    (April 2000), the preferred form is CDn_m (as used in IRAF), which 
 ;    contains both rotation & plate scale info.    However,
 ;    an earlier draft of Griesen & Calabretta proposed the CD00n00m form.
 ;    containing only rotation (and skew) info, with the plate scale stored in
@@ -25,7 +25,7 @@ pro fits_cd_fix,hdr, REVERSE = reverse
 ;    is now prefered) using the /REVERSE keyword.  
 ;
 ; CALLING SEQUENCE:
-;       FITS_CD_FIX, Hdr, [/REVERSE]
+;    FITS_CD_FIX, Hdr, [/REVERSE]
 ;
 ; INPUT-OUTPUT: 
 ;       HDR - FITS header, 80 x N string array.   If the header does not
@@ -43,11 +43,12 @@ pro fits_cd_fix,hdr, REVERSE = reverse
 ;    Written   W. Landsman             Feb 1990
 ;    Major rewrite                     Feb 1994
 ;    Converted to IDL V5.0   W. Landsman   September 1997
+;    Use double precision formatting of CD matrix   W. Landsman  April 2000
 ;-
  On_error,2
 
  if N_params() LT 1 then begin
-        print,'Syntax - FITS_CD_FIX, hdr, [/REVERSE]
+        print,'Syntax - FITS_CD_FIX, hdr, [/REVERSE]'
         return
  endif
 
@@ -60,7 +61,7 @@ pro fits_cd_fix,hdr, REVERSE = reverse
  for i= 0 ,3 do begin
  cd = sxpar(hdr,cd00[i], COUNT = N )
  if N GE 1 then begin
-        sxaddpar,hdr,cd_[i],cd,comment[i],cd00[i],format ='(E14.7)'
+        sxaddpar,hdr,cd_[i],cd,comment[i],cd00[i]
         sxdelpar,hdr,cd00[i]
  endif
  endfor
@@ -70,7 +71,7 @@ pro fits_cd_fix,hdr, REVERSE = reverse
  for i= 0 ,3 do begin
  cd = sxpar(hdr,cd_[i], COUNT = N )
  if N GE 1 then begin
-        sxaddpar,hdr,cd00[i],cd,comment[i],cd_[i],format ='(E14.7)'
+        sxaddpar,hdr,cd00[i],cd,comment[i],cd_[i]
         sxdelpar,hdr,cd_[i]
  endif
  endfor

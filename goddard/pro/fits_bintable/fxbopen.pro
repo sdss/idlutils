@@ -1,9 +1,7 @@
 	PRO FXBOPEN, UNIT, FILENAME0, EXTENSION, HEADER, NO_TDIM=NO_TDIM, $
                 ERRMSG=ERRMSG, ACCESS=ACCESS, REOPEN=REOPEN
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBOPEN
 ; Purpose     : 
 ;	Open binary table extension in a disk FITS file for reading.

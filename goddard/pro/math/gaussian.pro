@@ -1,4 +1,4 @@
-function gaussian, xi, parms, pderiv
+function gaussian, xi, parms, pderiv, DOUBLE=double
 ;+
 ; NAME:
 ;       GAUSSIAN
@@ -14,20 +14,28 @@ function gaussian, xi, parms, pderiv
 ; INPUTS:
 ;       xi = array, independent variable of Gaussian function.
 ;
-;       parms = parameters of Gaussian, 2 or 3 element array:
-;               parms(0) = maximum value (factor) of Gaussian,
-;               parms(1) = mean value (center) of Gaussian,
-;               parms(2) = standard deviation (sigma) of Gaussian.
-;               (if parms has only 2 elements then sigma taken from common).
+;       parms = parameters of Gaussian, 2, 3 or 4 element array:
+;               parms[0] = maximum value (factor) of Gaussian,
+;               parms[1] = mean value (center) of Gaussian,
+;               parms[2] = standard deviation (sigma) of Gaussian.
+;               (if parms has only 2 elements then sigma taken from previous
+;               call to gaussian(), which is stored in a  common block).
+;               parms[3] = optional, constant offset added to Gaussian.
+; OUTPUT:
+;       y -  Function returns array of Gaussian evaluated at xi.    Values will
+;            be floating pt. (even if xi is double) unless the /DOUBLE keyword
+;            is set.
 ;
+; OPTIONAL INPUT:
+;       /DOUBLE - set this keyword to return double precision for both
+;             the function values and (optionally) the partial derivatives.
 ; OPTIONAL OUTPUT:
-;       pderiv = optional output of partial derivatives,
+;       pderiv = [N,3] or [N,4] output array of partial derivatives,
 ;               computed only if parameter is present in call.
 ;
-;               pderiv(*,i) = partial derivative at all xi absisca values
-;               with respect to parms(i), i=0,1,2.
+;               pderiv[*,i] = partial derivative at all xi absisca values
+;               with respect to parms[i], i=0,1,2,[3].
 ;
-;       Function returns array of Gaussian evaluated at xi.
 ;
 ; EXAMPLE:
 ;       Evaulate a Gaussian centered at x=0, with sigma=1, and a peak value
@@ -38,43 +46,62 @@ function gaussian, xi, parms, pderiv
 ;       numerical derivative at the two points with respect to the 3 parameters.
 ; 
 ; COMMON BLOCKS:
-;       common gaussian, sigma
+;       None
 ; HISTORY:
 ;       Written, Frank Varosi NASA/GSFC 1992.
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use machar() for machine precision, added /DOUBLE keyword,
+;       add optional constant 4th parameter    W. Landsman   November 2001
 ;-
   On_error,2
+  common gaussian, sigma
 
   if N_params() LT 2 then begin
-        print,'Syntax - y = GAUSSIAN( xi, parms,[ pderiv ])'
+        print,'Syntax - y = GAUSSIAN( xi, parms,[ pderiv, /DOUBLE ])'
         print,'         parms[0] = maximum value (factor) of Gaussian'
         print,'         parms[1] = mean value (center) of Gaussian'
         print,'         parms[2] = standard deviation (sigma) of Gaussian'
+        print,'         parms[3] = optional constant to be added to Gaussian'
         return, -1
   endif
 
   common gaussian, sigma
 
         Nparmg = N_elements( parms )
-        parms = float( parms )
+        npts = N_elements(xi) 
+        ptype = size(parms,/type)
+        if (ptype LE 3) or (ptype GE 12) then parms = float(parms)
         if (Nparmg GE 3) then sigma = parms[2]
 
+        double = keyword_set(DOUBLE)
+        if double then $       ;Double precision?
+            gauss = dblarr( npts ) else $
+            gauss = fltarr( npts )
+ 
         z = ( xi - parms[1] )/sigma
         zz = z*z
-        gauss = fltarr( N_elements( zz ) )
-        w = where( zz LT 172, nw )
+
+; Get smallest value expressible on computer.   Set lower values to 0 to avoid
+; floating underflow
+        minexp = alog((machar(DOUBLE=double)).xmin)     
+ 
+        w = where( zz LT -2*minexp, nw )
         if (nw GT 0) then gauss[w] = exp( -zz[w] / 2 )
 
         if N_params() GE 3 then begin
 
-                pderiv = fltarr( N_elements( xi ), Nparmg )
+                if double then $ 
+                pderiv = dblarr( npts, Nparmg ) else $
+                pderiv = fltarr( npts, Nparmg )
                 fsig = parms[0] / sigma
 
                 pderiv[0,0] = gauss
                 pderiv[0,1] = gauss * z * fsig
 
                 if (Nparmg GE 3) then  pderiv[0,2] = gauss * zz * fsig
+                if (Nparmg GE 4) then  pderiv[0,3] = replicate(1, npts)
            endif
 
-return, parms[0] * gauss
-end
+ if Nparmg LT 4 then return, parms[0] * gauss else $
+                     return, parms[0] * gauss + parms[3]
+ end

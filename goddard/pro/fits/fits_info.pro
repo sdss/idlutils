@@ -118,11 +118,11 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
    readu, lun1, hdr
    hd = string( hdr > 32b)
 ;                               Get values of BITPIX, NAXIS etc.
-   bitpix = sxpar(hd, 'BITPIX')
-   if !ERR EQ -1 then $ 
+   bitpix = sxpar(hd, 'BITPIX', Count = N_BITPIX)
+   if N_BITPIX EQ 0 then $ 
           message, 'WARNING - FITS header missing BITPIX keyword',/CON
-   Naxis = sxpar( hd, 'NAXIS')
-   if !ERR EQ -1 then message, $ 
+   Naxis = sxpar( hd, 'NAXIS', Count = N_NAXIS)
+   if N_NAXIS EQ 0 then message, $ 
            'WARNING - FITS header missing NAXIS keyword',/CON
    simple = sxpar( hd, 'SIMPLE')
    exten = sxpar( hd, 'XTENSION')

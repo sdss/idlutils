@@ -41,6 +41,10 @@
 ;	constraint that the solution convolved with PSF fits data image.
 ;	Based on paper by Hollis, Dorband, Yusef-Zadeh, Ap.J. Feb.1992,
 ;	which refers to Agmon, Alhassid, Levine, J.Comp.Phys. 1979.
+;
+;       A more elaborate image deconvolution program using maximum entropy is 
+;       available at 
+;       http://sohowww.nascom.nasa.gov/solarsoft/gen/idl/image/image_deconvolve.pro
 ; HISTORY:  
 ;	written by Frank Varosi at NASA/GSFC, 1992.
 ;	Converted to IDL V5.0   W. Landsman   September 1997

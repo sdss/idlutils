@@ -25,7 +25,7 @@ PRO ZENPOS, date, ra, dec
 ;       ZENPOS will prompt for the following 3 parameters if they are not
 ;       defined in the common block SITE (see below)
 ;
-;       LAT,LNG - north latitude and west longitude of the desired location 
+;       LAT,LNG - north latitude and east longitude of the desired location 
 ;               in DEGREES
 ;       TZONE - Time Zone (in hours) of the desired location (e.g. 4 = EDT,
 ;               5 = EST)
@@ -39,11 +39,12 @@ PRO ZENPOS, date, ra, dec
 ; MODIFICATION HISTORY:
 ;       Written by Michael R. Greason, STX, 14 October 1988.
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Update documentation, longitude now *east* of Greenwich W.L. July 2000
 ;-
  COMMON SITE, lat, lng, tzone
 
  if N_params() EQ 0 then begin
-     print,'Syntax - zenpos, dte, ra, dec
+     print,'Syntax - zenpos, dte, ra, dec'
      print,'         dte = Julian Date, Ouput Ra and Dec in radians'
      return
  endif

@@ -32,7 +32,7 @@ function nint, x, LONG = long             ;Nearest Integer Function
 ;	If X = [-0.9,-0.1,0.1,0.9] then NINT(X) = [-1,0,0,1]
 ;
 ; PROCEDURE CALL:
-;	DATATYPE()
+;	None:
 ; REVISION HISTORY:
 ;	Written W. Landsman        January 1989
 ;	Added LONG keyword         November 1991
@@ -40,13 +40,14 @@ function nint, x, LONG = long             ;Nearest Integer Function
 ;	Always start with ROUND function    April 1995
 ;	Return LONG values, if some input value exceed 32767
 ;		and accept string values   February 1998 
+;       Use size(/TNAME) intead of DATATYPE()      October 2001
 ;-
  xmax = max(x,min=xmin)
  xmax = abs(xmax) > abs(xmin)
  if (xmax gt 32767) or keyword_set(long) then begin
-    if datatype(x,1) eq 'String' then b = round(float(x)) else b = round(x)
+    if size(x,/TNAME) eq 'STRING' then b = round(float(x)) else b = round(x)
  end else begin
-    if datatype(x,1) eq 'String' then b = fix(round(float(x))) else	$
+    if size(x,/TNAME) eq 'STRING' then b = fix(round(float(x))) else	$
 	    b = fix(round(x))
  endelse
 

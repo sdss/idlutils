@@ -23,8 +23,8 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       ABORT - string specifying that SXPAR should do a RETALL
 ;               if a parameter is not found.  ABORT should contain
 ;               a string to be printed if the keyword parameter is not found.
-;               If not supplied SXPAR will return with a negative
-;               !err if a keyword is not found.
+;               If not supplied, SXPAR will return quietly with COUNT = 0
+;               (and !ERR = -1) if a keyword is not found.
 ;
 ; OPTIONAL INPUT KEYWORDS: 
 ;       /NOCONTINUE = If set, then continuation lines will not be read, even
@@ -32,7 +32,7 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;
 ; OPTIONAL OUTPUT KEYWORDS:
 ;       COUNT - Optional keyword to return a value equal to the number of 
-;               parameters found by sxpar, integer scalar
+;               parameters found by SXPAR, integer scalar
 ;
 ;       COMMENT - Array of comments associated with the returned values
 ;
@@ -48,10 +48,11 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ; SIDE EFFECTS:
 ;       !ERR is set to -1 if parameter not found, 0 for a scalar
 ;       value returned.  If a vector is returned it is set to the
-;       number of keyword matches found.
+;       number of keyword matches found.    The use of !ERR is deprecated, and
+;       instead the COUNT keyword is preferred
 ;
-;       If a keyword occurs more than once in a header, a warning is given,
-;       and the first occurence is used.
+;       If a keyword (except HISTORY or COMMENT) occurs more than once in a 
+;       header, a warning is given, and the first occurence is used.
 ;
 ; EXAMPLES:
 ;       Given a FITS header, h, return the values of all the NAXISi values
@@ -64,7 +65,7 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       The first 8 chacters of each element of Hdr are searched for a 
 ;       match to Name.  The value from the last 20 characters is returned.  
 ;       An error occurs if there is no parameter with the given name.
-;       
+;
 ;       If a numeric value has no decimal point it is returned as type
 ;       LONG.   If it contains more than 8 numerals, or contains the 
 ;       characters 'D' or 'E', then it is returned as type DOUBLE.  Otherwise
@@ -91,7 +92,7 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       both are too widely used to drop either one.
 ;
 ; PROCEDURES CALLED:
-;       GETTOK(), STRNUMBER()
+;       GETTOK(), VALID_NUM()
 ; MODIFICATION HISTORY:
 ;       DMS, May, 1983, STPAR Written.
 ;       D. Lindler Jan 90 added ABORT input parameter
@@ -108,10 +109,11 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       Converted to IDL V5.0, May 1998
 ;       W. Landsman Feb 1998, Recognize CONTINUE convention 
 ;       W. Landsman Oct 1999, Recognize numbers such as 1E-10 as floating point
+;       W. Landsman Jan 2000, Only accept integer N values when name = keywordN
 ;-
 ;----------------------------------------------------------------------
  if N_params() LT 2 then begin
-     print,'Syntax -     result =  sxpar( hdr, name, [abort, COUNT = ])
+     print,'Syntax -     result =  sxpar( hdr, name, [abort, COUNT = ])'
      return, -1
  endif 
 
@@ -130,8 +132,10 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 
   nam = strtrim( strupcase(name) )      ;Copy name, make upper case     
 
-; Determine if name is of form 'keyword*'; must consider the possibility
-; than nam is an empty string
+
+;  Determine if NAME is of form 'keyword*'.  If so, then strip off the '*', and
+;  set the VECTOR flag.  One must consider the possibility that NAM is an empty
+;  string.
 
    namelength1 = (strlen(nam) - 1 ) > 1         
    if strpos( nam, '*' ) EQ namelength1 then begin    
@@ -141,34 +145,63 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
             num_length = 8 - name_length        ;Max length of number portion  
             if num_length LE 0 then  $ 
                   message, 'Keyword length must be 8 characters or less'
+
+;  Otherwise, extend NAME with blanks to eight characters.
+
     endif else begin  
                 while strlen(nam) LT 8 do nam = nam + ' ' ;Make 8 chars long
                 vector = 0      
     endelse
 
-; Loop on lines of the header 
 
- keyword = strmid( hdr, 0, 8)
- histnam = (nam eq 'HISTORY ') or (nam eq 'COMMENT ') or (nam eq '') 
- if vector then begin
-           nfound = where(strpos(keyword,nam) GE 0, matches)
-           if ( matches GT 0 ) then begin
-                   numst= strmid(hdr[nfound], name_length, num_length)
-                   number = intarr(matches)-1
-                   for i = 0, matches-1 do $
-                    if strnumber( numst[i], num) then number[i] = num
-                   igood = where(number GE 0, matches)
-                   if matches GT 0 then begin
-                        nfound = nfound[igood] & number = number[igood]
-                   endif
-           endif
+;  If of the form 'keyword*', then find all instances of 'keyword' followed by
+;  a number.  Store the positions of the located keywords in NFOUND, and the
+;  value of the number field in NUMBER.
 
- endif else begin
+        histnam = (nam eq 'HISTORY ') or (nam eq 'COMMENT ') or (nam eq '') 
+        if N_elements(start) EQ 0 then start = -1l
+        start = long(start[0])
+        if (not vector) and (start GE 0) then begin
+            if N_elements(precheck)  EQ 0 then precheck = 5
+            if N_elements(postcheck) EQ 0 then postcheck = 20
+            nheader = N_elements(hdr)
+            mn = (start - precheck)  > 0
+            mx = (start + postcheck) < nheader-1
+            keyword = strmid(hdr[mn:mx], 0, 8)
+        endif else begin
+            restart:
+            start   = -1l
+            keyword = strmid( hdr, 0, 8)
+        endelse
 
-       nfound = where(keyword EQ nam, matches)
-       if not histnam then if matches GT 1 then message,$
-         'WARNING - Keyword '+NAM +' located more than once in '+abort,/inform
- endelse   
+        if vector then begin
+            nfound = where(strpos(keyword,nam) GE 0, matches)
+            if ( matches gt 0 ) then begin
+                numst= strmid( hdr[nfound], name_length, num_length)
+                number = replicate(-1, matches)
+                for i = 0, matches-1 do         $
+                    if VALID_NUM( numst[i], num,/INTEGER) then number[i] = num
+                igood = where(number GE 0, matches)
+                if matches GT 0 then begin
+                    nfound = nfound[igood]
+                    number = number[igood]
+                endif
+            endif
+
+;  Otherwise, find all the instances of the requested keyword.  If more than
+;  one is found, and NAME is not one of the special cases, then print an error
+;  message.
+
+        endif else begin
+            nfound = where(keyword EQ nam, matches)
+            if (matches EQ 0) and (start GE 0) then goto, RESTART
+            if (start GE 0) then nfound = nfound + mn
+            if (matches GT 1) and (not histnam) then        $
+                message,/informational, 'Warning - keyword ' +   $
+                nam + 'located more than once in ' + abort
+            if (matches GT 0) then start = nfound[matches-1]
+        endelse
+
 
 ; Process string parameter 
 

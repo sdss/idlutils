@@ -32,6 +32,7 @@ pro t_group,fitsfile,rmax,xpar=xpar,ypar=ypar, NEWTABLE = newtable
 ; REVISION HISTORY:
 ;	Written, W. Landsman        STX Co.      May, 1996
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Updated for new FTINFO call    W. Landsman    May 2000
 ;-
  On_error,2    
 
@@ -45,21 +46,23 @@ pro t_group,fitsfile,rmax,xpar=xpar,ypar=ypar, NEWTABLE = newtable
  if not keyword_set(NEWTABLE) then newtable = fitsfile
 
  dummy = readfits( fitsfile, hprimary, /SILENT )
- if !ERROR GT 0 then return
  tab = readfits(fitsfile, h, /ext)
 
- x = ftget( h, tab, xpar) - 1.
- y = ftget( h, tab, ypar) - 1.
+ ftinfo,h,ft_str
+ ttype = strtrim(ft_str.ttype,2)
+ x = ftget( ft_str, tab, xpar) - 1.
+ y = ftget( ft_str, tab, ypar) - 1.
 
  if N_elements(rmax) EQ 0 then $
 	read,'Enter maximum distance between stars in a group: ',rmax
 
  group, x, y, rmax, ngroup
 
- sxaddpar, h, 'RMAX', rmax, 'MAX DISTANCE IN GROUP', 'TTYPE1'
- sxaddpar, h, 'EXTNAME', 'IDL DAOPHOT: GROUP', 'DAOPHOT Stage'
- ftinfo, h, 'GROUP_ID'
- if !ERR EQ -1 then ftaddcol, h, tab, 'GROUP_ID', 4, 'I4'
+ sxaddpar, h, 'RMAX', rmax, 'Maximum Distance in Group', 'TTYPE1'
+ sxaddpar, h, 'EXTNAME', 'IDL DAOPHOT: Group', 'DAOPHOT Stage'
+
+ gid = where(ttype EQ 'GROUP_ID', Nid)
+ if Nid EQ 0 then ftaddcol, h, tab, 'GROUP_ID', 4, 'I4'
  ftput, h, tab, 'GROUP_ID', 0, ngroup
  sxaddhist, 'T_GROUP: ' + systime(),h
 

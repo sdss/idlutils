@@ -1,9 +1,7 @@
 	PRO FXBWRITE, UNIT, DATA, COL, ROW, BIT=BIT, NANVALUE=NANVALUE,	$
 		ERRMSG=ERRMSG
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBWRITE
 ; Purpose     : 
 ;	Write a binary data array to a disk FITS binary table file.

@@ -2,7 +2,7 @@ pro dbfparse, spar, items, stype, values
 ;+
 ; NAME:
 ;     DBFPARSE
-; PURPOSE
+; PURPOSE:
 ;     Parse the search string supplied to DBFIND.   Not a standalone routine
 ;
 ; CALLING SEQUENCE:

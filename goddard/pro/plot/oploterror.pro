@@ -35,10 +35,10 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;            For example, if NSKIP = 2 then every other error bar is 
 ;            plotted; if NSKIP=3 then every third error bar is plotted.   
 ;            Default is to plot every error bar (NSKIP = 1)
-;      NSUM =  Number of points to average over before plotting.   The errors
-;             are also averaged, and then divided by sqrt(NSUM).   This 
-;             approximation is useful when the neighboring error bars have
-;             similar sizes.
+;      NSUM =  Number of points to average over before plotting, default = 
+;             !P.NSUM  The errors are also averaged, and then divided by 
+;             sqrt(NSUM).   This approximation is meaningful only when the 
+;             neighboring error bars have similar sizes.
 ; 
 ;      /LOBAR = if specified and non-zero, will draw only the -ERR error bars.
 ;      /HIBAR = if specified and non-zero, will draw only the +ERR error bars.
@@ -92,6 +92,9 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;      Ignore !P.PSYM when drawing error bars   W. Landsman   Jan 1999
 ;      Handle NSUM keyword correctly           W. Landsman    Aug 1999
 ;      Check limits for logarithmic axes       W. Landsman    Nov. 1999
+;      Work in the presence of  NAN values     W. Landsman    Dec 2000
+;      W. Landsman  Improve logic when NSUM or !P.NSUM is set        Jan 2001
+;      Remove NSUM keyword from PLOTS call    W. Landsman      March 2001
 ;-
 ;                  Check the parameters.
 ;
@@ -115,6 +118,7 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  IF (n_elements(ecol) EQ 0) THEN ecol = !P.COLOR
  if N_elements( NOCLIP ) EQ 0 THEN noclip = 0
  if not keyword_set(NSKIP) then nskip = 1
+ if N_elements(nsum) EQ 0 then nsum = !P.NSUM
  if not keyword_set(lobar) and not keyword_set(hibar) then begin
       lobar=1
       hibar=1
@@ -133,22 +137,26 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ; procedure can know which parameter is which.
 ;
  IF np EQ 2 THEN BEGIN                  ; Only Y and YERR passed.
-      yerr = abs(y)
+      yerr = y
       yy = x
       xx = indgen(n_elements(yy))
-        xerr = make_array(size=size(xx))
+      xerr = make_array(size=size(xx))
 
  ENDIF ELSE IF np EQ 3 THEN BEGIN       ; X, Y, and YERR passed.
-        yerr = abs(xerr)
+        yerr = xerr
         yy = y
         xx = x
 
  ENDIF ELSE BEGIN                        ; X, Y, XERR and YERR passed.
-      yerr = abs(yerr)
       yy = y
-        xerr = abs(xerr)
+      g = where(finite(xerr))
+      xerr[g] = abs(xerr[g])
       xx = x
  ENDELSE
+
+ g = where(finite(yerr))
+ yerr[g] = abs(yerr[g])
+
 ;
 ;                  Determine the number of points being plotted.  This
 ;                  is the size of the smallest of the three arrays
@@ -165,7 +173,9 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  yerr = yerr[0:n-1]
  IF np EQ 4 then xerr = xerr[0:n-1]
 
- if N_elements(nsum) EQ 1 then begin
+; If NSUM is greater than one, then we need to smooth ourselves (using FREBIN)
+
+ if NSum GT 1 then begin
       n1 = float(n) / nsum
       n  = long(n1)
       xx = frebin(xx, n1)

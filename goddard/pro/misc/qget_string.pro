@@ -25,8 +25,9 @@ FUNCTION qget_string, dummy
 ;     removes the previous character from the string (only the backspace
 ;     key will work in VMS IDL).
 ;
-; PROCEDURES CALLED:
-;
+; NOTES:
+;     For a widget password procedure see 
+;     http://www.dfanning.com/tip_examples/password.pro
 ; MODIFICATION HISTORY:
 ;     Written by Michael R. Greason, STX, 8 January 1991.
 ;     Work for Mac and Windows IDL  W. Landsman    September 1995

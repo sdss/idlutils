@@ -55,7 +55,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	rejected. 
 ;
 ; PROCEDURE CALLS:
-;	DATATYPE(), GETOPT
+;	GETOPT
 ; REVISION HISTORY:
 ;	Written W. Landsman, STX  February, 1987
 ;	ROUND now an internal function in V3.1   W. Landsman July 1993
@@ -63,6 +63,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	Use /PRINT keyword instead of TEXTOUT    W. Landsman May  1996
 ;	Changed loop indices to type LONG       W. Landsman Aug. 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Replace DATATYPE() with size(/TNAME)   W. Landsman Nov. 2001
 ;-
 ;
  On_error,2                         ;Return to caller
@@ -121,7 +122,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
  good = where( mask, pixels)  ;Value of c are now equal to distance to center
 
  c = c*mask               
- c[good] = exp(-0.5*c[good]/sigsq)	;Make c into a gaussian kernel
+ c[good] = exp(-0.5*c[good]/sigsq)	;Make c into a Gaussian kernel
  sumc = total(c)
  sumcsq = total(c^2) - sumc^2/pixels
  sumc = sumc/pixels
@@ -216,7 +217,7 @@ SEARCH: 			    ;Threshold dependent search begins here
 
  if PRINT then begin	;Create output file?
 
-         if ( datatype(print) NE 'STR' ) then file = 'find.prt' $
+         if ( size(print,/TNAME) NE 'STRING' ) then file = 'find.prt' $
                                          else file = print
          message,'Results will be written to a file ' + file,/INF
          openw,lun,file,/GET_LUN

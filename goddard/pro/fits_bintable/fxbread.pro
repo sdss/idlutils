@@ -2,9 +2,7 @@
 		DIMENSIONS=DIMENSIONS, NANVALUE=NANVALUE, ERRMSG=ERRMSG, $
                 NOIEEE=NOIEEE
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXBREAD
 ; Purpose     : 
 ;	Read a data array from a disk FITS binary table file.
@@ -127,23 +125,22 @@
 ;		Use IDL dcomplex datatype if needed
 ;	Version 12, Wayne Landmsan, GSFC, 20 Feb, 1998
 ;		Remove call to WHERE_NEGZERO (now part of IEEE_TO_HOST)
+;	Version 13, 18 Nov 1999, CM, Add NOIEEE keyword
+;	Version 14, 21 Aug 2000, William Thompson, GSFC
+;		Catch I/O errors
 ; Version     :
-;       Version 12, 20 Feb 1998
-;	Converted to IDL V5.0   W. Landsman   September 1997
-;       Add NOIEEE keyword, CM 1999 Nov 18
+;       Version 14, 21 Aug 2000
 ;-
 ;
 @fxbintable
 	ON_ERROR, 2
+	ON_IOERROR, HANDLE_IO_ERROR
 ;
 ;  Check the number of parameters.
 ;
 	IF N_PARAMS() LT 3 THEN BEGIN
 		MESSAGE = 'Syntax:  FXBREAD, UNIT, DATA, COL  [, ROW ]'
-		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-			ERRMSG = MESSAGE
-			RETURN
-		END ELSE MESSAGE, MESSAGE
+		GOTO, HANDLE_ERROR
 	ENDIF
 ;
 ;  Find the logical unit number in the FXBINTABLE common block.
@@ -151,12 +148,8 @@
 	ILUN = WHERE(LUN EQ UNIT,NLUN)
 	ILUN = ILUN[0]
 	IF NLUN EQ 0 THEN BEGIN
-		MESSAGE = 'Unit ' + STRTRIM(UNIT,2) +	$
-			' not opened properly'
-		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-			ERRMSG = MESSAGE
-			RETURN
-		END ELSE MESSAGE, MESSAGE
+		MESSAGE = 'Unit ' + STRTRIM(UNIT,2) + ' not opened properly'
+		GOTO, HANDLE_ERROR
 	ENDIF
 ;
 ;  If COL is of type string, then search for a column with that label.
@@ -169,10 +162,7 @@
 		ICOL = ICOL[0]
 		IF (ICOL LT 0) AND (NOT KEYWORD_SET(VIR)) THEN BEGIN
 			MESSAGE = 'Column "' + SCOL + '" not found'
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 		ENDIF
 ;
 ;  If the column was not found, and VIRTUAL was set, then search for a keyword
@@ -189,10 +179,7 @@
 				ENDIF
 			ENDIF
 			MESSAGE = 'Column "' + SCOL + '" not found'
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 		ENDIF
 ;
 ;  Otherwise, a numerical column was passed.  Check its value.
@@ -201,10 +188,7 @@
 	IF (ICOL LT 0) OR (ICOL GE TFIELDS[ILUN]) THEN BEGIN
 		MESSAGE = 'COL must be between 1 and ' +	$
 			STRTRIM(TFIELDS[ILUN],2)
-		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-			ERRMSG = MESSAGE
-			RETURN
-		END ELSE MESSAGE, MESSAGE
+		GOTO, HANDLE_ERROR
 	ENDIF
 ;
 ;  If there are no elements in the array, then set !ERR to -1.
@@ -225,10 +209,7 @@ CHECK_ROW:
 		2:  ROW2 = LONG(ROW[1])
 		ELSE:  BEGIN
 			MESSAGE = 'ROW must have one or two elements'
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 			END
 	ENDCASE
 	ROW1 = LONG(ROW[0])
@@ -241,25 +222,16 @@ CHECK_ROW:
 		IF (ROW1 LT 1) OR (ROW1 GT MAXROW) THEN BEGIN
 			MESSAGE = 'ROW[0] must be between 1 and ' +	$
 				STRTRIM(MAXROW,2)
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 		END ELSE IF (ROW2 LT ROW1) OR (ROW2 GT MAXROW) THEN BEGIN
 			MESSAGE = 'ROW[1] must be between ' +	$
 				STRTRIM(ROW1,2) + ' and ' + STRTRIM(MAXROW,2)
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 		END ELSE IF NOT VIRTUAL THEN IF MAXVAL[ICOL,ILUN] GT 0 THEN $
 				BEGIN
 			MESSAGE = 'Row ranges not allowed for ' +	$
 				'variable-length columns'
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 		ENDIF
 ;
 ;  Otherwise, if ROW is a single number, then just make sure it's valid.
@@ -268,10 +240,7 @@ CHECK_ROW:
 		IF (ROW1 LT 1) OR (ROW1 GT NAXIS2[ILUN]) THEN BEGIN
 			MESSAGE = 'ROW must be between 1 and ' +	$
 				STRTRIM(NAXIS2[ILUN],2)
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 		ENDIF
 	ENDELSE
 ;
@@ -328,10 +297,7 @@ CHECK_ROW:
 		IF PRODUCT(DIMS0) GT PRODUCT(DIMS) THEN BEGIN
 			MESSAGE = 'Requested dimensions exceeds the ' +	$
 				'number of elements'
-			IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-				ERRMSG = MESSAGE
-				RETURN
-			END ELSE MESSAGE, MESSAGE
+			GOTO, HANDLE_ERROR
 		ENDIF
 		DIMS = DIMS0
 	ENDIF
@@ -403,5 +369,16 @@ CHECK_ROW:
 	IF COUNT GT 0 THEN DATA[W] = NANVALUE
 ;
         IF N_ELEMENTS(ERRMSG) NE 0 THEN ERRMSG = ''
+	RETURN
+;
+;  I/O error handling point.
+;
+HANDLE_IO_ERROR:
+	MESSAGE = 'I/O error reading file'
+;
+;  Error handling point.
+;
+HANDLE_ERROR:
+	IF N_ELEMENTS(ERRMSG) NE 0 THEN ERRMSG = MESSAGE ELSE MESSAGE, MESSAGE
 	RETURN
 	END

@@ -44,8 +44,8 @@ pro polint, xa, ya, x, y, dy
 
  if N_params() LT 4 then begin
      print,'Syntax - polint, xa, ya, x, y, [ dy ]'
-     print,'     xa,ya - Input vectors to be interpolated
-     print,'     x - Scalar specifying point at which to interpolate
+     print,'     xa,ya - Input vectors to be interpolated'
+     print,'     x - Scalar specifying point at which to interpolate'
      print,'     y - Output interpolated scalar value'
      print,'     dy - Optional error estimate on y'
      return

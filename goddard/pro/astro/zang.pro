@@ -1,50 +1,78 @@
-function zang,dl,z,h,omega                   ;Angular-Diameter Redshift relation
+function zang,dl,z, h0=h0, k = k, Lambda0 = lambda0, Omega_m = Omega_m, $
+                    q0 = q0, SILENT = silent
 ;+
 ; NAME:
-;	ZANG
+;       ZANG
 ; PURPOSE:
-;	Determine the angular size of an object as a function of redshift
+;       Determine the angular size of an object as a function of redshift
 ; EXPLANATION:
-;	ZANG asumes a Friedmann cosmology (homogeneous, isotropic universe 
-;	with zero cosmological constant.
+;       Requires an input size in kpc and returns an angular size in arc seconds
+;       Default cosmology has a Hubble constant of 70 km/s/Mpc, Omega (matter)
+;       =0.3 and a normalized cosmological constant Lambda = 0.7; however these
+;       values can be changed with apropriate keywords.
 ;
 ; CALLING SEQUENCE:
-;	angsiz = zang( dl, [ z, h, omg ] )
+;       angsiz = zang( dl, [ z, H0 =, Omega_m =, Lambda0 = , q0 = , k =, 
+;                               /SILENT] )
 ;
 ; INPUTS:
-;	dl - linear size of the object in kpc
-; OPTIONAL INPUT
-;	User will be prompted for these parameters if not supplied.
+;       dl - linear size of the object *in kpc*, non-negative scalar or vector
+;       z - redshift of object, postive  scalar or vector
+;           Either dl and z must have the same number of elements, or at least
+;           one of them must be a vector.
+; OPTIONAL INPUT KEYWORDS
+;    H0 -  Hubble constant in km/s/Mpc, default is 70
 ;
-;	z - redshift of object 
-;	h - Hubble constant in km/s/Mpc (usually 50 - 100)
-;	omega - Cosmological density parameter (twice the deceleration
-;		parameter q0), Omega =1 at the critical density
+;        No more than two of the following four parameters should be
+;        specified.    None of them need be specified, default values are given
+;    k - curvature constant, normalized to the closure density.   Default is
+;        0, indicating a flat universe
+;    Omega_m -  Matter density, normalized to the closure density, default
+;        is 0.3.   Must be non-negative
+;    Lambda0 - Cosmological constant, normalized to the closure density,
+;        default is 0.7
+;    q0 - Deceleration parameter, numeric scalar = -R*(R'')/(R')^2, default
+;        is -0.5
 ;
+;    Note that Omega_m + lambda0 + k = 1 and q0 = 0.5*omega_m - lambda0
 ; OUTPUT:
-;	angsiz - Angular size of the object at the given redshift in 
-;		arc seconds 
+;       angsiz - Angular size of the object at the given redshift in 
+;               arc seconds 
+; EXAMPLE:
+;  (1) What would be the angular size of galaxy of diameter 50 kpc at a redshift
+;      of 1.5 in an open universe with Lambda = 0 and Omega (matter) = 0.3.
+;      Assume the default Hubble constant value of 70 km/s/Mpc.
+;      
+;      IDL> print,zang(50,1.5, Lambda = 0,omega_m = 0.3)
+;             ====> 6.58 arc seconds
 ;
+;  (2) Now plot the angular size of a 50 kpc diameter galaxy as a function of 
+;      redshift for the default cosmology (Lambda = 0.7, Omega_m=0.3) up to 
+;      z = 0.5
+;      IDL> z = findgen(50)/10. + 0.1    ;Angular size undefined at z = 0
+;      IDL> plot,z,zang(50,z),xtit='z',ytit='Angular Size (")'
 ; NOTES:
-;	One (and only one) of the input parameters may be supplied as a vector
-;	In this case, the output ANGSIZ will also be a vector.
-;	Be sure to supply the input linear size dl in units of kpc.
+;      This procedure underwent a major revision in April 2000 to allow for a 
+;      cosmological constant, ***including a change of the calling sequence***
 ;
+;      Be sure to supply the input linear size dl in units of kpc.
+; PROCEDURES CALLED:
+;      LUMDIST() -- Calculates the luminosity distance
 ; REVISION HISTORY:
-;	Written    J. Hill   STX           July, 1988
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;      Written    J. Hill   STX           July, 1988
+;      Converted to IDL V5.0   W. Landsman   September 1997
+;      Major rewrite to call LUMDIST function  W. Landsman   April 2000     
 ;-
- if n_elements(z) lt 1 then read,'Enter redshift of object: ',z
- if n_elements(h) lt 1 then read,'Enter a value for the Hubble constant: ',h
- if n_elements(omega) lt 1 then read, $
-     'Enter value of the density parameter (Omega): ',omega
 
- fac1 = 2.*3.e5/h                                 ;2c/h
- fac2 = 1./(omega^2*(1+z))
- fac3=omega*z-(2.-omega)*(sqrt(1.+omega*z)-1)
+ if N_params() LT 2 then begin 
+      print,'Sytnax - ' + $
+ 'angsiz = zang( dl, z, [H0 =, Omega_m =, Lambda0 = , q0 = , k =, /SILENT])'
+      return,-1
+ endif
 
- ar = fac1*fac2*fac3                   ;Distance in Mpc to object at redshift z
+ d = lumdist(z,H0 = h0,k = k, Lambda0 = lambda0, Omega_m = Omega_m,  q0 = q0, $
+               SILENT = silent)
 
- return,dl*(1+z)/(1000*ar)*2.062e5
-
+; Angular distance is equal to the luminosity distance times (1+z)^2
+ return,!RADEG*3600.*dl*(1.+z)^2/(1000.*d)
  end

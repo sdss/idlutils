@@ -40,7 +40,7 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
 ;       Normal - if this keyword is set and nonzero, the input center 
 ;                (xcen,ycen) is taken to be in normalized coordinates.   The
 ;                default is device coordinates.
-;       thick     - line thickness, default = 1.0, floating point scalar
+;       thick     - line thickness, default = 2.0, floating point scalar
 ; OUTPUTS:
 ;       none
 ; EXAMPLE:

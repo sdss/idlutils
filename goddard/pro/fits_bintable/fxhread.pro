@@ -1,8 +1,6 @@
 	PRO FXHREAD,UNIT,HEADER,STATUS
 ;+
-; Project     : SOHO - CDS
-;
-; Name        : 
+; NAME: 
 ;	FXHREAD
 ; Purpose     : 
 ;       Reads a FITS header from an opened disk file.

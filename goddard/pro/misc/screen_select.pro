@@ -1,4 +1,5 @@
-PRO SCREEN_SELECT, selections, iselected, comments, command_line, only_one
+PRO SCREEN_SELECT, selections, iselected, comments, command_line, only_one, $
+                COUNT  = count      
 ;+
 ; NAME:
 ;	SCREEN_SELECT
@@ -35,8 +36,11 @@ PRO SCREEN_SELECT, selections, iselected, comments, command_line, only_one
 ;	iselected - list of indices in selections giving the selected
 ;		items.
 ;
+; OPTIONAL OUTPUT KEYWORD:
+;       COUNT - Integer scalar giving the number of selections made
+;
 ; SIDE EFFECTS:
-;	!err is set to the number of selections made
+;	The obsolete system variable !err is set to the number of selections
 ;
 ; PROCEDURE:
 ;	The actual processing is farmed out to different procedures depending
@@ -49,6 +53,7 @@ PRO SCREEN_SELECT, selections, iselected, comments, command_line, only_one
 ;       Added widget support    W. Landsman           January, 1992
 ;	Remove X window but no widget option         November, 1994
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added COUNT keyword, deprecate !ERR   W. Landsman   March 2000
 ;-
 ;--------------------------------------------------------------------------
 ;			Set defaults.
@@ -61,6 +66,7 @@ if N_params() LT 5 then only_one = 0
 ;			supplied, set iselected to -1 and !err to 0.
 ;			Then quit.
 ;
+ count = 0
  if N_params() LT 2 then begin
 	!ERR = 0
 	iselected = -1
@@ -71,11 +77,11 @@ if N_params() LT 5 then only_one = 0
 ;
    if (!D.FLAGS and 65536) EQ 65536 then $       ;Widgets?
 
-      select_w, selections,iselected, comments, command_line, only_one $
-
-   else  $                                       ;Dumb Terminal?
-
-      select_o, selections, iselected, comments, command_line, only_one
+      select_w, selections,iselected, comments, command_line, only_one,  $
+                Count = count else  $                                       
+                                         ;Dumb Terminal?
+      select_o, selections, iselected, comments, command_line, only_one, $
+                Count = count
 
  endelse
 ;

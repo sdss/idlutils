@@ -1,10 +1,11 @@
 pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
-              c1 = c1, c2 = c2, c3 = c3, c4 = c4
-;
+              c1 = c1, c2 = c2, c3 = c3, c4 = c4,avglmc=avglmc, lmc2 = lmc2, $
+              ExtCurve=ExtCurve
+;+
 ; NAME:
 ;     FM_UNRED
 ; PURPOSE:
-;     Deredden a flux vector using the Fitzpatrick (1998) parameterization
+;     Deredden a flux vector using the Fitzpatrick (1999) parameterization
 ; EXPLANATION:
 ;     The R-dependent Galactic extinction curve is that of Fitzpatrick & Massa 
 ;     (Fitzpatrick, 1999, PASP, 111, 63; astro-ph/9809387 ).    
@@ -12,7 +13,7 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
 ;     microns).    UV extinction curve is extrapolated down to 912 Angstroms.
 ;
 ; CALLING SEQUENCE:
-;     FM_UNRED, wave, flux, ebv, [ funred, R_V = 
+;     FM_UNRED, wave, flux, ebv, [ funred, R_V = , /LMC2, /AVGLMC, ExtCurve= 
 ;                       gamma =, x0=, c1=, c2=, c3=, c4= ]
 ; INPUT:
 ;      WAVE - wavelength vector (Angstroms)
@@ -29,8 +30,17 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
 ; OPTIONAL INPUT KEYWORDS
 ;      R_V - scalar specifying the ratio of total to selective extinction
 ;               R(V) = A(V) / E(B - V).    If not specified, then R = 3.1
-;               Extreme values of R(V) range from 2.75 to 5.3
+;               Extreme values of R(V) range from 2.3 to 5.3
 ;
+;      /AVGLMC - if set, then the default fit parameters c1,c2,c3,c4,gamma,x0 
+;             are set to the average values determined for reddening in the 
+;             general Large Magellanic Cloud (LMC) field by Misselt et al. 
+;            (1999, ApJ, 515, 128)
+;      /LMC2 - if set, then the fit parameters are set to the values determined
+;             for the LMC2 field (including 30 Dor) by Misselt et al.
+;             Note that neither /AVGLMC or /LMC2 will alter the default value 
+;             of R_V which is poorly known for the LMC. 
+;             
 ;      The following five input keyword parameters allow the user to customize
 ;      the adopted extinction curve
 ;
@@ -43,6 +53,10 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
 ;      c1 - Intercept of the linear UV extinction component 
 ;           (default = 2.030 - 3.007*c2
 ;            
+; OPTIONAL OUTPUT KEYWORD:
+;      ExtCurve - Returns the E(wave-V)/E(B-V) extinction curve, interpolated
+;                 onto the input wavelength vector
+;
 ; EXAMPLE:
 ;       Determine how a flat spectrum (in wavelength) between 1200 A and 3200 A
 ;       is altered by a reddening of E(B-V) = 0.1.   Assume an "average"
@@ -70,13 +84,15 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
 ; REVISION HISTORY:
 ;       Written   W. Landsman        Raytheon  STX   October, 1998
 ;       Based on FMRCurve by E. Fitzpatrick (Villanova)
+;       Added /LMC2 and /AVGLMC keywords,  W. Landsman   August 2000
+;       Added ExtCurve keyword, J. Wm. Parker   August 2000
 ;
 ;-
  On_error, 2
 
  if N_params() LT 3 then begin
-     print,'Syntax: FM_UNRED, wave, flux, ebv, funred,[ R_V = '
-     print,'                  gamma =, x0 =, c1 =, c2 = ,c3 = ,c4 = ]'
+     print,'Syntax: FM_UNRED, wave, flux, ebv, funred,[ R_V =, /LMC2, /AVGLMC '
+     print,'                  gamma =, x0 =, c1 =, c2 = ,c3 = ,c4 =, ExtCurve=]'
      return
  endif
 
@@ -85,16 +101,33 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
  x = 10000./ wave                ; Convert to inverse microns 
  curve = x*0.
 
+; Set default values of c1,c2,c3,c4,gamma and x0 parameters
+
+ if keyword_set(LMC2) then  begin
+         if N_elements(x0) EQ 0 then x0    =  4.626
+         if N_elements(gamma) EQ 0 then gamma =  1.05	
+         if N_elements(c4) EQ 0 then c4   =  0.42   
+         if N_elements(c3) EQ 0 then c3    =  1.92	
+         if N_elements(c2) EQ 0 then c2    = 1.31
+         if N_elements(c1) EQ 0 then c1    =  -2.16
+ endif else if keyword_set(AVGLMC) then begin
+         if N_elements(x0) EQ 0 then x0 = 4.596  
+         if N_elements(gamma) EQ 0 then gamma = 0.91
+         if N_elements(c4) EQ 0 then c4   =  0.64  
+         if N_elements(c3) EQ 0 then c3    =  2.73	
+         if N_elements(c2) EQ 0 then c2    = 1.11
+         if N_elements(c1) EQ 0 then c1    =  -1.28
+  endif else begin
+         if N_elements(x0) EQ 0 then x0    =  4.596  
+         if N_elements(gamma) EQ 0 then gamma =  0.99	
+         if N_elements(c3) EQ 0 then c3    =  3.23	
+         if N_elements(c4) EQ 0 then c4   =  0.41    
+         if N_elements(c2) EQ 0 then c2    = -0.824 + 4.717/R_V
+         if N_elements(c1) EQ 0 then c1    =  2.030 - 3.007*c2
+ endelse
+
 ; Compute UV portion of A(lambda)/E(B-V) curve using FM fitting function and 
 ; R-dependent coefficients
-
- if not keyword_set(x0) then x0    =  4.596  
- if not keyword_set(gamma) then gamma =  0.99   
- if not keyword_set(c3) then c3    =  3.23      
- if not keyword_set(c4) then c4   =  0.41    
-
- if not keyword_set(c2) then c2    = -0.824 + 4.717/R_V
- if not keyword_set(c1) then c1    =  2.030 - 3.007*c2
  
  xcutuv = 10000.0/2700.0
  xspluv = 10000.0/[2700.0,2600.0]
@@ -131,5 +164,7 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
    curve = ebv*curve 
    if N_params() EQ 3 then flux = flux * 10.^(0.4*curve) else $
         funred = flux * 10.^(0.4*curve)       ;Derive unreddened flux
+
+   ExtCurve = Curve - R_V
 
  end

@@ -60,6 +60,8 @@
 ;       str = mrd_struct(['a','b','c','d'],['1', '1.', '1.d0', "'1'"],1)
 ;               ; returns a structure with integer, float, double and string
 ;               ; fields.
+; PROCEDURE CALLS:
+;       CONCAT_DIR - Used to concatenate temporary directory with filename
 ; MODIFICATION HISTORY:
 ;       Created by T. McGlynn October, 1994.
 ;       Modified by T. McGlynn September, 1995.
@@ -109,6 +111,7 @@ function mrd_fstruct, names, values, nrow, $
 ;  Use /usr/bin/rm rather than rm to delete temporary file, W. Landsman 6/1997
 ;  Use IDL features to delete rather than operating system dependent
 ;  capabilities. T. McGlynn 12/98
+;  Use concat_dir to concatenate directory name and file name W. Landsman 12/00
 
 common mrd_common, usage
 
@@ -121,15 +124,10 @@ endif else begin
         proname = 'mrd_structtemp'
 endelse
 
-os = !version.os
-if os eq 'VMS'  or os eq 'vms' then isvms=1 else isvms=0
-
-if keyword_set(tempdir) then begin
-        if isvms then filename = tempdir+proname+'.pro'  $
-        else filename = tempdir+'/'+proname+'.pro'
-endif else begin
-        filename = proname+'.pro'
-endelse
+ if keyword_set(tempdir) then $
+      filename = concat_dir(tempdir, proname+'.pro') $
+ else $
+     filename = proname+'.pro'
 
 openw, lun, filename, /get_lun
         

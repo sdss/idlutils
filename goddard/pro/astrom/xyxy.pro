@@ -26,6 +26,8 @@ PRO xyxy, hdra, hdrb, xa, ya, xb, yb
 ;       "get_equinox" to make sure that they are identical, and "precess"
 ;       is used if they are not
 ;
+;       Note that all X,Y coordinates are in the IDL convention (starting with
+;       0,0) and not the FITS convention (first pixel is 1,1)
 ; PROCEDURES USED:
 ;	GET_EQUINOX(), EXTAST, XYAD, ADXY, PRECESS
 ; MODIFICATION HISTORY:

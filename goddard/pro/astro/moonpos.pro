@@ -62,7 +62,7 @@
 ;       returned in degrees instead of radians).
 ;
 ; PROCEDURES CALLED:
-;       CIRRANGE, ISARRAY(), NUTATE  - from IDL Astronomy Library
+;       CIRRANGE, ISARRAY(), NUTATE, TEN()  - from IDL Astronomy Library
 ;       POLY() - from IDL User's Library
 ; MODIFICATION HISTORY:
 ;       Written by Michael R. Greason, STX, 31 October 1988.
