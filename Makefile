@@ -8,7 +8,7 @@ SHELL = /bin/sh
 #
 CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
 
-SUBDIRS = doc goddard lib pro src
+SUBDIRS = doc goddard lib pro src ups
 
 all :
 	@ for f in $(SUBDIRS); do \
@@ -20,15 +20,15 @@ all :
 #
 install :
 	@echo "You should be sure to have updated before doing this."
-	@echo "You will be installing in \$$IDLUTILS_DIR=$$IDLUTILS_DIR"
-	@echo ""
-	@echo "I'll give you 5 seconds to think about it"
-	@echo sleep 5
-	@echo
 	@if [ "$(IDLUTILS_DIR)" = "" ]; then \
 		echo You have not specified a destination directory >&2; \
 		exit 1; \
 	fi 
+	@echo "You will be installing in \$$IDLUTILS_DIR=$$IDLUTILS_DIR"
+	@echo ""
+	@echo "I'll give you 5 seconds to think about it"
+	@sleep 5
+	@echo
 	@ rm -rf $(IDLUTILS_DIR)
 	@ mkdir $(IDLUTILS_DIR)
 	@ for f in $(SUBDIRS); do \
