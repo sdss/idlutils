@@ -43,10 +43,13 @@
 ;     confidence region).  This mod is trivial.
 ;   Ought to specify min and max grey levels, and contour colors.
 ;   Contour thicknesses hard-coded to unity.
+; DEPENDENCIES:
+;   hogg_histogram
+;   plus much, much more
 ; REVISION HISTORY:
 ;   2002-12-04  written --- Hogg
 ;-
-pro hogg_scatterplot, x,y,weight=weight, $
+pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       xnpix=xnpix,ynpix=ynpix, $
                       xrange=xrange,yrange=yrange, $
                       levels=levels,quantiles=quantiles, $
@@ -61,7 +64,7 @@ pro hogg_scatterplot, x,y,weight=weight, $
                       _EXTRA=KeywordsForPlot
 
 ; set defaults
-ndata= n_elements(x)
+ndata= n_elements(xxx)
 if not keyword_set(weight) then weight= dblarr(ndata)+1.0
 if not keyword_set(xnpix) then xnpix= ceil(0.3*sqrt(ndata)) > 10
 if not keyword_set(ynpix) then ynpix= ceil(0.3*sqrt(ndata)) > 10
@@ -78,6 +81,10 @@ if not keyword_set(cthick) then cthick= !P.THICK
 ; check inputs
 ; [tbd]
 
+; cram inputs into correct form
+x= reform(xxx,ndata)
+y= reform(yyy,ndata)
+
 ; make axes
 plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
   _EXTRA=KeywordsForPlot,/nodata
@@ -85,26 +92,15 @@ plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
 ; snap points to grid
 xvec= xrange[0]+(xrange[1]-xrange[0])*(dindgen(xnpix)+0.5)/double(xnpix)
 yvec= yrange[0]+(yrange[1]-yrange[0])*(dindgen(ynpix)+0.5)/double(ynpix)
-xgrid= floor(xnpix*(x-xrange[0])/(xrange[1]-xrange[0]))
-ygrid= floor(ynpix*(y-yrange[0])/(yrange[1]-yrange[0]))
 
 ; make and fill 1-d grid first, if necessary
 if keyword_set(conditional) then begin
-    colnorm= dblarr(xnpix)
-    inxgrid= where(xgrid GE 0 AND xgrid LT xnpix,ninxgrid)
-    for ii=0L,ninxgrid-1 do $
-      colnorm[xgrid[inxgrid[ii]]]= colnorm[xgrid[inxgrid[ii]]] $
-        +weight[inxgrid[ii]]
+    colnorm= hogg_histogram(x,xrange,xnpix,weight=weight)
 endif
 
 ; make and fill 2-d grid
-; (this puts the grid in units of the weights --- not per unitx per unity)
-grid= dblarr(xnpix,ynpix)
-ingrid= where(xgrid GE 0 AND xgrid LT xnpix AND $
-              ygrid GE 0 AND ygrid LT ynpix,ningrid)
-for ii=0L,ningrid-1 do $
-  grid[xgrid[ingrid[ii]],ygrid[ingrid[ii]]]= $
-  grid[xgrid[ingrid[ii]],ygrid[ingrid[ii]]]+weight[ingrid[ii]]
+; (this puts the grid in units of the weights, not per unitx per unity)
+grid= hogg_histogram(transpose([[x],[y]]),[[xrange],[yrange]],[xnpix,ynpix])
 
 ; renormalize columns, if necessary
 if keyword_set(conditional) then begin
@@ -114,11 +110,12 @@ if keyword_set(conditional) then begin
 endif
 
 ; compute quantiles, if necessary
+xgrid= floor(xnpix*(x-xrange[0])/(xrange[1]-xrange[0]))
 if keyword_set(conditional) then begin
     qq= dblarr(xnpix,nquantiles)
     for ii=0L,xnpix-1 do begin
         inii= where(xgrid EQ ii,ninii)
-	if ninii GT 0 then begin
+        if ninii GT 0 then begin
             qq[ii,*]= weighted_quantile(y[inii],weight[inii],quant=quantiles)
         endif
     endfor
