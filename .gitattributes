@@ -1,5 +1,4 @@
 * text=auto !eol
-/Check_DR3_Runs.pro -text
 /Makefile -text
 /RELEASE_NOTES -text
 bin/.cvsignore -text
