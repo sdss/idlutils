@@ -630,6 +630,7 @@ pro/misc/make_html_help.pro -text
 pro/misc/rmfile.pro -text
 pro/misc/struct_addtags.pro -text
 pro/misc/struct_append.pro -text
+pro/misc/struct_print.pro -text
 pro/misc/which.pro -text
 pro/plot/atv.pro -text
 pro/plot/cmps_form.pro -text
