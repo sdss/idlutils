@@ -10,14 +10,14 @@
 ;   catpath   - path to catalogue files (.cat and .acc)
 ;   zone      - zone number (float, 1/10 degrees)
 ;   ra0,ra1   - ra limits [deg]
-;   rec_len   - record length for each object [bytes/4] (read as ulongs)
+;   rec_len   - record length for each object [bytes] (read as ulongs)
 ;   prefix    - filename prefix: 'zone' for USNOA, 'b' for USNOB
 ;
 ; KEYWORDS:
 ;   swap_if... - USNOA is written big endian, B is little endian(!)
 ;+------------------------------------------------------------------------  
 ; OUTPUTS:
-;   data      - float(rec_len,N) array of results.  
+;   data      - float(rec_len/4,N) array of results.  
 ;                 data[0,*] = RA (in .01 arcsec)
 ;                 data[1,*] = (dec+90) (in .01 arcsec)
 ;       USNO-A:
