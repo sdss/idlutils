@@ -110,7 +110,7 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;       Don't assume floating pt. exposure time W. Landsman   September 2001
 ;       Major rewrite, KEYWORD & ALT*_KEYWORDS keywords, no truncation, 
 ;             /NOSIZE keyword     W. Landsman,  SSAI   August 2002
-;
+;       NAXIS* values must be integers W. Landsman SSAI  June 2003
 ;-
  On_error,2
 
@@ -118,7 +118,7 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
  if N_elements(directory) EQ 0 then directory = '*.fits'
  if N_elements(exten) EQ 0 then exten = 0 
 
- fdecomp, directory, disk, dir, filename, ext
+ FDECOMP, directory, disk, dir, filename, ext
  if filename EQ '' then begin 
       directory = disk + dir + '*.fits'
       filename = '*'
@@ -234,29 +234,28 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
     endif 
 
    keyword = strtrim( strmid(h,0,8),2 )       ;First 8 chars is FITS keyword
-   lvalue = strtrim(strmid(h,10,30),2 ) 
+   lvalue = strtrim(strmid(h,10,20),2 ) 
    value = strtrim( strmid(h,10,68),2 )        ;Chars 10-30 is FITS value
  
  if not keyword_set(nosize) then begin
  l= where(keyword EQ 'NAXIS',Nfound)            ;Must have NAXIS keyword
-    if Nfound GT 0 then naxis  = long( value[ l[0] ] ) else goto, BADHD
-
+    if Nfound GT 0 then naxis  = long( lvalue[ l[0] ] ) else goto, BADHD
  if naxis EQ 0 then naxisi = '0' else begin
 
  l = where( keyword EQ 'NAXIS1', Nfound)         ;Must have NAXIS1 keyword
-    if Nfound gt 0 then naxis1  = long( value[l[0] ] ) else goto, BADHD 
+    if Nfound gt 0 then naxis1  = long( lvalue[l[0] ] ) else goto, BADHD 
     naxisi = strtrim( naxis1,2 )
  endelse
 
  if NAXIS GE 2 then begin
  l = where(keyword EQ 'NAXIS2', Nfound)          ;Must have NAXIS2 keyword
-    if Nfound gt 0 then naxis2  = long(value[l[0]]) else goto, BADHD
+    if Nfound gt 0 then naxis2  = long(lvalue[l[0]]) else goto, BADHD
     naxisi = naxisi + ' ' + strtrim( naxis2, 2 )
  endif
 
  if NAXIS GE 3 then begin
  l = where( keyword EQ 'NAXIS3', Nfound )          ;Must have NAXIS3 keyword
-    if Nfound GT 0 then naxis3  = long( value[l[0]] ) else goto, BADHD
+    if Nfound GT 0 then naxis3  = long( lvalue[l[0]] ) else goto, BADHD
     naxisi = naxisi + ' ' + strtrim( naxis3, 2 )
  endif
  bignaxis[i] = strtrim(naxisi)
