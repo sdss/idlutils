@@ -85,7 +85,6 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
        diff = (y[these] - yfit)*sqrt(invvar)
        bad = where(diff LT -lower OR diff GT upper)
 
-	stop
 	if (bad[0] EQ -1) then iiter = maxiter $
         else begin
             good = bytarr(nx) + 1	
