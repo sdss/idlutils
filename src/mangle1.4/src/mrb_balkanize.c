@@ -151,6 +151,7 @@ int main(int argc, char *argv[])
               total_parents+=polys[j]->nparents;
             fprintf(stderr, 
                     "total number of current parents: %d\n", total_parents);
+            exit(666);
           }
 					if(area_tot>0.) {
 						add_parent(polys[i],links[k][l]);
