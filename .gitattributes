@@ -903,6 +903,9 @@ pro/math/lle_sm_mult.pro -text
 pro/math/lle_sm_transpose.pro -text
 pro/math/logsum.pro -text
 pro/math/memshift.pro -text
+pro/math/mmeval.pro -text
+pro/math/mmsparse.pro -text
+pro/math/nmf_sparse.pro -text
 pro/math/nnls.pro -text
 pro/math/nonneg_mult_update.pro -text
 pro/math/nonneg_mult_update_solve.pro -text
@@ -1318,6 +1321,8 @@ src/math/diff.f -text
 src/math/g1.f -text
 src/math/g2.f -text
 src/math/h12.f -text
+src/math/idl_mmeval.c -text
+src/math/idl_mmsparse.c -text
 src/math/idl_nnls.c -text
 src/math/memshift.c -text
 src/math/nnls.f -text

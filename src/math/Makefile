@@ -22,6 +22,8 @@ OBJECTS = \
 	arravsigmask.o \
 	arrmedian.o \
 	ccorrelate.o \
+	idl_mmsparse.o \
+	idl_mmeval.o \
 	memshift.o \
 	$(RECIPES)
 
