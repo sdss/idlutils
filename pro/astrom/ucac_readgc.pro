@@ -6,7 +6,7 @@
 ;   Read the UCAC data files for a great circle on the sky.
 ;
 ; CALLING SEQUENCE:
-;   outdat = ucac_readgc(node=node, incl=incl, hwidth=hwidth)
+;   outdat = ucac_readgc(node=node, incl=incl, hwidth=, [ decrange= ] )
 ;
 ; INPUTS:
 ;   node       - Node of great circle [degrees]
@@ -14,6 +14,7 @@
 ;   hwidth     - Half-width of great circle for selecting a stripe [deg]
 ;
 ; OPTIONAL INPUTS:
+;   decrange   - Declination range for data; default to [-90,90] degrees
 ;
 ; OUTPUT:
 ;   outdat     - Structure with UCAC data in its raw catalog format;
@@ -122,7 +123,7 @@ function ucac_readgc1, node, incl, hwidth, thiszone, decmin, decmax
    return, outdat
 end
 ;------------------------------------------------------------------------------
-function ucac_readgc, node=node, incl=incl, hwidth=hwidth
+function ucac_readgc, node=node, incl=incl, hwidth=hwidth, decrange=decrange1
 
    common com_ucac, uindex
 
@@ -136,6 +137,8 @@ function ucac_readgc, node=node, incl=incl, hwidth=hwidth
       print, 'Wrong number of parameters!'
       return, 0
    endif
+   if (keyword_set(decrange1)) then decrange = decrange1 $
+    else decrange = [-90,90]
 
    ;----------
    ; Read the index file
@@ -150,9 +153,11 @@ function ucac_readgc, node=node, incl=incl, hwidth=hwidth
       if (ct GT 0) then begin
          decmax = uindex[jj].dcmax
          decmin = decmax - 0.5d0
-         moredat = ucac_readgc1(node, incl, hwidth, thiszone, decmin, decmax)
-         if (keyword_set(moredat)) then $
-          outdat = keyword_set(outdat) ? [outdat,moredat] : moredat
+         if (decmax GE decrange[0] AND decmin LE decrange[1]) then begin
+            moredat = ucac_readgc1(node, incl, hwidth, thiszone, decmin, decmax)
+            if (keyword_set(moredat)) then $
+             outdat = keyword_set(outdat) ? [outdat,moredat] : moredat
+         endif
       endif
    endfor
 
@@ -162,6 +167,16 @@ function ucac_readgc, node=node, incl=incl, hwidth=hwidth
    if (keyword_set(outdat)) then begin
       radec_to_munu, outdat.ramdeg, outdat.demdeg, mu, nu, node=node, incl=incl
       ikeep = where(abs(nu) LE hwidth, nkeep)
+      if (nkeep EQ 0) then outdat = 0 $
+       else outdat = outdat[ikeep]
+   endif
+
+   ;----------
+   ; Now trim to objects exactly within the declination range
+
+   if (keyword_set(decrange1)) then begin
+      ikeep = where(outdat.demdeg GE decrange[0] $
+       AND outdat.demdeg LE decrange[1], nkeep)
       if (nkeep EQ 0) then outdat = 0 $
        else outdat = outdat[ikeep]
    endif
