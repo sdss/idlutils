@@ -78,6 +78,7 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
       if (n_elements(hdr) GT n_elements(hdr1)) then qbigger = 1
    endif
 
+   qstruct = 0
    if (keyword_set(data)) then begin
       data1 = mrdfits(filename, exten_no)
       qstruct = size(data, /tname) EQ 'STRUCT'
