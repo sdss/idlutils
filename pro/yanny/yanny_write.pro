@@ -6,7 +6,7 @@
 ;   Write a Yanny parameter file from an IDL structure.
 ;
 ; CALLING SEQUENCE:
-;   yanny_write, filename, [ pdata, hdr=hdr, enums=enums, structs=structs ]
+;   yanny_write, filename, [ pdata, hdr=, enums=, structs=, stnames= ]
 ;
 ; INPUTS:
 ;   filename   - Output file name for Yanny parameter file
@@ -18,6 +18,9 @@
 ;   enums      - All "typedef enum" structures.
 ;   structs    - All "typedef struct" structures, which define the form
 ;                for all the PDATA structures.
+;   stnames    - Structure names, overriding the IDL structure names.
+;                Typically, you will want to use this if a structure was
+;                read using the /ANONYMOUS keyword.
 ;
 ; OUTPUT:
 ;
@@ -43,10 +46,11 @@
 ;   05-Sep-1999  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
+pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
+ stnames=stnames
 
    if (N_params() LT 1) then begin
-      print, 'Syntax - yanny_write, filename, [ pdata, hdr=hdr, enums=enums, structs=structs]'
+      print, 'Syntax - yanny_write, filename, [ pdata, hdr=, enums=, structs=, stnames= ]'
       return
    endif
 
@@ -90,8 +94,10 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
          for idat=0, N_elements(pdata)-1 do begin
             ntag = N_tags( *pdata[idat] )
             tags = tag_names( *pdata[idat] )
-            stname = tag_names( *pdata[idat], /structure_name)
-            if (stname EQ '') then stname = 'STRUCT' + strtrim(string(idat+1),2)
+            if (keyword_set(stnames)) then stname = stnames[idat] $
+             else stname1 = tag_names( *pdata[idat], /structure_name)
+            if (stname1 EQ '') then $
+             stname1 = 'STRUCT' + strtrim(string(idat+1),2)
 
             printf, olun, 'typedef struct {'
 
@@ -113,7 +119,7 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
                printf, olun, sline
             endfor
 
-            printf, olun, '} ' + stname + ';'
+            printf, olun, '} ' + stname1 + ';'
             printf, olun, ''
 
          endfor
@@ -126,12 +132,13 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
          printf, olun, ''
 
          ntag = N_tags( *pdata[idat] )
-         stname = tag_names( *pdata[idat], /structure_name)
-         if (stname EQ '') then stname = 'STRUCT' + strtrim(string(idat+1),2)
+         if (keyword_set(stnames)) then stname1 = stnames[idat] $
+          else stname1 = tag_names( *pdata[idat], /structure_name)
+         if (stname1 EQ '') then stname1 = 'STRUCT' + strtrim(string(idat+1),2)
 
          for iel=0, N_elements( *pdata[idat] )-1 do begin ; Loop thru each row
 
-            sline = stname
+            sline = stname1
 
             for itag=0, ntag-1 do begin          ; Loop through each variable
                words = (*pdata[idat])[iel].(itag)
