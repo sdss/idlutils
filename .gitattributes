@@ -563,6 +563,17 @@ pro/TeXtoIDL/textable.pro -text
 pro/TeXtoIDL/textoidl.bak -text
 pro/TeXtoIDL/textoidl.pro -text
 pro/TeXtoIDL/translate_sub_super.pro -text
+pro/coord/angles_to_xyz.pro -text
+pro/coord/djs_angle_group.pro -text
+pro/coord/djs_angle_match.pro -text
+pro/coord/djs_angle_nmatch.pro -text
+pro/coord/djs_angpos.pro -text
+pro/coord/djs_angsgn.pro -text
+pro/coord/djs_diff_angle.pro -text
+pro/coord/dotproduct_sphere.pro -text
+pro/coord/recenter.pro -text
+pro/coord/sptr1.pro -text
+pro/coord/xyz_to_angles.pro -text
 pro/fits/djs_readmany.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/qzap.pro -text
