@@ -32,10 +32,9 @@ dim = size(colors,/dimensions)
 NX = LONG(dim[0])
 NY = LONG(dim[1])
 
-pos_dist = 1D0-origin
-
+pos_dist = 1.-origin
 factor = fltarr(NX,NY)
-factor[*,*] = ((colors[*,*,0]/pos_dist[0]) $
+factor = ((colors[*,*,0]/pos_dist[0]) $
                > (colors[*,*,1]/pos_dist[1]) $
                > (colors[*,*,2]/pos_dist[2]))
 factor = factor > 1.0

@@ -77,12 +77,17 @@ IF n_elements(rebinfactor) THEN BEGIN
     colors = nw_rebin_image(colors,rebinfactor)
 ENDIF
 
+print, 'nw_scale_rgb'
 colors = nw_scale_rgb(colors,scales=scales)
-colors = nw_arcsinh(colors,nonlinearity=nonlinearity)
+print, 'nw_arcsinh'
+colors = nw_arcsinh(colors,nonlinearity=nonlinearity, /inplace)
+print, 'nw_cut_to_box'
 IF (NOT n_elements(saturatetowhite)) THEN $
   colors = nw_cut_to_box(colors,origin=origin)
 IF keyword_set(overlay) THEN colors= (colors+overlay) < 1.0
+print, 'nw_float_to_byte'
 colors = nw_float_to_byte(colors)
+print, 'WRITE_JPEG'
 
 WRITE_JPEG,name,colors,TRUE=3,QUALITY=quality
 END
