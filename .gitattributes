@@ -14,3 +14,4 @@ pro/TeXtoIDL/textable.pro -text
 pro/TeXtoIDL/textoidl.bak -text
 pro/TeXtoIDL/textoidl.pro -text
 pro/TeXtoIDL/translate_sub_super.pro -text
+pro/fits/djs_readmany.pro -text
