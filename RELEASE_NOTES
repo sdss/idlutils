@@ -20,6 +20,10 @@ src/{idlmangle,mangle1.4/src}/Makefile: Change the instances of "libmangle.a"
                with "libmangle.$(SO_EXT)" so that we get ".a" extensions
                on some platforms, and ".so" extensions on others.  This is
                how our other built libraries work.
+src/idlmangle/idl_garea.c,idl_gvers.c,idl_vmid.c,idl_where_polygons_overlap.c:
+               Recaste some "int" with "IDL_LONG" where not consistent.
+               This was crashing the build on the SGI platform.
+               Also, remove some unused variables.
 src/{idlmangle,image,math,slatec,spheregroup,trace}/Makefile: Changed the
                location of the include file to "../../include".
 src/image/Makefile: Change some of the comment lines, since for some bizarre
