@@ -156,6 +156,7 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
          extnum = 1
          lun = fxposit(filename, extnum)
          point_lun, -lun, header_start
+         free_lun, lun
       endif else begin
          mwrbin_append, filename, extnum, input[indx]
       endelse
