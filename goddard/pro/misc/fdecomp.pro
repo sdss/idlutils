@@ -51,8 +51,8 @@
 ;     (2) On VMS the filenames "MOTD" and "MOTD." are distinguished by the 
 ;         fact that qual = '' for the former and qual = ' ' for the latter.
 ;
-;     A version of FDECOMP that accepts vector input strings is available for
-;     IDL V5.3 or later from http://idlastro.gsfc.nasa.gov/ftp/v53/
+;     A faster version of this procedure for V5.3 or later is available in 
+;     http://idlastro.gsfc.nasa.gov/ftp/v53/fdecomp.pro
 ; ROUTINES CALLED:
 ;     Function GETTOK()
 ; HISTORY
@@ -61,6 +61,7 @@
 ;     Converted to Mac IDL, I. Freedman HSTX March 1994          
 ;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Allow vector file name input    W. Landsman   October 2002
+;     Fixed bug in version parameter introduced October 2002 W. Landsman April03
 ;-
 ;--------------------------------------------------------
 ;
@@ -236,7 +237,7 @@ ENDCASE                         ; end OTHER version
  return
  end
 
-  pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
+  pro fdecomp, filename, disk, dir, name, qual, ver, OSfamily = osfamily
 
   if N_params() LT 2 then begin
      print, 'Syntax - FDECOMP, filename, disk, [dir, name, qual, ver ] '
