@@ -88,17 +88,10 @@ echo "Setting MYSDSS_ROOT=$MYSDSS_ROOT"
 if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
    echo "This installation already appears to exist in " $MYSDSS_ROOT/$PRODNAME/$PRODVERS
    echo "Now declaring this version current."
-   # Find the table file if it exists...
-   if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table ] ; then
-      TABLEPARAM="-m $PRODNAME.table"
-   else
-      echo "WARNING: Cannot find table file " $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table
-      TABLEPARAM=""
-   fi
 # We could set this up too, but that information is not passed outside
 # of this script so don't bother ???
 #   ups setup $PRODNAME $PRODVERS
-   ups declare -f $FLAVOR $TABLEPARAM \
+   ups declare -f $FLAVOR \
     -r $MYSDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
    exit
 fi
