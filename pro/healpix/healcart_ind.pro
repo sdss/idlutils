@@ -13,7 +13,7 @@
 ;            if single element, interpret as Nside. 
 ;
 ; KEYWORDS:
-;   nest  - return nested ordering
+;   nest  - return index list for nested ordering
 ;
 ; OUTPUTS:
 ;   ind   - index array to transform healpix to quasi-cartesian
@@ -39,7 +39,7 @@ function healcart_ind, data, nest=nest
 
   if n_elements(data) gt 1 then begin 
      npix  = n_elements(data) 
-     nside = long(sqrt(npix/12))
+     nside = round(sqrt(npix/12))
   endif else begin 
      if NOT keyword_set(data) then begin 
         print, 'ind=healcart_ind(data, nest=nest)'
@@ -64,7 +64,7 @@ function healcart_ind, data, nest=nest
   ind = shift(ind, 4*nside, 0)
 
   if keyword_set(nest) then begin 
-     nest2ring, nside, lindgen(12*nside*nside), ipring
+     dpf_nest2ring, nside, lindgen(12*nside*nside), ipring
      ipnest = lonarr(nx, 4*nside-1, /nozero)
      ipnest[ipring] = lindgen(12*nside*nside)
      ind = ipnest[ind]
