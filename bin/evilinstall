@@ -8,8 +8,8 @@
 #   declare it current.
 # If it is an actual tagged version, then cvs-export that version,
 #   build it, install it using UPS, and declare it current.
-# If the requested version of the code already exists, then set it up
-#   and declare it current.
+# If the requested version of the code already exists, then simply declare
+#   that version current.
 #
 # If you are installing products with inter-dependencies, be sure to
 # install them in the order of those dependencies.  For example, since
@@ -21,6 +21,9 @@
 # install it using the utilities in the "sdsstools" product.  If those do
 # not exist, then it tries using the "evilmake" and "install_ups_table"
 # scripts in the "idlutils" product.
+#
+# Note: This script will only work if there is a table file in the /ups
+# subdirectory of the product.
 #
 # D. Schlegel, Princeton, 1 March 2001
 #------------------------------------------------------------------------------
@@ -39,8 +42,6 @@ if { [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | head -1c` != "v" ] } ; then
    exit
 fi
 
-exit
-
 # Find the flavor of this machine (e.g., "Linux+2" or "IRIX+6").
 
 FLAVOR=`echo $SETUP_UPS | sed -ne 's/.*-f \([^ ]*\).*/\1/p'`
@@ -51,31 +52,54 @@ echo Installing PRODNAME=$PRODNAME PRODVERS=$PRODVERS FLAVOR=$FLAVOR.
 if { [ -z `which \ups` ] || [ -z "$PRODUCTS" ] || [ -z "$SDSS_ROOT" ] } ; then
    echo "Try to run sdssfue.sh script..."
    if [ -e /u/products/etc/sdssfue.sh ] ; then
-      source /u/products/etc/sdssfue.csh
+      echo source /u/products/etc/sdssfue.sh
+      source /u/products/etc/sdssfue.sh
    elif [ -e /home/products/etc/sdssfue.sh ] ; then
+      echo source /home/products/etc/sdssfue.sh
       source /home/products/etc/sdssfue.sh
    elif [ -e /usr/local/etc/sdssfue.sh ] ; then
+      echo source /usr/local/etc/sdssfue.sh
       source /usr/local/etc/sdssfue.sh
    else
       echo "Unable to find sdssfue.sh script to set up UPS."
       exit
    fi
+else
+   echo "UPS already appears to be set up."
 fi
+
+# The following is a hack: Change $SDSS_ROOT to $SDSS_ROOT/$FLAVOR if it
+# appears that's where the code should go.  This is the case at Princeton.
+
+if [ -e $SDSS_ROOT/$FLAVOR ] ; then
+   MYSDSS_ROOT=$SDSS_ROOT/$FLAVOR
+else
+   MYSDSS_ROOT=$SDSS_ROOT
+fi
+echo "Setting MYSDSS_ROOT=$MYSDSS_ROOT"
 
 # Make sure this product+version isn't already delcared.
 
-if [ -e $SDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
-   echo "This installation already appears to exist in " $SDSS_ROOT/$PRODNAME/$PRODVERS
-   echo "Now setting up this version and declaring it current."
-   setup $PRODNAME $PRODVERS
+if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
+   echo "This installation already appears to exist in " $MYSDSS_ROOT/$PRODNAME/$PRODVERS
+   echo "Now declaring this version current."
+   if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table ] ; then
+      echo
+   else
+      echo "Cannot find table file " $MYSDSS_ROOT/$PRODNAME/$PRODVERS/$PRODNAME.table
+      exit
+   fi
+# We could set this up too, but that information is not passed outside
+# of this script so don't bother ???
+#   ups setup $PRODNAME $PRODVERS
    ups declare -f $FLAVOR -m $PRODNAME.table \
-    -r $SDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
+    -r $MYSDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
    exit
 fi
 
 # Set up "sdsscvs" if it exists as a product.
 
-setup sdsscvs
+ups setup sdsscvs
 
 # Set up "sdsstools" if it exists as a product.
 # If it exists, use "sdssmake" to build code.
@@ -83,29 +107,36 @@ setup sdsscvs
 #   set SDSSTOOLS_DIR=$IDLUTILS_DIR for the sake of getting a copy
 #   of the script "install_ups_table".
 
-setup sdsstools
+ups setup sdsstools
 if [ -n "$SDSSTOOLS_DIR" ] ; then
    if [ -n `which \sdssmake` ] ; then
       MAKECOMMAND='sdssmake -idl -opt -debug'
+      MAKEINSTALLCOMMAND='sdssmake install'
    fi
 else
-   setup idlutils
+   ups setup idlutils
    SDSSTOOLS_DIR=$IDLUTILS_DIR
    if [ -n `which \evilmake` ] ; then
       MAKECOMMAND=evilmake
+      MAKEINSTALLCOMMAND='make install'
    fi
 fi
 if [ -z "$MAKECOMMAND" ] ; then
    echo "Could not set up either \"sdssmake\" or \"evilmake\" for building code."
    exit
+else
+   echo "Setting MAKECOMMAND=$MAKECOMMAND"
 fi
 
-if [ -e $(SDSSTOOLS_DIR)/bin/install_ups_table ] ; then
+if [ -e $SDSSTOOLS_DIR/bin/install_ups_table ] ; then
+   echo
 else
-   echo "Unable to find the command \$(SDSSTOOLS_DIR)/bin/install_ups_table."
+   echo "Unable to find the command \$SDSSTOOLS_DIR/bin/install_ups_table."
    exit
 fi
 if [ -e /usr/local/bin/perl ] ; then
+   echo
+else
    echo "The binary \"/usr/local/bin/perl\" must exist for the \"install_ups_table\""
    echo "command to work.  Sorry!  Try putting in a symbolic link to perl and try again."
    exit
@@ -121,38 +152,56 @@ TEMPSUBDIR=$PRODNAME-$PRODVERS
 # in the "products" directory.  If we cannot create a file in this
 # directory, then stop.
 
-mkdir -p $SDSS_ROOT/$PRODNAME
-touch $SDSS_ROOT/$PRODNAME/thisisatest
-if [ -e $SDSS_ROOT/$PRODNAME/thisisatest ] ; then
-   rm -f $SDSS_ROOT/$PRODNAME/thisisatest
+mkdir -p $MYSDSS_ROOT/$PRODNAME
+touch $MYSDSS_ROOT/$PRODNAME/thisisatest
+if [ -e $MYSDSS_ROOT/$PRODNAME/thisisatest ] ; then
+   rm -f $MYSDSS_ROOT/$PRODNAME/thisisatest
 else
-   echo "Unable to create files in the directory " $SDSS_ROOT/$PRODNAME
+   echo "Unable to create files in the directory " $MYSDSS_ROOT/$PRODNAME
    exit
 fi
 
 # Now build and install the code!!
 
 cd $TEMPDIR
-if [ $PRODVERS == "cvs" ] ; then
+if [ $PRODVERS = "cvs" ] ; then
    cvs co -d $TEMPSUBDIR $PRODNAME
 else
    cvs export -d $TEMPSUBDIR -r $PRODVERS $PRODNAME
 fi
-setup -r $TEMPDIR/$TEMPSUBDIR \
- -m $TEMPDIR/$TEMPSUBDIR/ups/$PRODNAME.table $PRODNAME
+# The following ups commands are to set up any dependencies needed
+# to build the code.
+if [ -e $TEMPDIR/$TEMPSUBDIR/ups/$PRODNAME.table ] ; then
+   echo
+else
+   echo "Cannot find table file " $TEMPDIR/$TEMPSUBDIR/ups/$PRODNAME.table
+   exit
+fi
+ups declare -f $FLAVOR -m $PRODNAME.table \
+ -r $TEMPDIR/$TEMPSUBDIR -c $PRODNAME $PRODVERS
+ups setup -r $TEMPDIR/$TEMPSUBDIR $PRODNAME
+# The following nasty line is simply to set up the environment
+# variable {$PRODNAME}_DIR so that the code can be built.
+eval export `echo $PRODNAME | perl -pe 'y/a-z/A-Z/'`_DIR=$TEMPDIR/$TEMPSUBDIR
+echo Setting IDLMAPPER_DIR=$IDLMAPPER_DIR
 cd $TEMPDIR/$TEMPSUBDIR
 $MAKECOMMAND
-stop
-setup -r $SDSS_ROOT/$PRODNAME/$PRODVERS  \
- -m $TEMPDIR/$TEMPSUBDIR/ups/$PRODNAME.table $PRODNAME
-if [ $PRODVERS == "cvs" ] ; then
-   cp -r $TEMPDIR/$TEMPSUBDIR $SDSS_ROOT/$PRODNAME/$PRODVERS
+
+# The following nasty line is simply to set up the environment
+# variable {$PRODNAME}_DIR so that the code can be installed.
+eval export `echo $PRODNAME | perl -pe 'y/a-z/A-Z/'`_DIR=$MYSDSS_ROOT/$PRODNAME/$PRODVERS
+if [ $PRODVERS = "cvs" ] ; then
+   echo cp -r $TEMPDIR/$TEMPSUBDIR $MYSDSS_ROOT/$PRODNAME/$PRODVERS
+   cp -r $TEMPDIR/$TEMPSUBDIR $MYSDSS_ROOT/$PRODNAME/$PRODVERS
 else
-   $MAKECOMMAND install
+   echo $MAKEINSTALLCOMMAND
+   $MAKEINSTALLCOMMAND
 fi
-# Need the flavor in the line below.
+
+# Declare this version and make it current.
+ups undeclare -f $FLAVOR $PRODNAME $PRODVERS
 ups declare -f $FLAVOR -m $PRODNAME.table \
- -r $SDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
+ -r $MYSDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
 
 # Finally, delete the temporary directory used to build the code.
 
