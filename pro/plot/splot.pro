@@ -3,7 +3,7 @@
 ;   splot
 ;
 ; PURPOSE:
-;   Interactive plotting tool for 1-D data.
+;   Interactive plotting tool for 1-D (spectral) data.
 ;
 ; CALLING SEQUENCE:
 ;   splot, [x], y, $
@@ -34,6 +34,10 @@
 ;   Allow one to step through an image row at a time? Or link to ATV?
 ;   Use the WCS in splot_gettrack.
 ;   Add widget button option to fix Y range or let it float, or fix YMIN=0.
+;   Include options for plotting contours, etc?
+;   Options for XLOG, YLOG
+;   For FITS files, take XTITLE, YTITLE from header
+;   Option to pass header as param in SPLOT
 ;
 ; PROCEDURES CALLED:
 ;   fits_read
@@ -66,6 +70,9 @@
 ;   splot_refresh
 ;   splot_help
 ;   splot_help_event
+;   splot_plotparam_refresh
+;   splot_plotparam
+;   splot_plotparam_event
 ;   serase
 ;   splot_autoscale
 ;   soplot
@@ -110,28 +117,34 @@ pro splot_startup
     head_ptr: ptr_new()            , $ ; Pointer to FITS image header
     imagename: ''                  , $ ; FITS image file name
     base_id: 0L                    , $ ; ID of top-level base
-    base_min_size: [512L, 512L]    , $ ; Min size for top-level base
+    base_min_size: [600L, 400L]    , $ ; Min size for top-level base
     draw_base_id: 0L               , $ ; ID of base holding draw window
     draw_window_id: 0L             , $ ; Window ID of draw window
     draw_widget_id: 0L             , $ ; Widget ID of draw widget
     location_bar_id: 0L            , $ ; ID of (x,y) label
     wcs_bar_id: 0L                 , $ ; ID of WCS label
-    xrange_text_id: 0L             , $ ; ID of XRANGE= widget
-    yrange_text_id: 0L             , $ ; ID of YRANGE= widget
+    xmin_text_id: 0L               , $ ; ID of XMIN= widget
+    xmax_text_id: 0L               , $ ; ID of XMAX= widget
+    ymin_text_id: 0L               , $ ; ID of YMIN= widget
+    ymax_text_id: 0L               , $ ; ID of YMAX= widget
     comments_text_id: 0L           , $ ; ID of comments output widget
     keyboard_text_id: 0L           , $ ; ID of keyboard input widget
     nkey: 0                        , $ ; Number of elements in keylist
     keylist: replicate(keylist,5)  , $ ; Record of keystrokes + cursor in plot
     xrange: [0.0,1.0]              , $ ; X range of plot window
     yrange: [0.0,1.0]              , $ ; Y range of plot window
+    xfix: 'float'                  , $ ; 0=fix, 1=float
+    yfix: 'fix'                    , $ ; 0=fix, 1=float
     position: [0.15,0.15,0.95,0.95], $ ; POSITION for PLOT procedure
-    draw_window_size: [512L, 512L] , $ ; Size of main draw window
+    draw_window_size: [600L, 512L] , $ ; Size of main draw window
     menu_ids: lonarr(25)           , $ ; List of top menu items
     mouse: [0L, 0L]                , $ ; Cursor position in device coords
     mphys: [0.0, 0.0]              , $ ; Cursor position in data coordinates
     base_pad: [0L, 0L]             , $ ; Padding around draw base
     pad: [0L, 0L]                  , $ ; Padding around draw widget
-    headinfo_base_id: 0L             $ ; headinfo base widget id
+    headinfo_base_id: 0L           , $ ; headinfo base widget id
+    plotparam_base_id: 0L          , $ ; plotting parameter base widget id
+    box_xtitle_id: 0L                $ ;
    }
 
    nplot = 0
@@ -145,7 +158,7 @@ pro splot_startup
    tvlct, 255*red, 255*green, 255*blue
 
    ; Define the widgets.  For the widgets that need to be modified later
-   ; on, save their widget ids in state variables
+   ; on, save their widget ID's in state variables
 
    base = widget_base(title = 'splot', $
     /column, /base_align_right, app_mbar = top_menu, $
@@ -160,9 +173,12 @@ pro splot_startup
                   {cw_pdmenu_s, 2, 'Quit'}, $
                   {cw_pdmenu_s, 1, 'Erase'}, $        ; erase menu
                   {cw_pdmenu_s, 0, 'EraseLast'}, $
+                  {cw_pdmenu_s, 0, 'EraseAllButFirst'}, $
                   {cw_pdmenu_s, 2, 'EraseAll'}, $
-                  {cw_pdmenu_s, 1, 'ImageInfo'}, $    ;info menu
+                  {cw_pdmenu_s, 1, 'ImageInfo'}, $    ; info menu
                   {cw_pdmenu_s, 2, 'ImageHeader'}, $
+                  {cw_pdmenu_s, 1, 'Plot'}, $         ; plot menu
+                  {cw_pdmenu_s, 2, 'PlotParams'}, $
                   {cw_pdmenu_s, 1, 'Help'}, $         ; help menu
                   {cw_pdmenu_s, 2, 'SPLOT Help'} $
                 ]
@@ -179,19 +195,45 @@ pro splot_startup
    button_base2 =  widget_base(base, /row, /base_align_right)
    button_base3 =  widget_base(base, /row, /base_align_right)
 
-   state.xrange_text_id = cw_field(button_base1, $
-           uvalue = 'xrange_text', /string,  $
-           title = 'XRANGE=', $
-           value = string(state.xrange[0])+' '+string(state.xrange[1]),  $
+   state.xmin_text_id = cw_field(button_base1, $
+           uvalue = 'xmin_text', /float,  $
+           title = 'XMIN=', $
+           value = string(state.xrange[0]),  $
            /return_events, $
-           xsize = 25)
+           xsize = 12)
 
-   state.yrange_text_id = cw_field(button_base2, $
-           uvalue = 'yrange_text', /string,  $
-           title = 'YRANGE=', $
-           value = string(state.yrange[0])+' '+string(state.yrange[1]),  $
+   state.xmax_text_id = cw_field(button_base1, $
+           uvalue = 'xmax_text', /float,  $
+           title = 'XMAX=', $
+           value = string(state.xrange[1]),  $
            /return_events, $
-           xsize = 25)
+           xsize = 12)
+
+   fixlist = ['Fix', 'Float']
+   mode_droplist_id = widget_droplist(button_base1, $
+                                   title = '', $
+                                   uvalue = 'xfix', $
+                                   value = fixlist)
+
+   state.ymin_text_id = cw_field(button_base2, $
+           uvalue = 'ymin_text', /float,  $
+           title = 'YMIN=', $
+           value = string(state.yrange[0]),  $
+           /return_events, $
+           xsize = 12)
+
+   state.ymax_text_id = cw_field(button_base2, $
+           uvalue = 'ymax_text', /float,  $
+           title = 'YMAX=', $
+           value = string(state.xrange[1]),  $
+           /return_events, $
+           xsize = 12)
+
+   fixlist = ['Fix', 'Float']
+   mode_droplist_id = widget_droplist(button_base2, $
+                                   title = '', $
+                                   uvalue = 'yfix', $
+                                   value = fixlist)
 
    tmp_string = string('',format='(a30)')
    state.location_bar_id = widget_label(button_base1, $
@@ -287,6 +329,8 @@ end
 
 pro splot_readfits
 ; ???
+
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -357,6 +401,7 @@ pro splot_cleartext
    widget_control, state.draw_base_id, /clear_events
    widget_control, state.keyboard_text_id, set_value = ''
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -371,13 +416,16 @@ pro splot_zoom, zchange, recenter = recenter
       'in': begin
          state.xrange = state.mphys[0] $
           + [-0.25, 0.25] * (state.xrange[1] - state.xrange[0])
+         if (state.yfix EQ 'float') then splot_autoscale_y
       end
       'out': begin
          state.xrange = state.mphys[0] $
           + [-1.0, 1.0] * (state.xrange[1] - state.xrange[0])
+         if (state.yfix EQ 'float') then splot_autoscale_y
       end
       'one': begin
-         splot_autoscale
+         splot_autoscale_x
+         splot_autoscale_y
       end
       'none': begin ; no change to zoom level: recenter on current mouse pos'n
          state.xrange = state.mphys[0] $
@@ -386,8 +434,10 @@ pro splot_zoom, zchange, recenter = recenter
       else: print, 'Problem in splot_zoom!'
    endcase
 
+   splot_set_minmax
    splot_refresh
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -427,6 +477,7 @@ pro splot_event, event
   ; Main event loop for SPLOT widgets
 
    common splot_state
+   common splot_pdata
 
    widget_control, event.id, get_uvalue=uvalue
 
@@ -436,7 +487,20 @@ pro splot_event, event
       splot_refresh
       splot_cleartext
    end
-    'top_menu': begin       ; selection from menu bar
+
+   'xfix': case event.index of
+      0: state.xfix = 'fix'
+      1: state.xfix = 'float'
+      else: print, 'Unknown selection!'
+   endcase
+
+   'yfix': case event.index of
+      0: state.yfix = 'fix'
+      1: state.yfix = 'float'
+      else: print, 'Unknown selection!'
+   endcase
+
+   'top_menu': begin       ; selection from menu bar
       widget_control, event.value, get_value = event_name
 
       case event_name of
@@ -448,10 +512,14 @@ pro splot_event, event
 
          ; Erase options:
          'EraseLast' : serase, 1
+         'EraseAllButFirst' : serase, nplot-1
          'EraseAll'  : serase
 
          ; Info options:
          'ImageHeader': splot_headinfo
+
+         ; Plot options:
+         'PlotParams': splot_plotparam
 
          ; Help options:
          'SPLOT Help': splot_help
@@ -498,12 +566,22 @@ pro splot_event, event
 
    end
 
-   'xrange_text': begin     ; text entry in 'XRANGE= ' box
+   'xmin_text': begin     ; text entry in 'XMIN= ' box
       splot_get_minmax, uvalue, event.value
       splot_displayall
    end
 
-   'yrange_text': begin     ; text entry in 'YRANGE= ' box
+   'xmax_text': begin     ; text entry in 'XMAX= ' box
+      splot_get_minmax, uvalue, event.value
+      splot_displayall
+   end
+
+   'ymin_text': begin     ; text entry in 'YMIN= ' box
+      splot_get_minmax, uvalue, event.value
+      splot_displayall
+   end
+
+   'ymax_text': begin     ; text entry in 'YMAX= ' box
       splot_get_minmax, uvalue, event.value
       splot_displayall
    end
@@ -543,6 +621,7 @@ pro splot_event, event
 
    endcase
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -600,6 +679,7 @@ pro splot_resize, event
 
    state.draw_window_size = newsize
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -808,13 +888,13 @@ pro splot_plotwindow
    !p.position = state.position ; ???
    if (nplot GT 0) then begin
 
-      ; Convert color names to index numbers
+      ; Always plot the box with color='default'
       iplot = 0
       options = (*(plot_ptr[iplot])).options
       c = where(tag_names(options) EQ 'COLOR', ct)
-      if (ct EQ 1) then options.color = splot_icolor(options.color)
+      if (ct EQ 1) then options.color = splot_icolor('default')
 
-      plot, (*(plot_ptr[iplot])).x, (*(plot_ptr[iplot])).y, /nodata, $
+      plot, [0], [0], /nodata, $
        xrange=state.xrange, yrange=state.yrange, xstyle=1, ystyle=1, $
        _EXTRA=options
    endif else begin
@@ -937,20 +1017,21 @@ pro splot_move_cursor, direction
    ; Prevent the cursor move from causing a mouse event in the draw window
    widget_control, state.draw_widget_id, /clear_events
 
+   return
 end
 
 ;----------------------------------------------------------------------
 
 pro splot_set_minmax
 
-   ; Updates the min and max text boxes with new values.
+   ; Updates the MIN and MAX text boxes with new values.
 
    common splot_state
 
-   widget_control, state.xrange_text_id, $
-    set_value=string(state.xrange[0])+' '+string(state.xrange[1])
-   widget_control, state.yrange_text_id, $
-    set_value=string(state.yrange[0])+' '+string(state.yrange[1])
+   widget_control, state.xmin_text_id, set_value=state.xrange[0]
+   widget_control, state.xmax_text_id, set_value=state.xrange[1]
+   widget_control, state.ymin_text_id, set_value=state.yrange[0]
+   widget_control, state.ymax_text_id, set_value=state.yrange[1]
 
 end
 
@@ -965,22 +1046,31 @@ pro splot_get_minmax, uvalue, newvalue
 
    case uvalue of
 
-      'xrange_text': begin
-         reads, newvalue, tmp1, tmp2
+      'xmin_text': begin
+         reads, newvalue, tmp1
          state.xrange[0] = tmp1
-         state.xrange[1] = tmp2
       end
 
-      'yrange_text': begin
-         reads, newvalue, tmp1, tmp2
+      'xmax_text': begin
+         reads, newvalue, tmp1
+         state.xrange[1] = tmp1
+      end
+
+      'ymin_text': begin
+         reads, newvalue, tmp1
          state.yrange[0] = tmp1
-         state.yrange[1] = tmp2
+      end
+
+      'ymax_text': begin
+         reads, newvalue, tmp1
+         state.yrange[1] = tmp1
       end
 
    endcase
 
    splot_set_minmax
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -1008,87 +1098,59 @@ pro splot_help
 
    common splot_state
 
-   h = strarr(70)
-   i = 0
-   h[i] =  'SPLOT HELP'
-   i = i + 2
-   h[i] =  'MENU BAR:'
-   i = i + 1
-   h[i] =  'File->ReadFits:         Read in a new fits image from disk'
-   i = i + 1
-   h[i] =  'File->WritePS:          Write a PostScript file of the current display'
-   i = i + 1
-   h[i] =  'File->Quit:             Quits SPLOT'
-   i = i + 1
-   h[i] =  'Erase->EraseLast:       Erases the most recent plot label'
-   i = i + 1
-   h[i] =  'Erase->EraseAll:        Erases all plot labels'
-   i = i + 1
-   h[i] =  'ImageInfo->ImageHeader: Display the FITS header, if there is one.'
-   i = i + 2
-   h[i] =  'CONTROL PANEL ITEMS:'
-   i = i + 1
-   h[i] = 'XRANGE:          Shows X range for display; click to modify'
-   i = i + 1
-   h[i] = 'YRANGE:          Shows Y range for display; click to modify'
-   i = i + 2
-   h[i] = 'MOUSE:'
-   i = i + 1
-   h[i] = '                 Button1 = Zoom in & center'
-   i = i + 1 
-   h[i] = '                 Button2 = Center on current position'
-   i = i + 1
-   h[i] = '                 Button3 = Zoom out & center'
-   i = i + 1
-   h[i] = 'BUTTONS:'
-   i = i + 1
-   h[i] = 'Zoom1:           Sets XRANGE and YRANGE to show all data'
-   i = i + 1
-   h[i] = 'Done:            Quits SPLOT'
-   i = i + 2
-   h[i] = 'Keyboard commands in display window:'
-   i = i + 1
-   h[i] = '    Numeric keypad (with NUM LOCK on) moves cursor'
-   i = i + 1
-   h[i] = '    g: gaussian fit (gaussian integrated over each pixel)'
-   i = i + 2
-   h[i] = 'IDL COMMAND LINE HELP:'
-   i = i + 1
-   h[i] = 'To plot a 1-D array:'
-   i = i + 1
-   h[i] = '    splot, xvector, yvector [, options]'
-   i = i + 1
-   h[i] = 'To plot a 1-D array from a FITS file:'
-   i = i + 1
-   h[i] = '    splot, filename [, options] (enclose file name in single quotes)'
-   i = i + 1
-   h[i] = 'To overplot text on the draw window: '
-   i = i + 1
-   h[i] = '    sxyouts, x, y, text_string [, options]  (enclose string in single quotes)'
-   i = i + 2
-   h[i] = 'The options for SPLOT and SXYOUTS are essentially'
-   i = i + 1
-   h[i] =  'the same as those for the IDL PLOT and XYOUTS commands.'
-   i = i + 1
-   h[i] = 'The default color is red for overplots done from the IDL command line.'
-   i = i + 2
-   h[i] = 'Other commands:'
-   i = i + 1
-   h[i] = 'serase [, N]:       erases all (or last N) plots and text'
-   i = i + 1
-   h[i] = 'splot_shutdown:   quits SPLOT'
-   i = i + 1
-   h[i] = 'NOTE: If SPLOT should crash, type splot_shutdown at the IDL prompt.'
-   i = i + 5
-   h[i] = strcompress('SPLOT.PRO version '+state.version+' by D. Schlegel')
-   i = i + 1
-   h[i] = 'For full instructions, or to download the most recent version, go to:'
-   i = i + 1
-   h[i] = 'http://www.astro.princeton.edu/~schlegel/index.html'
-   i = i + 2
-   h[i] = 'For the companion program ATV, go to:'
-   i = i + 1
-   h[i] = 'http://cfa-www.harvard.edu/~abarth/atv/atv.html'
+   h =  'SPLOT HELP'
+   h = [h, '']
+   h = [h, 'MENU BAR:']
+   h = [h, 'File->ReadFits:         Read in a new fits image from disk']
+   h = [h, 'File->WritePS:          Write a PostScript file of the current display']
+   h = [h, 'File->Quit:             Quits SPLOT']
+   h = [h, 'Erase->EraseLast:       Erases the most recent plot label']
+   h = [h, 'Erase->EraseAll:        Erases all plot labels']
+   h = [h, 'ImageInfo->ImageHeader: Display the FITS header, if there is one.']
+   h = [h, 'Plot->PlotParams:       Edit plot options']
+   h = [h, '']
+   h = [h, 'CONTROL PANEL ITEMS:']
+   h = [h,'XMIN:            Shows X minimum for display; click to modify']
+   h = [h,'XMAX:            Shows X maximum for display; click to modify']
+   h = [h,'YMIN:            Shows Y minimum for display; click to modify']
+   h = [h,'YMAX:            Shows Y maximum for display; click to modify']
+   h = [h, '']
+   h = [h,'MOUSE:']
+   h = [h,'                 Button1 = Zoom in & center']
+   h = [h,'                 Button2 = Center on current position']
+   h = [h,'                 Button3 = Zoom out & center']
+   h = [h,'BUTTONS:']
+   h = [h,'Zoom1:           Rescale XRANGE and YRANGE to show all data']
+   h = [h,'Done:            Quits SPLOT']
+   h = [h, '']
+   h = [h,'Keyboard commands in display window:']
+   h = [h,'    Numeric keypad (with NUM LOCK on) moves cursor']
+   h = [h,'    g: gaussian fit (gaussian integrated over each pixel)']
+   h = [h, '']
+   h = [h,'IDL COMMAND LINE HELP:']
+   h = [h,'To plot a 1-D array:']
+   h = [h,'    splot, xvector, yvector [, options]']
+   h = [h,'To plot a 1-D array from a FITS file:']
+   h = [h,'    splot, filename [, options] (enclose file name in single quotes)']
+   h = [h,'To overplot text on the draw window: ']
+   h = [h,'    sxyouts, x, y, text_string [, options]  (enclose string in single quotes)']
+   h = [h, '']
+   h = [h,'The options for SPLOT and SXYOUTS are essentially']
+   h = [h, 'the same as those for the IDL PLOT and XYOUTS commands.']
+   h = [h,'The default color is red for overplots done from the IDL command line.']
+   h = [h, '']
+   h = [h,'Other commands:']
+   h = [h,'serase [, N]:       erases all (or last N) plots and text']
+   h = [h,'splot_shutdown:   quits SPLOT']
+   h = [h,'NOTE: If SPLOT should crash, type splot_shutdown at the IDL prompt.']
+   h = [h, '']
+   h = [h, '']
+   h = [h,strcompress('SPLOT.PRO version '+state.version+' by D. Schlegel')]
+   h = [h,'For full instructions, or to download the most recent version, go to:']
+   h = [h,'http://www.astro.princeton.edu/~schlegel/index.html']
+   h = [h, '']
+   h = [h,'For the companion program ATV, go to:']
+   h = [h,'http://cfa-www.harvard.edu/~abarth/atv/atv.html']
 
    if (NOT xregistered('splot_help')) then begin
 
@@ -1135,6 +1197,102 @@ end
 
 ;------------------------------------------------------------------------------
 
+pro splot_plotparam_refresh
+
+   common splot_state
+   common splot_pdata
+
+   options = (*(plot_ptr[0])).options ; Test if exists first ???
+
+   c = where(tag_names(options) EQ 'XTITLE', ct)
+   if (ct EQ 1) then $
+    widget_control, state.box_xtitle_id, set_value=options.(c[0])
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
+pro splot_plotparam_event, event
+
+   common splot_state
+   common splot_pdata
+
+   options = (*plot_ptr[0]).options ; Test if exists first ???
+
+   widget_control, event.id, get_uvalue=uvalue
+
+   case uvalue of
+
+      'plotparam_done': widget_control, event.top, /destroy
+
+      else: begin
+         uvalue = strupcase(uvalue)
+         if (N_elements(options) EQ 0) then begin
+            options = create_struct(uvalue, event.value)
+         endif else begin
+            c = where(tag_names(options) EQ uvalue, ct)
+            if (ct EQ 0) then $
+             options = create_struct(options, uvalue, event.value) $
+             else options.(c[0]) = event.value
+         endelse
+
+         (*plot_ptr[0]) = { $
+          type: (*plot_ptr[0]).type, $
+          x:    (*plot_ptr[0]).x,    $
+          y:    (*plot_ptr[0]).y,    $
+          options: options           $
+         }
+
+         splot_refresh
+      end
+
+   endcase
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
+pro splot_plotparam
+
+   common splot_state
+
+   if (NOT xregistered('splot_plotparam')) then begin
+
+      plotparam_base = $
+      widget_base(/floating, $
+                  /base_align_left, $
+                  group_leader = state.base_id, $
+                  /column, $
+                  title = 'SPLOT plot params', $
+                  uvalue = 'plotparam_base')
+
+      tmp_string = string('',format='(a30)')
+      state.box_xtitle_id = $ ; ???
+       cw_field(plotparam_base, $
+                   /string, $
+                   /return_events, $
+                  title = 'XTITLE:', $
+                   uvalue = 'xtitle', $
+                   value = tmp_string)
+
+      plotparam_done = $
+       widget_button(plotparam_base, $
+                    value = 'Done', $
+                    uvalue = 'plotparam_done')
+
+      widget_control, plotparam_base, /realize
+      xmanager, 'splot_plotparam', plotparam_base, /no_block
+   endif
+
+   splot_plotparam_refresh
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
 pro serase, nerase, norefresh=norefresh
 
    common splot_pdata
@@ -1156,6 +1314,7 @@ pro serase, nerase, norefresh=norefresh
 
    if (NOT keyword_set(norefresh) ) then splot_refresh
 
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -1210,7 +1369,7 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro splot_autoscale
+pro splot_autoscale_x
 
    common splot_state
    common splot_pdata
@@ -1218,24 +1377,18 @@ pro splot_autoscale
    ; First set default values if no data
    state.xrange[0] = 0.0
    state.xrange[1] = 1.0
-   state.yrange[0] = 0.0
-   state.yrange[1] = 1.0
 
    if (nplot GT 0) then begin
 
       ; Set plotting limits for first SPLOT
       state.xrange[0] = min( (*plot_ptr[0]).x )
       state.xrange[1] = max( (*plot_ptr[0]).x )
-      state.yrange[0] = min( (*plot_ptr[0]).y )
-      state.yrange[1] = max( (*plot_ptr[0]).y )
 
       ; Enlarge plotting limits if necessary for other calls to SOPLOT
       for i=1, nplot-1 do begin
          if ((*plot_ptr[i]).type EQ 'points') then begin
             state.xrange[0] = min( [state.xrange[0], (*plot_ptr[i]).x] )
             state.xrange[1] = max( [state.xrange[1], (*plot_ptr[i]).x] )
-            state.yrange[0] = min( [state.yrange[0], (*plot_ptr[i]).y] )
-            state.yrange[1] = max( [state.yrange[1], (*plot_ptr[i]).y] )
          endif
       endfor
    endif
@@ -1247,7 +1400,54 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro soplot, x, y, autoscale=autoscale, _EXTRA=options
+pro splot_autoscale_y
+
+   common splot_state
+   common splot_pdata
+
+   ; When determining Y plotting limits, only look at those data points
+   ; within the X plotting limits.
+   if (state.xrange[1] GE state.xrange[0]) then xrange = state.xrange $
+    else xrange = state.xrange[[1,0]]
+
+   ; First set default values if no data
+   state.yrange[0] = 0.0
+   state.yrange[1] = 1.0
+
+   if (nplot GT 0) then begin
+
+      ; Set plotting limits for first SPLOT
+      igood = where( (*plot_ptr[0]).x GE xrange[0] $
+       AND (*plot_ptr[0]).x LE xrange[1])
+      if (igood[0] NE -1) then begin
+         state.yrange[0] = min( (*plot_ptr[0]).y[igood] )
+         state.yrange[1] = max( (*plot_ptr[0]).y[igood] )
+      endif
+
+      ; Enlarge plotting limits if necessary for other calls to SOPLOT
+      for i=1, nplot-1 do begin
+         if ((*plot_ptr[i]).type EQ 'points') then begin
+            igood = where( (*plot_ptr[i]).x GE xrange[0] $
+             AND (*plot_ptr[i]).x LE xrange[1])
+            if (igood[0] NE -1) then begin
+               state.yrange[0] = $
+                min( [state.yrange[0], (*plot_ptr[i]).y[igood]] )
+               state.yrange[1] = $
+                max( [state.yrange[1], (*plot_ptr[i]).y[igood]] )
+            endif
+         endif
+      endfor
+   endif
+
+   splot_set_minmax
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
+pro soplot, x, y, autoscale=autoscale, xrange=xrange, yrange=yrange, $
+ position=position, _EXTRA=options
 
    common splot_state
    common splot_pdata
@@ -1260,6 +1460,10 @@ pro soplot, x, y, autoscale=autoscale, _EXTRA=options
    if (NOT xregistered('splot')) then begin
       print, 'Must use SPLOT before SOPLOT'
    endif
+
+   if (keyword_set(xrange)) then state.xrange = xrange
+   if (keyword_set(yrange)) then state.yrange = yrange
+   if (keyword_set(position)) then state.position = position
 
    if (nplot LT maxplot) then begin
 
@@ -1286,7 +1490,8 @@ pro soplot, x, y, autoscale=autoscale, _EXTRA=options
 
       wset, state.draw_window_id
       if (keyword_set(autoscale)) then begin
-         splot_autoscale
+         splot_autoscale_x
+         splot_autoscale_y
          splot_plotall
       endif else begin
          splot_plot1plot, nplot-1
