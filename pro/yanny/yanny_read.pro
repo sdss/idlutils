@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   yanny_read, filename, [ pdata, hdr=hdr, enums=enums, structs=structs, $
-;    /quick ]
+;    /anonymous, /quick ]
 ;
 ; INPUTS:
 ;   filename   - Input file name for Yanny parameter file
@@ -25,6 +25,9 @@
 ;   enums      - All "typedef enum" structures.
 ;   structs    - All "typedef struct" structures, which define the form
 ;                for all the PDATA structures.
+;   anonymous  - If set, then all returned structures are anonymous; set this
+;                keyword to avoid possible conflicts between named structures
+;                that are actually different.
 ;   quick      - Quicker read using READF, but fails if continuation lines
 ;                are present.
 ;
@@ -223,7 +226,7 @@ function yanny_getwords, sline
 end
 ;------------------------------------------------------------------------------
 pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
- quick=quick
+ anonymous=anonymous, quick=quick
 
    if (N_params() LT 1) then begin
       print, 'Syntax - yanny_read, filename, [ pdata, hdr=hdr, enums=enums, $
@@ -366,8 +369,10 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
             stname = strupcase( strtrim(strmid(sline,1), 2) )
 
             ; Create the actual structure
+            if (keyword_set(anonymous)) then structyp='' $
+             else structyp = stname
             add_pointer, stname, $
-             ptr_new( mrd_struct(names, values, 1, structyp=stname) ), $
+             ptr_new( mrd_struct(names, values, 1, structyp=structyp) ), $
              pcount, pname, pdata, pnumel
 
             qdone = 1 ; This last line is still part of the structure def'n
