@@ -156,12 +156,12 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
       if (total(coeff) EQ 0 AND total(y) NE 0) then begin
 
          ; Assume that there are two break points without any data in between.
-         ; Find them, and remove the first break point in those cases.
+         ; Find them, and remove the second break point in those cases.
          i = nord ; Don't remove the first NORD or last NORD break points
 print,'remove begin ',nbkpt
-         while (i LT nbkpt-nord) do begin
-            ; Test to see if there is data between break points #i and #(i+1)
-            indx = where(x GE fullbkpt[i] AND x LT fullbkpt[i+1], ct)
+         while (i LE nbkpt-nord) do begin
+            ; Test to see if there is data between break points #i and #(i-1)
+            indx = where(x LT fullbkpt[i] AND x GE fullbkpt[i-1], ct)
 
             ; Or if all data points in that range have zero weight
             if (ct GT 0) then wsum = total(invsig[indx]) $
@@ -169,9 +169,8 @@ print,'remove begin ',nbkpt
 
             if (ct EQ 0 OR wsum EQ 0) then begin
                ; Remove break point #i
-               if (i EQ 0) then fullbkpt = fullbkpt[1:nbkpt-1] $
-                else if (i EQ nbkpt-2) then fullbkpt = fullbkpt[0:nbkpt-2] $
-                else fullbkpt = fullbkpt[[lindgen(i),lindgen(nbkpt-i-1)+i+1]]
+	       ; print, 'removing... ', i
+               fullbkpt = fullbkpt[[lindgen(i),lindgen(nbkpt-i-1)+i+1]]
                nbkpt = n_elements(fullbkpt) ; Should decrement by 1
                qeval = 1 ; Set to re-evaluate the spline
             endif else begin

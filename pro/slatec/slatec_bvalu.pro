@@ -42,6 +42,8 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
 
    if (NOT keyword_set(ideriv)) then ideriv=0L
 
+   ideriv = long(ideriv)
+
    nbkpt = n_elements(bkpt)
    ncoeff = n_elements(coeff)
 
@@ -51,6 +53,7 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
          print, 'ideriv is ', ideriv
          message, 'ideriv must be >= 0 and < nord'
    endif
+
 
    if k LT 1 then message, 'nord must be > 0'
    if n LT k then message, 'nbkpt must be >= 2*nord'
@@ -72,8 +75,8 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
    xtemp = float(x < maxbkpt)
    xtemp = (xtemp > minbkpt)
    rr = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
-    'bvalu_idl', $
-    float(bkpt), float(coeff), n, k, LONG(ideriv), xtemp, nx, inbv, work, y)
+      'bvalu_idl', $
+      float(bkpt), float(coeff), n, k, ideriv, xtemp, nx, inbv, work, y)
 
    return, y
 end
