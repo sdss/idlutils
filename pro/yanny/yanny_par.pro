@@ -84,10 +84,20 @@ function yanny_par, hdr, keyname, count=count
    if (strpos(keystring, "'") NE -1) then begin
       ; The following is a kludge to take strings between successive
       ; pairs of single quotes.
-      result = strsplit(keystring, "'", /extract)
+
+;       below is the 5.3 version
+;     result = strsplit(keystring, "'", /extract)
+;
+;         here's the 5.2 version
+      result = str_sep(keystring, "'")
+
       result = result[ 2*lindgen((n_elements(result)/2) > 1) ]
    endif else begin
-      result = strsplit(keystring, " ", /extract)
+;         below is the 5.3 version
+;      result = strsplit(keystring, " ", /extract)
+;
+;        here's the 5.2 version
+      result = str_sep(strcompress(keystring), " ")
    endelse
 
    ; If the result has only 1 element, then return a scalar.
