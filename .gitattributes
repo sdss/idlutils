@@ -606,6 +606,7 @@ pro/misc/idlutils_version.pro -text
 pro/misc/rmfile.pro -text
 pro/plot/atv.pro -text
 pro/plot/cmps_form.pro -text
+pro/plot/display.pro -text
 pro/plot/djs_arrow.pro -text
 pro/plot/djs_axis.pro -text
 pro/plot/djs_contourpts.pro -text
@@ -615,6 +616,8 @@ pro/plot/djs_oploterr.pro -text
 pro/plot/djs_plot.pro -text
 pro/plot/djs_plotlimitbox.pro -text
 pro/plot/djs_xyouts.pro -text
+pro/plot/imgexp.pro -text
+pro/plot/imgscl.pro -text
 pro/plot/s_plotdev.pro -text
 pro/plot/splot.pro -text
 pro/slatec/bsplvn.pro -text
