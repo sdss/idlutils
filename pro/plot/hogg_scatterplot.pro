@@ -17,18 +17,23 @@
 ;   xrange      - x range; default minmax(x)
 ;   yrange      - y range; default minmax(y)
 ;   levels      - contour levels; default in source code
-;   quantiles   - quantiles to plot on conditional plot; default [0.25,0.5,0.75]
+;   quantiles   - quantiles to plot on conditional plot; default
+;                 [0.25,0.5,0.75]
 ;   cthick      - thickness for contours
 ;   exponent    - stretch greyscale at exponent power; default 1.0
 ;   satfrac     - fraction of pixels to saturate in greyscale; default 0
 ;   darkest     - darkest shade at saturation; default 127; lower darker
+;   outliers_psym    - NEEDS DOCUMENTATION
+;   outliers_color   - NEEDS DOCUMENTATION
+;   outliers_symsize - NEEDS DOCUMENTATION
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
-;   conditional - normalize each column separately
-;   labelcont   - label contours with numbers
+;   conditional     - normalize each column separately
+;   labelcont       - label contours with numbers
 ;   internal_weight - use only the points in the image to determine
 ;                     contours
 ;   nogreyscale     - don't plot the greyscale
+;   outliers        - NEEDS DOCUMENTATION
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
