@@ -6,10 +6,11 @@
 ;   reformat 2MASS PSC from ASCII to FITS files
 ;
 ; CALLING SEQUENCE:
-;   tmass_reformat_psc
+;   tmass_reformat_psc, inpath, outpath
 ;
 ; INPUTS:
-;   paths are hardwired!
+;   inpath  - path to the gzipped psc files downloaded from IPAC
+;   outpath - path to temp dir to write FITS files, one per ASCII file.
 ;
 ; COMMENTS:
 ;   convert the gzipped ASCII files to FITS files. 
@@ -22,10 +23,7 @@
 ;   2003-Jul-17  Written by D. Finkbeiner & D. Schlegel, Princeton
 ;----------------------------------------------------------------------
 
-pro tmass_reformat_psc
-
-  inpath = '/peyton/scr/photo66/sdssdata/2mass/allsky/'
-  outpath = '/peyton/scr/photo63/sdssdata/2mass/allsky/'
+pro tmass_reformat_psc, inpath, outpath
 
   spawn, 'mkdir -p '+outpath
 
