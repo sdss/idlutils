@@ -323,7 +323,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
             rawline = yanny_nextline(ilun)
             sline = yanny_strip_commas(rawline)
 
-            while (strmid(sline,0,1) NE '}') do begin
+            while (strmid(strtrim(sline,2),0,1) NE '}') do begin
                ww = yanny_getwords(sline)
 
                if (N_elements(ww) GE 2) then begin
