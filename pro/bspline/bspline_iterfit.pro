@@ -104,7 +104,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    yfit = 0 * ydata ; Default return values
 
    if (NOT keyword_set(invvar)) then begin
-      var = variance(ydata)
+      var = variance(ydata, /double)
       if (var EQ 0) then var = 1
       invvar = 0.0 * ydata + 1.0/var
    endif
