@@ -35,13 +35,14 @@
 ; MODIFICATION HISTORY:
 ;    2003-01-26 - Written by Michael Blanton (NYU)
 ;-
-pro em_pca_sparse_matrix, matrix, p, k, eigenvec, tol=tol, maxiter=maxiter, $
+pro em_pca_sparse_matrix, matrix, k, eigenvec, tol=tol, maxiter=maxiter, $
                           niter=niter, verbose=verbose, nofix=nofix, $
                           noortho=noortho
 
 ; set defaults
 if(n_elements(tol) eq 0) then tol=0.
 if(n_elements(maxiter) eq 0) then maxiter=20
+p=matrix.m
 
 ; check args
 if (n_params() lt 1) then begin
@@ -66,14 +67,16 @@ niter=0L
 diff=tol*2.+1.
 while(niter lt maxiter and diff gt tol) do begin
     if(keyword_set(verbose)) then splog,'niter= '+string(niter)
-    hidden=(invert(transpose(eigenvec)#eigenvec)#transpose(eigenvec))
     oldeigenvec=eigenvec
-    mathidden=lle_sm_full(lle_sm_mult(matrix,lle_sm(transpose(hidden))))
-    eigenvec=mathidden#invert(hidden#mathidden)
+    hidden=invert(transpose(eigenvec)#eigenvec,/double)#transpose(eigenvec)
+    mathidden=lle_sm_full(matrix)#transpose(hidden)
+    eigenvec=mathidden#invert(hidden#mathidden,/double)
     if(tol gt 0.) then begin
         diff=0.
         for i=0, k-1 do begin
-            diff=diff+abs(total(oldeigenvec[*,i]*eigenvec[*,i],/double))
+            diff=diff+abs(1.-total(oldeigenvec[*,i]*eigenvec[*,i],/double)/ $
+                          sqrt(total(oldeigenvec[*,i]^2,/double)* $
+                               total(eigenvec[*,i]^2,/double)))
         endfor
         if(keyword_set(verbose)) then splog,'diff= '+string(diff)
     endif
@@ -97,10 +100,12 @@ if(NOT keyword_set(noortho)) then begin
 
     if(NOT keyword_set(nofix)) then begin
 ;       project variables onto new coordinates
-        hidden=transpose(eigenvec)# $
-          lle_sm_full(lle_sm_mult(matrix,lle_sm(eigenvec)))
-        eval_hidden= eigenql(hidden,eigenvectors=evec_hidden)
-        eigenvec=eigenvec[*,*]#transpose(evec_hidden)
+        if(k gt 1) then begin
+            hidden=transpose(eigenvec)#lle_sm_full(matrix)#eigenvec
+            hidden=0.5*(hidden+transpose(hidden))
+            eval_hidden= eigenql(hidden,eigenvectors=evec_hidden, /double)
+            eigenvec=eigenvec[*,*]#(evec_hidden)
+        endif 
     endif
 endif
 

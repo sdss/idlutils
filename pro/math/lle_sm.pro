@@ -39,8 +39,14 @@ outsm={n:0L, $
        nindx:lonarr(count), $
        mindx:lonarr(count)}
 
-outsm.n=(size(inarr,/dimens))[0]
-outsm.m=(size(inarr,/dimens))[1]
+ndim=(size(inarr))[0]
+if(ndim eq 1) then begin
+    outsm.n=1
+    outsm.m=(size(inarr,/dimens))[0]
+endif else begin
+    outsm.n=(size(inarr,/dimens))[0]
+    outsm.m=(size(inarr,/dimens))[1]
+endelse
 outsm.vals=inarr[indx]
 outsm.mindx=indx/outsm.n
 outsm.nindx=indx mod outsm.n

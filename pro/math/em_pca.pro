@@ -83,13 +83,16 @@ niter=0L
 diff=tol*2.+1.
 while(niter lt maxiter and diff gt tol) do begin
     if(keyword_set(verbose)) then splog,'niter= '+string(niter)
-    hidden=(invert(transpose(eigenvec)#eigenvec)#transpose(eigenvec))#data
+    hidden=(invert(transpose(eigenvec)#eigenvec,/double)# $
+            transpose(eigenvec))#data
     oldeigenvec=eigenvec
-    eigenvec=data#transpose(hidden)#invert(hidden#transpose(hidden))
+    eigenvec=data#transpose(hidden)#invert(hidden#transpose(hidden),/double)
     if(tol gt 0.) then begin
         diff=0.
         for i=0, k-1 do begin
-            diff=diff+abs(total(oldeigenvec[*,i]*eigenvec[*,i],/double))
+            diff=diff+abs(1.-total(oldeigenvec[*,i]*eigenvec[*,i],/double)/ $
+                          sqrt(total(oldeigenvec[*,i]^2,/double)* $
+                               total(eigenvec[*,i]^2,/double)))
         endfor
         if(keyword_set(verbose)) then splog,'diff= '+string(diff)
     endif

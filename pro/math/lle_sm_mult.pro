@@ -62,7 +62,11 @@ j=0L
 count=0L
 compresscount=30L
 for i=0L,ninnera-1L do begin
-    while(mindx_innerb[j] lt mindx_innera[i] and j lt ninnerb) do j=j+1L
+    contloop=1
+    while(j lt ninnerb and contloop) do begin
+        contloop=mindx_innerb[j] lt mindx_innera[i]
+        if(contloop) then j=j+1L
+    endwhile 
     if(j lt ninnerb) then begin
         if(mindx_innerb[j] eq mindx_innera[i]) then begin
             tmp_outn=a.nindx[iinnera[i]:iinnera[i+1]-1L]
@@ -88,6 +92,7 @@ for i=0L,ninnera-1L do begin
         endif
     endif
 endfor
+if(n_elements(numlist) eq 0) then stop
 lle_sm_mult_compress,numlist,vallist
 
 nindx=numlist mod a.n
