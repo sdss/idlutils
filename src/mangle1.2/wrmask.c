@@ -50,10 +50,11 @@ extern void wrangle();
   Return value: number of polygons written,
 	or -1 if error occurred.
 */ 
-int wrmask(filename, fmt, polys, npolys)
+int wrmask(filename, fmt, polys, npolys, selfdestruct)
 		 char *filename;
 		 format *fmt;
 		 int npolys;
+		 int selfdestruct;
 #ifdef GCC
 		 polygon *polys[npolys];
 #else
@@ -76,7 +77,7 @@ int wrmask(filename, fmt, polys, npolys)
 		npoly = wr_rect(filename, fmt, polys, npolys, npoly);
 
 	} else if (strcmp(fmt->out, "polygon") == 0) {
-		npoly = wr_poly(filename, polys, npolys, npoly);
+		npoly = wr_poly(filename, polys, npolys, npoly, selfdestruct);
 
 	} else if (strcmp(fmt->out, "Region") == 0) {
 		npoly = wr_Reg(filename, polys, npolys, npoly);
@@ -487,9 +488,9 @@ int wr_rect(filename, fmt, polys, npolys, npolyw)
   Return value: number of polygons written,
 	or -1 if error occurred.
 */ 
-int wr_poly(filename, polys, npolys, npolyw)
+int wr_poly(filename, polys, npolys, npolyw, selfdestruct)
 		 char *filename;
-		 int npolys, npolyw;
+		 int npolys, npolyw, selfdestruct;
 #ifdef GCC
 		 polygon *polys[npolys];
 #else
@@ -539,6 +540,8 @@ int wr_poly(filename, polys, npolys, npolyw)
 	    fprintf(file, " %19.16f %19.16f %19.16f %.16g\n",
 							polys[ipoly]->rp_(0, ip), polys[ipoly]->rp_(1, ip), polys[ipoly]->rp_(2, ip), polys[ipoly]->cm[ip]);
 		}
+
+    if(selfdestruct==1) free_poly(polys[ipoly]);
 
 		/* increment polygon count */
 		npoly++;

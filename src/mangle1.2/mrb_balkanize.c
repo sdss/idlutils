@@ -116,15 +116,6 @@ int main(argc, argv)
 												 links, nlinks, npolylink);
 	if (npolys == -1) exit(1);
 
-	/* write polygons */
-	ifile = argc - 1;
-	if(nfiles>0) 
-		npolys = wrmask(argv[ifile], &fmt, &polys[npoly], npolys);
-	else 
-		npolys = wrmask("-", &fmt, &polys[npoly], npolys);
-	if (npolys == -1) exit(1);
-	/* memmsg(); */
-
 	/* find parents */
 	for(i=npoly;i<npoly+npolys;i++) {
 		/* for each parent who contributed a cap, check all the possibly 
@@ -168,6 +159,15 @@ int main(argc, argv)
 	}
 	if(fmt.parents)
 		fclose(ofp);
+
+	/* write polygons */
+	ifile = argc - 1;
+	if(nfiles>0) 
+		npolys = wrmask(argv[ifile], &fmt, &polys[npoly], npolys, 1);
+	else 
+		npolys = wrmask("-", &fmt, &polys[npoly], npolys, 1);
+	if (npolys == -1) exit(1);
+	/* memmsg(); */
 
 	exit(0);
 }
