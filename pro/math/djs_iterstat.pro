@@ -61,7 +61,7 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
 
    ngood = N_elements(image)
    if (ngood EQ 0) then begin
-      print, 'No data points'
+;      print, 'No data points'
       fmean = 0.0
       fmedian = 0.0
       fsig = 0.0
@@ -69,7 +69,7 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       return
    endif
    if (ngood EQ 1) then begin
-      print, 'Only 1 data point'
+;      print, 'Only 1 data point'
       fmean = image[0]
       fmedian = fmean
       fsig = 0.0
