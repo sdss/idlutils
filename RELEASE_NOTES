@@ -1,4 +1,6 @@
 
+ASINH: Modified this Goddard routine so that it works for scalars
+               as well as arrays.
 EXTRACT_PROFMEAN,FRAC_PROFMEAN,INTERP_PROFMEAN: Blanton's routines
                for dealing with PHOTO aperature photometry.
 MEMSHIFT: New proc for doing raw memory copies within arrays or
