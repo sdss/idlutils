@@ -2,7 +2,7 @@
 ; NAME:
 ;	  logsum
 ; PURPOSE: (one line)
-;   take natural log of the sum of natural logs (quickly)
+;   sum quantities when you have them as logs (preserving dynamic range)
 ; DESCRIPTION:
 ;
 ; CATEGORY:
