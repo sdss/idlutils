@@ -1,6 +1,8 @@
-DPF_PIX2ANG_NEST added (simply calls dpf_nest2ring and dpf_pix2ang_ring)
+
+DPF_NEST2RING,DPF_PIX2ANG_RING: Cache lookup table for wicked speed.
+DPF_PIX2ANG_NEST: Added (simply calls dpf_nest2ring and dpf_pix2ang_ring).
 HEALGEN        Updated to use dpf* routines and break dependence on HEALPIX
-                Packages.
+               packages.
 BSPLINE_ITERFIT: Fix crash condition for when only 1 point to fit.
 DJS_RGB_MAKE: Code to create JPEG from 3 FITS files based upon NW_RGB_MAKE,
                but saturating stars to a single color per object.
