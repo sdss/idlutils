@@ -382,7 +382,7 @@ function tyc_readfile, filename, range=range, columns=columns
    thisfile = tyc_readfits(filename)
    if (keyword_set(thisfile)) then begin
       splog, 'Reading FITS file ' + thisfile + ' RANGE=', range[0], range[1]
-      bigdat = mrdfits(thisfile, 1, range=range, columns=columns)
+      bigdat = mrdfits(thisfile, 1, range=range, columns=columns, /silent)
    endif else begin
       bigdat = tyc_readascii(filename, range=range, columns=columns)
    endelse
