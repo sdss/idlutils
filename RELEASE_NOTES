@@ -9,6 +9,8 @@ EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
                TRACE_CRUDE,TRACE_FWEIGHT,TRACE_GWEIGHT:
                Call IDLUTILS_SO_EXT() to get the suffix for dynamically
                loaded libraries (rather than assuming ".so").
+MAKE_RA_CAP,MAKE_DEC_CAP: Functions moved from photoop; make mangle
+               caps along ra and dec lines. 
 MRDFITS: When we updated the Goddard routines on 15 April 2004, it went
                back to a version from Landsman that only included some of
                the patches for large file (> 2Gb) support.  This meant that
@@ -16,14 +18,16 @@ MRDFITS: When we updated the Goddard routines on 15 April 2004, it went
                the code wouldn't crash.  I've re-introduced the patches
                originally included on 22 Sep 2003, and e-mailed this patch
                to Landsman.
+MWRFITS: Fix a bug, whereby if a pointer was included in an output structure,
+               the byte padding in heap was incorrect, and block sizes other
+               than 2880 bytes were incorrectly written out.  This was a
+               1-line bug fix that Landsman found.
 PLOT_POLY: Add /AITOFF flag to plot on Aitoff projections.
 POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
                poly_2d to perform a rotation of an imaging using the 
                cubic approximation to the sinc shift.
-MAKE_RA_CAP,MAKE_DEC_CAP: Functions moved from photoop; make mangle
-               caps along ra and dec lines. 
 REJECT_CR: A previous error in determining the background for rejection
-           has been fixed, so more cosmics are now successfully rejected. 
+               has been fixed, so more cosmics are now successfully rejected. 
 
 Makefile: Install the RELEASE_NOTES file.
 bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
