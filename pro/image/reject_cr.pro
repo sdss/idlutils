@@ -86,7 +86,7 @@ for k=0L, niter-1L do begin
         endfor
     endfor
     tmp_ivar[rejects]=0.
-    reject_cr_single, tmp_image, image_ivar, psfvals, newrejected, nsig=nsig, $
+    reject_cr_single, tmp_image, tmp_ivar, psfvals, newrejected, nsig=nsig, $
       cfudge=0., c2fudge=c2fudge
     rejected=rejected OR newrejected
     
