@@ -103,7 +103,7 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
       endfor
    endif
 
-   ; close, olun
+   close, olun
    free_lun, olun
 
    return

@@ -342,12 +342,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
    endwhile
 
-
-   ; close, ilun
-   ; I am not sure if logical units get freed with just close
+   close, ilun
    free_lun, ilun
-
-   ; Trim the pointers to only those that exist
 
    return
 end
