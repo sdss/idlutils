@@ -1,4 +1,10 @@
 
+SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
+               is left in a bad state that does not allow the use of !p.multi
+               in other plot windows.  The fix is to always make sure that
+               !p.position is reset to its previous value after any calls
+               to SPLOT,SOPLOT,SXYOUTS.
+
 -------------------------------------------------------------------------------
 v4_10_4 (Jul 5, 2003)
 Tagged for photoop v0_12.
