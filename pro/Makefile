@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-SUBDIRS = TeXtoIDL coord fits image math misc plot slatec yanny
+SUBDIRS = TeXtoIDL coord fits image math misc plot slatec yanny bspline cosmography
 
 all :;
 
@@ -15,6 +15,8 @@ all :;
 # Install things in their proper places in $(IDLUTILS_DIR)
 #
 install :
+	@ /bin/rm -rf $(IDLUTILS_DIR)/pro
+	@ mkdir $(IDLUTILS_DIR)/pro
 	@ for f in $(SUBDIRS); do \
 		(mkdir $(IDLUTILS_DIR)/pro/$$f; \
 		echo Copying $$f; \
