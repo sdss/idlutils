@@ -15,7 +15,7 @@ DRADEG = 180.d0/!dpi
 phi=DRADEG*atan(x[1,*],x[0,*])
 indx=where(phi lt 0.,count)
 if(count gt 0) then phi[indx]=phi[indx]+360.
-theta=(90.D)-DRADEG*asin(x[2,*]/sqrt(x[0,*]^2+x[1,*]^2))
- 
+theta=(90.D)-DRADEG*asin(x[2,*]/sqrt(x[0,*]^2+x[1,*]^2+x[2,*]^2))
+
 end
 ;-----------------------------------------------------------------------

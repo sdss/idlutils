@@ -24,8 +24,6 @@
 ;              center part of the image from djs_iterstat, and relative to the
 ;              mean from iterstat
 ;   noaxes     don't plot axes and labels
-;   startps    BLANTON: comment your code!
-;   endps      BLANTON: comment your code!
 ; COMMENTS:
 ;   The source code can be easily modified to include contouring.  In fact
 ;   the next revision ought to add optional contouring keywords and inputs.
@@ -40,8 +38,7 @@
 pro hogg_greyscale_plot, data,filename, $
                          pixscale=pixscale,scalename=scalename,lo=lo,hi=hi, $
                          title=title,sigma=sigma,xpt=xpt,ypt=ypt, $
-                         noaxes=noaxes, $
-                         startps=startps,endps=endps
+                         noaxes=noaxes
 
 ; set defaults
 if NOT keyword_set(pixscale) then pixscale= 1.0
@@ -74,7 +71,7 @@ size= 6.0
 margin= 0.0
 
 ; open PS file if necessary
-if(keyword_set(filename) and keyword_set(startps)) then begin
+if(keyword_set(filename)) then begin
     set_plot, "PS"
     device, file=filename,/inches,xsize=size,ysize=size, $
       xoffset=(8.5-size)/2.0,yoffset=(11.0-size)/2.0,bits_per_pixel=8
@@ -114,6 +111,6 @@ if keyword_set(xpt) and keyword_set(ypt) then begin
 endif
 
 ; close PS file if necessary
-if(keyword_set(filename) and (not keyword_set(startps))) then $
+if(keyword_set(filename)) then $
   device, /close
 end
