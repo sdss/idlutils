@@ -14,6 +14,8 @@ EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
                TRACE_CRUDE,TRACE_FWEIGHT,TRACE_GWEIGHT:
                Call IDLUTILS_SO_EXT() to get the suffix for dynamically
                loaded libraries (rather than assuming ".so").
+FITS_PURGE_NANS: New procedure to deal with some invalid FITS header
+               keywords in raw SDSS data files.
 HOGG_MANYD_SCATTERPLOT: Fix xdim=0 bug, add EXTRAFUN parameter,
                send plotting back to X.
 HOGG_SCATTERPLOT: Add /outliers keyword to show points outside last contour
