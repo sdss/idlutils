@@ -7,7 +7,7 @@
 ;   Compute the mean, median and/or sigma of data with iterative sigma clipping.
 ;
 ; CALLING SEQUENCE:
-;   djs_iterstat, image, [sigrej=, maxiter=, mean=, median=, sigma=]
+;   djs_iterstat, image, [sigrej=, maxiter=, mean=, median=, sigma=, mask=]
 ;
 ; INPUTS:
 ;   image:      Input data
@@ -22,6 +22,7 @@
 ;   mean:       Computed mean
 ;   median:     Computed median
 ;   sigma:      Computed sigma
+;   mask:       Mask set to 0 for good points, and 1 for rejected points
 ;
 ; PROCEDURES CALLED:
 ;
@@ -43,11 +44,12 @@
 ;-
 ;------------------------------------------------------------------------------
 pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
- mean=fmean, median=fmedian, sigma=fsig
+ mean=fmean, median=fmedian, sigma=fsig, mask=mask
  
    ; Need 1 parameter
    if N_params() LT 1 then begin
-      print, 'Syntax - djs_iterstat, image, [sigrej=, maxiter=, mean=, median=, sigma=]'
+      print, 'Syntax - djs_iterstat, image, [sigrej=, maxiter=, mean=, median=, sigma=,'
+      print, ' mask= ]'
       return
    endif
 
@@ -63,6 +65,7 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       fmean = 0.0
       fmedian = 0.0
       fsig = 0.0
+      mask = 0B
       return
    endif
    if (ngood EQ 1) then begin
@@ -70,6 +73,7 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       fmean = image[0]
       fmedian = fmean
       fsig = 0.0
+      mask = 0B
       return
    endif
 
@@ -80,6 +84,7 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
    fmean = (moment(image, sdev=fsig))[0]
    fmedian = fmean
    iiter = 1
+   mask = bytarr(ngood)
 
    ;----------
    ; Iteratively compute the mean + stdev, updating the sigma-rejection
@@ -90,7 +95,8 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       loval = fmean - sigrej * fsig
       hival = fmean + sigrej * fsig
       nlast = ngood
-      igood = where(image GE loval AND image LE hival, ngood)
+      mask = image LT loval OR image GT hival
+      igood = where(mask EQ 0, ngood)
       if (ngood GE 2) then begin
          fmean = (moment(image[igood], sdev=fsig))[0]
          fmedian = median(image[igood])
