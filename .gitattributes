@@ -980,6 +980,7 @@ pro/psconfig/fsc_inputfield.pro -text
 pro/psconfig/fsc_plotwindow.pro -text
 pro/psconfig/fsc_psconfig__define.pro -text
 pro/psconfig/psconfig.pro -text
+pro/rgbcolor/djs_mosaic_rgb.pro -text
 pro/rgbcolor/hogg_make_image_label.pro -text
 pro/rgbcolor/nw_arcsinh.pro -text
 pro/rgbcolor/nw_cut_to_box.pro -text
