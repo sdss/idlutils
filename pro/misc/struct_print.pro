@@ -6,7 +6,8 @@
 ;   Formatted print of a structure to standard out, a file, or an array.
 ;
 ; CALLING SEQUENCE:
-;   struct_print, struct, [ lun=, filename=, tarray=, /no_head, /html ]
+;   struct_print, struct, [ lun=, filename=, tarray=, /no_head, /html, $
+;    fdigit=, ddigit=, alias= ]
 ;
 ; INPUTS:
 ;   struct     - Structure
@@ -16,6 +17,16 @@
 ;   lun        - LUN number for an output file if one is already open
 ;   no_head    - Do not print the header lines that label the columns
 ;   html       - If set, then output as an HTML table
+;   fdigit     - Number of digits for type FLOAT numbers; default to 5.
+;   ddigit     - Number of digits for type DOUBLE numbers; default to 7.
+;   alias      - Set up aliases to convert from the IDL structure
+;                to the FITS column name.  The value should be
+;                a STRARR(2,*) value where the first element of
+;                each pair of values corresponds to a column
+;                in the structure and the second is the name
+;                to be used in the FITS file.
+;                The order of the alias keyword is compatible with
+;                use in MWRFITS,MRDFITS.
 ;
 ; OUTPUTS:
 ;
@@ -32,20 +43,43 @@
 ;
 ; PROCEDURES CALLED:
 ;
+; INTERNAL SUPPORT ROUTINES:
+;   struct_checktype()
+;
 ; REVISION HISTORY:
 ;   01-Nov-2000  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
+; This code is copied from MWR_CHECKTYPE from within "mwrfits.pro".
+function struct_checktype, tag, alias=alias
+   if not keyword_set(alias) then return, tag
+
+   sz = size(alias)
+   ; 1 or 2 D string array with first dimension of 2
+   if (sz[0] eq 1 or sz[1] eq 2) and sz[1] eq 2 and sz[sz[0]+1] eq 7 then begin
+      w = where(tag eq alias[0,*])
+      if (w[0] eq -1) then begin
+         return, tag
+      endif else begin
+         return, alias[1,w[0]]
+      endelse
+   endif else begin
+      print, 'Warning: Alias values not strarr(2) or strarr(2,*)'
+   endelse
+
+   return, tag
+end
+;------------------------------------------------------------------------------
 pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
- no_head=no_head, html=html
+ no_head=no_head, html=html, fdigit=fdigit, ddigit=ddigit, alias=alias
 
    if (keyword_set(filename)) then $
     openw, lun, filename, /get_lun
 
    if (NOT keyword_set(lun) AND NOT arg_present(tarray)) then lun = -1
 
-   fdigit = 5
-   ddigit = 7
+   if (NOT keyword_set(fdigit)) then fdigit = 5
+   if (NOT keyword_set(ddigit)) then ddigit = 7
 
    if (size(struct,/tname) NE 'STRUCT') then return
    nrow = n_elements(struct)
@@ -84,7 +118,7 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
             format = format + ',1x,'
          endelse
 
-         thisname = tags[itag]
+         thisname = struct_checktype(tags[itag], alias=alias)
          if (narr GT 1) then thisname = thisname + strtrim(string(iarr),2)
 
          tname = size(struct[0].(itag),/tname)
