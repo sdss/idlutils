@@ -105,11 +105,11 @@ function create_host_list, protocol, remotehost, remotedir, topdir
 
    if (nhost EQ 0) then begin
       splog, 'REMOTEHOST not set.  Quitting.'
-      return
+      return, ''
    endif
    if (total(strtrim(remotehost) EQ '') GT 0) then begin
       splog, 'Some entries for REMOTEHOST are empty strings.  Quitting'
-      return
+      return, ''
    endif
 
    ftemp = create_struct( name='HOSTLIST_STRUCT', $
@@ -363,6 +363,7 @@ pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
    ; Create a list of available remote hosts (and their status)
 
    hostlist = create_host_list(protocol, remotehost, remotedir, topdir)
+   if (NOT keyword_set(hostlist)) then return
    nhost = n_elements(hostlist)
    splog, 'Number of hosts = ', nhost
 
