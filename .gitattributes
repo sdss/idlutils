@@ -695,6 +695,7 @@ pro/bspline/create_bsplineset.pro -text
 pro/bspline/fill_bspline.pro -text
 pro/bspline/intrv.pro -text
 pro/coord/angles_to_xyz.pro -text
+pro/coord/crossprod.pro -text
 pro/coord/current_mjd.pro -text
 pro/coord/dec2hms.pro -text
 pro/coord/djs_angle_group.pro -text
