@@ -233,7 +233,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
 
    if (keyword_set(maxrej)) then begin
       ; Loop over each dimension of GROUPDIM (or loop once if not set)
-      for iloop=0, (n_elements(groupdim)>1)-1 do begin
+      for iloop=0L, (n_elements(groupdim)>1)-1 do begin
          ; Assign an index number in this dimension to each data point
          if (n_elements(groupdim) GT 0) then begin
             yndim = size(ydata, /n_dimen)
@@ -248,7 +248,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
          ; this is a 2-D array with GROUPDIM=1, then loop over each
          ; column of the data.  If GROUPDIM=2, then loop over each row.
          ; If GROUPDIM is not set, then use all whole image.
-         for ivec=0, max(dimnum) do begin
+         for ivec=0L, max(dimnum) do begin
             if (keyword_set(dimnum)) then indx = where(dimnum EQ ivec) $
              else indx = lindgen(ndata)
 
@@ -272,7 +272,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
               endelse
             endelse
 
-            for igroup=0,ngroups-1 do begin
+            for igroup=0L,ngroups-1 do begin
                i1 = groups_lower[igroup]
                i2 = groups_upper[igroup]
                nii = i2 - i1 + 1
@@ -300,7 +300,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    if keyword_set(grow) then begin
       rejects = where(newmask EQ 0)
       if rejects[0] NE -1 then begin
-        for jj=1,grow do begin
+        for jj=1L,grow do begin
           newmask[(rejects - jj) > 0] = 0
           newmask[(rejects + jj) < (ndata - 1)] = 0
         endfor
