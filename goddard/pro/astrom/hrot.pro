@@ -94,6 +94,8 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ;       Work for both CD001001 and CDELT defined  W. Landsman   March 2001
 ;       Recognize PC matrix astrometry  W. Landsman December 2001
 ;       Update astrometry correctly when /PIVOT applied W. Landsman March 2002
+;       Update CROTA2 astrometry correctly, approximate GSSS W.L. June 2003
+;       Work with CD1_1, PC1_1 and CROTA keywords W. L. July 2003 
 ;- 
  On_error,2
  npar = N_params()
@@ -189,6 +191,11 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ; Update astrometry info if it exists
 
  extast, oldhd, astr, noparams
+ if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
+        gsss_stdast, newhd
+        extast, newhd, astr, noparams
+ endif
+
 
  if noparams GE 0 then begin    ;Astrometry parameters exist in header?
     crpix = astr.crpix
@@ -209,22 +216,11 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 
     if noparams EQ 3 then begin     ;Transformation matrix format
 
-        sxaddpar, newhd, 'PC001001', newcd[0,0] 
-        sxaddpar, newhd, 'PC001002', newcd[0,1] 
-        sxaddpar, newhd, 'PC002001', newcd[1,0]
-        sxaddpar, newhd, 'PC002002', newcd[1,1]
-
-        crota2 = sxpar( oldhd, 'CROTA2', Count = N_crota2)
-        if N_crota2 GT 0 then sxaddpar, newhd, 'CROTA2', crota2 - angle
-        crota1 = sxpar( oldhd, 'CROTA1', Count = N_crota1)
-        if N_crota1 GT 0 then sxaddpar, newhd, 'CROTA1', crota1 - angle
-
-    endif else if noparams EQ 0 then begin
-
-        sxaddpar, newhd, 'CD001001', newcd[0,0] 
-        sxaddpar, newhd, 'CD001002', newcd[0,1] 
-        sxaddpar, newhd, 'CD002001', newcd[1,0]
-        sxaddpar, newhd, 'CD002002', newcd[1,1]
+        sxaddpar, newhd, 'PC1_1', newcd[0,0] 
+        sxaddpar, newhd, 'PC1_2', newcd[0,1] 
+        sxaddpar, newhd, 'PC2_1', newcd[1,0]
+        sxaddpar, newhd, 'PC2_2', newcd[1,1]
+ 
                                   
     endif else if noparams EQ 2 then begin
 
@@ -233,19 +229,12 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
         sxaddpar, newhd, 'CD2_1', newcd[1,0]
         sxaddpar, newhd, 'CD2_2', newcd[1,1]
 
-     endif else begin   
-        det = newcd[0,0]*newcd[1,1] - newcd[0,1]*newcd[1,0]
-        if det lt 0 then sgn = -1 else sgn = 1
-        cdelt[0] = sgn*sqrt(newcd[0,0]^2 + newcd[0,1]^2)
-        cdelt[1] =     sqrt(newcd[1,0]^2 + newcd[1,1]^2)
-        if cdelt[0] gt 0 then sgn1 = 1 else sgn1 = -1  
+     endif else begin  
+; Just need to update the CROTA keywords 
         crota  = atan( -newcd[1,0],newcd[1,1] )*180.0/!DPI
         sxaddpar, newhd,'CROTA1', crota
         sxaddpar, newhd,'CROTA2', crota
-        sxaddpar,newhd,'CDELT1',cdelt[0]
-        sxaddpar,newhd,'CDELT2',cdelt[1]
     
-
      endelse
 
  endif 
