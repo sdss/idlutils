@@ -10,11 +10,11 @@ CHOLESKY_SOLVE: Up to date bspline implementation, passing structure and
                Make loop variables type long (Blanton).
 DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
                parameter for OmegaL.
-DJS_PHOTFRAC: add documentation on /exact keyword, and report error in case
+DJS_PHOTFRAC: Add documentation on /exact keyword, and report error in case
               of non-integer center given with /exact keyword set. also, 
               changed so it doesn't recenter on its own if /exact is set.
 DPF_REJECT_CR: ???
-DUST_GETMAP: use EULER_2000_FAST instead of non-existent EULER_2000
+DUST_GETMAP: Use EULER_2000_FAST instead of non-existent EULER_2000.
 EXACT_PHOTFRAC: fix bug involving calculation of annulus photometry
 FIND: Need to index some loops with type LONG to allow for large
                numbers of stars.
@@ -35,7 +35,7 @@ HOGG_NAME2RADEC: New proc to convert IAU name in "J" format to RA,DEC (Hogg).
 HOGG_OPLOT_COVAR: Add support for a vectorized THICK keyword.
 HOGG_PLOTHIST: Change in behviour for setting X range when using /OVERPLOT.
 HOGG_SCATTERPLOT: Added IOUTLIERS keyword, to plot the outliers differently.
-LABELLOC: simple utility for xyouts plotting to get positions relative to 
+LABELLOC: Simple utility for XYOUTS plotting to get positions relative to 
           plot frame
 LG_TO_HELIO: Inverse function to HELIO_TO_LG.
 MRDFITS:       LONG64 stuff, handle degenerate excess NAXIS keywords
@@ -55,9 +55,12 @@ TRACE_CRUDE: Allow XSTART to be set to exactly zero as an input.
                Bug fix, where the arrays were cast incorrectly if IMAGE
                was not type float, and INVVAR was not specified.
 USNOB2FITS: Compress files locally, then copy to target.
-WRITE_FITS_POLYGONS: allow it to propagate a header to the FITS file
+WRITE_FITS_POLYGONS: Allow it to propagate a header to the FITS file.
 
-mangle1.4/src/mrb_balkanize.c: Add QA print statement for number of caps.
+src/image/reject_cr_psf.c: Undocumented changes by Blanton, presumably
+               in response to Finkbeiner's faster implemenation of this
+               algorithm in IDL.
+src/mangle1.4/src/mrb_balkanize.c: Add QA print statement for number of caps.
 src/mangle1.4/src/manglefn.h, mrb_balkanize.c, new_poly.c:
                Flush memory usage where possible.
 src/math/Makefile, idl_mmeval.c,idl_mmsparse.c: C code to support the
