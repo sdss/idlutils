@@ -123,7 +123,7 @@ pro splot_startup
    keylist = { key:' ', x:0.0, y:0.0 }
 
    state = {                         $
-    version: '0.9'                 , $ ; Version number of this release
+    version: '$Name: not supported by cvs2svn $'            , $ ; Version number of this release
     head_ptr: ptr_new()            , $ ; Pointer to FITS image header
     imagename: ''                  , $ ; FITS image file name
     base_id: 0L                    , $ ; ID of top-level base
@@ -141,11 +141,11 @@ pro splot_startup
     keyboard_text_id: 0L           , $ ; ID of keyboard input widget
     nkey: 0                        , $ ; Number of elements in keylist
     keylist: replicate(keylist,5)  , $ ; Record of keystrokes + cursor in plot
-    xrange: [0.0,1.0]              , $ ; X range of plot window
-    yrange: [0.0,1.0]              , $ ; Y range of plot window
+    xrange: [0.d0,1.d0]            , $ ; X range of plot window
+    yrange: [0.d0,1.d0]            , $ ; Y range of plot window
     xfix: 'float'                  , $ ; 0=fix, 1=float
     yfix: 'fix'                    , $ ; 0=fix, 1=float
-    position: [0.15,0.15,0.95,0.95], $ ; POSITION for PLOT procedure
+    position: [0.15d0,0.15d0,0.95d0,0.95d0], $ ; POSITION for PLOT procedure
     draw_window_size: [600L, 512L] , $ ; Size of main draw window
     menu_ids: lonarr(25)           , $ ; List of top menu items
     mouse: [0L, 0L]                , $ ; Cursor position in device coords
@@ -1309,9 +1309,11 @@ pro splot_help
    h = [h,'    splot, filename [, options] (enclose file name in single quotes)']
    h = [h,'To overplot text on the draw window: ']
    h = [h,'    sxyouts, x, y, text_string [, options]  (enclose string in single quotes)']
+   h = [h,'To overplot polygons on the draw window: ']
+   h = [h,'    spolyfill, x, y, [, options]']
    h = [h, '']
-   h = [h,'The options for SPLOT and SXYOUTS are essentially']
-   h = [h, 'the same as those for the IDL PLOT and XYOUTS commands.']
+   h = [h,'The options for SPLOT, SXYOUTS and SPOLYFILL are essentially']
+   h = [h, 'the same as those for the IDL PLOT, XYOUTS, and POLYFILL commands.']
    h = [h,'The default color is red for overplots done from the IDL command line.']
    h = [h, '']
    h = [h,'Other commands:']
@@ -1612,8 +1614,9 @@ pro splot_autoscale_y
    if (nplot GT 0) then begin
 
       ; Set plotting limits for first SPLOT
-      igood = where( (*plot_ptr[0]).x GE xrange[0] $
-       AND (*plot_ptr[0]).x LE xrange[1])
+      igood = where( $
+       ( (*plot_ptr[0]).x GE xrange[0] AND (*plot_ptr[0]).x LE xrange[1] ) OR $
+       ( (*plot_ptr[0]).x LE xrange[0] AND (*plot_ptr[0]).x GE xrange[1] ) )
       if (igood[0] NE -1) then begin
          state.yrange[0] = min( (*plot_ptr[0]).y[igood] )
          state.yrange[1] = max( (*plot_ptr[0]).y[igood] )
