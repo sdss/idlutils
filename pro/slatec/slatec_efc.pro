@@ -93,7 +93,6 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 	   endelse
         endif
 
-	nord = LONG(nord)
 	bkpt = float(bkpt)
 
 	if (min(x) LT min(bkpt,spot)) then begin
@@ -113,6 +112,7 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
            fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
                 bkpt[nshortbkpt - 1] + bkptspace*i]
      endif
+	nord = LONG(nord)
 
 	nbkpt = n_elements(fullbkpt)
 
