@@ -1,7 +1,9 @@
+
 -------------------------------------------------------------------------------
 v5_0_3 (August 18, 2004) running on IDL 5.4 - 6.0
 Tagged for photoop v1_6 (for the SDSS Orion data release)
 
+ALM2HEALPIX,HEAL_SMOOTH,MQLADVANCE: Avoid floating-point underflows.
 ATV,ATV_JOE_WRITEPS,SPLOT,SXASCII_READ,TEXTOIDL,YANNY_READ:
                Replace calls to the obsolete function RSTRPOS()
                with STRPOS(/REVERSE_SEARCH).
@@ -10,6 +12,7 @@ ATV: Fix bug introduced for Healpix when reading non-Healpix files.
 BSPLINE_ITERFIT: Fix crash condition for when only 1 point to fit.
 DPF_NEST2RING,DPF_PIX2ANG_RING: Cache lookup table for wicked speed.
 DPF_PIX2ANG_NEST: Added (simply calls dpf_nest2ring and dpf_pix2ang_ring).
+DJS_OPLOT,DJS_OPLOTERR,DJS_PLOT: Bug fix in case Y is set to the value zero.
 DJS_RGB_MAKE: Code to create JPEG from 3 FITS files based upon NW_RGB_MAKE,
                but saturating stars to a single color per object.
 EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
@@ -29,6 +32,8 @@ HEALPIX_RING_WEIGHT: Fix fatal bug caused by new mrdfits() response to
 HEAL_SMOOTH    Prevent "Floating underflow" condition
 HOGG_MANYD_SCATTERPLOT: Fix xdim=0 bug, add EXTRAFUN parameter,
                send plotting back to X.
+HOGG_MANYD_SCATTERPLOT,HOGG_PLOTHIST,HOGG_SCATTERPLOT:
+               Add /meanweight option.
 HOGG_SCATTERPLOT: Add /outliers keyword to show points outside last contour
                as points (and don't show greyscale there).
 IS_IN_CAP, IS_INPOLYGON: Fix ra=0 bug (changing keyword_set to n_elements).
@@ -60,8 +65,12 @@ POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and
                cubic approximation to the sinc shift.
 REJECT_CR: A previous error in determining the background for rejection
                has been fixed, so more cosmics are now successfully rejected. 
+RINGWT: Finkbeiner's stab at computing ring weights for Healpix integrations;
+               probably doesn't work?
 SORTINPLACE: New function for sorting arrays in-place.
 SPLOT: Add PLUGIN keyword for coordinate plug-ins.
+SPLOT_PLUGIN_SDSS_FINDIMAGE: Plug-in for using SPLOT from the SDSS_FINDIMAGE
+               function in the photoop product.
 WHICH: Replace with Tim Robishaw's version of which, he says it is better.
                Primarily, it shows which version of a routine has been
                compiled-in, even if that isn't the first instance of that
