@@ -588,7 +588,6 @@ src/math/arravsigclip.c -text
 src/math/arravsigmask.c -text
 src/math/arrmedian.c -text
 src/math/export.h -text
-src/math/makefile -text
 src/math/nr.h -text
 src/math/nrecipes.c -text
 src/math/nrutil.c -text
@@ -667,7 +666,6 @@ src/slatec/isort.f -text
 src/slatec/j4save.f -text
 src/slatec/junk -text
 src/slatec/lmpar.f -text
-src/slatec/makefile -text
 src/slatec/pcoef.f -text
 src/slatec/polfit.f -text
 src/slatec/pvalue.f -text
