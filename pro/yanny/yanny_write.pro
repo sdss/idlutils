@@ -6,7 +6,8 @@
 ;   Write a Yanny parameter file from an IDL structure.
 ;
 ; CALLING SEQUENCE:
-;   yanny_write, filename, [ pdata, hdr=, enums=, structs=, stnames= ]
+;   yanny_write, filename, [ pdata, hdr=, enums=, structs=, stnames=, $
+;    /align, formatcodes= ]
 ;
 ; INPUTS:
 ;   filename   - Output file name for Yanny parameter file
@@ -21,6 +22,8 @@
 ;   stnames    - Structure names, overriding the IDL structure names.
 ;                Typically, you will want to use this if a structure was
 ;                read using the /ANONYMOUS keyword.
+;   align      - If set, then align columns in the output file
+;   formatcodes- Passed to STRUCT_PRINT() if /ALIGN is also set.
 ;
 ; OUTPUT:
 ;
@@ -38,7 +41,15 @@
 ;     yanny_write, 'testout.par', pdata, comments=comments
 ;
 ; BUGS:
-;   There is no testing that STRUCTS is consistent with PDATA.
+;   There is no testing that STRUCTS is consistent with PDATA when that
+;   keyword is explicitly passed to define the header of the file rather
+;   than auto-generating it from PDATA itself.
+;
+;   If FORMATCODES is set, then it is possible to write invalid Yanny files.
+;   For example, if a format code of 'a5' is set for strings that are longer,
+;   then any terminating quotations beyond the 5th character will be lost.
+;   If a format code is too small for a numeric value, then a set of asterisks
+;   will be written.
 ;
 ; PROCEDURES CALLED:
 ;
@@ -47,7 +58,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
- stnames=stnames
+ stnames=stnames, align=align, formatcodes=formatcodes
 
    if (N_params() LT 1) then begin
       print, 'Syntax - yanny_write, filename, [ pdata, hdr=, enums=, structs=, stnames= ]'
@@ -131,45 +142,69 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       for idat=0, N_elements(pdata)-1 do begin
          printf, olun, ''
 
-         ntag = N_tags( *pdata[idat] )
+         ntag = n_tags( *pdata[idat] )
          if (keyword_set(stnames)) then stname1 = stnames[idat] $
           else stname1 = tag_names( *pdata[idat], /structure_name)
          if (stname1 EQ '') then stname1 = 'STRUCT' + strtrim(string(idat+1),2)
 
-         for iel=0, N_elements( *pdata[idat] )-1 do begin ; Loop thru each row
+         if (keyword_set(align)) then begin
+            ; Create a new (temporary) structure that has as its first
+            ; element a string with the structure name.
+            tmpstruct = struct_addtags( $
+             replicate({tmpstructname: stname1}, n_elements(*pdata[idat])), $
+             *pdata[idat] )
 
-            sline = stname1
-
+            ; Put double-quotes around any empty strings, or strings
+            ; with whitespace that are not already in double-quotes.
             for itag=0, ntag-1 do begin          ; Loop through each variable
-               words = (*pdata[idat])[iel].(itag)
-               nword = N_elements(words)
-
-               ; If WORDS is type STRING, then check for white-space
-               ; in any of its elements.  If there is white space, then
-               ; put double-quotes around that element.  Or, use quotes
-               ; if the string is completely empty.
-               if (size(words,/tname) EQ 'STRING') then begin
-                  for iw=0, nword-1 do $
-                   if (strpos(words[iw],' ') NE -1 $
-                    OR strtrim(words[iw],2) EQ '') then $
-                    words[iw] = '"' + words[iw] + '"'
-               endif else begin
-                  words = string(words)
-               endelse
-
-               if (nword EQ 1) then begin
-                  sline = sline + ' ' + words
-               endif else begin
-                  sline = sline + ' {'
-                  for i=0, N_elements( (*pdata[idat])[iel].(itag) )-1 do $
-                   sline = sline + ' ' + words[i]
-                  sline = sline + ' }'
-               endelse
+               if (size(tmpstruct.(itag+1), /tname) EQ 'STRING') then begin
+                  for iarr=0, n_elements(tmpstruct[0].(itag+1))-1 do begin
+                     iquote = where(strtrim(tmpstruct.(itag+1)[iarr]) EQ '' $
+                      OR (strmatch(tmpstruct.(itag+1)[iarr],'* *') $
+                       AND (strmatch(tmpstruct.(itag+1)[iarr],'"* *"') EQ 0)), $
+                      nquote)
+                     if (nquote GT 0) then $
+                      tmpstruct.(itag+1)[iarr] = '"'+tmpstruct.(itag+1)[iarr]+'"'
+                  endfor
+               endif
             endfor
-            sline = strcompress(sline)
-            printf, olun, sline
-         endfor
 
+            struct_print, tmpstruct, lun=olun, alias=alias, /no_head, $
+             formatcodes=formatcodes
+         endif else begin
+            for iel=0, n_elements( *pdata[idat] )-1 do begin ; Loop over rows
+               sline = stname1
+
+               for itag=0, ntag-1 do begin          ; Loop through each variable
+                  words = (*pdata[idat])[iel].(itag)
+                  nword = n_elements(words)
+
+                  ; If WORDS is type STRING, then check for white-space
+                  ; in any of its elements.  If there is white space, then
+                  ; put double-quotes around that element.  Or, use quotes
+                  ; if the string is completely empty.
+                  if (size(words,/tname) EQ 'STRING') then begin
+                     for iw=0, nword-1 do $
+                      if (strpos(words[iw],' ') NE -1 $
+                       OR strtrim(words[iw],2) EQ '') then $
+                       words[iw] = '"' + words[iw] + '"'
+                  endif else begin
+                     words = string(words)
+                  endelse
+
+                  if (nword EQ 1) then begin
+                     sline = sline + ' ' + words
+                  endif else begin
+                     sline = sline + ' {'
+                     for i=0, N_elements( (*pdata[idat])[iel].(itag) )-1 do $
+                      sline = sline + ' ' + words[i]
+                     sline = sline + ' }'
+                  endelse
+               endfor
+               sline = strcompress(sline)
+               printf, olun, sline
+            endfor
+         endelse
       endfor
    endif
 
