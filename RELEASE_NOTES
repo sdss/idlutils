@@ -69,6 +69,8 @@ src/mangle1.2/mrb_balkanize.c, mwrmask.c: Destroy the polygons as they
                Print a loop counter after every 100 balkans.
 src/mangle1.4: All new source code imported by Blanton from Andrew Hamilton,
                replacing mangle1.2 files.
+src/mangle1.4/mrb_balkanize.c: Clear memory usage when possible
+               when assigning parents.
 ups/idlutils.table: Add optional dependencies upon these products: dust,
                first, gsc, twomass, tycho2, ucac, usno.
                Get rid of all the $UPS_PROD_FLAVOR references for

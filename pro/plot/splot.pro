@@ -1037,7 +1037,7 @@ pro splot_plotall
    ; Routine to overplot line plots from SPLOT and text from SXYOUTS
    splot_plotwindow
 
-   for iplot=0, nplot-1 do begin
+   for iplot=0L, nplot-1 do begin
       case (*(plot_ptr[iplot])).type of
         'points'  : splot_plot1plot, iplot
         'text'    : splot_plot1text, iplot
