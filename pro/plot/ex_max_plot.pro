@@ -30,6 +30,7 @@
 ;   quantfrac    vector of fractions at which to plot quantiles on conditional
 ;                   panels
 ;   default_font  font command to send to set font for plotting
+;   pthick       thickness of plot lines
 ; KEYWORDS:
 ;   nomodel      don't show model fits as greyscales or histograms
 ;   nodata       don't show data as greyscales or histograms
@@ -63,12 +64,14 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  sigrejimage=sigrejimage, paneluse=paneluse, $
                  quantfrac=quantfrac, quantile=quantile, quantneff=quantneff, $
                  default_font=default_font,twodimages=twodimages, $
-                 psym_overpoints=psym_overpoints,sizepanellabel=sizepanellabel
+                 psym_overpoints=psym_overpoints,sizepanellabel=sizepanellabel, $
+                 pthick=pthick
 
 ; set defaults
 if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
 if(NOT keyword_set(npix_x)) then npix_x= 32L
 if(NOT keyword_set(npix_y)) then npix_y= 32L
+if(NOT keyword_set(pthick)) then pthick= 2.
 
 ; check dimensions
 ndata= n_elements(weight)       ; N
@@ -151,7 +154,7 @@ if keyword_set(psfilename) then begin
   device, file=psfilename,/inches,xsize=xsize,ysize=ysize, $
     xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color
 endif
-!P.THICK= 2.0
+!P.THICK= pthick
 !P.CHARTHICK= !P.THICK & !X.THICK= !P.THICK & !Y.THICK= !P.THICK
 !P.CHARSIZE= 1.0
 if(NOT keyword_set(axis_char_scale)) then axis_char_scale= 1.75
