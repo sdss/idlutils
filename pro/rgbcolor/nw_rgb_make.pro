@@ -17,7 +17,10 @@
 ;              - default is 3
 ;  origin      - (3x1) array containing R0/G0/B0
 ;              - default is [0,0,0]
-;  rebinfactor - integer by which to multiply NX and NY
+;  rebinfactor - integer by which to rebin pixels in the x and y
+;                directions; eg, a rebinfactor of 2 halves the number
+;                of pixels in each direction and quarters the total
+;                number of pixels in the image.
 ;OPTIONAL KEYWORDS:
 ;  saturatetowhite
 ;              - choose whether to saturate high-value pixels to white
@@ -33,6 +36,8 @@
 ;DEPENDENCIES:
 ;  
 ;BUGS:
+;  If the code congridded before making the initial colors matrix, it
+;  would use less memory and be faster.
 ;  
 ;REVISION HISTORY:
 ; 12/03/03 written - wherry
@@ -63,14 +68,14 @@ ENDIF ELSE BEGIN
     colors[*,*,1] = Gim
     colors[*,*,2] = Bim
 ENDELSE
+IF n_elements(rebinfactor) THEN $ 
+  colors = nw_rebin_image(colors,rebinfactor)
 
 colors = nw_scale_rgb(colors,scales=scales)
 colors = nw_arcsinh(colors,nonlinearity=nonlinearity)
 IF NOT n_elements(saturatetowhite) THEN $
   colors = nw_cut_to_box(colors,origin=origin)
 image = nw_float_to_byte(colors)
-IF n_elements(rebinfactor) THEN $ 
-  image = nw_rebin_image(image,rebinfactor)
 
 WRITE_JPEG,name,image,TRUE=3,QUALITY=100
 END
