@@ -112,21 +112,6 @@ maskbits RESOLVE_STATUS 10 SURVEY_SECONDARY
 maskbits RESOLVE_STATUS 11 SURVEY_BADFIELD
 maskbits RESOLVE_STATUS 12 SURVEY_EDGE
 
-# The following are probably deprecated in favour of the RESOLVE_STATUS flag.
-maskbits RESOLVE  0 SET_RUN
-maskbits RESOLVE  1 FIELD
-maskbits RESOLVE  2 RUN
-maskbits RESOLVE  3 RUN_MARGINAL
-maskbits RESOLVE  4 TRIMRUN
-maskbits RESOLVE  5 TRIMRUN_MARGINAL
-maskbits RESOLVE  6 SCANLINE
-maskbits RESOLVE  7 STRIPE
-maskbits RESOLVE  8 SET_PSEGMENT
-maskbits RESOLVE  9 PSEGMENT
-maskbits RESOLVE  10 SET_FULL
-maskbits RESOLVE  11 FULL
-maskbits RESOLVE  12 FULL_MARGINAL
-
 #------------------------------------------------------------------------------
 
 maskbits IMAGE_STATUS  0 CLEAR
