@@ -84,7 +84,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
         invvar = y - y + 1.0/(moment(y))[1]	
     endif
 
-    invsig = sqrt(invvar)
+    invsig = sqrt(invvar > 0)
 
     nx = n_elements(x)
     mask = bytarr(nx) + 1
