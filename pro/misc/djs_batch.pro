@@ -197,6 +197,10 @@ pro batch_assign_job, ihost, iprog
    cpstring = hostlist[ihost].cpstring
    prothost = hostlist[ihost].protocol + ' ' + hostlist[ihost].remotehost + ' '
 
+   ;----------
+   ; Copy files to a remote machine if a remote directory is specified.
+   ; Otherwise, the host is assumed to be able to see the local directory.
+
    if (keyword_set(cpstring)) then begin
 
       ; Create directories on remote machine for input files.
@@ -227,10 +231,6 @@ pro batch_assign_job, ihost, iprog
       batch_spawn, prothost + 'mkdir -p ' $
        + string(newdir[iuniq]+' ',format='(99a)')
 
-      ; Launch the command in the background
-      batch_spawn, prothost + sq+'cd '+hostlist[ihost].remotedir+'; ' $
-       +proglist[iprog].command+sq, pid=thispid, unit=thisunit
-
    endif else begin
 
       ; Only need to create local directories for output files
@@ -239,13 +239,24 @@ pro batch_assign_job, ihost, iprog
       batch_spawn, 'mkdir -p ' $
        + string(newdir[iuniq]+' ',format='(99a)')
 
-      ; Launch the command in the background
-      batch_spawn, proglist[iprog].command, pid=thispid, unit=thisunit
-
    endelse
 
+   ;----------
+   ; Launch this job on a remote machine if a protocol is listed,
+   ; otherwise launch locally (in which case, the host name should
+   ; be "localhost").  Launch the job in the background.
+
+   if (keyword_set(hostlist[ihost].protocol)) then begin
+      batch_spawn, prothost + sq+'cd '+hostlist[ihost].remotedir+'; ' $
+       +proglist[iprog].command+sq, pid=thispid, unit=thisunit
+   endif else begin
+      batch_spawn, proglist[iprog].command, pid=thispid, unit=thisunit
+   endelse
+
+   ;----------
    ; Save the process ID number and the unit (LUN) number of the pipe
    ; to this process.
+
 splog, "THISPID " ,thispid
    proglist[iprog].pid = thispid
    proglist[iprog].unit = thisunit
