@@ -612,6 +612,16 @@ pro/cosmography/dcomdisdz.pro -text
 pro/cosmography/dpropdisdz.pro -text
 pro/cosmography/lumdis.pro -text
 pro/cosmography/propmotdis.pro -text
+pro/dust/bh_rdfort.pro -text
+pro/dust/djs_planck.pro -text
+pro/dust/dust_getval.pro -text
+pro/dust/fac_flux2temp.pro -text
+pro/dust/planckcorr.pro -text
+pro/dust/predict_sync.pro -text
+pro/dust/predict_thermal.pro -text
+pro/dust/setlog.pro -text
+pro/dust/wcs_coord2pix.pro -text
+pro/dust/wcs_getval.pro -text
 pro/fits/djs_modfits.pro -text
 pro/fits/djs_readmany.pro -text
 pro/fits/fits_wait.pro -text
