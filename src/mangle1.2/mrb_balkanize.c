@@ -35,6 +35,8 @@ extern void msg(char *, ...);
 extern void scale();
 extern void memmsg();
 
+polygon *polys[NPOLYSMAX];
+
 /*------------------------------------------------------------------------------
   Main program.
 */
@@ -43,7 +45,7 @@ int main(argc, argv)
 		 char *argv[];
 {
 	int ifile, nfiles, npoly, npolys;
-	polygon *polys[NPOLYSMAX], *test_poly1, *test_poly2;
+	polygon *test_poly1, *test_poly2;
 	int npolylink, *nlinks, **links, i, j, k, l, itrim,verb,ier;
 	double tol,area_tot;
 	FILE *ifp, *ofp;

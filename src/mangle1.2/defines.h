@@ -9,7 +9,8 @@
 */
 /* #define NPOLYSMAX	65536 */
 /* a suitably huge alternative value */
-#define NPOLYSMAX	524288 
+/* #define NPOLYSMAX	524288  */
+#define NPOLYSMAX	10000000
 
 /* number of extra caps to allocate to polygon, to allow for later splitting */
 #define DNP		4
