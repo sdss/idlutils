@@ -727,7 +727,6 @@ pro/image/qzap.pro -text
 pro/mangle/angles_to_x.pro -text
 pro/mangle/circle_cap.pro -text
 pro/mangle/construct_cap.pro -text
-pro/mangle/construct_field_polygon.pro -text
 pro/mangle/construct_polygon.pro -text
 pro/mangle/construct_vertex.pro -text
 pro/mangle/is_cap_used.pro -text
