@@ -14,7 +14,7 @@
 ; OPTIONAL INPUTS:
 ;
 ; OUTPUT:
-;   result     - Value of paramter in header
+;   result     - Value of parameter in header; return 0 if parameter not found
 ;
 ; OPTIONAL OUTPUTS:
 ;   count      - Return the number of paramters found
@@ -40,7 +40,7 @@ function yanny_par, hdr, keyname, count=count
 
    if (N_params() LT 2) then begin
       print, 'Syntax - result = yanny_par(hdr, keyname, [count= ] )'
-      return, -1
+      return, 0
    endif
 
    nhead = N_elements(hdr)
@@ -55,7 +55,7 @@ function yanny_par, hdr, keyname, count=count
    indx = where(keyname EQ keylist, ct)
    if (ct EQ 0) then begin
       count = 0
-      result = -1
+      result = 0
    endif else begin
       count = ct
       result = 0
