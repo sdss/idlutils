@@ -36,6 +36,8 @@ pro hogg_meanplot, x,y,z,weight=weight, $
               noperimeter=noperimeter,nobox=nobox,nolines=nolines, $
               maskonly=maskonly
 
+if(NOT keyword_set(minnum)) then minnum=1L
+
 ; take moments
 ndata= n_elements(x)
 if not keyword_set(weight) then weight= fltarr(ndata)+1.0
@@ -83,6 +85,13 @@ bin_weight= image[*,*,1]
 bin_weight2= image[*,*,2]
 bin_mean= image[*,*,3]
 
+; make bin_mean lower than low 
+min_indx=where(bin_number lt minnum,min_count)
+min_mean=min(bin_mean)
+ignore_mean=min_mean-0.1*abs(min_mean)-1.
+limit_mean=0.5*(min_mean+ignore_mean)
+if(min_count gt 0) then bin_mean[min_indx]=ignore_mean
+
 ; check values and set contour levels
 factor= 10.0
 good= where(bin_number GT minnum,count_good)
@@ -115,7 +124,8 @@ if not keyword_set(c_colors) then begin
 endif
 contour, bin_mean,xbin,ybin,levels=levels,/cell_fill, $
   c_colors=c_colors, $
-  xstyle=1,xrange=xrange,ystyle=1,yrange=yrange
+  xstyle=1,xrange=xrange,ystyle=1,yrange=yrange, $
+  min_value=limit_mean
 if NOT keyword_set(nolines) then begin
     contour, bin_mean,xbin,ybin,levels=levels,/overplot, $
       c_labels=lonarr(n_elements(levels))+1L,c_charthick=!P.CHARTHICK

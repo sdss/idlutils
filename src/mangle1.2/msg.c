@@ -6,7 +6,7 @@
 #ifdef LINUX
 # include <stdarg.h>
 #endif
-#ifdef SUN
+#ifdef SunOS
 # include <sys/varargs.h>
 #endif
 

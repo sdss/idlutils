@@ -6,13 +6,15 @@
 # Linux
 
 CC = gcc
+#CC = cc
 #CFLAGS = -g -Wall -DDEBUG -DLINUX
-CFLAGS = -g -Wall -O3 -DLINUX
+CFLAGS = $(X_CFLAGS) -D$(UNAME)
 
 # f2c
 #F77 = f77
 #FFLAGS = -u -a -C -g -DF2C
-FFLAGS = -u -a -C -g -O3 -DF2C
+FFLAGS = $(X_FFLAGS) -DF2C
+#FFLAGS = -u -O -DSUN
 
 ## gnu g77 (which assumes no SAVE)
 #F77 = g77
