@@ -16,6 +16,7 @@ if not keyword_set(default_font) then default_font='!3'
 pold=!P
 xold=!X
 yold=!Y
+!P.POSITION= [0,0,0,0]
 !P.MULTI= [0,1,1]
 !P.FONT= -1
 !P.BACKGROUND= djs_icolor('white')
