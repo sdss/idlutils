@@ -117,6 +117,8 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
       return 
    endif
 
+   if (keyword_set(append)) then extnum = 1
+
    ;----------
    ; Pre-condition to FITS structure to have same-length strings
    ; (for any given tag name) by concatenating spaces.
@@ -125,10 +127,23 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    tags = tag_names(input)
    for itag=0L, ntag-1L do begin
       if (size(input[0].(itag), /tname) EQ 'STRING') then begin
+         if (keyword_set(append) AND keyword_set(olddat) EQ 0) then $
+          olddat = mrdfits(filename, extnum, range=[0,0])
+
          if (NOT keyword_set(silent)) then $
           print, 'Padding whitespace for string array ' + tags[itag]
+
          taglen = strlen(input.(itag))
          maxlen = max(taglen)
+         if (keyword_set(olddat)) then begin
+            thislen = strlen(olddat.(itag))
+            if (maxlen GT thislen) then begin
+               if (NOT keyword_set(silent)) then $
+                print, 'Warning: Trimming length of string array ' + tags[itag]
+            endif
+            maxlen = thislen
+         endif
+
          padspace = string('', format='(a'+string(maxlen)+')')
          input.(itag) = strmid(input.(itag) + padspace, 0, maxlen)
       endif
@@ -137,7 +152,6 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    ;----------
    ; Write the structure in chunks.
 
-   if (keyword_set(append)) then extnum = 1
    nrow = n_elements(input)
    if (NOT keyword_set(chunksize)) then chunksize = nrow
    nchunk = nrow / chunksize + ((nrow MOD chunksize) NE 0)
