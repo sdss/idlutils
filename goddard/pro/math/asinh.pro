@@ -28,9 +28,7 @@ function asinh, x
 ;     Work for multi-dimensional arrays  W. Landsman    August 2002
 ;-
 
- y = x*0.      ;Output vector is at least floating pt.
- y[0] = reform(alog( abs(x) + sqrt( x^2 + 1.d0) ), N_elements(x))
-
+ y = alog( abs(x) + sqrt( x^2 + 1.d0) )
  index = where(x LT 0 ,count)
  if count GT 0 then y[index] = -y[index]
 
