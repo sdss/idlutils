@@ -1,9 +1,15 @@
 * text=auto !eol
+/Makefile -text
+bin/Makefile -text
+doc/Makefile -text
+goddard/Makefile -text
 goddard/README -text
 goddard/contents.txt -text
+goddard/data/Makefile -text
 goddard/data/README -text
 goddard/data/ebcasc.dat -text svneol=unset#unset
 goddard/news.txt -text
+goddard/pro/Makefile -text
 goddard/pro/README -text
 goddard/pro/astro/README -text
 goddard/pro/astro/a_b.pro -text
@@ -531,6 +537,8 @@ goddard/text/sdas_table.doc -text
 goddard/text/structure.doc -text
 goddard/text/tape_io.doc -text
 goddard/text/tv.doc -text
+lib/Makefile -text
+pro/Makefile -text
 pro/TeXtoIDL/COPYRIGHT -text
 pro/TeXtoIDL/DESCRIPTIONS -text
 pro/TeXtoIDL/DISCLAIMER -text
@@ -584,7 +592,9 @@ pro/yanny/yanny_free.pro -text
 pro/yanny/yanny_par.pro -text
 pro/yanny/yanny_read.pro -text
 pro/yanny/yanny_write.pro -text
+src/Makefile -text
 src/math/.cvsignore -text
+src/math/Makefile -text
 src/math/arravsigclip.c -text
 src/math/arravsigmask.c -text
 src/math/arrmedian.c -text
@@ -594,6 +604,7 @@ src/math/nrecipes.c -text
 src/math/nrutil.c -text
 src/math/nrutil.h -text
 src/slatec/.cvsignore -text
+src/slatec/Makefile -text
 src/slatec/bint4.f -text
 src/slatec/bndacc.f -text
 src/slatec/bndsol.f -text
