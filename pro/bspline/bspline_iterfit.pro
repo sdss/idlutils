@@ -125,7 +125,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
    if (keyword_set(oldset)) then begin
       sset = oldset
-      sset.bkmask = 0
+      sset.bkmask = 1
       sset.coeff = 0
       tags = tag_names(oldset)
       if ((where(tags EQ 'XMIN'))[0] NE -1 AND NOT keyword_set(x2)) then $
