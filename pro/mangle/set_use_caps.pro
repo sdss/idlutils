@@ -17,6 +17,8 @@
 ; OUTPUTS:
 ; OPTIONAL INPUT/OUTPUTS:
 ; COMMENTS:
+;  If there are two caps identical except for the sign of cm, we 
+;  turn off *all* the caps --- it is zero!
 ; EXAMPLES:
 ; BUGS:
 ;   Number of caps limited to 64
@@ -45,11 +47,17 @@ if(NOT keyword_set(allow_doubles)) then begin
                            abs((*polygon[ipoly].caps)[i].x[1]- $
                                (*polygon[ipoly].caps)[j].x[1]) lt tol and $
                            abs((*polygon[ipoly].caps)[i].x[2]- $
-                               (*polygon[ipoly].caps)[j].x[2]) lt tol and $
-                           abs((*polygon[ipoly].caps)[i].cm- $
-                               (*polygon[ipoly].caps)[j].cm) lt tol) then $
-                          polygon[ipoly].use_caps= $
-                          polygon[ipoly].use_caps and (NOT ulong64(2)^j)
+                               (*polygon[ipoly].caps)[j].x[2]) lt tol) then $
+                          begin 
+                            if(abs((*polygon[ipoly].caps)[i].cm- $
+                                   (*polygon[ipoly].caps)[j].cm) lt tol) then $
+                              polygon[ipoly].use_caps= $
+                              polygon[ipoly].use_caps and (NOT ulong64(2)^j) $
+                            else if(abs((*polygon[ipoly].caps)[i].cm+ $
+                                        (*polygon[ipoly].caps)[j].cm) $
+                                    lt tol) then $
+                              polygon[ipoly].use_caps=0
+                        endif
                     endif
                 endfor
             endif
