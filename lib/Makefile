@@ -6,10 +6,10 @@ SHELL = /bin/sh
 all :
 
 #
-# Install things in their proper places in $(IDLSPEC2D_DIR)
+# Install things in their proper places in $(IDLUTILS_DIR)
 #
 install :
-	- cp *.so $(IDLSPEC2D_DIR)/lib
+	- cp *.so $(IDLUTILS_DIR)/lib
 
 clean :
 	- /bin/rm -f *~ core *.so
