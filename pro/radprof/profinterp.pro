@@ -66,9 +66,10 @@ indx=lindgen(nrad-1l)
 indxp1=lindgen(nrad-1l)+1l
 profmean=reform(profmean,nrad-1l,nprofiles)
 proferr=reform(proferr,nrad-1l,nprofiles)
+help
 cumprof[1l:nrad-1l,*]= $
   total(profmean[indx,*]*PI* $
-        ((profradius[indxp1]^2-profradius[indx]^2)#replicate(1,nprofiles)), $
+        ((profradius[indxp1]^2-profradius[indx]^2)#replicate(1.,nprofiles)), $
         1,/cumulative)
 cumprofvar[1l:nrad-1l,*]= $
   total((proferr[indx,*]*PI* $

@@ -74,13 +74,14 @@ ffs_model_profmean=ffs_model_profmean[0L:ffs_nprof-1L]
 ; set amplitude
 ffs_amp=total(ffs_model_profmean*ffs_profmean/ffs_proferr^2,/double)/ $
   total(ffs_model_profmean^2/ffs_proferr^2,/double)
+if(ffs_amp lt 0.) then ffs_amp=abs(ffs_amp)*1.e-7
 ffs_model_profmean=ffs_model_profmean*ffs_amp
 
 return,ffs_model_profmean
 
 end
 ;
-pro fast_fit_sersic,nprof,profmean,proferr,seeing_width,seeing_amp,sersic, $
+pro fast_fit_sersic,nprof,profmean,proferr,seeing_width,seeing_amp,sersicout, $
                     seestruct=seestruct,nprofile=nprofile, nbands=nbands, $
                     savseestruct=savseestruct, savfaststruct=savfaststruct, $
                     canonical=canonical
@@ -88,10 +89,10 @@ pro fast_fit_sersic,nprof,profmean,proferr,seeing_width,seeing_amp,sersic, $
 common com_fast_fit_sersic
 
 ; set keywords
-if(NOT keyword_set(maxnprof)) then maxnprof=11L
+if(NOT keyword_set(maxnprof)) then maxnprof=14L
 if(NOT keyword_set(nbands)) then nbands=5L
 if(NOT keyword_set(canonical)) then canonical=3L
-if(NOT keyword_set(nprofile)) then nprofile=100L
+if(NOT keyword_set(nprofile)) then nprofile=1200L
 if(NOT keyword_set(profradius)) then $
   profradius=[0., 0.564190, 1.692569, 2.585442, 4.406462, $
               7.506054, 11.576202, 18.584032, 28.551561, $
@@ -165,7 +166,7 @@ sersic_one={sersic_struct, $
             sersic_covar:dblarr(5,2,2), $
             chi2:dblarr(5), $
             nprof:lonarr(5)}
-sersic=replicate(sersic_one,nprofiles)
+sersicout=replicate(sersic_one,nprofiles)
 
 ; implement constraints
 pi = replicate({fixed:0, limited:[0,0], limits:[0.D,0.D]},2)
@@ -187,6 +188,11 @@ for i=0L, nprofiles-1L do begin
         ffs_nprof=min([maxnprof,nprof[k,i]])
         ffs_profmean=profmean[0:ffs_nprof-1L,k,i]
         ffs_proferr=proferr[0:ffs_nprof-1L,k,i]
+        bzindx=where(ffs_profmean lt 0.,bzcount)
+        if(bzcount gt 0) then begin 
+            ffs_proferr[bzindx]=sqrt(ffs_proferr[bzindx]^2+ $
+                                     (0.5*ffs_profmean[bzindx])^2)
+        endif
         ffs_meanprofradius=meanprofradius[0:ffs_nprof-1L]
         for j = 0L, ffs_nseeing-1L do begin
             ffs_kindx[j]=long((ffs_nswv-1.)* $
@@ -208,24 +214,29 @@ for i=0L, nprofiles-1L do begin
         ;splog,'nprof = '+string(ffs_nprof)
         ffs_model_profmean=fast_fit_sersic_func(ffs_meanprofradius,p)
         sersic_params,1.,p[0],1.,r50=r50
-        sersic[i].sersic_amp[k]=ffs_amp
-        sersic[i].sersic_n[k]=p[0]
-        sersic[i].sersic_r0[k]=p[1]/r50
-        sersic[i].chi2[k]=chi2
-        sersic[i].nprof[k]=ffs_nprof
-        sersic[i].sersic_covar[k,*,*]=covar
+        sersicout[i].sersic_amp[k]=ffs_amp
+        sersicout[i].sersic_n[k]=p[0]
+        sersicout[i].sersic_r0[k]=p[1]/r50
+        sersicout[i].chi2[k]=chi2
+        sersicout[i].nprof[k]=ffs_nprof
+        sersicout[i].sersic_covar[k,*,*]=covar
     endfor
 
     ; calculate amplitude assuming canonical fit
-    p[0]=sersic[i].sersic_n[canonical]
+    p[0]=sersicout[i].sersic_n[canonical]
     sersic_params,1.,p[0],1.,r50=r50
-    p[1]=sersic[i].sersic_r0[canonical]*r50
+    p[1]=sersicout[i].sersic_r0[canonical]*r50
     for k=0L, nbands-1L do begin
         ffs_seeing_amp=seeing_amp[*,k,i]
         ffs_seeing_width=seeing_width[*,k,i]
         ffs_nprof=min([maxnprof,nprof[k,i]])
         ffs_profmean=profmean[0:ffs_nprof-1L,k,i]
         ffs_proferr=proferr[0:ffs_nprof-1L,k,i]
+        bzindx=where(ffs_profmean lt 0.,bzcount)
+        if(bzcount gt 0) then begin 
+            ffs_proferr[bzindx]=sqrt(ffs_proferr[bzindx]^2+ $
+                                     ffs_profmean[bzindx]^2)
+        endif
         ffs_meanprofradius=meanprofradius[0:ffs_nprof-1L]
         for j = 0L, ffs_nseeing-1L do begin
             ffs_kindx[j]=long((ffs_nswv-1.)* $
@@ -241,7 +252,7 @@ for i=0L, nprofiles-1L do begin
                ffs_faststruct.seeing_width_vals[ffs_kindx[j]])
         endfor
         ffs_model_profmean=fast_fit_sersic_func(ffs_meanprofradius,p)
-        sersic[i].sersic_canon_amp[k]=ffs_amp
+        sersicout[i].sersic_canon_amp[k]=ffs_amp
     endfor
 endfor
 

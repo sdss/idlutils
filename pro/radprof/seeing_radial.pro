@@ -37,7 +37,7 @@
 ;   23-Mar-2002  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-pro seeing_radial,profile,seeing_width,seeing_amp,seeing_profmean,seestruct=seestruct,setseestruct=setseestruct,profradius=profradius,radius_vals=radius_vals,seeing_width_vals=seeing_width_vals,nintegral=nintegral,max_radius_vals=max_radius_vals
+pro seeing_radial,profile,seeing_width,seeing_amp,seeing_profmean,seestruct=seestruct,setseestruct=setseestruct,profradius=profradius,radius_vals=radius_vals,seeing_width_vals=seeing_width_vals,nintegral=nintegral,max_radius_vals=max_radius_vals,nseeing_width_vals=nseeing_width_vals
 
 if(NOT keyword_set(profradius)) then $
   profradius=[0., 0.564190, 1.692569, 2.585442, 4.406462, $
@@ -60,7 +60,7 @@ nseeing=long(n_elements(seeing_width)/nprofiles)
 if(n_tags(seestruct) EQ 0 OR keyword_set(setseestruct)) then begin
     ; set sizes of grids
     if(NOT keyword_set(nseeing_width_vals)) then nseeing_width_vals=20L
-    if(NOT keyword_set(nradius_vals)) then nradius_vals=800L
+    if(NOT keyword_set(nradius_vals)) then nradius_vals=1200L
     if(NOT keyword_set(nintegral)) then nintegral=300L
 
     ; set grids in seeing_width and radius
@@ -71,10 +71,9 @@ if(n_tags(seestruct) EQ 0 OR keyword_set(setseestruct)) then begin
     if(NOT keyword_set(max_radius_vals)) then $
        max_radius_vals=1.1*max(profradius[1:nrad-1])
     if(NOT keyword_set(radius_vals)) then $
-      radius_vals=exp(alog(0.05*min(profradius[1:nrad-1]))+ $
-                      (alog(max_radius_vals)- $
-                       alog(0.05*min(profradius[1:nrad-1]))) $
-                      *(dindgen(nradius_vals)+0.5)/double(nradius_vals-1L))
+      radius_vals=exp(alog(0.05*profradius[1])+ $
+      (alog(max_radius_vals)-alog(0.05*profradius[1])) $
+      *(dindgen(nradius_vals)+0.5)/double(nradius_vals-1L))
     nradius_vals=n_elements(radius_vals)
     nseeing_width_vals=n_elements(seeing_width_vals)
                                
@@ -148,7 +147,7 @@ for i=0L, nprofiles-1L do begin
         isee=long((seeing_width[j,i]-seestruct.seeing_width_vals[0])/ $
                   (seestruct.seeing_width_vals[nseeing_width_vals-1] $
                    -seestruct.seeing_width_vals[0])* $
-                  double(nseeing_width_vals))
+                  double(nseeing_width_vals-1.))
         if(isee ge nseeing_width_vals-1L) then isee=nseeing_width_vals-2L
         ssee=(seeing_width[j,i]-seestruct.seeing_width_vals[isee])/ $
           (seestruct.seeing_width_vals[isee+1] $

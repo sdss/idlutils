@@ -47,7 +47,7 @@ if(NOT keyword_set(profradius)) then $
               45.503910, 70.510155, 110.530769, 172.493530, $
               269.519104, 420.510529, 652.500061]*0.396
 if(NOT keyword_set(radius_vals)) then $
-  radius_vals=exp(alog(r0*0.03)+(alog(r0*100000.)-alog(r0*0.03))* $
+  radius_vals=exp(alog(r0*0.03)+(alog(r0*20.^nsersic)-alog(r0*0.03))* $
                   dindgen(1000)/1000.)
 nrad=n_elements(radius_vals)
 i=lindgen(nrad-1L)
@@ -77,10 +77,12 @@ avgsb=cummaggies/(PI*radius_vals^2)
 petroradindx=where(sersic_vals[i]/avgsb[i] gt 0.2 and $
                    sersic_vals[ip1]/avgsb[ip1] lt 0.2)
 petroradindx=petroradindx[0]
+if(petroradindx lt 0) then petroradindx=nrad-1L
 petrorad=radius_vals[petroradindx]
 petroap=2.*petrorad
 petroapindx=where(radius_vals[i] lt petroap and radius_vals[ip1] gt petroap)
 petroapindx=petroapindx[0]
+if(petroapindx lt 0) then petroapindx=nrad-1L
 petromaggies=cummaggies[petroapindx]
 petror50indx=where(cummaggies[i] lt 0.5*petromaggies and $
                    cummaggies[ip1] gt 0.5*petromaggies)
