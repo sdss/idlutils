@@ -5,7 +5,6 @@ pro tmass_reformat_psc
 ;  outpath = '/peyton/scr/photo58/2mass/'
 
   flist = findfile(inpath+'psc*.gz', count=fct)
-flist = findfile(inpath+'psc_b*.gz', count=fct) ; ???
   infile = strmid(flist, strlen(inpath))
 
   for i=0L, fct-1 do begin 
