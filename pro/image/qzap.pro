@@ -74,7 +74,7 @@ pro qzap, name, outname, outmask, skyfiltsize=skyfiltsize, $
 
    while (iter LT maxiter and nbad GT 0) do begin
       iter = iter + 1
-      print, Iteration, iter
+      print, 'Iteration', iter
 
       fmedimage = median(skysubimage, boxsize)
 
