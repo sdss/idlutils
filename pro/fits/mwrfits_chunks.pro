@@ -7,14 +7,19 @@
 ;   Write a FITS binary table in chunks.
 ;
 ; CALLING SEQUENCE:
-;   mwrfits_chunks, input, filename, [ header, chunksize=, /silent, $
-;    _EXTRA=KeywordsForMwrfits ]
+;   mwrfits_chunks, input, filename, [ header, chunksize=, /append, $
+;    /silent, _EXTRA=KeywordsForMwrfits ]
 ;
 ; INPUTS:
 ;   input     - Structure to be written.
 ;
 ; OPTIONAL INPUTS:
 ;   chunksize - Number of rows to write in each sub-write.
+;   append    - If set, then append to an existing HDU.  In this case,
+;               it is up to the user to be certain that the INPUT
+;               structure is identical to that in the existing file.
+;               Any string elements in INPUT must be of equal length or shorter
+;               than the existing strings in the file.
 ;   silent    - If set, then suppress informational messages.
 ;
 ; OUTPUTS:
@@ -24,6 +29,10 @@
 ; COMMENTS:
 ;   This procedure can be used instead of MWRFITS to write a large
 ;   FITS binary table without doubling the memory usage.
+;
+;   If using the /APPEND option, any string elements will be trimmed to
+;   the length allowed by the existing data in the output file.
+;   But at least it won't crash!
 ;
 ; BUGS:
 ;
@@ -82,7 +91,7 @@ end
 
 ;-----------------------------------------------------------------------
 pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
- silent=silent, _EXTRA=KeywordsForMwrfits
+ silent=silent, append=append, _EXTRA=KeywordsForMwrfits
 
    ;----------
    ; Need at least 2 parameters
@@ -127,6 +136,7 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    ;----------
    ; Write the structure in chunks.
 
+   if (keyword_set(append)) then extnum = 1
    nrow = n_elements(input)
    if (NOT keyword_set(chunksize)) then chunksize = nrow
    nchunk = nrow / chunksize + ((nrow MOD chunksize) NE 0)
@@ -138,7 +148,7 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
       i2 = ((ichunk+1) * chunksize - 1) < (nrow-1)
       indx = i1 + lindgen(i2-i1+1)
 
-      if (ichunk EQ 0) then begin
+      if (ichunk EQ 0 AND NOT keyword_set(append)) then begin
          ; Create a new file, and write this structure as HDU #1.
          mwrfits, input[indx], filename, header, $
           silent=silent, _EXTRA=KeywordsForMwrfits
