@@ -578,6 +578,7 @@ pro/plot/splot.pro -text
 pro/yanny/yanny_read.pro -text
 pro/yanny/yanny_write.pro -text
 src/math/arravsigclip.c -text
+src/math/arravsigmask.c -text
 src/math/arrmedian.c -text
 src/math/export.h -text
 src/math/makefile -text

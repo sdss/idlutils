@@ -1,4 +1,4 @@
-#$Id: makefile,v 1.1 1999-07-09 20:32:23 schlegel Exp $
+#$Id: makefile,v 1.2 1999-10-14 09:35:28 schlegel Exp $
 #
 #  Copyright (c) 1988-1998, Research Systems Inc.  All rights reserved.
 #  This software includes information which is proprietary to and a
@@ -88,7 +88,7 @@ all :
 
 RECIPES = nrecipes.o nrutil.o
 
-objs = arrmedian.o arravsigclip.o \
+objs = arrmedian.o arravsigclip.o arravsigmask.o \
 	$(RECIPES)
 
 libmath.$(SO_EXT): $(objs)
