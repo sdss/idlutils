@@ -6,19 +6,22 @@
 ;   Tweak astrometric solution, given a good initial guess
 ;
 ; CALLING SEQUENCE:
-;   gsa_out = astrom_tweak(cat, im, maxsep, gsa_in, $
-;    [ nminmatch=, /radial, maxrad=, errflag=, nmatch= ]
+;   gsa_out = astrom_tweak(cat, im, gsa_in, $
+;    [ maxsep=, nminmatch=, /radial, errflag=, nmatch= ]
 ;
 ; INPUTS:
 ;   cat        - Structure (with fields .ra, .dec) of catalogue positions
 ;   im         - Structure (with fields .x, .y) of image star positions
-;   maxsep     - Maximum allowed separation for good match (pixels)
 ;   gsa-in     - Initial guess for astrometric solution (struct)
+;
+; REQUIRED KEYWORDS:
+;   maxsep     - Maximum allowed separation for good match (pixels).
+;                Stars are matched with the catalog that fall within 3*MAXSEP,
+;                but the final solution rejects any stars further than MAXSEP.
 ;
 ; OPTIONAL KEYWORDS:
 ;   nminmatch  - Minimum number of stars for match; default to 5
 ;   radial     - include higher-order radial terms in fit
-;   maxrad     - passed to ptstarmatch (???)
 ;  
 ; OUTPUTS:
 ;   gsa_out    - returned guess for astrometric solution (struct);
@@ -46,6 +49,7 @@
 ;   gsssxyad
 ;
 ; INTERNAL SUPPORT PROCEDURES:
+;   warp_apply
 ;   astrom_starmatch
 ;   astrom_warp
 ;
@@ -54,9 +58,24 @@
 ;                Modified from D. Finkbeiner's PT_TWEAK_ASTR.
 ;-
 ;-----------------------------------------------------------------------------
+pro warp_apply, xraw, yraw, k_x, k_y, xwarp, ywarp
+
+   dims = size(k_x, /dimens)
+   degree = dims[0]-1 ; Assume that k_x, k_y are [DEGREE+1,DEGREE+1] arrays
+
+   xwarp = 0 * xraw
+   ywarp = 0 * yraw
+   for i=0, degree do begin
+      for j=0, degree do begin
+         xwarp = xwarp + k_x[i,j] * xraw^j * yraw^i
+         ywarp = ywarp + k_y[i,j] * xraw^j * yraw^i
+      endfor
+   endfor
+end
+;-----------------------------------------------------------------------------
 ; Returns the indices of the catalog stars that match with the image stars
 
-pro astrom_starmatch, cat, im, maxsep, indcat, indobs, maxrad=maxrad
+pro astrom_starmatch, cat, im, indcat, indobs, maxsep=maxsep
 
    ncat = n_elements(cat)
    nobs = n_elements(im)
@@ -64,25 +83,14 @@ pro astrom_starmatch, cat, im, maxsep, indcat, indobs, maxrad=maxrad
    indcat = lonarr(ncat)
    indobs = lonarr(ncat)
 
-   if (keyword_set(maxrad) EQ 0) then maxrad = 1E9
-   mx = mean(im.x)
-   my = mean(im.y)
-   rdif = sqrt((im.x-mx)^2+(im.y-my)^2)
-   in_rad = rdif LT maxrad
-
    k = 0L
-
    for i=0L, ncat-1 do begin
-
       dist = sqrt((cat[i].x-im.x)^2 + (cat[i].y-im.y)^2)
-
-      whmin = where(dist LT maxsep, ct)
-      if (ct EQ 1) then begin ; Only do if exactly 1 star is in range
-         if (in_rad[whmin[0]]) then begin
-            indcat[k] = i
-            indobs[k] = whmin
-            k = k+1
-         endif
+      imin = where(dist LT maxsep, ct)
+      if (ct EQ 1) then begin ; Only match if exactly 1 star is in range
+         indcat[k] = i
+         indobs[k] = imin
+         k = k + 1L
       endif
    endfor
 
@@ -100,7 +108,8 @@ pro astrom_starmatch, cat, im, maxsep, indcat, indobs, maxrad=maxrad
    return
 end
 ;-----------------------------------------------------------------------------
-pro astrom_warp, catmatch, immatch, deltax, deltay, rot, shift=shift
+pro astrom_warp, catmatch, immatch, deltax, deltay, rot, shift=shift, $
+ maxsep=maxsep
 
 ; determines the x and y offsets, rotation, and plate scale (first degree)
 
@@ -121,25 +130,42 @@ pro astrom_warp, catmatch, immatch, deltax, deltay, rot, shift=shift
 ; (rot will always be 2x2)
    rot = dblarr(2, 2)
 
-   polywarp, x_i, y_i, x_0, y_0, degree, k_x, k_y
+   ndata = n_elements(x_i)
+   qdone = 0
+   iiter = 0L
+   outmask = bytarr(ndata) + 1 ; Begin with all points good
+   adiff = 0 * x_i
+   while (NOT keyword_set(qdone) AND iiter LE ndata) do begin
+      igood = where(outmask NE 0, ngood)
+      if (ngood GE (degree+1)^2) then $
+       polywarp, x_i[igood], y_i[igood], x_0[igood], y_0[igood], $
+        degree, k_x, k_y
+      warp_apply, x_0, y_0, k_x, k_y, xwarp, ywarp
+      adiff = sqrt( (x_i-xwarp)^2 + (y_i-ywarp)^2 )
+      qdone = djs_reject(adiff, 0*adiff, outmask=outmask, $
+       maxdev=maxsep)
+      iiter = iiter + 1
+   endwhile
+   splog, 'Number of iterations = ', iiter
+   splog, 'Fraction of points rejected = ', mean(1-outmask)
 
-; translational offset   
+   ; Translational offset   
 
    deltax = k_x[0,0]
    deltay = k_y[0,0]
 
-; rotation correction (radians)
+   ; Rotation correction (radians)
 
    rot[0,0] = k_x[0,1]
    rot[0,1] = k_y[0,1]
    rot[1,0] = k_x[1,0]
    rot[1,1] = k_y[1,0]
 
-; plate scale
+   ; Plate scale
 
-   splog, 'Inital scale guess off by factor of', determ(rot)
+   splog, 'Initial scale guess off by factor of', determ(rot)
 
-; cross terms
+   ; Cross terms
 
    crossx = k_x[1,1]
    crossy = k_y[1,1]
@@ -151,7 +177,7 @@ pro astrom_warp, catmatch, immatch, deltax, deltay, rot, shift=shift
    return
 end 
 ;-----------------------------------------------------------------------------
-function astrom_tweak, cat, im, maxsep, gsa_in, radial=radial, maxrad=maxrad, $
+function astrom_tweak, cat, im, gsa_in, maxsep=maxsep, radial=radial, $
  nminmatch=nminmatch, errflag=errflag, catind=catind, obsind=obsind, $
  nmatch=nmatch
 
@@ -172,7 +198,7 @@ function astrom_tweak, cat, im, maxsep, gsa_in, radial=radial, maxrad=maxrad, $
    cat.y = caty
 
    ; find matches between USNO catalogue and image stars; return index arrays
-   astrom_starmatch, cat, im, maxsep, catind, obsind, maxrad=maxrad
+   astrom_starmatch, cat, im, catind, obsind, maxsep=3*maxsep
    nmatch = n_elements(catind) * (catind[0] NE -1)
    if (nmatch LT nminmatch) then begin
       splog, 'Only', nmatch, ' stars found - skipping'
@@ -210,10 +236,10 @@ function astrom_tweak, cat, im, maxsep, gsa_in, radial=radial, maxrad=maxrad, $
       catmatch.y = catmatch.y+iy*qd
    endif
   
-   ; astro_warp determines the translational, rotational, and plate scale coeffs
+   ; astrom_warp determines the translational, rotational, and scale coeffs
   
    astrom_warp, catmatch, immatch, deltax, deltay, rot, $
-    shift=[xcen, ycen]
+    shift=[xcen, ycen], maxsep=maxsep
 
    ; This routine coverts X,Y to RA, dec using information in astr
    ; structure which contains the initial guess...
