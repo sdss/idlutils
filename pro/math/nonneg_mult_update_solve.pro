@@ -96,7 +96,7 @@ endif
 
 sol=start
 oldval=nnmus_value(sol,use_avfunc,b,offset=offset)
-splog,'oldval='+string(oldval)
+if(keyword_set(verbose)) then splog,'oldval='+string(oldval)
 diff=tol*2.
 while(abs(diff) gt tol) do begin
     sol=nonneg_mult_update(sol,use_avfunc,b,factor=factor)

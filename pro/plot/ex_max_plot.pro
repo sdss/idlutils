@@ -208,6 +208,7 @@ for id2=ydimen-1,0L,-1 do begin
                 panelweight=weight
                 panelpoint=point
             endelse
+            pointamp1= total(panelweight)
             
             if(keyword_set(paneluse2)) then begin
                 if(keyword_set(weight2) and keyword_set(point2)) then begin
@@ -471,7 +472,7 @@ for id2=ydimen-1,0L,-1 do begin
 
 ; renormalize the cumulated image so it really represents fractions of the
 ; total
-                    cumimage= 1.0-cumimage*abs(delta_x*delta_y)/amp1
+                    cumimage= 1.0-cumimage*abs(delta_x*delta_y)/pointamp1
 
 ; contour
                     if(NOT keyword_set(conditional)) then begin
