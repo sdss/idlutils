@@ -10,6 +10,7 @@ case `uname` in
 	"SunOS") if [  -d /proc ]; then
 			SO_EXT=so
 			X_CFLAGS="-KPIC"
+      X_FFLAGS="-e"
 			X_LD_FLAGS=-G
 		fi
 		SDSS_CFLAGS=-O3
@@ -17,20 +18,26 @@ case `uname` in
 	"HP-UX")
 		SO_EXT=sl
 		X_CFLAGS="+z -Aa -D_HPUX_SOURCE"
+	  X_FFLAGS="-extend_source"
 		X_LD_FLAGS=-b
 	;;
 	"IRIX" )
 		SO_EXT=so
 		X_CFLAGS="-32 -KPIC"
+    X_FFLAGS="-32 -extend_source"
+    MAKE_FTNLIB="-lftn"
 		X_LD_FLAGS="-shared -32"
 	;;
 	"IRIX64" )
 		SO_EXT=so
 		X_CFLAGS="-32 -KPIC"
+    X_FFLAGS="-32 -extend_source -KPIC"
+    MAKE_FTNLIB="-lftn"
 		X_LD_FLAGS="-shared -32"
 	;;
 	"OSF1" )
 		SO_EXT=so
+    X_FFLAGS="-extend_source"
 		X_LD_FLAGS="-S -shared"
 		SDSS_CFLAGS=-O3
 	;;
@@ -47,6 +54,8 @@ case `uname` in
 	"Linux" )
 		SO_EXT=so
 		X_CFLAGS="-fPIC -g -Wall"
+		X_FFLAGS="-ffixed-line-length-none"
+    MAKE_FTNLIB="-lg2c"
 		X_LD_FLAGS=-shared
 		SDSS_CFLAGS=-O3
 	;;
@@ -54,6 +63,6 @@ case `uname` in
 		exit 1;;
 esac
 
-export SO_EXT X_CFLAGS X_LD_FLAGS SDSS_CFLAGS LD F77
+export SO_EXT X_CFLAGS X_FFLAGS X_LD_FLAGS SDSS_CFLAGS LD F77 MAKE_FTNLIB
 
 make "$@"

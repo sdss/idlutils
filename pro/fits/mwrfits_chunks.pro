@@ -112,7 +112,7 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    ; (for any given tag name) by concatenating spaces.
 
    ntag = n_tags(input)
-   for itag=0, ntag-1 do begin
+   for itag=0L, ntag-1L do begin
       if (size(input[0].(itag), /tname) EQ 'STRING') then begin
          taglen = strlen(input.(itag))
          maxlen = max(taglen)
@@ -127,7 +127,7 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    nrow = n_elements(input)
    if (NOT keyword_set(chunksize)) then chunksize = nrow
    nchunk = nrow / chunksize + ((nrow MOD chunksize) NE 0)
-   for ichunk=0L, nchunk-1 do begin
+   for ichunk=0L, nchunk-1L do begin
       if (NOT keyword_set(silent)) then $
        print,'Writing chunk number ', ichunk
 
