@@ -73,6 +73,7 @@ nquantiles= n_elements(quantiles)
 if not keyword_set(satfrac) then satfrac= 0.0
 if not keyword_set(exponent) then exponent= 1.0
 if not keyword_set(darkest) then darkest= 127.0
+if not keyword_set(cthick) then cthick= !P.THICK
 
 ; check inputs
 ; [tbd]
