@@ -43,7 +43,7 @@ function djs_laxisgen, dimens, iaxis=iaxis
    case ndimen of
    1 : $
       begin
-         result = lindgen(naxis)
+         result = lindgen(naxis[0])
       end
    2 : $
       begin
