@@ -1,4 +1,10 @@
 
+src/mangle1.4/src/garea.s.f: Bug fix to send errors to stderr.  We had errors
+               like "*** from garea: total failure at tol =  3.33161425"
+               spilling into the output stream from the Fortran code back
+               into IDL, which was corrupting the data.  (Blanton thinks
+               this is triggered from balkans with zero area.)
+
 -------------------------------------------------------------------------------
 v4_10_7 (Dec 11, 2003)
 Tagged for idlspec2d v4_10_7.
