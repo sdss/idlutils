@@ -131,7 +131,7 @@ float vector_avsigclip_mask
    nmask = 0;
    for (i=0; i<nData; i++) {
       pMaskOut[i] = pMaskIn[i];
-      nmask++;
+      if (pMaskIn[i] > 0) nmask++;
    }
 
    /* First compute the mean and dispersion */
@@ -157,6 +157,23 @@ float vector_avsigclip_mask
             nbad++;
          }
       }
+
+      /* If all points are now rejected, then un-reject the points just
+       * masked out, such that we only mask those points specified by pMaskIn.
+       * This is no guarantee that any points survive, since pMaskIn might
+       * already mask all points.
+       */
+#if 0
+      if (nbad == nData) {
+         for (i=0; i < nData; i++) {
+            if (pMaskIn[i] == 0 && pMaskOut[i] == 1) {
+               pMaskOut[i] = 0;
+               nbad--;
+            }
+         }
+      }
+#endif
+
       if (nbad == nData) {
          iiter = maxiter;
       } else {
