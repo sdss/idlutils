@@ -114,11 +114,10 @@ endif else begin
     cumindex= reverse(sort(grid))
     cumimage= dblarr(xnpix,ynpix)
     cumimage[cumindex]= total(grid[cumindex],/cumulative) 
-endelse
-
 ; renormalize the cumulated image so it really represents fractions of the
 ; *total* weight
     cumimage= cumimage/total(weight)
+endelse
 
 ; scale greyscale
 mingrey= 255.0
