@@ -26,8 +26,6 @@
 ;   FITS binary table without doubling the memory usage.
 ;
 ; BUGS:
-;   This routine is written to always create a new file.  It should
-;   be easy to modify to allow the creation of a new HDU to an existing file.
 ;
 ; PROCEDURES CALLED:
 ;   fxpar()
@@ -139,7 +137,7 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
 
       if (ichunk EQ 0) then begin
          ; Create a new file, and write this structure as HDU #1.
-         mwrfits, input[indx], filename, header, /create, $
+         mwrfits, input[indx], filename, header, $
           silent=silent, _EXTRA=KeywordsForMwrfits
          extnum = 1
          lun = fxposit(filename, extnum)
