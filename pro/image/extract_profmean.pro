@@ -185,6 +185,7 @@ fullarea=!DPI*(radii[1:n_elements(cache)]^2-radii[0:n_elements(cache)-1L]^2)
 inotenough=where(area[1:n_elements(cache)]/fullarea le 0.95, nnotenough)
 ienough=where(area[1:n_elements(cache)]/fullarea gt 0.95, nenough)
 
+
 profmean=fltarr(n_elements(cache))
 if(arg_present(profmean_ivar)) then $
   profmean_ivar=fltarr(n_elements(cache))
@@ -202,6 +203,12 @@ for i=0, nenough-1 do begin
       profflux_ivar[ienough[i]+1]*area[ienough[i]+1]^2
 endfor
 area=area[1:n_elements(cache)]
+
+; check for very negative annuli
+if(n_elements(profmean_ivar) eq 0) then $
+  profmean_ivar=fltarr(n_elements(cache))+1.
+ineg=where(profmean[ienough]^2*profmean_ivar[ienough] lt -100., nneg)
+if(nneg gt 0) then nprof=ineg[0]
 
 if(NOT arg_present(cache)) then begin
     for i=0, n_elements(cache)-1 do begin
