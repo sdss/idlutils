@@ -43,9 +43,9 @@
 ;
 ; COMMENTS:
 ;   The fit parameters are as follows:
-;     FITVAL[0] - Starting MU coordinate [degrees]
-;     FITVAL[1] - Node of great circle [degrees]
-;     FITVAL[2] - Inclination of great circle [degrees]
+;     FITVAL[0] - Starting MU coordinate from [0,360) degrees
+;     FITVAL[1] - Node of great circle from [0,360) degrees
+;     FITVAL[2] - Inclination of great circle from [-180,180) degrees
 ;     FITVAL[3] - Perpendicular offset of scan from the great circle [degrees];
 ;                 this is what is called XBORE for SDSS imaging scans.
 ;                 Fix this parameter to zero if you want to fit exactly along
@@ -68,7 +68,6 @@
 ; EXAMPLES:
 ;
 ; BUGS:
-;   Still possible to return INCL not in bounds of [-90,+90] degrees ???
 ;
 ; PROCEDURES CALLED:
 ;   cirrange
@@ -191,18 +190,13 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
     maxiter=maxiter, niter=niter, status=status)
 
    ;----------
-   ; If the INCL goes out of bounds from [-90,+90] degrees, then
+   ; If the INCL goes out of bounds from [-180,+180) degrees, then
    ; re-define the values to be in those bounds.
 
-   if (fitval[2] GT 90 AND fitval[2] LT 180) then begin
-      fitval[0] = fitval[0] + 180.d0
-      fitval[1] = fitval[1] + 180.d0
-      fitval[2] = 180.d0 - fitval[2]
-   endif else if (fitval[2] LT -90 AND fitval[2] GT -180) then begin
-      fitval[0] = fitval[0] + 180.d0
-      fitval[1] = fitval[1] + 180.d0
-      fitval[2] = -180.d0 - fitval[2]
-   endif
+   if (fitval[2] GE 180) then $
+    fitval[2] = ((fitval[2]+180.d0) MOD 360.d0) - 180.d0 $
+   else if (fitval[2] LT -180) then $
+    fitval[2] = 180.d0 - ((180.d0-fitval[2]) MOD 360.d0)
 
    ;----------
    ; Do bounds-checking on the fit coordinates
