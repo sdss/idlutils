@@ -110,7 +110,17 @@ end
 ;------------------------------------------------------------------------------
 function create_host_list, protocol, remotehost, remotedir, topdir
 
+   ; Do not try to use more hosts than there are free file pointers (LUNs).
+   ; This is because the SPAWN command uses GET_LUN to open pipes,
+   ; and will crash if it tries to allocate too many pipes.
+   ; Specifically, it will crash in the SPAWN command in the BATCH_SPAWN
+   ; procedure.
    nhost = n_elements(remotehost)
+   nlunmax = count_freelun()
+   if (nhost GT nlunmax) then begin
+      splog, 'WARNING: Trimming to use only the first ', nlunmax, ' hosts'
+      nhost = nlunmax
+   endif
 
    if (nhost EQ 0) then begin
       splog, 'REMOTEHOST not set.  Quitting.'
@@ -131,9 +141,9 @@ function create_host_list, protocol, remotehost, remotedir, topdir
 
    hostlist = replicate(ftemp, nhost)
 
-   hostlist[*].remotehost = remotehost
-   hostlist[*].remotedir = remotedir
-   hostlist[*].protocol = protocol
+   hostlist[*].remotehost = remotehost[0:nhost-1]
+   hostlist[*].remotedir = remotedir[0:nhost-1]
+   hostlist[*].protocol = protocol[0:nhost-1]
 
    for ihost=0, nhost-1 do begin
       if (hostlist[ihost].remotehost EQ 'localhost') then begin
@@ -381,17 +391,6 @@ pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
    if (NOT keyword_set(hostlist)) then return
    nhost = n_elements(hostlist)
    splog, 'Number of hosts = ', nhost
-
-   ; Do not try to use more hosts than there are free file pointers (LUNs).
-   ; This is because the SPAWN command uses GET_LUN to open pipes,
-   ; and will crash if it tries to allocate too many pipes.
-   ; Specifically, it will crash in the SPAWN command in the BATCH_SPAWN
-   ; procedure.
-   nlunmax = count_freelun()
-   if (nhost GT nlunmax) then begin
-      splog, 'WARNING: Trimming to use only the first ', nlunmax, ' hosts'
-      nhost = nlunmax
-   endif
 
    ;----------
    ; Find which programs are already done by looking at local files
