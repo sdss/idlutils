@@ -744,6 +744,7 @@ pro/plot/djs_xyouts.pro -text
 pro/plot/ex_max_plot.pro -text
 pro/plot/hogg_interval.pro -text
 pro/plot/hogg_oplot_covar.pro -text
+pro/plot/hogg_scatterplot.pro -text
 pro/plot/hogg_usersym.pro -text
 pro/plot/imgexp.pro -text
 pro/plot/imgscl.pro -text
