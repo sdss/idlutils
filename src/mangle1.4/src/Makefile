@@ -69,7 +69,7 @@ DEST=$(IDLUTILS_DIR)/bin/
 ILIB = -L$(IDLUTILS_DIR)/lib/
 LLIB = -lmangle
 
-PROGS = mrb_balkanize mrb_unify balkanize drangle harmonize map polyid poly2poly ransack snap unify weight
+PROGS = mrb_balkanize mrb_unify mrb_snap balkanize drangle harmonize map polyid poly2poly ransack snap unify weight
 #ddcount rotate rrcoeffs
 
 COBJ = add_parent.o advise_fmt.o braktop_.o cmminf.o convert.o copy_format.o copy_poly.o drandom.o drangle_polys.o dranglepolys_.o dump_poly.o findtop_.o garea.o gcmlim.o gphbv.o gphi.o gptin.o gspher.o gsphr.o gvert.o gvlim.o gvphi.o harmonize_polys.o harmonizepolys_.o ikrand.o msg.o new_poly.o new_vert.o partition_poly.o places.o poly_id.o prune_poly.o rdangle.o rdline.o rdmask.o rdmask_.o rdspher.o scale.o search.o snap_poly.o split_poly.o strcmpl.o strdict.o vmid.o weight_fn.o wrangle.o wrho.o wrmask.o wrrrcoeffs.o wrspher.o
@@ -128,6 +128,9 @@ ransack: ransack.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
 
 rrcoeffs: rrcoeffs.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)rrcoeffs rrcoeffs.o $(ILIB) $(LLIB)
+
+mrb_snap: mrb_snap.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+	$(F77) $(FFLAGS) -o $(DEST)mrb_snap mrb_snap.o $(ILIB) $(LLIB)
 
 snap: snap.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)snap snap.o $(ILIB) $(LLIB)
@@ -239,6 +242,8 @@ search.o: manglefn.h search.c
 	$(CC) $(CFLAGS) -c search.c
 snap.o: parse_args.c defaults.h manglefn.h usage.h snap.c
 	$(CC) $(CFLAGS) -c snap.c
+mrb_snap.o: parse_args.c defaults.h manglefn.h usage.h mrb_snap.c
+	$(CC) $(CFLAGS) -c mrb_snap.c
 snap_poly.o: manglefn.h snap_poly.c
 	$(CC) $(CFLAGS) -c snap_poly.c
 split_poly.o: manglefn.h split_poly.c
