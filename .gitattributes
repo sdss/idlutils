@@ -820,5 +820,6 @@ src/spheregroup/friendsoffriends.h -text
 src/spheregroup/rarange.c -text
 src/spheregroup/separation.c -text
 src/spheregroup/spheregroup.c -text
+src/spheregroup/spherematch.c -text
 ups/Makefile -text
 ups/idlutils.table -text
