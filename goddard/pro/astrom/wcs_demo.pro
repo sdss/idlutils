@@ -69,8 +69,8 @@
 ;       1.1     8/31/93
 ;       1.2     3/19/96 - J. Bloch - LANL
 ;                        - Made compatible with wcslib-2.2 by Calabretta.
-;
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Updated for conical projections W. Landsman  July 2003
 ;-
 
 ; PROCEDURE FOR OPTION 1
@@ -95,16 +95,16 @@ if ((map ge 0) and (map le 22)) then begin
     "; Only connect latitude lines in a full circle if the longitude"
     printf,file_unit,"; values cover the full circle."
     printf,file_unit,$
-      "if (360 - abs(longitude(0,0) - longitude(n_elements(xx(*,0))-1)) $"
+      "if (360 - abs(longitude(0,0) - longitude(n_elements(xx[*,0])-1)) $"
     printf,file_unit,"                             le lon_spacing) $"
     printf,file_unit,$
-      "then for i = 0,num_lat - 1 do oplot,[xx(*,i),xx(0,i)],[y(*,i),y(0,i)] $"
-    printf,file_unit,"else for i = 0,num_lat - 1 do oplot,xx(*,i),y(*,i)"
+      "then for i = 0,num_lat - 1 do oplot,[xx[*,i],xx(0,i)],[y[*,i],y(0,i)] $"
+    printf,file_unit,"else for i = 0,num_lat - 1 do oplot,xx[*,i],y[*,i]"
 
     printf,file_unit,""
     printf,file_unit,$
     "; Connect the longitude lines from the poles outward."
-    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx(i,*),y(i,*)"
+    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx[i,*],y[i,*]"
 
     printf,file_unit,""
     printf,file_unit,";LABELS"
@@ -120,7 +120,7 @@ if ((map ge 0) and (map le 22)) then begin
     printf,file_unit,"         orientation=360-longitude(i,0)"
     printf,file_unit,"  j = j + 1"
     printf,file_unit,"endrep until (j eq n_elements(lon_index))"
-    printf,file_unit,"if (lat_index(0) ne -1) then $"
+    printf,file_unit,"if (lat_index[0] ne -1) then $"
     printf,file_unit,"  xyouts,xx(0,lat_index),y(0,lat_index),$"
     printf,file_unit,"       strcompress(string(long(latitude(0,lat_index))))"
 
@@ -128,23 +128,23 @@ if ((map ge 0) and (map le 22)) then begin
   endif else if (((map ge 9) and (map le 12)) or (map eq 0)) then begin
     printf,file_unit,""
     printf,file_unit,"; Draw lines connecting equal longitudes"
-    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx(i,*),y(i,*)"
+    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx[i,*],y[i,*]"
     printf,file_unit,"; Draw lines connecting equal latitudes"
     printf,file_unit,$
-    "if ((min(longitude(*,0)) ge 180) or (max(longitude(*,0)) lt 180)) then $"
-    printf,file_unit,"  for i = 0,num_lat - 1 do oplot,xx(*,i),y(*,i) $"
+    "if ((min(longitude[*,0]) ge 180) or (max(longitude[*,0]) lt 180)) then $"
+    printf,file_unit,"  for i = 0,num_lat - 1 do oplot,xx[*,i],y[*,i] $"
     printf,file_unit,"else begin"
-    printf,file_unit,"  index = where(longitude(*,0) ge 180)"
+    printf,file_unit,"  index = where(longitude[*,0] ge 180)"
     printf,file_unit,$
-    "  if ((360 - max(longitude(*,0)) + min(longitude(*,0))) le lon_spacing) $"
+    "  if ((360 - max(longitude[*,0]) + min(longitude[*,0])) le lon_spacing) $"
     printf,file_unit,"    then begin"
     printf,file_unit,$
-    "    for i = 0, num_lat - 1 do oplot,[xx(index,i),xx(0:index(0)-1,i)],$"
+    "    for i = 0, num_lat - 1 do oplot,[xx(index,i),xx(0:index[0]-1,i)],$"
     printf,file_unit,$
-    "                                    [y(index,i),y(0:index(0)-1,i)]"
+    "                                    [y(index,i),y(0:index[0]-1,i)]"
     printf,file_unit,"  endif else begin"
     printf,file_unit,"    for i = 0,num_lat - 1 do begin"
-    printf,file_unit,"      oplot,xx(0:index(0) - 1,i),y(0:index(0) - 1,i)"
+    printf,file_unit,"      oplot,xx(0:index[0] - 1,i),y(0:index[0] - 1,i)"
     printf,file_unit,"      oplot,xx(index,i),y(index,i)"
     printf,file_unit,"    endfor"
     printf,file_unit,"  endelse"
@@ -158,29 +158,29 @@ if ((map ge 0) and (map le 22)) then begin
     "xyouts,xx(lon_index,0),y(lon_index,0) - ydelta,orientation=90,$"
     printf,file_unit,$
     "       strcompress(string(long(longitude(lon_index,0)))),alignment=0.5"
-    printf,file_unit,"y_index = where(longitude(0,*) eq max(longitude(0,*)))"
-    printf,file_unit,"if (lat_index(0) ne -1) then $"
+    printf,file_unit,"y_index = where(longitude[0,*] eq max(longitude[0,*]))"
+    printf,file_unit,"if (lat_index[0] ne -1) then $"
     printf,file_unit,$
-    "xyouts,max(xx) + xdelta,y(y_index(0),lat_index),alignment=0.5,$"
+    "xyouts,max(xx) + xdelta,y(y_index[0],lat_index),alignment=0.5,$"
     printf,file_unit,"       strcompress(string(long(latitude(0,lat_index))))"
 
   ; CONICAL PROJECTIONS
   endif else if ((map ge 13) and (map le 16)) then begin
     printf,file_unit,""
     printf,file_unit,"; Draw lines of longitude out from the poles."
-    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx(i,*),y(i,*)"
+    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx[i,*],y[i,*]"
 
     printf,file_unit,$
     "; Draw lines of latitude, making sure to break the line at 180 degrees."
-    printf,file_unit,"index = where(longitude(*,0) ge 180)"
-    printf,file_unit,"if (index(0) ne -1) then $"
+    printf,file_unit,"index = where(longitude[*,0] ge 180)"
+    printf,file_unit,"if (index[0] ne -1) then $"
     printf,file_unit,$
-          "  for i = 0,num_lat - 1 do oplot,[xx(index,i),xx(0:index(0)-1,i)],$"
-    printf,file_unit,"                        [y(index,i),y(0:index(0)-1,i)] $"
+          "  for i = 0,num_lat - 1 do oplot,[xx(index,i),xx(0:index[0]-1,i)],$"
+    printf,file_unit,"                        [y(index,i),y(0:index[0]-1,i)] $"
     printf,file_unit,"else begin"
-    printf,file_unit,"  index = where(longitude(*,0) eq max(longitude(*,0)))"
+    printf,file_unit,"  index = where(longitude[*,0] eq max(longitude[*,0]))"
     printf,file_unit,$
-    "  for i = 0,num_lat - 1 do oplot,xx(0:index(0),i),y(0:index(0),i)"
+    "  for i = 0,num_lat - 1 do oplot,xx(0:index[0],i),y(0:index[0],i)"
     printf,file_unit,"endelse"
 
     printf,file_unit,""
@@ -220,7 +220,7 @@ if ((map ge 0) and (map le 22)) then begin
     printf,file_unit,"  j = j + 1"
     printf,file_unit,"endrep until (j eq (n_elements(lon_index) - 1))"
     endif else begin
-    printf,file_unit,"end_index = n_elements(xx(i,*)) - 1"
+    printf,file_unit,"end_index = n_elements(xx[i,*]) - 1"
     printf,file_unit,"repeat begin"
     printf,file_unit,"  i = lon_index(j)"
     printf,file_unit,"  i1 = lon_index(j + 1)"
@@ -235,7 +235,7 @@ if ((map ge 0) and (map le 22)) then begin
     printf,file_unit,"endrep until (j eq n_elements(lon_index) - 1)"
     endelse
     printf,file_unit,$
-    "if (lat_index(0) ne -1) then xyouts,xx(0,lat_index),y(0,lat_index),$"
+    "if (lat_index[0] ne -1) then xyouts,xx(0,lat_index),y(0,lat_index),$"
     printf,file_unit,$
     "                        strcompress(string(long(latitude(0,lat_index))))"
 
@@ -243,25 +243,25 @@ if ((map ge 0) and (map le 22)) then begin
   endif else if ((map ge 17) and (map le 22)) then begin
     printf,file_unit,""
     printf,file_unit,"; Draw lines of longitude"
-    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx(i,*),y(i,*)"
+    printf,file_unit,"for i = 0,num_lon - 1 do oplot,xx[i,*],y[i,*]"
 
     printf,file_unit,$
     "; Draw lines of latitude, breaking the line at 180 degrees."
     printf,file_unit,$
-    "if ((min(longitude(*,0)) ge 180) or (max(longitude(*,0)) lt 180)) then $"
-    printf,file_unit,"  for i = 0,num_lat - 1 do oplot,xx(*,i),y(*,i) $"
+    "if ((min(longitude[*,0]) ge 180) or (max(longitude[*,0]) lt 180)) then $"
+    printf,file_unit,"  for i = 0,num_lat - 1 do oplot,xx[*,i],y[*,i] $"
     printf,file_unit,"else begin"
-    printf,file_unit,"  index = where(longitude(*,0) ge 180)"
+    printf,file_unit,"  index = where(longitude[*,0] ge 180)"
     printf,file_unit,$
-    "  if ((360 - max(longitude(*,0)) + min(longitude(*,0))) le lon_spacing) $"
+    "  if ((360 - max(longitude[*,0]) + min(longitude[*,0])) le lon_spacing) $"
     printf,file_unit,"    then begin"
     printf,file_unit,$
-    "    for i = 0, num_lat - 1 do oplot,[xx(index,i),xx(0:index(0)-1,i)],$"
+    "    for i = 0, num_lat - 1 do oplot,[xx(index,i),xx(0:index[0]-1,i)],$"
     printf,file_unit,$
-    "                                    [y(index,i),y(0:index(0)-1,i)]"
+    "                                    [y(index,i),y(0:index[0]-1,i)]"
     printf,file_unit,"  endif else begin"
     printf,file_unit,"    for i = 0,num_lat - 1 do begin"
-    printf,file_unit,"      oplot,xx(0:index(0) - 1,i),y(0:index(0) - 1,i)"
+    printf,file_unit,"      oplot,xx(0:index[0] - 1,i),y(0:index[0] - 1,i)"
     printf,file_unit,"      oplot,xx(index,i),y(index,i)"
     printf,file_unit,"    endfor"
     printf,file_unit,"  endelse"
@@ -271,15 +271,15 @@ if ((map ge 0) and (map le 22)) then begin
     printf,file_unit,";LABELS"
     printf,file_unit,$
     "; Label latitude and longitude lines and orient the labels correctly."
-    printf,file_unit,"if (lat_index(0) ne -1) then $"
+    printf,file_unit,"if (lat_index[0] ne -1) then $"
     printf,file_unit,"xyouts,xx(0,lat_index),y(0,lat_index),$"
     printf,file_unit,"       strcompress(string(long(latitude(0,lat_index))))"
     printf,file_unit,$
-    "index = where(abs(latitude(0,*)) eq min(abs(latitude(0,*))))"
+    "index = where(abs(latitude[0,*]) eq min(abs(latitude[0,*])))"
     printf,file_unit,$
-    "xyouts,xx(lon_index,index(0)),y(lon_index,index(0)),orientation=90,$"
+    "xyouts,xx(lon_index,index[0]),y(lon_index,index[0]),orientation=90,$"
     printf,file_unit,$
-"       strcompress(string(long(longitude(lon_index,index(0))))),alignment=0.5"
+"       strcompress(string(long(longitude(lon_index,index[0])))),alignment=0.5"
   endif
 
 ; SPHERICAL CUBE PROJECTIONS
@@ -306,37 +306,37 @@ endif else begin
   "; Correctly adjust the x and y values for display purposes (they all start "
   printf,file_unit,$
   "; out on the same face)."
-  printf,file_unit,"if (face_0(0) ne -1) then begin"
+  printf,file_unit,"if (face_0[0] ne -1) then begin"
   printf,file_unit,"  x0 = -x(face_0) + 2.d0*x_len"
   printf,file_unit,"  y0 = y(face_0) + y_len"
   printf,file_unit,"  xx(face_0) = x0"
   printf,file_unit,"  yy(face_0) = y0"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_1(0) ne -1) then begin"
+  printf,file_unit,"if (face_1[0] ne -1) then begin"
   printf,file_unit,"  x1 = -x(face_1) + 2.d0*x_len"
   printf,file_unit,"  y1 = y(face_1)"
   printf,file_unit,"  xx(face_1) = x1"
   printf,file_unit,"  yy(face_1) = y1"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_2(0) ne -1) then begin"
+  printf,file_unit,"if (face_2[0] ne -1) then begin"
   printf,file_unit,"  x2 = -x(face_2) + x_len"
   printf,file_unit,"  y2 = y(face_2)"
   printf,file_unit,"  xx(face_2) = x2"
   printf,file_unit,"  yy(face_2) = y2"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_3(0) ne -1) then begin"
+  printf,file_unit,"if (face_3[0] ne -1) then begin"
   printf,file_unit,"  x3 = -x(face_3)"
   printf,file_unit,"  y3 = y(face_3)"
   printf,file_unit,"  xx(face_3) = x3"
   printf,file_unit,"  yy(face_3) = y3"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_4(0) ne -1) then begin"
+  printf,file_unit,"if (face_4[0] ne -1) then begin"
   printf,file_unit,"  x4 = -x(face_4) - x_len"
   printf,file_unit,"  y4 = y(face_4)"
   printf,file_unit,"  xx(face_4) = x4"
   printf,file_unit,"  yy(face_4) = y4"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_5(0) ne -1) then begin"
+  printf,file_unit,"if (face_5[0] ne -1) then begin"
   printf,file_unit,"  x5 = -x(face_5) + 2.d0*x_len"
   printf,file_unit,"  y5 = y(face_5) - y_len"
   printf,file_unit,"  xx(face_5) = x5"
@@ -346,28 +346,28 @@ endif else begin
   printf,file_unit,""
   printf,file_unit,$
   "; Define plot ranges by finding which faces are actually used."
-  printf,file_unit,"if (face_4(0) ne -1) then x_low = -3*x_len/2 $"
-  printf,file_unit,"else if (face_3(0) ne -1) then x_low = -x_len/2 $"
-  printf,file_unit,"else if (face_2(0) ne -1) then x_low = x_len/2 $"
+  printf,file_unit,"if (face_4[0] ne -1) then x_low = -3*x_len/2 $"
+  printf,file_unit,"else if (face_3[0] ne -1) then x_low = -x_len/2 $"
+  printf,file_unit,"else if (face_2[0] ne -1) then x_low = x_len/2 $"
   printf,file_unit,$
-  "else if ((face_1(0) ne -1) or (face_0(0) ne -1) or (face_5(0) ne -1)) $"
+  "else if ((face_1[0] ne -1) or (face_0[0] ne -1) or (face_5[0] ne -1)) $"
   printf,file_unit,"then x_low = 3*x_len/2"
   printf,file_unit,$
-  "if ((face_1(0) ne -1) or (face_5(0) ne -1) or (face_0(0) ne -1)) $"
+  "if ((face_1[0] ne -1) or (face_5[0] ne -1) or (face_0[0] ne -1)) $"
   printf,file_unit,"  then x_high = 5*x_len/2 $"
-  printf,file_unit,"else if (face_2(0) ne -1) then x_high = 3*x_len/2 $"
-  printf,file_unit,"else if (face_3(0) ne -1) then x_high = x_len/2 $"
-  printf,file_unit,"else if (face_4(0) ne -1) then x_high = -x_len/2"
-  printf,file_unit,"if (face_5(0) ne -1) then y_low = -3*y_len/2 $"
+  printf,file_unit,"else if (face_2[0] ne -1) then x_high = 3*x_len/2 $"
+  printf,file_unit,"else if (face_3[0] ne -1) then x_high = x_len/2 $"
+  printf,file_unit,"else if (face_4[0] ne -1) then x_high = -x_len/2"
+  printf,file_unit,"if (face_5[0] ne -1) then y_low = -3*y_len/2 $"
   printf,file_unit,$
-  "else if ((face_1(0) ne -1) or (face_3(0) ne -1) or (face_2(0) ne -1) or $"
-  printf,file_unit,"   (face_4(0) ne -1)) then y_low = -y_len/2 $"
-  printf,file_unit,"else if (face_0(0) ne -1) then y_low = y_len/2"
-  printf,file_unit,"if (face_0(0) ne -1) then y_high = 3*y_len/2 $"
+  "else if ((face_1[0] ne -1) or (face_3[0] ne -1) or (face_2[0] ne -1) or $"
+  printf,file_unit,"   (face_4[0] ne -1)) then y_low = -y_len/2 $"
+  printf,file_unit,"else if (face_0[0] ne -1) then y_low = y_len/2"
+  printf,file_unit,"if (face_0[0] ne -1) then y_high = 3*y_len/2 $"
   printf,file_unit,$
-  "else if ((face_1(0) ne -1) or (face_3(0) ne -1) or (face_2(0) ne -1) or $"
-  printf,file_unit,"   (face_4(0) ne -1)) then y_high = y_len/2 $"
-  printf,file_unit,"else if (face_5(0) ne -1) then y_high = -y_len/2"
+  "else if ((face_1[0] ne -1) or (face_3[0] ne -1) or (face_2[0] ne -1) or $"
+  printf,file_unit,"   (face_4[0] ne -1)) then y_high = y_len/2 $"
+  printf,file_unit,"else if (face_5[0] ne -1) then y_high = -y_len/2"
 
   printf,file_unit,""
   printf,file_unit,"; Plot the points calculated by wcssph2xy."
@@ -380,10 +380,10 @@ endif else begin
   "; Set-up an array with the correct ordering of indices to connect the"
   printf,file_unit,"; latitude lines correctly on faces 1-4."
   printf,file_unit,"face_ind = intarr(1)"
-  printf,file_unit,"if (face_4(0) ne -1) then face_ind = [face_ind,face_4]"
-  printf,file_unit,"if (face_3(0) ne -1) then face_ind = [face_ind,face_3]"
-  printf,file_unit,"if (face_2(0) ne -1) then face_ind = [face_ind,face_2]"
-  printf,file_unit,"if (face_1(0) ne -1) then face_ind = [face_ind,face_1]"
+  printf,file_unit,"if (face_4[0] ne -1) then face_ind = [face_ind,face_4]"
+  printf,file_unit,"if (face_3[0] ne -1) then face_ind = [face_ind,face_3]"
+  printf,file_unit,"if (face_2[0] ne -1) then face_ind = [face_ind,face_2]"
+  printf,file_unit,"if (face_1[0] ne -1) then face_ind = [face_ind,face_1]"
   printf,file_unit,"; Draw the latitude lines on faces 1-4"
   printf,file_unit,"if (n_elements(face_ind) gt 1) then begin"
   printf,file_unit,"  face_ind = face_ind(1:*)"
@@ -391,7 +391,7 @@ endif else begin
   printf,file_unit,"  yyy = yy(face_ind)"
   printf,file_unit,"  for i = 0,num_lat - 1 do begin"
   printf,file_unit,"    index = where(latitude(face_ind) eq latitude(0,i))"
-  printf,file_unit,"    if (index(0) ne -1) then begin"
+  printf,file_unit,"    if (index[0] ne -1) then begin"
   printf,file_unit,"      tempx = xxx(index)"
   printf,file_unit,"      tempy = yyy(index)"
   printf,file_unit,"      index = sort(tempx)"
@@ -416,25 +416,25 @@ endif else begin
   printf,file_unit,""
   printf,file_unit,"; Draw latitude lines on faces 0 and 5"
   printf,file_unit,"  for i = 0,num_lat - 1 do begin"
-  printf,file_unit,"    if (face_0(0) ne -1) then begin"
+  printf,file_unit,"    if (face_0[0] ne -1) then begin"
   printf,file_unit,"      index = where(latitude(face_0) eq latitude(0,i))"
-  printf,file_unit,"      if (index(0) ne -1) then begin"
+  printf,file_unit,"      if (index[0] ne -1) then begin"
   printf,file_unit,$
   "        if ((360 - abs(longitude(0,0) - longitude(n_elements(x) - 1))) $"
   printf,file_unit,"                                    le lon_spacing) then $"
   printf,file_unit,$
-  "          oplot,[x0(index),x0(index(0))],[y0(index),y0(index(0))] $"
+  "          oplot,[x0(index),x0(index[0])],[y0(index),y0(index[0])] $"
   printf,file_unit,"        else oplot,x0(index),y0(index)"
   printf,file_unit,"      endif"
   printf,file_unit,"    endif"
-  printf,file_unit,"    if (face_5(0) ne -1) then begin"
+  printf,file_unit,"    if (face_5[0] ne -1) then begin"
   printf,file_unit,"      index = where(latitude(face_5) eq latitude(0,i))"
-  printf,file_unit,"      if (index(0) ne -1) then begin"
+  printf,file_unit,"      if (index[0] ne -1) then begin"
   printf,file_unit,$
   "        if ((360 - abs(longitude(0,0) - longitude(n_elements(x) - 1))) $"
   printf,file_unit,"                                    le lon_spacing) then $"
   printf,file_unit,$
-  "          oplot,[x5(index),x5(index(0))],[y5(index),y5(index(0))] $"
+  "          oplot,[x5(index),x5(index[0])],[y5(index),y5(index[0])] $"
   printf,file_unit,"        else oplot,x5(index),y5(index)" 
   printf,file_unit,"      endif"
   printf,file_unit,"    endif"
@@ -442,49 +442,49 @@ endif else begin
   printf,file_unit,""
   printf,file_unit,"; Draw boxes around each face and draw longitude lines"
   printf,file_unit,"  for i = 0,num_lon - 1 do begin"
-  printf,file_unit,"    if (face_4(0) ne -1) then begin"
+  printf,file_unit,"    if (face_4[0] ne -1) then begin"
   printf,file_unit,"      index = where(longitude(face_4) eq longitude(i,0))"
-  printf,file_unit,"      if (index(0) ne -1) then oplot,x4(index),y4(index)"
+  printf,file_unit,"      if (index[0] ne -1) then oplot,x4(index),y4(index)"
   printf,file_unit,"      plots,[-3*x_len/2,-x_len/2],[-y_len/2,-y_len/2]"
   printf,file_unit,"      plots,[-3*x_len/2,-x_len/2],[y_len/2,y_len/2]"
   printf,file_unit,"      plots,[-x_len/2,-x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"      plots,[-3*x_len/2,-3*x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"    endif"
-  printf,file_unit,"    if (face_2(0) ne -1) then begin"
+  printf,file_unit,"    if (face_2[0] ne -1) then begin"
   printf,file_unit,"      index = where(longitude(face_2) eq longitude(i,0))"
-  printf,file_unit,"      if (index(0) ne -1) then oplot,x2(index),y2(index)"
+  printf,file_unit,"      if (index[0] ne -1) then oplot,x2(index),y2(index)"
   printf,file_unit,"      plots,[x_len/2,3*x_len/2],[-y_len/2,-y_len/2]"
   printf,file_unit,"      plots,[x_len/2,3*x_len/2],[y_len/2,y_len/2]"
   printf,file_unit,"      plots,[x_len/2,x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"      plots,[3*x_len/2,3*x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"    endif"
-  printf,file_unit,"    if (face_3(0) ne -1) then begin"
+  printf,file_unit,"    if (face_3[0] ne -1) then begin"
   printf,file_unit,"      index = where(longitude(face_3) eq longitude(i,0))"
-  printf,file_unit,"      if (index(0) ne -1) then oplot,x3(index),y3(index)"
+  printf,file_unit,"      if (index[0] ne -1) then oplot,x3(index),y3(index)"
   printf,file_unit,"      plots,[-x_len/2,x_len/2],[-y_len/2,-y_len/2]"
   printf,file_unit,"      plots,[-x_len/2,x_len/2],[y_len/2,y_len/2]"
   printf,file_unit,"      plots,[-x_len/2,-x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"      plots,[x_len/2,x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"    endif"
-  printf,file_unit,"    if (face_1(0) ne -1) then begin"
+  printf,file_unit,"    if (face_1[0] ne -1) then begin"
   printf,file_unit,"      index = where(longitude(face_1) eq longitude(i,0))"
-  printf,file_unit,"      if (index(0) ne -1) then oplot,x1(index),y1(index)"
+  printf,file_unit,"      if (index[0] ne -1) then oplot,x1(index),y1(index)"
   printf,file_unit,"      plots,[3*x_len/2,5*x_len/2],[-y_len/2,-y_len/2]"
   printf,file_unit,"      plots,[3*x_len/2,5*x_len/2],[y_len/2,y_len/2]"
   printf,file_unit,"      plots,[3*x_len/2,3*x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"      plots,[5*x_len/2,5*x_len/2],[-y_len/2,y_len/2]"
   printf,file_unit,"    endif"
-  printf,file_unit,"    if (face_0(0) ne -1) then begin"
+  printf,file_unit,"    if (face_0[0] ne -1) then begin"
   printf,file_unit,"      index = where(longitude(face_0) eq longitude(i,0))"
-  printf,file_unit,"      if (index(0) ne -1) then oplot,x0(index),y0(index)"
+  printf,file_unit,"      if (index[0] ne -1) then oplot,x0(index),y0(index)"
   printf,file_unit,"      plots,[3*x_len/2,5*x_len/2],[y_len/2,y_len/2]"
   printf,file_unit,"      plots,[3*x_len/2,5*x_len/2],[3*y_len/2,3*y_len/2]"
   printf,file_unit,"      plots,[3*x_len/2,3*x_len/2],[y_len/2,3*y_len/2]"
   printf,file_unit,"      plots,[5*x_len/2,5*x_len/2],[y_len/2,3*y_len/2]"
   printf,file_unit,"    endif"
-  printf,file_unit,"    if (face_5(0) ne -1) then begin"
+  printf,file_unit,"    if (face_5[0] ne -1) then begin"
   printf,file_unit,"      index = where(longitude(face_5) eq longitude(i,0))"
-  printf,file_unit,"      if (index(0) ne -1) then oplot,x5(index),y5(index)"
+  printf,file_unit,"      if (index[0] ne -1) then oplot,x5(index),y5(index)"
   printf,file_unit,"      plots,[3*x_len/2,5*x_len/2],[-3*y_len/2,-3*y_len/2]"
   printf,file_unit,"      plots,[3*x_len/2,5*x_len/2],[-y_len/2,-y_len/2]"
   printf,file_unit,"      plots,[3*x_len/2,3*x_len/2],[-3*y_len/2,-y_len/2]"
@@ -493,15 +493,15 @@ endif else begin
   printf,file_unit,"  endfor"
   printf,file_unit,""
   printf,file_unit,";LABELS"
-  printf,file_unit,"  if (lat_index(0) ne -1) then $"
+  printf,file_unit,"  if (lat_index[0] ne -1) then $"
   printf,file_unit,"  xyouts,xx(0,lat_index),yy(0,lat_index),$"
   printf,file_unit,"         strcompress(string(long(latitude(0,lat_index))))"
   printf,file_unit,$
-  "  index = where(abs(latitude(0,*)) eq min(abs(latitude(0,*))))"
+  "  index = where(abs(latitude[0,*]) eq min(abs(latitude[0,*])))"
   printf,file_unit,$
-  "  xyouts,xx(lon_index,index(0)),yy(lon_index,index(0)),orientation=90,$"
+  "  xyouts,xx(lon_index,index[0]),yy(lon_index,index[0]),orientation=90,$"
   printf,file_unit,$
-"       strcompress(string(long(longitude(lon_index,index(0))))),alignment=0.5"
+"       strcompress(string(long(longitude(lon_index,index[0])))),alignment=0.5"
 endelse
 end
 
@@ -539,26 +539,26 @@ printf,file_unit,$
 "    lat_delta,max(latitude_inv) + lat_delta],xstyle = 4,ystyle = 4"
 printf,file_unit,"; Draw lines connecting equal longitudes"
 printf,file_unit,$
-       "for i = 0,num_lon - 1 do oplot,longitude_inv(i,*),latitude_inv(i,*)"
+       "for i = 0,num_lon - 1 do oplot,longitude_inv[i,*],latitude_inv[i,*]"
 printf,file_unit,"; Draw lines connecting equal latitudes"
 printf,file_unit,$
-"if ((min(longitude(*,0)) ge 180) or (max(longitude(*,0)) lt 180)) then $"
+"if ((min(longitude[*,0]) ge 180) or (max(longitude[*,0]) lt 180)) then $"
 printf,file_unit,$
-      "  for i = 0,num_lat - 1 do oplot,longitude_inv(*,i),latitude_inv(*,i) $"
+      "  for i = 0,num_lat - 1 do oplot,longitude_inv[*,i],latitude_inv[*,i] $"
 printf,file_unit,"else begin"
-printf,file_unit,"  index = where(longitude(*,0) ge 180)"
+printf,file_unit,"  index = where(longitude[*,0] ge 180)"
 printf,file_unit,$
-"  if ((360 - max(longitude(*,0)) + min(longitude(*,0))) le lon_spacing) $"
+"  if ((360 - max(longitude[*,0]) + min(longitude[*,0])) le lon_spacing) $"
 printf,file_unit,"    then begin"
 printf,file_unit,$
        "    for i = 0, num_lat - 1 do oplot,[longitude_inv(index,i),$"
 printf,file_unit,$
-       "      longitude_inv(0:index(0)-1,i)],[latitude_inv(index,i),$"
-printf,file_unit,"      latitude_inv(0:index(0)-1,i)]"
+       "      longitude_inv(0:index[0]-1,i)],[latitude_inv(index,i),$"
+printf,file_unit,"      latitude_inv(0:index[0]-1,i)]"
 printf,file_unit,"  endif else begin"
 printf,file_unit,"    for i = 0,num_lat - 1 do begin"
 printf,file_unit,$
-   "      oplot,longitude_inv(0:index(0) - 1,i),latitude_inv(0:index(0) - 1,i)"
+   "      oplot,longitude_inv(0:index[0] - 1,i),latitude_inv(0:index[0] - 1,i)"
 printf,file_unit,"      oplot,longitude_inv(index,i),latitude_inv(index,i)"
 printf,file_unit,"    endfor"
 printf,file_unit,"  endelse"
@@ -573,10 +573,10 @@ printf,file_unit,$
 printf,file_unit,$
     "       orientation=90,strcompress(string(long(longitude(lon_index,0)))),$"
 printf,file_unit,"       alignment=0.5"
-printf,file_unit,"lat1_index = where(longitude(0,*) eq max(longitude(0,*)))"
-printf,file_unit,"if (lat_index(0) ne -1) then $"
+printf,file_unit,"lat1_index = where(longitude[0,*] eq max(longitude[0,*]))"
+printf,file_unit,"if (lat_index[0] ne -1) then $"
 printf,file_unit,$
-"xyouts,max(longitude_inv) + lon_delta,latitude_inv(lat1_index(0),lat_index),$"
+"xyouts,max(longitude_inv) + lon_delta,latitude_inv(lat1_index[0],lat_index),$"
 printf,file_unit,$
 "       alignment=0.5,strcompress(string(long(latitude(0,lat_index))))"
 
@@ -598,7 +598,7 @@ until ((key eq "y") or (key eq "n"))
 
 if (key eq "y") then begin
   printf,file_unit,"poles = where(abs(abs(latitude_inv) - 9.d1) le 573.d-4)"
-  printf,file_unit,"if (poles(0) ne -1) then $"
+  printf,file_unit,"if (poles[0] ne -1) then $"
   printf,file_unit,$
     "  latitude_inv(poles) = latitude_inv(poles)/abs(latitude_inv(poles))*9.d1"
 endif
@@ -617,7 +617,7 @@ printf,file_unit,"good = where(norm ne 0.d0)"
 printf,file_unit,"lon_diff(good) = lon_diff(good)/norm(good)"
 printf,file_unit,"lat_diff = dist*(latitude-latitude_inv)"
 printf,file_unit,"lat_diff(good) = lat_diff(good)/norm(good)"
-printf,file_unit,"velovect,lon_diff,lat_diff,longitude(*,0),latitude(0,*)"
+printf,file_unit,"velovect,lon_diff,lat_diff,longitude[*,0],latitude[0,*]"
 end
 
 ; PROCEDURE FOR OPTION 3
@@ -633,27 +633,27 @@ if ((map ge 0) and (map le 22)) then begin
          "plot,xx,y,psym = 3,xrange = [min(xx) - xdelta,max(xx) + xdelta],$"
   printf,file_unit,$
          "yrange = [min(y) - ydelta,max(y) + ydelta],xstyle = 4,ystyle = 4"
-  printf,file_unit,"zero_ind = where(latitude(0,*) eq min(abs(latitude(0,*))))"
+  printf,file_unit,"zero_ind = where(latitude[0,*] eq min(abs(latitude[0,*])))"
   printf,file_unit,$
-  "xyouts,xx(lon_index,zero_ind(0)),y(lon_index,zero_ind(0)),$"
+  "xyouts,xx(lon_index,zero_ind[0]),y(lon_index,zero_ind[0]),$"
   printf,file_unit,$
-  "       strcompress(string(long(longitude(lon_index,zero_ind(0))))),$"
+  "       strcompress(string(long(longitude(lon_index,zero_ind[0])))),$"
   printf,file_unit,"       alignment = 0.5"
   printf,file_unit,$
-  "zero_ind2 = where(longitude(*,0) eq min(abs(longitude(*,0))))"
+  "zero_ind2 = where(longitude[*,0] eq min(abs(longitude[*,0])))"
   printf,file_unit,$
-  "xyouts,xx(zero_ind2(0),lat_index),y(zero_ind2(0),lat_index),$"
+  "xyouts,xx(zero_ind2[0],lat_index),y(zero_ind2[0],lat_index),$"
   printf,file_unit,$
-  "       strcompress(string(long(latitude(zero_ind2(0),lat_index)))),$"
+  "       strcompress(string(long(latitude(zero_ind2[0],lat_index)))),$"
   printf,file_unit,"       alignment = 0.5"
   printf,file_unit,$
-  "non_zero_ind = where(longitude(*,0) ne min(abs(longitude(*,0))))
+  "non_zero_ind = where(longitude[*,0] ne min(abs(longitude[*,0])))
   printf,file_unit,$
-  "for i = 0,zero_ind(0) - 1 do $"
+  "for i = 0,zero_ind[0] - 1 do $"
   printf,file_unit,$
   "    oplot,xx(non_zero_ind,i),y(non_zero_ind,i),psym=4"
   printf,file_unit,$
-  "for i = zero_ind(0) + 1,n_elements(longitude(0,*)) - 1 do $"
+  "for i = zero_ind[0] + 1,n_elements(longitude[0,*]) - 1 do $"
   printf,file_unit,"   oplot,xx(non_zero_ind,i),y(non_zero_ind,i),psym=4"
 endif else begin
   printf,file_unit,"xx = -x"
@@ -683,37 +683,37 @@ endif else begin
   "; Correctly adjust the x and y values for display purposes (they all start "
   printf,file_unit,$
   "; out on the same face)."
-  printf,file_unit,"if (face_0(0) ne -1) then begin"
+  printf,file_unit,"if (face_0[0] ne -1) then begin"
   printf,file_unit,"  x0 = -x(face_0)"
   printf,file_unit,"  y0 = y(face_0) - y_len"
   printf,file_unit,"  xx(face_0) = x0"
   printf,file_unit,"  yy(face_0) = y0"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_1(0) ne -1) then begin"
+  printf,file_unit,"if (face_1[0] ne -1) then begin"
   printf,file_unit,"  x1 = -x(face_1) + 2.d0*x_len"
   printf,file_unit,"  y1 = y(face_1)"
   printf,file_unit,"  xx(face_1) = x1"
   printf,file_unit,"  yy(face_1) = y1"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_2(0) ne -1) then begin"
+  printf,file_unit,"if (face_2[0] ne -1) then begin"
   printf,file_unit,"  x2 = -x(face_2) + x_len"
   printf,file_unit,"  y2 = y(face_2)"
   printf,file_unit,"  xx(face_2) = x2"
   printf,file_unit,"  yy(face_2) = y2"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_3(0) ne -1) then begin"
+  printf,file_unit,"if (face_3[0] ne -1) then begin"
   printf,file_unit,"  x3 = -x(face_3)"
   printf,file_unit,"  y3 = y(face_3)"
   printf,file_unit,"  xx(face_3) = x3"
   printf,file_unit,"  yy(face_3) = y3"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_4(0) ne -1) then begin"
+  printf,file_unit,"if (face_4[0] ne -1) then begin"
   printf,file_unit,"  x4 = -x(face_4) - x_len"
   printf,file_unit,"  y4 = y(face_4)"
   printf,file_unit,"  xx(face_4) = x4"
   printf,file_unit,"  yy(face_4) = y4"
   printf,file_unit,"endif"
-  printf,file_unit,"if (face_5(0) ne -1) then begin"
+  printf,file_unit,"if (face_5[0] ne -1) then begin"
   printf,file_unit,"  x5 = -x(face_5)"
   printf,file_unit,"  y5 = y(face_5) - y_len"
   printf,file_unit,"  xx(face_5) = x5"
@@ -723,55 +723,55 @@ endif else begin
   printf,file_unit,""
   printf,file_unit,$
   "; Define plot ranges by finding which faces are actually used."
-  printf,file_unit,"if (face_4(0) ne -1) then x_low = -3*x_len/2 $"
-  printf,file_unit,"else if (face_3(0) ne -1) then x_low = -x_len/2 $"
-  printf,file_unit,"else if (face_2(0) ne -1) then x_low = x_len/2 $"
+  printf,file_unit,"if (face_4[0] ne -1) then x_low = -3*x_len/2 $"
+  printf,file_unit,"else if (face_3[0] ne -1) then x_low = -x_len/2 $"
+  printf,file_unit,"else if (face_2[0] ne -1) then x_low = x_len/2 $"
   printf,file_unit,$
-  "else if ((face_1(0) ne -1) or (face_5(0) ne -1) or (face_0(0) ne -1)) $"
+  "else if ((face_1[0] ne -1) or (face_5[0] ne -1) or (face_0[0] ne -1)) $"
   printf,file_unit,"  then x_low = 3*x_len/2"
-  printf,file_unit,"if (face_4(0) ne -1) then x_high = -x_len/2 $"
-  printf,file_unit,"else if (face_2(0) ne -1) then x_high = 3*x_len/2 $"
-  printf,file_unit,"else if (face_3(0) ne -1) then x_high = x_len/2 $"
+  printf,file_unit,"if (face_4[0] ne -1) then x_high = -x_len/2 $"
+  printf,file_unit,"else if (face_2[0] ne -1) then x_high = 3*x_len/2 $"
+  printf,file_unit,"else if (face_3[0] ne -1) then x_high = x_len/2 $"
   printf,file_unit,$
-  "else if ((face_1(0) ne -1) or (face_5(0) ne -1) or (face_0(0) ne -1)) $"
+  "else if ((face_1[0] ne -1) or (face_5[0] ne -1) or (face_0[0] ne -1)) $"
   printf,file_unit,"  then x_high = 5*x_len/2"
-  printf,file_unit,"if (face_5(0) ne -1) then y_low = -3*y_len/2 $"
+  printf,file_unit,"if (face_5[0] ne -1) then y_low = -3*y_len/2 $"
   printf,file_unit,$
-  "else if ((face_4(0) ne -1) or (face_3(0) ne -1) or (face_2(0) ne -1) or $"
-  printf,file_unit,"   (face_1(0) ne -1)) then y_low = -y_len/2 $"
-  printf,file_unit,"else if (face_0(0) ne -1) then y_low = y_len/2"
-  printf,file_unit,"if (face_0(0) ne -1) then y_high = 3*y_len/2 $"
+  "else if ((face_4[0] ne -1) or (face_3[0] ne -1) or (face_2[0] ne -1) or $"
+  printf,file_unit,"   (face_1[0] ne -1)) then y_low = -y_len/2 $"
+  printf,file_unit,"else if (face_0[0] ne -1) then y_low = y_len/2"
+  printf,file_unit,"if (face_0[0] ne -1) then y_high = 3*y_len/2 $"
   printf,file_unit,$
-  "else if ((face_1(0) ne -1) or (face_3(0) ne -1) or (face_2(0) ne -1) or $"
-  printf,file_unit,"   (face_4(0) ne -1)) then y_high = y_len/2 $"
-  printf,file_unit,"else if (face_5(0) ne -1) then y_high = -y_len/2"
+  "else if ((face_1[0] ne -1) or (face_3[0] ne -1) or (face_2[0] ne -1) or $"
+  printf,file_unit,"   (face_4[0] ne -1)) then y_high = y_len/2 $"
+  printf,file_unit,"else if (face_5[0] ne -1) then y_high = -y_len/2"
 
   printf,file_unit,""
   printf,file_unit,"; Plot the points calculated by wcssph2xy."
   printf,file_unit,$
   "plot,xx,yy,psym=3,xrange=[x_low,x_high],yrange=[y_low,y_high],xstyle=4,$"
   printf,file_unit,"     ystyle=4"
-  printf,file_unit,"zero_ind = where(latitude(0,*) eq min(abs(latitude(0,*))))"
+  printf,file_unit,"zero_ind = where(latitude[0,*] eq min(abs(latitude[0,*])))"
   printf,file_unit,$
-  "xyouts,xx(lon_index,zero_ind(0)),yy(lon_index,zero_ind(0)),$"
+  "xyouts,xx(lon_index,zero_ind[0]),yy(lon_index,zero_ind[0]),$"
   printf,file_unit,$
-  "       strcompress(string(long(longitude(lon_index,zero_ind(0))))),$"
+  "       strcompress(string(long(longitude(lon_index,zero_ind[0])))),$"
   printf,file_unit,"       alignment = 0.5"
   printf,file_unit,$
-  "zero_ind2 = where(longitude(*,0) eq min(abs(longitude(*,0))))"
+  "zero_ind2 = where(longitude[*,0] eq min(abs(longitude[*,0])))"
   printf,file_unit,$
-  "xyouts,xx(zero_ind2(0),lat_index),yy(zero_ind2(0),lat_index),$"
+  "xyouts,xx(zero_ind2[0],lat_index),yy(zero_ind2[0],lat_index),$"
   printf,file_unit,$
-  "       strcompress(string(long(latitude(zero_ind2(0),lat_index)))),$"
+  "       strcompress(string(long(latitude(zero_ind2[0],lat_index)))),$"
   printf,file_unit,"       alignment = 0.5"
   printf,file_unit,$
-  "non_zero_ind = where(longitude(*,0) ne min(abs(longitude(*,0))))
+  "non_zero_ind = where(longitude[*,0] ne min(abs(longitude[*,0])))
   printf,file_unit,$
-  "for i = 0,zero_ind(0) - 1 do $"
+  "for i = 0,zero_ind[0] - 1 do $"
   printf,file_unit,$
   "    oplot,xx(non_zero_ind,i),yy(non_zero_ind,i),psym=4"
   printf,file_unit,$
-  "for i = zero_ind(0) + 1,n_elements(longitude(0,*)) - 1 do $"
+  "for i = zero_ind[0] + 1,n_elements(longitude[0,*]) - 1 do $"
   printf,file_unit,"   oplot,xx(non_zero_ind,i),yy(non_zero_ind,i),psym=4"
 endelse
 end
@@ -874,7 +874,7 @@ print,"  11    Mercator                     12    Cylindrical equal area"
 print,"  13    Conical perspective          14    Conical equidistant"
 print,"  15    Conical equal area           16    Conical orthomorphic"
 print,"  17    Bonne's equal area           18    Polyconic"
-print,"  19    Sinusoidal                   20    Parabolic"
+print,"  19    Sanson-Flmsteed              20    Parabolic"
 print,"  21    Hammer-Aitoff                22    Mollweide"
 print,"  23    Cobe Quadrilateralized Spherical Cube"
 print,"  24    Quadrilateralized Spherical Cube"
@@ -959,10 +959,12 @@ case map of
   13:begin
     read,$
     "COP: Lower angle at which cone intersects sphere (range = [-90,upper]):",$
-    param1
+    theta1
     read,$
     "COP: Upper angle at which cone intersects sphere (range = [lower,90]):",$
-    param2
+    theta2
+    param1 = (theta2+theta1)/2.
+    param2 = abs(theta2 - theta1)/2
   end
   14:begin
     read,$
@@ -1051,8 +1053,8 @@ if (choice eq 1) then begin
     printf,file_unit,"min_lat = -75"
     printf,file_unit,"max_lat = 75"
   endif else if (map eq 13) then begin
-    printf,file_unit,"min_lat = -90 > ((param1 + param2)/2 - 90 + 15)"
-    printf,file_unit,"max_lat = 90 < ((param1 + param2)/2 + 90 - 15)"
+    printf,file_unit,"min_lat = -90 > (param1 - 90 + 15)"
+    printf,file_unit,"max_lat =  90 < (param1 + 90 - 15)"
   endif else if (map eq 16) then begin
     printf,file_unit,"min_lat = -75"
     printf,file_unit,"max_lat = 90"
@@ -1087,9 +1089,9 @@ printf,file_unit,"lon = dindgen(num_lon)*lon_spacing + min_lon"
 printf,file_unit,"num_lat = long((max_lat - min_lat)/lat_spacing) + 1"
 printf,file_unit,"lat = dindgen(num_lat)*lat_spacing + min_lat"
 printf,file_unit,"longitude = dblarr(num_lon,num_lat)"
-printf,file_unit,"for i = 0,num_lat - 1 do longitude(*,i) = lon"
+printf,file_unit,"for i = 0,num_lat - 1 do longitude[*,i] = lon"
 printf,file_unit,"latitude = dblarr(num_lon,num_lat)"
-printf,file_unit,"for i = 0,num_lon - 1 do latitude(i,*) = lat"
+printf,file_unit,"for i = 0,num_lon - 1 do latitude[i,*] = lat"
 
 printf,file_unit,""
 printf,file_unit,";CONVERSION"
@@ -1154,13 +1156,13 @@ printf,file_unit,$
 printf,file_unit,$
 "; all latitude and longitude lines are labeled."
 printf,file_unit,$
-  "lon_index = where(long(longitude(*,0))/30 eq longitude(*,0)/30.)"
+  "lon_index = where(long(longitude[*,0])/30 eq longitude[*,0]/30.)"
 printf,file_unit,$
-  "lat_index = where(long(latitude(0,*))/30 eq latitude(0,*)/30.)"
+  "lat_index = where(long(latitude[0,*])/30 eq latitude[0,*]/30.)"
 printf,file_unit,$
-  "if (lat_index(0) eq -1) then lat_index = indgen(n_elements(latitude(0,*)))"
+  "if (lat_index[0] eq -1) then lat_index = indgen(n_elements(latitude[0,*]))"
 printf,file_unit,$
-  "if (lon_index(0) eq -1) then lon_index = indgen(n_elements(longitude(*,0)))"
+  "if (lon_index[0] eq -1) then lon_index = indgen(n_elements(longitude[*,0]))"
 
 printf,file_unit,""
 
