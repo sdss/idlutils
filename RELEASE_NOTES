@@ -1,14 +1,19 @@
 
-DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
-               parameter for OmegaL.
+
 BSPLINE_FIT: Test if SSET is set by demanding that it be a structure;
                as it was, setting SSET=0 would not cause it to self-initialize.
+DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
+               parameter for OmegaL.
 FIND: Need to index some loops with type LONG to allow for large
                numbers of stars.
 MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
                tables for string-type elements.  Bug fix to allow appending
                string elements that are different lengths, though if the
                appended strings are longer then they get truncated.
+NW_RGB_MAKE: Trivial bug fixes; change SPLOG statements to PRINT.
+USNOB2FITS: Compress files locally, then copy to target.
+
+mangle1.4/src/mrb_balkanize.c: Add QA print statement for number of caps.
 
 -------------------------------------------------------------------------------
 v5_0_3 (August 18, 2004) running on IDL 5.4 - 6.0
