@@ -2776,7 +2776,7 @@ if (not (xregistered('atv_mapphot'))) then begin
                          format = '("Object counts: ",g12.6)' )
     
     state.photresult_id = $
-      widget_label(mapphot_base, $
+      widget_label(eapphot_base, $
                    value = tmp_string2, $
                    uvalue = 'photresult', $
                    /frame)

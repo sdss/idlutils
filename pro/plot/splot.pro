@@ -1473,7 +1473,7 @@ pro soplot, x, y, autoscale=autoscale, xrange=xrange, yrange=yrange, $
       if (N_params() EQ 1) then begin
          pstruct = { $
           type: 'points',   $     ; points
-          x: lindgen(N_elelements(x)),      $     ; x coordinate
+          x: lindgen(N_elements(x)),      $     ; x coordinate
           y: x,             $     ; y coordinate
           options: options  $     ; plot keyword options
          }
