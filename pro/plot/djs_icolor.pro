@@ -66,6 +66,7 @@ function djs_icolor, color
              + 13 * (color EQ 'grey') $
              + 13 * (color EQ 'gray') $
              + 14 * (color EQ 'light red') $
+             + 14 * (color EQ 'pink') $
              + 15 * (color EQ 'cyan green') $
              + 16 * (color EQ 'light green') $
              + 17 * (color EQ 'light yellow') $
