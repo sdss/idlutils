@@ -832,6 +832,7 @@ src/slatec/efcmn.f -text
 src/slatec/enorm.f -text
 src/slatec/erf.f -text
 src/slatec/erfc.f -text
+src/slatec/export.h -text
 src/slatec/f2c.h -text
 src/slatec/fdjac3.f -text
 src/slatec/fdump.f -text
@@ -901,6 +902,7 @@ src/spheregroup/spherematch.c -text
 src/trace/Makefile -text
 src/trace/evilmath.c -text
 src/trace/evilmath.h -text
+src/trace/export.h -text
 src/trace/trace_crude.c -text
 src/trace/trace_fweight.c -text
 src/trace/trace_gweight.c -text
