@@ -12,15 +12,17 @@
 ;   x,y         - data values
 ; OPTIONAL INPUTS:
 ;   weight      - weighting for data points; default unity
-;   xnpix       - width of greyscale grid in pixels; default to 0.3*sqrt(N)
+;   xnpix       - width of greyscale grid in pixels; default 0.3*sqrt(N)
 ;   ynpix       - height of greyscale grid in pixels; same default
-;   xrange      - x range; default to minmax(x)
-;   yrange      - y range; default to minmax(y)
-;   levels      - contour levels; default to [0.5,0.75,0.95,0.99,0.999]
+;   xrange      - x range; default minmax(x)
+;   yrange      - y range; default minmax(y)
+;   levels      - contour levels; default [0.5,0.75,0.95,0.99,0.999]
+;   quantiles   - quantiles to plot on conditional plot; default [0.25,0.5,0.75]
 ;   satfrac     - fraction of pixels to saturate in plot; default 0.0
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
 ;   sqrt        - make greyscale on SQRT stretch
+;   conditional - normalize each column separately
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
@@ -37,6 +39,7 @@ pro hogg_scatterplot, x,y,weight=weight, $
                       levels=levels,satfrac=satfrac, $
                       xvec=xvec,yvec=yvec,grid=grid,cumimage=cumimage, $
                       sqrt=sqrt, $
+                      conditional=conditional,quantiles=quantiles, $
                       _EXTRA=KeywordsForPlot
 
 ; set defaults
@@ -47,33 +50,45 @@ if not keyword_set(ynpix) then ynpix= ceil(0.3*sqrt(ndata)) > 10
 if not keyword_set(xrange) then xrange= minmax(x)
 if not keyword_set(yrange) then yrange= minmax(y)
 if not keyword_set(levels) then levels= [0.5,0.75,0.95,0.99,0.999]
+if not keyword_set(quantiles) then quantiles= [0.25,0.5,0.75]
+nquantiles= n_elements(quantiles)
 if not keyword_set(satfrac) then satfrac= 0.0
 
 ; check inputs
 ; [tbd]
 
-; make axes and empty grid
+; make axes
 plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
   _EXTRA=KeywordsForPlot,/nodata
-grid= dblarr(xnpix,ynpix)
 
-; snap to grid
+; snap points to grid
 xvec= xrange[0]+(xrange[1]-xrange[0])*(dindgen(xnpix)+0.5)/double(xnpix)
 yvec= yrange[0]+(yrange[1]-yrange[0])*(dindgen(ynpix)+0.5)/double(ynpix)
 xgrid= floor(xnpix*(x-xrange[0])/(xrange[1]-xrange[0]))
 ygrid= floor(ynpix*(y-yrange[0])/(yrange[1]-yrange[0]))
+
+; make and fill 1-d grid first, if necessary
+if keyword_set(conditional) then begin
+    colnorm= dblarr(xnpix)
+    inxgrid= where(xgrid GE 0 AND xgrid LT xnpix,ninxgrid)
+    for ii=0L,ninxgrid-1 do $
+      colnorm[xgrid[inxgrid[ii]]]= colnorm[xgrid[inxgrid[ii]]] $
+        +weight[inxgrid[ii]]
+endif
+
+; make and fill 2-d grid
+grid= dblarr(xnpix,ynpix)
 ingrid= where(xgrid GE 0 AND xgrid LT xnpix AND $
               ygrid GE 0 AND ygrid LT ynpix,ningrid)
+for ii=0L,ningrid-1 do $
+  grid[xgrid[ingrid[ii]],ygrid[ingrid[ii]]]= $
+    grid[xgrid[ingrid[ii]],ygrid[ingrid[ii]]]+weight[ingrid[ii]]
 
-; restrict to on-grid points
-if ningrid GT 0 then begin
-    xgrid= xgrid[ingrid]
-    ygrid= ygrid[ingrid]
-    wgrid= weight[ingrid]
-
-; fill grid
-    for ii=0L,ningrid-1 do $
-      grid[xgrid[ii],ygrid[ii]]= grid[xgrid[ii],ygrid[ii]]+wgrid[ii]
+; renormalize columns, if necessary
+if keyword_set(conditional) then begin
+    zeroindx= where(grid EQ 0.0,nzeroindx)
+    grid= grid/(colnorm#(dblarr(ynpix)+1))
+    if nzeroindx GT 0 then grid[zeroindx]= 0.0
 endif
 
 ; scale greyscale
@@ -92,17 +107,34 @@ tvgrid= (tvgrid < mingrey) > maxgrey
 tv, tvgrid,xrange[0],yrange[0],/data, $
   xsize=(xrange[1]-xrange[0]),ysize=(yrange[1]-yrange[0]) 
 
+; compute quantiles, if necessary
+if keyword_set(conditional) then begin
+    qq= dblarr(xnpix,nquantiles)
+    for ii=0L,xnpix-1 do begin
+        inii= where(xgrid EQ ii,ninii)
+	if ninii GT 0 then begin
+            qq[ii,*]= weighted_quantile(y[inii],weight[inii],quant=quantiles)
+        endif
+    endfor
+
+; plot quantiles, if necessary
+    for ii=0L,nquantiles-1 do begin
+        oplot, xvec,qq[*,ii],psym=10
+    endfor
+endif else begin
+
 ; cumulate image
-cumindex= reverse(sort(grid))
-cumimage= dblarr(xnpix,ynpix)
-cumimage[cumindex]= total(grid[cumindex],/cumulative) 
+    cumindex= reverse(sort(grid))
+    cumimage= dblarr(xnpix,ynpix)
+    cumimage[cumindex]= total(grid[cumindex],/cumulative) 
 
 ; renormalize the cumulated image so it really represents fractions of the
 ; *total* weight
-cumimage= cumimage/total(weight)
+    cumimage= cumimage/total(weight)
 
 ; overplot contours
-contour, cumimage,xvec,yvec,levels=levels,thick=1,/overplot
+    contour, cumimage,xvec,yvec,levels=levels,thick=1,/overplot
+endelse
 
 ; re-plot axes (yes, this is a HACK)
 !P.MULTI[0]= !P.MULTI[0]+1
