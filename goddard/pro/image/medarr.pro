@@ -12,7 +12,7 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       This routine became partially obsolete in V5.6 with the introduction
 ;       of the DIMENSION keyword to the intrinsic MEDIAN() function.   However,
 ;       it is  still useful if a input mask is needed (though it is much 
-;       faster to set invalid pixels to NAN values.)
+;       faster to set invalid pixels to NaN values.)
 ; CALLING SEQUENCE:
 ;       MEDARR, inarr, outarr, [ mask, output_mask ]
 ; INPUTS:
@@ -76,7 +76,9 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       Faster execution for odd number of images   W. Landsman July 2000
 ;       V5.4 fix for change in SIZE() definition of undefined variable 
 ;                W. Landsman/E. Young   May 2001
-;       Use MEDIAN(/DIMEN) for V5.6 or later   W. Lansdman   November 2002
+;       Use MEDIAN(/DIMEN) for V5.6 or later   W. Landsman   November 2002
+;       Use keyword_set() instead of ARG_present() to test for presence of mask
+;           parameter  D. Hanish/W. Landsman   June 2003
 ;-
  On_error,2
 ;                       Check parameters.
@@ -100,14 +102,14 @@ PRO medarr, inarr, outarr, mask, output_mask
  narr = s[3]
  type = s[s[0] + 1]
  outarr = make_array( dimen = [ncol,nrow], /NOZERO, TYPE = type )
- if n_params(0) gt 2 then $
+ if N_params() GT 2 then $
         output_mask = make_array (dimen = [ncol,nrow], VALUE = 1b)
  even = (narr mod 2) EQ 0
 
 ;                       Combine the input arrays into the output array.
 
  mask_given = 0b
- if arg_present(mask) then begin
+ if keyword_set(mask) then begin
     sm = size(mask)
     if N_elements(mask) LT 4 then $ 
            message,'Input mask not valid... must have 3 dimensions'
@@ -118,7 +120,7 @@ PRO medarr, inarr, outarr, mask, output_mask
        message,'Mask not valid... must be same shape as input cube.'
     endelse
  endif
- 
+
  if not mask_given then begin
 ; If the /EVEN keyword is not needed, then it is faster not to use it
 
