@@ -53,23 +53,28 @@ end
 ;
 ;+------------------------------------------------------------------------  
 ;-
-function usno_read, racen, deccen, rad, path=path
+function usno_read, racen, deccen, rad, path=path, catname=catname
 
-; set path
+; -------- Set path: first check for catalogue name and environment var
+  if catname eq 'USNO-A2.0' then path = getenv('USNOA20_PATH')
+  if catname eq 'USNO-SA2.0' then path = getenv('USNOSA20_PATH')
+  if catname eq 'USNO-B1.0' then path = getenv('USNOB10_PATH')
+
+; -------- If catname not set, or those envvars not set, then default
+;          to usno_path
   IF (NOT keyword_set(path)) THEN path = getenv('USNO_PATH')
-  IF (NOT keyword_set(path)) THEN path = getenv('USNOA20_PATH')
   IF (NOT keyword_set(path)) THEN message, 'set environment variables or path keyword'
 
 ; which catalogue?
   testfile = concat_dir(path, 'zone*.cat')
   flist = findfile(testfile, count=ct)
-  catname = ct ne 0 ? 'USNO-A' : 'USNO-B'
+  cattype = ct ne 0 ? 'USNO-A' : 'USNO-B'
 
 ; Read the stars - loop over pointings
   nstar = n_elements(racen)
   FOR i=0, nstar-1 DO BEGIN 
      radi = i < (n_elements(rad)-1) ; don't require that rad be array
-     usno_cone, path, racen[i], deccen[i], rad[radi], zdata, catname=catname
+     usno_cone, path, racen[i], deccen[i], rad[radi], zdata, cattype=cattype
      data = n_elements(data) EQ 0 ? temporary(zdata) : [[data], [zdata]]
   ENDFOR 
 
@@ -79,7 +84,7 @@ function usno_read, racen, deccen, rad, path=path
   if (ntot EQ 0) then return, 0
 
 ; -------- For USNO-A (or SA)
-  if strupcase(catname) eq 'USNO-A' then begin 
+  if strupcase(cattype) eq 'USNO-A' then begin 
 
      usnostruct = create_usnostruct(ntot)
 
@@ -97,7 +102,7 @@ function usno_read, racen, deccen, rad, path=path
   endif 
 
 ; -------- For USNO-B
-  if strupcase(catname) eq 'USNO-B' then begin 
+  if strupcase(cattype) eq 'USNO-B' then begin 
 
      usnostruct = usnob10_extract(data)
 
