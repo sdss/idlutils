@@ -1,0 +1,53 @@
+;+
+; NAME:
+;   write_mangle_polygons
+; PURPOSE:
+;   Create a "polygon" format ascii file that mangle will understand
+; CALLING SEQUENCE:
+;   write_mangle_polygons, outfile, polygons [, id, weight, str]
+; INPUTS:
+;   outfile - output file name
+;   polygons - arrays of structures (eg those made by construct_field_polygon) 
+; OPTIONAL INPUTS:
+;   id - array of id's for polygons (should be unique)
+;   weight - arrays of weights for each polygon
+;   str - area of each polygon?
+; OUTPUTS:
+; OPTIONAL INPUT/OUTPUTS:
+; COMMENTS:
+;   The format is lossy --- it only outputs "used" caps, and it throws 
+;   away auxiliary information about each polygon.
+; EXAMPLES:
+; BUGS:
+; PROCEDURES CALLED:
+; REVISION HISTORY:
+;   07-Nov-2002  Written by MRB (NYU)
+;-
+;------------------------------------------------------------------------------
+pro write_mangle_polygons, outfile, polygons, id
+
+if(n_elements(id) eq 0) then id=lindgen(n_elements(polygons))
+
+openw,unit,outfile,/get_lun
+printf,unit,format='(%"%d polygons")',n_elements(polygons)
+for i=0L, n_elements(polygons)-1L do begin
+    nused_caps=0
+    for j=0L, polygons[i].ncaps-1L do $
+      if(is_cap_used(polygons[i].use_caps,j)) then $
+         nused_caps=nused_caps+1
+    printf,unit, $
+      format='(%"polygon %22d ( %d caps, %13.7f weight, %20.16f str):")', $
+      id[i],nused_caps,polygons[i].weight,polygons[i].str
+    for j=0L, polygons[i].ncaps-1L do begin
+        if(is_cap_used(polygons[i].use_caps,j)) then $
+           printf,unit, $
+           format='(%"%20.16f %20.16f %20.16f %20.16f")', $
+           polygons[i].caps[j].x[0], $
+           polygons[i].caps[j].x[1], $
+           polygons[i].caps[j].x[2], $
+           polygons[i].caps[j].cm
+    endfor
+endfor
+free_lun,unit
+
+end
