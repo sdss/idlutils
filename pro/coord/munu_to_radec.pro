@@ -84,9 +84,16 @@ pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl, $
    cirrange, ra
 
    if (arg_present(phi)) then begin
-      cosdec = cos(dec/r2d)
-      phi = r2d $
-       * atan(cosdec^2 * cosmu * sini, cosnu * cosi - sinmu * sinnu * sini)
+;      cosdec = cos(dec/r2d)
+;      phi = r2d $
+;       * atan(cosdec^2 * cosmu * sini, cosnu * cosi - sinmu * sinnu * sini)
+
+      ; Compute the rotation angle numerically, since the returned value
+      ; from the above seems to be incorrect???
+      dradeg = 180.d0 / !dpi
+      radec_to_munu, ra, dec, mu1, nu1, node=node, incl=incl
+      radec_to_munu, ra, dec+0.01d0, mu2, nu2, node=node, incl=incl
+      phi = atan(mu2-mu1,nu2-nu1) * dradeg
    endif
 
    return
