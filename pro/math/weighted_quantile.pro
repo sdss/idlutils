@@ -1,9 +1,13 @@
-;
-; Given a set of values and weights, 
-; returns the weighted quantile or 
-; set of quantiles
-; MB 07/02
-;
+;+
+; NAME:
+;   weighted_quantile
+; PURPOSE:
+;   given a set of values and weights, returns weighted quantile(s)
+; CALLING SEQUENCE:
+;   quantile= weighted_quantile(values,weights,quant=0.25)
+; REVISION HISTORY
+;   2002-07-ish  written - Blanton
+;-
 function weighted_quantile,values,weights,quant=quant
 
 if(n_elements(values) le 1) then return,values[0]
