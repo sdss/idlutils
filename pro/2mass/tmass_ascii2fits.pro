@@ -105,7 +105,7 @@ pro tmass_ascii2fits, infile, outfile
   free_lun, rlun
 
   print, 'Writing ', outfile
-  mwrfits, a, outfile, /create
+  mwrfits_chunks, a, outfile, chunksize=50000, /create
 
   return
 end
