@@ -628,6 +628,7 @@ pro/math/sshift.pro -text
 pro/math/sshift2d.pro -text
 pro/math/stdev.pro -text
 pro/misc/blackbody.pro -text
+pro/misc/catfits.pro -text
 pro/misc/cpbackup.pro -text
 pro/misc/djs_batch.pro -text
 pro/misc/djs_filepath.pro -text
