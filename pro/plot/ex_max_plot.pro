@@ -22,7 +22,7 @@
 ;   npix_x,npix_y  BLANTON -- COMMENT YOUR CODE
 ;   sqrt         BLANTON -- COMMENT YOUR CODE
 ;   log          BLANTON -- COMMENT YOUR CODE
-;   axis_char_scale BLANTON -- COMMENT YOUR CODE
+;   axis_char_scale  BLANTON -- COMMENT YOUR CODE
 ;   overpoints   BLANTON -- COMMENT YOUR CODE
 ;   model_npix_factor  BLANTON -- COMMENT YOUR CODE
 ; KEYWORDS:
@@ -52,7 +52,8 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  axis_char_scale=axis_char_scale, npix_x=npix_x, $
                  npix_y=npix_y,overpoints=overpoints, $
                  model_npix_factor=model_npix_factor
-                 
+
+; set defaults
   if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
   if(NOT keyword_set(npix_x)) then npix_x= 32L
   if(NOT keyword_set(npix_y)) then npix_y= 32L
@@ -184,20 +185,26 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
       if d1 EQ d2 then begin
         !Y.RANGE= [-0.1,1.1]/1.5*amp1/sqrt(var1[d1,d1])
       endif
-      djs_plot,[0],[1],/nodata
+      xinterval= hogg_interval(!X.RANGE*axis_char_scale)
+      yinterval= hogg_interval(!Y.RANGE*axis_char_scale)
+      djs_plot,[0],[1],/nodata,xtickinterval=xinterval,ytickinterval=yinterval
 
 ; make extra axis labels where necessary
       if bottomside then begin
-        axis,!X.RANGE[0],!Y.RANGE[0],xaxis=0,xtickinterval=hogg_interval(!X.RANGE*axis_char_scale),xtitle=label[d1],xcharsize=axis_char_scale
+        axis,!X.RANGE[0],!Y.RANGE[0],xaxis=0,xtickinterval=xinterval, $
+          xtitle=label[d1],xcharsize=axis_char_scale
       endif
       if topside then begin
-        axis,!X.RANGE[0],!Y.RANGE[1],xaxis=1,xtickinterval=hogg_interval(!X.RANGE*axis_char_scale),xtitle=label[d1],xcharsize=axis_char_scale
+        axis,!X.RANGE[0],!Y.RANGE[1],xaxis=1,xtickinterval=xinterval, $
+          xtitle=label[d1],xcharsize=axis_char_scale
       endif
       if leftside AND (d1 NE d2) then begin
-        axis,!X.RANGE[0],!Y.RANGE[0],yaxis=0,ytickinterval=hogg_interval(!Y.RANGE*axis_char_scale),ytitle=label[d2],ycharsize=axis_char_scale
+        axis,!X.RANGE[0],!Y.RANGE[0],yaxis=0,ytickinterval=yinterval, $
+          ytitle=label[d2],ycharsize=axis_char_scale
       endif
       if rightside AND (d1 NE d2) then begin
-        axis,!X.RANGE[1],!Y.RANGE[0],yaxis=1,ytickinterval=hogg_interval(!Y.RANGE*axis_char_scale),ytitle=label[d2],ycharsize=axis_char_scale
+        axis,!X.RANGE[1],!Y.RANGE[0],yaxis=1,ytickinterval=yinterval, $
+          ytitle=label[d2],ycharsize=axis_char_scale
       endif
 
 ; reset image and set x and y pixel centers
@@ -315,7 +322,8 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
 
 ; re-make axes (yes, this is a HACK)
           !P.MULTI[0]= !P.MULTI[0]+1
-          djs_plot,[0],[1],/nodata
+          djs_plot,[0],[1],/nodata, $
+            xtickinterval=xinterval,ytickinterval=yinterval
 
 ; cumulate the image
           cumindex= reverse(sort(image))
@@ -416,7 +424,8 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
 	endif
 
         !P.MULTI[0]= !P.MULTI[0]+1
-        djs_plot,[0],[0],/nodata,xstyle=1,ystyle=5
+        djs_plot,[0],[0],/nodata,xstyle=1,ystyle=5, $
+          xtickinterval=xinterval,ytickinterval=yinterval
       endif
 
 ; end loops and close file
