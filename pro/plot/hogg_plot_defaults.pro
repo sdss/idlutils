@@ -8,8 +8,14 @@
 ; REVISION HISTORY:
 ;   2003-01-08  written - Hogg
 ;-
-pro hogg_plot_defaults, axis_char_scale=axis_char_scale
+pro hogg_plot_defaults, axis_char_scale=axis_char_scale, $
+                        xold=xold, yold=yold, pold=pold, $
+                        default_font=default_font
 if not keyword_set(axis_char_scale) then axis_char_scale=1.0
+if not keyword_set(default_font) then default_font='!6'
+pold=!P
+xold=!X
+yold=!Y
 !P.FONT= -1
 !P.BACKGROUND= djs_icolor('white')
 !P.COLOR= djs_icolor('black')
@@ -33,4 +39,5 @@ if not keyword_set(axis_char_scale) then axis_char_scale=1.0
 !Y.OMARGIN= 0.6*!X.OMARGIN
 !Y.RANGE= 0
 !Y.TICKS= !X.TICKS
+xyouts, 0,0, default_font
 end

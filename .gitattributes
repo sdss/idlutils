@@ -68,6 +68,7 @@ data/filters/wf2f555wsys.txt -text
 data/filters/wf2f606wsys.txt -text
 data/filters/wf2f702wsys.txt -text
 data/filters/wf2f814wsys.txt -text
+data/sdss/sdssMaskbits.par -text
 doc/Makefile -text
 doc/mk_doc -text
 doc/www/.cvsignore -text
@@ -867,6 +868,8 @@ pro/plot/imgscl.pro -text
 pro/plot/restore_sysvars.pro -text
 pro/plot/splot.pro -text
 pro/plot/sysvars.pro -text
+pro/sdss/sdss_flagname.pro -text
+pro/sdss/sdss_flagval.pro -text
 pro/slatec/bvalu2d.pro -text
 pro/slatec/efc2d.pro -text
 pro/slatec/efcmn.pro -text
