@@ -704,6 +704,7 @@ pro/djsphot/quick_photfrac.pro -text
 pro/djsphot/squarephot.pro -text
 pro/dust/bh_rdfort.pro -text
 pro/dust/djs_planck.pro -text
+pro/dust/dust_getmap.pro -text
 pro/dust/dust_getval.pro -text
 pro/dust/dust_intfilter.pro -text
 pro/dust/dust_sdssfilter.pro -text
