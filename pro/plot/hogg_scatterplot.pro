@@ -29,6 +29,11 @@
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
 ;   grid        - the greyscale grid [xnpix,ynpix] that was plotted
 ;   cumimage    - the cumulated grid [xnpix,ynpix] that was contoured
+; COMMENTS:
+;   When output, the grid is in units of unit_weight, not in 
+;   unit_weight per unit_x per unit_y (as you would want to do if 
+;   you wanted to directly compare two results using different
+;   resolution grids); the user will have to convert to that themselves.
 ; BUGS:
 ;   Doesn't check inputs.
 ;   Ought to specify saturation not as a fraction of pixels, but as a fraction
@@ -42,7 +47,8 @@
 pro hogg_scatterplot, x,y,weight=weight, $
                       xrange=xrange,yrange=yrange,xnpix=xnpix,ynpix=ynpix, $
                       levels=levels,satfrac=satfrac, $
-                      xvec=xvec,yvec=yvec,grid=grid,cumimage=cumimage, $
+                      xvec=xvec,yvec=yvec,grid=grid, $
+                      cumimage=cumimage, $
                       exponent=exponent, $
                       conditional=conditional, $
                       quantiles=quantiles, $
@@ -85,12 +91,13 @@ if keyword_set(conditional) then begin
 endif
 
 ; make and fill 2-d grid
+; (this puts the grid in units of the weights --- not per unitx per unity)
 grid= dblarr(xnpix,ynpix)
 ingrid= where(xgrid GE 0 AND xgrid LT xnpix AND $
               ygrid GE 0 AND ygrid LT ynpix,ningrid)
 for ii=0L,ningrid-1 do $
   grid[xgrid[ingrid[ii]],ygrid[ingrid[ii]]]= $
-    grid[xgrid[ingrid[ii]],ygrid[ingrid[ii]]]+weight[ingrid[ii]]
+  grid[xgrid[ingrid[ii]],ygrid[ingrid[ii]]]+weight[ingrid[ii]]
 
 ; renormalize columns, if necessary
 if keyword_set(conditional) then begin

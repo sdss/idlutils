@@ -26,7 +26,8 @@
 pro read_mangle_vertices, infile, vertices, id, maxnvertices=maxnvertices
 
 if(n_params() lt 2) then begin
-    print, 'Syntax - read_mangle_vertices, infile, vertices [, id]'
+print, 'Syntax - read_mangle_vertices, infile, vertices [, id]'
+return
 endif
 
 if(NOT keyword_set(maxnvertices)) then maxnvertices=15
