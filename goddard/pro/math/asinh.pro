@@ -26,9 +26,12 @@ function asinh, x
 ; REVISION HISTORY:
 ;     Written W. Landsman                 February, 2001
 ;     Work for multi-dimensional arrays  W. Landsman    August 2002
+;     Simplify coding, and work for scalars again  W. Landsman October 2003
 ;-
+ On_error,2
+ 
+ y = alog( abs(x) + sqrt( x^2 + 1.0) )
 
- y = alog( abs(x) + sqrt( x^2 + 1.d0) )
  index = where(x LT 0 ,count)
  if count GT 0 then y[index] = -y[index]
 
