@@ -36,7 +36,6 @@ function comdis, z,OmegaM,OmegaL
       for zz=0.5*dz,z,dz do dC= dC+dz*dcomdisdz(zz,OmegaM,OmegaL)
     endelse
   endif else begin
-    help, nz
     for i=0L,nz-1L do dC[i]= comdis(z[i],OmegaM,OmegaL)
   endelse
   return, dC

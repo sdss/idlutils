@@ -28,7 +28,8 @@
 ;-
 ;------------------------------------------------------------------------------
 pro set_use_caps, polygon, list, allow_doubles=allow_doubles, add=add, $
-                  tol=tol, use_caps=use_caps
+                  tol=tol, use_caps=use_caps, $
+                  allow_neg_doubles=allow_neg_doubles
 
 if(NOT keyword_set(add)) then polygon.use_caps=0
 if(n_elements(tol) eq 0) then tol=1.D-10
@@ -51,7 +52,8 @@ if(NOT keyword_set(allow_doubles)) then begin
                               polygon[ipoly].use_caps and (NOT (2L)^j) $
                             else if(abs((*polygon[ipoly].caps)[i].cm+ $
                                         (*polygon[ipoly].caps)[j].cm) $
-                                    lt tol) then $
+                                    lt tol AND $
+                                    NOT keyword_set(allow_neg_doubles)) then $
                               polygon[ipoly].use_caps= $
                               polygon[ipoly].use_caps and (NOT (2L)^j) 
                         endif

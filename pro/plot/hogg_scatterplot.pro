@@ -65,6 +65,16 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       cumimage=cumimage, $
                       _EXTRA=KeywordsForPlot
 
+if(n_params() lt 2) then begin
+    print,'Syntax - hogg_scatterplot, x, y [, weight=, xnpix=, ynpix=, '
+    print,'          xrange=, yrange=, levels=, quantiles=, cthick=, '
+    print,'          exponent=, satfrac=, darkest=, /internal_weight, '
+    print,'          /conditional, labelcont=, xvec=, yvec=, grid=, '
+    print,'          cumimage= ]'
+    print,'(also takes keywords associated with plot)'
+    return
+endif
+
 ; set defaults
 ndata= n_elements(xxx)
 if not keyword_set(weight) then weight= dblarr(ndata)+1.0

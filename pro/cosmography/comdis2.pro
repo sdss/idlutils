@@ -32,7 +32,12 @@
 ;   2002-Feb-20  Look-up table to increase speed; Blanton (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function comdis2, z,OmegaM,OmegaL,cdtable=cdtable,zmaxtable=zmaxtable
+function comdis2, z,OmegaM,OmegaL,cdtable=in_cdtable,zmaxtable=in_zmaxtable
+
+common com_comdis2, cdtable, zmaxtable
+
+if(n_elements(in_cdtable) gt 0) then cdtable=in_cdtable
+if(n_elements(in_zmaxtable) gt 0) then zmaxtable=in_zmaxtable
 
 ; Set up the table?
   if(NOT keyword_set(zmaxtable)) then zmaxtable=10.d

@@ -40,6 +40,15 @@ pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
                             nodata=nodata, manyd=manyd, title=title, $
                             _EXTRA=KeywordsForHoggScatterplot
 
+if(n_params() lt 2) then begin
+    print,'Syntax - hogg_manyd_scatterplot, weight, point [, psfilename, '
+    print,'           nsig=, label=, range=, xdims=, ydims=, axis_char_scale=,'
+    print,'           default_font=, xnpix=, ynpix=, /nodata, manyd=, '
+    print,'           title= ]'
+    print,'(also takes keywords associated with hogg_scatterplot)'
+    return
+endif
+
 ; check dimensions
 ndata= n_elements(weight)                    ; N
 dimen= n_elements(point)/n_elements(weight)  ; d
