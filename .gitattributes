@@ -591,6 +591,7 @@ pro/fits/djs_modfits.pro -text
 pro/fits/djs_readmany.pro -text
 pro/fits/fits_wait.pro -text
 pro/fits/modfitscard.pro -text
+pro/fits/rdss_fits.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/populate_image.pro -text
 pro/image/qzap.pro -text
