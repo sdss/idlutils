@@ -12,8 +12,8 @@
 ;   return all matches
 ;
 ; CALLING SEQUENCE:
-;   spherematch( ra1, dec1, ra2, dec2, matchlength, match1, match2, $
-;     		       distance12, [maxmatch=] )
+;   spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
+;     		       distance12, [maxmatch=maxmatch]
 ;
 ; INPUTS:
 ;   ra1         - ra coordinates in degrees (N-dimensional array)
