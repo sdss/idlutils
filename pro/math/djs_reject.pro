@@ -3,7 +3,7 @@
 ;   djs_reject
 ;
 ; PURPOSE:
-;   Routine to...
+;   Routine to reject points when doing an iterative fit to data.
 ;
 ; CALLING SEQUENCE:
 ;   qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
@@ -41,9 +41,10 @@
 ;                points can alternate from being rejected to not rejected.
 ;
 ; OUTPUTS:
-;   qdone      - Set to 0 if the points marked as rejected in OUTMASK changes;
-;                set to 1 when the same points are rejected as from a previous
-;                call.
+;   qdone      - Set to 0 if YMODEL is not set (usually the first call to
+;                this routine), or if the points marked as rejected in OUTMASK
+;                changes; set to 1 when the same points are rejected as from
+;                a previous call.
 ;
 ; OPTIONAL OUTPUTS:
 ;
@@ -81,8 +82,7 @@
 ;     maxiter = 10
 ;     outmask = 0 * ydata + 1 ; Begin with all points good
 ;     while (NOT keyword_set(qdone) AND iiter LE maxiter) do begin
-;        if (iiter GT 0) then qdone = djs_reject(ydata, ymodel, $
-;         outmask=outmask, upper=2, lower=2)
+;        qdone = djs_reject(ydata, ymodel, outmask=outmask, upper=2, lower=2)
 ;        res = polyfitw(xdata, ydata, outmask/sigma^2, 2, ymodel)
 ;        iiter = iiter + 1
 ;     endwhile
@@ -127,6 +127,11 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
    endif else begin
       outmask = make_array(size=size(ydata), /byte) + 1
    endelse
+
+   if (NOT keyword_set(ymodel)) then begin
+      if (keyword_set(inmask)) then outmask[*] = inmask
+      return, 0
+   endif
 
    if (keyword_set(sigma) AND keyword_set(invvar)) then $
     message, 'Cannot set both SIGMA and INVVAR'
