@@ -60,10 +60,16 @@
 ;------------------------------------------------------------------------------
 pro yanny_add_comment, rawline, comments
 
+   ;
+   ; test for pure comment line
+   ;
+   trimmed = strtrim(rawline,2)
+   if (strpos(trimmed,'#') EQ 0) then return
+
    if (size(comments,/tname) EQ 'INT') then $
-    comments = rawline $
+    comments = trimmed $
    else $
-    comments = [comments, rawline]
+    comments = [comments, trimmed]
 
    return
 end
