@@ -28,7 +28,7 @@ pro tmass_writeslice, ind, a, outpath
 
 ; -------- write FITS file
   fname = string('2mass-', ind, format='(A,I4.4)')
-  path = string(outpath, (ind/10), format='(A,I3.3)')+'/'
+  path = concat_dir(outpath, string(ind/10, format='(I3.3)'))+'/'
   spawn, 'mkdir -p '+ path
   print, 'Writing '+path+fname+'.fits'
   mwrfits, a, path+fname+'.fits', /create
