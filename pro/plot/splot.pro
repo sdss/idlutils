@@ -439,15 +439,25 @@ pro splot_zoom, zchange, recenter = recenter
    ; Routine to do zoom in/out and recentering of image
 
    case zchange of
-      'in': begin
+      'x-in': begin
          state.xrange = state.mphys[0] $
           + [-0.25, 0.25] * (state.xrange[1] - state.xrange[0])
          if (state.yfix EQ 'float') then splot_autoscale_y
       end
-      'out': begin
+      'y-in': begin
+         state.yrange = state.mphys[1] $
+          + [-0.25, 0.25] * (state.yrange[1] - state.yrange[0])
+         if (state.xfix EQ 'float') then splot_autoscale_x
+      end
+      'x-out': begin
          state.xrange = state.mphys[0] $
           + [-1.0, 1.0] * (state.xrange[1] - state.xrange[0])
          if (state.yfix EQ 'float') then splot_autoscale_y
+      end
+      'y-out': begin
+         state.yrange = state.mphys[1] $
+          + [-1.0, 1.0] * (state.yrange[1] - state.yrange[0])
+         if (state.xfix EQ 'float') then splot_autoscale_x
       end
       'one': begin
          splot_autoscale_x
@@ -580,10 +590,13 @@ pro splot_event, event
       endif
 
       if (event.type EQ 0) then begin
+         ; If the shift key is pressed at the same time as a mouse button,
+         ; then zoom/pan in Y instead of X.
+         xycase = keyword_set(event.modifiers) ? 'y' : 'x'
          case event.press of
-            1: splot_zoom, 'in', /recenter
+            1: splot_zoom, xycase+'-in', /recenter
             2: splot_zoom, 'none', /recenter
-            4: splot_zoom, 'out', /recenter
+            4: splot_zoom, xycase+'-out', /recenter
             else: print,  'trouble in splot_event, mouse zoom'
          endcase
       endif
@@ -1168,9 +1181,12 @@ pro splot_help
    h = [h,'YMAX:            Shows Y maximum for display; click to modify']
    h = [h, '']
    h = [h,'MOUSE:']
-   h = [h,'                 Button1 = Zoom in & center']
-   h = [h,'                 Button2 = Center on current position']
-   h = [h,'                 Button3 = Zoom out & center']
+   h = [h,'                 Button1 = X-Zoom in & center']
+   h = [h,'                 Button2 = X-Center on current position']
+   h = [h,'                 Button3 = X-Zoom out & center']
+   h = [h,'                 Shift+Button1 = Y-Zoom in & center']
+   h = [h,'                 Shift+Button2 = Y-Center on current position']
+   h = [h,'                 Shift+Button3 = Y-Zoom out & center']
    h = [h,'BUTTONS:']
    h = [h,'Zoom1:           Rescale XRANGE and YRANGE to show all data']
    h = [h,'Done:            Quits SPLOT']
