@@ -47,15 +47,6 @@ if { [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | head -1c` != "v" ] } ; then
    exit
 fi
 
-# Find the flavor of this machine (e.g., "Linux+2" or "IRIX+6").
-
-FLAVOR=`echo $SETUP_UPS | sed -ne 's/.*-f \([^ ]*\).*/\1/p'`
-echo Installing PRODNAME=$PRODNAME PRODVERS=$PRODVERS FLAVOR=$FLAVOR.
-if [ -z $FLAVOR ] ; then
-   echo "FLAVOR could not be determined from environment variable SETUP_UPS"
-   exit
-fi
-
 # Must have "ups" in the path and PRODUCTS and SDSS_ROOT must be defined.
 # Hmmm... always source this file to get the right "setup" command.
 #if { [ -z `which \ups` ] || [ -z "$PRODUCTS" ] || [ -z "$SDSS_ROOT" ] } ; then
@@ -76,6 +67,15 @@ fi
 #else
 #   echo "UPS already appears to be set up."
 #fi
+
+# Find the flavor of this machine (e.g., "Linux+2" or "IRIX+6").
+
+FLAVOR=`echo $SETUP_UPS | sed -ne 's/.*-f \([^ ]*\).*/\1/p'`
+echo Installing PRODNAME=$PRODNAME PRODVERS=$PRODVERS FLAVOR=$FLAVOR.
+if [ -z $FLAVOR ] ; then
+   echo "FLAVOR could not be determined from environment variable SETUP_UPS"
+   exit
+fi
 
 # The following is a hack: Change $SDSS_ROOT to $SDSS_ROOT/$FLAVOR if it
 # appears that's where the code should go.  This is the case at Princeton.
