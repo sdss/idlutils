@@ -173,6 +173,17 @@ pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
 
    return
 end
+;-----------------------------------------------------------------------------
+function getwords,sline
+
+      words = str_sep(sline, '"') ; Divide into words based upon quotes
+      nword = n_elements(words)
+      if (nword GT 2) then words = [str_sep(strtrim(words[0],2), ' '), $
+           words[1:nword-2], str_sep(strtrim(words[nword-1],2), ' ')] $
+      else words = str_sep(sline, ' ') ; Divide into words based upon spaces
+
+      return, words
+end
 ;------------------------------------------------------------------------------
 pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
  quick=quick
@@ -216,7 +227,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
        else rawline = yanny_nextline(ilun)
 
       sline = yanny_strip_commas(rawline)
-      words = str_sep(sline, ' ') ; Divide into words based upon whitespace
+      words = getwords(sline) ; Divide into words and strings
+
       nword = N_elements(words)
 
       if (nword GE 2) then begin
@@ -245,7 +257,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
             while (strmid(sline,0,1) NE '}') do begin
                sline = strcompress(sline)
-               ww = str_sep(sline, ' ')
+               ww = getwords(sline)
 
                if (N_elements(ww) GE 2) then begin
                   i = where(ww[0] EQ tname, ct)
@@ -321,7 +333,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
                ; Split this text line into words
                sline = strcompress( yanny_strip_brackets(sline) )
-               ww = str_sep(sline, ' ')
+               ww = getwords(sline)
+
                i = 1 ; Counter for which word we're currently reading
                      ; Skip the 0-th word since it's the structure name.
 
