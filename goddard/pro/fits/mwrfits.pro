@@ -231,12 +231,14 @@
 ;               Don't use EXECUTE() statement if on a virtual machine
 ;       Version 1.3a Wayne Landsman 2004-5-21
 ;               Fix for variable type arrays
+;       Version 1.4 Wayne Landsman 2004-07-16
+;               Use STRUCT_ASSIGN when modifying structure with pointer tags
 ;              
 ;-
 
 ; What is the current version of this program.
 function mwr_version
-    return, '1.3a'
+    return, '1.4'
 end
     
 
@@ -1000,11 +1002,8 @@ function mwr_retable, input, vtypes
 
     offset = 0L
     tags = tag_names(input);
-    noexecute = 0b
-    if !VERSION.RELEASE GE '6.0' then if lmgr(/vm) then noexecute = 1b
-
-; If on a Virtual Machine, then the EXECUTE statement cannot be used
-    if noexecute then begin 
+;Create an output structure identical to the input structure but with pointers replaced
+; by a 2 word lonarr to point to the heap area
       if vtypes[0].status then begin
         output = CREATE_STRUCT(tags[0],lonarr(2))
       endif else begin
@@ -1018,24 +1017,7 @@ function mwr_retable, input, vtypes
          endelse
       endfor
       output = replicate(temporary(output), N_elements(input) )
-    endif else begin
-       str = "output=replicate({";
-       comma =""
-       for i=0, n_elements(tags) -1 do begin
-          if vtypes[i].status then begin
-             str = str + comma +tags[i] + ":lonarr(2)"
-          endif else begin
-             str = str + comma + tags[i]+ ":input[0].("+strtrim(i,2)+")"
-          endelse
-          comma= ","
-       endfor
-      str = str + "},"+strtrim(n_elements(input),2)+")"
-      stat = execute(str)
-      if stat eq 0 then begin
-         print,'MWRFITS: Error: Unable to create temporary structure for heap'
-         return, 0
-      endif
-    endelse
+      struct_assign, input, output      ;Available since V5.1
 
     for i=0, n_elements(tags)-1 do begin
        if vtypes[i].status then begin
@@ -1131,6 +1113,7 @@ pro mwr_tabledat, lun, input, header, vtypes
     endfor
 
     if n_elements(vtypes) gt 0 then begin
+            
         input = mwr_retable(input, vtypes)
     endif
 
