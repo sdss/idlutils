@@ -22,7 +22,7 @@
 pro tmass_writeslice, ind, a, outpath
 
 ; -------- sort list on RA
-  sind = sort(a.ra)
+  sind = sort(a.tmass_ra)
   a = a[sind]
   delvarx, sind
 
@@ -34,7 +34,7 @@ pro tmass_writeslice, ind, a, outpath
   mwrfits, a, path+fname+'.fits', /create
 
 ; -------- write index (acc) file
-  rah = a.ra/15
+  rah = a.tmass_ra/15
   step = 0.25d
   openw, wlun, path+fname+'.acc', /get_lun
   thisind = 1
@@ -56,7 +56,7 @@ pro tmass_decslice, inpath, outpath
   fileind = 0
   print, 'Reading ', flist[fileind]
   a = mrdfits(flist[fileind], 1)
-  ind = ceil((a.dec+90)*10)-1  ; this is how they did it in the south
+  ind = ceil((a.tmass_dec+90)*10)-1  ; this is how they did it in the south
   if min(ind) lt 0 then stop
   i = min(ind, max=mx)
   while (i lt 1800) do begin 
@@ -74,8 +74,8 @@ pro tmass_decslice, inpath, outpath
         if fileind lt n_elements(flist) then begin 
            print, 'Reading ', flist[fileind]
            a = [aw, mrdfits(flist[fileind], 1)]
-           ind = ceil((a.dec+90)*10)-1
-           if min(a.dec) ge 0 then ind = floor((a.dec+90)*10)
+           ind = ceil((a.tmass_dec+90)*10)-1
+           if min(a.tmass_dec) ge 0 then ind = floor((a.tmass_dec+90)*10)
            mn = min(ind, max=mx)
            if i ne mn then stop ; assert i=mn
         endif else a = aw
