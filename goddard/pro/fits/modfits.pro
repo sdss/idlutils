@@ -6,7 +6,8 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ; PURPOSE:
 ;      Modify a FITS file by updating the header and/or data array.  
 ; EXPLANATION:
-;      The updated header or array cannot change the size of the FITS file.
+;      Since August 2003, the size of the supplied FITS header or data array
+;      does not need to match the size of the existing header or data array.
 ;
 ; CALLING SEQUENCE:
 ;      MODFITS, Filename_or_fcb, Data, [ Header, EXTEN_NO =, ERRMSG=]
@@ -33,7 +34,6 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;               on the MESSAGE routine in IDL.   If no errors are encountered
 ;               then a null string is returned.               
 ;
-;
 ; EXAMPLES:
 ;     (1) Modify the value of the DATE keyword in the primary header of a 
 ;             file TEST.FITS.
@@ -49,10 +49,11 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;               IDL> im = abs(im)                  ;Take absolute values
 ;               IDL> modfits,'test.fits',im        ;Update image array
 ;
-;       (3) Modify the value of the EXTNAME keyword in the first extension
+;       (3) Add some HISTORY records to the FITS header in the first extension
+;               of a file 'test.fits'
 ;       
 ;               IDL> h = headfits('test.fits',/ext)  ;Read first extension hdr
-;               IDL> sxaddpar,h,'EXTNAME','newtable' ;Update EXTNAME value
+;               IDL> sxaddhist,['Comment 1','Comment 2'],h
 ;               IDL> modfits,'test.fits',0,h,/ext    ;Update extension hdr
 ;
 ;       (4) Change 'OBSDATE' keyword to 'OBS-DATE' in every extension in a 
@@ -72,23 +73,24 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;           inheritance convention is adopted.
 ;
 ; NOTES:
-;       MODFITS performs numerous checks to make sure that the DATA and
-;       HEADER are the same size as the data or header currently stored in the 
-;       FITS files.    (More precisely, MODFITS makes sure that the FITS file
-;       would not be altered by a multiple of 2880 bytes.    Thus, for example,
-;       it is possible to add new header lines so long as the total line count 
-;       does not exceed the next multiple of 36.)    MODFITS is best
-;       used for modifying FITS keyword values or array or table elements.
-;       When the size of the data or header have been modified, then a new
-;       FITS file should be written with WRITEFITS.
+;       Use the BLKSHIFT procedure to shift the contents of the FITS file if 
+;       the new data or header differs in size by more than 2880 bytes from the
+;       old data or header.
+;
+;       Also see the procedures FXHMODIFY to add a single FITS keyword to a 
+;       header in a FITS files, and FXBGROW to enlarge the size of a binary 
+;       table.
 ; RESTRICTIONS:
 ;       (1) Cannot be used to modifiy the data in FITS files with random 
 ;           groups or variable length binary tables.   (The headers in such
 ;           files *can* be modified.)
 ;
+;       (2) If a data array but no FITS header is supplied, then MODFITS does 
+;           not check to make sure that the existing header is consistent with
+;           the new data.
 ; PROCEDURES USED:
 ;       Functions:   IS_IEEE_BIG(), N_BYTES(), SXPAR()
-;       Procedures:  CHECK_FITS, FITS_OPEN, FITS_READ, HOST_TO_IEEE
+;       Procedures:  BLKSHIFT, CHECK_FITS, FITS_OPEN, FITS_READ, HOST_TO_IEEE
 ;
 ; MODIFICATION HISTORY:
 ;       Written,    Wayne Landsman          December, 1994
@@ -103,6 +105,8 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;       Update CHECKSUM keywords if already present in header, add padding 
 ;       if new data  size is smaller than old  W.Landsman December 2002
 ;       Only check XTENSION value if EXTEN_NO > 1   W. Landsman Feb. 2003
+;       Correct for unsigned data on little endian machines W. Landsman Apr 2003
+;       Major rewrite to allow changing size of data or header W.L. Aug 2003
 ;-
   On_error,2                    ;Return to user
 
@@ -143,6 +147,8 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
               endif
    endelse
 
+; Was a file name or file control block supplied?
+
    fcbsupplied = size(filename,/TNAME) EQ 'STRUCT'
    if not fcbsupplied then begin 
        fits_open, filename, io,/update,/No_Abort,message=message
@@ -155,58 +161,55 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
        io = filename
    endelse
 
+; Getting starting position of data and header
+
    unit = io.unit
- 
-   fits_read,io,0,oldheader,/header_only, exten=exten_no, /No_PDU, $
-                             message = message,/no_abort
+   start_d = io.start_data[exten_no]
+   if exten_no NE io.nextend then begin
+        start_h = io.start_header[exten_no+1] 
+        nbytes = start_h - start_d
+   endif else nbytes = N_BYTES(data)
+
+   FITS_READ,Io,0,oldheader,/header_only, exten=exten_no, /No_PDU, $
+       message = message,/no_abort
    if message NE '' then goto, BAD_EXIT
-   dochecksum = sxpar(oldheader,'CHECKSUM', Count = N_checksum)
+    dochecksum = sxpar(oldheader,'CHECKSUM', Count = N_checksum)
    checksum = N_checksum GT 0  
- 
+
+; Update header, including any CHECKSUM keywords if present 
+
    if nheader GT 1 then begin
-      noldheader = N_elements(oldheader)
+        noldheader = start_d - io.start_header[exten_no]
  
         if dtype EQ 'UINT' then $
               sxaddpar,header,'BZERO',32768,'Data is unsigned integer'
         if dtype EQ 'ULONG' then $
               sxaddpar,header,'BZERO',2147483648,'Data is unsigned long'
-        point_lun, unit, io.start_header[exten_no]      ;Position header start
         if checksum then begin 
-               if Ndata GT 1 then fits_add_checksum, header, data else $
-                fits_add_checksum, header 
+               if Ndata GT 1 then FITS_ADD_CHECKSUM, header, data else $
+                FITS_ADD_CHECKSUM, header 
         endif
-        nheader = N_elements(header) 
-        if ( (nheader-1)/36) NE ( (Noldheader-1)/36) then begin     ;Updated Dec. 2000
-        message = 'FITS header not compatible with existing file '
-        message,'Input FITS header contains '+ strtrim(nheader,2) +' lines',/inf
-        message,'Current disk FITS header contains ' + strtrim(Noldheader,2) + $
-                ' lines',/inf
-        goto,BAD_EXIT
+        newbytes = N_elements(header)*80 
+        block = (newbytes-1)/2880 - (Noldheader-1)/2880
+        if block NE 0 then begin  
+            BLKSHIFT, io.unit, start_d, block*2880L
+            start_d = start_d + block*2880L
+            if exten_no NE io.nextend then start_h = start_h + block*2880L
         endif
-
-        writeu, unit, byte(header)                      ;Write new header
-
+        point_lun, unit, io.start_header[exten_no]      ;Position header start  
+        writeu, unit, byte(header)
+        remain = newbytes mod 2880
+	writeu, unit, replicate( 32b, 2880 - remain)
+ 
    endif 
 
    if ndata GT 1 then begin
-        Naxis = sxpar(oldheader, 'NAXIS')
-        bitpix = sxpar( oldheader, 'BITPIX')
-
-        if Naxis GT 0 then begin
-            Nax = sxpar( oldheader, 'NAXIS*' )   ;Read NAXES
-            nbytes = nax[0]*abs(bitpix/8)
-           if naxis GT 1 then for i = 2, naxis do nbytes = nbytes*nax[i-1]
-        endif else nbytes = 0
-
-        newbytes = N_BYTES(data)    ;total number of bytes in supplied data
  
-        if ((newbytes-1)/2880) NE ( (nbytes-1)/2880) then begin   ;Updated Dec. 2000
-        message = 'FITS data not compatible with existing file '
-        message,'Input FITS data contains '+ strtrim(newbytes,2) + ' bytes',/inf
-        message,'Current disk FITS data contains ' + strtrim(nbytes,2) + $
-                ' bytes',/inf
-        goto, BAD_EXIT
-        endif
+        newbytes = N_BYTES(data)    ;total number of bytes in supplied data
+        nblock = (newbytes-1)/2880 - (nbytes-1)/2880
+        if nblock NE 0 and exten_no NE io.nextend then $
+              BLKSHIFT, io.unit, start_h, nblock*2880L
+      
         if nheader EQ 0 then begin
                 check_fits,data,oldheader,/FITS,ERRMSG = message
                 if message NE '' then goto, BAD_EXIT
@@ -215,12 +218,12 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
         Little_endian = not IS_IEEE_BIG()
 
         junk = fstat(unit)   ;Need this before changing from READU to WRITEU
-        point_lun, unit, io.start_data[exten_no] 
+        point_lun, unit, start_d
         if dtype EQ 'UINT' then newdata = fix(data - 32768)
         if dtype EQ 'ULONG' then newdata = long(data - 2147483648)
         if (VMS or Little_endian) then begin
-             newdata = data
-             host_to_ieee, newdata
+             if (dtype NE 'UINT') and (dtype NE 'ULONG') then newdata = data
+             HOST_TO_IEEE, newdata
         endif
         if N_elements(newdata) GT 0 then writeu, unit, newdata  else $
                                          writeu, unit ,data
@@ -235,7 +238,7 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 	endif
     endif       
 
-   if not fcbsupplied then fits_close,io
+   if not fcbsupplied then FITS_CLOSE,io
    return 
 
 BAD_EXIT:
