@@ -2,13 +2,14 @@
 Directory pro/rgbcolor added to support making color (RGB) images.
 Directory pro/healpix added to support atv display of healpix maps.
 
+ALM2HEALPIX,DPF_NEST2RING,HEAL_REBIN,HEAL_SMOOTH,HEALCART_IND,HEALGEN,
+               HEALGEN_LB,HEALPIX2ALM,HEALPIX_RING_WEIGHT,ISHEALPIX,
+               MAP_NEST2RING,MAP_RING2NEST: healpix routines added to
+               support using ATV to view healpix-format images.
 ATV: Add support for healpix (DPF).
 CMP_FITS_FILES: New proc for comparing the contents of two FITS files.
 DJS_READILINES: Minor bug fix reported by John Moustakes; need to
                allow setting INDX=[0] and return that first line.
-DPF_NEST2RING,HEAL_REBIN,HEALCART_IND,HEALGEN,HEALGEN_LB,
-               MAP_NEST2RING,MAP_RING2NEST: healpix routines added to
-               support using ATV to view healpix-format images.
 DUSTPLOT: Checking in this old proc for making SFD map figures.
 FIRST_READ: Fix possible crash condition if radius > 1 deg, and near RA=0.
 NW_ARCSINH,NW_CUT_TO_BOX,NW_FLOAT_TO_BYTE,NW_REBIN_IMAGE,NW_SCALE_RBG:
