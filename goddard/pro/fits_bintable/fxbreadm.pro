@@ -153,15 +153,17 @@
 ;                              multiple row/column technique.  Mostly
 ;                              the parameter checking and general data
 ;                              flow remain.
-;        C. Markwardt, updated to read variable length arrays, and to
+;       C. Markwardt, updated to read variable length arrays, and to
 ;                              pass columns by handle or pointer.
 ;                              20 Jun 2001
 ;       C. Markwardt, try to conserve memory when creating the arrays
 ;                              13 Oct 2001
-;       Handle case of GE 50 columns, C. Markwardt, 18 Apr 2002
-;       Handle case where TSCAL/TZERO changes type of column,
-;              C. Markwardt, 23 Feb 2003
-; 
+;   Handle case of GE 50 columns, C. Markwardt, 18 Apr 2002
+;   Handle case where TSCAL/TZERO changes type of column,
+;       C. Markwardt, 23 Feb 2003
+;   Fix bug in handling of FOUND and numeric columns, 
+;       C. Markwardt 12 May 2003
+;
 ;
 ;-
 ;
@@ -438,7 +440,7 @@ PRO FXBREADM, UNIT, COL, $
 ;
         ENDIF ELSE BEGIN
             ICOL[*] = LONG(MYCOL) - 1
-            FOUND[ICOL] = 1
+            FOUND[*] = 1
         ENDELSE
 
 ;  Step through each column index
@@ -732,7 +734,7 @@ PRO FXBREADM, UNIT, COL, $
             ENDIF
 
             ;; Finally, store this in the output variable
-            RESULT = EXECUTE(COLNAMES[I]+'(0,POS) = DD')
+            RESULT = EXECUTE(COLNAMES[I]+'[0,POS] = DD')
             DD = 0
             IF RESULT EQ 0 THEN BEGIN
                 MESSAGE = 'ERROR: Could not compose output data '+COLNAMES[I]
