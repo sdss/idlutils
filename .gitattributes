@@ -28,10 +28,14 @@ pro/math/djs_posmod.pro -text
 pro/misc/djs_laxisgen.pro -text
 pro/misc/djs_readcol.pro -text
 pro/plot/atv.pro -text
+pro/plot/djs_arrow.pro -text
+pro/plot/djs_axis.pro -text
+pro/plot/djs_contourpts.pro -text
 pro/plot/djs_icolor.pro -text
 pro/plot/djs_oplot.pro -text
 pro/plot/djs_oploterr.pro -text
 pro/plot/djs_plot.pro -text
+pro/plot/djs_plotlimitbox.pro -text
 src/math/arravsigclip.c -text
 src/math/arrmedian.c -text
 src/math/export.h -text
