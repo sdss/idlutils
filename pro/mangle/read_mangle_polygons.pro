@@ -22,7 +22,8 @@
 ;   30-Nov-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-pro read_mangle_polygons, infile, polygons, id, unit=unit
+pro read_mangle_polygons, infile, polygons, id, unit=unit, $
+                          allow_doubles=allow_doubles
 
 if(n_params() lt 2) then begin
     print,'Syntax - read_mangle_polygons, infile, polygons [,id, unit=]'
@@ -51,7 +52,8 @@ for i=0L, npoly-1L do begin
        (*(polygons[i].caps))[j].x[0:2]=double(tmp_words[0:2])
        (*(polygons[i].caps))[j].cm=double(tmp_words[3])
     endfor
-    set_use_caps,polygons[i],lindgen(polygons[i].ncaps), use_caps=use_caps
+    set_use_caps,polygons[i],lindgen(polygons[i].ncaps), use_caps=use_caps, $
+      allow_doubles=allow_doubles
     polygons[i].use_caps=use_caps
 endfor
 if(NOT arg_present(unit)) then $

@@ -75,7 +75,7 @@ for i=0L, n_elements(poly)-1L do begin
               oplot,ramoffset,dec,color=use_color[i], $
               thick=outline_thick $
             else $
-              soplot,ramoffset,dec,color=use_color[i], $
+              oplot,ramoffset,dec,color=use_color[i], $
               thick=outline_thick 
         endif
     endif
