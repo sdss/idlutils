@@ -61,7 +61,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
-         lower=lower, maxIter=maxIter, bkpt=bkpt, $
+         lower=lower, maxIter=maxIter, bkpt=bkpt, fullbkpt=fullbkpt, $
          secondkludge=secondkludge, _EXTRA=KeywordsForEfc
 
     if N_PARAMS() LT 3 then begin
@@ -88,17 +88,17 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
        oldgood = good
        these = where(good)
        fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
-              coeff, invsig=invsig[these], $
+              coeff, bkpt=bkpt, invsig=invsig[these], $
                  _EXTRA=KeywordsForEfc)
-       yfit = slatec_bvalu(x[these], fullbkpt, coeff)
+       yfit = slatec_bvalu(x, fullbkpt, coeff)
  
-       diff = (y[these] - yfit)*invsig
+       diff = (y - yfit)*invsig
        bad = where(diff LT -lower OR diff GT upper)
 
 	if (bad[0] EQ -1) then iiter = maxiter $
         else begin
             good = bytarr(nx) + 1	
-	    good[these[bad]]  = 0
+	    good[bad]  = 0
             if total(abs(good - oldgood)) EQ 0 then iiter=maxiter
         endelse
     endfor

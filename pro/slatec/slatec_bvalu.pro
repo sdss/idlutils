@@ -63,14 +63,14 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
 ;       message, 'x values fall above the last breakpoint'
 
    work = fltarr(3*k)
-   y = x
+   y = float(x)
    nx = n_elements(x)
 
    inbv = 1L
-   xtemp = (x < maxbkpt)
+   xtemp = float(x < maxbkpt)
    xtemp = (xtemp > minbkpt)
    rr = call_external(getenv('IDL_EVIL')+'libslatecidl.so','bvalu_idl', $
-      bkpt, coeff, n, k, ideriv, xtemp, nx, inbv, work, y)
+      float(bkpt), float(coeff), n, k, ideriv, xtemp, nx, inbv, work, y)
 
    return, y
 end

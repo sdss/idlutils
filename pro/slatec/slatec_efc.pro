@@ -107,10 +107,11 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 	 
 	nshortbkpt = n_elements(bkpt) 
 	fullbkpt = bkpt
-	bkptspace = (bkpt[1] - bkpt[0])/100.0
+	bkptspace = (bkpt[1] - bkpt[0])/10.0
         for i=1,nord-1 do $
            fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
                 bkpt[nshortbkpt - 1] + bkptspace*i]
+  
      endif
 	nord = LONG(nord)
 
@@ -128,7 +129,8 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 	w = fltarr(lw)
 
 	test = call_external(getenv('IDL_EVIL')+'libslatecidl.so','efc_idl', $
-	         ndata, x, y, invsig, nord, nbkpt, fullbkpt, $
+	         ndata, float(x), float(y), float(invsig), nord, $
+                 nbkpt,fullbkpt, $
                  mdein, mdeout, coeff, lw, w)
 
 	return, fullbkpt
