@@ -21,7 +21,7 @@
 ;  11/07/03 written - wherry
 ;  11/12/03 changed radius - wherry
 ;-
-FUNCTION nw_arcsinh,colors,nonlinearity=nonlinearity
+FUNCTION nw_arcsinh,colors,nonlinearity=nonlinearity, radius=radius
 ;set default nonlinearity
 IF NOT n_elements(nonlinearity) THEN nonlinearity=3
 
