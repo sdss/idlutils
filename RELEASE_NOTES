@@ -14,12 +14,15 @@ FSC_DROPLIST,FSC_FIELD,FSC_FILESELECT,FSC_INPUTFIELD,FSC_PLOTWINDOW,
 FSC_PSCONFIG__DEFINE,PSCONFIG - New routines downloaded from David Fanning
                 for use with ATV.  Downloaded from:
                 "http://www.dfanning.com/documents/programs.html#FSCPSCONFIG"
+GROW_OBJECT   - New proc to identify objects as the contiguous non-zero pixels
+                in an image.  This calls a C program.
 TNMIN         - Two loop variables (lines 559 and 601) changed from "0"
                 to "0L".
 WCSXY2SPH:    - Add HealCart projection.
 YANNY_READ:   - Don't crash when FILENAME is a 1-element array!
 
 bin/Makefile  - Take out "evilinstall" which has now moved to evilups product.
+src/image/grow_obj.c - New code for IDL proc GROW_OBJECT.
 src/math/nr.h - Comment-out line 93 which defines "float fmin(float x[]);".
                This conflicts with a definition in one of the include files
                under Mac OS X: "/usr/include/architecture/ppc/math.h".
