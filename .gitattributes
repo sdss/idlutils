@@ -620,6 +620,7 @@ pro/math/djs_median.pro -text
 pro/math/djs_posmod.pro -text
 pro/math/djs_reject.pro -text
 pro/math/djsig.pro -text
+pro/math/ex_max.pro -text
 pro/math/gauss_kernel.pro -text
 pro/math/gausspix1d.pro -text
 pro/math/sshift.pro -text
