@@ -217,7 +217,7 @@ function tyc_readascii, filename, range=range1, columns=columns
     else range = [0L, expectlines-1]
    nline = range[1] - range[0] + 1
 ;   splog, 'Reading Tycho data file ' + thisfile + ' RANGE=', $
-    range[0], range[1]
+;    range[0], range[1]
    barr = bytarr(207,nline)
    tmpString = ''
    get_lun, ilun
