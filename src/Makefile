@@ -12,7 +12,7 @@ SHELL = /bin/sh
 #
 CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
 
-# Note that mangle1.2 must be built before idlmangle!
+# Note that either mangle1.4/src or mangle1.2 must be built before idlmangle!
 SUBDIRS = image mangle1.4/src idlmangle math slatec spheregroup trace
 
 all :
