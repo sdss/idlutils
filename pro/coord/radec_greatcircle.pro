@@ -158,7 +158,7 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
 
    if (keyword_set(timelist)) then nparm = 6 $
     else nparm = 5
-   parinfo = {value: 0.D, fixed: 0}
+   parinfo = {value: 0.D, fixed: 0, limited: [0b,0b], limits: [0.d0,0.d0]}
    parinfo = replicate(parinfo, nparm)
 
    if (keyword_set(start_parms)) then begin
@@ -172,6 +172,14 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
       parinfo.fixed = fixed
    endif
 
+   ; Set bounds on INCL
+   parinfo[2].limited = [1b, 1b]
+   parinfo[2].limits = [-90.d0, 90.d0]
+
+   ; Set bounds on XBORE
+   parinfo[3].limited = [1b, 1b]
+   parinfo[3].limits = [-90.d0, 90.d0]
+
    ;----------
    ; Do the fit
 
@@ -180,6 +188,17 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
     debug: keyword_set(debug), muerr: muerr, nuerr: nuerr }
    fitval = mpfit('radec_gcfn', parinfo=parinfo, functargs=functargs, $
     maxiter=maxiter, niter=niter, status=status)
+
+   ;----------
+   ; Do bounds-checking on the fit coordinates
+
+   ; Put MU_START in the domain [0,360) degrees
+   if (fitval[0] GE 0) then fitval[0] = fitval[0] MOD 360.d0 $
+    else fitval[0] = 360.d0 - (-fitval[0] MOD 360.d0)
+
+   ; Put NODE in the domain [0,360) degrees
+   if (fitval[1] GE 0) then fitval[1] = fitval[1] MOD 360.d0 $
+    else fitval[1] = 360.d0 - (-fitval[1] MOD 360.d0)
 
    ;----------
    ; Make one last call to the function in order to return the residuals
