@@ -488,9 +488,9 @@ for id2=ydimen-1,0L,-1 do begin
                                 quantile[id1,id2,m,*,0]= xline
                                 outmedindx=where(quantuse[m,*] ne 0,outcount)
                                 if(outcount gt 0) then begin
-                                    djs_oplot,quantile[id1,id2,m,outmedindx,0], $
-                                      quantile[id1,id2,m,outmedindx,1],thick=4,psym=10, $
-                                      color=djs_icolor('white')
+;                                    djs_oplot,quantile[id1,id2,m,outmedindx,0], $
+;                                      quantile[id1,id2,m,outmedindx,1],thick=4,psym=10, $
+;                                      color=djs_icolor('white')
                                     djs_oplot,quantile[id1,id2,m,outmedindx,0], $
                                       quantile[id1,id2,m,outmedindx,1],thick=1,psym=10
                                 endif
