@@ -617,6 +617,7 @@ pro/misc/djs_readlines.pro -text
 pro/misc/djs_selectlines.pro -text
 pro/misc/djs_unlockfile.pro -text
 pro/misc/fileandpath.pro -text
+pro/misc/floatcompress.pro -text
 pro/misc/idlutils_version.pro -text
 pro/misc/rmfile.pro -text
 pro/misc/struct_addtags.pro -text
