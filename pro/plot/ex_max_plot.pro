@@ -29,6 +29,7 @@
 ;   panellabels  label string for each panel (size of xdims, ydims arrays)
 ;   quantfrac    vector of fractions at which to plot quantiles on conditional
 ;                   panels
+;   default_font  font command to send to set font for plotting
 ; KEYWORDS:
 ;   nomodel      don't show model fits as greyscales or histograms
 ;   nodata       don't show data as greyscales or histograms
@@ -39,6 +40,9 @@
 ; OPTIONAL OUTPUTS:
 ;   quantile     output array of quantile positions; read the source code
 ;   quantneff    the effective number of data points contributing to the medians
+;   twodimages   set of all of the 2-dimensional projections 
+;                (doesn't save the gaussian model unless
+;                model_npix_factor==1)
 ; BUGS:
 ;   Greyscales need work?
 ; DEPENDENCIES:
@@ -57,7 +61,9 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  model_npix_factor=model_npix_factor, $
                  panellabels=panellabels, panellabelpos=panellabelpos, $
                  sigrejimage=sigrejimage, paneluse=paneluse, $
-                 quantfrac=quantfrac, quantile=quantile, quantneff=quantneff
+                 quantfrac=quantfrac, quantile=quantile, quantneff=quantneff, $
+                 default_font=default_font,twodimages=twodimages, $
+                 psym_overpoints=psym_overpoints
 
 ; set defaults
 if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
@@ -73,6 +79,7 @@ splog, ndata,' data points,',dimen,' dimensions,',ngauss,' gaussians'
 ; which dimensions should we look at?
 if(NOT keyword_set(xdims)) then xdims=lindgen(dimen)
 if(NOT keyword_set(ydims)) then ydims=lindgen(dimen)
+if(NOT keyword_set(default_font)) then default_font='!3'
 xdimen=n_elements(xdims)
 ydimen=n_elements(ydims)
 
@@ -126,6 +133,9 @@ if NOT keyword_set(range) then begin
   for d1= 0,dimen-1 do range[*,d1]= mean1[d1]+[-nsig,nsig]*sqrt(var1[d1,d1])
 endif
 
+; set up 2-d images to save
+twodimages=dblarr(npix_x,npix_y,xdimen,ydimen)
+
 ; save system plotting parameters for later restoration
 bangP= !P
 bangX= !X
@@ -162,7 +172,7 @@ tiny= 1.d-4
 !Y.RANGE= 0
 !Y.TICKS= !X.TICKS
 !P.MULTI= [xdimen*ydimen,xdimen,ydimen]
-xyouts, 0,0,'!3'
+xyouts, 0,0,default_font
 ;  djs_xyouts, 0,0,'!BBlanton & Hogg (NYU)',/device,color='grey'
 
 ; make useful vectors for plotting
@@ -371,6 +381,10 @@ for id2=ydimen-1,0L,-1 do begin
                 endif
             endfor
 
+; save greyscale image
+            if(usenpix_x eq npix_x AND usenpix_y eq npix_y) then $
+              twodimages[*,*,id1,id2]=image
+
 ; plot greyscale image
             if (d1 NE d2) then begin
                 if (NOT keyword_set(nodata) OR NOT keyword_set(nomodel)) then begin
@@ -549,7 +563,9 @@ for id2=ydimen-1,0L,-1 do begin
                 endif
 
                 if keyword_set(overpoints) AND d1 NE d2 then begin
-                    djs_oplot,overpoints[d1,*],overpoints[d2,*],psym=6,color='red', $
+                    if(n_elements(psym_overpoints) eq 0) then $
+                      psym_overpoints=6
+                    djs_oplot,overpoints[d1,*],overpoints[d2,*],psym=psym_overpoints,color='red', $
                       symsize=0.8
                 endif
 
