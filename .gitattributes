@@ -652,6 +652,7 @@ src/slatec/efcmn.f -text
 src/slatec/enorm.f -text
 src/slatec/erf.f -text
 src/slatec/erfc.f -text
+src/slatec/f2c.h -text
 src/slatec/fdjac3.f -text
 src/slatec/fdump.f -text
 src/slatec/h12.f -text
