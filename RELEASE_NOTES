@@ -57,6 +57,8 @@ src/mangle1.2/mrb_balkanize.c, mwrmask.c: Destroy the polygons as they
                Print a loop counter after every 100 balkans.
 ups/idlutils.table: Add optional dependencies upon these products: dust,
                first, gsc, twomass, tycho2, ucac, usno.
+               Get rid of all the $UPS_PROD_FLAVOR references for
+               dependent products.
 
 In the Goddard utitilies:
 MRDFITS: Modified by Wayne Landsman to have the ROWS keyword.
