@@ -537,8 +537,8 @@ pro splot_event, event
          'Quit'      : splot_shutdown
 
          ; Erase options:
-         'EraseLast' : serase, 1
-         'EraseAllButFirst' : serase, nplot-1
+         'EraseLast' : if (nplot GE 1) then serase, 1
+         'EraseAllButFirst' : if (nplot GE 1) then serase, nplot-1
          'EraseAll'  : serase
 
          ; Info options:
