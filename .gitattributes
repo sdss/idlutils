@@ -715,7 +715,10 @@ pro/plot/imgscl.pro -text
 pro/plot/s_plotdev.pro -text
 pro/plot/splot.pro -text
 pro/radprof/asinh2.pro -text
+pro/radprof/fit_sersic.pro -text
 pro/radprof/profinterp.pro -text
+pro/radprof/seeing_radial.pro -text
+pro/radprof/sersic.pro -text
 pro/slatec/bvalu2d.pro -text
 pro/slatec/efc2d.pro -text
 pro/slatec/efcmn.pro -text

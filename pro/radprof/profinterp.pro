@@ -59,7 +59,7 @@ PI=3.14159265358979d
 
 nprofiles=n_elements(nprof)
 nrad=n_elements(profradius)
-if(NOT keyword_set(proferr)) then proferr=dblarr(nrad-1l)
+if(NOT keyword_set(proferr)) then proferr=dblarr(nrad-1l,nprofiles)
 cumprof=dblarr(nrad,nprofiles)
 cumprofvar=dblarr(nrad,nprofiles)
 indx=lindgen(nrad-1l)
