@@ -70,7 +70,7 @@ PRO tmass_readzone, fitspath, zone, ra0, ra1, prefix, result
 
 ; trim unwanted RA stars
   
-  racat = data.ra
+  racat = data.tmass_ra
   good = where((racat LE ra1) AND (racat GE ra0), ct)
   IF ct GT 0 THEN BEGIN 
      result = data[good]
