@@ -8,17 +8,16 @@
 ; INPUTS:
 ;   polygons - polygons with caps to check
 ; OPTIONAL INPUTS:
-;   ra - set of ra values
-;   dec - set of dec values
-;   xyz - xyz value(s) (overrides ra and dec)
+;   ra - [N] set of ra values
+;   dec - [N] set of dec values
+;   xyz - [3,N] xyz value(s) (overrides ra and dec)
 ;   ncaps - override polygon.ncaps (if ncaps < polygon.ncaps)
 ; OUTPUTS:
-; OPTIONAL INPUT/OUTPUTS:
+;   result - [N] 1 if in window, 0 otherwise
+; OPTIONAL OUTPUTS:
+;   in_polygon - [N] which polygon each ra,dec is in (-1 if none)
 ; COMMENTS:
 ;   Either ra and dec, or xyz must be set; xyz overrides ra and dec
-; EXAMPLES:
-; BUGS:
-; PROCEDURES CALLED:
 ; REVISION HISTORY:
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
