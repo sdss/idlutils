@@ -103,6 +103,15 @@ function create_host_list, protocol, remotehost, remotedir, topdir
 
    nhost = n_elements(remotehost)
 
+   if (nhost EQ 0) then begin
+      splog, 'REMOTEHOST not set.  Quitting.'
+      return
+   endif
+   if (total(strtrim(remotehost) EQ '') GT 0) then begin
+      splog, 'Some entries for REMOTEHOST are empty strings.  Quitting'
+      return
+   endif
+
    ftemp = create_struct( name='HOSTLIST_STRUCT', $
     'PROGNAME', '', $
     'REMOTEHOST', '', $
