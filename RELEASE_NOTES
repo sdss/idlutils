@@ -7,6 +7,9 @@ IS_IN_CAP,IS_IN_POLYGON,IS_IN_WINDOW: Change calling sequence, with
                ra=,dec=,xyz= instead of assuming xyz is passed.
 MWRFITS_CHUNKS: Small changes to internal proc MWRBIN_APPEND to allow
                support for files larger than 2 Gb.
+               Free all logical units (LUNs), which was not the case.
+               We were not freeing one LUN for each time this routine
+               was called.
 SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                is left in a bad state that does not allow the use of !p.multi
                in other plot windows.  The fix is to always make sure that
