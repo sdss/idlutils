@@ -1,5 +1,11 @@
 
+-------------------------------------------------------------------------------
+v4_10_4 (Jul 5, 2003)
+Tagged for photoop v0_12.
+
 MWRFITS_CHUNKS- Added /APPEND option.
+UCAC_READGC - Check to see if outdat has any elements.
+USNO_READGC - Check to see if outdat has any elements.
 
 -------------------------------------------------------------------------------
 v4_10_3 (Jun 27, 2003)
