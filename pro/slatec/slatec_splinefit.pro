@@ -96,7 +96,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
 	if (bad[0] EQ -1) then iiter = maxiter $
         else begin
             good = bytarr(nx) + 1	
-	    good[bad]  = 0
+	    good[these[bad]]  = 0
             if total(abs(good - oldgood)) EQ 0 then iiter=maxiter
         endelse
     endfor
