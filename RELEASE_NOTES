@@ -2,6 +2,7 @@
 Directory pro/rgbcolor added to support making color (RGB) images.
 Directory pro/healpix added to support atv display of healpix maps.
 
+MQLADVANCE : A healpix routine DPF forgot (NP)
 HEALNPIX : One more healpix routine (NP)
 ALM2HEALPIX,DPF_NEST2RING,DPF_PIX2ANG_RING,HEAL_REBIN,
                HEAL_SMOOTH,HEALCART_IND,HEALGEN,
