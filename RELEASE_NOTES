@@ -1,15 +1,12 @@
-HEALGEN        No longer loop over chunks to save memory.
-HEALPIX_RING_WEIGHT: Fix fatal bug caused by new mrdfits() response to 
-               Gorski's nonstandard file format for ring weights.
+
 ATV,ATV_JOE_WRITEPS,SPLOT,SXASCII_READ,TEXTOIDL,YANNY_READ:
                Replace calls to the obsolete function RSTRPOS()
                with STRPOS(/REVERSE_SEARCH).
 ATV: Fix bug introduced for Healpix when reading non-Healpix files.
+               Reject complex inputs (Finkbeiner).
+BSPLINE_ITERFIT: Fix crash condition for when only 1 point to fit.
 DPF_NEST2RING,DPF_PIX2ANG_RING: Cache lookup table for wicked speed.
 DPF_PIX2ANG_NEST: Added (simply calls dpf_nest2ring and dpf_pix2ang_ring).
-HEALGEN        Updated to use dpf* routines and break dependence on HEALPIX
-               packages.
-BSPLINE_ITERFIT: Fix crash condition for when only 1 point to fit.
 DJS_RGB_MAKE: Code to create JPEG from 3 FITS files based upon NW_RGB_MAKE,
                but saturating stars to a single color per object.
 EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
@@ -21,6 +18,11 @@ EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
                loaded libraries (rather than assuming ".so").
 FITS_PURGE_NANS: New procedure to deal with some invalid FITS header
                keywords in raw SDSS data files.
+HEALGEN        Updated to use dpf* routines and break dependence on HEALPIX
+               packages.
+               No longer loop over chunks to save memory.
+HEALPIX_RING_WEIGHT: Fix fatal bug caused by new mrdfits() response to 
+               Gorski's nonstandard file format for ring weights.
 HOGG_MANYD_SCATTERPLOT: Fix xdim=0 bug, add EXTRAFUN parameter,
                send plotting back to X.
 HOGG_SCATTERPLOT: Add /outliers keyword to show points outside last contour
@@ -47,7 +49,7 @@ MWRFITS: Fix a bug, whereby if a pointer was included in an output structure,
                the non-pointer tags were being copied.  This bug fix was
                sent to me by Landsman on 16-Jul-2004.
 NW_AD_GRID,NW_OVERLAY_RANGE: New (but unused?) code.
-NW_RGB_MAKE: Slight change to overlay code.
+NW_RGB_MAKE: Slight change to overlay code.  Option for TIFF files.
 PLOT_POLY: Add /AITOFF flag to plot on Aitoff projections.
 POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
                poly_2d to perform a rotation of an imaging using the 
