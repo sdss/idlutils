@@ -837,6 +837,7 @@ pro/image/multi_psf_fit.pro -text
 pro/image/polywarp_rotate.pro -text
 pro/image/polywarp_shift.pro -text
 pro/image/populate_image.pro -text
+pro/image/psf_reject_cr_single.pro -text
 pro/image/qu_to_baphi.pro -text
 pro/image/qzap.pro -text
 pro/image/rebin_spectrum.pro -text
