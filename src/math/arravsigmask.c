@@ -233,7 +233,11 @@ void vector_mean_and_disp_mask
        */
       for (i=0; i<nData; i++) vmean += pData[i];
       vmean /= nData;
-      for (i=0; i<nData; i++) vdisp += vtemp * vtemp;
+      vdisp = 0.0;
+      for (i=0; i<nData; i++) {
+         vtemp = pData[i] - vmean;
+         vdisp += vtemp * vtemp;
+      }
       if (nData > 1) vdisp = sqrt(vdisp / (nData-1));
       else vdisp = 0.0;
    }
