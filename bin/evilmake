@@ -9,6 +9,7 @@ UNAME=`uname`
 echo "OS type detected: "$UNAME
 case $UNAME in
 	"SunOS") if [  -d /proc ]; then
+		LDF77=g77
 			SO_EXT=so
 			X_CFLAGS="-KPIC"
       X_FFLAGS="-e"
@@ -17,12 +18,14 @@ case $UNAME in
 		SDSS_CFLAGS=-O3
 	;;
 	"HP-UX")
+		LDF77=g77
 		SO_EXT=sl
 		X_CFLAGS="+z -Aa -D_HPUX_SOURCE"
 	  X_FFLAGS="-extend_source"
 		X_LD_FLAGS=-b
 	;;
 	"IRIX" )
+		LDF77=g77
 		SO_EXT=so
 		X_CFLAGS="-32 -KPIC"
     X_FFLAGS="-32 -extend_source"
@@ -31,14 +34,17 @@ case $UNAME in
 	;;
 	"IRIX64" )
 		SO_EXT=so
+		LDF77=g77
 		X_CFLAGS="-n32 -KPIC -mips3"
 		CC=cc
 		LD=ld
+		LDF77=ld
     X_FFLAGS="-32 -extend_source -KPIC"
     MAKE_FTNLIB="-lftn"
 		X_LD_FLAGS="-shared -n32 -mips3"
 	;;
 	"OSF1" )
+		LDF77=g77
 		SO_EXT=so
     X_FFLAGS="-extend_source"
 		X_LD_FLAGS="-S -shared"
@@ -46,6 +52,7 @@ case $UNAME in
 	;;
 	"Darwin" )
 		F77=g77
+		LDF77=ld
 		SO_EXT=so
 		X_LD_FLAGS="-bundle /usr/lib/bundle1.o -L/usr/lib -lc -lcc_dynamic -flat_namespace -undefined suppress"
 # The following two lines should be equivalent to the above line
@@ -55,6 +62,7 @@ case $UNAME in
 		SDSS_CFLAGS=-O3
 	;;
 	"Linux" )
+		LDF77=g77
 		SO_EXT=so
 		X_CFLAGS="-fPIC -g -Wall"
 		X_FFLAGS="-ffixed-line-length-none"
@@ -67,6 +75,6 @@ case $UNAME in
 		exit 1;;
 esac
 
-export SO_EXT X_CFLAGS X_FFLAGS X_LD_FLAGS SDSS_CFLAGS LD F77 MAKE_FTNLIB UNAME
+export SO_EXT X_CFLAGS X_FFLAGS X_LD_FLAGS SDSS_CFLAGS LD F77 MAKE_FTNLIB UNAME LDF77
 
 make "$@"
