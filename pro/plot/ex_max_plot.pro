@@ -383,27 +383,11 @@ for id2=ydimen-1,0L,-1 do begin
                                 amp1col[ii]=total(image[ii,*]^2)/total(image[ii,*]*avgcol)
                                 image[ii,*]=image[ii,*]/amp1col[ii]
                                 if(keyword_set(quant)) then begin
-                                    sortindx=indx[sort(panelpoint[d2,indx])]
-                                    cummed= total(weight[sortindx],/double, $
-                                                  /cumulative)
-                                    cummed=cummed/cummed[n_elements(cummed)-1L]
-                                    for jj=0L, nquant-1L do begin
-                                        indx0=lindgen(n_elements(cummed)-1L)
-                                        indx1=indx0+1L
-                                        medindx=where(quant[jj] ge cummed[indx0]  and $
-                                                      quant[jj] lt cummed[indx1], $
-                                                      medcount)
-                                        if(medcount eq 0) then begin
-                                            if(quant[jj] lt cummed[0]) then begin
-                                                medindx=0
-                                            endif else begin
-                                                medindx=n_elements(cummed)-1L
-                                            endelse
-                                        endif
-                                        quantile[id1,id2,jj,ii,1]= $
-                                          panelpoint[d2,sortindx[medindx[0]]]
-                                        quantuse[jj,ii]=1L
-                                    endfor
+                                    quantile[id1,id2,*,ii,1]= $
+                                      weighted_quantile(panelpoint[d2,indx], $
+                                                        panelweight[indx], $
+                                                        quant=quant)
+                                    quantuse[*,ii]=1L
                                 endif
                             endif
                         endfor
