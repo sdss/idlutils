@@ -760,6 +760,7 @@ pro/dust/dust_getmap.pro -text
 pro/dust/dust_getval.pro -text
 pro/dust/dust_intfilter.pro -text
 pro/dust/dust_sdssfilter.pro -text
+pro/dust/dustplot.pro -text
 pro/dust/ext_ccm.pro -text
 pro/dust/ext_odonnell.pro -text
 pro/dust/fac_flux2temp.pro -text
