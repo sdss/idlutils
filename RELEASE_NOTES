@@ -44,6 +44,8 @@ MWRFITS: Fix a bug, whereby if a pointer was included in an output structure,
                was not being written properly.  Only the zeroth element of
                the non-pointer tags were being copied.  This bug fix was
                sent to me by Landsman on 16-Jul-2004.
+NW_AD_GRID,NW_OVERLAY_RANGE: New (but unused?) code.
+NW_RGB_MAKE: Slight change to overlay code.
 PLOT_POLY: Add /AITOFF flag to plot on Aitoff projections.
 POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
                poly_2d to perform a rotation of an imaging using the 
