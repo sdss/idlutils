@@ -4,18 +4,26 @@
 ;       usno_readzone
 ;+------------------------------------------------------------------------  
 ; PURPOSE:
-;       Read given RA range out of one deczone. 
+;       Read given RA range out of one deczone. (USNO-A or B)
 ;+------------------------------------------------------------------------  
 ; INPUTS:
 ;   catpath   - path to catalogue files (.cat and .acc)
 ;   zone      - zone number (float, 1/10 degrees)
-;   ra0,ra1   - ra limits (deg)
+;   ra0,ra1   - ra limits [deg]
+;   rec_len   - record length for each object [bytes/4] (read as ulongs)
+;   prefix    - filename prefix: 'zone' for USNOA, 'b' for USNOB
+;
+; KEYWORDS:
+;   swap_if... - USNOA is written big endian, B is little endian(!)
 ;+------------------------------------------------------------------------  
 ; OUTPUTS:
-;   data      - float(3,N) array of results.  
+;   data      - float(rec_len,N) array of results.  
 ;                 data[0,*] = RA (in .01 arcsec)
 ;                 data[1,*] = (dec+90) (in .01 arcsec)
-;                 data[2,*] = magnitudes packed in 32-bit int (see below)
+;       USNO-A:
+;                 data[2,*] = magnitudes packed in 32-bit int
+;       USNO-B:   
+;                 data[2:19,*] = all kinds of stuff
 ;+------------------------------------------------------------------------  
 ; COMMENTS:
 ;   uses point_lun to skip to requested part of file.  Very fast. 
@@ -26,10 +34,15 @@
 ;   Warning - this routine interpolates file index positions
 ;             and works only if the star distribution is approximately
 ;             uniform (which it is).  
-;+------------------------------------------------------------------------  
+;+------------------------------------------------------------------------
+; MODIFICATION HISTORY:
+;  2002-Nov-25 Taken from usno_read by D. Finkbeiner, Princeton
+;               Also works for USNO-B1.0 now. 
 ;-
-PRO usno_readzone, catpath, zone, ra0, ra1, result
-
+PRO usno_readzone, catpath, zone, ra0, ra1, rec_len, prefix, result, $
+        swap_if_little_endian=swap_if_little_endian, $
+        swap_if_big_endian=swap_if_big_endian
+  
 ; error trapping
   IF (ra0 LT 0.0) OR (ra0 GT 360.0) OR (ra1 LT 0.0) OR (ra1 GT 360.0) THEN $
     message, 'RA out of range'
@@ -42,17 +55,14 @@ PRO usno_readzone, catpath, zone, ra0, ra1, result
   raread = ((raread) < 360.0) > 0.0
 
 ; read .acc file (1-indexed)
-  zstr = 'zone'+string(zone, format='(I4.4)')
-
-; --- use something faster than readcol in next version!
-;  readcol, catpath+zstr+'.acc', ra_acc, ind, n, /silent
+  zstr = prefix+string(zone, format='(I4.4)')
 
   accfile = djs_filepath(zstr+'.acc', root_dir=catpath)
   catfile = djs_filepath(zstr+'.cat', root_dir=catpath)
   flist = findfile(accfile, count=ct)
   IF ct NE 1 THEN message, 'cannot find file ' + accfile
   grid = dblarr(3, 96)
-  openr, rlun, accfile, /get_lun, /swap_if_little_endian
+  openr, rlun, accfile, /get_lun
   readf, rlun, grid
   free_lun, rlun
   ra_acc = reform(grid[0, *])
@@ -71,10 +81,12 @@ PRO usno_readzone, catpath, zone, ra0, ra1, result
   ind1 = indrange[1]
 
 ; read .cat file
-  openr, readlun, catfile, /get_lun, /swap_if_little_endian
+  openr, readlun, catfile, /get_lun, $
+    swap_if_little_endian=swap_if_little_endian, $
+    swap_if_big_endian=swap_if_big_endian
   nstars = (ind1-ind0)+1
-  data = lonarr(3, nstars)
-  point_lun, readlun, ind0*12L
+  data = ulonarr(rec_len/4, nstars)
+  point_lun, readlun, ind0*rec_len
   readu, readlun, data
   free_lun, readlun
 
