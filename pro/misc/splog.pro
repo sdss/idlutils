@@ -28,7 +28,8 @@
 ;
 ; COMMENTS:
 ;   The output is formatted just like with the IDL PRINT command, except
-;   that extraneous whitespace is removed unless a FORMAT keyword is used.
+;   that extraneous whitespace is removed from non-STRING elements unless
+;   a FORMAT keyword is used.
 ;
 ; EXAMPLES:
 ;   Open a file for text output, write to it, then close it:
@@ -47,13 +48,30 @@
 ;   17-Nov-1999  Written by D. Schlegel, Princeton
 ;-
 ;------------------------------------------------------------------------------
+; Trim extra whitespace (multiple blanks) from any string conversion
+; iff the FORMAT keyword is not specified, and this isn't already a string.
+; Any strings that are passed will not have whitespace removed.
+function splog_trim, v
 
+   common com_splog_trim, qcompress
+
+   if (keyword_set(v)) then $
+    vt = (qcompress AND size(v,/tname) NE 'STRING') $
+     ? strcompress(string(v)) : v $
+   else $
+    vt = '' ; unused return value
+
+   return, vt
+end
+
+;------------------------------------------------------------------------------
 pro splog, noname=noname, prelog=prelog, $
  filename=filename, append=append, close=close, $
  v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, _EXTRA=extra
 
    ; Declare LOGLUN in a common block so that it is remembered between calls.
    common com_splog, loglun, fullprelog
+   common com_splog_trim, qcompress
 
    if (keyword_set(filename)) then begin
       ; First close a file if one is already open
@@ -64,7 +82,7 @@ pro splog, noname=noname, prelog=prelog, $
       openw, loglun, filename, append=append
    endif
 
-   if (N_elements(prelog) EQ 1) then fullprelog = prelog
+   if (n_elements(prelog) EQ 1) then fullprelog = prelog
 
    ; Determine the name of the calling routine
    help, calls=calls
@@ -75,29 +93,6 @@ pro splog, noname=noname, prelog=prelog, $
    for i=0,n_elements(calls)-4 do fname = ' ' + fname 
 
    ;----------
-   ; Construct the output text string
-
-   nv = N_params()
-;   if (nv GT 0 OR keyword_set(extra)) then begin
-   if (nv GT 0) then begin
-      case nv of
-;      0: textstring = string('', _EXTRA=extra) ; Does not work! IDL bug?
-      1: textstring = string(v1, _EXTRA=extra)
-      2: textstring = string(v1, v2, _EXTRA=extra)
-      3: textstring = string(v1, v2, v3, _EXTRA=extra)
-      4: textstring = string(v1, v2, v3, v4, _EXTRA=extra)
-      5: textstring = string(v1, v2, v3, v4, v5, _EXTRA=extra)
-      6: textstring = string(v1, v2, v3, v4, v5, v6, _EXTRA=extra)
-      7: textstring = string(v1, v2, v3, v4, v5, v6, v7, _EXTRA=extra)
-      8: textstring = string(v1, v2, v3, v4, v5, v6, v7, v8, _EXTRA=extra)
-      9: textstring = string(v1, v2, v3, v4, v5, v6, v7, v8, v9, _EXTRA=extra)
-      10: textstring = string(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, _EXTRA=extra)
-      11: textstring = string(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, _EXTRA=extra)
-      else: textstring = string(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, _EXTRA=extra)
-      endcase
-   endif
-
-   ;----------
    ; If there is no FORMAT keyword specified, then compress the output string
    ; (remove extraneous whitespace).
 
@@ -106,8 +101,42 @@ pro splog, noname=noname, prelog=prelog, $
       tags = tag_names(extra)
       if ( (where(tags EQ 'FORMAT'))[0] NE -1) then qcompress = 0
    endif
-   if (qcompress AND keyword_set(textstring)) then $
-    textstring = strcompress(textstring)
+
+   vt1 = splog_trim(v1)
+   vt2 = splog_trim(v2)
+   vt3 = splog_trim(v3)
+   vt4 = splog_trim(v4)
+   vt5 = splog_trim(v5)
+   vt6 = splog_trim(v6)
+   vt7 = splog_trim(v7)
+   vt8 = splog_trim(v8)
+   vt9 = splog_trim(v9)
+   vt10 = splog_trim(v10)
+   vt11 = splog_trim(v11)
+   vt12 = splog_trim(v12)
+
+   ;----------
+   ; Construct the output text string
+
+   nv = n_params()
+;   if (nv GT 0 OR keyword_set(extra)) then begin
+   if (nv GT 0) then begin
+      case nv of
+;      0: textstring = string('', _EXTRA=extra) ; Does not work! IDL bug?
+      1: textstring = string(vt1, _EXTRA=extra)
+      2: textstring = string(vt1, vt2, _EXTRA=extra)
+      3: textstring = string(vt1, vt2, vt3, _EXTRA=extra)
+      4: textstring = string(vt1, vt2, vt3, vt4, _EXTRA=extra)
+      5: textstring = string(vt1, vt2, vt3, vt4, vt5, _EXTRA=extra)
+      6: textstring = string(vt1, vt2, vt3, vt4, vt5, vt6, _EXTRA=extra)
+      7: textstring = string(vt1, vt2, vt3, vt4, vt5, vt6, vt7, _EXTRA=extra)
+      8: textstring = string(vt1, vt2, vt3, vt4, vt5, vt6, vt7, vt8, _EXTRA=extra)
+      9: textstring = string(vt1, vt2, vt3, vt4, vt5, vt6, vt7, vt8, vt9, _EXTRA=extra)
+      10: textstring = string(vt1, vt2, vt3, vt4, vt5, vt6, vt7, vt8, vt9, vt10, _EXTRA=extra)
+      11: textstring = string(vt1, vt2, vt3, vt4, vt5, vt6, vt7, vt8, vt9, vt10, vt11, _EXTRA=extra)
+      else: textstring = string(vt1, vt2, vt3, vt4, vt5, vt6, vt7, vt8, vt9, vt10, vt11, vt12, _EXTRA=extra)
+      endcase
+   endif
 
    ;----------
    ; Write to standard out
