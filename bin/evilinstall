@@ -53,8 +53,8 @@ if [ -z $FLAVOR ] ; then
 fi
 
 # Must have "ups" in the path and PRODUCTS and SDSS_ROOT must be defined.
-
-if { [ -z `which \ups` ] || [ -z "$PRODUCTS" ] || [ -z "$SDSS_ROOT" ] } ; then
+# Hmmm... always source this file to get the right "setup" command.
+#if { [ -z `which \ups` ] || [ -z "$PRODUCTS" ] || [ -z "$SDSS_ROOT" ] } ; then
    echo "Try to run sdssfue.sh script..."
    if [ -e /u/products/etc/sdssfue.sh ] ; then
       echo source /u/products/etc/sdssfue.sh
@@ -69,9 +69,9 @@ if { [ -z `which \ups` ] || [ -z "$PRODUCTS" ] || [ -z "$SDSS_ROOT" ] } ; then
       echo "Unable to find sdssfue.sh script to set up UPS."
       exit
    fi
-else
-   echo "UPS already appears to be set up."
-fi
+#else
+#   echo "UPS already appears to be set up."
+#fi
 
 # The following is a hack: Change $SDSS_ROOT to $SDSS_ROOT/$FLAVOR if it
 # appears that's where the code should go.  This is the case at Princeton.
@@ -90,7 +90,7 @@ if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
    echo "Now declaring this version current."
 # We could set this up too, but that information is not passed outside
 # of this script so don't bother ???
-#   ups setup $PRODNAME $PRODVERS
+#   setup $PRODNAME $PRODVERS
    ups declare -f $FLAVOR \
     -r $MYSDSS_ROOT/$PRODNAME/$PRODVERS -c $PRODNAME $PRODVERS
    exit
@@ -98,7 +98,7 @@ fi
 
 # Set up "sdsscvs" if it exists as a product.
 
-ups setup sdsscvs
+setup sdsscvs
 
 # Set up "sdsstools" if it exists as a product.
 # If it exists, use "sdssmake" to build code.
@@ -106,14 +106,14 @@ ups setup sdsscvs
 #   set SDSSTOOLS_DIR=$IDLUTILS_DIR for the sake of getting a copy
 #   of the script "install_ups_table".
 
-ups setup sdsstools
+setup sdsstools
 if [ -n "$SDSSTOOLS_DIR" ] ; then
    if [ -n `which \sdssmake` ] ; then
       MAKECOMMAND='sdssmake -idl -opt -debug'
       MAKEINSTALLCOMMAND='sdssmake install'
    fi
 else
-   ups setup idlutils
+   setup idlutils
    SDSSTOOLS_DIR=$IDLUTILS_DIR
    if [ -n `which \evilmake` ] ; then
       MAKECOMMAND=evilmake
@@ -128,7 +128,8 @@ else
 fi
 
 if [ -e $SDSSTOOLS_DIR/bin/install_ups_table ] ; then
-   echo
+   # Save where this script lives, in case this environment variable changes.
+   MYSDSSTOOLS_DIR=$SDSSTOOLS_DIR
 else
    echo "Unable to find the command \$SDSSTOOLS_DIR/bin/install_ups_table."
    exit
@@ -178,8 +179,8 @@ else
    TABLEPARAM=""
 fi
 ups declare -f $FLAVOR $TABLEPARAM \
- -r $TEMPDIR/$TEMPSUBDIR -c $PRODNAME $PRODVERS
-ups setup -r $TEMPDIR/$TEMPSUBDIR $PRODNAME
+ -r $TEMPDIR/$TEMPSUBDIR $PRODNAME $PRODVERS
+setup -r $TEMPDIR/$TEMPSUBDIR $PRODNAME
 # The following nasty line is simply to set up the environment
 # variable {$PRODNAME}_DIR so that the code can be built.
 eval export `echo $PRODNAME | perl -pe 'y/a-z/A-Z/'`_DIR=$TEMPDIR/$TEMPSUBDIR
@@ -195,6 +196,8 @@ if [ $PRODVERS = "cvs" ] ; then
    cp -r $TEMPDIR/$TEMPSUBDIR $MYSDSS_ROOT/$PRODNAME/$PRODVERS
 else
    echo $MAKEINSTALLCOMMAND
+   # Reset this environment variable to where we found "install_ups_table"
+   export SDSSTOOLS_DIR=$MYSDSSTOOLS_DIR
    $MAKEINSTALLCOMMAND
 fi
 
