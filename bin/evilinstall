@@ -54,9 +54,9 @@ if [ $# != 2 ] ; then
 fi
 PRODNAME=$1
 PRODVERS=$2
-if [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | head -1c` != "v" ] ; then
+if [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | awk '{print substr($1,1,1)}'` != "v" ] ; then
    echo
-   echo "ABORT: Version name must either be \"cvs\" or begin with the character \"c\"."
+   echo "ABORT: Version name must either be \"cvs\" or begin with the character \"v\"."
    exit
 fi
 
