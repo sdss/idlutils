@@ -78,6 +78,9 @@ if(NOT keyword_set(npix_y)) then npix_y= 32L
 if(NOT keyword_set(pthick)) then pthick= 2.
 if(NOT keyword_set(yrangefudge)) then yrangefudge= 1.
 
+; recast range
+range = double(range)
+
 ; check dimensions
 ndata= n_elements(weight)       ; N
 ngauss= n_elements(amp)         ; M
