@@ -35,6 +35,9 @@ cmd= '\pstopnm -ppm -stdout -xborder 0 -yborder 0'+ $
 splog, cmd
 spawn, cmd
 overlay= read_image(psfile+'.ppm')
+cmd= '\rm -vf '+psfile+'.ppm'
+splog, cmd
+spawn, cmd
 overlay= float(overlay)/255.0
 tmp= rebin(overlay,3,naxis2,naxis1)
 overlay= fltarr(naxis1,naxis2,3)
