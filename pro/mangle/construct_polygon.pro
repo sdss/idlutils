@@ -6,10 +6,9 @@
 ;   This has the number of caps stored, a bitmask indicating whether 
 ;   to use each cap, the weight, and the area
 ; CALLING SEQUENCE:
-;   poly=construct_polygon([maxncaps= ])
+;   poly=construct_polygon()
 ; INPUTS:
 ; OPTIONAL INPUTS:
-;   maxncaps - the maximum number of caps allowed for any polygon
 ; OUTPUTS:
 ; OPTIONAL INPUT/OUTPUTS:
 ; COMMENTS:
@@ -21,11 +20,9 @@
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function construct_polygon, maxncaps=maxncaps
+function construct_polygon,ncaps=ncaps
 
-if(NOT keyword_set(maxncaps)) then maxncaps=15L
-if(maxncaps gt 64) then $
-  message,'Maximum number of caps per polygon is 64'
+if(NOT keyword_set(ncaps)) then ncaps=1
 
 ; make cap structure
 cap1=construct_cap()
@@ -35,7 +32,7 @@ polygon={polystr, $
          weight:0.D, $
          str:0.D, $
          use_caps:ulong64(0), $
-         caps:replicate(cap1,maxncaps)}
+         caps:ptr_new(replicate(cap1,ncaps))}
 
 return,polygon
 

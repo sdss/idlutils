@@ -23,9 +23,10 @@
 ;------------------------------------------------------------------------------
 pro write_fits_polygons, outfile, polygons, hdr=hdr
 
+maxncaps=max(polygons.ncaps)
+
 tags=tag_names(polygons)
-poly1=construct_polygon()
-outpoly1={xcaps:poly1.caps.x, cmcaps:poly1.caps.cm}
+outpoly1={xcaps:dblarr(3,maxncaps), cmcaps:dblarr(maxncaps)}
 for i=0L, n_elements(tags)-1L do begin
     if(tags[i] ne 'CAPS') then $ 
       outpoly1=create_struct(outpoly1,tags[i], polygons[0].(i))
@@ -33,8 +34,12 @@ endfor
 
 outpoly=replicate(outpoly1,n_elements(polygons))
 struct_assign,polygons,outpoly
-outpoly.xcaps=polygons.caps.x
-outpoly.cmcaps=polygons.caps.cm
+for i=0L, n_elements(polygons)-1L do begin
+    outpoly[i].xcaps[*,0:outpoly[i].ncaps-1L]= $
+      (*polygons[i].caps)[0:outpoly[i].ncaps-1].x
+    outpoly[i].cmcaps[0:outpoly[i].ncaps-1L]= $
+      (*polygons[i].caps)[0:outpoly[i].ncaps-1].cm
+endfor
 
 sxaddpar,hdr,'SDSSGA_T',systime(),'Time of creation of polygon fits file'
 sxaddpar,hdr,'VAGC_VER',vagc_version(),'Version of vagc used'

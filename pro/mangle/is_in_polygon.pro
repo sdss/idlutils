@@ -35,7 +35,7 @@ in_polygon=lonarr(nxyz)+1L
 for icap=0L, usencaps-1L do begin 
     if(is_cap_used(polygon.use_caps,icap)) then $
       in_polygon=in_polygon and $
-      (is_in_cap(xyz,polygon.caps[icap],radec=radec))
+      (is_in_cap(xyz,(*polygon.caps)[icap],radec=radec))
 endfor
 
 return,in_polygon

@@ -29,22 +29,29 @@ if(n_params() ne 2) then begin
     return
 endif
 
-if(NOT keyword_set(maxncaps)) then maxncaps=15
-
 inpoly=mrdfits(infile,1,/unsigned)
 intags=tag_names(inpoly)
-cap1=construct_cap()
-polygon1={caps:replicate(cap1,maxncaps)}
 for i=0L, n_elements(intags)-1L do begin
     if(intags[i] ne 'XCAPS' and $
        intags[i] ne 'CMCAPS') then begin
-        polygon1=create_struct(polygon1,intags[i], inpoly[0].(i))
-    endif
+        if(n_tags(polygon1) gt 0) then $
+          polygon1=create_struct(polygon1,intags[i], inpoly[0].(i)) $
+        else $
+          polygon1=create_struct(intags[i], inpoly[0].(i)) 
+    endif 
 endfor
+cap1=construct_cap()
+polygon1=create_struct(polygon1,'caps',ptr_new(0))
 
 polygons=replicate(polygon1,n_elements(inpoly))
-struct_assign,inpoly,polygons
-polygons.caps.x=inpoly.xcaps
-polygons.caps.cm=inpoly.cmcaps
+struct_assign,inpoly,polygons,/nozero
+
+for i=0L, n_elements(inpoly)-1L do begin
+    polygons[i].caps=ptr_new(replicate(construct_cap(),inpoly[i].ncaps))
+    (*polygons[i].caps)[0:inpoly[i].ncaps-1].x= $
+      inpoly[i].xcaps[*,0:inpoly[i].ncaps-1]
+    (*polygons[i].caps)[0:inpoly[i].ncaps-1].cm= $
+      inpoly[i].cmcaps[0:inpoly[i].ncaps-1]
+endfor
 
 end

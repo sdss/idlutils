@@ -40,14 +40,14 @@ if(NOT keyword_set(allow_doubles)) then begin
             if(is_cap_used(polygon[ipoly].use_caps,i)) then begin
                 for j=i+1L, polygon[ipoly].ncaps-1L do begin
                     if(is_cap_used(polygon[ipoly].use_caps,j)) then begin
-                        if(abs(polygon[ipoly].caps[i].x[0]- $
-                               polygon[ipoly].caps[j].x[0]) lt tol and $
-                           abs(polygon[ipoly].caps[i].x[1]- $
-                               polygon[ipoly].caps[j].x[1]) lt tol and $
-                           abs(polygon[ipoly].caps[i].x[2]- $
-                               polygon[ipoly].caps[j].x[2]) lt tol and $
-                           abs(polygon[ipoly].caps[i].cm- $
-                               polygon[ipoly].caps[j].cm) lt tol) then $
+                        if(abs((*polygon[ipoly].caps)[i].x[0]- $
+                               (*polygon[ipoly].caps)[j].x[0]) lt tol and $
+                           abs((*polygon[ipoly].caps)[i].x[1]- $
+                               (*polygon[ipoly].caps)[j].x[1]) lt tol and $
+                           abs((*polygon[ipoly].caps)[i].x[2]- $
+                               (*polygon[ipoly].caps)[j].x[2]) lt tol and $
+                           abs((*polygon[ipoly].caps)[i].cm- $
+                               (*polygon[ipoly].caps)[j].cm) lt tol) then $
                           polygon[ipoly].use_caps= $
                           polygon[ipoly].use_caps and (NOT ulong64(2)^j)
                     endif
