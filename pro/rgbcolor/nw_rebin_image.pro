@@ -4,7 +4,7 @@
 ;PURPOSE:
 ;  Divide the dimensions of the image by specified value
 ;CALLING SEQUENCE:
-;  nw_rebin_image(colors,rebin)
+;  colors= nw_rebin_image(colors,rebin)
 ;INPUTS:
 ;  colors      - [NX,NY,3] array containing the R, G, and B images
 ;  rebin       - factor by which to reduce the size of the output
