@@ -3,6 +3,8 @@ bin/drangle
 bin/harmonize
 bin/map
 bin/mrb_balkanize
+bin/mrb_snap
+bin/mrb_unify
 bin/poly2poly
 bin/polyid
 bin/ransack

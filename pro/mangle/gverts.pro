@@ -70,14 +70,14 @@ if(nused_caps eq 1) then begin
 ;   single cap is special case
 ;   doesn't work for inverted cap
     istart=0
-    while(x[istart,used_caps[0]] gt 0.99) do $
+    while(x[istart,0] gt 0.99) do $
       istart=istart+1
     refdir=dblarr(3)
     refdir[istart]=1.
-    sinth=sqrt(1.-x[istart,used_caps[0]]^2)
-    perp1=crossp(x[*,used_caps[0]],refdir)/sinth
-    perp2=crossp(x[*,used_caps[0]],perp1)
-    halfchord=sqrt(2*cm[used_caps[0]]-cm[used_caps[0]]^2)
+    sinth=sqrt(1.-x[istart,0]^2)
+    perp1=crossp(x[*,0],refdir)/sinth
+    perp2=crossp(x[*,0],perp1)
+    halfchord=sqrt(2*cm[0]-cm[0]^2)
     if(keyword_set(dangle)) then $
       nvdangle=long(halfchord*180./!DPI*2.*!DPI/dangle) 
     nvminside=long(minside*2.)
@@ -86,7 +86,7 @@ if(nused_caps eq 1) then begin
     nve=1L
     ve_p=dblarr(3,nv)
     for i=0L, nv-1L do $
-      ve_p[*,i]=x*(1.-cm[used_caps[0]])+ $
+      ve_p[*,i]=x*(1.-cm[0])+ $
       halfchord*(perp1*sin(2.*!DPI*double(i)/double(nv-1L))+ $
                  perp2*cos(2.*!DPI*double(i)/double(nv-1L)))
     retval=0
