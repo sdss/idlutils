@@ -27,7 +27,7 @@ all : $(LIB)/libidlmangle.$(SO_EXT)
 
 $(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle.$(SO_EXT)
 	$(LDF77) $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
-		-lmangle -L$(IDLUTILS_DIR)/lib
+		-L$(IDLUTILS_DIR)/lib -lmangle
 
 install :
 	-@ cp *.c $(IDLUTILS_DIR)/src/idlmangle
