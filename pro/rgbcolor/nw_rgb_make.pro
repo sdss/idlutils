@@ -22,7 +22,8 @@
 ;                of pixels in each direction and quarters the total
 ;                number of pixels in the image.
 ;  quality     - quality input for WRITE_JPEG
-;  overlay     - [nx,ny,3] image to overlay on the input images
+;  overlay     - [nx/rebinfactor,ny/rebinfactor,3] image to overlay on
+;                the input images
 ;OPTIONAL KEYWORDS:
 ;  saturatetowhite
 ;              - choose whether to saturate high-value pixels to white
@@ -72,18 +73,15 @@ ENDIF ELSE BEGIN
     colors[*,*,1] = Gim
     colors[*,*,2] = Bim
 ENDELSE
-if(keyword_set(overlay)) then overlay1= overlay
 IF n_elements(rebinfactor) THEN BEGIN
     colors = nw_rebin_image(colors,rebinfactor)
-    IF keyword_set(overlay) THEN overlay1= nw_rebin_image(overlay,rebinfactor)
 ENDIF
 
 colors = nw_scale_rgb(colors,scales=scales)
 colors = nw_arcsinh(colors,nonlinearity=nonlinearity)
-IF keyword_set(overlay1) THEN colors= colors+overlay1
 IF (NOT n_elements(saturatetowhite)) THEN $
   colors = nw_cut_to_box(colors,origin=origin)
-IF keyword_set(overlay1) THEN colors= (colors+overlay1) < 1.0
+IF keyword_set(overlay) THEN colors= (colors+overlay) < 1.0
 colors = nw_float_to_byte(colors)
 
 WRITE_JPEG,name,colors,TRUE=3,QUALITY=quality
