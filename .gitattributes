@@ -572,6 +572,7 @@ pro/astrom/angle_from_pairs.pro -text
 pro/astrom/astrom_engine.pro -text
 pro/astrom/astrom_tweak.pro -text
 pro/astrom/offset_from_pairs.pro -text
+pro/astrom/usno_cone.pro -text
 pro/astrom/usno_read.pro -text
 pro/astrom/usno_readzone.pro -text
 pro/bspline/bspline_action.pro -text
