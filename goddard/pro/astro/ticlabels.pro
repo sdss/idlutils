@@ -205,14 +205,14 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
  endif else begin                        ;Hours/Degrees
 
       inc = fix(DELTA*incr/60.0)
-      ticlabs[0] = string(minh,'(i3.2)') + sd 
+      ticlabs[0] = strtrim(minh,2) + sd 
       for i = delta,numtics-1, delta do begin
           minh = minh + inc
 	  if keyword_set(RA) then begin
 		while minh LT 0 do minh = minh + 24
 		while minh GT 24 do minh = minh - 24
           endif
-          ticlabs[i] = string( minh, '(i3.2)' ) + sd
+          ticlabs[i] = strtrim( minh,2) + sd
       endfor      
 
  endelse
