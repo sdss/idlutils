@@ -77,13 +77,18 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
         print, '         mask=mask, rejper=rejper, _EXTRA=KeywordsForEfc)'
     endif
 
+    if (N_elements(x) NE N_elements(y)) then $
+     message, 'Dimensions of X and Y do not agree'
     if (n_elements(maxiter) EQ 0) then maxiter = 5
     if (NOT keyword_set(upper)) then upper = 5.0
     if (NOT keyword_set(lower)) then lower = 5.0
     if (NOT keyword_set(invvar)) then begin
 	; cheesey inverse variance
         invvar = y - y + 1.0 / (stddev(y))^2
-    endif
+    endif else begin
+       if (N_elements(y) NE N_elements(invvar)) then $
+        message, 'Dimensions of Y and INVVAR do not agree'
+    endelse
 
     invsig = sqrt(invvar > 0)
 
