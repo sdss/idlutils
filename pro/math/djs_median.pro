@@ -7,7 +7,7 @@
 ;   the image along one of its dimensions.
 ;
 ; CALLING SEQUENCE:
-;   result = djs_median( array, [ dimension, width= ] )
+;   result = djs_median( array, [ dimension, width=, boundary= ] )
 ;
 ; INPUTS:
 ;   array      - N-dimensional array
@@ -19,6 +19,17 @@
 ;                by WIDTH) are medianed.
 ;   width      - Width of median window; scalar value.
 ;                It is invalid to specify both DIMENSION and WIDTH.
+;   boundary   - Boundary condition:
+;                'none': Do not median filter within WIDTH/2 pixels of
+;                        the edge; this is the default for both this
+;                        routine and MEDIAN().
+;                'nearest': Use the value of the nearest boundary pixel.
+;                        NOT IMPLEMENTED
+;                'reflect': Reflect pixel values around the boundary.
+;                'wrap': Wrap pixel values around the boundary.
+;                        NOT IMPLEMENTED
+;                These boundary conditions only take effect if WIDTH is set,
+;                and if ARRAY is either 1-dimensional or 2-dimensional.
 ;
 ; OUTPUTS:
 ;   result     - The output array.  If neither DIMENSION nor WIDTH are set,
@@ -50,6 +61,9 @@
 ;   > array = randomu(123,100,200)
 ;   > medarr = djs_median(array,9)
 ;
+; BUGS:
+;   The C routine only supports type FLOAT.
+;
 ; PROCEDURES CALLED:
 ;   Dynamic link to arrmedian.c
 ;
@@ -57,7 +71,7 @@
 ;   06-Jul-1999  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-function djs_median, array, dim, width=width
+function djs_median, array, dim, width=width, boundary=boundary
 
    ; Need at least 1 parameter
    if (N_params() LT 1) then begin
@@ -65,18 +79,95 @@ function djs_median, array, dim, width=width
       return, -1
    endif
 
+   if (NOT keyword_set(boundary)) then boundary = 'none'
+
+   dimvec = size(array, /dimensions)
+   ndim = N_elements(dimvec)
+
    if (NOT keyword_set(dim) AND NOT keyword_set(width)) then begin
 
       medarr = median(array, /even)
 
    endif else if (NOT keyword_set(dim)) then begin
 
-      medarr = median(array, width, /even)
+      if (boundary EQ 'none') then begin
+         medarr = median(array, width, /even)
+      endif else begin
+         padsize = ceil(width/2)
+         zero = array[0] - array[0] ; Zero in the type of ARRAY
+         if (ndim EQ 1) then begin
+            bigarr = bytarr(dimvec[0]+2*padsize) + zero
+            bigarr[padsize:padsize+dimvec[0]-1] = array
+         endif else if (ndim EQ 2) then begin
+            bigarr = bytarr(dimvec[0]+2*padsize, dimvec[1]+2*padsize) + zero
+            bigarr[padsize:padsize+dimvec[0]-1, padsize:padsize+dimvec[1]-1] $
+             = array
+         endif else begin
+            message, 'Unsupported number of dimensions with this b.c.'
+         endelse
+
+         if (ndim EQ 1) then begin
+            bigarr[0:padsize-1] = reverse(array[0:padsize-1])
+            bigarr[padsize+dimvec[0]:padsize*2+dimvec[0]-1] = $
+             array[dimvec[0]-padsize:dimvec[0]-1]
+
+            bigarr = temporary( median(bigarr, width, /even) )
+            medarr = bigarr[padsize:padsize+dimvec[0]-1]
+
+         endif else begin
+
+            case boundary of
+            'nearest': begin
+               message, 'This boundary condition not implemented.'
+            end
+            'reflect': begin
+
+               ; Copy into left + right
+               bigarr[0:padsize-1,padsize:dimvec[1]+padsize-1] = $
+                reverse(array[0:padsize-1,*],1)
+               bigarr[padsize+dimvec[0]:padsize*2+dimvec[0]-1, $
+                 padsize:dimvec[1]+padsize-1] = $
+                reverse(array[dimvec[0]-padsize:dimvec[0]-1,*],1)
+
+               ; Copy into bottom + top
+               bigarr[padsize:dimvec[0]+padsize-1,0:padsize-1] = $
+                reverse(array[*,0:padsize-1],2)
+               bigarr[padsize:padsize+dimvec[0]-1, $
+                padsize+dimvec[1]:padsize*2+dimvec[1]-1] = $
+                reverse(array[*,dimvec[1]-padsize:dimvec[1]-1],2)
+
+               ; Copy into lower left
+               bigarr[0:padsize-1,0:padsize-1] = $
+                reverse(reverse(array[0:padsize-1,0:padsize-1],1),2)
+
+               ; Copy into lower right
+               bigarr[padsize+dimvec[0]:padsize*2+dimvec[0]-1,0:padsize-1] = $
+                reverse(array[dimvec[0]-padsize:dimvec[0]-1,0:padsize-1],2)
+
+               ; Copy into upper left
+               bigarr[0:padsize-1,padsize+dimvec[1]:padsize*2+dimvec[1]-1] = $
+                reverse(reverse(array[0:padsize-1, $
+                dimvec[1]-padsize:dimvec[1]-1],1),2)
+
+               ; Copy into upper right
+               bigarr[padsize+dimvec[0]:padsize*2+dimvec[0]-1, $
+                padsize+dimvec[1]:padsize*2+dimvec[1]-1] = $
+                reverse(reverse(array[dimvec[0]-padsize:dimvec[0]-1, $
+                dimvec[1]-padsize:dimvec[1]-1],1),2)
+
+               bigarr = temporary( median(bigarr, width, /even) )
+               medarr = bigarr[padsize:padsize+dimvec[0]-1, $
+                padsize:padsize+dimvec[1]-1]
+
+            end
+            'wrap': begin
+               message, 'This boundary condition not implemented.'
+            end
+            endcase
+         endelse
+      endelse
 
    endif else if (NOT keyword_set(width)) then begin
-
-      dimvec = size(array, /dimensions)
-      ndim = N_elements(dimvec)
 
       if (dim GT ndim OR dim LT 1) then begin
          message, 'DIM must be between 1 and '+string(ndim)+' inclusive'
