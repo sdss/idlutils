@@ -1,4 +1,7 @@
 
+bin/Makefile: Should have "-n32" instead of "-32" in the X_FFLAGS
+               for the IRIX64 platform, to avoid inconsistencies with
+               the other compiler flags.
 src/image/Makefile: Change some of the comment lines, since for some bizarre
                reason those comment lines that end in a backslash will crash
                on the SGI IRIX platform.
