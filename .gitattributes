@@ -575,6 +575,7 @@ pro/coord/recenter.pro -text
 pro/coord/sptr1.pro -text
 pro/coord/xyz_to_angles.pro -text
 pro/fits/djs_readmany.pro -text
+pro/fits/modfitscard.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/qzap.pro -text
 pro/math/djs_avsigclip.pro -text
