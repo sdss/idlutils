@@ -10,7 +10,10 @@ SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                in other plot windows.  The fix is to always make sure that
                !p.position is reset to its previous value after any calls
                to SPLOT,SOPLOT,SXYOUTS.
-TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_READZONE,TMASS_STRUC:
+               If in zoom mode, default to zooming/panning in X, or if shift
+               button is pressed then zoom/pan in Y.
+TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_FITS_FILES,
+TMASS_READZONE,TMASS_REFORMAT_PSC,TMASS_STRUC:
                New procs for reading the 2MASS catalog.
 
 ups/idlutils.table: Add optional dependencies upon these products: dust,
@@ -18,6 +21,7 @@ ups/idlutils.table: Add optional dependencies upon these products: dust,
 
 In the Goddard utitilies:
 MRDFITS: Modified by Wayne Landsman to have the ROWS keyword.
+               (See e-mail exchange with him on 24-Jul-2003).
 
 -------------------------------------------------------------------------------
 v4_10_4 (Jul 5, 2003)
