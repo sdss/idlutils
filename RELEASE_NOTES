@@ -18,6 +18,10 @@ GROW_OBJECT   - New proc to identify objects as the contiguous non-zero pixels
                 in an image.  This calls a C program.
 TNMIN         - Two loop variables (lines 559 and 601) changed from "0"
                 to "0L".
+UCAC_READZONE - New function to read the raw UCAC data files for a specific
+                declination zone within a given RA range.
+USNO_READGC   - New proc to read the UCAC data files for a great circle
+                on the sky, analogous to UCAC_READGC.
 WCSXY2SPH     - Add HealCart projection.
 YANNY_READ    - Don't crash when FILENAME is a 1-element array!
 YANNY_READONE - Free pointers before returning.
