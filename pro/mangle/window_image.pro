@@ -43,7 +43,9 @@ endif else begin
         cmdstr='ransack -c'+strtrim(string(i),2)+' -r'+ $
           strtrim(string(1000000L),2)+' tmp_poly.ply tmp_wi_radec.dat'
         splog,cmdstr
-        spawn,cmdstr
+;        spawn,cmdstr
+        spawn, ['ransack', '-c'+strtrim(string(i),2), ' -r1000000', $
+         'tmp_poly.ply', 'tmp_wi_radec.dat'], /noshell
         openr,unit,'tmp_wi_radec.dat',/get_lun
         dummy=''
         readf,unit,dummy
