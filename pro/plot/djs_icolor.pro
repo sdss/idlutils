@@ -44,7 +44,7 @@ function djs_icolor, color
       green = long(255.0*(fix(findgen(27)/3) mod 3)/2.0)
       blue  = long(255.0*fix(findgen(27)/9)/2.0)
 
-for ii=0,26 do print, ii,red[ii],green[ii],blue[ii]
+;for ii=0,26 do print, ii,red[ii],green[ii],blue[ii]
 
       tvlct, red, green, blue
       icolor = 0 * (color EQ 'black') $
