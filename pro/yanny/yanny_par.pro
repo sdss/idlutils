@@ -46,7 +46,7 @@ function yanny_par, hdr, keyname, count=count, indx=indx
    count = 0
 
    if (N_params() LT 2) then begin
-      print, 'Syntax - result = yanny_par(hdr, keyname, [count= ] )'
+      print, 'Syntax - result = yanny_par(hdr, keyname, [count=, indx= ] )'
       return, ''
    endif
 
