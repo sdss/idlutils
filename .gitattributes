@@ -708,7 +708,10 @@ pro/bspline/bspline_fit.pro -text
 pro/bspline/bspline_indx.pro -text
 pro/bspline/bspline_iterfit.pro -text
 pro/bspline/bspline_maskpoints.pro -text
+pro/bspline/bspline_radial.pro -text
+pro/bspline/bspline_radial_valu.pro -text
 pro/bspline/bspline_valu.pro -text
+pro/bspline/bspline_workit.pro -text
 pro/bspline/bsplvn.pro -text
 pro/bspline/bvalu.pro -text
 pro/bspline/bvalu_slow.pro -text
