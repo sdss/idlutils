@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v4_10_3 (Jun 27, 2003)
+Tagged for photoop v0_10.
+
 ATV          - Merged with Aaron Barth's version 1.4 (by Finkbeiner).
                Merged to include using SPLOT/SOPLOT instead of PLOT,
                use 5 digit pixel coords, some Healpix support (though
@@ -6,6 +10,7 @@ ATV          - Merged with Aaron Barth's version 1.4 (by Finkbeiner).
                Fink did not merge in support for reversed CTYPE values
                in FITS headers, e.g. DEC,RA instead of RA,DEC.
 CAP_DISTANCE: New function, moved from photoop/RESOLVE_RUN_LOCAL.
+GVERTS: Fix zero-area failure.
 MUNU_TO_RADEC,RADEC_TO_MUNU: Computation of PHI now done properly in both
                routines, and done analytically rather than numerically.
                Before this, I at least had a correct numerical computation
