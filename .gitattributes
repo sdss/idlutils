@@ -733,6 +733,7 @@ pro/coord/euler_2000_fast.pro -text
 pro/coord/helio_to_lg.pro -text
 pro/coord/heliocentric.pro -text
 pro/coord/hms2dec.pro -text
+pro/coord/lg_to_helio.pro -text
 pro/coord/local_extragalactic.pro -text
 pro/coord/mjd2datelist.pro -text
 pro/coord/moon_zenith.pro -text
