@@ -1,18 +1,37 @@
 
+EXTRACT_PROFMEAN,FRAC_PROFMEAN,INTERP_PROFMEAN: Blanton's routines
+               for dealing with PHOTO aperature photometry.
 MEMSHIFT: New proc for doing raw memory copies within arrays or
                structure arrays.  This is faster than just using
                an IDL assignment statement.
 MRDFITS: Re-cast the argument to POINT_LUN to be type LONG64, to allow
                using MRDFITS with > 2 Gb files without errors.  This patch
                has been sent to Landsman.
+               Also, recast some other variables as LONG64 to work with
+               large files.  Basically, do this to all NAXIS*,THEAP,PCOUNT
+               header keywords.
+POLYGON_OVERLAP: Added /allow_neg_doubles to call to SET_USE_CAPS.
+SET_USE_CAPS: New (undocumented) keyword of /ALLOW_NEG_DOUBLES.
+VMID: New proc to return vector within a given balkan polygon.
 
 bin/evilmake: For compiling on the Mac (Darwin) platform, add the following
                to the X_LD_FLAGS flags: "-flat_namespace -undefined suppress".
                This lets Blanton's spherematch code build, since it needs
                to link to IDL's memory-management routines.  Note that we
                still cannot build the mangle routines on the Mac.
+               Blanton mysteriously changed the following for Linux:
+                MAKE_FTNLIB="-lg2c"
+               to have the following:
+                "-lg2c  -L/usr/lib/gcc-lib/i386-redhat-linux/`gcc -dumpversion
 pro/Makefile: Remove radprof from the SUBDIRS list, since there is nothing
                left in that directory.
+src/idlmangle/Makefile: Build idl_vmid.c.
+src/idlmangle/idl_vmid.c: Called by VMID.
+src/image/Makefile: Include $(MAKE_FTNLIB) options in $(LD) build step.
+               Also, build the new Fortran (.f) files, and idl_profmean,
+               ppvalu, tautsp, interv, interp_profmean.
+src/image/idl_interp_profmean.f, interp_profmean.f, interv.f, ppvalu.f,
+               tautsp.f: New procs by Blanton for profile interpolation.
 src/mangle1.4/src/Makefile: Change the "make" command to put the executables
                directly in the idlutils/bin directory, rather than copying
                them there after a "make install".  And don't have "make"
@@ -20,6 +39,8 @@ src/mangle1.4/src/Makefile: Change the "make" command to put the executables
 src/mangle1.4/src/GNUmakefile: Remove this file, since it appears to
                be identical to the "Makefile", and I don't really want
                to be worrying about two versions of the same Makefile.
+src/mangle1.4/src/format.h, mrb_balkanize.c, msg.c, parse_args.c, vmid.c:
+               Fixes for memory-use bugs.
 src/math/Makfile: Compile memshift.c
 src/math/memshift.c: Called by the new IDL procedure MEMSHIFT.
 
