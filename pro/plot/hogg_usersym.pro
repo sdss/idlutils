@@ -11,6 +11,7 @@
 ; OPTIONAL INPUTS:
 ;   scale       - linear size
 ;   _extra      - keywords for usersym (see usersym help page)
+;                 eg, /fill or thick=thick
 ; KEYWORDS
 ;   diagonal    - rotate symbol through 1/2 of 1/N turns
 ; REVISION HISTORY:
