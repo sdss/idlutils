@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   yanny_read, filename, [ pdata, hdr=hdr, enums=enums, structs=structs, $
-;    /anonymous, /quick, errcode= ]
+;    /anonymous, stnames=, /quick, errcode= ]
 ;
 ; INPUTS:
 ;   filename   - Input file name for Yanny parameter file
@@ -28,6 +28,11 @@
 ;   anonymous  - If set, then all returned structures are anonymous; set this
 ;                keyword to avoid possible conflicts between named structures
 ;                that are actually different.
+;   stnames    - Names of structures.  If /ANONYMOUS is not set, then this
+;                will be equivalent to the IDL name of each structure in PDATA,
+;                i.e. tag_names(PDATA[0],/structure_name) for the 1st one.
+;                This keyword is useful for when /ANONYMOUS must be set to
+;                deal with structures with the same name but different defns.
 ;   quick      - Quicker read using READF, but fails if continuation lines
 ;                are present.  However, /QUICK must be used if there are any
 ;                lines longer than 1023 characters (see bug section below).
@@ -270,11 +275,11 @@ function yanny_getwords, sline
 end
 ;------------------------------------------------------------------------------
 pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
- anonymous=anonymous, quick=quick, errcode=errcode
+ anonymous=anonymous, stnames=stnames, quick=quick, errcode=errcode
 
    if (N_params() LT 1) then begin
-      print, 'Syntax - yanny_read, filename, [ pdata, hdr=hdr, enums=enums, $
-      print, ' structs=structs, /quick ]'
+      print, 'Syntax - yanny_read, filename, [ pdata, hdr=, enums=, structs=, $
+      print, ' /anonymous, stnames=, /quick, errcode= ]'
       return
    endif
 
@@ -411,12 +416,14 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
             ; Now for the structure name - get from the last line read
             ; Force this to uppercase
-            stname = strupcase( strtrim(strmid(sline,1), 2) )
+            stname1 = strupcase( strtrim(strmid(sline,1), 2) )
+            if (NOT keyword_set(stnames)) then stnames = stname1 $
+             else stnames = [stnames, stname1]
 
             ; Create the actual structure
             if (keyword_set(anonymous)) then structyp='' $
-             else structyp = stname
-            add_pointer, stname, $
+             else structyp = stname1
+            add_pointer, stname1, $
              ptr_new( mrd_struct(names, values, 1, structyp=structyp) ), $
              pcount, pname, pdata, pnumel
 
