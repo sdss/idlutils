@@ -5,6 +5,8 @@ PLOT_POLY: Use SPLOT routine.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
 SPHEREMATCH: Some memory-saving changes by Blanton.
+STRUCT_SELECTTAGS: New proc for trimming structures to specified tags.
+               This is code broken out of SDSS_READOBJ().
 
 data/sdss/sdssMaskbits.par: Change IMAGE_STATUS bit from "CLOUDS" to "CLOUDY".
 src/image/pop_image.c: A double-precision version of the code has been
