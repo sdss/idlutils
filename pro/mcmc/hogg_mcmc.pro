@@ -18,7 +18,7 @@
 pro hogg_mcmc, seed,step_func,like_func,nstep,pars,like
 npars= n_elements(pars)
 oldpars= pars
-pars= pars#fltarr(nstep)
+pars= replicate(pars[0],npars,nstep)
 like= dblarr(nstep)
 for ii=0L,nstep-1L do begin
     hogg_mcmc_step, seed,oldpars,oldlike,step_func,like_func,newpars,newlike
@@ -26,7 +26,7 @@ for ii=0L,nstep-1L do begin
     like[ii]= newlike
     oldpars= newpars
     oldlike= newlike
-    if (((100L*ii) MOD nstep) EQ 0) then print, $
+    print, $
       strjoin(strarr(21)+string(byte(8)),''), $
       'HOGG_MCMC: ',100L*ii/nstep,' percent', $
       format= '($,A,A,I2.2,A)'
