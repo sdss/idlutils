@@ -18,3 +18,6 @@ programs
 
 fixed ransack bug where it wasn't checking for nULL polygons after
 throwing them away
+
+added selfdestruct flag to wrmask to destroy polygons as you write
+them

@@ -67,6 +67,7 @@ ipv_p=lonarr(nvmax)
 ev_p=lonarr(nvmax)
 if(nused_caps eq 1) then begin
 ;   single cap is special case
+;   doesn't work for inverted cap
     istart=0
     while(x[istart,used_caps[0]] gt 0.99) do $
       istart=istart+1
