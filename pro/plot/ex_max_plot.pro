@@ -31,6 +31,7 @@
 ;                   panels
 ;   default_font  font command to send to set font for plotting
 ;   pthick       thickness of plot lines
+;   yrangefudge  fudge range on histograms (default 1.)
 ; KEYWORDS:
 ;   nomodel      don't show model fits as greyscales or histograms
 ;   nodata       don't show data as greyscales or histograms
@@ -67,13 +68,15 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  default_font=default_font,twodimages=twodimages, $
                  psym_overpoints=psym_overpoints, $
                  sizepanellabel=sizepanellabel, $
-                 pthick=pthick,nogreyscale=nogreyscale
+                 pthick=pthick,nogreyscale=nogreyscale, $
+                 yrangefudge=yrangefudge
 
 ; set defaults
 if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
 if(NOT keyword_set(npix_x)) then npix_x= 32L
 if(NOT keyword_set(npix_y)) then npix_y= 32L
 if(NOT keyword_set(pthick)) then pthick= 2.
+if(NOT keyword_set(yrangefudge)) then yrangefudge= 1.
 
 ; check dimensions
 ndata= n_elements(weight)       ; N
@@ -283,7 +286,7 @@ for id2=ydimen-1,0L,-1 do begin
                     totdelta=panelpoint[d1,indxra]-totmean
                     totsig=sqrt(total(totdelta^2*panelweight[indxra]) $
                                 /totweight)
-                    !Y.RANGE= 1.0d0*[-0.1,1.1]*totweight/(totsig)
+                    !Y.RANGE= yrangefudge*[-0.1,1.1]*totweight/(totsig)
                 endelse
                 yinterval= 1000*(!Y.RANGE[1]-!Y.RANGE[0])
             endif
