@@ -21,10 +21,39 @@
 ;   yflux      - Rebinned spectrum
 ;
 ; COMMENTS:
-;   Both XWAVE and YWAVE must be in strictly ascending order.
+;   This function does a straight cloud-in-cell re-assignment of flux
+;   from one spectrum to another.  The boundaries of the flux in pixel #i,
+;   XFLUX[i], in the first spectrum is assumed to be uniformly distributed
+;   between the wavelengths [XWAVE[i],XWAVE[i+1]].  This flux is re-assigned
+;   to YFLUX, whose pixel #j is assumed to cover [YWAVE[j],YWAVE[j+1]].
+;   This algorithm is strictly flux-conserving for the wavelengths that
+;   overlap.
+;
+;   If one wavelength grid is an integral multiple of the other, than this
+;   is equivalent to using the IDL REBIN command.  For example, the following
+;   exactly puts the flux from the XFLUX spectrum into bins twice as big:
+;     IDL> xflux=randomu(1234,100)
+;     IDL> xwave=findgen(101)
+;     IDL> ywave=findgen(51)*2
+;     IDL> yflux=rebin_spectrum(xflux,xwave,ywave)
+;   This could also be accomplished with
+;     IDL> yflux2=rebin(xflux,50)
+;   In this example, the two pixels of the input spectrum span the
+;   wavelengths [0,1] and [1,2].  The first pixel of the output spectrum
+;   spans [0,2].
+;
+;   Both XWAVE and YWAVE must be in strictly ascending order, and cannot
+;   repeat any wavelengths within those vectors.
+;
+;   One can also call this routine with XWAVE having the same number of
+;   elements as XFLUX.  In that case, we assume that the wavelengths are
+;   at the center of each pixel, and internal to this routine compute
+;   (by linear interpolation) where the pixel boundaries are.  For this case,
+;   we also interpret YWAVE as being at the pixel centers.
 ;
 ; BUGS:
 ;   This should probably be implmented in C for better speed.
+;   We do not test that XWAVE and YWAVE are strictly ascending.
 ;
 ; PROCEDURES CALLED:
 ;
