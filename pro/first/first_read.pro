@@ -348,6 +348,8 @@ function first_read, racen, deccen, radius, $
          ramin = 0.0
          ramax = 360.0
       endif
+      ramin = ramin > 0
+      ramax = ramax < 360
    endif else begin
       ramin = 0.0
       ramax = 360.0
