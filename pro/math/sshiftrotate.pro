@@ -76,10 +76,10 @@ function sshiftrotate, image, theta1, xshift=xshift, yshift=yshift, $
 
    ; Compute the offset functions for each of the 3 sinc shifts
 
-; This fails if theta=0 exactly ???
    sint = sin(-theta/!radeg)
-   aslope = (-2. + sqrt(4. - 2.*sint^2)) / (2. * sint)
-   bslope = -2. * aslope / (1. + aslope^2)
+   cost = cos(-theta/!radeg)
+   aslope = -sint / (1. + cost)
+   bslope = sint
    cslope = aslope
    ssx = xshift - cslope * yshift
    ssy = -bslope * xshift + (1+bslope*cslope) * yshift
