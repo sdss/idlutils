@@ -83,8 +83,8 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
    ; These values will be returned if there are fewer than 2 good points.
 
    mask = fltarr(ngood)+1.0
-   fmean = total(image*mask)/ngood
-   fsig = sqrt(total((image-fmean)^2*mask)/(ngood-1))
+   fmean = total(image*mask) / ngood
+   fsig = sqrt(total((image-fmean)^2*mask) / (ngood-1))
    iiter = 1
 
    ;----------
@@ -97,8 +97,7 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       hival = fmean + sigrej * fsig
       nlast = ngood
 
-      ; Convert the MASK to type float to speed it up.
-      mask = float(image GT loval AND image LT hival)
+      mask = image GT loval AND image LT hival
       ngood = total(mask)
 
       if (ngood GE 2) then begin
@@ -110,10 +109,12 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       iiter = iiter + 1
    endwhile
 
-   if (keyword_set(savemask)) then $
-    fmedian = median(image[where(savemask EQ 1)], /even) $
-   else $
-    fmedian = fmean
+   if (arg_present(fmedian)) then begin
+      if (keyword_set(savemask)) then $
+       fmedian = median(image[where(savemask EQ 1)], /even) $
+      else $
+       fmedian = fmean
+   endif
 
    return
 end
