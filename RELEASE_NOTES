@@ -1,9 +1,20 @@
 
+ADJUST_ERROR: New proc.
+ASINH2: Trig function; moved from vagc product.
+FIRST_READ,FIRST_COVERAGE: New functions for reading the FIRST radio survey
+               data files.
+IS_IN_CAP,IS_IN_POLYGON,IS_IN_WINDOW: Change calling sequence, with
+               ra=,dec=,xyz= instead of assuming xyz is passed.
 SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                is left in a bad state that does not allow the use of !p.multi
                in other plot windows.  The fix is to always make sure that
                !p.position is reset to its previous value after any calls
                to SPLOT,SOPLOT,SXYOUTS.
+TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_READZONE,TMASS_STRUC:
+               New procs for reading the 2MASS catalog.
+
+ups/idlutils.table: Add optional dependencies upon these products: dust,
+               first, gsc, twomass, tycho2, ucac, usno.
 
 -------------------------------------------------------------------------------
 v4_10_4 (Jul 5, 2003)
