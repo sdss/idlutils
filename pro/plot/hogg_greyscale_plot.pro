@@ -30,6 +30,7 @@
 ; BUGS/FEATURES:
 ;   There may be something wrong with the axes; check few-pixel images.
 ;   No contouring available (but see "COMMENTS" and the source code).
+;   Probably doesn't work on multi-plot pages; not really checked.
 ; REVISION HISTORY:
 ;   1999-08-01  Written - Hogg
 ;   2001-05-01  Fonts improved - Hogg
