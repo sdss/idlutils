@@ -40,14 +40,16 @@
 # Demand that both a product and version name are on the command line,
 # and that the version name either be "cvs" or begin with the character "c".
 if [ $# != 2 ] ; then
-  echo "Need to specify product and version on command line, i.e."
-  echo "  \"evilinstall idlutils v4_5_0\""
+  echo
+  echo "ABORT: Need to specify product and version on command line, i.e."
+  echo "       \"evilinstall idlutils v4_5_0\""
   exit
 fi
 PRODNAME=$1
 PRODVERS=$2
 if [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | head -1c` != "v" ] ; then
-   echo "Version name must either be \"cvs\" or begin with the character \"c\"."
+   echo
+   echo "ABORT: Version name must either be \"cvs\" or begin with the character \"c\"."
    exit
 fi
 
@@ -65,7 +67,8 @@ fi
       echo source /usr/local/etc/sdssfue.sh
       source /usr/local/etc/sdssfue.sh
    else
-      echo "Unable to find sdssfue.sh script to set up UPS."
+      echo
+      echo "ABORT: Unable to find sdssfue.sh script to set up UPS."
       exit
    fi
 #else
@@ -77,7 +80,8 @@ fi
 FLAVOR=`echo $SETUP_UPS | sed -ne 's/.*-f \([^ ]*\).*/\1/p'`
 echo Installing PRODNAME=$PRODNAME PRODVERS=$PRODVERS FLAVOR=$FLAVOR.
 if [ -z $FLAVOR ] ; then
-   echo "FLAVOR could not be determined from environment variable SETUP_UPS"
+   echo
+   echo "ABORT: FLAVOR could not be determined from environment variable SETUP_UPS"
    exit
 fi
 
@@ -94,6 +98,7 @@ echo "Setting MYSDSS_ROOT=$MYSDSS_ROOT"
 # Make sure this product+version isn't already declared.
 
 if [ -e $MYSDSS_ROOT/$PRODNAME/$PRODVERS ] ; then
+   echo
    echo "This installation already appears to exist in " $MYSDSS_ROOT/$PRODNAME/$PRODVERS
    echo "Now declaring this version current."
 # We could set this up too, but that information is not passed outside
@@ -139,7 +144,8 @@ else
    fi
 fi
 if [ -z "$MAKECOMMAND" ] ; then
-   echo "Could not set up either \"sdssmake\" or \"evilmake\" for building code."
+   echo
+   echo "ABORT: Could not set up either \"sdssmake\" or \"evilmake\" for building code."
    exit
 else
    echo "Setting MAKECOMMAND=$MAKECOMMAND"
@@ -149,15 +155,18 @@ if [ -e $SDSSTOOLS_DIR/bin/install_ups_table ] ; then
    # Save where this script lives, in case this environment variable changes.
    MYSDSSTOOLS_DIR=$SDSSTOOLS_DIR
 else
-   echo "Unable to find the command \$SDSSTOOLS_DIR/bin/install_ups_table"
-   echo "or \$IDLUTILS_DIR/bin/install_ups_table."
+   echo
+   echo "ABORT: Unable to find the command \$SDSSTOOLS_DIR/bin/install_ups_table"
+   echo "       or \$IDLUTILS_DIR/bin/install_ups_table."
    exit
 fi
 if [ -e /usr/local/bin/perl ] ; then
    echo
 else
-   echo "The binary \"/usr/local/bin/perl\" must exist for the \"install_ups_table\""
-   echo "command to work.  Sorry!  Try putting in a symbolic link to perl and try again."
+   echo
+   echo "ABORT: The binary \"/usr/local/bin/perl\" must exist for"
+   echo "       the \"install_ups_table\" command to work.  Sorry!"
+   echo "       Try putting in a symbolic link to perl and try again."
    exit
 fi
 
@@ -176,7 +185,8 @@ touch $MYSDSS_ROOT/$PRODNAME/thisisatest
 if [ -e $MYSDSS_ROOT/$PRODNAME/thisisatest ] ; then
    rm -f $MYSDSS_ROOT/$PRODNAME/thisisatest
 else
-   echo "Unable to create files in the directory " $MYSDSS_ROOT/$PRODNAME
+   echo
+   echo "ABORT: Unable to create files in the directory " $MYSDSS_ROOT/$PRODNAME
    exit
 fi
 
@@ -187,6 +197,14 @@ if [ $PRODVERS = "cvs" ] ; then
    cvs co -d $TEMPSUBDIR $PRODNAME
 else
    cvs export -d $TEMPSUBDIR -r $PRODVERS $PRODNAME
+fi
+# If the cvs check-out failed (for example, if this version does not exist),
+# then exit.
+if [ ! -d $TEMPSUBDIR ] ; then
+   echo
+   echo "ABORT: Could not cvs check-out verson $PRODVERS of $PRODNAME"
+   echo "       from the repository CVSROOT=$CVSROOT"
+   exit
 fi
 # The following ups commands are to set up any dependencies needed
 # to build the code.
