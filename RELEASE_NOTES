@@ -2,6 +2,8 @@
 ADJUST_ERROR: New proc.
 ASINH2: Trig function; moved from vagc product.
 ASTROM_ENGINE: Fix print statement for "XSHIFT:".
+CIRCLE_CAP: Conform to new RA,DEC inputs.
+CONSTRUCT_POLYGON, READ_MANGLE_POLYGONS: Cleaner memory.
 DJS_PHOT,DJS_PHOTSKY,EXACT_PHOTFRAC: Add support for calling the sinc-shift
                "exact" photometry that Lupton uses in PHOTO.  This algorithm
                is called if the /EXACT keyword is set.
@@ -16,6 +18,7 @@ MWRFITS_CHUNKS: Small changes to internal proc MWRBIN_APPEND to allow
                We were not freeing one LUN for each time this routine
                was called.
 POLYGON_OVERLAP - Blanton changed the usage?
+SET_USE_CAPS: Output use_caps separately too.
 SPLOT - Fix to address PR #5468, where the IDL system variable !p.position
                is left in a bad state that does not allow the use of !p.multi
                in other plot windows.  The fix is to always make sure that
@@ -37,6 +40,10 @@ src/image/idl_photfrac.c, p_cisi.c, p_midpnt.c, p_polint.c, p_qromo.c,
                p_utils.c, ph.h, photfrac.c, test_photfrac.c:
                New tools added by Blanton for band-limited aperature
                photometry (as done by Lupton in PHOTO).
+src/mangle1.2/mrb_balkanize.c, mwrmask.c: Destroy the polygons as they
+               stream out, so that we try to conserve total memory as
+               the C outputs are read into the IDL code.
+               Print a loop counter after every 100 balkans.
 ups/idlutils.table: Add optional dependencies upon these products: dust,
                first, gsc, twomass, tycho2, ucac, usno.
 
