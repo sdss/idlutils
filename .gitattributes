@@ -577,6 +577,9 @@ pro/plot/djs_oploterr.pro -text
 pro/plot/djs_plot.pro -text
 pro/plot/djs_plotlimitbox.pro -text
 pro/plot/splot.pro -text
+pro/slatec/slatec_bvalu.pro -text
+pro/slatec/slatec_efc.pro -text
+pro/slatec/slatec_splinefit.pro -text
 pro/yanny/yanny_read.pro -text
 pro/yanny/yanny_write.pro -text
 src/math/arravsigclip.c -text

@@ -1,0 +1,68 @@
+;+
+; NAME:
+;   slatec_bvalu
+;
+; PURPOSE:
+;   Evaluate a bspline 
+;
+; CALLING SEQUENCE:
+;   
+;    y = slatec_bvalu(x, bkpt, coeff, ideriv=ideriv)
+;
+; INPUTS:
+;   x          - vector of positions to evaluate
+;   bkpt       - Breakpoint vector returned by efc
+;   coeff      - B-spline coefficients calculated by efc
+;
+; OPTIONAL KEYWORDS:
+;
+;   ideriv     - Derivative to evaluate at x (default 0)
+;
+; OUTPUTS:
+;   y          - Evaluations corresponding to x positions
+;
+; OPTIONAL OUTPUTS:
+;
+; COMMENTS:
+;
+; EXAMPLES:
+;
+;
+;
+; PROCEDURES CALLED:
+;   bvalu_idl in slatec/src/idlwrapper.c
+;      which calls bvalu.f in libslatecidl.so
+;
+; REVISION HISTORY:
+;   15-Oct-1999  Written by Scott Burles, Chicago
+;-
+;------------------------------------------------------------------------------
+
+function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
+
+   if (NOT keyword_set(ideriv)) then ideriv=0L
+
+   nbkpt = n_elements(bkpt)
+   ncoeff = n_elements(coeff)
+
+   k = nbkpt - ncoeff
+   n = nbkpt - k
+
+   minbkpt = bkpt[k-1]
+   maxbkpt = bkpt[n]
+
+   work = fltarr(3*k)
+   y = x
+   nx = n_elements(x)
+   retval = 1.0
+
+   inbv = 1L
+   for i=0L,nx-1 do begin
+	xtemp = min([max([x[i],minbkpt]), maxbkpt])
+     rr = call_external(getenv('IDL_EVIL')+'libslatecidl.so','bvalu_idl', $
+      bkpt, coeff, n, k, ideriv, xtemp, inbv, work, retval)
+      y[i] = retval
+   endfor
+
+   return, y
+end
