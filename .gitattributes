@@ -859,7 +859,9 @@ pro/plot/hogg_usersym.pro -text
 pro/plot/hogg_weighted_mean_surface.pro -text
 pro/plot/imgexp.pro -text
 pro/plot/imgscl.pro -text
+pro/plot/restore_sysvars.pro -text
 pro/plot/splot.pro -text
+pro/plot/sysvars.pro -text
 pro/slatec/bvalu2d.pro -text
 pro/slatec/efc2d.pro -text
 pro/slatec/efcmn.pro -text
