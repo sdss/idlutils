@@ -42,7 +42,7 @@ IDL_LONG idl_vmid
 	IDL_LONG *ev_p;
 	IDL_LONG i,j,k,l;
 	IDL_LONG retval=1;
-  double mtol=1.e-10;
+  double mtol=1.e-15;
 
   poly=NULL;
   vm_p=NULL;
@@ -75,10 +75,17 @@ IDL_LONG idl_vmid
 	retval=gvert(poly, vcirc, &tol, nv, 0, nve, (int *) &nv, (vec *) ve_p, 
                angle_p, (int *) ipv_p, (int *) gp_p, (int *) &nev, 
                (int *) &nev0, (int *) ev_p);
+#if 0
+  printf("%d\n",retval);
+  for(i=0;i<nve;i++)
+    printf("%e %e %e\n",ve_p[i*3+0],ve_p[i*3+1],ve_p[i*3+2]);
+  fflush(stdout);
+#endif
   retval=vmid(poly, mtol, nv, nve, (vec *) ve_p, (int *) ipv_p, (int *) ev_p, 
               (int *) &nvm, (vec **) &vm_p);
   
 #if 0
+  printf("%d\n",retval);
   for(i=0;i<nvm;i++)
     printf("%e %e %e\n",vm_p[i*3+0],vm_p[i*3+1],vm_p[i*3+2]);
   fflush(stdout);
