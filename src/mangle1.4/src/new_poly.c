@@ -115,6 +115,34 @@ int room_poly(polygon **poly, int np, int dnp, int save)
     return(1);
 }
 
+/*-------------------------------------------------------------------------
+  Clean up a polygon so it does not use up extra space
+*/
+int clean_poly(polygon **poly)
+{
+  polygon *newpoly;
+
+  if(!(*poly)) return(0);
+    
+  /* polygon contains right amount of space */
+  if (*poly && (*poly)->npmax <= (*poly)->np) return(0);
+  
+  /* allocate new polygon with np caps */
+  newpoly=new_poly((*poly)->np);
+  if (!newpoly) return(-1);
+  
+  /* copy poly to new polygon */
+  if (*poly) copy_poly(*poly, newpoly);
+  
+  /* free polygon */
+  if (*poly) free_poly(*poly);
+  
+  /* point poly to new polygon */
+  *poly = newpoly;
+
+  return(1);
+}
+
 /*------------------------------------------------------------------------------
   Advise memory used.
 */

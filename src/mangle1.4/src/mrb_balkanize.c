@@ -305,12 +305,13 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
       add_parent(polys[m],i);
     
     if(i%100 == 0) {
-      total_ncaps=0;
-#if 1
       for(ic=0;ic<np;ic++) 
         if(polys[ic]) 
-          total_ncaps+=polys[ic]->np;
-#endif
+          clean_poly(&(polys[ic]));
+      total_ncaps=0;
+      for(ic=0;ic<np;ic++) 
+        if(polys[ic]) 
+          total_ncaps+=polys[ic]->npmax;
       fprintf(stderr, "polygon %d / %d (%d balkans) / %d caps\n",i,npoly,np,
               total_ncaps);
     } /* end if */

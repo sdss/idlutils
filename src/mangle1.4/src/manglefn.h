@@ -167,6 +167,7 @@ void	msg(char *, ...);
 polygon	*new_poly(int);
 void	free_poly(polygon *);
 int	room_poly(polygon **, int, int, int);
+int	clean_poly(polygon **);
 void	memmsg(void);
 
 vertices	*new_vert(int);
