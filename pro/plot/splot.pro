@@ -889,9 +889,12 @@ pro splot_plot1plot, iplot
 ;    _EXTRA=options
 ;   oplot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
 ;    _EXTRA=options
+   pposition = !p.position
+   !p.position = state.position
    plot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
     /noerase, xstyle=5, ystyle=5, xrange=state.xrange, yrange=state.yrange, $
     _EXTRA=options
+   !p.position = pposition
 
    return
 end
@@ -900,6 +903,7 @@ end
 
 pro splot_plot1text, iplot
 
+   common splot_state
    common splot_pdata
 
    widget_control, /hourglass
@@ -911,8 +915,11 @@ pro splot_plot1text, iplot
 
    string_tex = (*(plot_ptr[iplot])).text
 ;   if (keyword_set(string_tex)) then string_tex = TeXtoIDL(string_tex)
+   pposition = !p.position
+   !p.position = state.position
    xyouts, (*(plot_ptr[iplot])).x, (*(plot_ptr[iplot])).y, $
     string_tex, _EXTRA=options
+   !p.position = pposition
 
    return
 end
@@ -926,7 +933,8 @@ pro splot_plotwindow
 
    ; Set plot window - draw box
 
-   !p.position = state.position ; ???
+   pposition = !p.position
+   !p.position = state.position
    if (nplot GT 0) then begin
 
       ; Always plot the box with color='default'
@@ -942,6 +950,7 @@ pro splot_plotwindow
       plot, [0], [0], /nodata, $
        xrange=state.xrange, yrange=state.yrange, xstyle=1, ystyle=1
    endelse
+   !p.position = pposition
 
    return
 end
