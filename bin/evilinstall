@@ -33,7 +33,7 @@
 # Now with all the messy confusion at Fermi, it is no longer possible
 # to auto-detect Linux flavors using the $SETUP_UPS environment.
 # It is best to first set an environment variable, i.e.:
-#   UPS_FLAVOR=Linux+2
+#   UPS_PROD_FLAVOR=Linux+2
 # to over-ride the auto-detected flavor on Linux boxes, which now always
 # appears to come up as Linux+2.4, which no one actually uses.
 #
@@ -84,12 +84,12 @@ fi
 
 # Find the flavor of this machine (e.g., "Linux+2" or "IRIX+6").
 
-if [ -n $UPS_FLAVOR ] ; then
-   FLAVOR=$UPS_FLAVOR
-   echo Setting from environment variable UPS_FLAVOR=$UPS_FLAVOR
+if [ -n $UPS_PROD_FLAVOR ] ; then
+   FLAVOR=$UPS_PROD_FLAVOR
+   echo Setting from environment variable FLAVOR=$UPS_PROD_FLAVOR
 else
    FLAVOR=`echo $SETUP_UPS | sed -ne 's/.*-f \([^ ]*\).*/\1/p'`
-   echo Setting from the UPS setups UPS_FLAVOR=$UPS_FLAVOR
+   echo Setting from the UPS setups FLAVOR=$UPS_PROD_FLAVOR
 fi
 echo Installing PRODNAME=$PRODNAME PRODVERS=$PRODVERS FLAVOR=$FLAVOR.
 if [ -z $FLAVOR ] ; then
