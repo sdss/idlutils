@@ -21,7 +21,9 @@ function hogg_mrdfits, file, extension, header, silent=silent, $
  range=range, structyp=structyp, nrowchunk=nrowchunk, _EXTRA=inputs_for_mrdfits
 
   if not keyword_set(range) then begin
-    naxis2= long64(sxpar(headfits(file,exten=extension,silent=silent),'NAXIS2'))
+    hdr = headfits(file,exten=extension,silent=silent)
+    if (size(hdr,/tname) NE 'STRING') then return, 0
+    naxis2= long64(sxpar(hdr,'NAXIS2'))
     if(NOT keyword_set(silent)) then splog, naxis2
     range= [0LL,naxis2-1LL]
   endif
