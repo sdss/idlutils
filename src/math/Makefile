@@ -15,13 +15,12 @@ CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS
 LIB = $(IDLUTILS_DIR)/lib
 
 RECIPES = nrecipes.o nrutil.o
-NNLS = 	nnls.o diff.o g1.o g2.o h12.o
+# NNLS = 	nnls.o diff.o g1.o g2.o h12.o
 OBJECTS = \
 	arravsigclip.o \
 	arravsigmask.o \
 	arrmedian.o \
 	ccorrelate.o \
-	$(NNLS) \
 	$(RECIPES)
 
 all : $(LIB)/libmath.$(SO_EXT)
