@@ -28,7 +28,7 @@ if(n_params() ne 2) then begin
     return
 endif
 
-inpoly=mrdfits(infile,1,/unsigned)
+inpoly=mrdfits(infile,1,/unsigned,/silent)
 intags=tag_names(inpoly)
 for i=0L, n_elements(intags)-1L do begin
     if(intags[i] ne 'XCAPS' and $
