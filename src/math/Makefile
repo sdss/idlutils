@@ -19,6 +19,7 @@ OBJECTS = \
 	arravsigclip.o \
 	arravsigmask.o \
 	arrmedian.o \
+	ccorrelate.o \
 	$(RECIPES)
 
 all : $(LIB)/libmath.$(SO_EXT)
