@@ -59,6 +59,7 @@ src/mangle1.4/src/format.h, mrb_balkanize.c, msg.c, parse_args.c, vmid.c:
                Fixes for memory-use bugs.
 src/mangle1.4/src/copy_poly.c,defaults.h,defines.h,format.h,manglefn.h,
                parse_args.c,wrmask.c: Change to use binary mangle outputs.
+src/mangle1.4/src/mrb_unify.c: New function.
 src/math/Makfile: Compile memshift.c
 src/math/memshift.c: Called by the new IDL procedure MEMSHIFT.
 
