@@ -670,6 +670,7 @@ pro/coord/djs_diff_angle.pro -text
 pro/coord/dotproduct_sphere.pro -text
 pro/coord/eta_to_stripe.pro -text
 pro/coord/etalambda_to_radec.pro -text
+pro/coord/euler_2000_fast.pro -text
 pro/coord/helio_to_lg.pro -text
 pro/coord/heliocentric.pro -text
 pro/coord/hms2dec.pro -text
