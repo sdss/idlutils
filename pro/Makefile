@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-SUBDIRS = fits math plot yanny TeXtoIDL image misc slatec
+SUBDIRS = TeXtoIDL coord fits image math misc plot slatec yanny
 
 all :;
 
