@@ -17,9 +17,10 @@
 ; COMMON BLOCKS:
 ; SIDE EFFECTS:
 ; RESTRICTIONS:
+;   seems to not have expected precision
 ; PROCEDURE:
 ; MODIFICATION HISTORY:
-;	  Blanton and Roweis 2003-02-18j 
+;	  Blanton and Roweis 2003-02-18 
 ;-
 function logsum, logs, double=double, const=const
 

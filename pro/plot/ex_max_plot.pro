@@ -37,6 +37,7 @@
 ;   noellipse    don't show ellipses on 2-d plots
 ;   bw           show ellipses in b/w
 ;   conditional  plot the conditional distribution of y on x 
+;   nogreyscale  don't plot the greyscale
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
 ;   quantile     output array of quantile positions; read the source code
@@ -66,7 +67,7 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  default_font=default_font,twodimages=twodimages, $
                  psym_overpoints=psym_overpoints, $
                  sizepanellabel=sizepanellabel, $
-                 pthick=pthick
+                 pthick=pthick,nogreyscale=nogreyscale
 
 ; set defaults
 if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
@@ -378,27 +379,32 @@ for id2=ydimen-1,0L,-1 do begin
                 evec1= evec1*2.0*sqrt(eval1)
                 evec2= evec2*2.0*sqrt(eval2)
 ; increment greyscale image with gaussians
-                if (((d2 LT d1) OR keyword_set(nodata)) AND $ 
-                    (NOT keyword_set(nomodel))) then begin
-                    invvar2d= invert(var2d,/double)
-                    for xxi=0L,usenpix_x-1 do for yyi=0L,usenpix_y-1 do $
-                      image[xxi,yyi]= image[xxi,yyi]+ $
-                      amp[j]/sqrt(det)/2.0/!PI* $
-                      exp(-0.5*([mean[d1,j],mean[d2,j]]- $
-                                [ximg[xxi],yimg[yyi]])# $
-                          invvar2d#([mean[d1,j],mean[d2,j]]- $
-                                    [ximg[xxi],yimg[yyi]]))
+                if(NOT keyword_set(nogreyscale)) then begin
+                    if (((d2 LT d1) OR keyword_set(nodata)) AND $ 
+                        (NOT keyword_set(nomodel))) then begin
+                        invvar2d= invert(var2d,/double)
+                        for xxi=0L,usenpix_x-1 do for yyi=0L,usenpix_y-1 do $
+                          image[xxi,yyi]= image[xxi,yyi]+ $
+                          amp[j]/sqrt(det)/2.0/!PI* $
+                          exp(-0.5*([mean[d1,j],mean[d2,j]]- $
+                                    [ximg[xxi],yimg[yyi]])# $
+                              invvar2d#([mean[d1,j],mean[d2,j]]- $
+                                        [ximg[xxi],yimg[yyi]]))
+                    endif
                 endif
             endfor
 
 ; save greyscale image
-            if(usenpix_x eq npix_x AND usenpix_y eq npix_y) then $
-              twodimages[*,*,id1,id2]=image
+            if(NOT keyword_set(nogreyscale)) then begin
+                if(usenpix_x eq npix_x AND usenpix_y eq npix_y) then $
+                  twodimages[*,*,id1,id2]=image
+            endif
 
 ; plot greyscale image
             if (d1 NE d2) then begin
                 if (NOT keyword_set(nodata) OR NOT keyword_set(nomodel)) then begin
                     loadct,0,/silent
+                    if(NOT keyword_set(nogreyscale)) then begin
                     if(keyword_set(conditional)) then begin
                         xx= floor(double(usenpix_x)* $
                                   (panelpoint[d1,*]-range[0,d1])/ $
@@ -447,16 +453,19 @@ for id2=ydimen-1,0L,-1 do begin
                     endif
 
 ; rescale outimage
-                    if(keyword_set(sigrejimage)) then begin
-                        tvrange= [0.0,djsig(outimage,sigrej=sigrejimage*2)]
-                    endif else begin
-                        tvrange= [0.0,2.0*max(outimage)]
-                    endelse
-                    tvimage= 255-((floor(256*(outimage-tvrange[0])/ $
-                                         (tvrange[1]-tvrange[0])) > 0) < 255)
+                        if(keyword_set(sigrejimage)) then begin
+                            tvrange= [0.0,djsig(outimage,sigrej=sigrejimage*2)]
+                        endif else begin
+                            tvrange= [0.0,2.0*max(outimage)]
+                        endelse
+                        tvimage= 255-((floor(256*(outimage-tvrange[0])/ $
+                                             (tvrange[1]-tvrange[0])) > 0) $
+                                      < 255)
+                    endif
 
 ; plot greyscale image
-                    tv, tvimage,!X.CRANGE[0],!Y.CRANGE[0],/data, $
+                    if(NOT keyword_set(nogreyscale)) then $
+                      tv, tvimage,!X.CRANGE[0],!Y.CRANGE[0],/data, $
                       xsize=(!X.CRANGE[1]-!X.CRANGE[0]), $
                       ysize=(!Y.CRANGE[1]-!Y.CRANGE[0]) 
 
