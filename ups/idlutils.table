@@ -12,6 +12,6 @@ Common:
       proddir()
       setupenv()
       pathAppend(PATH, ${UPS_PROD_DIR}/bin)
-      envAppend(IDL_PATH, +${UPS_PROD_DIR}/goddard/pro)
-      envAppend(IDL_PATH, +${UPS_PROD_DIR}/pro)
+      envPrepend(IDL_PATH, +${UPS_PROD_DIR}/goddard/pro)
+      envPrepend(IDL_PATH, +${UPS_PROD_DIR}/pro)
 End:
