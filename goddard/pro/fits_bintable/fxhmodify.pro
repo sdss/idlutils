@@ -1,5 +1,6 @@
-	PRO FXHMODIFY, FILENAME, NAME, VALUE, COMMENT, BEFORE=BEFORE,	$
-		AFTER=AFTER, FORMAT=FORMAT, EXTENSION=EXTENSION, ERRMSG=ERRMSG
+PRO FXHMODIFY, FILENAME, NAME, VALUE, COMMENT, BEFORE=BEFORE,	$
+               AFTER=AFTER, FORMAT=FORMAT, EXTENSION=EXTENSION, ERRMSG=ERRMSG,$
+               NOGROW=NOGROW
 ;+
 ; NAME: 
 ;	FXHMODIFY
@@ -66,20 +67,19 @@
 ;			IF ERRMSG NE '' THEN ...
 ;
 ; Calls       : 
-;	FXHREAD, FXPAR, FXADDPAR
+;	FXHREAD, FXPAR, FXADDPAR, BLKSHIFT
 ; Common      : 
 ;	None.
 ; Restrictions: 
-;	Adding records to a FITS header is not allowed if it would increase the
-;	number of 2880 byte records needed to store the header.  Modifying
-;	existing records is always allowed.
-;
 ;	This routine can not be used to modify any of the keywords that control
 ;	the structure of the FITS file, e.g. BITPIX, NAXIS, PCOUNT, etc.  Doing
 ;	so could corrupt the readability of the FITS file.
 ;
 ; Side effects: 
-;	None.
+;       If adding a record to the FITS header would increase the
+;       number of 2880 byte records stored on disk, then the file is
+;       enlarged before modification, unless the NOGROW keyword is passed.
+;  
 ; Category    : 
 ;	Data Handling, I/O, FITS, Generic.
 ; Prev. Hist. : 
@@ -204,6 +204,7 @@ NEXT_EXT:
 		MHEAD0 = POINTLUN + NREC*2880L
 		POINT_LUN, UNIT, MHEAD0			;Next FITS extension
 		FXHREAD,UNIT,HEADER,STATUS
+                POINT_LUN, -UNIT, END_HEADER
 		IF STATUS NE 0 THEN BEGIN
 			FREE_LUN,UNIT
 			MESSAGE = 'Requested extension not found'
@@ -242,14 +243,23 @@ DONE:
 	IEND = WHERE(STRMID(HEADER,0,8) EQ 'END     ')
 	N_FINAL = 1 + IEND[0]/36
 	IF N_FINAL NE N_INITIAL THEN BEGIN
+            IF KEYWORD_SET(NOGROW) THEN BEGIN
 		MESSAGE, /CONTINUE, 'Adding parameter would increase ' + $
 			'header length, no action taken.'
+            ENDIF ELSE BEGIN
+                ;; Increase size of the file by inserting multiples of
+                ;; 2880 bytes at the end of the current header.  Then
+                ;; resume normal operations.
+                BLKSHIFT, UNIT, END_HEADER, (N_FINAL-N_INITIAL)*36L*80L
+                GOTO, WRITE_HEADER
+            ENDELSE
 ;
 ;  Otherwise, rewind to the beginning of the header, and write the new header
 ;  over the old header.  Convert to byte and force into 80 character lines.
 ;
-	END ELSE BEGIN
-		BHDR = REPLICATE(32B, 80, 36*N_INITIAL)
+        ENDIF ELSE BEGIN
+            WRITE_HEADER:
+		BHDR = REPLICATE(32B, 80, 36*N_FINAL)
 		FOR N = 0,IEND[0] DO BHDR[0,N] = BYTE(STRMID(HEADER[N],0,80))
 		POINT_LUN, UNIT, MHEAD0
 		WRITEU, UNIT, BHDR
