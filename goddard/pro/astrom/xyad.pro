@@ -1,5 +1,5 @@
 pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic,  $
-         CELESTIAL = celestial, ECLIPTIC = ecliptic      ;X, Y to Long, lat
+         CELESTIAL = celestial, ECLIPTIC = ecliptic, ALT = alt ;X,Y to Long, lat
 ;+
 ; NAME:
 ;       XYAD
@@ -11,8 +11,8 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic,  $
 ;
 ; CALLING SEQUENCE:
 ;       XYAD, HDR               ;Prompt for X and Y positions
-;       XYAD, HDR, X, Y, A, D, [ /PRINT, /GALACTIC, /CELESTIAL, /ECLIPTIC]
-;
+;       XYAD, HDR, X, Y, A, D, [ /PRINT, /Galactic, /Celestial, /Ecliptic, 
+;                                ALT = ]
 ; INPUTS:
 ;       HDR - FITS Image header containing astrometry info
 ;
@@ -29,6 +29,12 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic,  $
 ;       D - Output latitude in decimal DEGREES.   For celestial coordinates,
 ;               this is the declination.
 ; OPTIONAL KEYWORD INPUT:
+;       ALT -  single character 'A' through 'Z' or ' ' specifying an alternate 
+;             astrometry system present in the FITS header.    The default is
+;             to use the primary astrometry or ALT = ' '.   If /ALT is set, 
+;             then this is equivalent to ALT = 'A'.   See Section 3.3 of 
+;             Greisen & Calabretta (2002, A&A, 395, 1061) for information about
+;             alternate astrometry keywords.;      
 ;       /PRINT - If this keyword is set and non-zero, then results are displayed
 ;               at the terminal.in both decimal and sexigesimal notation.
 ;
@@ -42,7 +48,8 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic,  $
 ;    
 ; OPERATIONAL NOTES:
 ;       If less than 5 parameters are supplied, or if the /PRINT keyword is
-;       set, then then the X and Y positions are displayed at the terminal.
+;       set, then the computed astronomical coordinates are displayed at the 
+;       terminal.
 ;
 ;       If this procedure is to be used repeatedly with the same header,
 ;       then it would be faster to use XY2AD.
@@ -64,6 +71,7 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic,  $
 ;       Changed ADSTRING output format   W. Landsman    September 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use vector call to ADSTRING() W. Landsman February 2000
+;       Added ALT input keyword  W. Landsman June 2003
 ;-
  On_error,2
 
@@ -76,7 +84,7 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic,  $
         return
  endif                                                         
 
-  extast, hdr, astr, noparams              ;Extract astrometry structure
+  extast, hdr, astr, noparams, ALT = alt       ;Extract astrometry structure
 
   if ( noparams LT 0 ) then $ 
         message,'ERROR - No astrometry info in supplied FITS header'
