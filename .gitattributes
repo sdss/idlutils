@@ -871,6 +871,7 @@ pro/mpfit/mpfittut.html -text
 pro/mpfit/setfitparm.pro -text
 pro/mpfit/tnmin.pro -text
 pro/plot/atv.pro -text
+pro/plot/atv_joe_writeps.pro -text
 pro/plot/blanton_oned_meanplot.pro -text
 pro/plot/blanton_weighted_mean_line.pro -text
 pro/plot/cmps_form.pro -text
