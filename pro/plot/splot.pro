@@ -439,35 +439,53 @@ pro splot_zoom, zchange, recenter = recenter
    ; Routine to do zoom in/out and recentering of image
 
    case zchange of
-      'x-in': begin
+      'xonly-in': begin
          state.xrange = state.mphys[0] $
           + [-0.25, 0.25] * (state.xrange[1] - state.xrange[0])
          if (state.yfix EQ 'float') then splot_autoscale_y
       end
-      'y-in': begin
+      'yonly-in': begin
          state.yrange = state.mphys[1] $
           + [-0.25, 0.25] * (state.yrange[1] - state.yrange[0])
          if (state.xfix EQ 'float') then splot_autoscale_x
       end
-      'x-out': begin
+      'xandy-in': begin
+         state.xrange = state.mphys[0] $
+          + [-0.25, 0.25] * (state.xrange[1] - state.xrange[0])
+         state.yrange = state.mphys[1] $
+          + [-0.25, 0.25] * (state.yrange[1] - state.yrange[0])
+      end
+      'xonly-out': begin
          state.xrange = state.mphys[0] $
           + [-1.0, 1.0] * (state.xrange[1] - state.xrange[0])
          if (state.yfix EQ 'float') then splot_autoscale_y
       end
-      'y-out': begin
+      'yonly-out': begin
          state.yrange = state.mphys[1] $
           + [-1.0, 1.0] * (state.yrange[1] - state.yrange[0])
          if (state.xfix EQ 'float') then splot_autoscale_x
+      end
+      'xandy-out': begin
+         state.xrange = state.mphys[0] $
+          + [-1.0, 1.0] * (state.xrange[1] - state.xrange[0])
+         state.yrange = state.mphys[1] $
+          + [-1.0, 1.0] * (state.yrange[1] - state.yrange[0])
       end
       'one': begin
          splot_autoscale_x
          splot_autoscale_y
       end
-      'x-recen': begin ; no change to zoom level: X recenter on mouse pos'n
+      'xonly-recen': begin ; no change to zoom level: X recenter on mouse pos'n
          state.xrange = state.mphys[0] $
           + [-0.5, 0.5] * (state.xrange[1] - state.xrange[0])
       end
-      'y-recen': begin ; no change to zoom level: Y recenter on mouse pos'n
+      'yonly-recen': begin ; no change to zoom level: X recenter on mouse pos'n
+         state.yrange = state.mphys[1] $
+          + [-0.5, 0.5] * (state.yrange[1] - state.yrange[0])
+      end
+      'xandy-recen': begin ; no change to zoom level: Y recenter on mouse pos'n
+         state.xrange = state.mphys[0] $
+          + [-0.5, 0.5] * (state.xrange[1] - state.xrange[0])
          state.yrange = state.mphys[1] $
           + [-0.5, 0.5] * (state.yrange[1] - state.yrange[0])
       end
@@ -596,7 +614,12 @@ pro splot_event, event
       if (event.type EQ 0) then begin
          ; If the shift key is pressed at the same time as a mouse button,
          ; then zoom/pan in Y instead of X.
-         xycase = keyword_set(event.modifiers) ? 'y' : 'x'
+         case event.modifiers of
+            1: xycase = 'yonly'
+            4: xycase = 'xandy'
+            else: xycase = 'xonly'
+         endcase
+         xycase = keyword_set(event.modifiers) ? 'xandy' : 'xonly'
          case event.press of
             1: splot_zoom, xycase+'-in', /recenter
             2: splot_zoom, xycase+'-recen', /recenter
@@ -1191,6 +1214,9 @@ pro splot_help
    h = [h,'                 Shift+Button1 = Y-Zoom in & center']
    h = [h,'                 Shift+Button2 = Y-Center on current position']
    h = [h,'                 Shift+Button3 = Y-Zoom out & center']
+   h = [h,'                 ShiftLock+Button1 = X+Y-Zoom in & center']
+   h = [h,'                 ShiftLock+Button2 = X+Y-Center on current position']
+   h = [h,'                 ShiftLock+Button3 = X+Y-Zoom out & center']
    h = [h,'BUTTONS:']
    h = [h,'Zoom1:           Rescale XRANGE and YRANGE to show all data']
    h = [h,'Done:            Quits SPLOT']
