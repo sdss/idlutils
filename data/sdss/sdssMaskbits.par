@@ -209,3 +209,45 @@ maskbits OBJECT2 28 SPARE4
 maskbits OBJECT2 29 SPARE3 
 maskbits OBJECT2 30 SPARE2 
 maskbits OBJECT2 31 SPARE1 
+
+#------------------------------------------------------------------------------
+
+maskbits Q_EYEBALL 0 DONE
+maskbits Q_EYEBALL 1 OTHER
+maskbits Q_EYEBALL 2 UNCLASSIFIABLE
+maskbits Q_EYEBALL 3 NEED_BIGGER_IMAGE
+maskbits Q_EYEBALL 4 BAD_DEBLEND
+maskbits Q_EYEBALL 5 FLECK
+maskbits Q_EYEBALL 6 DOUBLE_STAR
+maskbits Q_EYEBALL 7 HII
+maskbits Q_EYEBALL 8 HII_REMOVED
+maskbits Q_EYEBALL 9 EDGE
+maskbits Q_EYEBALL 10 SATELLITE
+maskbits Q_EYEBALL 11 PLANE
+maskbits Q_EYEBALL 12 BAD_Z
+maskbits Q_EYEBALL 13 INTERNAL_REFLECTION
+maskbits Q_EYEBALL 14 BAD_SPEC_CLASS
+maskbits Q_EYEBALL 15 USE_PARENT
+maskbits Q_EYEBALL 16 IN_HUGE_OBJECT
+
+#------------------------------------------------------------------------------
+
+maskbits T_EYEBALL 0 DONE
+maskbits T_EYEBALL 1 OTHER
+maskbits T_EYEBALL 2 UNCLASSIFIABLE
+maskbits T_EYEBALL 3 E
+maskbits T_EYEBALL 4 S0
+maskbits T_EYEBALL 5 Sa
+maskbits T_EYEBALL 6 Sb
+maskbits T_EYEBALL 7 Sc
+maskbits T_EYEBALL 8 Sd
+maskbits T_EYEBALL 9 PSF
+maskbits T_EYEBALL 10 SPIRAL_STRUCTURE
+maskbits T_EYEBALL 11 RING
+maskbits T_EYEBALL 12 NEAR_NEIGHBORS
+maskbits T_EYEBALL 13 MERGER
+maskbits T_EYEBALL 14 BAR
+maskbits T_EYEBALL 15 TIDAL_TAILS
+maskbits T_EYEBALL 16 SHELLS
+maskbits T_EYEBALL 17 DUST_ASYMMETRY
+maskbits T_EYEBALL 18 DUST_LANE
