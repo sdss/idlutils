@@ -585,8 +585,6 @@ pro/bspline/create_bsplineset.pro -text
 pro/bspline/fill_bspline.pro -text
 pro/bspline/intrv.pro -text
 pro/coord/angles_to_xyz.pro -text
-pro/coord/atbound.pro -text
-pro/coord/atbound2.pro -text
 pro/coord/current_mjd.pro -text
 pro/coord/djs_angle_group.pro -text
 pro/coord/djs_angle_match.pro -text
@@ -602,7 +600,6 @@ pro/coord/mjd2datelist.pro -text
 pro/coord/moon_zenith.pro -text
 pro/coord/munu_to_radec.pro -text
 pro/coord/radec_to_etalambda.pro -text
-pro/coord/radec_to_fields.pro -text
 pro/coord/radec_to_munu.pro -text
 pro/coord/recenter.pro -text
 pro/coord/sptr1.pro -text
