@@ -864,6 +864,7 @@ pro/math/em_pca_sparse_matrix.pro -text
 pro/math/ex_max.pro -text
 pro/math/ex_max_probability.pro -text
 pro/math/gauss_kernel.pro -text
+pro/math/gauss_overlap.pro -text
 pro/math/gausspix1d.pro -text
 pro/math/hogg_iter_linfit.pro -text
 pro/math/hogg_snap_integer.pro -text
