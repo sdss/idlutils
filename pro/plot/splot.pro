@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   splot, [x], y, $
-;    [color=, psym=, symsize=, thick= ]
+;    [color=, psym=, symsize=, thick=, xoffset=, yoffset= ]
 ;
 ;   soplot, [x], y, [/autoscale], $
 ;    [color=, psym=, symsize=, thick= ]
@@ -113,7 +113,7 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro splot_startup
+pro splot_startup, xoffset=xoffset, yoffset=yoffset
 
    common splot_state, state, graphkeys
    common splot_images, main_image
@@ -315,6 +315,7 @@ pro splot_startup
               scr_ysize = state.draw_window_size[1])
 
    ; Create the widgets on screen
+   widget_control, base, xoffset=xoffset, yoffset=yoffset
    widget_control, base, /realize
 
    widget_control, state.draw_widget_id, get_value = tmp_value
@@ -1713,7 +1714,7 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro splot, x, y, _EXTRA=KeywordsForSOPLOT
+pro splot, x, y, xoffset=xoffset, yoffset=yoffset, _EXTRA=KeywordsForSOPLOT
 
    common splot_state
    common splot_images
@@ -1734,7 +1735,8 @@ pro splot, x, y, _EXTRA=KeywordsForSOPLOT
       x = main_image[*,0] ; Set X equal to the first row of the image ???
    endif
 
-   if (NOT xregistered('splot')) then splot_startup
+   if (NOT xregistered('splot')) then splot_startup, xoffset=xoffset, $
+     yoffset=yoffset
 
    state.imagename = imagename
    splot_setheader, head
