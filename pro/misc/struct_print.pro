@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   struct_print, struct, [ lun=, filename=, tarray=, /no_head, /html, $
-;    fdigit=, ddigit=, alias= ]
+;    fdigit=, ddigit=, alias=, formatcodes= ]
 ;
 ; INPUTS:
 ;   struct     - Structure
@@ -29,6 +29,13 @@
 ;                to be used in the FITS file.
 ;                The order of the alias keyword is compatible with
 ;                use in MWRFITS,MRDFITS.
+;   formatcodes- Explicit format codes for specific structure elements.
+;                The value should be a STRARR(2,*) value where teh first
+;                element of each pair of values corresponds to a column
+;                name (before applying any ALIAS), and the second is the
+;                format code, such as "a10" for a 10-character string,
+;                or "f10.5" for a floating-point value with 5 places after
+;                the decimal point.
 ;
 ; OUTPUTS:
 ;
@@ -42,6 +49,10 @@
 ; EXAMPLES:
 ;
 ; BUGS:
+;   If FORMATCODES is used, then it is possible to have numeric values
+;   that do not fit within the specified format, which are then printed
+;   as asterisks.  For example, printing the value 123.4 with the format
+;   code "f3.1" will result in printing "***".
 ;
 ; PROCEDURES CALLED:
 ;
@@ -73,7 +84,8 @@ function struct_checktype, tag, alias=alias
 end
 ;------------------------------------------------------------------------------
 pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
- no_head=no_head, html=html, fdigit=fdigit, ddigit=ddigit, alias=alias
+ no_head=no_head, html=html, fdigit=fdigit, ddigit=ddigit, alias=alias, $
+ formatcodes=formatcodes
 
    if (keyword_set(filename)) then $
     openw, lun, filename, /get_lun
@@ -158,6 +170,11 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
          endif else begin
             message, 'Unsupported type code: ' + tname
          endelse
+
+         if (keyword_set(formatcodes)) then begin
+            jj = (where(strupcase(formatcodes[0,*]) EQ tags[itag], ct))[0]
+            if (ct NE 0) then thiscode = formatcodes[1,jj]
+         endif
 
          schar = strtrim(string(nchar),2)
          hdr1 = hdr1 + hdrsep + string(thisname, format='(a' + schar + ')')
