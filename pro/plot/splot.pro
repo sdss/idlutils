@@ -871,8 +871,10 @@ pro splot_plot1plot, iplot
    c = where(tag_names(options) EQ 'COLOR', ct)
    if (ct EQ 1) then options.color = splot_icolor(options.color)
 
-   plot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
-    /noerase, xstyle=5, ystyle=5, xrange=!x.crange, yrange=!y.crange, $
+;   plot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
+;    /noerase, xstyle=5, ystyle=5, xrange=!x.crange, yrange=!y.crange, $
+;    _EXTRA=options
+   oplot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
     _EXTRA=options
 
    return
