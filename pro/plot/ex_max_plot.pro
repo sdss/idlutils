@@ -593,11 +593,13 @@ for id2=ydimen-1,0L,-1 do begin
                     endif
                 endif
 
-                if keyword_set(overpoints) AND d1 NE d2 then begin
-                    if(n_elements(psym_overpoints) eq 0) then $
-                      psym_overpoints=6
-                    djs_oplot,overpoints[d1,*],overpoints[d2,*],psym=psym_overpoints,color='red', $
-                      symsize=0.8,thick=4
+                if keyword_set(overpoints) then begin
+                    if(d1 ne d2) then begin
+                        if(n_elements(psym_overpoints) eq 0) then $
+                          psym_overpoints=6
+                        djs_oplot,overpoints[d1,*],overpoints[d2,*], $
+                          psym=psym_overpoints,color='red', thick=4
+                    endif 
                 endif
 
 ; plot ellipses
@@ -640,6 +642,11 @@ for id2=ydimen-1,0L,-1 do begin
                         djs_oplot,ximg,yhist,psym=10,thick=2*!P.THICK
                     endif
                 endif
+
+                if(keyword_set(overpoints)) then $
+                  for io=0L, n_elements(overpoints[d1,*])-1L do $
+                  djs_oplot,[overpoints[d1,io],overpoints[d1,io]], $
+                  [!Y.RANGE[0],!Y.RANGE[1]], thick=6, color='red'
             endif               ; end if d1 EQ d2  
             
             if(keyword_set(panellabels)) then begin
