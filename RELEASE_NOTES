@@ -16,11 +16,15 @@ include/export.h: This include file used to exist in six places under /src,
                Remove this file from src/idlmangle, src/image, src/math,
                src/slatec, src/spheregroup, src/slatec.
 include/Makefile: New directory for IDL<->C include file.
+src/{idlmangle,image,math,slatec,spheregroup,trace}/Makefile: Changed the
+               location of the include file to "../../include".
 src/image/Makefile: Change some of the comment lines, since for some bizarre
                reason those comment lines that end in a backslash will crash
                on the SGI IRIX platform.
-src/{idlmangle,image,math,slatec,spheregroup,trace}/Makefile: Changed the
-               location of the include file to "../../include".
+src/mangle1.4/src/Makefile: Simplify line 80 of the Makefile such that this
+               will build on the SGI platform.  This meant stripping out the
+               fancy bit of code that extracts the list of objects in
+               the libmangle.a library.
 src/trace/evilmath.c: Get rid of "sumf" variable which is unused.
 
 -------------------------------------------------------------------------------
