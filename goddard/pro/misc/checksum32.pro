@@ -14,9 +14,10 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
 ;       CHECKSUM32, array, checksum, [/FROM_IEEE, /NoSAVE]
 ;
 ; INPUTS:
-;       array - any numeric idl array.   The number of bytes in the array must 
-;               be a multiple of four.   Convert a string array (e.g. a FITS
-;               header) to bytes prior to calling CHECKSUM32.
+;       array - any numeric idl array.  If the number of bytes in the array is 
+;               not a multiple of four then it is padded with zeros internally
+;               (the array is returned unchanged).   Convert a string array 
+;               (e.g. a FITS header) to bytes prior to calling CHECKSUM32.
 ;
 ; OUTPUTS:
 ;       checksum - unsigned long scalar, giving sum of array elements using 
@@ -53,14 +54,14 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
 ;       Written    W. Landsman          June 2001
 ;       Work correctly on little endian machines, added /FROM_IEEE and /NoSave
 ;                  W. Landsman          November 2002
+;       Pad with zeros when array size not a multiple of 4 W.Landsman Aug 2003
 ;-
  if N_params() LT 2 then begin
       print,'Syntax - CHECKSUM32, array, checksum, /FROM_IEEE, /NoSAVE'
       return
  endif
  N = N_bytes(array)
- if (N mod 4) NE 0 then message, $
-     'ERROR - Number of bytes in supplied array must be a multiple of 4'
+ Nremain = N mod 4 
 
 ; Get maximum number of base 2 digits available in double precision, and 
 ; compute maximum number of longword values that can be coadded without losing
@@ -85,7 +86,13 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
            nbyte = (N mod maxnum) 
            if nbyte EQ 0 then nbyte = maxnum
    endif else nbyte = maxnum
-   checksum = checksum + total(ulong(  array,maxnum*i,nbyte/4), /double)
+
+   if Nremain NE 0 and i EQ Niter then begin
+   nbyte = nbyte + 4 - Nremain
+    checksum = checksum + total(ulong([byte(array,0,N), bytarr(4-Nremain)],  $
+           maxnum*i,nbyte/4), /double) 
+   endif else $
+     checksum = checksum + total(ulong(  array,maxnum*i,nbyte/4), /double)
  
 ; Fold any overflow bits beyond 32 back into the word.
 
