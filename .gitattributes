@@ -911,6 +911,7 @@ pro/misc/djs_unlockfile.pro -text
 pro/misc/fileandpath.pro -text
 pro/misc/floatcompress.pro -text
 pro/misc/group_indx.pro -text
+pro/misc/hogg_iau_name.pro -text
 pro/misc/idlutils_so_ext.pro -text
 pro/misc/idlutils_version.pro -text
 pro/misc/lookforgzip.pro -text
