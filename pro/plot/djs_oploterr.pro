@@ -105,7 +105,7 @@ pro djs_oploterr, x, y, xerr=xerr, yerr=yerr, xlog=xlog, ylog=ylog, $
       ; Plot X error bars
       if (keyword_set(xerr)) then begin
          if (xerr[ipt] GT 0) then begin ; Draw limit bars
-            djs_oplot, [xlo[ipt],xhi[ipt]], [ytmp[ipt],ytmp[ipt]], $
+            djs_oplot, [xlo[ipt],xhi[ipt]], [ytmp[ipt],ytmp[ipt]], psym=0,$
              color=color1, _EXTRA=KeywordsForPlot
          endif else if (xerr[ipt] LT 0) then begin ; Draw upper/lower limit
             xend = xtmp[ipt] - xlen*(xerr[ipt] EQ -1) + xlen*(xerr[ipt] EQ -2)
@@ -117,7 +117,7 @@ pro djs_oploterr, x, y, xerr=xerr, yerr=yerr, xlog=xlog, ylog=ylog, $
       ; Plot Y error bars
       if (keyword_set(yerr)) then begin
          if (yerr[ipt] GT 0) then begin ; Draw limit bars
-            djs_oplot, [xtmp[ipt],xtmp[ipt]], [ylo[ipt],yhi[ipt]], $
+            djs_oplot, [xtmp[ipt],xtmp[ipt]], [ylo[ipt],yhi[ipt]], psym=0,$
              color=color1, _EXTRA=KeywordsForPlot
          endif else if (yerr[ipt] LT 0) then begin ; Draw upper/lower limit
             yend = ytmp[ipt] - ylen*(yerr[ipt] EQ -1) + ylen*(yerr[ipt] EQ -2)
