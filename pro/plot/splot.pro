@@ -905,7 +905,7 @@ pro splot_plot1text, iplot
    if (ct EQ 1) then options.color = splot_icolor(options.color)
 
    string_tex = (*(plot_ptr[iplot])).text
-   if (keyword_set(string_tex)) then string_tex = TeXtoIDL(string_tex)
+;   if (keyword_set(string_tex)) then string_tex = TeXtoIDL(string_tex)
    xyouts, (*(plot_ptr[iplot])).x, (*(plot_ptr[iplot])).y, $
     string_tex, _EXTRA=options
 
