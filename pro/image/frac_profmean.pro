@@ -20,6 +20,7 @@
 ; DEPENDENCIES:
 ;   idlutils
 ; BUGS:
+;   no indication of whether fit is sensible
 ; REVISION HISTORY:
 ;   2003-09-15  Written - Blanton
 ;-
@@ -52,6 +53,8 @@ profradius=in_profradius
 if(nprof eq 0) then return,0.
 
 interp_profmean,nprof,profmean,radtot,fluxtot
+if(fluxtot eq !VALUES.F_INFINITY) then $
+  return,radtot
 radfrac=zbrent(profradius[0]*0.01,radtot,func_name='frac_profmean_func')
 
 return, radfrac

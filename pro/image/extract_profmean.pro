@@ -207,7 +207,7 @@ area=area[1:n_elements(cache)]
 ; check for very negative annuli
 if(n_elements(profmean_ivar) eq 0) then $
   profmean_ivar=fltarr(n_elements(cache))+1.
-ineg=where(profmean[ienough]^2*profmean_ivar[ienough] lt -100., nneg)
+ineg=where(profmean[ienough]*sqrt(profmean_ivar[ienough]) lt -100., nneg)
 if(nneg gt 0) then nprof=ineg[0]
 
 if(NOT arg_present(cache)) then begin
