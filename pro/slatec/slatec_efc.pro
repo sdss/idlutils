@@ -135,16 +135,52 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
 
 
 
-	coeff = fltarr(nbkpt-nord)
-	mdein = 1L
-	mdeout = 0L
-	lw = 10*nbkpt*nord + 2*max([ndata,nbkpt])
-	w = fltarr(lw)
+   qeval = 1
+   while (qeval) do begin
 
-	test = call_external(getenv('IDL_EVIL')+'libslatecidl.so','efc_idl', $
-	         ndata, float(x), float(y), float(invsig), nord, $
-                 nbkpt,fullbkpt, $
-                 mdein, mdeout, coeff, lw, w)
+      coeff = fltarr(nbkpt-nord)
+      mdein = 1L
+      mdeout = 0L
+      lw = 10*nbkpt*nord + 2*max([ndata,nbkpt])
+      w = fltarr(lw)
 
-	return, fullbkpt
+      test = call_external(getenv('IDL_EVIL')+'libslatecidl.so','efc_idl', $
+       ndata, float(x), float(y), float(invsig), nord, $
+       nbkpt,fullbkpt, mdein, mdeout, coeff, lw, w)
+
+      qeval = 0 ; Do not re-evaluate spline unless break points are removed
+                ; below
+
+      ; Test if the call to Slatec failed
+      if (total(coeff) EQ 0 AND total(y) NE 0) then begin
+
+         ; Assume that there are two break points without any data in between.
+         ; Find them, and remove the first break point in those cases.
+         wsum = 1
+         i = 1 ; Don't remove the first point (i=0)
+print,'remove begin ',nbkpt
+         while (i LT nbkpt-2) do begin
+            ; Test to see if there is data between break points #i and #(i+1)
+            indx = where(x GE fullbkpt[i] AND x LT fullbkpt[i+1], ct)
+
+            ; Or if all data points in that range have zero weight
+            if (ct GT 0) then wsum = total(invsig[indx])
+
+            if (ct EQ 0 OR wsum EQ 0) then begin
+               ; Remove break point #i
+               if (i EQ 0) then fullbkpt = fullbkpt[1:nbkpt-1] $
+                else if (i EQ nbkpt-2) then fullbkpt = fullbkpt[0:nbkpt-2] $
+                else fullbkpt = fullbkpt[[lindgen(i),lindgen(nbkpt-i-1)+i+1]]
+               nbkpt = n_elements(fullbkpt) ; Should decrement by 1
+               qeval = 1 ; Re-evaluate the spline
+            endif
+            i = i + 1
+         endwhile
+print,'remove end ',nbkpt
+
+      endif
+
+   endwhile
+
+   return, fullbkpt
 end
