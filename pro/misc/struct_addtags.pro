@@ -20,6 +20,9 @@
 ; OPTIONAL OUTPUTS:
 ;
 ; COMMENTS:
+;   The dimensions of the output array match that of ASTRUCT.  For example,
+;   if ASTRUCT has dimensions [5,10], and BSTRUCT has dimensions [2,25],
+;   the output structure has dimensions [5,10].
 ;
 ; EXAMPLES:
 ;
@@ -47,13 +50,15 @@ function struct_addtags, astruct, bstruct
    ntag = N_tags(bstruct)
    for i=0, ntag-1 do $
     obj1 = create_struct(obj1, tname[i], bstruct[0].(i))
-   outstruct = replicate(obj1, num1)
+;   outstruct = replicate(obj1, num1)
+   dims = size(astruct,/dimens)
+   outstruct = make_array(dimension=dims, value=obj1)
 
    ; Assign elements from NEWDAT into the new output structure
    newtags = tag_names(outstruct)
    for i=0, ntag-1 do begin
       j = (where(newtags EQ tname[i]))[0]
-      outstruct.(j) = bstruct.(i)
+      outstruct.(j) = reform(bstruct.(i), size(outstruct.(j),/dimens))
    endfor
 
    return, outstruct
