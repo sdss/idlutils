@@ -6,7 +6,8 @@
 ;   Trim a structure to a list of selected and/or excluded tags
 ;
 ; CALLING SEQUENCE:
-;   outstruct = struct_trimtags(instruct, [ select_tags=, except_tags= ]
+;   outstruct = struct_trimtags(instruct, [ select_tags=, except_tags=, $
+;    format= ]
 ;
 ; INPUTS:
 ;   instruct   - Input structure, which can be an array
@@ -14,6 +15,8 @@
 ; OPTIONAL INPUTS:
 ;   select_tags- List of tag names to include; this can use wildcards.
 ;   except_tags- List of tag names to exclude; this can use wildcards.
+;   format     - If set, then convert all tags to strings using this
+;                array of format codes (one per output tag).
 ;
 ; OUTPUTS:
 ;   outstruct  - Ouput structure array
@@ -29,6 +32,10 @@
 ; EXAMPLES:
 ;
 ; BUGS:
+;   No checks are done to assure that tags are not selected multiple
+;   times (which will crash this code).
+;   No checks are done that FORMAT has the correct number of elements,
+;   which could also crash this code.
 ;
 ; PROCEDURES CALLED:
 ;   copy_struct
@@ -38,7 +45,7 @@
 ;   05-Jun-2002  Written by D. Schlegel, Princeton
 ;------------------------------------------------------------------------------
 function struct_trimtags, instruct, select_tags=select_tags, $
- except_tags=except_tags
+ except_tags=except_tags, format=format
 
    nout = n_elements(instruct)
    if (nout EQ 0) then return, 0
@@ -82,16 +89,33 @@ function struct_trimtags, instruct, select_tags=select_tags, $
    endelse
 
    ;----------
-   ; Create the output structure and copy the requested tags
+   ; Create the output structure
 
-   outstruct = create_struct(tags[indx[0]], instruct[0].(indx[0]))
-   for ii=1, nkeep-1 do $
-    outstruct = create_struct(outstruct, $
-     tags[indx[ii]], instruct[0].(indx[ii]))
+   if (keyword_set(format)) then begin
+      outstruct = create_struct(tags[indx[0]], $
+       strarr(n_elements(instruct[0].(indx[0]))))
+      for ii=1, nkeep-1 do $
+       outstruct = create_struct(outstruct, tags[indx[ii]], $
+        strarr(n_elements(instruct[0].(indx[ii]))))
+   endif else begin
+      outstruct = create_struct(tags[indx[0]], instruct[0].(indx[0]))
+      for ii=1, nkeep-1 do $
+       outstruct = create_struct(outstruct, tags[indx[ii]], $
+        instruct[0].(indx[ii]))
+   endelse
+
+   ;----------
+   ; Copy the requested tags
 
    struct_assign, {junk:0}, outstruct ; Zero-out all elements
    outstruct = replicate(outstruct, nout)
-   struct_assign, instruct, outstruct
+   if (keyword_set(format)) then begin
+      for ii=0, nkeep-1 do begin
+         outstruct[*].(ii) = string(instruct.(indx[ii]), format=format[ii])
+      endfor
+   endif else begin
+      struct_assign, instruct, outstruct
+   endelse
 
    return, outstruct
 end
