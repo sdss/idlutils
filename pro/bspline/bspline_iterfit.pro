@@ -23,6 +23,9 @@
 ;   xmax       - Normalization maximum for X2; default to MAX(XDATA).
 ;   oldset     - If set, then use values of FULLBKPT, NORD, XMIN, XMAX, NPOLY
 ;                from this structure.
+;   funcname   - If OLDSET is not specified and this is a 2-D B-spline,
+;                then the function for the second variable may be passed.
+;                The default is 'legendre' in the call to CREATE_BSPLINESET().
 ;   maxiter    - Maximum number of rejection iterations; default to 10;
 ;                set to 0 to disable rejection.
 ;   upper      - Upper rejection threshhold; default to 5 sigma.
@@ -31,9 +34,13 @@
 ;
 ; OUTPUTS:
 ;   sset       - Structure describing spline fit.
+;                Return 0 if too few good (INVVAR NE 0) points are passed.
 ;
 ; OPTIONAL OUTPUTS:
 ;   outmask    - Output mask, set =1 for good points, =0 for bad points.
+;   fullbkpt   - If OLDSET is not specified, then the break points are
+;                chosen with a call to BSPLINE_BKPTS() which can be returned
+;                with this keyword.
 ;
 ; COMMENTS:
 ;   Data points can be masked either by setting their weights to zero
@@ -53,6 +60,7 @@
 ; PROCEDURES CALLED:
 ;   bspline_bkpts()
 ;   bspline_fit()
+;   create_bsplineset()
 ;   djs_reject()
 ;
 ; REVISION HISTORY:
@@ -66,7 +74,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
    if (n_params() LT 2) then begin
       print, 'Syntax -  sset = bspline_iterfit( )'
-      return, -1
+      return, 0
    endif
 
    ;----------
@@ -114,13 +122,20 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
    endif else begin
 
-     if NOT keyword_set(fullbkpt) then $
-       fullbkpt = bspline_bkpts(xdata[these], nord=nord, bkpt=bkpt, _EXTRA=EXTRA)
+      if (nthese EQ 0) then begin
+         print, 'No valid data points'
+         fullbkpt = 0
+         return, 0
+      endif
 
-     sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
+      if NOT keyword_set(fullbkpt) then $
+       fullbkpt = bspline_bkpts(xdata[these], nord=nord, bkpt=bkpt, $
+        _EXTRA=EXTRA)
+
+      sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
 
       if (nthese LT nord) then begin
-         message, 'Number of good data points fewer the nord', /continue
+         print, 'Number of good data points fewer the NORD'
          return, sset
       endif
 
@@ -134,7 +149,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
          if (xmin EQ xmax) then xmax = xmin + 1
          sset.xmin = xmin
          sset.xmax = xmax
-         
+
          if keyword_set(funcname) then sset.funcname=funcname
       endif
 

@@ -7,8 +7,8 @@
 ;
 ; CALLING SEQUENCE:
 ;   
-;   fullbkpt = bspline_bkpts(x, nord=nord, bkpt=bkpt, $
-;           bkspace=bkspace, nbkpts=nbkpts, everyn=everyn, silent=silent)
+;   fullbkpt = bspline_bkpts(x, nord=, bkpt=, $
+;    bkspace=, nbkpts=, everyn=, /silent)
 ;
 ; INPUTS:
 ;   bkpt       - Breakpoint vector returned by efc
@@ -59,8 +59,9 @@ function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
             tempbkspace = double(range/(float(nbkpts-1)))
             bkpt = (findgen(nbkpts))*tempbkspace + startx
          endif else if keyword_set(everyn) then begin
-            nbkpts = nx / everyn
-            xspot = lindgen(nbkpts)*nx /(nbkpts-1)
+            nbkpts = (nx / everyn) > 1
+            if (nbkpts EQ 1) then xspot = [0] $
+             else xspot = lindgen(nbkpts)*nx / (nbkpts-1)
             bkpt = x[xspot]
          endif else message, 'No information for bkpts'
       endif
@@ -83,7 +84,8 @@ function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
       fullbkpt = bkpt
 
       if (NOT keyword_set(bkspread)) then bkspread = 1.0
-      bkspace = (bkpt[1] - bkpt[0]) * bkspread
+      if (nshortbkpt EQ 1) then bkspace = bkspread $
+       else bkspace = (bkpt[1] - bkpt[0]) * bkspread
 
       for i=1, nord-1 do $
        fullbkpt = [bkpt[0]-bkspace*i, fullbkpt, $
