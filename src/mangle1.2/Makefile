@@ -268,3 +268,14 @@ wlm.s.o: pi.par wlm.s.f
 wrho.s.o: pi.par wrho.s.f
 	$(F77) $(FFLAGS) -c wrho.s.f
 
+#
+# Install things in their proper places in $(IDLUTILS_DIR)
+#
+install : 
+	-@ cp *.c $(IDLUTILS_DIR)/src/mangle1.2
+	-@ cp *.f $(IDLUTILS_DIR)/src/mangle1.2
+	-@ cp *.h $(IDLUTILS_DIR)/src/mangle1.2
+	-@ cp Makefile $(IDLUTILS_DIR)/src/mangle1.2
+
+clean :
+	- /bin/rm -f *~ core *.o so_locations
