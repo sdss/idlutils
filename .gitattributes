@@ -774,9 +774,11 @@ pro/dust/func_ccm_fitrv.pro -text
 pro/dust/planckcorr.pro -text
 pro/dust/predict_sync.pro -text
 pro/dust/predict_thermal.pro -text
+pro/dust/sdss_rv_table.pro -text
 pro/dust/setlog.pro -text
 pro/dust/wcs_coord2pix.pro -text
 pro/dust/wcs_getval.pro -text
+pro/dust/web_table.pro -text
 pro/first/first_coverage.pro -text
 pro/first/first_read.pro -text
 pro/fits/cmp_fits_files.pro -text
