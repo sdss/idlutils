@@ -765,6 +765,7 @@ pro/dust/predict_thermal.pro -text
 pro/dust/setlog.pro -text
 pro/dust/wcs_coord2pix.pro -text
 pro/dust/wcs_getval.pro -text
+pro/first/first_read.pro -text
 pro/fits/djs_modfits.pro -text
 pro/fits/djs_readmany.pro -text
 pro/fits/fits_wait.pro -text
