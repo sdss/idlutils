@@ -626,6 +626,7 @@ pro/misc/djs_unlockfile.pro -text
 pro/misc/fileandpath.pro -text
 pro/misc/floatcompress.pro -text
 pro/misc/idlutils_version.pro -text
+pro/misc/lookforgzip.pro -text
 pro/misc/make_html_help.pro -text
 pro/misc/rmfile.pro -text
 pro/misc/splog.pro -text
