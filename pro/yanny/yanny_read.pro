@@ -175,7 +175,13 @@ function yanny_nextline, ilun
    ; but then add the semi-colon back to each of those lines.
    ; NOTE: The following does not look for semi-colons within strings,
    ; and will incorrectly split that different input lines!!!???
-   lastline = strsplit(sline, ';', /extract, escape='\')
+   ; lastline = strsplit(sline, ';', /extract, escape='\')
+
+   ; Attempt with a 5.2 hack
+
+   lastline = str_sep(strcompress(sline), ';')
+   nonblank = where(lastline NE '')
+   if nonblank[0] NE -1 then lastline = lastline[nonblank]
    nlast = n_elements(lastline)
    lastchar = strtrim(sline)
    lastchar = strmid(lastchar, strlen(lastchar)-1, 1)
