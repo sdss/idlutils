@@ -374,7 +374,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
             ; Now for the structure name - get from the last line read
             ; Force this to uppercase
-            stname1 = strupcase( strtrim(strmid(sline,1), 2) )
+            ww = yanny_getwords(sline)
+            stname1 = strupcase(ww[0])
             if (NOT keyword_set(stnames)) then stnames = stname1 $
              else stnames = [stnames, stname1]
 
