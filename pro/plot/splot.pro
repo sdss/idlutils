@@ -43,7 +43,7 @@
 ;   fits_read
 ;
 ; INTERNAL SUPPORT ROUTINES:
-;   gausspix
+;   splot_gausspix
 ;   splot_startup
 ;   splot_clearkeylist
 ;   splot_displayall
@@ -89,7 +89,7 @@
 ;    A[2] = normalization of the Gaussian
 ;    A[3...] = polynomial coefficients for background terms
 
-pro gausspix, x, a, f, pder
+pro splot_gausspix, x, a, f, pder
 
    ncoeff = N_elements(a)
    f = a[2] * a[1] * (gaussint((x+0.5-a[0])/a[1]) -gaussint((x-0.5-a[0])/a[1]))
@@ -1346,7 +1346,7 @@ pro splot_gaussfit
 
          ; Fit a gaussian + a constant sky term
          yfit = curvefit(xtemp, ytemp, xtemp*0+1.0, a, $
-          /noderivative, function_name='gausspix')
+          /noderivative, function_name='splot_gausspix')
 
          out_string = 'GAUSSFIT: ' $
           + ' x0= ' + strtrim(string(a[0]),2) $
