@@ -574,6 +574,7 @@ pro/plot/djs_oplot.pro -text
 pro/plot/djs_oploterr.pro -text
 pro/plot/djs_plot.pro -text
 pro/plot/djs_plotlimitbox.pro -text
+pro/plot/splot.pro -text
 pro/yanny/yanny_read.pro -text
 pro/yanny/yanny_write.pro -text
 src/math/arravsigclip.c -text
