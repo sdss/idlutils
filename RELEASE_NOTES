@@ -3,6 +3,7 @@ CMP_FITS_FILES: New proc for comparing the contents of two FITS files.
 DJS_READILINES: Minor bug fix reported by John Moustakes; need to
                allow setting INDX=[0] and return that first line.
 DUSTPLOT: Checking in this old proc for making SFD map figures.
+FIRST_READ: Fix possible crash condition if radius > 1 deg, and near RA=0.
 PLOT_POLY: Use SPLOT routine.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
