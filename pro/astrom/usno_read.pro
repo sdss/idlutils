@@ -63,10 +63,12 @@ PRO usno_readzone, catpath, zone, ra0, ra1, result
 ; --- use something faster than readcol in next version!
 ;  readcol, catpath+zstr+'.acc', ra_acc, ind, n, /silent
 
-  flist = findfile(catpath+zstr+'.acc', count=ct)
-  IF ct NE 1 THEN message, 'cannot find file '+catpath+zstr+'.acc'
+  accfile = djs_filepath(zstr+'.acc', root_dir=catpath)
+  catfile = djs_filepath(zstr+'.cat', root_dir=catpath)
+  flist = findfile(accfile, count=ct)
+  IF ct NE 1 THEN message, 'cannot find file ' + accfile
   grid = dblarr(3, 96)
-  openr, rlun, catpath+zstr+'.acc', /get_lun, /swap_if_little_endian
+  openr, rlun, accfile, /get_lun, /swap_if_little_endian
   readf, rlun, grid
   free_lun, rlun
   ra_acc = reform(grid[0, *])
@@ -85,7 +87,7 @@ PRO usno_readzone, catpath, zone, ra0, ra1, result
   ind1 = indrange[1]
 
 ; read .cat file
-  openr, readlun, catpath+zstr+'.cat', /get_lun, /swap_if_little_endian
+  openr, readlun, catfile, /get_lun, /swap_if_little_endian
   nstars = (ind1-ind0)+1
   data = lonarr(3, nstars)
   point_lun, readlun, ind0*12L
@@ -240,7 +242,7 @@ end
 function usno_read, racen, deccen, rad, path=path
 
 ; set path
-  IF (NOT keyword_set(path)) THEN path = '/u/schlegel/mt/cdrom/'
+  IF (NOT keyword_set(path)) THEN path = '/u/schlegel/mt/cdrom'
 
 ; Read the stars - loop over pointings
   nstar = n_elements(racen)
