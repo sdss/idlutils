@@ -1,4 +1,5 @@
 
+CMP_FITS_FILES: New proc for comparing the contents of two FITS files.
 DUSTPLOT: Checking in this old proc for making SFD map figures.
 PLOT_POLY: Use SPLOT routine.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
