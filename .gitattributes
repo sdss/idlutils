@@ -4,6 +4,7 @@ bin/Makefile -text
 bin/evilmake -text
 doc/Makefile -text
 doc/mk_doc -text
+doc/www/.cvsignore -text
 goddard/Makefile -text
 goddard/README -text
 goddard/contents.txt -text
