@@ -63,6 +63,8 @@ pro reject_cr, image, image_ivar, psfvals, rejects, nsig=nsig, $
 
 if(n_elements(niter) eq 0) then niter=3
 
+nrejects = 0 ; Set default return value
+
 ; First detect cosmics the normal way
 tmp_image=image
 reject_cr_single, tmp_image, image_ivar, psfvals, rejected, nsig=nsig, $
