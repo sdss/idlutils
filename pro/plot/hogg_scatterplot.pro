@@ -17,6 +17,7 @@
 ;   xrange      - x range; default to minmax(x)
 ;   yrange      - y range; default to minmax(y)
 ;   levels      - contour levels; default to [0.5,0.75,0.95,0.99,0.999]
+;   satfrac     - fraction of pixels to saturate in plot; default 0.0
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
 ;   sqrt        - make greyscale on SQRT stretch
@@ -33,7 +34,7 @@
 ;-
 pro hogg_scatterplot, x,y,weight=weight, $
                       xrange=xrange,yrange=yrange,xnpix=xnpix,ynpix=ynpix, $
-                      levels=levels, $
+                      levels=levels,satfrac=satfrac, $
                       xvec=xvec,yvec=yvec,grid=grid,cumimage=cumimage, $
                       sqrt=sqrt, $
                       _EXTRA=KeywordsForPlot
@@ -41,11 +42,12 @@ pro hogg_scatterplot, x,y,weight=weight, $
 ; set defaults
 ndata= n_elements(x)
 if not keyword_set(weight) then weight= dblarr(ndata)+1.0
-if not keyword_set(xnpix) then xnpix= ceil(0.3*sqrt(ndata))
-if not keyword_set(ynpix) then ynpix= ceil(0.3*sqrt(ndata))
+if not keyword_set(xnpix) then xnpix= ceil(0.3*sqrt(ndata)) > 10
+if not keyword_set(ynpix) then ynpix= ceil(0.3*sqrt(ndata)) > 10
 if not keyword_set(xrange) then xrange= minmax(x)
 if not keyword_set(yrange) then yrange= minmax(y)
 if not keyword_set(levels) then levels= [0.5,0.75,0.95,0.99,0.999]
+if not keyword_set(satfrac) then satfrac= 0.0
 
 ; check inputs
 ; [tbd]
@@ -77,15 +79,14 @@ endif
 ; scale greyscale
 mingrey= 255.0
 maxgrey= 127.0
-maxgrid= max(grid)
+maxgrid= grid[(reverse(sort(grid)))[ceil(satfrac*xnpix*ynpix)]]
 mingrid= 0.0
 if keyword_set(sqrt) then begin
     tvgrid= mingrey+(maxgrey-mingrey)*sqrt((grid-mingrid)/(maxgrid-mingrid))
 endif else begin
     tvgrid= mingrey+(maxgrey-mingrey)*(grid-mingrid)/(maxgrid-mingrid)
 endelse
-tvgrid= tvgrid > 0
-tvgrid= tvgrid < 255
+tvgrid= (tvgrid < mingrey) > maxgrey
 
 ; plot greyscale
 tv, tvgrid,xrange[0],yrange[0],/data, $
