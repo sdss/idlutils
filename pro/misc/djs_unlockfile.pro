@@ -34,15 +34,16 @@
 ;-----------------------------------------------------------------------
 pro djs_unlockfile, filename, lun=lun
 
-   lockfile = filename + '.lock'
-   openw, olun, lockfile, /get_lun, /delete
-   close, olun
-   free_lun, olun
-
+   ; Close the file before unlocking it
    if (arg_present(lun)) then begin
       close, lun
       free_lun, lun
    endif
+
+   lockfile = filename + '.lock'
+   openw, olun, lockfile, /get_lun, /delete
+   close, olun
+   free_lun, olun
 
    return
 end
