@@ -827,7 +827,6 @@ pro/plot/djs_plot.pro -text
 pro/plot/djs_plotlimitbox.pro -text
 pro/plot/djs_xyouts.pro -text
 pro/plot/ex_max_plot.pro -text
-pro/plot/hogg_combine_layers.pro -text
 pro/plot/hogg_interval.pro -text
 pro/plot/hogg_manyd_meanplot.pro -text
 pro/plot/hogg_manyd_scatterplot.pro -text
