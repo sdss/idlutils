@@ -55,7 +55,7 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
 ;       ONE_ARROW called to create the "weathervane".
 ;
 ; PROCEDURES USED:
-;       EXTAST - Extract astrometry structure from FITS header
+;       GETROT - Computes rotation from the FITS header
 ;       ONE_ARROW - Draw a labeled arrow	
 ;       ZPARCHECK
 ; REVISON HISTORY:
@@ -70,15 +70,16 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
 ;       Modified to work correctly for COLOR=0  J.Wm.Parker, HITC   1995 May 25
 ;       Work correctly for negative CDELT values   W. Landsman   Feb. 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use GETROT to compute rotation   W. Landsman    June 2003
 ;-
 
   On_error,2                            ;Return to caller
 
   if (N_params() LT 1) then begin 
     print,'Syntax - ' + $
-             'ARROWS, hdr, [ xcen, ycen, ARROWLEN= , CHARSIZE=  COLOR= , /DATA
-    print,'                        FONT=, /NORMAL, /NotVertex, THICK=  ]
-    print,'         hdr - FITS header with astrometry
+             'ARROWS, hdr, [ xcen, ycen, ARROWLEN= , CHARSIZE=  COLOR= , /DATA'
+    print,'                        FONT=, /NORMAL, /NotVertex, THICK=  ]'
+    print,'         hdr - FITS header with astrometry'
     return
   endif else zparcheck,'ARROWS',h,1,7,1,'FITS header array'
 
@@ -92,21 +93,10 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
   if not keyword_set( NotVertex ) then NotVertex=0
 
 ;  Derive Position Angles for North and East separately
-  extast, h, astr
-  if strmid( astr.ctype[0], 5, 3)  EQ 'GSS' then begin
-	h1 = h
-	gsss_stdast, h1
-	extast, h1, astr
-  endif
-  cd = astr.cd
-  cdelt = astr.cdelt
 
-  dRAdX = cdelt[0]*cd[0,0] & dRAdY = cdelt[1]*cd[0,1]
-  dDECdX = cdelt[0]*cd[1,0] & dDECdY = cdelt[1]*cd[1,1]
-
-  NPA = atan(dDECdY,dDECdX)*!radeg & if (NPA lt 0) then NPA=360+NPA
-  EPA = atan(dRAdY,dRAdX)*!radeg & if (EPA lt 0) then EPA=360+EPA
-  NPA = NPA-90 & EPA = EPA-90
+  getrot,h,npa, cdelt, /SILENT
+  sgn = 1 - 2*(cdelt[0]*cdelt[1] GT 0) 
+  epa = npa + sgn*90   
 
 ;  Make arrows reasonable size depending on device
 
