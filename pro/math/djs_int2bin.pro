@@ -73,8 +73,9 @@ function djs_int2bin, val, ndigit=ndigit
       end
    endcase
 
+   ; The addition of 0.01 below is just to prevent rounding-down problems
    if (max(intval) LE 0) then maxdigit = 1 $
-   else maxdigit = djs_floor( alog(max(intval)) / alog(2.0) ) + 1
+   else maxdigit = djs_floor( alog(max(intval)) / alog(2.0) + 0.01 ) + 1
 
    mfac = TWO^indgen(maxdigit)
 
