@@ -46,7 +46,7 @@ int main(argc, argv)
 {
 	int ifile, nfiles, npoly, npolys;
 	polygon *test_poly1, *test_poly2;
-	int npolylink, *nlinks, **links, i, j, k, l, itrim,verb,ier;
+	int npolylink, *nlinks, **links, i, j, k, l, itrim,verb,ier,total_parents;
 	double tol,area_tot;
 	FILE *ifp, *ofp;
 
@@ -117,9 +117,22 @@ int main(argc, argv)
 	if (npolys == -1) exit(1);
 
 	/* find parents */
+  total_parents=0;
+	for(i=npoly;i<npoly+npolys;i++) 
+    total_parents+=polys[i]->nparents;
+  fprintf(stderr, 
+          "total number of current parents: %d\n", total_parents);
 	for(i=npoly;i<npoly+npolys;i++) {
 		/* for each parent who contributed a cap, check all the possibly 
 			 involved parties */
+    if(((i-npoly)%1000)==0) {
+      total_parents=0;
+      for(j=npoly;j<npoly+npolys;j++) 
+        total_parents+=polys[j]->nparents;
+      fprintf(stderr, 
+              "at output poly %d/%d total number of current parents: %d\n", i-npoly, 
+              npolys,total_parents);
+    }
 		test_poly1=new_poly(polys[i]->np);
 		copy_poly(polys[i],test_poly1);
 		for(j=0;j<test_poly1->nparents;j++) {
@@ -132,10 +145,20 @@ int main(argc, argv)
 					tol = mtol;
 					verb = 1;
 					ier = garea(test_poly2, &tol, &verb, &area_tot);
-					if(area_tot>0.)
+          if(ier==-1) {
+            fprintf(stderr, 
+                    "mrb_balkanize found garea malloc problem while finding parents.\n");
+            total_parents=0;
+            for(j=npoly;j<npoly+npolys;i++) 
+              total_parents+=polys[j]->nparents;
+            fprintf(stderr, 
+                    "total number of current parents: %d\n", total_parents);
+          }
+					if(area_tot>0.) {
 						add_parent(polys[i],links[k][l]);
-					else 
+					} else  {
 						trim_parent(polys[i],links[k][l]);
+          }
 				} else {
 					trim_parent(polys[i],links[k][l]);
 				}
@@ -146,6 +169,10 @@ int main(argc, argv)
 		free_poly(test_poly1);
 		test_poly1=0x0;
 	}
+  total_parents=0;
+  for(i=npoly;i<npoly+npolys;i++) 
+    total_parents+=polys[i]->nparents;
+  fprintf(stderr, "total number of parents: %d\n", total_parents);
 
 	if(fmt.parents)
 		ofp=fopen(fmt.parents,"w");
