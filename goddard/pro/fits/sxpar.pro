@@ -1,5 +1,5 @@
 function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
-                                  NoContinue = NoContinue
+                                  NoContinue = NoContinue, SILENT = silent
 ;+
 ; NAME:
 ;      SXPAR
@@ -29,6 +29,8 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ; OPTIONAL INPUT KEYWORDS: 
 ;       /NOCONTINUE = If set, then continuation lines will not be read, even
 ;                 if present in the header
+;       /SILENT - Set this keyword to suppress warning messages about duplicate
+;                 keywords in the FITS header.
 ;
 ; OPTIONAL OUTPUT KEYWORDS:
 ;       COUNT - Optional keyword to return a value equal to the number of 
@@ -52,7 +54,7 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       instead the COUNT keyword is preferred
 ;
 ;       If a keyword (except HISTORY or COMMENT) occurs more than once in a 
-;       header, a warning is given, and the first occurence is used.
+;       header, a warning is given, and the *last* occurence is used.
 ;
 ; EXAMPLES:
 ;       Given a FITS header, h, return the values of all the NAXISi values
@@ -110,10 +112,15 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       W. Landsman Feb 1998, Recognize CONTINUE convention 
 ;       W. Landsman Oct 1999, Recognize numbers such as 1E-10 as floating point
 ;       W. Landsman Jan 2000, Only accept integer N values when name = keywordN
+;       W. Landsman Dec 2001, Optional /SILENT keyword to suppress warnings
+;       W. Landsman/D. Finkbeiner  Mar 2002  Make sure extracted vectors 
+;             of mixed data type are returned with the highest type.
 ;-
 ;----------------------------------------------------------------------
  if N_params() LT 2 then begin
-     print,'Syntax -     result =  sxpar( hdr, name, [abort, COUNT = ])'
+     print,'Syntax -     result =  sxpar( hdr, name, [abort])'
+     print,'   Input Keywords:    /NOCONTINUE, /SILENT'
+     print,'   Output Keywords:   COUNT=,  COMMENT= '
      return, -1
  endif 
 
@@ -197,8 +204,9 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
             if (matches EQ 0) and (start GE 0) then goto, RESTART
             if (start GE 0) then nfound = nfound + mn
             if (matches GT 1) and (not histnam) then        $
+                if not keyword_set(silent) then $
                 message,/informational, 'Warning - keyword ' +   $
-                nam + 'located more than once in ' + abort
+                nam + ' located more than once in ' + abort
             if (matches GT 0) then start = nfound[matches-1]
         endelse
 
@@ -318,12 +326,16 @@ GOT_VALUE:
 ;  Add to vector if required
 
          if vector then begin
-               maxnum = max(number)
                if ( i EQ 0 ) then begin
-                     sz_value = size(value)
-                     result = make_array( maxnum, TYPE = sz_value[1] )
+                     maxnum = max(number)
+                     dtype = size(value,/type)
+                     result = make_array( maxnum, TYPE = dtype )
                      comments = strarr( maxnum )
                endif 
+               if size(value,/type) GT dtype then begin   ;Do we need to recast?
+                    result = result + 0*value
+                    dtype = size(value,/type)
+               endif
                result[ number[i]-1 ] =  value
                comments[ number[i]-1 ] = comment
           endif else $
