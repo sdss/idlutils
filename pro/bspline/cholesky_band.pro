@@ -27,10 +27,10 @@ function cholesky_band, lower, mininf=mininf, verbose=verbose
     kn = bw - 1 
     spot = 1 + lindgen(kn)
     bi = lindgen(kn)
-    for i=1,kn-1 do bi = [bi,lindgen(kn-i)+(kn+1)*i]
+    for i=1L, kn-1 do bi = [bi,lindgen(kn-i)+(kn+1)*i]
 
 
-    for j=0,n - 1 do begin
+    for j=0L, n-1 do begin
          lower[0,j] = sqrt(lower[0,j])
          lower[spot,j] = lower[spot,j] / lower[0,j]
          x = lower[spot,j]
@@ -48,4 +48,3 @@ function cholesky_band, lower, mininf=mininf, verbose=verbose
 
   return,-1L
 end
-            
