@@ -959,6 +959,11 @@ pro/psconfig/fsc_inputfield.pro -text
 pro/psconfig/fsc_plotwindow.pro -text
 pro/psconfig/fsc_psconfig__define.pro -text
 pro/psconfig/psconfig.pro -text
+pro/rgbcolor/nw_arcsinh.pro -text
+pro/rgbcolor/nw_cut_to_box.pro -text
+pro/rgbcolor/nw_float_to_byte.pro -text
+pro/rgbcolor/nw_rebin_image.pro -text
+pro/rgbcolor/nw_scale_rgb.pro -text
 pro/sdss/findopfile.pro -text
 pro/sdss/sdss_flagname.pro -text
 pro/sdss/sdss_flagval.pro -text
