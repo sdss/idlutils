@@ -316,6 +316,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    enums = 0
    structs = 0
    errcode = 0
+   stnames = 0
 
    ; List of all possible structures
    pcount = 0       ; Count of structure types defined
