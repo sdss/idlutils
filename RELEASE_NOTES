@@ -5,6 +5,9 @@ ATV           - Merged with Aaron Barth's version 1.4 (by Finkbeiner).
                 the libraries are not yet in idlutils).
                 Fink did not merge in support for reversed CTYPE values
                 in FITS headers, e.g. DEC,RA instead of RA,DEC.
+src/mangle1.2/balkanize.c, harmonize.c, poly2poly.c, ransack.c,
+              snap.c, unify.c - Fixed ransack bug where it wasn't
+              checking for NULL polygons after throwing them away.
 
 -------------------------------------------------------------------------------
 v4_10_2 (Jun 20, 2003)
