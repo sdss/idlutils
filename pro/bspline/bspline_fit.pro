@@ -12,7 +12,7 @@
 ; CALLING SEQUENCE:
 ;   
 ;   error_code = bspline_fit(x, y, invvar, sset, $
-;                fullbkpt=fullbkpt, nord=, x2=, npoly=, yfit=, mask=)
+;                fullbkpt=fullbkpt, nord=, x2=, npoly=, yfit=)
 ;
 ; INPUTS:
 ;   x          - independent variable
@@ -58,7 +58,7 @@
 ;------------------------------------------------------------------------------
 
 function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
-       x2=x2, npoly=npoly, nord=nord, yfit=yfit, mask=mask
+       x2=x2, npoly=npoly, nord=nord, yfit=yfit
 
       if NOT keyword_set(nord) then nord=4L
 
@@ -163,8 +163,9 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 ;
 ;	Now evaluate fit just since we can
 ;
-    yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, $
-            lower=lower, mask=mask)
+    if (arg_present(yfit)) then $
+     yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, $
+      lower=lower)
 
     return, 0L
 end 

@@ -60,7 +60,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
- x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, mask=mask, $
+ x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, $
  bkpt=bkpt, oldset=oldset, maxiter=maxiter, upper=upper, lower=lower, $
  outmask=outmask, _EXTRA=EXTRA
 
@@ -172,7 +172,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
         ;   -1 if all break points are masked
         ;   -2 if everything is screwed
         error = bspline_fit(xwork, ywork, invwork*outmask, sset, $
-         x2=x2work, yfit=yfit, nord=nord, mask=mask)
+         x2=x2work, yfit=yfit, nord=nord)
       endelse
 
       iiter = iiter + 1
