@@ -47,6 +47,7 @@ function usno_intersect, dec0, node, incl, nu
    sinnu = sin(nu/DRADEG)
    cosnu = cos(nu/DRADEG)
    sinmu = (sin(dec0/DRADEG) - sinnu * cosi) / (cosnu * sini)
+   sinmu = ((sinmu) < 1.d0) > (-1.d0) ; Sanity-check this for round-off errors
    cosmu = sqrt(1 - sinmu^2)
    cosmu = [-cosmu,cosmu]
    yy = sinmu * cosnu * cosi - sinnu * sini
