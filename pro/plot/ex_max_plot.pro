@@ -468,38 +468,26 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
             symsize=0.8
       endif
 
+; plot ellipses
+        if NOT keyword_set(noellipse) then begin
+          var2d= var[[d1,d2],[d1,d2],*]
+          if keyword_set(bw) then begin
+            hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
+              color='white',thick=3.0*!P.THICK
+            hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
+              color='black'
+          endif else begin
+            hogg_oplot_covar, [mean[d1,*]],[mean[d2,*]],var2d,nsigma=2, $
+              color=colorname[lindgen(ngauss) MOD ncolor]
+          endelse
+        endif
+
 ; plot superimposed box, if asked
         if keyword_set(box) then begin
           box_x= [box[0,d1],box[1,d1],box[1,d1],box[0,d1],box[0,d1]]
           box_y= [box[0,d2],box[0,d2],box[1,d2],box[1,d2],box[0,d2]]
           djs_oplot,box_x,box_y,color='white',thick=3.0*!P.THICK
           djs_oplot,box_x,box_y,color='black'
-        endif
-
-; begin loop over gaussians, plotting ellipses
-        if NOT keyword_set(noellipse) then begin
-          for j=0L,ngauss-1 do begin
-; get eigenvalues and eivenvectors of this 2x2
-            var2d= [[var[d1,d1,j],var[d1,d2,j]],[var[d2,d1,j],var[d2,d2,j]]]
-            tr= trace(var2d)
-            det= determ(var2d,/double)
-            eval1= tr/2.0+sqrt(tr^2/4.0-det)
-            eval2= tr/2.0-sqrt(tr^2/4.0-det)
-            evec1= [var2d[1,0],eval1-var2d[0,0]]
-            evec1= evec1/(sqrt(transpose(evec1)#evec1))[0]
-            evec2= [evec1[1],-evec1[0]]
-            evec1= evec1*2.0*sqrt(eval1)
-            evec2= evec2*2.0*sqrt(eval2)
-; make and plot ellipse vectors
-            xx= mean[d1,j]+x*evec1[0]+y*evec2[0]
-            yy= mean[d2,j]+x*evec1[1]+y*evec2[1]
-            if keyword_set(bw) then begin
-              djs_oplot,xx,yy,color='white',thick=3.0*!P.THICK
-              djs_oplot,xx,yy,color='black'
-            endif else begin
-              djs_oplot,xx,yy,color=colorname[j MOD ncolor]
-            endelse
-          endfor
         endif
       endif
 
