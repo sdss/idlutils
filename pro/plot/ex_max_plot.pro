@@ -423,14 +423,9 @@ for id2=ydimen-1,0L,-1 do begin
                             endif
                         endfor
                     endif
+
+; mess with "outimage" for plotting
                     outimage=image
-                    if(keyword_set(sigrejimage)) then begin
-                        sig=djsig(outimage,sigrej=sigrejimage*2)
-                        indx=where(outimage gt sigrejimage*sig,count)
-                        if(count gt 0) then begin
-                            outimage[indx]=sigrejimage*sig
-                        endif
-                    endif
                     if(keyword_set(sqrt)) then outimage=sqrt(outimage)
                     if(keyword_set(log)) then begin
                         notzero=where(outimage ne 0.d,nzcount)
@@ -442,15 +437,27 @@ for id2=ydimen-1,0L,-1 do begin
                                 outimage[iszero]=min(outimage[notzero])-scale
                             endif
                         endif
-                    endif 
-                    tvscl, -outimage,!X.CRANGE[0],!Y.CRANGE[0],/data, $
+                    endif
+
+; rescale outimage
+                    if(keyword_set(sigrejimage)) then begin
+                        tvrange= [0.0,djsig(outimage,sigrej=sigrejimage*2)]
+                    endif else begin
+                        tvrange= [0.0,2.0*max(outimage)]
+                    endelse
+                    tvimage= 255-((floor(256*(outimage-tvrange[0])/ $
+                                         (tvrange[1]-tvrange[0])) > 0) < 255)
+print, minmax(tvimage)
+; plot greyscale image
+                    tv, tvimage,!X.CRANGE[0],!Y.CRANGE[0],/data, $
                       xsize=(!X.CRANGE[1]-!X.CRANGE[0]), $
                       ysize=(!Y.CRANGE[1]-!Y.CRANGE[0]) 
 
 ; re-make axes (yes, this is a HACK)
                     !P.MULTI[0]= !P.MULTI[0]+1
                     djs_plot,[0],[1],/nodata, $
-                      xtickinterval=xinterval,ytickinterval=yinterval
+                      xtickinterval=xinterval,ytickinterval=yinterval, $
+                      color='grey'
 
 ; cumulate the image
                     cumindex= reverse(sort(image))
@@ -463,8 +470,8 @@ for id2=ydimen-1,0L,-1 do begin
 
 ; contour
                     if(NOT keyword_set(conditional)) then begin
-                        contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
-                          thick=3,/overplot,color=djs_icolor('white')
+;                        contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
+;                          thick=3,/overplot,color=djs_icolor('white')
                         contour, cumimage/max(cumimage),ximg,yimg,levels=contlevel, $
                           thick=1,/overplot
                     endif else begin
@@ -551,9 +558,9 @@ for id2=ydimen-1,0L,-1 do begin
                         endelse
                     endelse
                 endif
+
                 
 ; put on extra text labels, if asked
-
                 if keyword_set(textlabel) AND keyword_set(textpos) AND d1 NE d2 then begin
                     ilabel= where((textpos[d1,*] GT min(!X.CRANGE)) AND $
                                   (textpos[d1,*] LT max(!X.CRANGE)) AND $
