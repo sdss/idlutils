@@ -77,8 +77,8 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
     message, 'Dimensions of XDATA and YDATA do not agree'
 
    if (NOT keyword_set(nord)) then nord = 4L
-   if (NOT ARG_PRESENT(upper)) then upper = 5
-   if (NOT ARG_PRESENT(lower)) then lower = 5
+   if n_elements(upper) EQ 0 then upper = 5
+   if n_elements(lower) EQ 0 then lower = 5
 
    if (keyword_set(invvar)) then begin
       if (n_elements(invvar) NE nx) then $
