@@ -20,7 +20,9 @@
 ; OPTIONAL OUTPUTS:
 ;
 ; COMMENTS:
-;   If either structure is undefined, then return the other one only.
+;   If either structure is undefined are set to zero, then return the other
+;   one only.  If one of the structures is defined (and non-zero), but not
+;   a structure, then a blank structure is put in its place.
 ;
 ; EXAMPLES:
 ;   > a={one:1,two:2}
@@ -47,12 +49,29 @@ function struct_append, struct1, struct2
    num1 = n_elements(struct1)
    num2 = n_elements(struct2)
 
+   ; In the event that STRUCT1 is not a structure, but STRUCT2 is,
+   ; then use STRUCT2 as the template for the output structure.
    obj1 = struct1[0]
+   if (size(struct1, /tname) NE 'STRUCT') then begin
+      if (size(struct2, /tname) EQ 'STRUCT') then begin
+         obj1 = struct2[0]
+      endif else begin
+         outstruct = [struct1, struct2]
+         return, outstruct
+      endelse
+   endif
+   struct_assign, {junk:0}, obj1 ; Zero-out this new structure
    outstruct = replicate(obj1, num1+num2)
-   outstruct[0:num1-1] = struct1[*]
+
+   if (size(struct1, /tname) EQ 'STRUCT') then begin
+      outstruct[0:num1-1] = struct1[*]
+   endif
+
    for irow=0L, num2-1 do begin
-      struct_assign, struct2[irow], obj1
-      outstruct[num1+irow] = obj1
+      if (size(struct2, /tname) EQ 'STRUCT') then begin
+         struct_assign, struct2[irow], obj1
+         outstruct[num1+irow] = obj1
+      endif
    endfor
 
    return, outstruct
