@@ -6,23 +6,30 @@
 ;   Wrapper for ppmtompeg, the open-source UNIX mpeg writer
 ;
 ; CALLING SEQUENCE:
-;   ppmtompeg, bytcube, output
+;   ppmtompeg, bytcube, [ output, tmpdir= ]
 ; 
 ; INPUTS:
-;   bytcube  - byte array [X, Y, Nframe]
-;   output   - filename string (default 'idl.mpeg')
+;   bytcube  - Byte array [X,Y,NFRAME]
+;   output   - Output file name; default 'idl.mpeg'
 ;
 ; KEYWORDS:
-;   tmpdir   - temp directory to do dirty work in
-;	
+;   tmpdir   - temp directory to do dirty work in; default to '/tmp/mpeg1234/'
+;
 ; OUTPUTS:
-;   mpeg file with name given above
+;
+; COMMENTS:
+;   A single mpeg file is written.
+;   Temporary files are removed after the MPEG file is made.
 ;
 ; EXAMPLES:
 ;   ppmtompeg, bytscl(imagecube, min=800, max=1600), 'movie.mpeg'
 ;
-; COMMENTS:
-;   
+; PROCEDURES CALLED:
+;   rmfile
+;
+; INTERNAL SUPPORT PROCEDURES:
+;   ppmtompeg_parameters
+;
 ; REVISION HISTORY:
 ;   2002-Mar-29  Douglas Finkbeiner, Princeton University
 ;                  dfink@astro.princeton.edu
@@ -112,11 +119,13 @@ pro ppmtompeg, bytcube, output, tmpdir=tmpdir
 ; generate mpeg
   spawn, 'ppmtompeg -quiet '+parname
 
-; safety check 
-  if (strmid(tmpdir, 0, 5) NE '/tmp/') then return
-
-; clean-up
-  spawn, '\rm -r '+tmpdir
+; Remove temporary files
+  if (strmid(tmpdir, 0, 5) EQ '/tmp/') then begin
+    spawn, '\rm -r '+tmpdir
+  endif else begin
+    rmfile, parname
+    rmfile, tmpdir+fname
+  endelse
 
   return
 end
