@@ -874,7 +874,10 @@ pro splot_plot1plot, iplot
 ;   plot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
 ;    /noerase, xstyle=5, ystyle=5, xrange=!x.crange, yrange=!y.crange, $
 ;    _EXTRA=options
-   oplot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
+;   oplot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
+;    _EXTRA=options
+   plot, [(*(plot_ptr[iplot])).x], [(*(plot_ptr[iplot])).y], $
+    /noerase, xstyle=5, ystyle=5, xrange=state.xrange, yrange=state.yrange, $
     _EXTRA=options
 
    return
