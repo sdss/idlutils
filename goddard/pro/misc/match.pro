@@ -9,7 +9,7 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
 ;       match, a, b, suba, subb, [ COUNT =, /SORT ]
 ;
 ; INPUTS:
-;       a,b - two vectors to match elements, numeric or string datatype
+;       a,b - two vectors to match elements, numeric or string data types
 ;
 ; OUTPUTS:
 ;       suba - subscripts of elements in vector a with a match
@@ -64,6 +64,7 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
 ;             performance                W. Landsman         March 2000
 ;       Work again for strings           W. Landsman         April 2000
 ;       Use size(/type)                  W. Landsman         December 2002
+;       Work for scalar integer input    W. Landsman         June 2003
 ;-
 ;-------------------------------------------------------------------------
  On_error,2
