@@ -21,6 +21,7 @@ void usage(), parse_args();
 
 /* external functions */
 extern void add_parent();
+extern void trim_parent();
 extern void free_poly();
 extern polygon *new_poly();
 extern int partition_poly();
@@ -131,7 +132,7 @@ int main(argc, argv)
 		for(j=0;j<test_poly1->nparents;j++) {
 			k=test_poly1->parent_polys[j];
 			for(l=0;l<nlinks[k];l++) {
-				test_poly2=new_poly(test_poly1->np+polys[k]->np);
+				test_poly2=new_poly(test_poly1->np+polys[links[k][l]]->np);
 				poly_poly(test_poly1,polys[links[k][l]],test_poly2);
 				itrim = trim_poly(test_poly2);
 				if (itrim<2) {
@@ -140,6 +141,10 @@ int main(argc, argv)
 					ier = garea(test_poly2, &tol, &verb, &area_tot);
 					if(area_tot>0.)
 						add_parent(polys[i],links[k][l]);
+					else 
+						trim_parent(polys[i],links[k][l]);
+				} else {
+					trim_parent(polys[i],links[k][l]);
 				}
 				free_poly(test_poly2);
 				test_poly2=0x0;

@@ -19,3 +19,19 @@ void add_parent(polygon *poly, int parent)
 	poly->nparents++;
 } /* end add_parent */
 
+/* take a parent out of the polygon parent list */
+void trim_parent(polygon *poly, int parent) 
+{
+	int i,*tmp_parent_polys, tmp_nparents;
+	tmp_parent_polys=poly->parent_polys;
+	tmp_nparents=poly->nparents;
+	poly->parent_polys=0x0;
+	poly->nparents=0;
+	for(i=0;i<tmp_nparents;i++)
+		if(tmp_parent_polys[i]!=parent)
+			add_parent(poly,tmp_parent_polys[i]);
+	free(tmp_parent_polys);
+	tmp_parent_polys=0x0;
+	tmp_nparents=0;
+} /* end add_parent */
+
