@@ -7,8 +7,9 @@ pro xy2ad, x, y, astr, a, d
 ;     Compute R.A. and Dec from X and Y and a FITS astrometry structure
 ; EXPLANATION:
 ;     The astrometry structure must first be extracted by EXTAST from a FITS
-;     header.   A tangent (gnomonic) projection is computed directly; other
-;     projections are computed using WCSXY2SPH.   Angles are returned in 
+;     header.   The procedure WCSXY2SPH is used to compute native coordinates,
+;     and the CD matrix is then used to compute RA and Dec (or longitude and
+;     latitude).   Angles are returned in 
 ;     degrees.   XY2AD is meant to be used internal to other procedures.  
 ;     For interactive purposes use XYAD.
 ;
@@ -29,9 +30,12 @@ pro xy2ad, x, y, astr, a, d
 ;        .CRVAL - 2 element vector giving R.A. and DEC of reference pixel 
 ;               in DEGREES
 ;        .CTYPE - 2 element vector giving projection types 
-;        .LONGPOLE - scalar longitude of north pole (default = 180) 
-;        .PROJP1 - Scalar parameter needed in some projections
-;        .PROJP2 - Scalar parameter needed in some projections
+;        .LONGPOLE - scalar longitude of north pole
+;        .LATPOLE - scalar giving native latitude of the celestial pole  
+;        .PROJP1 - Scalar parameter needed in some projections, FITS keyword
+;                  PV2_1
+;        .PROJP2 - Scalar parameter needed in some projections, FITS keyword
+;                  
 ;
 ; OUTPUT:
 ;     A - R.A. in DEGREES, same number of elements as X and Y
@@ -51,6 +55,7 @@ pro xy2ad, x, y, astr, a, d
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
 ;       Consistent conversion between CROTA and CD matrix W. Landsman Oct. 2000
+;       No special case for tangent projection W. Landsman June 2003
 ;-
  if N_params() LT 4 then begin
         print,'Syntax -- XY2AD, x, y, astr, a, d'
@@ -77,26 +82,16 @@ pro xy2ad, x, y, astr, a, d
  coord = strmid(ctype,0,4)
  reverse = ((coord[0] EQ 'DEC-') and (coord[1] EQ 'RA--')) or $
            ((coord[0] EQ 'GLAT') and (coord[1] EQ 'GLON')) or $
-           ((coord[0] EQ 'ELON') and (coord[1] EQ 'ELAT'))
+           ((coord[0] EQ 'ELAT') and (coord[1] EQ 'ELON'))
 
  if reverse then begin
      crval = rotate(crval,2)
      temp = xsi & xsi = eta & eta = temp
  endif
 
- if (strmid(ctype[0],5,3) EQ 'TAN') or (ctype[0] EQ '') then begin  
-         xsi = xsi / radeg
-         eta = eta / radeg
-         crval = crval / radeg
-
-         beta = cos(crval[1]) - eta * sin(crval[1])
-         a = atan(xsi, beta) + crval[0]
-         gamma = sqrt((xsi^2) +(beta^2))
-         d = atan(eta*cos(crval[1])+sin(crval[1]) , gamma)
-         a = a*RADEG   &  d = d*RADEG
-
- endif else wcsxy2sph, xsi, eta, a, d, CTYPE = ctype[0:1], PROJP1 = astr.projp1, $
-        PROJP2 = astr.projp2, LONGPOLE = astr.longpole, CRVAL = crval
+ WCSXY2SPH, xsi, eta, a, d, CTYPE = ctype[0:1], PROJP1 = astr.projp1, $
+        PROJP2 = astr.projp2, LONGPOLE = astr.longpole, CRVAL = crval, $
+        LATPOLE = astr.latpole
 
  return
  end
