@@ -67,8 +67,8 @@ function sshiftrotate, image, theta1, xshift=xshift, yshift=yshift, $
    dims = size(image, /dimens)
    nx = dims[0]
    ny = dims[1]
-   if (NOT keyword_set(xcen)) then xcen = 0.5 * nx + 0.5
-   if (NOT keyword_set(ycen)) then ycen = 0.5 * ny + 0.5
+   if (n_elements(xcen) EQ 0) then xcen = 0.5 * nx + 0.5
+   if (n_elements(ycen) EQ 0) then ycen = 0.5 * ny + 0.5
    if (keyword_set(theta1)) then theta = theta1 $
     else theta = 0
 
