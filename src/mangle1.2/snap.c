@@ -23,6 +23,8 @@ extern void advise_fmt();
 extern void msg(char *fmt, ...);
 extern void scale();
 
+polygon *polys[NPOLYSMAX];
+
 /*------------------------------------------------------------------------------
   Main program.
 */
@@ -31,7 +33,6 @@ int argc;
 char *argv [];
 {
     int ifile, nadj, nfiles, npoly, npolys;
-    polygon *polys[NPOLYSMAX];
 
     /* default output format */
     fmt.out = keywords[POLYGON];

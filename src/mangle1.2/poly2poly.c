@@ -25,6 +25,8 @@ extern void scale();
 extern void free_poly();
 extern void poly_poly();
 
+polygon *polys[NPOLYSMAX];
+
 /*------------------------------------------------------------------------------
   Main program.
 */
@@ -33,7 +35,6 @@ int argc;
 char *argv [];
 {
     int ifile, ipoly, nfiles, npoly, npolys;
-    polygon *polys[NPOLYSMAX];
 
     /* default output format */
     fmt.out = keywords[POLYGON];

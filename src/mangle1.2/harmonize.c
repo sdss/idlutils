@@ -31,6 +31,8 @@ extern void findtop();
 extern void msg(char *fmt, ...);
 extern void scale();
 
+polygon *polys[NPOLYSMAX];
+
 /*------------------------------------------------------------------------------
   Main program.
 */
@@ -40,7 +42,6 @@ char *argv [];
 {
     int ifile, nfiles, npoly, npolys, nws;
     double area, *w;
-    polygon *polys[NPOLYSMAX];
 
     /* parse arguments */
     parse_args(argc, argv);

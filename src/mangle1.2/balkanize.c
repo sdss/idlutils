@@ -31,6 +31,8 @@ extern void msg(char *, ...);
 extern void scale();
 extern void memmsg();
 
+polygon *polys[NPOLYSMAX];
+
 /*------------------------------------------------------------------------------
   Main program.
 */
@@ -39,7 +41,6 @@ int main(argc, argv)
 		 char *argv[];
 {
 	int ifile, nfiles, npoly, npolys;
-	polygon *polys[NPOLYSMAX];
 
 	/* default output format */
 	fmt.out = keywords[POLYGON];

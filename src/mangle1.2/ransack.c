@@ -35,6 +35,8 @@ extern void rp_to_vert();
 extern void scale(), scale_azel();
 extern void wrangle();
 
+polygon *poly[NPOLYSMAX];
+
 /*------------------------------------------------------------------------------
   Main program.
 */
@@ -43,7 +45,6 @@ int argc;
 char *argv [];
 {
     int ifile, nfiles, np, npoly, npolys;
-    polygon *poly[NPOLYSMAX];
 
     /* parse arguments */
     parse_args(argc, argv);
