@@ -37,7 +37,7 @@ pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
 ; check dimensions
 ndata= n_elements(weight)       ; N
 dimen= n_elements(point)/n_elements(weight) ; d
-splog, ndata,' data points,',dimen,' dimensions
+splog, ndata,' data points,',dimen,' dimensions'
 
 ; set defaults
 if NOT keyword_set(label) then $
@@ -49,7 +49,7 @@ if NOT keyword_set(axis_char_scale) then axis_char_scale= 1.75
 if(NOT keyword_set(xdims)) then xdims=lindgen(dimen)
 if(NOT keyword_set(ydims)) then ydims=lindgen(dimen)
 if(NOT keyword_set(default_font)) then default_font='!3'
-xdimen=n_elements(xdims)
+xdimen=n_elements(xdims) 
 ydimen=n_elements(ydims)
 
 ; cram inputs into correct format

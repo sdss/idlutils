@@ -729,12 +729,14 @@ pro/mangle/circle_cap.pro -text
 pro/mangle/construct_cap.pro -text
 pro/mangle/construct_field_polygon.pro -text
 pro/mangle/construct_polygon.pro -text
+pro/mangle/construct_vertex.pro -text
 pro/mangle/is_cap_used.pro -text
 pro/mangle/is_in_cap.pro -text
 pro/mangle/is_in_polygon.pro -text
 pro/mangle/is_in_window.pro -text
 pro/mangle/read_fits_polygons.pro -text
 pro/mangle/read_mangle_polygons.pro -text
+pro/mangle/read_mangle_vertices.pro -text
 pro/mangle/set_use_caps.pro -text
 pro/mangle/window_image.pro -text
 pro/mangle/write_fits_polygons.pro -text
