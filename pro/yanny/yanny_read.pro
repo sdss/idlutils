@@ -79,10 +79,15 @@ function yanny_strip_brackets, sline
 end
 ;------------------------------------------------------------------------------
 ; Replace ";" or "," with spaces.  Also get rid of extra whitespace.
+; Also get rid of anything after a hash mark.
 
 function yanny_strip_commas, rawline
 
    sline = rawline
+
+   i = strpos(sline, '#')
+   if (i EQ 0) then sline = '' $
+    else if (i GE 0) then sline = strmid(sline, 0, i-1)
 
    i = strpos(sline, ',')
    while (i NE -1) do begin
@@ -133,6 +138,23 @@ function yanny_nextline, ilun
    return, sline
 end
 ;------------------------------------------------------------------------------
+; Append another pointer NEWPTR to the array of pointers PDATA.
+; Also add its name to PNAME.
+
+pro add_pointer, stname, newptr, pcount, pname, pdata
+
+   if (pcount EQ 0) then begin
+      pname = stname
+      pdata = newptr
+   endif else begin
+      pname = [pname, stname]
+      pdata = [pdata, newptr]
+   endelse
+
+   pcount = pcount + 1
+
+   return
+end
 ;------------------------------------------------------------------------------
 pro yanny_read, filename, pdata, comments=comments
 
@@ -153,11 +175,10 @@ pro yanny_read, filename, pdata, comments=comments
    comments = 0
 
    ; List of all possible structures
-   nmax = 10                          ; Maximum number of types of structures
-   pcount = 0                         ; Count of structure types defined
-   pname = strarr(nmax)               ; Name of each structure
-   pdata = replicate(ptr_new(), nmax) ; Pointer to each structure
-   pnumel = intarr(nmax)              ; Number of elements in each structure
+   pcount = 0       ; Count of structure types defined
+   pname = 0        ; Name of each structure
+   pdata = 0        ; Pointer to each structure
+   pnumel = 0       ; Number of elements in each structure
 
    nline = numlines(filename)
    get_lun, ilun
@@ -180,30 +201,34 @@ pro yanny_read, filename, pdata, comments=comments
             while (strmid(sline,0,1) NE '}') do begin
                sline = strcompress(sline)
                ww = str_sep(sline, ' ')
-               i = where(ww[0] EQ tname, ct)
-               if (ct EQ 0) then i = 0 ; Force this to be a "char"
 
-               ; Test to see if this should be an array
-               ; (Only 1-dimensional arrays supported here.)
-               j1 = strpos(ww[1], '[')
-               if (j1 NE -1) then begin
-                  addname = strmid(ww[1], 0, j1)
-                  j2 = strpos(ww[1], ']')
-                  addval = tarrs[i] + strmid(ww[1], j1+1, j2-j1-1) + ')'
-               endif else begin
-                  addname = ww[1]
-                  addval = tvals[i]
-               endelse
+               if (N_elements(ww) GE 2) then begin
+                  i = where(ww[0] EQ tname, ct)
+                  if (ct EQ 0) then i = 0 ; Force this to be a "char"
 
-               if (ntag EQ 0) then begin
-                  names = addname
-                  values = addval
-               endif else begin
-                  names = [names, addname]
-                  values = [values, addval]
-               endelse
+                  ; Test to see if this should be an array
+                  ; (Only 1-dimensional arrays supported here.)
+                  j1 = strpos(ww[1], '[')
+                  if (j1 NE -1) then begin
+                     addname = strmid(ww[1], 0, j1)
+                     j2 = strpos(ww[1], ']')
+                     addval = tarrs[i] + strmid(ww[1], j1+1, j2-j1-1) + ')'
+                  endif else begin
+                     addname = ww[1]
+                     addval = tvals[i]
+                  endelse
 
-               ntag = ntag + 1
+                  if (ntag EQ 0) then begin
+                     names = addname
+                     values = addval
+                  endif else begin
+                     names = [names, addname]
+                     values = [values, addval]
+                  endelse
+
+                  ntag = ntag + 1
+               endif
+
                yanny_add_comment, rawline, comments
                rawline = yanny_nextline(ilun)
                sline = yanny_strip_commas(rawline)
@@ -213,10 +238,9 @@ pro yanny_read, filename, pdata, comments=comments
             stname = strtrim(strmid(sline,1), 2)
 
             ; Create the actual structure
-            pname[pcount] = stname
-            pdata[pcount] = $
-             ptr_new( mrd_struct(names, values, 1, structyp=stname) )
-            pcount = pcount + 1
+            add_pointer, stname, $
+             ptr_new( mrd_struct(names, values, 1, structyp=stname) ), $
+             pcount, pname, pdata
          endif
 
          ; LOOK FOR A STRUCTURE ELEMENT
@@ -261,8 +285,6 @@ pro yanny_read, filename, pdata, comments=comments
    close, ilun
 
    ; Trim the pointers to only those that exist
-   if (pcount GT 0) then pdata = pdata[0:pcount-1] $
-    else pdata = 0
 
    return
 end
