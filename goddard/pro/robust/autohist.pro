@@ -19,9 +19,10 @@ PRO AUTOHIST,V, ZX,ZY,XX,YY, NOPLOT=whatever,_EXTRA = _extra
 ;       Sample = the vector to be histogrammed
 ;
 ; OUTPUT:
-;       XLINES = the x coordinates of the points that trace the rectangular 
+;       XLINES = vector of x coordinates of the points that trace the rectangular 
 ;               histogram bins
-;       YLINES = the y coordinates. To draw the histogram plot ZY vs ZX.
+;       YLINES = vector of y coordinates. To draw the histogram plot YLINES vs 
+;                 XLINES
 ;       XCENTERS = the x values of the bin centers
 ;       YCENTERS = the corresponding y values
 ;
@@ -34,6 +35,7 @@ PRO AUTOHIST,V, ZX,ZY,XX,YY, NOPLOT=whatever,_EXTRA = _extra
 ;       Written,   H. Freudenreich, STX, 1/91
 ;       1998 March 17 - Changed shading of histogram.  RSH, RSTX
 ;       V5.0 update, _EXTRA keywords  W. Landsman    April 2002
+;       Added NOCLIP keyword for POLYFILL call C. Paxson/W. Landsman July 2003
 ;-
 
  ON_ERROR,2
@@ -93,7 +95,7 @@ IF KEYWORD_SET(WHATEVER) THEN RETURN
   IF YY[J] GT 0 THEN BEGIN
      A=[XX[J]-DX/2.,XX[J]+DX/2.,XX[J]+DX/2.,XX[J]-DX/2.] 
      B=[0.,0.,YY[J],YY[J]]
-     POLYFILL,A,B,orientation=45
+     POLYFILL,A,B,orientation=45,noclip=0
   ENDIF
 ENDFOR
 
