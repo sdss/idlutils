@@ -60,8 +60,12 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, $
 	tempx = x[sortx]
 	tempy = y[sortx]
 
-	if (NOT keyword_set(nord)) then nord = 4L
+	if (NOT keyword_set(nord)) then nord = 4L $
+ 	else if (nord LT 1 or nord GT 20) then $
+          message, 'efc only accepts nord between 1 and 20'
+
         ndata = n_elements(tempx)
+	if ndata LT 2 then message, 'need more data points'
 
 	if (NOT keyword_set(bkpt)) then begin $
 	   range = (max(x) - min(x)) 	
@@ -115,6 +119,11 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, $
                 bkpt[nshortbkpt - 1] + bkptspace*i]
 
 	nbkpt = n_elements(tempbkpt)
+
+	if (nbkpt LT 2*nord) then $
+           message, 'not enough breakpoints?, must have at least 2*nord'
+
+
 
 	coeff = fltarr(nbkpt-nord)
 	mdein = 1L

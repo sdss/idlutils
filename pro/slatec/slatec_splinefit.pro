@@ -8,7 +8,7 @@
 ; CALLING SEQUENCE:
 ;   
 ;    fullbkpt = slatec_splinefit(x, y, coeff, invvar=invvar, $
-;                  maxIter=maxIter, upper=upper, lower=lower,
+;                  maxIter=maxIter, upper=upper, lower=lower, bkpt=bkpt,
 ;                 _EXTRA = slatec_efc extras)
 ;
 ; INPUTS:
@@ -23,8 +23,14 @@
 ;   coeff      - B-spline coefficients calculated by efc
 ;
 ; OPTIONAL KEYWORDS:
+;   maxIter    - maximum number of iterations (default 5)
+;   lower      - rejection threshold for negative deviations 
+;                        (default 5 sigma)
+;   upper      - rejection threshold for positive deviations 
+;                        (default 5 sigma)
+;   invvar     - inverse variance of y
+;   EXTRA      - goodies passed to slatec_efc
 ;   nord       - Order of b-splines (default 4: cubic)
-;   sigma      - sigma array for weighted fit
 ;   bkpsace    - Spacing of breakpoints in units of x
 ;   nbkpts     - Number of breakpoints to span x range
 ;                 minimum is 2 (the endpoints)
@@ -55,12 +61,12 @@
 ;-
 ;------------------------------------------------------------------------------
 function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
-         lower=lower, maxIter=maxIter, _EXTRA=KeywordsForEfc
+         lower=lower, maxIter=maxIter, bkpt=bkpt, _EXTRA=KeywordsForEfc
 
     if N_PARAMS() LT 3 then begin
         print, ' Syntax - fullbkpt = slatec_splinefit(x, y, coeff, '
         print, '         invvar=invvar, maxIter=maxIter, upper=upper, '
-        print, '         lower=lower, _EXTRA = slatec_efc extras)'
+        print, '         lower=lower, bkpt=bkpt, _EXTRA = slatec_efc extras)'
     endif
 
     if (NOT keyword_set(maxIter)) then maxIter = 5
@@ -78,7 +84,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
        oldgood = good
        these = where(good)
        fullbkpt = slatec_efc(x[these], y[these], $
-              coeff, invvar=invvar[where(good)], $
+              coeff, invvar=invvar[where(good)], bkpt=bkpt, $
                  _EXTRA=KeywordsForEfc)
        yfit = slatec_bvalu(x[these], fullbkpt, coeff)
  

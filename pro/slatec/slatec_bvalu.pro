@@ -47,9 +47,20 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
 
    k = nbkpt - ncoeff
    n = nbkpt - k
+   if (ideriv LT 0 OR ideriv GE k) then $
+         message, 'ideriv must be >= 0 and < nord'
+
+   if k LT 1 then message, 'nord must be > 0'
+   if n LT k then message, 'nbkpt must be >= 2*nord'
 
    minbkpt = bkpt[k-1]
    maxbkpt = bkpt[n]
+
+   if (min(x) LT minbkpt) then $
+       message, 'x values fall below the first breakpoint'
+
+   if (max(x) GT maxbkpt) then $
+       message, 'x values fall above the last breakpoint'
 
    work = fltarr(3*k)
    y = x
