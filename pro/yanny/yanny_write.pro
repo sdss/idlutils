@@ -24,6 +24,7 @@
 ;                read using the /ANONYMOUS keyword.
 ;   align      - If set, then align columns in the output file
 ;   formatcodes- Passed to STRUCT_PRINT() if /ALIGN is also set.
+;   ddigit     - Passed to STRUCT_PRINT() if /ALIGN is also set.
 ;
 ; OUTPUT:
 ;
@@ -58,7 +59,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
- stnames=stnames, align=align, formatcodes=formatcodes
+ stnames=stnames, align=align, formatcodes=formatcodes, ddigit=ddigit
 
    if (N_params() LT 1) then begin
       print, 'Syntax - yanny_write, filename, [ pdata, hdr=, enums=, structs=, stnames= ]'
@@ -170,7 +171,7 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
             endfor
 
             struct_print, tmpstruct, lun=olun, alias=alias, /no_head, $
-             formatcodes=formatcodes
+             formatcodes=formatcodes, ddigit=ddigit
          endif else begin
             for iel=0, n_elements( *pdata[idat] )-1 do begin ; Loop over rows
                sline = stname1
