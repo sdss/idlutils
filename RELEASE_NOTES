@@ -1,4 +1,6 @@
 
+BSPLINE_ITERFIT: Set all the SSET.BKMASK=1 (good) for the case that the break
+               points are passed through the OLDSET keyword.
 REBIN_SPECTRUM: New function for rebinning 1-D spectra using CIC assignment
                and arbitrary pixel boundaries.
 TRACESET_TRIM: New function for trimming trace sets to selected traces.
