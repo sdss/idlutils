@@ -981,10 +981,14 @@ src/idlmangle/Makefile -text
 src/idlmangle/export.h -text
 src/idlmangle/idl_garea.c -text
 src/idlmangle/idl_gverts.c -text
+src/idlmangle/idl_vmid.c -text
 src/image/Makefile -text
 src/image/export.h -text
 src/image/grow_obj.c -text
+src/image/idl_interp_profmean.c -text
 src/image/idl_photfrac.c -text
+src/image/interp_profmean.c -text
+src/image/interv.f -text
 src/image/p_cisi.c -text
 src/image/p_midpnt.c -text
 src/image/p_polint.c -text
@@ -993,6 +997,8 @@ src/image/p_utils.c -text
 src/image/ph.h -text
 src/image/photfrac.c -text
 src/image/pop_image.c -text
+src/image/ppvalu.f -text
+src/image/tautsp.f -text
 src/image/test_photfrac.c -text
 src/mangle1.2/.cvsignore -text
 src/mangle1.2/HELP.unformatted -text
