@@ -1026,13 +1026,11 @@ pro/yanny/yanny_readone.pro -text
 pro/yanny/yanny_write.pro -text
 src/Makefile -text
 src/idlmangle/Makefile -text
-src/idlmangle/export.h -text
 src/idlmangle/idl_garea.c -text
 src/idlmangle/idl_gverts.c -text
 src/idlmangle/idl_vmid.c -text
 src/idlmangle/idl_where_polygons_overlap.c -text
 src/image/Makefile -text
-src/image/export.h -text
 src/image/grow_obj.c -text
 src/image/idl_interp_profmean.c -text
 src/image/idl_photfrac.c -text
@@ -1279,7 +1277,6 @@ src/math/arravsigmask.c -text
 src/math/arrmedian.c -text
 src/math/ccorrelate.c -text
 src/math/diff.f -text
-src/math/export.h -text
 src/math/g1.f -text
 src/math/g2.f -text
 src/math/h12.f -text
@@ -1352,7 +1349,6 @@ src/slatec/efcmn.f -text
 src/slatec/enorm.f -text
 src/slatec/erf.f -text
 src/slatec/erfc.f -text
-src/slatec/export.h -text
 src/slatec/f2c.h -text
 src/slatec/fdjac3.f -text
 src/slatec/fdump.f -text
@@ -1411,7 +1407,6 @@ src/spheregroup/Makefile -text
 src/spheregroup/chunkfriendsoffriends.c -text
 src/spheregroup/chunks.c -text
 src/spheregroup/chunks.h -text
-src/spheregroup/export.h -text
 src/spheregroup/friendsoffriends.c -text
 src/spheregroup/friendsoffriends.h -text
 src/spheregroup/rarange.c -text
@@ -1421,7 +1416,6 @@ src/spheregroup/spherematch.c -text
 src/trace/Makefile -text
 src/trace/evilmath.c -text
 src/trace/evilmath.h -text
-src/trace/export.h -text
 src/trace/trace_crude.c -text
 src/trace/trace_fweight.c -text
 src/trace/trace_gweight.c -text
