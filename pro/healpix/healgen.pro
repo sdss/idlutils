@@ -37,28 +37,11 @@ PRO healgen, nside, theta, phi, nest=nest, double=double
   npix = 12*long(nside)^2
   ipix = lindgen(npix)
 
-; Do a loop to avoid allocating too much RAM
-  chunk  = npix/12
-  nchunk = long(12)
-  if keyword_set(double) then begin 
-     theta  = dblarr(npix)
-     phi    = dblarr(npix)
+  if keyword_set(nest) then begin 
+     dpf_pix2ang_nest, nside, ipix, theta, phi, double=double
   endif else begin 
-     theta  = fltarr(npix)
-     phi    = fltarr(npix)
-  endelse
-
-  FOR i=long(0), long(nchunk-1) DO BEGIN 
-      lo = i*chunk
-      hi = (i+1)*chunk
-      if keyword_set(nest) then begin 
-         dpf_pix2ang_nest, nside, ipix[lo:hi-1], theta1, phi1, double=double
-      endif else begin 
-         dpf_pix2ang_ring, nside, ipix[lo:hi-1], theta1, phi1, double=double
-      endelse 
-      phi[lo:hi-1] = phi1
-      theta[lo:hi-1] = theta1
-  ENDFOR 
+     dpf_pix2ang_ring, nside, ipix, theta, phi, double=double
+  endelse 
 
 ; -------- cache outputs
   nside_save  = nside
@@ -66,7 +49,6 @@ PRO healgen, nside, theta, phi, nest=nest, double=double
   double_save = keyword_set(double)
   phi_save    = phi
   theta_save  = theta
-
 
   return
 END
