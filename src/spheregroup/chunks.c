@@ -199,8 +199,11 @@ unsetchunks(double ***raBounds,
 
 	/* free up raBounds */
 	if((*raBounds)!=NULL) {
-		for(i=0;i<(*nDec);i++) 
-			free((char *) (*raBounds)[i]);
+		for(i=0;i<(*nDec);i++) {
+			if((*raBounds)[i]!=NULL)
+				free((char *) (*raBounds)[i]);
+			(*raBounds)[i]=NULL;
+		} 
 		free((char *) (*raBounds));
 		(*raBounds)=NULL;
 	} /* end if */
@@ -238,6 +241,9 @@ assignchunks(double ra[],        /* degrees */
 	IDL_LONG decChunk,raChunk;
 	IDL_LONG *raChunkMin, *raChunkMax, decChunkMin, decChunkMax;
 	IDL_LONG i,j;
+
+	/* initialize pointers */
+	raChunkMin=raChunkMax=NULL;
 
 	/* Check that marginSize is smaller than minSize */
 	if(marginSize>=minSize) {
@@ -355,6 +361,11 @@ assignchunks(double ra[],        /* degrees */
 		raChunkMin=raChunkMax=NULL;
 	} /* end for i */
 
+	/* free memory */
+	if(raChunkMin!=NULL) free((char *) raChunkMin);
+	if(raChunkMax!=NULL) free((char *) raChunkMax);
+	raChunkMin=raChunkMax=NULL;
+
 	/* Allocate chunkList memory */
 	(*chunkList)=(IDL_LONG ***) malloc(nDec*sizeof(IDL_LONG **));
 	for(i=0;i<nDec;i++) {
@@ -363,6 +374,8 @@ assignchunks(double ra[],        /* degrees */
 			if((*nChunk)[i][j]>0)
 				(*chunkList)[i][j]=(IDL_LONG *) 
 					malloc((*nChunk)[i][j]*sizeof(IDL_LONG));
+			else
+				(*chunkList)[i][j]=NULL;
 		} /* end for i */
 	} /* end for i */
 	
@@ -461,6 +474,11 @@ assignchunks(double ra[],        /* degrees */
 		raChunkMin=raChunkMax=NULL;
 	} /* end for i */
 
+	/* free memory */
+	if(raChunkMin!=NULL) free((char *) raChunkMin);
+	if(raChunkMax!=NULL) free((char *) raChunkMax);
+	raChunkMin=raChunkMax=NULL;
+
 	return(CH_OK);
 } /* end assign_chunks */
 
@@ -476,10 +494,15 @@ unassignchunks(IDL_LONG ***nChunk,     /* number of targets in each chunk */
 	/* get rid of chunkList */
 	if((*chunkList)!=NULL) {
 		for(i=0;i<nDec;i++) {
-			for(j=0;j<nRa[i];j++) 
-				if((*nChunk)[i][j]>0) 
-					free((char *) (*chunkList)[i][j]);
-			free((char *) (*chunkList)[i]);
+			if((*chunkList)[i]!=NULL) {
+				for(j=0;j<nRa[i];j++) {
+					if((*chunkList)[i][j]!=NULL)
+						free((char *) (*chunkList)[i][j]);
+					(*chunkList)[i][j]=NULL;
+				}
+				free((char *) (*chunkList)[i]);
+			} 
+			(*chunkList)[i]=NULL;
 		} /* end for i */
 		free((char *) (*chunkList));
 		(*chunkList)=NULL;
@@ -487,8 +510,10 @@ unassignchunks(IDL_LONG ***nChunk,     /* number of targets in each chunk */
 
 	/* get rid of nChunk */
 	if((*nChunk)!=NULL) {
-		for(i=0;i<nDec;i++) 
-			free((char *) (*nChunk)[i]);
+		for(i=0;i<nDec;i++) {
+			if((*nChunk)[i]!=NULL) free((char *) (*nChunk)[i]);
+			(*nChunk)[i]=NULL;
+		}
 		free((char *) (*nChunk));
 		(*nChunk)=NULL;
 	} /* end if */
@@ -555,8 +580,8 @@ getchunkbounds(double ra,
 											/(raBounds[i][nRa[i]]-raBounds[i][0]));
 		if((*raChunkMin)[i-(*decChunkMin)]<0 || 
 			 (*raChunkMin)[i-(*decChunkMin)]>nRa[i]-1) {
-			free((char *) (*raChunkMin));
-			free((char *) (*raChunkMax));
+			if((*raChunkMin)!=NULL) free((char *) (*raChunkMin));
+			if((*raChunkMax)!=NULL) free((char *) (*raChunkMax));
 			(*raChunkMin)=(*raChunkMax)=NULL;
 			return(CH_OUTOFRANGE);
 		} /* end if */

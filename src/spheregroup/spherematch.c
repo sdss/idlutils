@@ -9,6 +9,8 @@ static double **rabounds=NULL, *decbounds=NULL;
 static double raoffset;
 static double *xx1=NULL,*yy1=NULL,*zz1=NULL;
 static double *xx2=NULL,*yy2=NULL,*zz2=NULL;
+static IDL_VPTR vxx1,vyy1,vzz1;
+static IDL_VPTR vxx2,vyy2,vzz2;
 static IDL_LONG **nchunk2=NULL, ***chunklist2=NULL; 
 
 #define DEG2RAD .01745329251994
@@ -19,16 +21,21 @@ double separation(double xx1, double yy1, double zz1, double xx2, double yy2,
 #define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
 static void free_memory()
 {
-	FREEVEC(xx1);
-	FREEVEC(yy1);
-	FREEVEC(zz1);
-	FREEVEC(xx2);
-	FREEVEC(yy2);
-	FREEVEC(zz2);
+	IDL_Deltmp(vxx1); xx1=NULL;
+	IDL_Deltmp(vyy1); yy1=NULL;
+	IDL_Deltmp(vzz1); zz1=NULL;
+	IDL_Deltmp(vxx2); xx2=NULL;
+	IDL_Deltmp(vyy2); yy2=NULL;
+	IDL_Deltmp(vzz2); zz2=NULL;
 	if(nchunk2!=NULL) 
 		unassignchunks(&nchunk2,&chunklist2,nra,ndec);
 	if(rabounds!=NULL)
 		unsetchunks(&rabounds,&decbounds,&nra,&ndec);
+	nchunk2=NULL;
+	chunklist2=NULL;
+	rabounds=NULL;
+	decbounds=NULL;
+	nra=NULL;
 }
 
 /********************************************************************/
@@ -76,17 +83,18 @@ IDL_LONG spherematch
 								&chunklist2,rabounds,decbounds,nra,ndec);
 
 	 /* 3. make x, y, z coords */
-	 xx1=(double *) malloc(npoints1*sizeof(double));
-	 yy1=(double *) malloc(npoints1*sizeof(double));
-	 zz1=(double *) malloc(npoints1*sizeof(double));
+	 
+	 xx1=(double *) IDL_GetScratch(&vxx1,npoints1,sizeof(double));
+	 yy1=(double *) IDL_GetScratch(&vyy1,npoints1,sizeof(double));
+	 zz1=(double *) IDL_GetScratch(&vzz1,npoints1,sizeof(double));
 	 for(i=0;i<npoints1;i++) {
 		 xx1[i]=cos(DEG2RAD*ra1[i])*cos(DEG2RAD*dec1[i]);
 		 yy1[i]=sin(DEG2RAD*ra1[i])*cos(DEG2RAD*dec1[i]);
 		 zz1[i]=sin(DEG2RAD*dec1[i]);
 	 } /* end for i */
-	 xx2=(double *) malloc(npoints2*sizeof(double));
-	 yy2=(double *) malloc(npoints2*sizeof(double));
-	 zz2=(double *) malloc(npoints2*sizeof(double));
+	 xx2=(double *) IDL_GetScratch(&vxx2,npoints2,sizeof(double));
+	 yy2=(double *) IDL_GetScratch(&vyy2,npoints2,sizeof(double));
+	 zz2=(double *) IDL_GetScratch(&vzz2,npoints2,sizeof(double));
 	 for(i=0;i<npoints2;i++) {
 		 xx2[i]=cos(DEG2RAD*ra2[i])*cos(DEG2RAD*dec2[i]);
 		 yy2[i]=sin(DEG2RAD*ra2[i])*cos(DEG2RAD*dec2[i]);
