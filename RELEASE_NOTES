@@ -34,6 +34,9 @@ src/math/nr.h - Comment-out line 93 which defines "float fmin(float x[]);".
                Note that we don't actually use the fmin() function anywhere
                in this directory anyway.
 
+In the Goddard utitilies:
+MATCH         - Simple fix to allow this to work with scalar values.
+
 -------------------------------------------------------------------------------
 v4_10_0 (Mar 29, 2003)
 Tagged for photoop v0_6, and includes updated Goddard libraries.
