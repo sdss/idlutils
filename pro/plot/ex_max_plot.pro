@@ -578,9 +578,13 @@ for id2=ydimen-1,0L,-1 do begin
                     endelse
                     if(keyword_set(image2)) then begin
                         yhist2= total(image2,2)*scale
-                        djs_oplot,ximg,yhist2,psym=10,thick=2*!P.THICK,color='grey'
+                        djs_oplot,ximg,yhist2,psym=10,thick=2*!P.THICK, $
+                          color='grey'
                     endif
-
+                    if(keyword_set(image)) then begin
+                        yhist= total(image,2)*scale
+                        djs_oplot,ximg,yhist,psym=10,thick=2*!P.THICK
+                    endif
                 endif
             endif               ; end if d1 EQ d2  
             
