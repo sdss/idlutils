@@ -79,18 +79,16 @@ function findopfile, expres, mjd, indir, abort_notfound=abort_notfound, $
    mjdlist = lonarr(nfile)
    for i=0, nfile-1 do begin
       thisfile = fileandpath(files[i])
-; Change below to select which file to use based upon the MJD in
-; the file name rather than the MJD in the header of a Yanny param file.
-;      if (strmid(thisfile, strpos(thisfile, '.')) EQ '.par') then begin
-;         ; Get the MJD from the header of the Yanny file
-;         yanny_read, files[i], hdr=hdr
-;         mjdlist[i] = long(yanny_par(hdr, 'mjd'))
-;      endif else begin
-         ; Get the MJD from the file name; use the 5 digits after
-         ; the first minus sign.  Prepend the '0' below to avoid triggering
+         ; Get the MJD from the file name; use the digits after
+         ; the first minus sign and before whatever non-digit follows.
+
+         ;  Prepend the '0' below to avoid triggering
          ; an IDL "Type conversion error".
-         mjdlist[i] = long( '0'+strmid(thisfile, strpos(thisfile,'-')+1,5) )
-;      endelse
+;         mjdlist[i] = long( '0'+strmid(thisfile, strpos(thisfile,'-')+1) )
+
+         ; The following does the above with regular-expression matching,
+         ; extracting all the contiguous digits after the first minus sign.
+         mjdlist[i] = long( (stregex(thisfile, '.*-([0-9]+).*',/subexp,/extract))[1] )
    endfor
 
    ; Sort the files by MJD in descending order
@@ -105,7 +103,8 @@ function findopfile, expres, mjd, indir, abort_notfound=abort_notfound, $
       if (NOT keyword_set(silent)) then $
        splog, 'WARNING: No ' + expres + ' op files appear to have an MJD <= ' $
        + strtrim(string(mjd),2)
-      ibest = 0
+      ibest = n_elements(files)-1 ; This chooses the lowest-numbered file
+                                  ; (note we have reverse sorted)
    endif
    selectfile = fileandpath(files[ibest])
    if (NOT keyword_set(silent)) then $
