@@ -9,7 +9,6 @@
 #define PIBY2 1.5707963
 #define FPMIN 1.0e-30
 #define TMIN 2.0
-#define TRUE 1
 #define ONE Complex(1.0,0.0)
 
 /* CAUTION: This is the ANSI C (only) version of the Numerical Recipes
