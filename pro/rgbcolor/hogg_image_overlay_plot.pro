@@ -4,15 +4,18 @@
 ; PURPOSE:
 ;   Make bitmapped overlay for rgb images.
 ; CALLING SEQUENCE:
-;   hogg_image_overlay_plot, naxis1,naxis2,overlay, $
+;   hogg_image_overlay_plot, xx,yy,naxis1,naxis2,overlay, $
 ;                            [extras for plot procedure]
 ; EXAMPLES:
 ; INPUTS:
+;   xx,yy      - points to plot
 ;   naxis1     - width in pixels to make overlay
 ;   naxis2     - height in pixels
+;   overlay    - overlay to be added to (fine if not set)
 ;   [extras]   - plotting inputs, just like for "plot" procedure
 ; OPTIONAL INPUTS:
-;   overlay    - overlay to be added to
+;   factor     - integer factor to use for antialiasing; default 2;
+;                set to 1 for no antialiasing
 ; OUTPUT:
 ;   overlay    - overlay with plot material added
 ; COMMENTS:
@@ -25,9 +28,10 @@
 ; REVISION HISTORY:
 ;   2004-02-28  written - Hogg
 ;-
-function hogg_image_overlay_plot, naxis1,naxis2,overlay, $
-                                  xstyle=xstyle,ystyle=ystyle
-                                  _EXTRA=KeywordsForPlot
+pro hogg_image_overlay_plot, xx,yy,naxis1,naxis2,overlay,factor=factor, $
+                             xstyle=xstyle,xrange=xrange, $
+                             ystyle=ystyle,yrange=yrange, $
+                             _EXTRA=KeywordsForPlot
 prefix= 'tmp_hogg_image_overlay_plot'
 naxis1= round(naxis1)
 naxis2= round(naxis2)
@@ -44,13 +48,18 @@ device, filename=prefix+'.ps',xsize=xsize,ysize=ysize,/inches
 !X.OMARGIN= [0,0]
 !Y.MARGIN= !X.MARGIN
 !Y.OMARGIN= !Y.OMARGIN
-plot, xstyle=4,ystyle=4,_EXTRA=KeywordsForPlot
+nw_overlay_range, naxis1,naxis2,xrange,yrange
+xstyle= 5
+ystyle= 5
+plot, xx,yy, $
+  xstyle=xstyle,xrange=xrange, $
+  ystyle=ystyle,yrange=yrange, $
+  _EXTRA=KeywordsForPlot
 device, /close
 !P= bangp
 !X= bangx
 !Y= bangy
-overlay1= hogg_image_overlay(prefix+'.ps',naxis1,naxis2)
-help, overlay1
+overlay1= hogg_image_overlay(prefix+'.ps',naxis1,naxis2,factor=factor)
 if keyword_set(overlay) then overlay= overlay+overlay1 $
   else overlay= overlay1
 return
