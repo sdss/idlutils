@@ -133,8 +133,7 @@ nticks=6/axis_char_scale
 ; make contour plot
 loadct,0,/silent
 if NOT keyword_set(c_colors) then begin
-    c_colors= double(255)/(1.5*double(nlevels))* $
-      (reverse(dindgen(nlevels))+2L*nlevels+1)
+    c_colors= 255.0-128.0*(dindgen(nlevels))/double(nlevels)
 endif
 contour, bin_mean,xbin,ybin,levels=levels,cell_fill=cell_fill, $
   c_colors=c_colors, overplot=overplot, $
