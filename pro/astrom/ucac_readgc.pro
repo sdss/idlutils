@@ -188,7 +188,7 @@ function ucac_readgc, node=node1, incl=incl1, hwidth=hwidth, decrange=decrange1
    ;----------
    ; Now trim to objects exactly within the declination range
 
-   if (keyword_set(decrange1) AND keyword_set(outdat)) then begin
+   if (keyword_set(decrange1)) then begin
       ikeep = where(outdat.demdeg GE decrange[0] $
        AND outdat.demdeg LE decrange[1], nkeep)
       if (nkeep EQ 0) then outdat = 0 $
