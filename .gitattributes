@@ -586,6 +586,7 @@ pro/cosmography/lumdis.pro -text
 pro/cosmography/propmotdis.pro -text
 pro/fits/djs_modfits.pro -text
 pro/fits/djs_readmany.pro -text
+pro/fits/fits_wait.pro -text
 pro/fits/modfitscard.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/populate_image.pro -text
