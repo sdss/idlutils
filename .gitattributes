@@ -8,6 +8,7 @@ bin/eviltarball -text
 bin/install_ups_table -text
 bin/memtrack -text
 bin/pstogif -text
+data/Makefile -text
 data/filters/Makefile -text
 data/filters/README -text
 data/filters/ctio_B.dat -text
