@@ -6,7 +6,7 @@
 ;   Convert from equatorial coordinates to SDSS great circle coordinates.
 ;
 ; CALLING SEQUENCE:
-;   radec_to_munu, ra, dec, mu, nu, [ stripe=, node=, incl=, phi= ]
+;   radec_to_munu, ra, dec, [ mu, nu, stripe=, node=, incl=, phi= ]
 ;
 ; INPUTS:
 ;   ra         - Right ascension (J2000 degrees)
@@ -47,8 +47,8 @@
 pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl, $
  phi=phi
 
-   if (n_params() NE 4) then begin
-       print, 'Syntax - radec_to_munu, ra, dec, mu, nu [, stripe=, node=, incl=]'
+   if (n_params() NE 2) then begin
+       print, 'Syntax - radec_to_munu, ra, dec, [ mu, nu, stripe=, node=, incl=]'
        return
    endif
 
