@@ -17,14 +17,19 @@
 ;   2002-04-11  written by Hogg
 ;-
 ;-----------------------------------------------------------------------
-pro hogg_oplot_covar,x,y,covar,color=color,nsigma=nsigma,_EXTRA=KeywordsForPlot
+pro hogg_oplot_covar,x,y,incovar,color=color,nsigma=nsigma,_EXTRA=KeywordsForPlot
 
 ; set defaults, etc
   if NOT keyword_set(color) then color = !p.color
   ndata= n_elements(x)
   x= reform([x],ndata)
   y= reform([y],ndata)
-  covar= reform(covar,2,2,ndata)
+  if (n_elements(incovar) EQ 2L*2L*ndata) then begin
+      covar= reform(incovar,2,2,ndata)
+  endif else begin
+      covar= dblarr(2,2,ndata)
+      for ii=0,ndata-1 do covar[*,*,ii]= incovar
+  endelse
   ncolor= N_elements(color)
   if ncolor EQ 1 then icolor= intarr(ndata)+djs_icolor(color) $
   else icolor= djs_icolor(color)
