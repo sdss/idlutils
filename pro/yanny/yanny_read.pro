@@ -38,6 +38,10 @@
 ;   errcode    - Returns as non-zero if there was an error reading the file.
 ;
 ; COMMENTS:
+;   If the file name suffix is '.gz' or '.Z', the uncompress the file
+;   while reading.  The gunzip command is spawned for '.gz' files, and
+;   'uncompress' is spawned for '.Z' files.
+;
 ;   Return 0's if the file does not exist.
 ;
 ;   Read and write variables that are denoted INT in the Yanny file
@@ -60,6 +64,7 @@
 ;   is the fTCL-based reader.
 ;
 ; PROCEDURES CALLED:
+;   fileandpath()
 ;   hogg_strsplit
 ;   hogg_unquoted_regex()
 ;   mrd_struct
@@ -275,8 +280,31 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    pdata = 0        ; Pointer to each structure
    pnumel = 0       ; Number of elements in each structure
 
-   get_lun, ilun
-   openr, ilun, filename, error=err
+   shortname = fileandpath(filename)
+   ww = strsplit(shortname,'.',/extract)
+   nword = n_elements(ww)
+   if (nword GT 1) then uncmps = ww[nword-1] $
+    else uncmps = ''
+   case uncmps of
+   'Z': begin
+       spawn, 'uncompress -c '+filename+'|wc -l', maxlen
+       maxlen = long(maxlen[0]) > 1
+       ; I can use /NOSHELL below only if the spawn command is
+       ; passed as an array of words.
+       spawn, ['uncompress','-c',filename], unit=ilun, /noshell
+       err = 0
+       end
+   'gz': begin
+       spawn, 'gunzip -c '+filename+'|wc -l', maxlen
+       maxlen = long(maxlen[0]) > 1
+       openr, ilun, filename, error=err, /get_lun, /compress
+       end
+   else: begin
+       maxlen = numlines(filename) > 1
+       openr, ilun, filename, error=err, /get_lun
+       end
+   endcase
+
    if (err NE 0) then begin
       close, ilun
       free_lun, ilun
