@@ -43,6 +43,14 @@ TMASS_ASCII2FITS,TMASS_CONE,TMASS_DECSLICE,TMASS_FITS_FILES,
 TMASS_READZONE,TMASS_REFORMAT_PSC,TMASS_STRUC:
                New procs for reading the 2MASS catalog.
 
+bin/evilmake: Changed some of the flags so that C code libraries load
+               properly on an IRIX64 machine (sdsshost.apo).  I got these
+               flags from "idl_5.5/external/call_external/C/makefile".
+               The changed flag values for IRIX64 are:
+                 X_CFLAGS="-n32 -KPIC -mips3"
+                 CC=cc
+                 LD=ld
+                 X_LD_FLAGS="-shared -n32 -mips3"
 data/sdss/sdssMaskbits.par: Add CALIB_STATUS flag.
 src/Makefile: Compile source code in "mangle1.4/src" instead of "mangle1.2".
 src/image/idl_photfrac.c, p_cisi.c, p_midpnt.c, p_polint.c, p_qromo.c,
