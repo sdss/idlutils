@@ -80,25 +80,19 @@ IF (n_elements(rebinfactor) GT 0) THEN $
   IF (rebinfactor NE 1) THEN $
   colors = nw_rebin_image(colors,rebinfactor)
 
-splog, 'nw_arcsinh'
 colors = nw_scale_rgb(colors,scales=scales)
-splog, 'nw_arcsinh'
 colors = nw_arcsinh(colors,nonlinearity=nonlinearity, /inplace)
-splog, 'nw_cut_to_box'
 IF (NOT keyword_set(saturatetowhite)) THEN $
   colors = nw_cut_to_box(colors,origin=origin)
 IF keyword_set(overlay) THEN colors= (colors > overlay) < 1.0
-splog, 'nw_float_to_byte'
 colors = nw_float_to_byte(colors)
 if(keyword_set(invert)) then colors=255-colors
 
 IF keyword_set(tiff) THEN BEGIN
     colors = reverse(colors,2)
-    splog, 'WRITE_TIFF'
     WRITE_TIFF,name,planarconfig=2,red=colors[*,*,0],$
       green=colors[*,*,1],blue=colors[*,*,2]
 ENDIF ELSE BEGIN
-    splog, 'WRITE_JPEG'
     WRITE_JPEG,name,colors,TRUE=3,QUALITY=quality
 ENDELSE
 END
