@@ -24,6 +24,6 @@ src/mangle1.2/snap
 src/mangle1.2/unify
 src/mangle1.2/weight
 src/mangle1.4/bin
-src/mangle1.4/mask
+src/mangle1.4/masks
 src/math/so_locations
 src/slatec/so_locations
