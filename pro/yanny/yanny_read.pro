@@ -460,6 +460,14 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
          ; Note that the structure names should be forced to uppercase
          ; such that they are not case-sensitive.
          endif else if (pcount GT 0) then begin
+            ; If PDATA is not to be returned, then we need to read this
+            ; file no further.
+            if (NOT arg_present(pdata)) then begin
+               close, ilun
+               free_lun, ilun
+               return
+            endif
+
             idat = where(strupcase(words[0]) EQ pname[0:pcount-1], ct)
             if (ct EQ 1) then begin
                idat = idat[0]
