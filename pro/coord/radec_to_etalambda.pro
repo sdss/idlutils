@@ -22,7 +22,7 @@
 ;-
 pro radec_to_etalambda, ra,dec,eta,lambda,stripenumber=stripenumber
 
-if (n_params() NE 2) then $
+if (n_params() NE 4) then $
   message, 'Wrong number of parameters'
 if (n_elements(ra) NE n_elements(dec)) then $
   message, 'Number of elements in RA and DEC must agree'
@@ -44,9 +44,15 @@ if nbad GT 0 then begin
     eta[bad]= eta[bad]+180.0D
     lambda[bad]= (180.0D)-lambda[bad]
 endif
-eta=(eta gt 180.D) ? eta-360.D : eta
-lambda=(lambda gt 180.D) ? lambda-360.D : lambda
-stripenumber= (stripenumber lt 0L) ? stripenumber+144L : stripenumber
+
+bad=where(eta gt 180.D,nbad)
+if(nbad gt 0) then eta[bad]=eta[bad]-360.D
+
+bad=where(lambda gt 180.D,nbad)
+if(nbad gt 0) then lambda[bad]=lambda[bad]-360.D
+
+bad=where(stripenumber lt 0.D,nbad)
+if(nbad gt 0) then stripenumber[bad]=stripenumber[bad]+144L
 
 end
 
