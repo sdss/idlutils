@@ -36,18 +36,6 @@
 ;
 ; EXAMPLES:
 ;
-;   x = findgen(100)
-;   y = randomu(200, 100, /normal)
-;   zmodel = 10.0*sin(x/10.0) + y
-;   z = zmodel + randomu(100,100,/normal)
-;   invsig = fltarr(100) + 1.0
-;   fullbkpt = [-3.0,-2.0,-1.0,findgen(11)*10.0,101.0,102.0,103.0]
-;   npoly = 2L
-;   nbkptord = 4L
-;   coeff = efc2d(x, y, z, invsig, npoly, nbkptord, fullbkpt)
-;
-;   zfit = bvalu2d(x, y, fullbkpt, coeff)
-;
 ;
 ; PROCEDURES CALLED:
 ;
@@ -58,6 +46,30 @@
 ;   10-Mar-2000 Written by Scott Burles, FNAL
 ;-
 ;------------------------------------------------------------------------------
+pro test_bspline, nx, nbkpt
+   x = dindgen(nx)
+   y = randomu(200, nx, /normal)*1.0d
+   zmodel = 10.0*sin(x/10.0) + y
+   z = zmodel + randomu(100,nx,/normal)
+   invsig = fltarr(nx) + 1.0
+   npoly = 2L
+   nbkptord = 4L
+   fullbkpt = (findgen(nbkpt + nbkptord*2-1) - (nbkptord - 1))/nbkpt * nx 
+   stime1 = systime(1)
+   coeff = efcmn(x, z, invsig, nbkptord, fullbkpt)
+   stime2 = systime(1)
+   coeffb = fill_bspline(x, y, z, invsig, 1, nbkptord, fullbkpt)
+   stime3 = systime(1)
+   print, stime2-stime1, stime3-stime2
+
+;   zfit = bvalu2d(x, y, fullbkpt, coeff)
+   zfit = slatec_bvalu(x, fullbkpt, coeff)
+
+return
+end
+
+
+
 function fill_bspline, x, y, z, invsig, npoly, nbkptord, fullbkpt
 
     
@@ -65,8 +77,6 @@ function fill_bspline, x, y, z, invsig, npoly, nbkptord, fullbkpt
       nbkpt= n_elements(fullbkpt)
       n = (nbkpt - nbkptord)
       nfull = n*npoly
-      mdg = (nbkpt+1)*npoly
-      mdata = max([nx,nbkpt*npoly])
 
       coeff = fltarr(nfull)
 
@@ -77,7 +87,7 @@ function fill_bspline, x, y, z, invsig, npoly, nbkptord, fullbkpt
 ;	Make sure nord bkpts on each side lie outside [xmin,xmax]
 ;
 	for i=0,nbkptord-1 do fullbkpt[i] = min([fullbkpt[i],xmin])
-	for i=n,nbkpt-1 do fullbkpt[i] = max([fullbkpt[i],xmax])
+	for i=n,nbkpt-1 do fullbkpt[i] = max([fullbkpt[i],xmax]) 
 
 ;
 ;     Loop through data points, and process at every once each breakpoint
@@ -98,27 +108,28 @@ function fill_bspline, x, y, z, invsig, npoly, nbkptord, fullbkpt
 
       indx = lonarr(nx)
       for i=0L, nx-1 do begin
-        while (x[i] GE fullbkpt[ileft+1]) do ileft = ileft + 1L
+        while (x[i] GE fullbkpt[ileft+1] AND ileft LT n-1 ) do $
+            ileft = ileft + 1L
         indx[i] = ileft
       endfor
-       
+      
       bf1 = bsplvn(fullbkpt, nbkptord, x, indx)
       bf = reform(bf1[*] #replicate(1,npoly),nx, bw)
 
       a = bf * ypoly * (invsig # replicate(1,bw))
       b = z * invsig
 
-      alphafull = fltarr(nx, nfull)
-      alphafull[*,0:bw-1] = a
-      for i=0, nx-1 do $
-      alphafull[i,*] = shift(alphafull[i,*],(indx[i]-nbkptord+1)*npoly)
+;      alphafull = fltarr(nx, nfull)
+;      alphafull[*,0:bw-1] = a
+;      for i=0L, nx-1 do $
+;      alphafull[i,*] = shift(alphafull[i,*],(indx[i]-nbkptord+1)*npoly)
+;
+;      atest = alphafull ## transpose(alphafull)
+;      btest = alphafull ## b
 
-      atest = alphafull ## transpose(alphafull)
-      btest = alphafull ## b
 
-
-      alpha = fltarr(bw,nfull+bw)
-      beta = fltarr(nfull+bw)
+      alpha = dblarr(bw,nfull+bw)
+      beta = dblarr(nfull+bw)
 
       bi = lindgen(bw)
       bo = lindgen(bw)
@@ -133,6 +144,7 @@ function fill_bspline, x, y, z, invsig, npoly, nbkptord, fullbkpt
         inside = where(indx EQ ilist[i], ict)
 
         if (ict NE 0) then begin
+
           work = a[inside,*] ## transpose(a[inside,*])
           wb =  b[inside] # a[inside,*] 
 
@@ -141,8 +153,11 @@ function fill_bspline, x, y, z, invsig, npoly, nbkptord, fullbkpt
         endif
       endfor
 
-    cholesky_band, alpha   ; this changes alpha
+; this changes alpha
+    errb = cholesky_band(alpha)   
 
-    cholesky_solve, alpha, beta   ; this changes beta to contain the solution
+; this changes beta to contain the solution
+    errs = cholesky_solve(alpha, beta)   
+
     return, beta[lindgen(nfull)]
 end 

@@ -555,6 +555,7 @@ pro/TeXtoIDL/FILES -text
 pro/TeXtoIDL/README -text
 pro/TeXtoIDL/textoidl.pro -text
 pro/astrom/usno_read.pro -text
+pro/bspline/bvalu.pro -text
 pro/bspline/cholesky_band.pro -text
 pro/bspline/cholesky_solve.pro -text
 pro/bspline/fill_bspline.pro -text

@@ -1,24 +1,22 @@
 
-function cholesky_band, a
+function cholesky_band, lower
 
     ; compute cholesky decomposition of banded matrix
-    ;   a[bandwidth, n]  n is the number of linear equations
+    ;   lower[bandwidth, n]  n is the number of linear equations
  
     ; I'm doing lower cholesky decomposition from lapack, spbtf2.f
 
-    bw = (size(a))[1]
-    n = (size(a))[2]
+    bw = (size(lower))[1]
+    n = (size(lower))[2] - bw
 
     kd = bw - 1
 
 
-    negative = where(a[0,*] LE 0)
+    negative = where(lower[0,0:n-1] LE 0)
     if negative[0] NE -1 then begin
        message, 'you have negative diagonals, difficult to root', /continue
        return, negative
     endif
-
-    lower = [[a], [fltarr(bw,bw)]]
 
     kn = bw - 1 
     spot = 1 + lindgen(kn)
@@ -35,6 +33,6 @@ function cholesky_band, a
          lower[here] = lower[here] - hmm[bi]
     endfor
 
-  return,lower
+  return,0
 end
             
