@@ -6,10 +6,9 @@
 ;   Read one table from the GSC (Guide star catalogue)
 ;
 ; CALLING SEQUENCE:
-;   cat=gsc_read_table(gsc_path, fname, maglim=maglim, poserrlim=poserrlim)
+;   cat=gsc_read_table(fname, maglim=maglim, poserrlim=poserrlim)
 ;
 ; INPUTS:
-;   gsc_path   - path to catalogue table
 ;   fname      - file name(s) of catalogue FITS table (e.g. 0060.gsc )
 ;                      (can be array)
 ; KEYWORDS:
@@ -29,13 +28,13 @@
 ;   2002-Mar-27  Written by D. Finkbeiner, Princeton
 ;
 ;----------------------------------------------------------------------
-function gsc_read_table, gsc_path, fname, maglim=maglim, poserrlim=poserrlim
+function gsc_read_table, fname, maglim=maglim, poserrlim=poserrlim
 
   cat1 = {ra: 0., dec:0., mag:0.}  ; no double precision...
 
   nfile = n_elements(fname)
-  for i=0, nfile-1 do begin 
-     gsc = mrdfits(gsc_path+fname[i], 1, /silent)
+  for i=0L, nfile-1 do begin 
+     gsc = mrdfits(fname[i], 1, /silent)
      
      w = where((gsc.mag GT maglim[0]) AND (gsc.mag LT maglim[1]) AND $
                (gsc.pos_err LT poserrlim) AND $
