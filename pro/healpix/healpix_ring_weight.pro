@@ -27,10 +27,14 @@
 ;   Gorski stores weight-1 as a float; we return weight as a double.
 ;   Because the weight array is symmetric, Gorski only stores half; we 
 ;     return the whole array for simplicity. 
+;   The new mrdfits() (in v5_0_2b) replaces a " " in binary fits table
+;   field names with "_" instead of removing it.  Current version of
+;   this routine works with both new and old mrdfits().
 ;   
 ; REVISION HISTORY:
 ;   2003-Mar-11  Written by Douglas Finkbeiner, Princeton
 ;   2003-Nov-12  Cache outputs - DPF & NP
+;   2004-Aug-09  Fix fatal bug with new mrdfits().
 ;
 ;----------------------------------------------------------------------
 function healpix_ring_weight, nside, iring=iring
@@ -51,7 +55,9 @@ function healpix_ring_weight, nside, iring=iring
 
   if file_test(wt_ring_file) ne 1 then message, 'file not found' 
   wt_str = mrdfits(wt_ring_file, 1)
-  twt = wt_str.temperatureweights
+  tind = where(strpos(tag_names(wt_str),'TEMP') EQ 0, nind)
+  if nind NE 1 then message, 'structure does not have a field with TEMPERATURE WEIGHTS'
+  twt = wt_str.(tind)
   twt = reform(twt, n_elements(twt)) ; handle 1024 case
   wt = [twt, reverse(twt[0:n_elements(twt)-2] )]
 
