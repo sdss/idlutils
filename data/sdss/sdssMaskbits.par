@@ -229,6 +229,14 @@ maskbits Q_EYEBALL 13 INTERNAL_REFLECTION
 maskbits Q_EYEBALL 14 BAD_SPEC_CLASS
 maskbits Q_EYEBALL 15 USE_PARENT
 maskbits Q_EYEBALL 16 IN_HUGE_OBJECT
+maskbits Q_EYEBALL 17 STAR_ON_GALAXY
+maskbits Q_EYEBALL 18 QSO_ON_GALAXY
+maskbits Q_EYEBALL 19 NEGATIVE_QSO_FIT
+maskbits Q_EYEBALL 20 BAD_SPECTRUM
+maskbits Q_EYEBALL 21 POSSIBLE_LENS
+maskbits Q_EYEBALL 22 IS_STAR
+maskbits Q_EYEBALL 23 DOUBLE_Z
+maskbits Q_EYEBALL 24 PLANETARY_NEBULA
 
 #------------------------------------------------------------------------------
 
