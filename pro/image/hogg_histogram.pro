@@ -12,7 +12,7 @@
 ; OPTIONAL INPUTS:
 ;   weight   - [M] array of weights for the data points
 ; OUTPUTS:
-;   hist     - [d,P] array of numbers of points in each bin
+;   hist     - [d,P] array of numbers of points (or total weight) in each bin
 ; OPTIONAL OUTPUTS:
 ;   err      - [d,P] array of Poisson errors
 ; BUGS:
