@@ -1010,6 +1010,7 @@ pro/trace/trace_fweight.pro -text
 pro/trace/trace_gweight.pro -text
 pro/trace/traceset2pix.pro -text
 pro/trace/traceset2xy.pro -text
+pro/trace/traceset_trim.pro -text
 pro/trace/xy2traceset.pro -text
 pro/yanny/hogg_strsplit.pro -text
 pro/yanny/hogg_unquoted_regex.pro -text
