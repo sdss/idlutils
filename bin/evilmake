@@ -39,7 +39,7 @@ case `uname` in
 		SO_EXT=so
     X_FFLAGS="-extend_source"
 		X_LD_FLAGS="-S -shared"
-		SDSS_CFLAGS=-O3
+		SDSS_CFLAGS=-O3 
 	;;
 	"Darwin" )
 		F77=g77
@@ -57,7 +57,7 @@ case `uname` in
 		X_FFLAGS="-ffixed-line-length-none"
     MAKE_FTNLIB="-lg2c"
 		X_LD_FLAGS=-shared
-		SDSS_CFLAGS=-O3
+		SDSS_CFLAGS="-O3 -DSDSS_LITTLE_ENDIAN"
 	;;
 	*) echo "This system is not supported" >&2
 		exit 1;;

@@ -84,7 +84,7 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
   iteration= 0L
   lastplot= 0L
   repeat begin
-    iteration= iteration+1
+    iteration= iteration+1 
 
 ; compute (un-normalized) probabilities
     for j=0L,ngauss-1 do begin
