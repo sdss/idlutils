@@ -26,7 +26,7 @@ function logsum, logs, double=double, const=const
 
 maxlog=max(logs)
 logxmax=alog((machar(double=double)).xmax)
-const=logxmax-alog(2.*n_elements(logs))-maxlog
+const=logxmax-(2.D)*(alog(double(n_elements(logs)))-maxlog)
 logsum=alog(total(exp(logs+const),double=double))-const
 return,logsum
 
