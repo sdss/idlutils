@@ -119,7 +119,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
  groupbadpix=groupbadpix, grow=grow
 
    if (n_params() LT 2 OR NOT arg_present(outmask)) then begin
-      print, 'Syntax: qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
+      print, 'Syntax: qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $'
       print, ' sigma=, invvar=, upper=, lower=, maxdev=, grow= $'
       print, ' maxrej=, groupsize=, groupdim=, /sticky, /groupbadpix] )'
       return, 1

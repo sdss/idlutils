@@ -2,7 +2,7 @@
 ; NAME:
 ;   read_tbl
 ; PURPOSE:
-;   Read .tbl/.hdr format files (like those of 2MASS)
+;   Read .tbl/.hdr format files output by postgres (like those of 2MASS)
 ; CALLING SEQUENCE:
 ;   table= read_tbl(filebase [, chunksize=])
 ; INPUTS:
