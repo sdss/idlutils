@@ -638,6 +638,7 @@ pro/astrom/usno_cone.pro -text
 pro/astrom/usno_read.pro -text
 pro/astrom/usno_readzone.pro -text
 pro/astrom/usnob10_extract.pro -text
+pro/astrom/usnob2fits.pro -text
 pro/astrom/uv2ll.pro -text
 pro/bspline/bspline_action.pro -text
 pro/bspline/bspline_bkpts.pro -text
