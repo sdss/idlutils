@@ -48,6 +48,8 @@
 ;
 ;
 ; PROCEDURES CALLED:
+;   findbkpt()
+;
 ;   efc_idl in src/slatec/idlwrapper.c
 ;         which wraps to efc.o in libslatecidl.so
 ;
@@ -56,7 +58,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
- invsig=invsig, bkspace=bkspace, nbkpts=nbkpts, everyn=everyn, silent=silent
+ invsig=invsig, idlver=idlver, _EXTRA=KeywordsForBkpts
 
    if (NOT keyword_set(nord)) then nord = 4L $
     else if (nord LT 1 or nord GT 20) then $
@@ -80,55 +82,8 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
       return, fullbkpt
    endif
 
-   if (NOT keyword_set(fullbkpt)) then begin
-
-      if (NOT keyword_set(bkpt)) then begin
- 
-         range = (max(x) - min(x))
-         startx = min(x)
-         if (keyword_set(bkspace)) then begin
-            nbkpts = long(range/float(bkspace)) + 1
-            if (nbkpts LT 2) then nbkpts = 2
-            tempbkspace = double(range/(float(nbkpts-1)))
-            bkpt = (findgen(nbkpts))*tempbkspace + startx
-         endif else if keyword_set(nbkpts) then begin
-            nbkpts = long(nbkpts)
-            if (nbkpts LT 2) then nbkpts = 2
-            tempbkspace = double(range/(float(nbkpts-1)))
-            bkpt = (findgen(nbkpts))*tempbkspace + startx
-         endif else if keyword_set(everyn) then begin
-            nbkpts = ngood / everyn
-            xspot = lindgen(nbkpts)*ngood/(nbkpts-1)
-            bkpt = x[good[xspot]]
-         endif else message, 'No information for bkpts'
-      endif
-
-      bkpt = float(bkpt)
-
-      if (min(x) LT min(bkpt,spot)) then begin
-         if (NOT keyword_set(silent)) then $
-          print, 'Lowest breakpoint does not cover lowest x value: changing'
-         bkpt[spot] = min(x)
-      endif
-
-      if (max(x) GT max(bkpt,spot)) then begin
-         if (NOT keyword_set(silent)) then $
-          print, 'highest breakpoint does not cover highest x value, changing'
-         bkpt[spot] = max(x)
-      endif
-
-      nshortbkpt = n_elements(bkpt)
-      fullbkpt = bkpt
-      bkptspace = (bkpt[1] - bkpt[0]) / 10.0
-      for i=1, nord-1 do $
-       fullbkpt = [bkpt[0]-bkptspace*i, fullbkpt, $
-        bkpt[nshortbkpt - 1] + bkptspace*i]
-  
-   endif else begin
-
-      fullbkpt = FLOAT(fullbkpt)
-
-   endelse
+   if (NOT keyword_set(fullbkpt)) then $
+     fullbkpt = findbkpt(x, good, bkpt, nord, _EXTRA=KeywordsForBkpts)
 
    nbkpt = n_elements(fullbkpt)
 
@@ -138,17 +93,21 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
    qeval = 1
    while (qeval) do begin
 
-      coeff = fltarr(nbkpt-nord)
-      mdein = 1L
-      mdeout = 0L
-      lw = 10*nbkpt*nord + 2*max([ndata,nbkpt])
-      w = fltarr(lw)
+      if (keyword_set(idlver)) then $
+        coeff = efcmn(x,y,invsig, nord, fullbkpt) $
+      else begin
+        coeff = fltarr(nbkpt-nord)
+        mdein = 1L
+        mdeout = 0L
+        lw = 10*nbkpt*nord + 2*max([ndata,nbkpt])
+        w = fltarr(lw)
 
-      test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
-       'efc_idl', $
-       ndata, FLOAT(x), FLOAT(y), FLOAT(invsig), LONG(nord), $
-       LONG(nbkpt), fullbkpt, mdein, mdeout, coeff, lw, w)
+        test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
+         'efc_idl', $
+         ndata, FLOAT(x), FLOAT(y), FLOAT(invsig), LONG(nord), $
+         LONG(nbkpt), fullbkpt, mdein, mdeout, coeff, lw, w)
 
+      endelse
       qeval = 0 ; Do not re-evaluate spline unless break points are removed
                 ; below
 
