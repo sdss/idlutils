@@ -65,8 +65,8 @@ SLIB =
 # END OF LOCAL CONFIGURATION
 ###############################################################################
 
-DEST=$(IDLUTILS_DIR)/bin
-ILIB = -L$(IDLUTILS_DIR)/lib
+DEST=$(IDLUTILS_DIR)/bin/
+ILIB = -L$(IDLUTILS_DIR)/lib/
 LLIB = -lmangle
 
 PROGS = mrb_balkanize balkanize drangle harmonize map polyid poly2poly ransack snap unify weight
