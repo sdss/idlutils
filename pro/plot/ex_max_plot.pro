@@ -9,7 +9,8 @@
 ;   amp          [M] array of gaussian amplitudes
 ;   mean         [d,M] array of gaussian mean vectors
 ;   var          [d,d,M] array of gaussian variance matrices
-;   psfilename   name for PostScript file
+;   psfilename   name for PostScript file; if no filename is given, then the
+;                  plots will simply be sent to the currently active device
 ; OPTIONAL INPUTS:
 ;   nsig         number of sigma for half-width of each plot; default 5
 ;   label        [d] array of axis labels; default 'x_i'
@@ -24,11 +25,10 @@
 ;   log          logarithmic stretch on image
 ;   axis_char_scale  size of characters on labels
 ;   overpoints   [d,P] set of points to overplot a red box on each panel
-;   model_npix_factor  for gaussians, use this factor to scale model
+;   model_npix_factor  for gaussians, use this factor to scale down pixel size
 ;   panellabels  label string for each panel (size of xdims, ydims arrays)
-;   quant        vector of fractions at which to plot quantiles on conditional
+;   quantfrac    vector of fractions at which to plot quantiles on conditional
 ;                   panels
-;   quantile     output array of quantile positions; read the source code
 ; KEYWORDS:
 ;   nomodel      don't show model fits as greyscales or histograms
 ;   nodata       don't show data as greyscales or histograms
@@ -37,8 +37,10 @@
 ;   conditional  plot the conditional distribution of y on x 
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
+;   quantile     output array of quantile positions; read the source code
+;   quantneff    the effective number of data points contributing to the medians
 ; BUGS:
-;   Conditional plots look terrible.
+;   Greyscales need work?
 ; DEPENDENCIES:
 ; REVISION HISTORY:
 ;   2001-10-22  written - Hogg
@@ -54,7 +56,8 @@ pro ex_max_plot, weight,point,amp,mean,var,psfilename,nsig=nsig, $
                  npix_y=npix_y,overpoints=overpoints, $
                  model_npix_factor=model_npix_factor, $
                  panellabels=panellabels, panellabelpos=panellabelpos, $
-                 sigrejimage=sigrejimage, paneluse=paneluse, quant=quant
+                 sigrejimage=sigrejimage, paneluse=paneluse, $
+                 quantfrac=quantfrac, quantile=quantile, quantneff=quantneff
 
 ; set defaults
 if(NOT keyword_set(model_npix_factor)) then model_npix_factor= 4.0
@@ -81,13 +84,14 @@ mean= reform(double(mean),dimen,ngauss)
 var= reform(double(var),dimen,dimen,ngauss)
 
 ; by default show quartiles in conditional case
-if (keyword_set(conditional) and (not keyword_set(quant))) then $
-  quant=[0.25,0.5,0.75]
+if (keyword_set(conditional) and (not keyword_set(quantfrac))) then $
+  quantfrac=[0.25,0.5,0.75]
 
 ; setup arrays for quantiles in conditional case
-if keyword_set(conditional) then begin
-  nquant= n_elements(quant)
+if keyword_set(quantfrac) then begin
+  nquant= n_elements(quantfrac)
   quantile= dblarr(xdimen,ydimen,nquant,npix_x,2)
+  quantneff= dblarr(xdimen,ydimen,npix_x)
 endif
 
 ; if there is a second set of data, deal with it
@@ -127,10 +131,12 @@ bangY= !Y
 !P.FONT= -1
 !P.BACKGROUND= djs_icolor('white')
 !P.COLOR= djs_icolor('black')
-set_plot, "PS"
 xsize= 7.5 & ysize= 7.5
-device, file=psfilename,/inches,xsize=xsize,ysize=ysize, $
-  xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color
+if keyword_set(psfilename) then begin
+  set_plot, "PS"
+  device, file=psfilename,/inches,xsize=xsize,ysize=ysize, $
+    xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color
+endif
 !P.THICK= 2.0
 !P.CHARTHICK= !P.THICK & !X.THICK= !P.THICK & !Y.THICK= !P.THICK
 !P.CHARSIZE= 1.0
@@ -172,7 +178,7 @@ for id2=ydimen-1,0L,-1 do begin
         if(d1 lt 0 or d2 lt 0) then begin
             !P.MULTI[0]=!P.MULTI[0]-1L
         endif else begin 
-            
+
             if(keyword_set(paneluse)) then begin
                 paneluse=reform(paneluse,ndata,xdimen,ydimen)
                 panelindx=where(paneluse[*,id1,id2] gt 0)
@@ -374,7 +380,7 @@ for id2=ydimen-1,0L,-1 do begin
                         amp1col=dblarr(usenpix_x)
                         avgcol=total(image,1)
                         avgcol=avgcol/total(avgcol)
-                        if(keyword_set(quant)) then begin
+                        if(keyword_set(quantfrac)) then begin
                             quantuse=lonarr(nquant,usenpix_x) 
                         endif
                         for ii=0L, usenpix_x-1L do begin
@@ -382,12 +388,13 @@ for id2=ydimen-1,0L,-1 do begin
                             if(countin gt 1) then begin
                                 amp1col[ii]=total(image[ii,*]^2)/total(image[ii,*]*avgcol)
                                 image[ii,*]=image[ii,*]/amp1col[ii]
-                                if(keyword_set(quant)) then begin
+                                if(keyword_set(quantfrac)) then begin
                                     quantile[id1,id2,*,ii,1]= $
                                       weighted_quantile(panelpoint[d2,indx], $
                                                         panelweight[indx], $
-                                                        quant=quant)
+                                                        quant=quantfrac)
                                     quantuse[*,ii]=1L
+                                    quantneff[id1,id2,ii]= (total(panelweight[indx],/double))^2/total((panelweight[indx])^2,/double)
                                 endif
                             endif
                         endfor
@@ -442,7 +449,7 @@ for id2=ydimen-1,0L,-1 do begin
                         xline=!X.CRANGE[0]+ $
                           ((dindgen(usenpix_x)+0.5)*(!X.CRANGE[1]-!X.CRANGE[0])/ $
                            double(usenpix_x))
-                        if(keyword_set(quant)) then begin
+                        if(keyword_set(quantfrac)) then begin
                             for m=0L, nquant-1L do begin
                                 quantile[id1,id2,m,*,0]= xline
                                 outmedindx=where(quantuse[m,*] ne 0,outcount)
@@ -605,7 +612,7 @@ for id2=ydimen-1,0L,-1 do begin
         endelse 
     endfor
 endfor
-device, /close
+if keyword_set(psfilename) then device, /close
 
                                 ; restore system plotting parameters
 !P= bangP
