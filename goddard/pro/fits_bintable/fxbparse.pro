@@ -66,6 +66,8 @@
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Optimized FXPAR; call FXBFIND for speed, CM 1999 Nov 18
 ;       Modify DHEAP(ILUN) when opening table now, CM 2000 Feb 22
+;       Default the TZERO/TSCAL tables to double instead of single
+;         precision floating point, CM 2003 Nov 23
 ;-
 ;
 @fxbintable
@@ -90,8 +92,8 @@
 	END ELSE FXBTFORM,HEADER,BYTOFF0,IDLTYPE0,FORMAT0,N_ELEM0,MAXVAL0
 ;
 	FXBFIND,HEADER,'TTYPE',COLUMNS,TTYPE0,N_FOUND,''
-	FXBFIND,HEADER,'TSCAL',COLUMNS,TSCAL0,N_FOUND,1.
-	FXBFIND,HEADER,'TZERO',COLUMNS,TZERO0,N_FOUND,0.
+	FXBFIND,HEADER,'TSCAL',COLUMNS,TSCAL0,N_FOUND,1D
+	FXBFIND,HEADER,'TZERO',COLUMNS,TZERO0,N_FOUND,0D
 	POINT_LUN,-LUN[ILUN],NHEAD0
 ;
 ;  Get the information from the required keywords.
