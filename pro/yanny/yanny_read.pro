@@ -53,6 +53,7 @@
 ;
 ; INTERNAL SUPPORT ROUTINES:
 ;   yanny_add_comment
+;   yanny_getwords()
 ;   yanny_strip_brackets()
 ;   yanny_strip_commas()
 ;   yanny_readstring
@@ -64,16 +65,10 @@
 ;------------------------------------------------------------------------------
 pro yanny_add_comment, rawline, comments
 
-   ;
-   ; test for pure comment line
-   ;
-   trimmed = strtrim(rawline,2)
-   if (strpos(trimmed,'#') EQ 0) then return
-
    if (size(comments,/tname) EQ 'INT') then $
-    comments = trimmed $
+    comments = rawline $
    else $
-    comments = [comments, trimmed]
+    comments = [comments, rawline]
 
    return
 end
@@ -178,15 +173,15 @@ pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
    return
 end
 ;-----------------------------------------------------------------------------
-function getwords,sline
+function yanny_getwords, sline
 
-      words = str_sep(sline, '"') ; Divide into words based upon quotes
-      nword = n_elements(words)
-      if (nword GT 2) then words = [str_sep(strtrim(words[0],2), ' '), $
-           words[1:nword-2], str_sep(strtrim(words[nword-1],2), ' ')] $
-      else words = str_sep(sline, ' ') ; Divide into words based upon spaces
+   words = str_sep(sline, '"') ; Divide into words based upon quotes
+   nword = n_elements(words)
+   if (nword GT 2) then words = [str_sep(strtrim(words[0],2), ' '), $
+    words[1:nword-2], str_sep(strtrim(words[nword-1],2), ' ')] $
+    else words = str_sep(sline, ' ') ; Divide into words based upon spaces
 
-      return, words
+   return, words
 end
 ;------------------------------------------------------------------------------
 pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
@@ -242,7 +237,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
        else rawline = yanny_nextline(ilun)
 
       sline = yanny_strip_commas(rawline)
-      words = getwords(sline) ; Divide into words and strings
+      words = yanny_getwords(sline) ; Divide into words and strings
 
       nword = N_elements(words)
 
@@ -260,6 +255,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
             yanny_add_comment, rawline, enums
 
+            qdone = 1 ; This last line is still part of the enum string
+
          ; LOOK FOR STRUCTURES TO BUILD with "typedef struct"
          endif else if (words[0] EQ 'typedef' AND words[1] EQ 'struct') $
           then begin
@@ -272,7 +269,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
             while (strmid(sline,0,1) NE '}') do begin
                sline = strcompress(sline)
-               ww = getwords(sline)
+               ww = yanny_getwords(sline)
 
                if (N_elements(ww) GE 2) then begin
                   i = where(ww[0] EQ tname, ct)
@@ -348,7 +345,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
                ; Split this text line into words
                sline = strcompress( yanny_strip_brackets(sline) )
-               ww = getwords(sline)
+               ww = yanny_getwords(sline)
 
                i = 1 ; Counter for which word we're currently reading
                      ; Skip the 0-th word since it's the structure name.
