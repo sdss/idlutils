@@ -806,6 +806,7 @@ pro/math/djs_posmod.pro -text
 pro/math/djs_reject.pro -text
 pro/math/djsig.pro -text
 pro/math/em_pca.pro -text
+pro/math/em_pca_sparse_matrix.pro -text
 pro/math/ex_max.pro -text
 pro/math/ex_max_probability.pro -text
 pro/math/gauss_kernel.pro -text
@@ -813,6 +814,7 @@ pro/math/gausspix1d.pro -text
 pro/math/hogg_iter_linfit.pro -text
 pro/math/legendre_zero.pro -text
 pro/math/legendre_zero_func.pro -text
+pro/math/lle.pro -text
 pro/math/lle_sm.pro -text
 pro/math/lle_sm_full.pro -text
 pro/math/lle_sm_mult.pro -text

@@ -64,7 +64,7 @@ PROGS = mrb_balkanize balkanize harmonize map polyid poly2poly ransack snap unif
 # excised rotate because of failed starlink dependency
 #rotate
 
-COBJ = advise_fmt.o convert.o copy_format.o copy_poly.o drandom.o findtop_.o garea.o gcmlim.o gptin.o gspher.o gvert.o gvlim.o gvphi.o ikrand.o msg.o new_poly.o new_vert.o partition_poly.o places.o prune_poly.o rdangle.o rdline.o rdmask.o rdspher.o scale.o snap_poly.o strdict.o vmid.o weight_fn.o wrangle.o wrho.o wrmask.o wrspher.o
+COBJ = advise_fmt.o convert.o copy_format.o copy_poly.o drandom.o findtop_.o garea.o gcmlim.o gptin.o gspher.o gvert.o gvlim.o gvphi.o ikrand.o msg.o new_poly.o new_vert.o partition_poly.o places.o prune_poly.o rdangle.o rdline.o rdmask.o rdspher.o scale.o snap_poly.o strdict.o vmid.o weight_fn.o wrangle.o wrho.o wrmask.o wrspher.o add_parent.o
 
 FOBJ = azel.s.o azell.s.o felp.s.o fframe.s.o findtop.s.o garea.s.o gcmlim.s.o gphi.s.o gptin.s.o gsphera.s.o gspher.s.o gsubs.s.o gvert.s.o gvlim.s.o gvphi.s.o iylm.s.o twodf.o twoqz.o wlm.s.o wrho.s.o
 
@@ -140,7 +140,7 @@ advise_fmt.o: angunit.h format.h scale.h advise_fmt.c
 	$(CC) $(CFLAGS) -c advise_fmt.c
 balkanize.o: parse_args.c defaults.h format.h polygon.h scale.h usage.h balkanize.c
 	$(CC) $(CFLAGS) -c balkanize.c
-mrb_balkanize.o: parse_args.c defaults.h format.h polygon.h scale.h usage.h balkanize.c
+mrb_balkanize.o: parse_args.c defaults.h format.h polygon.h scale.h usage.h mrb_balkanize.c
 	$(CC) $(CFLAGS) -c mrb_balkanize.c
 convert.o: pi.h polygon.h vertices.h convert.c
 	$(CC) $(CFLAGS) -c convert.c
@@ -162,6 +162,8 @@ gspher.o: harmonics.h logical.h polygon.h gspher.c
 	$(CC) $(CFLAGS) -c gspher.c
 gvert.o: logical.h polygon.h gvert.c
 	$(CC) $(CFLAGS) -c gvert.c
+add_parent.o: logical.h polygon.h add_parent.c
+	$(CC) $(CFLAGS) -c add_parent.c
 gvlim.o: logical.h polygon.h gvlim.c
 	$(CC) $(CFLAGS) -c gvlim.c
 gvphi.o: polygon.h gvphi.c

@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdio.h>
 #include "polygon.h"
 
 /* initial angular tolerance within which to merge multiple intersections */
@@ -23,75 +25,75 @@ extern int garea();
   Null polygons are replaced with a single null cap.
   Note that a polygon with no caps is the whole sphere, not a null polygon.
 
-   Input: poly is a pointer to a polygon.
+	Input: poly is a pointer to a polygon.
   Output: poly with all superfluous caps removed;
-	  the number of caps is changed.
+	the number of caps is changed.
   Return value: -1 if error;
-		0 if nothing changed;
-		1 if something changed;
-		2 if nothing changed, and polygon is null;
-		3 if polygon was changed to null polygon.
+	0 if nothing changed;
+	1 if something changed;
+	2 if nothing changed, and polygon is null;
+	3 if polygon was changed to null polygon.
 */
 int prune_poly(poly)
-polygon *poly;
+		 polygon *poly;
 {
-    int i, ier, ip, iret, jp, verb;
-    double area, area_tot, cm, tol;
+	int i, ier, ip, iret, jp, verb;
+	double area, area_tot, cm, tol;
 
-    /* first cut */
-    iret = trim_poly(poly);
+	/* first cut */
+	iret = trim_poly(poly);
 
-    /* trim_poly detected null polygon */
-    if (iret >= 2) return(iret);
+	/* trim_poly detected null polygon */
+	if (iret >= 2) return(iret);
 
-    /* area of intersection */
-    tol = mtol;
-    verb = 1;
-    ier = garea(poly, &tol, &verb, &area_tot);
-    if (ier) return(-1);
-
-    /* null polygon */
-    if (area_tot == 0.) {
-	poly->rp_(0, 0) = 0.;
-	poly->rp_(1, 0) = 0.;
-	poly->rp_(2, 0) = 1.;
-	poly->cm[0] = 0.;
-	poly->np = 1;
-	return(3);
-    }
-
-    /* test whether suppressing cap changes area or not */
-    verb = 0;
-    for (ip = 0; ip < poly->np; ip++) {
-	if (poly->cm[ip] >= 2.) continue;	/* cap is already superfluous */
-	cm = poly->cm[ip];			/* save latitude */
-	poly->cm[ip] = 2.;			/* suppress cap */
+	/* area of intersection */
 	tol = mtol;
-	ier = garea(poly, &tol, &verb, &area);	/* area sans cap */
-	if (ier == -1) return(-1);
-	if (ier || area != area_tot) {		/* cap affects area */
-	    poly->cm[ip] = cm;			/* so restore cap */
-	}
-    }
+	verb = 1;
+	ier = garea(poly, &tol, &verb, &area_tot);
+	if (ier) return(-1);
 
-    /* remove superfluous caps */
-    ip = 0;
-    for (jp = 0; jp < poly->np; jp++) {
-	/* copy down cap */
-	if (poly->cm[jp] < 2.) {
+	/* null polygon */
+	if (area_tot == 0.) {
+		poly->rp_(0, 0) = 0.;
+		poly->rp_(1, 0) = 0.;
+		poly->rp_(2, 0) = 1.;
+		poly->cm[0] = 0.;
+		poly->np = 1;
+		return(3);
+	}
+
+	/* test whether suppressing cap changes area or not */
+	verb = 0;
+	for (ip = 0; ip < poly->np; ip++) {
+		if (poly->cm[ip] >= 2.) continue;	/* cap is already superfluous */
+		cm = poly->cm[ip];			/* save latitude */
+		poly->cm[ip] = 2.;			/* suppress cap */
+		tol = mtol;
+		ier = garea(poly, &tol, &verb, &area);	/* area sans cap */
+		if (ier == -1) return(-1);
+		if (ier || area != area_tot) {		/* cap affects area */
+	    poly->cm[ip] = cm;			/* so restore cap */
+		}
+	}
+
+	/* remove superfluous caps */
+	ip = 0;
+	for (jp = 0; jp < poly->np; jp++) {
+		/* copy down cap */
+		if (poly->cm[jp] < 2.) {
 	    for (i = 0; i < 3; i++) {
-		poly->rp_(i, ip) = poly->rp_(i, jp);
+				poly->rp_(i, ip) = poly->rp_(i, jp);
 	    }
 	    poly->cm[ip] = poly->cm[jp];
 	    ip++;
-	/* skip superfluous cap */
-	} else {
+			/* skip superfluous cap */
+		} else {
 	    iret = 1;
+		}
 	}
-    }
-    poly->np = ip;
+	poly->np = ip;
 
-    return(iret);
+	return(iret);
 }
 
 /*------------------------------------------------------------------------------
@@ -113,72 +115,72 @@ polygon *poly;
   including those with axes pointing in opposite directions, have been
   modified by `snap' to coincide exactly, with coaligned axes.
 
-   Input: poly is a pointer to a polygon.
+	Input: poly is a pointer to a polygon.
   Output: poly with obviously superfluous caps suppressed;
-	  the number and order of caps remains unchanged
-	  UNLESS polygon is replaced by null polygon.
+	the number and order of caps remains unchanged
+	UNLESS polygon is replaced by null polygon.
   Return value: 0 if nothing changed;
-		1 if one or more caps were suppressed;
-		2 if nothing changed, and polygon is null;
-		3 if polygon was changed to null polygon.
+	1 if one or more caps were suppressed;
+	2 if nothing changed, and polygon is null;
+	3 if polygon was changed to null polygon.
 */
 int trim_poly(poly)
-polygon *poly;
+		 polygon *poly;
 {
-    int ip, iret, jp;
+	int ip, iret, jp;
 
-    /* initialize return value to no change */
-    iret = 0;
+	/* initialize return value to no change */
+	iret = 0;
 
-    /* check for cap which excludes everything */
-    for (jp = 0; jp < poly->np; jp++) {
-	if (poly->cm[jp] == 0. || poly->cm[jp] <= -2.) {
+	/* check for cap which excludes everything */
+	for (jp = 0; jp < poly->np; jp++) {
+		if (poly->cm[jp] == 0. || poly->cm[jp] <= -2.) {
 	    if (poly->np == 1		/* polygon is already single null cap */
-		&& poly->rp_(0, 0) == 0.
-		&& poly->rp_(1, 0) == 0.
-		&& poly->rp_(2, 0) == 1.
-		&& poly->cm[0] == 0.) {
-		return(2);
+					&& poly->rp_(0, 0) == 0.
+					&& poly->rp_(1, 0) == 0.
+					&& poly->rp_(2, 0) == 1.
+					&& poly->cm[0] == 0.) {
+				return(2);
 	    } else {			/* change polygon to single null cap */
-		poly->rp_(0, 0) = 0.;
-		poly->rp_(1, 0) = 0.;
-		poly->rp_(2, 0) = 1.;
-		poly->cm[0] = 0.;
-		poly->np = 1;
-		return(3);
+				poly->rp_(0, 0) = 0.;
+				poly->rp_(1, 0) = 0.;
+				poly->rp_(2, 0) = 1.;
+				poly->cm[0] = 0.;
+				poly->np = 1;
+				return(3);
 	    }
+		}
 	}
-    }
 
-    /* for each cap jp, check for coincident caps */
-    for (jp = 0; jp < poly->np; jp++) {
-	/* don't check superfluous cap */
-	if (poly->cm[jp] >= 2.) continue;
-	for (ip = jp+1; ip < poly->np; ip++) {
+	/* for each cap jp, check for coincident caps */
+	for (jp = 0; jp < poly->np; jp++) {
+		/* don't check superfluous cap */
+		if (poly->cm[jp] >= 2.) continue;
+		for (ip = jp+1; ip < poly->np; ip++) {
 	    /* don't check superfluous cap */
 	    if (poly->cm[ip] >= 2.) continue;
 	    /* cap axes coincide */
 	    if (poly->rp_(0, ip) == poly->rp_(0, jp)
-		&& poly->rp_(1, ip) == poly->rp_(1, jp)
-		&& poly->rp_(2, ip) == poly->rp_(2, jp)) {
-		/* suppress coincident cap ip */
-		if (poly->cm[ip] == poly->cm[jp]) {
-		    poly->cm[ip] = 2.;
-		    iret = 1;
-		} else if (poly->cm[ip] == - poly->cm[jp]) {
-		/* complementary cap means polygon is null */
-		    poly->rp_(0, 0) = 0.;
-		    poly->rp_(1, 0) = 0.;
-		    poly->rp_(2, 0) = 1.;
-		    poly->cm[0] = 0.;
-		    poly->np = 1;
-		    return(3);
-		}
+					&& poly->rp_(1, ip) == poly->rp_(1, jp)
+					&& poly->rp_(2, ip) == poly->rp_(2, jp)) {
+				/* suppress coincident cap ip */
+				if (poly->cm[ip] == poly->cm[jp]) {
+					poly->cm[ip] = 2.;
+					iret = 1;
+				} else if (poly->cm[ip] == - poly->cm[jp]) {
+					/* complementary cap means polygon is null */
+					poly->rp_(0, 0) = 0.;
+					poly->rp_(1, 0) = 0.;
+					poly->rp_(2, 0) = 1.;
+					poly->cm[0] = 0.;
+					poly->np = 1;
+					return(3);
+				}
 	    }
+		}
 	}
-    }
 
-    return(iret);
+	return(iret);
 }
 
 /*------------------------------------------------------------------------------
@@ -194,39 +196,39 @@ polygon *poly;
 
   In general this is not enough to make garea, gspher et al happy.
 
-   Input: poly is a pointer to a polygon.
+	Input: poly is a pointer to a polygon.
   Output: poly with obviously superfluous caps suppressed;
-	  the number and order of caps remains unchanged.
+	the number and order of caps remains unchanged.
   Return value: 0 if nothing changed;
-		1 if one or more caps were suppressed.
+	1 if one or more caps were suppressed.
 */
 int touch_poly(poly)
-polygon *poly;
+		 polygon *poly;
 {
-    int ip, iret, jp;
+	int ip, iret, jp;
 
-    /* initialize return value to no change */
-    iret = 0;
+	/* initialize return value to no change */
+	iret = 0;
 
-    /* for each cap jp, check for coincident caps */
-    for (jp = 0; jp < poly->np; jp++) {
-	/* don't check superfluous cap */
-	if (poly->cm[jp] >= 2.) continue;
-	for (ip = jp+1; ip < poly->np; ip++) {
+	/* for each cap jp, check for coincident caps */
+	for (jp = 0; jp < poly->np; jp++) {
+		/* don't check superfluous cap */
+		if (poly->cm[jp] >= 2.) continue;
+		for (ip = jp+1; ip < poly->np; ip++) {
 	    /* don't check superfluous cap */
 	    if (poly->cm[ip] >= 2.) continue;
 	    /* cap axes coincide */
 	    if (poly->rp_(0, ip) == poly->rp_(0, jp)
-		&& poly->rp_(1, ip) == poly->rp_(1, jp)
-		&& poly->rp_(2, ip) == poly->rp_(2, jp)) {
-		/* suppress coincident cap ip */
-		if (poly->cm[ip] == poly->cm[jp]) {
-		    poly->cm[ip] = 2.;
-		    iret = 1;
-		}
+					&& poly->rp_(1, ip) == poly->rp_(1, jp)
+					&& poly->rp_(2, ip) == poly->rp_(2, jp)) {
+				/* suppress coincident cap ip */
+				if (poly->cm[ip] == poly->cm[jp]) {
+					poly->cm[ip] = 2.;
+					iret = 1;
+				}
 	    }
+		}
 	}
-    }
 
-    return(iret);
+	return(iret);
 }
