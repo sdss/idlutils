@@ -87,6 +87,7 @@
 ; REVISION HISTORY:
 ;   28-Sep-1999  Written by David Schlegel, Princeton.
 ;   19-Jun-2001  Gaussfit amplitude was wrong - fixed - D. Finkbeiner
+;   27-May-2004  add plugin keyword for coordinate plugins - D. Finkbeiner
 ;-
 ;------------------------------------------------------------------------------
 ; Routine to evaluate a gaussian function integrated over a pixel of width 1,
@@ -150,6 +151,7 @@ pro splot_startup, xoffset=xoffset, yoffset=yoffset
     menu_ids: lonarr(25)           , $ ; List of top menu items
     mouse: [0L, 0L]                , $ ; Cursor position in device coords
     mphys: [0.0, 0.0]              , $ ; Cursor position in data coordinates
+    plugin: ''                     , $ ; Name of coordinate plugin
     base_pad: [0L, 0L]             , $ ; Padding around draw base
     pad: [0L, 0L]                  , $ ; Padding around draw widget
     headinfo_base_id: 0L           , $ ; headinfo base widget id
@@ -533,8 +535,16 @@ pro splot_gettrack
     (state.mouse[1] - ydev0) * yphysize / ydevsize + state.yrange[0]
 
    loc_string = strcompress( string(state.mphys[0], state.mphys[1]) )
+   if keyword_set(state.plugin) then begin 
+      coord0 = state.mphys[0]
+      coord1 = state.mphys[1]
+      command = 'plugin_string='+state.plugin+'(coord0,coord1)'
+      result = execute(command)
+      if result NE 1 then plugin_string = 'Plugin failed'
+   endif
 
    widget_control, state.location_bar_id, set_value=loc_string
+   widget_control, state.comments_text_id, set_value=plugin_string
 
    return
 end
@@ -1714,7 +1724,7 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro splot, x, y, xoffset=xoffset, yoffset=yoffset, _EXTRA=KeywordsForSOPLOT
+pro splot, x, y, xoffset=xoffset, yoffset=yoffset, plugin=plugin, _EXTRA=KeywordsForSOPLOT
 
    common splot_state
    common splot_images
@@ -1748,6 +1758,9 @@ pro splot, x, y, xoffset=xoffset, yoffset=yoffset, _EXTRA=KeywordsForSOPLOT
       xplot = x
       yplot = y
    endelse
+
+   if NOT arg_present(plugin) then state.plugin = ''
+   if size(plugin, /tname) EQ 'STRING' then state.plugin = plugin
 
    serase, /norefresh
    soplot, xplot, yplot, /autoscale, /replot, _EXTRA=KeywordsForSOPLOT
