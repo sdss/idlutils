@@ -188,7 +188,7 @@ setup -r $TEMPDIR/$TEMPSUBDIR $PRODNAME
 # The following nasty line is simply to set up the environment
 # variable {$PRODNAME}_DIR so that the code can be built.
 eval export `echo $PRODNAME | perl -pe 'y/a-z/A-Z/'`_DIR=$TEMPDIR/$TEMPSUBDIR
-echo Setting IDLMAPPER_DIR=$IDLMAPPER_DIR
+echo Setting temporary directory to $IDLMAPPER_DIR
 cd $TEMPDIR/$TEMPSUBDIR
 $MAKECOMMAND
 
