@@ -77,6 +77,9 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ;       Bypass IEEE_TO_HOST call for improved speed W. Landsman November 2002
 ;       Cosmetic changes to SIZE() calls W. Landsman December 2002
 ;       Added unofficial support for 64bit integers W. Landsman February 2003
+;       Support unsigned integers, new pointer types of TSCAL and TZERO
+;       returned by TBINFO   W. Landsman        April 2003
+;       Add an i = i[0] for V6.0 compatibility  W. Landsman  August 2003
 ;-
 ;------------------------------------------------------------------
  On_error,2
@@ -111,12 +114,13 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
       i = where( strupcase(tb_str.ttype) EQ strupcase(field), Nfound)
       if Nfound EQ 0 then $ 
          message,'Field ' + field + ' not found in header'
+      i=i[0]
       end
 
  'UNDEFINED':message,'First parameter must be field name or number'
  
  ELSE: begin
-      i = field-1
+      i = field[0]-1
       if (i LT 0 ) or (i GT tfields) then $
             message,'Field number must be between 1 and ' +strtrim(tfields,2)
       end
@@ -219,8 +223,12 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 
 
  if not keyword_set(NOSCALE) then begin
-        tscale = tb_str.tscal[i]
-        tzero = tb_str.tzero[i]
+        tscale = *tb_str.tscal[i]
+        tzero = *tb_str.tzero[i]
+        unsgn_int = (tzero EQ 32768) and (tscale EQ 1)
+        unsgn_lng = (tzero EQ 2147483648) and (tscale EQ 1)
+        if unsgn_int then d = uint(d) - uint(32768) $
+        else if unsgn_lng then d = ulong(d) - ulong(2147483648) else $
         if ( (tscale NE 1.0) or (tzero NE 0.0) ) then $
                 d = temporary(d)*tscale + tzero
  endif
