@@ -74,7 +74,8 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
       hdr1 = headfits(filename, exten=exten_no)
       if (NOT keyword_set(hdr1)) then $
        message, 'EXTEN_NO does not exist in file '+filename
-      if ((n_elements(hdr)+79)/80 GT (n_elements(hdr1)+79)/80) then qbigger = 1
+;      if ((n_elements(hdr)+79)/80 GT (n_elements(hdr1)+79)/80) then qbigger = 1
+      if (n_elements(hdr) GT n_elements(hdr1)) then qbigger = 1
    endif
 
    if (keyword_set(data)) then begin
