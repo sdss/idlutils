@@ -20,7 +20,8 @@
 ;                (degrees). By default this is max(1.,4*linklength)
 ;
 ; OUTPUTS:
-;   ingroup    - group number of each object (N-dimensional array)
+;   ingroup    - group number of each object (N-dimensional array);
+;                -1 if no groups
 ;
 ; OPTIONAL INPUT/OUTPUTS:
 ;   multgroup  - multiplicity of each group 

@@ -29,9 +29,9 @@
 ;                 matches.
 ;
 ; OUTPUTS:
-;   match1     - List of indices of matches in list 1 
-;   match2     - List of indices of matches in list 2 
-;   distance12 - Distance of matches
+;   match1     - List of indices of matches in list 1; -1 if no matches
+;   match2     - List of indices of matches in list 2; -1 if no matches
+;   distance12 - Distance of matches; 0 if no matches
 ;
 ; OPTIONAL OUTPUTS:
 ;
