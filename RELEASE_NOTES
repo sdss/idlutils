@@ -7,7 +7,7 @@ EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
                TRACE_CRUDE,TRACE_FWEIGHT,TRACE_GWEIGHT:
                Call IDLUTILS_SO_EXT() to get the suffix for dynamically
                loaded libraries (rather than assuming ".so").
-MRDFITS: When Fink updated the Goddard routines on 15 April 2004, it went
+MRDFITS: When we updated the Goddard routines on 15 April 2004, it went
                back to a version from Landsman that only included some of
                the patches for large file (> 2Gb) support.  This meant that
                we could get crazy behaviour for files larger than 2 Gb, though
@@ -29,6 +29,7 @@ bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
 -------------------------------------------------------------------------------
 v5_0_2b (April 17, 2004) running on IDL 5.4 - 6.0
 Tagged for photoop v1_3b (for the SDSS Orion data release)
+(This version of MRDFITS is buggy on >2 Gb files!)
 
 The Goddard routines (in goddard/pro) have been brought up to
 the early 2004 versions from Landsman as follows:
