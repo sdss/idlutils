@@ -35,6 +35,7 @@ src/mangle1.4/src/Makefile: Change the output library name from
                "libmangle.$(SO_EXT)" to explicitly be "libmangle.a"
                (as used to be the case) because that seems to be the
                only way to get this to build under Darwin and IRIX (SGIs).
+src/mangle1.4/src/mrb_balkanize.c: Print output status in stage 2.
 src/mangle1.4/src/msg.c: Add the include for <stdarg.h>, since it it needed
                to build on the IRIX platform (on hecate.princeton).
                It seems safe to have that include on Linux or Darwin also.
