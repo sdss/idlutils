@@ -32,7 +32,7 @@ if (rebinfactor GT 1) AND (round(rebinfactor) EQ rebinfactor) then begin
       rebinned_colors[*,*,k] = rebin(colors[*,*,k],NX_new,NY_new,/sample)
 endif else begin
     FOR k=0,2 DO $
-      rebinned_colors[*,*,k] = congrid(colors[*,*,k],NX_new,NY_new)
+      rebinned_colors[*,*,k] = congrid(colors[*,*,k],NX_new,NY_new,/interp)
 endelse
 
 RETURN,rebinned_colors
