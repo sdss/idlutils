@@ -9,7 +9,7 @@
 ;       Image display.
 ;
 ; CALLING SEQUENCE:
-;       atv [,array_name] [,min = min_value] [,max=max_value] 
+;       atv [,array_name OR fits_file] [,min = min_value] [,max=max_value] 
 ;           [,/autoscale] [,/linear] [,/log] [,/histeq] 
 ;
 ; REQUIRED INPUTS:
@@ -19,12 +19,14 @@
 ;
 ; OPTIONAL INPUTS:
 ;       array_name: a 2-D data array to display
+;          OR
+;       fits_file:  a fits file name, enclosed in single quotes
 ;
 ; KEYWORDS:
 ;       min:        minimum data value to be mapped to the color table
 ;       max:        maximum data value to be mapped to the color table
 ;       autoscale:  set min and max to show a range of data values
-;                   around the median value
+;                      around the median value
 ;       linear:     use linear stretch
 ;       log:        use log stretch 
 ;       histeq:     use histogram equalization
@@ -36,10 +38,12 @@
 ;       atv_state:  contains variables describing the display state
 ;       atv_images: contains the internal copies of the display image
 ;       atv_color:  contains colormap vectors
+;       atv_pdata:  contains plot and text annotation information
 ;
 ; RESTRICTIONS:
 ;       Requires the GSFC IDL astronomy library routines,
-;       for fits input.
+;         for fits input.
+;       The current version doesn't read fits extensions.
 ;       The current version only works with 8-bit color.
 ;       For a current list of atv's bugs and weirdnesses, go to
 ;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
@@ -57,24 +61,20 @@
 ;
 ; MODIFICATION HISTORY:
 ;       Written by Aaron J. Barth, first release 17 December 1998.
-;       This version is 1.0b3, last modified 08 June 1998.
-;       For the most current version, revision history, and further 
-;       information, go to:
-;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
+;
 ;       Modified 26 Jul 1999 by D. Schlegel to add overplotting via
 ;       the routines ATVPLOT, ATVXYOUTS, ATVCONTOUR, and ATVERASE.
 ;       At present, these overplots are only in the main draw window.
 ;       The arguments C_ORIENTATION and C_SPACING are not supported.
 ;       The default color for all overplots is 'red'.
 ;
-;       AJB modifications 7/26/99: search on 'AJB' below.
-;       notes to add to web page for this version: 
-;       blinking does not redisplay overlays
-;       fixed atv_getdisplay: now display_image is same size
-;         as draw_window
+;       This version is 1.0b4, last modified 29 July 1999.
+;       For the most current version, revision history, instructions,
+;       and further information, go to:
+;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
+;
 ;-
 ;----------------------------------------------------------------------
-
 
 pro atv_startup
 
@@ -91,7 +91,7 @@ common atv_images, $
   unblink_image, $      ; added AJB 7/26/99
   pan_image
 common atv_color, r_vector, g_vector, b_vector
-common atv_pdata, pdata, ptext, pcon
+common atv_pdata, pdata, ptext, pcon, phistory
 
 state = {                   $
           base_id: 0L, $                 ; id of top-level base
@@ -104,7 +104,7 @@ state = {                   $
           location_bar_id: 0L, $         ; id of (x,y,value) label
           min_text_id: 0L,  $            ; id of min= widget
           max_text_id: 0L, $             ; id of max= widget
-          menu_ids: lonarr(19), $        ; list of top menu items
+          menu_ids: lonarr(24), $        ; list of top menu items
           brightness_slider_id: 0L, $    ; id of brightness widget
           contrast_slider_id: 0L, $      ; id of contrast widget
           keyboard_text_id: 0L, $        ; id of keyboard input widget
@@ -147,55 +147,63 @@ state = {                   $
           centerboxsize: 11L, $          ; centering box size
           r: 5L, $                       ; aperture photometry radius
           innersky: 10L, $               ; inner sky radius
-          outersky: 20L $                ; outer sky radius
+          outersky: 20L  $               ; outer sky radius
         }
 
+nmax = 5000L
 pdata = {                               $
           nplot: 0L,                    $ ; Number of line plots
-          x: replicate(ptr_new(),999),  $ ; X vector
-          y: replicate(ptr_new(),999),  $ ; Y vector
-          color: lonarr(999),           $ ; COLOR for PLOT
-          psym: lonarr(999),            $ ; PSYM for PLOT
-          thick: fltarr(999)            $ ; THICK for PLOT
+          nmax:  nmax,                  $ ; Maximum number of line plots
+          x: replicate(ptr_new(),nmax), $ ; X vector
+          y: replicate(ptr_new(),nmax), $ ; Y vector
+          color: lonarr(nmax),          $ ; COLOR for PLOT
+          psym: lonarr(nmax),           $ ; PSYM for PLOT
+          thick: fltarr(nmax)           $ ; THICK for PLOT
         }
 
+nmax = 5000L
 ptext = {                               $
           nplot: 0L,                    $ ; Number of text plots
-          x: fltarr(999),               $ ; X position
-          y: fltarr(999),               $ ; Y position
-          string: replicate(ptr_new(),999), $ ; Text string
-          alignment: fltarr(999),       $ ; ALIGNMENT for XYOUTS
-          charsize: fltarr(999),        $ ; CHARSIZE for XYOUTS
-          charthick: fltarr(999),       $ ; CHARTHICK for XYOUTS
-          color: lonarr(999),           $ ; COLOR for XYOUTS
-          font: lonarr(999),            $ ; FONT for XYOUTS
-          orientation: fltarr(999)      $ ; ORIENTATION for XYOUTS
+          nmax:  nmax,                  $ ; Maximum number of text plots
+          x: fltarr(nmax),              $ ; X position
+          y: fltarr(nmax),              $ ; Y position
+          string: replicate(ptr_new(),nmax), $ ; Text string
+          alignment: fltarr(nmax),      $ ; ALIGNMENT for XYOUTS
+          charsize: fltarr(nmax),       $ ; CHARSIZE for XYOUTS
+          charthick: fltarr(nmax),      $ ; CHARTHICK for XYOUTS
+          color: lonarr(nmax),          $ ; COLOR for XYOUTS
+          font: lonarr(nmax),           $ ; FONT for XYOUTS
+          orientation: fltarr(nmax)     $ ; ORIENTATION for XYOUTS
         }
 
-pcon = {                               $
+nmax = 500L
+pcon = {                                $
           nplot: 0L,                    $ ; Number of contour plots
-          z: replicate(ptr_new(),999),  $ ; Z image
-          x: replicate(ptr_new(),999),  $ ; X vector
-          y: replicate(ptr_new(),999),  $ ; Y vector
-          c_annotation: replicate(ptr_new(),999), $ ; C_ANNOTATION for CONTOUR
-          c_charsize: fltarr(999),      $ ; C_CHARSIZE for CONTOUR
-          c_charthick: fltarr(999),     $ ; C_CHARTHICK for CONTOUR
-          c_colors: replicate(ptr_new(),999), $ ; C_COLORS for CONTOUR
-          c_labels: replicate(ptr_new(),999), $ ; C_LABELS for CONTOUR
-          c_linestyle: replicate(ptr_new(),999), $ ; C_LINESTYLE for CONTOUR
-          c_orientation: fltarr(999),   $ ; C_ORIENTATION for CONTOUR
-          c_spacing: fltarr(999),       $ ; C_SPACING for CONTOUR
-          c_thick: replicate(ptr_new(),999), $ ; C_THICK for CONTOUR
-          cell_fill: intarr(999),       $ ; CELL_FILL for CONTOUR
-          closed: intarr(999),          $ ; CLOSED for CONTOUR
-          downhill: intarr(999),        $ ; DOWNHILL for CONTOUR
-          fill: intarr(999),            $ ; FILL for CONTOUR
-          irregular: intarr(999),       $ ; IRREGULAR for CONTOUR
-          levels: replicate(ptr_new(),999), $ ; LEVELS for CONTOUR
-          max_value: fltarr(999),       $ ; MAX_VALUE for CONTOUR
-          min_value: fltarr(999),       $ ; MIN_VALUE for CONTOUR
-          nlevels: lonarr(999)          $ ; NLEVELS for CONTOUR
+          nmax:  nmax,                  $ ; Maximum number of contour plots
+          z: replicate(ptr_new(),nmax), $ ; Z image
+          x: replicate(ptr_new(),nmax), $ ; X vector
+          y: replicate(ptr_new(),nmax), $ ; Y vector
+          c_annotation: replicate(ptr_new(),nmax), $ ; C_ANNOTATION for CONTOUR
+          c_charsize: fltarr(nmax),     $ ; C_CHARSIZE for CONTOUR
+          c_charthick: fltarr(nmax),    $ ; C_CHARTHICK for CONTOUR
+          c_colors: replicate(ptr_new(),nmax), $ ; C_COLORS for CONTOUR
+          c_labels: replicate(ptr_new(),nmax), $ ; C_LABELS for CONTOUR
+          c_linestyle: replicate(ptr_new(),nmax), $ ; C_LINESTYLE for CONTOUR
+          c_orientation: fltarr(nmax),  $ ; C_ORIENTATION for CONTOUR
+          c_spacing: fltarr(nmax),      $ ; C_SPACING for CONTOUR
+          c_thick: replicate(ptr_new(),nmax), $ ; C_THICK for CONTOUR
+          cell_fill: intarr(nmax),      $ ; CELL_FILL for CONTOUR
+          closed: intarr(nmax),         $ ; CLOSED for CONTOUR
+          downhill: intarr(nmax),       $ ; DOWNHILL for CONTOUR
+          fill: intarr(nmax),           $ ; FILL for CONTOUR
+          irregular: intarr(nmax),      $ ; IRREGULAR for CONTOUR
+          levels: replicate(ptr_new(),nmax), $ ; LEVELS for CONTOUR
+          max_value: fltarr(nmax),      $ ; MAX_VALUE for CONTOUR
+          min_value: fltarr(nmax),      $ ; MIN_VALUE for CONTOUR
+          nlevels: lonarr(nmax)         $ ; NLEVELS for CONTOUR
         }
+
+phistory = intarr(pdata.nmax + ptext.nmax + pcon.nmax)
 
 ; Read in a color table to initialize !d.table_size
 ; As a bare minimum, we need the 8 basic colors used by ATV_ICOLOR(),
@@ -233,7 +241,12 @@ top_menu_desc = [ $
                   {cw_pdmenu_s, 0, 'Linear'}, $
                   {cw_pdmenu_s, 0, 'Log'}, $
                   {cw_pdmenu_s, 2, 'HistEq'}, $
-                  {cw_pdmenu_s, 1, 'Help'}, $
+                  {cw_pdmenu_s, 1, 'Labels'}, $       ; labels menu
+                  {cw_pdmenu_s, 0, 'TextLabel'}, $
+                  {cw_pdmenu_s, 0, 'Contour'}, $
+                  {cw_pdmenu_s, 0, 'EraseLast'}, $
+                  {cw_pdmenu_s, 2, 'EraseAll'}, $
+                  {cw_pdmenu_s, 1, 'Help'}, $         ; help menu
                   {cw_pdmenu_s, 2, 'ATV Help'} $
                 ]
 
@@ -427,7 +440,8 @@ state.base_pad[0] = basegeom.xsize - drawbasegeom.xsize $
 state.base_pad[1] = basegeom.ysize - drawbasegeom.ysize + 30 $
   + (2 * basegeom.margin)
 
-state.base_min_size = [512, state.base_pad[1] + 100]
+; modified 7/28/99 AJB
+state.base_min_size = [state.base_pad[0] + 512, state.base_pad[1] + 100]
 
 ; Initialize the vectors that hold the current color table.
 ; See the routine atv_stretchct to see why we do it this way.
@@ -542,16 +556,33 @@ if (nfiles GT 0 and filename NE '') then begin
                              /question)                 
 endif
 
+; Modified by AJB 7/29/99
 if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
-    tvlct, rr, gg, bb, 8, /get
-    rn = congrid(temporary(rr), 256)
-    gn = congrid(temporary(gg), 256)
-    bn = congrid(temporary(bb), 256)
 
-    write_tiff, filename, bytscl(display_image), $
-      red = temporary(rn), $
-      green = temporary(gn), $
-      blue = temporary(bn)
+    wset, state.draw_window_id
+
+    tvlct, rr, gg, bb, /get
+
+    rn = congrid(rr[8:!d.table_size-1], 248)
+    gn = congrid(gg[8:!d.table_size-1], 248)
+    bn = congrid(bb[8:!d.table_size-1], 248)
+
+    rvec = bytarr(256)
+    gvec = bytarr(256)
+    bvec = bytarr(256)
+
+    rvec[0] = rr  ; load in the first 8 colors
+    gvec[0] = gg
+    bvec[0] = bb
+
+    rvec[8] = temporary(rn)
+    gvec[8] = temporary(gn)
+    bvec[8] = temporary(bn)
+
+    write_tiff, filename, tvrd(), $
+      red = temporary(rvec), $
+      green = temporary(gvec), $
+      blue = temporary(bvec)
 endif
 
 atv_cleartext
@@ -618,7 +649,7 @@ if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
     
 ;    tv, temporary(tmp_image)
     tv, bytscl(display_image, top = 247) + 8
-    atv_xyplots
+    atv_plotall
 
     device, /close
     set_plot, screen_device
@@ -688,6 +719,7 @@ if (n_elements(recenter) GT 0) then begin
     tvcrs, newpos[0], newpos[1], /device 
     atv_gettrack
 endif
+
 
 end
 
@@ -806,6 +838,9 @@ state.mouse = round(state.image_size / 2.)
 state.centerpix = round(state.image_size / 2.)
 atv_getoffset
 
+; Clear all plot annotations
+atverase, /norefresh    ; added AJB 7/27/99
+
 end
 
 ;----------------------------------------------------------------------
@@ -877,50 +912,52 @@ case uvalue of
 
     'top_menu': begin       ; selection from menu bar
         widget_control, event.value, get_value = event_name
-        parent = widget_info(event.value, /parent)
-        widget_control, parent, get_value = parent_name
         
-        case parent_name of
+        case event_name of
             
-            'File': begin
-                case event_name of
-                    'ReadFits': atv_readfits
-                    'WriteEPS' : atv_writeps
-                    'WriteTiff': atv_writetiff
-                    'Quit':     atv_shutdown
-                    else:
-                endcase
-            end
-
-            'ColorMap': begin
-                case event_name of
-                    'Grayscale': atv_getct, 0
-                    'Blue-White': atv_getct, 1
-                    'Red-Orange': atv_getct, 3
-                    'BGRY': atv_getct, 4
-                    'Rainbow': atv_getct, 13
-                    'ATV Special': atv_makect, event_name
-                    else:
-                endcase
-            end
-
-            'Scaling':  begin
-                case event_name of
-                    'Linear': state.scaling = 0
-                    'Log': state.scaling = 1
-                    'HistEq': state.scaling = 2
-                    else:
-                endcase
+; File menu options:
+            'ReadFits': atv_readfits
+            'WriteEPS' : atv_writeps
+            'WriteTiff': atv_writetiff
+            'Quit':     atv_shutdown
+; ColorMap menu options:            
+            'Grayscale': atv_getct, 0
+            'Blue-White': atv_getct, 1
+            'Red-Orange': atv_getct, 3
+            'BGRY': atv_getct, 4
+            'Rainbow': atv_getct, 13
+            'ATV Special': atv_makect, event_name
+; Scaling options:
+            'Linear': begin
+                state.scaling = 0
                 atv_displayall
                 atv_cleartext
             end
-            
-            'Help': atv_help
+            'Log': begin
+                state.scaling = 1
+                atv_displayall
+                atv_cleartext
+            end
+            'HistEq': begin
+                state.scaling = 2
+                atv_displayall
+                atv_cleartext
+            end
+; Label options:
+            'TextLabel': atv_textlabel
+            'Contour': atv_oplotcontour
+            'Draw': atv_draw
+            'EraseLast': atverase, 1
+            'EraseAll': atverase
+; Help options:            
+            'ATV Help': atv_help
 
             else: print, 'Unknown event in file menu!'
         endcase
         
-    end
+    end   ; end of file menu options
+
+
 
 
 ; If the mouse enters the main draw base, set the input focus to
@@ -1072,7 +1109,7 @@ case uvalue of
             'p': atv_mapphot
             else:  ;any other key press does nothing
         endcase
-        widget_control, state.keyboard_text_id, /clear_event
+        widget_control, state.keyboard_text_id, /clear_events
     end
 
     'zoom_in':  atv_zoom, 'in'         ; zoom buttons
@@ -1289,7 +1326,10 @@ end
 function atv_icolor, color
 
 ;   if (NOT keyword_set(color)) then color = !p.color
-   if (NOT keyword_set(color)) then return, 1 ; Default to red
+
+;  modified by AJB 7/29/99
+;   if (NOT keyword_set(color)) then return, 1 ; Default to red
+   if (n_elements(color) EQ 0) then return, 1
 
    ncolor = N_elements(color)
 
@@ -1319,47 +1359,44 @@ function atv_icolor, color
 end 
 
 ;----------------------------------------------------------------------
-
-pro atv_xyplots
-common atv_state
+pro atv_plot1plot, iplot
 common atv_pdata
 
-; Routine to overplot line plots from ATVPLOT and text from ATVXYOUTS
+oplot, *(pdata.x[iplot]), *(pdata.y[iplot]), $
+ color=pdata.color[iplot], psym=pdata.psym[iplot], $
+ thick=pdata.thick[iplot]
 
-if (pdata.nplot GT 0 OR ptext.nplot GT 0 OR pcon.nplot GT 0) then begin
+return
+end
 
-   xrange=[state.offset[0], $
-    state.offset[0] + state.draw_window_size[0] / state.zoom_factor] - 0.5
-   yrange=[state.offset[1], $
-    state.offset[1] + state.draw_window_size[1] / state.zoom_factor] - 0.5
+;----------------------------------------------------------------------
+pro atv_plot1text, iplot
+common atv_pdata
 
-;   wset, state.draw_window_id    commented out by AJB 7/26/99
-   plot, [0], [0], /nodata, position=[0,0,1,1], $
-    xrange=xrange, yrange=yrange, xstyle=5, ystyle=5, /noerase
+xyouts, ptext.x[iplot], ptext.y[iplot], *(ptext.string[iplot]), $
+ alignment=ptext.alignment[iplot], charsize=ptext.charsize[iplot], $
+ charthick=ptext.charthick[iplot], color=ptext.color[iplot], $
+ font=ptext.font[iplot], orientation=ptext.orientation[iplot]
 
-   for iplot=0, pdata.nplot-1 do begin
-      oplot, *(pdata.x[iplot]), *(pdata.y[iplot]), $
-       color=pdata.color[iplot], psym=pdata.psym[iplot], $
-       thick=pdata.thick[iplot]
-   endfor
+return
+end
 
-   for iplot=0, ptext.nplot-1 do begin
-      xyouts, ptext.x[iplot], ptext.y[iplot], *(ptext.string[iplot]), $
-       alignment=ptext.alignment[iplot], charsize=ptext.charsize[iplot], $
-       charthick=ptext.charthick[iplot], color=ptext.color[iplot], $
-       font=ptext.font[iplot], orientation=ptext.orientation[iplot]
-   endfor
+;----------------------------------------------------------------------
+pro atv_plot1contour, iplot
+common atv_pdata
 
-   ; The following allows for 4 conditions, depending upon whether X and Y
-   ; are set on whether LEVELS is set.
-   ; In addition, I have commented out C_ORIENTATION and C_SPACING, since
-   ; these seem to force FILL - is this an IDL bug?
-   for iplot=0, pcon.nplot-1 do begin
-      dims = size(*(pcon.z[iplot]),/dim)
-      levels = *(pcon.levels[iplot])
-      if (size(*(pcon.x[iplot]),/N_elements) EQ dims[0] $
-       AND size(*(pcon.y[iplot]),/N_elements) EQ dims[1] ) then begin
-         if (N_elements(levels) GT 1) then begin
+xrange = !x.crange
+yrange = !y.crange
+
+; The following allows for 4 conditions, depending upon whether X and Y
+; are set on whether LEVELS is set.
+; In addition, I have commented out C_ORIENTATION and C_SPACING, since
+; these seem to force FILL - is this an IDL bug?
+dims = size(*(pcon.z[iplot]),/dim)
+levels = *(pcon.levels[iplot])
+if (size(*(pcon.x[iplot]),/N_elements) EQ dims[0] $
+ AND size(*(pcon.y[iplot]),/N_elements) EQ dims[1] ) then begin
+   if (N_elements(levels) GT 1) then begin
 contour, *(pcon.z[iplot]), *(pcon.x[iplot]), *(pcon.y[iplot]), $
  c_annotation=*(pcon.c_annotation[iplot]), c_charsize=pcon.c_charsize[iplot], $
  c_charthick=pcon.c_charthick[iplot], c_colors=*(pcon.c_colors[iplot]), $
@@ -1372,7 +1409,7 @@ contour, *(pcon.z[iplot]), *(pcon.x[iplot]), *(pcon.y[iplot]), $
  max_value=pcon.max_value[iplot], min_value=pcon.min_value[iplot], $
  nlevels=pcon.nlevels[iplot], $
  position=[0,0,1,1], xrange=xrange, yrange=yrange, xstyle=5, ystyle=5, /noerase
-         endif else begin
+   endif else begin
 contour, *(pcon.z[iplot]), *(pcon.x[iplot]), *(pcon.y[iplot]), $
  c_annotation=*(pcon.c_annotation[iplot]), c_charsize=pcon.c_charsize[iplot], $
  c_charthick=pcon.c_charthick[iplot], c_colors=*(pcon.c_colors[iplot]), $
@@ -1385,9 +1422,9 @@ contour, *(pcon.z[iplot]), *(pcon.x[iplot]), *(pcon.y[iplot]), $
  max_value=pcon.max_value[iplot], min_value=pcon.min_value[iplot], $
  nlevels=pcon.nlevels[iplot], $
  position=[0,0,1,1], xrange=xrange, yrange=yrange, xstyle=5, ystyle=5, /noerase
-         endelse
-      endif else begin
-         if (N_elements(levels) GT 1) then begin
+   endelse
+endif else begin
+   if (N_elements(levels) GT 1) then begin
 contour, *(pcon.z[iplot]), $
  c_annotation=*(pcon.c_annotation[iplot]), c_charsize=pcon.c_charsize[iplot], $
  c_charthick=pcon.c_charthick[iplot], c_colors=*(pcon.c_colors[iplot]), $
@@ -1413,9 +1450,51 @@ contour, *(pcon.z[iplot]), $
  max_value=pcon.max_value[iplot], min_value=pcon.min_value[iplot], $
  nlevels=pcon.nlevels[iplot], $
  position=[0,0,1,1], xrange=xrange, yrange=yrange, xstyle=5, ystyle=5, /noerase
-         endelse
-      endelse
-   endfor
+   endelse
+endelse
+
+return
+end
+
+;----------------------------------------------------------------------
+pro atv_plotwindow
+common atv_state
+
+;   wset, state.draw_window_id    commented out by AJB 7/26/99
+
+; Set plot window
+xrange=[state.offset[0], $
+ state.offset[0] + state.draw_window_size[0] / state.zoom_factor] - 0.5
+yrange=[state.offset[1], $
+ state.offset[1] + state.draw_window_size[1] / state.zoom_factor] - 0.5
+
+plot, [0], [0], /nodata, position=[0,0,1,1], $
+ xrange=xrange, yrange=yrange, xstyle=5, ystyle=5, /noerase
+
+return
+end
+
+;----------------------------------------------------------------------
+pro atv_plotall
+common atv_state
+common atv_pdata
+
+; Routine to overplot line plots from ATVPLOT and text from ATVXYOUTS
+
+if (pdata.nplot GT 0 OR ptext.nplot GT 0 OR pcon.nplot GT 0) then begin
+   atv_plotwindow
+
+   for iplot=0, pcon.nplot-1 do $
+    atv_plot1contour, iplot
+
+; AJB moved the following blocks here, so that text is always
+; plotted on top of contours and lines/points.  7/27/99
+
+   for iplot=0, pdata.nplot-1 do $
+    atv_plot1plot, iplot
+
+   for iplot=0, ptext.nplot-1 do $
+    atv_plot1text, iplot
 
 endif
 
@@ -1425,6 +1504,7 @@ end
 
 pro atvplot, x, y, color=color, psym=psym, thick=thick
 common atv_pdata
+common atv_state
 
 ; Routine to overplot line plots
 
@@ -1433,7 +1513,7 @@ if (N_params() LT 1) then begin
    return
 endif
 
-if (pdata.nplot LT 999) then begin
+if (pdata.nplot LT pdata.nmax) then begin
    iplot = pdata.nplot
 
    if (N_params() EQ 1) then begin
@@ -1450,12 +1530,15 @@ if (pdata.nplot LT 999) then begin
    if (keyword_set(thick)) then pdata.thick[iplot] = thick $
     else pdata.thick[iplot] = 1.0
 
+   wset, state.draw_window_id
+   atv_plotwindow
+   atv_plot1plot, pdata.nplot
    pdata.nplot = pdata.nplot + 1
 endif else begin
    print, 'Too many calls to ATVPLOT'
 endelse
 
-atv_refresh
+phistory[pdata.nplot + ptext.nplot + pcon.nplot - 1] = 1 ; points
 
 end
 
@@ -1464,6 +1547,7 @@ end
 pro atvxyouts, x, y, string, alignment=alignment, charsize=charsize, $
  charthick=charthick, color=color, font=font, orientation=orientation
 common atv_pdata
+common atv_state
 
 ; Routine to overplot text
 
@@ -1472,7 +1556,7 @@ if (N_params() LT 3) then begin
    return
 endif
 
-if (ptext.nplot LT 999) then begin
+if (ptext.nplot LT ptext.nmax) then begin
    iplot = ptext.nplot
 
    ptext.x[iplot] = x
@@ -1490,12 +1574,15 @@ if (ptext.nplot LT 999) then begin
    if (keyword_set(orientation)) then ptext.orientation[iplot] = orientation $
     else ptext.orientation[iplot] = 0.0
 
+   wset, state.draw_window_id
+   atv_plotwindow
+   atv_plot1text, ptext.nplot
    ptext.nplot = ptext.nplot + 1
 endif else begin
    print, 'Too many calls to ATVPLOT'
 endelse
 
-atv_refresh
+phistory[pdata.nplot + ptext.nplot + pcon.nplot - 1] = 2 ; text
 
 end
 
@@ -1508,6 +1595,7 @@ pro atvcontour, z, x, y, c_annotation=c_annotation, c_charsize=c_charsize, $
  fill=fill, irregular=irregular, levels=levels, max_value=max_value, $
  min_value=min_value, nlevels=nlevels
 common atv_pdata
+common atv_state
 
 ; Routine to overplot contours
 
@@ -1516,7 +1604,7 @@ if (N_params() LT 1) then begin
    return
 endif
 
-if (pcon.nplot LT 999) then begin
+if (pcon.nplot LT pcon.nmax) then begin
    iplot = pcon.nplot
 
    pcon.z[iplot] = ptr_new(z)
@@ -1563,40 +1651,59 @@ if (pcon.nplot LT 999) then begin
    if (keyword_set(nlevels)) then pcon.nlevels[iplot] = nlevels $
     else pcon.nlevels[iplot] = 0
 
+   wset, state.draw_window_id
+   atv_plotwindow
+   atv_plot1contour, pcon.nplot
    pcon.nplot = pcon.nplot + 1
 endif else begin
    print, 'Too many calls to ATVCONTOUR'
 endelse
 
-atv_refresh
+phistory[pdata.nplot + ptext.nplot + pcon.nplot - 1] = 3 ; contour
 
 end
 
 ;----------------------------------------------------------------------
 
-pro atverase
+pro atverase, nerase, norefresh = norefresh
 common atv_pdata
 
-; Routine to erase line plots from ATVPLOT and text from ATVXYOUTS
+; Routine to erase line plots from ATVPLOT, text from ATVXYOUTS, and
+; contours from ATVCONTOUR.
 
-for iplot=0, pdata.nplot-1 do $
- ptr_free, pdata.x[iplot], pdata.y[iplot]
-pdata.nplot = 0
+; keyword norefresh added AJB 7/27/99
+; The norefresh keyword is used by atv_getstats, when a new image
+;   has just been read in.
 
-for iplot=0, ptext.nplot-1 do $
- ptr_free, ptext.string[iplot]
-ptext.nplot = 0
+nplotall = pdata.nplot + ptext.nplot + pcon.nplot
+if (N_params() LT 1) then nerase = nplotall $
+else if (nerase GT nplotall) then nerase = nplotall
 
-for iplot=0, pcon.nplot-1 do $
- ptr_free, pcon.z, pcon.x, pcon.y, pcon.c_annotation, pcon.c_colors, $
-  pcon.c_labels, pcon.c_linestyle, pcon.c_thick, pcon.levels
-pcon.nplot = 0
+for ihistory=nplotall-nerase, nplotall-1 do begin
+   if (phistory[ihistory] EQ 1) then begin
+      ; Erase a point plot
+      pdata.nplot = pdata.nplot - 1
+      iplot = pdata.nplot
+      ptr_free, pdata.x[iplot], pdata.y[iplot]
+   endif else if (phistory[ihistory] EQ 2) then begin
+      ; Erase a text plot
+      ptext.nplot = ptext.nplot - 1
+      iplot = ptext.nplot
+      ptr_free, ptext.string[iplot]
+   endif else if (phistory[ihistory] EQ 3) then begin
+      ; Erase a contour plot
+      pcon.nplot = pcon.nplot - 1
+      iplot = pcon.nplot
+      ptr_free, pcon.z, pcon.x, pcon.y, pcon.c_annotation, pcon.c_colors, $
+       pcon.c_labels, pcon.c_linestyle, pcon.c_thick, pcon.levels
+   endif
+endfor
 
-atv_refresh
+if (NOT keyword_set(norefresh) ) then atv_refresh
 
 end
 
-;----------------------------------------------------------------------
+;---------------------------------------------------------------------
 
 pro atv_getdisplay
 
@@ -1610,7 +1717,8 @@ common atv_images
 widget_control, /hourglass    ; added by AJB 7/26/99
 
 ; Major change 7/26/99 AJB:
-; display_image is now equal in size to the display viewport.
+; display_image is now equal in size to the display viewport,
+;   the way it should have been done in the first place.
 display_image = bytarr(state.draw_window_size[0], state.draw_window_size[1])
 
 view_min = round(state.centerpix - $
@@ -1627,7 +1735,7 @@ tmp_image = congrid(scaled_image[view_min[0]:view_max[0], $
                                             view_min[1]:view_max[1]], $
                                             newsize[0], newsize[1])
 
-; AJB 
+; AJB modifications 7/26/99 to fit tmp_image into display_image
 xmax = newsize[0] < (state.draw_window_size[0] - startpos[0])
 ymax = newsize[1] < (state.draw_window_size[1] - startpos[1])
 
@@ -1642,7 +1750,7 @@ erase
 tv, display_image
 
 ; Overplot x,y plots from atvplot
-atv_xyplots
+atv_plotall
 
 end
 
@@ -1795,6 +1903,9 @@ atv_gettrack
 wset, state.draw_window_id
 unblink_image = tvrd()     ; added AJB 7/26/99
 
+; Added by AJB 7/26/99 to prevent unwanted mouse clicks
+widget_control, state.draw_base_id, /clear_events   
+
 end
 
 ;--------------------------------------------------------------------
@@ -1885,8 +1996,9 @@ sig = stdev(main_image)
 
 state.max_value = (med + (10 * sig)) < max(main_image)
 
+; AJB modified 7/26/99 to test for med GT 0
 state.min_value = (med - (2 * sig))  > min(main_image)
-if (state.min_value LT 0 AND state.max_value GT 0) then begin
+if (state.min_value LT 0 AND med GT 0) then begin
   state.min_value = 0.0
 endif
 
@@ -2109,7 +2221,7 @@ end
 pro atv_help
 common atv_state
 
-h = strarr(45)
+h = strarr(70)
 i = 0
 h[i] =  'ATV HELP'
 i = i + 1
@@ -2117,17 +2229,25 @@ h[i] =  ''
 i = i + 1
 h[i] =  'MENU BAR:'
 i = i + 1
-h[i] =  'File->ReadFits:  read in a new fits image from disk'
+h[i] =  'File->ReadFits:     read in a new fits image from disk'
 i = i + 1
-h[i] =  'File->WriteEPS:  write an encapsulated PS file of the current display'
+h[i] =  'File->WriteEPS:     write an encapsulated PS file of the current display'
 i = i + 1
-h[i] =  'File->WriteTiff: write a tiff image of the current display'
+h[i] =  'File->WriteTiff:    write a tiff image of the current display'
 i = i + 1
-h[i] =  'File->Quit:      quits atv'
+h[i] =  'File->Quit:         quits atv'
 i = i + 1
-h[i] =  'ColorMap Menu:   selects color table'
+h[i] =  'ColorMap Menu:      selects color table'
 i = i + 1
-h[i] =  'Scaling Menu:    selects linear, log, or histogram-equalized scaling'
+h[i] =  'Scaling Menu:       selects linear, log, or histogram-equalized scaling'
+i = i + 1
+h[i] =  'Labels->TextLabel:  Brings up a dialog box for text input'
+i = i + 1
+h[i] =  'Labels->Contour:    Brings up a dialog box for overplotting contours'
+i = i + 1
+h[i] =  'Labels->EraseLast:  Erases the most recent plot label'
+i = i + 1
+h[i] =  'Labels->EraseAll:   Erases all plot labels'
 i = i + 1
 h[i] =  ''
 i = i + 1
@@ -2194,6 +2314,46 @@ i = i + 1
 h[i] = '    t: contour plot'
 i = i + 1
 h[i] = '    p: aperture photometry at current position'
+i = i + 2
+h[i] = 'IDL COMMAND LINE HELP:'
+i = i + 1
+h[i] =  'To pass an array to atv:'
+i = i + 1
+h[i] =  '   atv, array_name [, options]'
+i = i + 1
+h[i] = 'To pass a fits filename to atv:'
+i = i + 1
+h[i] = '    atv, fitsfile_name [, options] (enclose filename in single quotes) '
+i = i + 1
+h[i] = 'To overplot a contour plot on the draw window:'
+i = i + 1
+h[i] = '    atvcontour, array_name [, options...]'
+i = i + 1
+h[i] = 'To overplot text on the draw window: '
+i = i + 1
+h[i] = '    atvxyouts, x, y, text_string [, options]  (enclose string in single quotes)'
+i = i + 1
+h[i] = 'To overplot points or lines on the current plot:'
+i = i + 1
+h[i] = '    atvplot, xvector, yvector [, options]'
+i = i + 2
+h[i] = 'The options for atvcontour, atvxyouts, and atvplot are essentially'
+i = i + 1
+h[i] =  'the same as those for the idl contour, xyouts, and plot commands,'
+i = i + 1
+h[i] = 'except that data coordinates are always used.' 
+i = i + 1
+h[i] = 'The default color for all overplots is red.'
+i = i + 2
+h[i] = 'Other commands:'
+i = i + 1
+h[i] = 'atveraselast:   erases the most recent plot or text'
+i = i + 1
+h[i] = 'atverase [, N]:       erases all (or last N) plots and text'
+i = i + 1
+h[i] = 'atv_shutdown:   quits atv'
+i = i + 1
+h[i] = 'NOTE: If atv should crash, type atv_shutdown at the idl prompt.'
 
 if (not (xregistered('atv_help'))) then begin
     help_base =  widget_base(/floating, $
@@ -2206,7 +2366,7 @@ if (not (xregistered('atv_help'))) then begin
     help_text = widget_text(help_base, $
                             /scroll, $
                             value = h, $
-                            xsize = 75, $
+                            xsize = 85, $
                             ysize = 24)
     
     help_done = widget_button(help_base, $
@@ -2548,6 +2708,76 @@ atv_mapphot_refresh
 
 end
 
+;---------------------------------------------------------------------
+
+pro atv_textlabel
+
+; widget front end for atvxyouts, AJB 7/27/99
+
+
+formdesc = ['0, text, , label_left=Text: , width=15', $
+            '0, integer, 0, label_left=x: ', $
+            '0, integer, 0, label_left=y: ', $
+            '0, droplist, black|red|green|blue|cyan|magenta|yellow|white,label_left=Color:, set_value=0 ', $
+            '0, float, 2.0, label_left=Charsize: ', $
+            '0, integer, 1, label_left=Charthick: ', $
+            '0, integer, 0, label_left=Orientation: ', $
+            '1, base, , row', $
+            '0, button, Cancel, quit', $
+            '0, button, DrawText, quit']
+            
+textform = cw_form(formdesc, /column, $
+                   title = 'atv text label')
+
+if (textform.tag9 EQ 1) then begin
+    atvxyouts, textform.tag1, textform.tag2, textform.tag0, $
+      color = textform.tag3, charsize = textform.tag4, $
+      charthick = textform.tag5, orientation = textform.tag6
+endif
+
+end
+
+;---------------------------------------------------------------------
+
+pro atv_oplotcontour
+
+; widget front end for atvcontour,  AJB 7/27/99
+
+common atv_state
+common atv_images
+
+minvalstring = strcompress('0, float, ' + string(state.min_value) + $
+                           ', label_left=MinValue: , width=15 ')
+maxvalstring = strcompress('0, float, ' + string(state.max_value) + $
+                           ', label_left=MaxValue: , width=15')
+
+formdesc = ['0, droplist, black|red|green|blue|cyan|magenta|yellow|white,label_left=Color:, set_value=0 ', $
+;            '0, float, 1.0, label_left=Charsize: ', $
+;            '0, integer, 1, label_left=Charthick: ', $
+            '0, droplist, solid|dotted|dashed|dashdot|dashdotdotdot|longdash, label_left=Linestyle: , set_value=0', $
+            '0, integer, 1, label_left=LineThickness: ', $
+            minvalstring, $
+            maxvalstring, $
+            '0, integer, 6, label_left=NLevels: ', $
+            '1, base, , row,', $
+            '0, button, Cancel, quit', $
+            '0, button, DrawContour, quit']
+            
+cform = cw_form(formdesc, /column, $
+                   title = 'atv text label')
+
+
+if (cform.tag8 EQ 1) then begin
+    atvcontour, main_image, c_color = cform.tag0, $
+;      c_charsize = cform.tag1, c_charthick = cform.tag2, $
+      c_linestyle = cform.tag1, $
+      c_thick = cform.tag2, $
+      min_value = cform.tag3, max_value = cform.tag4, $, 
+      nlevels = cform.tag5
+endif
+
+end
+
 ;----------------------------------------------------------------------
 
 ; Main program routine for ATV.  If there is no current ATV session,
@@ -2572,11 +2802,28 @@ if ( (n_params() EQ 0) AND (xregistered('atv'))) then begin
     retall
 endif
 
-if ( (n_params() NE 0) AND (size(image))[0] NE 2) then begin
-    print, 'Input data must be a 2-d array!'
-    retall
+if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') ) then begin
+    if ( (size(image))[0] NE 2) then begin
+        print, 'Input data must be a 2-d array!'
+        retall
+    endif
 endif
 
+; Added by AJB 7/27/99: if image is a string, read in the fits file
+; whose name is that string.
+
+if ( (n_params() NE 0) AND (size(image, /tname) EQ 'STRING') ) then begin
+    fits_read, image, tmp_image
+
+    if ( (size(tmp_image))[0] NE 2 ) then begin
+        print, 'Error-- selected file is not a 2-D fits image!'
+        junk = size( temporary(tmp_image))
+        retall
+    endif
+
+    main_image = temporary(tmp_image)
+
+endif
 
 if ( (n_params() EQ 0) AND (not (xregistered('atv')))) then begin
     main_image = bytscl(dist(500,500)^2 * sin(dist(500,500)/2.)^2)
@@ -2584,7 +2831,8 @@ if ( (n_params() EQ 0) AND (not (xregistered('atv')))) then begin
 endif else begin
     scaled_image = 0
     display_image = 0
-    main_image = image
+; next line modified by AJB 7/27/99
+    if (size(image, /tname) NE 'STRING') then main_image = image
 endelse
 
 if (not (xregistered('atv'))) then atv_startup
@@ -2619,4 +2867,5 @@ state.zoom_factor = 1.0
 atv_displayall
 
 end
+
 
