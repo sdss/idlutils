@@ -139,9 +139,7 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
 
    writefits, filename, *(pdata[0]), *(phdr[0])
    for ihdu=1, nhdu-1 do begin
-;      mwrfits, *(pdata[0]), filename, *(phdr[0])
-; DPF fix 3 June 2000 
-     mwrfits, *(pdata[ihdu]), filename, *(phdr[ihdu])
+      mwrfits, *(pdata[ihdu]), filename, *(phdr[ihdu])
    endfor
 
    ;----------
