@@ -672,6 +672,7 @@ pro/astrom/ll2uv.pro -text
 pro/astrom/offset_from_pairs.pro -text
 pro/astrom/tycho_epoch.pro -text
 pro/astrom/tycho_read.pro -text
+pro/astrom/ucac_readindex.pro -text
 pro/astrom/ucac_readzone.pro -text
 pro/astrom/usno_cone.pro -text
 pro/astrom/usno_parse_epoch_file.pro -text

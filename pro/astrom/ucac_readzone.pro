@@ -29,7 +29,7 @@
 ; BUGS:
 ;
 ; PROCEDURES CALLED:
-;   readfmt
+;   ucac_readindex()
 ;
 ; REVISION HISTORY:
 ;   27-May-2003  Written by David Schlegel, Princeton.
@@ -59,29 +59,9 @@ function ucac_readzone, thiszone, ra_min, ra_max
    endif
 
    ;----------
-   ; Read the index file (if not already read and cached in memory)
+   ; Read the index file
 
-   if (NOT keyword_set(uindex)) then begin
-; Should we read the binary version of this file instead of ASCII ???
-      indexfile = filepath('u2index.txt', root_dir=ucac_dir, subdir='info')
-      readfmt, indexfile, 'I6,I8,I9,I4,I4,F6.1,F5.1', $
-       nsbin, naz, nat, zn, jj, dcmax, ramax, skipline=10
-      uindex = replicate( create_struct( $
-       'NSBIN', 0L, $
-       'NAZ'  , 0L, $
-       'NAT'  , 0L, $
-       'ZN'   , 0L, $
-       'JJ'   , 0L, $
-       'DCMAX', 0d, $
-       'RAMAX', 0d ), n_elements(nsbin))
-      uindex.nsbin = nsbin
-      uindex.naz = naz
-      uindex.nat = nat
-      uindex.zn = zn
-      uindex.jj = jj
-      uindex.dcmax = dcmax
-      uindex.ramax = ramax
-   endif
+   uindex = ucac_readindex()
 
    ;----------
    ; Determine where to seek in this zone file.
@@ -95,7 +75,7 @@ function ucac_readzone, thiszone, ra_min, ra_max
    j1 = (where(uindex[jj].ramax * 15.d GE ra_min))[0]
    j1 = j1 > 0L
    j2 = (reverse(where(uindex[jj].ramax * 15.d LE ra_max)))[0] + 1L
-   j2 = j2 < n_elements(jj) - 1L ; In the case that RA_MAX=360 deg
+   j2 = j2 < (n_elements(jj) - 1L) ; In the case that RA_MAX=360 deg
 
    if (j1 EQ 0) then i1 = 0L $
     else i1 = uindex[jj[j1-1]].naz
