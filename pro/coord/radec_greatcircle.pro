@@ -29,7 +29,8 @@
 ;   nuerr      - Error of each point in NU coordinate; default to 1 arcsec;
 ;                either a scalar or of length [NPOINTS]; used for chi^2
 ;   debug      - If set, then plot the MU,NU deviations in units of arcsec
-;                at each iteration of the fit.
+;                at each iteration of the fit.  Also, don't call MPFIT()
+;                with /QUIET, but print its verbose output on each iteration.
 ;
 ; OUTPUTS:
 ;   fitval     - Best-fit parameters [NPARM].
@@ -190,7 +191,8 @@ function radec_greatcircle, ralist, declist, xposlist, yposlist, timelist, $
     xposlist: xposlist, yposlist: yposlist, timelist: timelist, $
     debug: keyword_set(debug), muerr: muerr, nuerr: nuerr }
    fitval = mpfit('radec_gcfn', parinfo=parinfo, functargs=functargs, $
-    maxiter=maxiter, niter=niter, status=status)
+    maxiter=maxiter, niter=niter, status=status, $
+    quiet=(keyword_set(debug) EQ 0))
 
    ;----------
    ; If the INCL goes out of bounds from [0,+180) degrees, then
