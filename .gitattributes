@@ -922,6 +922,7 @@ pro/math/sshift2d.pro -text
 pro/math/sshiftrotate.pro -text
 pro/math/stdev.pro -text
 pro/math/weighted_quantile.pro -text
+pro/mcmc/README -text
 pro/mcmc/hogg_mcmc.pro -text
 pro/mcmc/hogg_mcmc_step.pro -text
 pro/mcmc/hogg_mcmc_test.pro -text
