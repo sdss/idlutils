@@ -393,7 +393,8 @@ pro splot_writeeps
        filename = filename, $
        /color, $
        bits_per_pixel = 8, $
-       /encapsul, $
+;       /encapsul, $
+       encapsul=0, $
        /inches, $
        xsize = 6.0, $
        ysize = 6.0 * aspect_ratio
