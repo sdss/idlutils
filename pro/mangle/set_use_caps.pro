@@ -52,7 +52,8 @@ if(NOT keyword_set(allow_doubles)) then begin
                             else if(abs((*polygon[ipoly].caps)[i].cm+ $
                                         (*polygon[ipoly].caps)[j].cm) $
                                     lt tol) then $
-                              polygon[ipoly].use_caps=0
+                              polygon[ipoly].use_caps= $
+                              polygon[ipoly].use_caps and (NOT (2L)^j) 
                         endif
                     endif
                 endfor

@@ -32,6 +32,7 @@ typedef struct {
 			 = elevation of original pole wrt new frame */
     double azp;		/* azimuth of original pole wrt new frame */
     char trunit;	/* angular units of transformation angles */
+    char *linklist;	/* angular units of transformation angles */
 } format;
 
 #define REGION		0

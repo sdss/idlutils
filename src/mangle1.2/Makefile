@@ -60,7 +60,7 @@ all: mangler
 ILIB = -L.
 LLIB = -lmangle
 
-PROGS = balkanize harmonize map polyid poly2poly ransack snap unify weight 
+PROGS = mrb_balkanize balkanize harmonize map polyid poly2poly ransack snap unify weight 
 # excised rotate because of failed starlink dependency
 #rotate
 
@@ -106,6 +106,9 @@ libmangle.a: $(COBJ) $(FOBJ) Makefile
 balkanize: balkanize.o libmangle.a Makefile
 	$(F77) $(FFLAGS) -o balkanize balkanize.o $(ILIB) $(LLIB)
 
+mrb_balkanize: mrb_balkanize.o libmangle.a Makefile
+	$(F77) $(FFLAGS) -o mrb_balkanize mrb_balkanize.o $(ILIB) $(LLIB)
+
 harmonize: harmonize.o libmangle.a Makefile
 	$(F77) $(FFLAGS) -o harmonize harmonize.o $(ILIB) $(LLIB)
 
@@ -137,6 +140,8 @@ advise_fmt.o: angunit.h format.h scale.h advise_fmt.c
 	$(CC) $(CFLAGS) -c advise_fmt.c
 balkanize.o: parse_args.c defaults.h format.h polygon.h scale.h usage.h balkanize.c
 	$(CC) $(CFLAGS) -c balkanize.c
+mrb_balkanize.o: parse_args.c defaults.h format.h polygon.h scale.h usage.h balkanize.c
+	$(CC) $(CFLAGS) -c mrb_balkanize.c
 convert.o: pi.h polygon.h vertices.h convert.c
 	$(CC) $(CFLAGS) -c convert.c
 copy_format.o: format.h copy_format.c

@@ -1010,6 +1010,7 @@ src/mangle1.2/maker -text
 src/mangle1.2/mangdir.data -text
 src/mangle1.2/mangdir.inc -text
 src/mangle1.2/map.c -text
+src/mangle1.2/mrb_balkanize.c -text
 src/mangle1.2/msg.c -text
 src/mangle1.2/nazel.dat -text
 src/mangle1.2/nazel_l.dat -text

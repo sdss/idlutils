@@ -10,3 +10,5 @@ up the MacOS CVS stuff.
 Changed msg.c to use evilmake UNAME values SunOS and Linux
 
 Take out defn of CC=gcc and rely on evilmake to set it
+
+Added mrb_balkanize, and changed Makefile for it

@@ -20,7 +20,7 @@
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function construct_polygon,ncaps=ncaps,nelem=nelem
+function construct_polygon,ncaps=ncaps,nelem=nelem,extra=extra
 
 if(NOT keyword_set(ncaps)) then ncaps=1
 if(NOT keyword_set(nelem)) then nelem=1
@@ -34,6 +34,8 @@ polygon1={polystr, $
           str:0.D, $
           use_caps:ulong64(0), $
           caps:ptr_new(cap)}
+if(n_tags(extra) gt 0) then $
+  polygon1=create_struct(extra,polygon1)
 polygon=replicate(polygon1,nelem)
 for i=0L, nelem-1L do $
   polygon[i].caps=ptr_new(cap)
