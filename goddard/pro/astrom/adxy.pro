@@ -34,7 +34,7 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
 ;
 ; OPERATIONAL NOTES:
 ;	If less than 5 parameters are supplied, or if the /PRINT keyword is
-;	set, then then the X and Y positions are displayed at the terminal.
+;	set, then the X and Y positions are displayed at the terminal.
 ;
 ;	If the procedure is to be used repeatedly with the same header,
 ; 	then it would be faster to use AD2XY.
@@ -62,8 +62,8 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
  if ( noparams LT 0 ) then return 
  
  if npar lt 3 then begin
-   RD: print,'Coordinates must be entered with either 2 or 6 parameters'
-   print,'Either RA,DEC or  HR,MIN,SEC,DEG,MIN,SEC
+   RD: print,'Coordinates must be entered in either decimal (2 parameter) ' 
+   print,'  or sexigesimal (6 parameter) format'
    inp = ''
    read,'ADXY: Enter coordinates: ',inp
    radec = getopt(inp,'F')
@@ -75,7 +75,7 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
          a = ten(radec[0:2]*15.) & d = ten(radec[3:5])
 	 end
    else: begin
-         print,string(7b),'ADXY: ERROR - Illegal Format'
+         print,'ADXY: ERROR - Either 2 or 6 parameters must be entered'
 	 return
 	 end
    endcase 
@@ -90,7 +90,10 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
 	npts = N_elements(a)
         fmt = '(2F9.4,A,2X,2F8.2)'
         str = adstring(a,d,1)
-	print,'    RA       DEC       RA         DEC          X       Y'
+        tit = strmid(astr.ctype,0,4)
+        tit = repchr(tit,'-',' ')
+	print,'    ' + tit[0] + '    ' + tit[1] + '       ' + tit[0]  + $
+              '         ' + tit[1]  + '        X       Y'
 	for i = 0l, npts-1 do $
 	print,FORMAT = fmt, a[i], d[i], str[i], x[i], y[i] 
   endif
