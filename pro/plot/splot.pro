@@ -1450,8 +1450,8 @@ pro splot_autoscale_x
       ; Enlarge plotting limits if necessary for other calls to SOPLOT
       for i=1, nplot-1 do begin
          if ((*plot_ptr[i]).type EQ 'points') then begin
-            state.xrange[0] = min( [state.xrange[0], (*plot_ptr[i]).x] )
-            state.xrange[1] = max( [state.xrange[1], (*plot_ptr[i]).x] )
+            state.xrange[0] = min( [state.xrange[0], (*plot_ptr[i]).x[*]] )
+            state.xrange[1] = max( [state.xrange[1], (*plot_ptr[i]).x[*]] )
          endif
       endfor
    endif
