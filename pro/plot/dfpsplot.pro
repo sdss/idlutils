@@ -38,7 +38,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro dfpsplot, filename, square=square, landscape=landscape, ysize=ysize, $
- encap=encap, color=color, _EXTRA=KeywordsForDevice
+ xsize=xsize, encap=encap, color=color, _EXTRA=KeywordsForDevice
 
    if (N_params() LT 1) then begin
       print, 'Syntax - dfpsplot, filename, [/square, /landscape, ysize=ysize, $,'
@@ -52,17 +52,20 @@ pro dfpsplot, filename, square=square, landscape=landscape, ysize=ysize, $
    if (keyword_set(landscape)) then begin
       xs = 10.5                          ; full page
       IF keyword_set(square) THEN xs = 8 ; square page
+      IF keyword_set(xsize) THEN xs = xsize
       set_plot, 'PS'
       device, file=filename, /landscape, xsize=xs, ysize=8, $
        xoff=0, yoff=11.5+(10-xs), /inch, encap=encap, color=color, $
        _EXTRA=KeywordsForDevice
 
    endif else begin
+      xs = 8.0
       ys = 10.0                          ;full page
       IF keyword_set(square) THEN ys = 8 ; square page
       IF keyword_set(ysize) THEN ys = ysize
+      IF keyword_set(xsize) THEN xs = xsize
       set_plot, 'PS'
-      device, file=filename, /portrait, xsize=8, ysize=ys, $
+      device, file=filename, /portrait, xsize=xs, ysize=ys, $
        xoff=0, yoff=0.5+(10-ys), /inch, encap=encap, color=color, $
        _EXTRA=KeywordsForDevice
 
