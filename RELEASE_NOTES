@@ -1,6 +1,8 @@
 
 ATV           - Call PSCONFIG instead of CMPS_FORM for making PostScript
                 plots.  This change was necessary to work with IDL 5.5.
+ATV_JOE_WRITEPS - Write a PostScript file of the current ATV display
+                w/out using a widget
 DJS_BATCH     - Fix bug introduced when SELECTHOST option was added.
 FINDOPFILE    - This routine was hard-wired to a 5-digit MJD, but
                 we need it to work for numbers with any number of digits.
