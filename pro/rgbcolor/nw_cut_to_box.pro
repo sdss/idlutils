@@ -20,7 +20,9 @@
 ;  11/12/03 changed default origin - wherry
 ;-
 FUNCTION nw_cut_to_box,colors,origin=origin
-IF NOT keyword_set(origin) THEN origin = [0.0,0.0,0.0]
+
+if (NOT keyword_set(origin)) then origin = [0.0,0.0,0.0]
+if (n_elements(origin) LT 3) then origin = replicate(origin[0],3)
 
 if((n_elements(colors) MOD 3) ne 0) then $
   message,'nw_cut_to_box requires colors to be [nx,ny,3] array'
@@ -30,7 +32,7 @@ dim = size(colors,/dimensions)
 NX = LONG(dim[0])
 NY = LONG(dim[1])
 
-pos_dist = 1.0-origin
+pos_dist = 1D0-origin
 
 factor = fltarr(NX,NY)
 factor[*,*] = ((colors[*,*,0]/pos_dist[0]) $
