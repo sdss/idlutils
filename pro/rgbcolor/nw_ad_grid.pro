@@ -6,7 +6,6 @@
 ;CALLING SEQUENCE:
 ;  nw_ad_grid,rain,decin,hdr,[dra=,ddec=,name=,linethick=,color=,/nolabels]
 ;INPUTS:
-;  rain,decin  - coordinates on which the grid will be centered
 ;  hdr         - header of the FITS image to be overlayed
 ;  
 ;OPTIONAL INPUTS:
@@ -30,12 +29,14 @@
 ;REVISION HISTORY:
 ;  7/8/04 written - wherry
 ;-
-PRO nw_ad_grid,rain,decin,hdr,dra=dra,ddec=ddec,nra=nra,ndec=ndec, $
+PRO nw_ad_grid,hdr,dra=dra,ddec=ddec,nra=nra,ndec=ndec, $
                linethick=linethick,color=color,nolabels=nolabels, $
                charsize=charsize
 
 NX = sxpar(hdr,'NAXIS1')
 NY = sxpar(hdr,'NAXIS2')
+extast, hdr,astr
+xy2ad, (NX-1.)/2.,(NY-1.)/2.,astr,rain,decin
 
 IF (NOT keyword_set(dra)) THEN dra= 0.1
 IF (NOT keyword_set(ddec)) THEN ddec= 0.1
