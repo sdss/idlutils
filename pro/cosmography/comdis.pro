@@ -12,9 +12,10 @@
 ; OPTIONAL INPUTS:
 ; KEYWORDS
 ; OUTPUTS:
-;   comoving line-of-sight distance in units of the Hubble length c/H_0.
+;   comoving line-of-sight distance in units of the Hubble length c/H_0
 ; COMMENTS:
 ; BUGS:
+;   The integrator is crude and slow.
 ; EXAMPLES:
 ; PROCEDURES CALLED:
 ;   dcomdisdz()

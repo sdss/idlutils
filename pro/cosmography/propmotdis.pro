@@ -12,9 +12,10 @@
 ; OPTIONAL INPUTS:
 ; KEYWORDS
 ; OUTPUTS:
-;   proper motion distance in units of the Hubble length c/H_0.
+;   proper motion distance in units of the Hubble length c/H_0
 ; COMMENTS:
 ; BUGS:
+;   The integrator is crude and slow.
 ; EXAMPLES:
 ; PROCEDURES CALLED:
 ; REVISION HISTORY:
