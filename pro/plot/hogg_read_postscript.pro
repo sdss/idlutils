@@ -27,7 +27,7 @@ prefix= '/tmp/tmp_hogg_read_postscript'
 
 ; bitmap postscript
 splog, 'making bitmap'
-cmd= 'ghostscript -dNOPAUSE -sDEVICE=ppm -r'+resstr+' -sOutputFile="'+prefix+'.ppm" '+filename
+cmd= 'echo showpage | ghostscript -dNOPAUSE -sDEVICE=ppm -r'+resstr+' -sOutputFile="'+prefix+'.ppm" '+filename
 splog, cmd
 spawn, cmd
 
