@@ -1,6 +1,7 @@
 * text=auto !eol
 /Makefile -text
 bin/Makefile -text
+bin/build_links -text
 bin/evilinstall -text
 bin/evilmake -text
 bin/install_ups_table -text
