@@ -236,7 +236,7 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
 #define OVERWRITE_ORIGINAL	2
 #define WARNMAX			8
   int discard, dm, dn, dnp, failed, i, ier, inull, ip, iprune, j, k, m, n, np;
-  int jj,ifrag;
+  int jj,ifrag, ic, total_ncaps;
 
   /* start by pruning all input polygons */
   np = 0;
@@ -304,8 +304,12 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
     if(!fmt.dontoutputparents) 
       add_parent(polys[m],i);
     
-    if(i%100 == 0) 
-      fprintf(stderr, "polygon %d / %d (%d balkans)\n",i,npoly,np);
+    if(i%100 == 0) {
+      total_ncaps=0;
+      for(ic=0;ic<np;ic++) total_ncaps+=polys[ic]->np;
+      fprintf(stderr, "polygon %d / %d (%d balkans) / %d caps\n",i,npoly,np,
+              total_ncaps);
+    } /* end if */
 
     /* fragment successively against other polygons */
     for (jj = 0; jj < nlinks[i]; jj++) {
