@@ -747,8 +747,8 @@ pro mrd_ascii, header, structyp, use_colnum,   $
     endif
 
     nfld = fxpar(header, 'TFIELDS')
-    nrows = fxpar(header, 'NAXIS2')
-    nbytes = fxpar(header, 'NAXIS1')
+    nrows = long64(fxpar(header, 'NAXIS2'))
+    nbytes = long64(fxpar(header, 'NAXIS1'))
  
     if range[0] ge 0 then begin
         range[0] = range[0] < (nrows-1)
@@ -1050,7 +1050,7 @@ pro mrd_image, header, range, maxd, rsize, table, scales, offsets, scaling, $
  
     naxis = fxpar(header, 'NAXIS') 
     bitpix= fxpar(header, 'BITPIX') 
-    if naxis gt 0 then dims = fxpar(header, 'NAXIS*') else dims = 0
+    if naxis gt 0 then dims = long64(fxpar(header, 'NAXIS*')) else dims = 0
     
     gcount = fxpar(header, 'GCOUNT') 
     pcount = fxpar(header, 'PCOUNT')
@@ -1595,8 +1595,8 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
  
     ; Find the beginning of the heap area. 
  
-    heapoff = fxpar(header, 'THEAP') 
-    sz = fxpar(header, 'NAXIS1')*fxpar(header, 'NAXIS2')
+    heapoff = long64(fxpar(header, 'THEAP') )
+    sz = long64(fxpar(header, 'NAXIS1'))*long64(fxpar(header, 'NAXIS2'))
     
     if heapoff ne 0 and heapoff lt sz then begin 
         print, 'MRDFITS: ERROR Heap begins within data area' 
@@ -1610,7 +1610,7 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
     endif
  
     ; Get the size of the heap. 
-    pc = fxpar(header, 'PCOUNT') 
+    pc = long64(fxpar(header, 'PCOUNT'))
     if heapoff eq 0 then heapoff = sz 
     hpsiz = pc - (heapoff-sz) 
  
@@ -2137,8 +2137,8 @@ pro mrd_table, header, structyp, use_colnum,           $
         return 
     endif 
  
-    nfld = fxpar(header, 'TFIELDS') 
-    nrow = fxpar(header, 'NAXIS2')
+    nfld = fxpar(header, 'TFIELDS')
+    nrow = long64(fxpar(header, 'NAXIS2'))
     nrows = nrow
  
     if range[0] ge 0 then begin 
@@ -2159,7 +2159,7 @@ pro mrd_table, header, structyp, use_colnum,           $
     endif
     if N_elements(rows) EQ 0 then nrowp  = nrow else nrowp = N_elements(rows)
 
-    rsize = fxpar(header, 'NAXIS1') 
+    rsize = long64(fxpar(header, 'NAXIS1'))
  
     ; 
     ;  Loop over the columns           
@@ -2599,8 +2599,9 @@ function mrdfits, file, extension, header,      $
 	    endif else begin
 
 	        ; Skip remainder of last data block
-	        sz = fxpar(header, 'NAXIS1')*fxpar(header,'NAXIS2') +  $
-		       fxpar(header, 'PCOUNT')
+	        sz = long64(fxpar(header, 'NAXIS1')) $
+                      *long64(fxpar(header,'NAXIS2')) +  $
+		       long64(fxpar(header, 'PCOUNT'))
 	        skipB = 2880 - sz mod 2880
 	        if (skipB ne 2880) then mrd_skip, unit, skipB
             endelse
