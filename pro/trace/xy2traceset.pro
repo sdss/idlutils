@@ -137,8 +137,8 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
    if (NOT keyword_set(inputans)) then curans = fltarr(ncoeff)
 
    ; Header for Burles counter
-   if not keyword_set(silent) then print, ''
-   if not keyword_set(silent) then print, ' TRACE# NPOINTS NREJECT'
+   if (NOT keyword_set(silent)) then print, ''
+   if (NOT keyword_set(silent)) then print, ' TRACE# NPOINTS NREJECT'
 
    ;----------
    ; Loop over each trace
@@ -148,7 +148,6 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
       xnorm = 2.0 * (xpos[*,itrace] - xmid) / xrange ; X positions renormalized
 
       if (keyword_set(inputans)) then curans = inputans[*,itrace] 
-      if (keyword_set(inmask)) then curinmask = inmask[*,itrace]
 
       ;----------
       ; Rejection iteration loop
@@ -157,41 +156,40 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
       qdone = 0
       ycurfit = 0
       if (keyword_set(invvar)) then tempivar = invvar[*,itrace] $
-      else tempivar = bytarr(nx) + 1
-      curoutmask = tempivar GT 0
+       else tempivar = fltarr(nx) + 1.
+      if (keyword_set(inmask)) then tempivar = tempivar * inmask[*,itrace]
+      thismask = tempivar GT 0
 
       while (NOT keyword_set(qdone) AND iiter LE maxiter) do begin
 
          if keyword_set(inputfunc) then $
-           res = func_fit(xnorm, ypos[*,itrace], ncoeff, $
-             invvar=tempivar*curoutmask, $
-             function_name=function_name, yfit=ycurfit, inputans=curans, $
-             inputfunc=inputfunc[*,itrace], _EXTRA=EXTRA) $
+          res = func_fit(xnorm, ypos[*,itrace], ncoeff, $
+           invvar=tempivar*thismask, $
+           function_name=function_name, yfit=ycurfit, inputans=curans, $
+           inputfunc=inputfunc[*,itrace], _EXTRA=EXTRA) $
          else res = func_fit(xnorm, ypos[*,itrace], ncoeff, $
-             invvar=tempivar*curoutmask, $
+          invvar=tempivar*thismask, $
           function_name=function_name, yfit=ycurfit, inputans=curans, $
           _EXTRA=EXTRA)
 
-         curinmask = curoutmask
-
          qdone = djs_reject(ypos[*,itrace], ycurfit, invvar=tempivar, $
-          inmask=curinmask, outmask=curoutmask, _EXTRA=EXTRA)
+          outmask=thismask, _EXTRA=EXTRA)
 
          iiter = iiter + 1
       endwhile
  
       yfit[*,itrace] = ycurfit 
       tset.coeff[*,itrace] = res
-      outmask[*,itrace] = curoutmask
+      outmask[*,itrace] = thismask
 
       ; Burles counter of row number...
-      junk = where(curoutmask EQ 0, nreject)
-      if not keyword_set(silent) then $
-        print, format='(i7,i8,i8,a1,$)', itrace, nx, nreject, string(13b)
+      junk = where(thismask EQ 0, nreject)
+      if (NOT keyword_set(silent)) then $
+       print, format='(i7,i8,i8,a1,$)', itrace, nx, nreject, string(13b)
    endfor
 
    junk = where(outmask EQ 0, nreject)
-   if not keyword_set(silent) then splog, 'Total rejected = ', nreject
+   if (NOT keyword_set(silent)) then splog, 'Total rejected = ', nreject
 
    return
 end
