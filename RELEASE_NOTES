@@ -3,6 +3,7 @@ ADJUST_ERROR: New proc.
 ASINH2: Trig function; moved from vagc product.
 ASTROM_ENGINE: Fix print statement for "XSHIFT:".
 CIRCLE_CAP: Conform to new RA,DEC inputs.
+COMDIST2: New proc to compute comoving line-of-sight distances.
 CONSTRUCT_POLYGON, READ_MANGLE_POLYGONS: Cleaner memory.
 DJS_PHOT,DJS_PHOTSKY,EXACT_PHOTFRAC: Add support for calling the sinc-shift
                "exact" photometry that Lupton uses in PHOTO.  This algorithm
@@ -10,6 +11,7 @@ DJS_PHOT,DJS_PHOTSKY,EXACT_PHOTFRAC: Add support for calling the sinc-shift
 FIRST_READ,FIRST_COVERAGE: New functions for reading the FIRST radio survey
                data files.
 GVERTS: Fix a loop variable that should have been type long.
+        Move from mangle version 1.2 to mangle version 1.4.
 IS_IN_CAP,IS_IN_POLYGON,IS_IN_WINDOW: Change calling sequence, with
                ra=,dec=,xyz= instead of assuming xyz is passed.
 LOGSUM: Small bug fix.
