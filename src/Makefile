@@ -12,7 +12,7 @@ SHELL = /bin/sh
 #
 CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
 
-SUBDIRS = spheregroup image math slatec
+SUBDIRS = image math slatec spheregroup trace
 
 all :
 	@ for f in $(SUBDIRS); do \

@@ -895,5 +895,11 @@ src/spheregroup/rarange.c -text
 src/spheregroup/separation.c -text
 src/spheregroup/spheregroup.c -text
 src/spheregroup/spherematch.c -text
+src/trace/Makefile -text
+src/trace/evilmath.c -text
+src/trace/evilmath.h -text
+src/trace/trace_crude.c -text
+src/trace/trace_fweight.c -text
+src/trace/trace_gweight.c -text
 ups/Makefile -text
 ups/idlutils.table -text
