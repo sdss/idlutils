@@ -15,7 +15,8 @@
 ; OPTIONAL INPUTS:
 ;
 ; OUTPUT:
-;   result     - Value of parameter in header; return 0 if parameter not found
+;   result     - Value of parameter in header as either a string or an
+;                array of strings; return '' if parameter not found
 ;
 ; OPTIONAL OUTPUTS:
 ;   count      - Return the number of parameters found
@@ -39,20 +40,22 @@
 ;------------------------------------------------------------------------------
 function yanny_par, hdr, keyname, count=count
 
+   count = 0
+
    if (N_params() LT 2) then begin
       print, 'Syntax - result = yanny_par(hdr, keyname, [count= ] )'
-      return, 0
+      return, ''
    endif
 
    nhead = N_elements(hdr)
    if (nhead EQ 0) then begin
       print, 'Header contains no elements'
-      return, 0
+      return, ''
    endif
 
    if (size(keyname, /tname) EQ 'UNDEFINED') then begin
       print, 'KEYNAME is undefined'
-      return, 0
+      return, ''
    endif
 
    keylist = strarr(nhead)
@@ -61,41 +64,35 @@ function yanny_par, hdr, keyname, count=count
       keylist[i] = (str_sep( strtrim(hdr[i],2), ' '))[0]
    endfor
 
+   ; Locate the first keyword that matches
    indx = where(keyname EQ keylist, ct)
-   if (ct EQ 0) then begin
-      count = 0
-      result = 0
+   if (ct EQ 0) then return, ''
+   j = indx[0]
+
+   ; Find the string after the keyword
+   ipos = strpos(hdr[j], keylist[j]) + strlen(keylist[j])
+   keystring = strtrim( strmid(hdr[j], ipos+1), 2 )
+
+   ; Remove any comments from this string
+   ipos = strpos(keystring, '#')
+   if (ipos EQ 0) then keystring = '' $
+    else if (ipos GT 0) then keystring = strmid(keystring, 0, ipos)
+
+   ; If any single quote exists, then split the string by looking for
+   ; everything within single quotes.
+   ; Otherwise, split the string using spaces.
+   if (strpos(keystring, "'") NE -1) then begin
+      ; The following is a kludge to take strings between successive
+      ; pairs of single quotes.
+      result = strsplit(keystring, "'", /extract)
+      result = result[ 2*lindgen((n_elements(result)/2) > 1) ]
    endif else begin
-      count = ct
-      result = 0
-      for i=0, ct-1 do begin
-         j = indx[i]
-
-         ; Find the string after the keyword
-         ipos = strpos(hdr[j], keylist[j]) + strlen(keylist[j])
-         keystring = strtrim( strmid(hdr[j], ipos+1), 2 )
-
-         ; Remove any comments from this string
-         ipos = strpos(keystring, '#')
-         if (ipos EQ 0) then keystring = '' $
-          else if (ipos GT 0) then keystring = strmid(keystring, 0, ipos)
-
-         if (strpos(keystring, "'") NE -1) then begin
-            ; Type is STRING
-            res = (str_sep(keystring, "'"))[1]
-         endif else if (strpos(keystring, ".") NE -1) then begin
-            ; Type is DOUBLE
-            res = double(keystring)
-         endif else begin
-            ; Type is LONG
-            res = long(keystring)
-         endelse
-
-         if (i EQ 0) then result = res $
-          else result = [result, res]
-
-      endfor
+      result = strsplit(keystring, " ", /extract)
    endelse
+
+   ; If the result has only 1 element, then return a scalar.
+   count = n_elements(result)
+   if (count EQ 1) then result = result[0]
 
    return, result
 end        
