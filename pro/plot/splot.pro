@@ -1557,10 +1557,11 @@ pro splot_gaussfit
             yfit = yfit_abs
             a = a_abs
          endif
+         a[1] = abs(a[1]) ; sigma cannot be negative
 
          xtemp = xtemp + xmid
          a[0] = a[0] + xmid
-         area = a[2] * sqrt(2.*!pi)
+         area = a[2] * a[1] * sqrt(2.*!pi)
          out_string = 'GAUSSFIT: ' $
           + ' x0= ' + strtrim(string(a[0]),2) $
           + ' sig= ' + strtrim(string(a[1]),2) $
