@@ -1,4 +1,6 @@
 
+HOGG_SCATTERPLOT: add /outliers keyword to show points outside last contour
+                  as points (and don't show greyscale there).
 BSPLINE_ITERFIT: Fix crash condition for when only 1 point to fit.
 DJS_RGB_MAKE: Code to create JPEG from 3 FITS files based upon NW_RGB_MAKE,
                but saturating stars to a single color per object.
