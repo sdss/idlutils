@@ -69,9 +69,9 @@ pro ppmtompeg_parameters, parname, input_dir=input_dir, $
   printf, wlun, '#FRAME_RATE     '+frame_rate
   printf, wlun, 'FORCE_ENCODE_LAST_FRAME'
   printf, wlun, ''
-  printf, wlun, 'IQSCALE         31'
-  printf, wlun, 'PQSCALE         10'
-  printf, wlun, 'BQSCALE         25'
+  printf, wlun, 'IQSCALE         1'
+  printf, wlun, 'PQSCALE         6'
+  printf, wlun, 'BQSCALE         6'
   printf, wlun, 'REFERENCE_FRAME ORIGINAL'
 
   free_lun, wlun
