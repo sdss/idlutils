@@ -39,6 +39,7 @@
 ;
 ; REVISION HISTORY:
 ;   Written D. Schlegel, 18 July 2003, Princeton
+;    31 July 2003 - /silent keyword added to read - DPF
 ;-
 ;------------------------------------------------------------------------------
 function first_coverage, ravec1, decvec
@@ -108,7 +109,7 @@ function first_coverage, ravec1, decvec
           - ramin[ifile]) / dra[ifile] )
          ybin = floor( (decvec[indx] - decmin[ifile]) / ddec[ifile] )
          ymin = min(ybin, max=ymax)
-         img = mrdfits(filename[ifile], range=[ymin,ymax])
+         img = mrdfits(filename[ifile], range=[ymin,ymax], /silent)
          skyrms[indx] = img[xbin,ybin-ymin]
       endif
    endfor
