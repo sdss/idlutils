@@ -43,7 +43,9 @@ pro hogg_plothist, x,weight=weight, $
 ndata= n_elements(x)
 if not keyword_set(weight) then weight= dblarr(ndata)+1.0
 if not keyword_set(npix) then npix= ceil(0.3*sqrt(ndata)) > 10
-if not keyword_set(xrange) then xrange= minmax(x)
+if not keyword_set(xrange) then begin
+    if keyword_set(overplot) then xrange= !X.CRANGE else xrange= minmax(x)
+endif
 
 ; check inputs
 ; [tbd]
