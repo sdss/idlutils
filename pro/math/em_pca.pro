@@ -28,8 +28,9 @@
 ; OPTIONAL INPUT PARAMETERS:
 ;    tol - tolerance of convergence (default 0.)
 ;    maxiter - maximum number of iterations (default 20)
-;    /verbose - verbose output
 ; KEYWORD PARAMETERS:
+;    /verbose - verbose output
+;    /nofix - don't do the final real PCA
 ; OUTPUTS:
 ;    eigenvec - [p,k] matrix of k leading eigenvectors
 ;    hidden - [k] matrix of "hidden" variables (the lower dimensional
@@ -47,7 +48,7 @@
 ;    2003-01-26 - Written by Michael Blanton (NYU)
 ;-
 pro em_pca, data, k, eigenvec, hidden, tol=tol, maxiter=maxiter, niter=niter, $
-            verbose=verbose
+            verbose=verbose, nofix=nofix
 
 ; set defaults
 if(n_elements(tol) eq 0) then tol=0.
@@ -94,6 +95,14 @@ while(niter lt maxiter and diff gt tol) do begin
     endif
     niter=niter+1L
 endwhile
+
+if(NOT keyword_set(nofix)) then begin
+    pca, transpose(hidden), eval_hidden, evec_hidden, /silent, /covariance
+    for i=0,k-1 do $
+      eigenvec[*,i]=eigenvec[*,i]/sqrt(total(eigenvec[*,i]^2,/double))
+    eigenvec=eigenvec[*,*]#(evec_hidden)
+    stop
+endif
 
 return
 
