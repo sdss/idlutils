@@ -26,7 +26,10 @@ $(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle.a
 		-lmangle $(MAKE_FTNLIB) -L/usr/lib/gcc-lib/i386-redhat-linux/2.96 \
 		-L$(IDLUTILS_DIR)/lib
 
-install : 
+install :
+	-@ cp *.c $(IDLUTILS_DIR)/src/idlmangle
+	-@ cp *.h $(IDLUTILS_DIR)/src/idlmangle
+	-@ cp Makefile $(IDLUTILS_DIR)/src/idlmangle
 
 clean :
 	- /bin/rm -f *~ core *.o so_locations
