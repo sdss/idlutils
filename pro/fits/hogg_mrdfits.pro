@@ -35,7 +35,6 @@ function hogg_mrdfits, file, extension, header, silent=silent, $
     chunkresult= mrdfits(file,extension,header, $
      range=chunkrange, structyp=structyp, $
       silent=silent, _EXTRA=inputs_for_mrdfits)
-    if(NOT keyword_set(silent)) then help, chunkresult
     if not keyword_set(result) then begin
         result=replicate(chunkresult[0],range[1]-range[0]+1)
     endif 
