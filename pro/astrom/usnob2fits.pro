@@ -1,3 +1,5 @@
+; rewrite USNO-B data as FITS files for easier access (for Ivezic)
+
 pro usnob2fits_1, path, subdir, fname, outpath, hash
 
   rec_len = 80L
@@ -18,7 +20,10 @@ pro usnob2fits_1, path, subdir, fname, outpath, hash
   usnostruct = usnob10_extract(data)
   usnostruct.fldepoch = hash[usnostruct.fldid]
 
-  mwrfits, usnostruct, outfile, /create
+; -------- write temporary file
+  tempname = '/tmp/'+fname+'.fit'
+  mwrfits, usnostruct, tempname, /create
+  spawn, 'gzip -vf '+tempname+' ; \mv '+tempname+'.gz '+outdir
 
   return
 end
@@ -28,10 +33,12 @@ end
 pro usnob2fits
 
 ; -------- set paths
+  usno_dir = getenv('USNO_DIR')
+  print, 'Using input directory ', usno_dir
   dataroot = getenv('PHOTO_DATA')+'/'
   if dataroot eq '/' then message, 'you need to set PHOTO_DATA'
-  path = dataroot+'usnob/'
-  outpath = path+'fits/'
+  path = usno_dir
+  outpath = dataroot+'usnob/fits/'
 
 ; -------- set up epoch hash
   epochfile = path+'/USNO-B-epochs.fit'
@@ -39,7 +46,7 @@ pro usnob2fits
   hash = fltarr(10000)
   hash[ep.field] = ep.epoch
 
-  for subdir = 80, 100 do begin 
+  for subdir = 0, 179 do begin 
      for i=0, 9 do begin 
         fname = 'b'+string(subdir*10+i, format='(I4.4)')
         print, fname
