@@ -115,7 +115,8 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       invvar = 0.0 * ydata + 1.0/var
    endif
 
-   outmask = make_array(size=size(invvar), /byte) + 1B
+   if (n_elements(invvar) EQ 1) then outmask = 1B $
+    else outmask = make_array(size=size(invvar), /byte) + 1B
 
    maskwork = outmask * (invvar GT 0)
    these = where(maskwork, nthese)
