@@ -41,23 +41,22 @@
 ;       atv_pdata:  contains plot and text annotation information
 ;
 ; RESTRICTIONS:
+;       Requires IDL version 5.1 or greater.
 ;       Requires the GSFC IDL astronomy library routines,
 ;         for fits input.
-;       The current version doesn't read fits extensions.
-;       The current version only works with 8-bit color.
 ;       For a current list of atv's bugs and weirdnesses, go to
 ;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
 ;
 ; SIDE EFFECTS:
 ;       Modifies the color table.
 ;
-; EXAMPLE: 
-;       To start atv running, just enter the command 'atv' at the
-;       idl prompt, either with or without an array name as an input.
-;       Only one atv window will be created at a time, so if one
-;       already exists and another image is passed to atv from the
-;       idl command line, the new image will be displayed in the
-;       pre-existing atv window.
+; EXAMPLE:
+;       To start atv running, just enter the command 'atv' at the idl
+;       prompt, either with or without an array name or fits file name 
+;       as an input.  Only one atv window will be created at a time,
+;       so if one already exists and another image is passed to atv
+;       from the idl command line, the new image will be displayed in 
+;       the pre-existing atv window.
 ;
 ; MODIFICATION HISTORY:
 ;       Written by Aaron J. Barth, first release 17 December 1998.
@@ -68,26 +67,11 @@
 ;       The arguments C_ORIENTATION and C_SPACING are not supported.
 ;       The default color for all overplots is 'red'.
 ;
-;       This version is 1.0b4, last modified 02 August 1999.
+;       This version is 1.0b5.1, last modified 16 September 1999.
 ;       For the most current version, revision history, instructions,
 ;       and further information, go to:
 ;              http://cfa-www.harvard.edu/~abarth/atv/atv.html
 ;
-;  new features since last release:
-;  made crosshair in tracking image green
-;  changed mode selection to a droplist
-;  added color mode for dragging mouse on main draw window
-;  completely changed brightness/contrast algorithm
-;  added stern special color table
-;  fixed problem where unblink image should have been set in 
-;    atv_getdisplay
-;  removed color sliders
-;  made min and max text boxes bigger
-;  changed base structure
-;  lowered maximum numbers of text and contour plots
-;  changed startup image
-;
-;  added SYMSIZE keyword to ATVPLOT command
 ;-
 ;----------------------------------------------------------------------
 
@@ -103,12 +87,13 @@ common atv_images, $
   display_image, $
   scaled_image, $
   blink_image, $
-  unblink_image, $      ; added AJB 7/26/99
+  unblink_image, $  
   pan_image
 common atv_color, r_vector, g_vector, b_vector
 common atv_pdata, pdata, ptext, pcon, phistory
 
 state = {                   $
+          version: '1.0b5.1', $            ; version # of this release
           base_id: 0L, $                 ; id of top-level base
           base_min_size: [512L, 512L], $ ; min size for top-level base
           draw_base_id: 0L, $            ; id of base holding draw window
@@ -120,8 +105,10 @@ state = {                   $
           min_text_id: 0L,  $            ; id of min= widget
           max_text_id: 0L, $             ; id of max= widget
           menu_ids: lonarr(25), $        ; list of top menu items
-;          brightness_slider_id: 0L, $    ; id of brightness widget
-;          contrast_slider_id: 0L, $      ; id of contrast widget
+          colorbar_base_id: 0L, $        ; id of colorbar base widget
+          colorbar_widget_id: 0L, $      ; widget id of colorbar draw widget
+          colorbar_window_id: 0L, $      ; window id of colorbar
+          colorbar_height: 6L, $         ; height of colorbar in pixels
           brightness: 500L, $           
           contrast: 500L, $
           slidermax: 1000L, $            ; max val for sliders (min=1)
@@ -141,7 +128,6 @@ state = {                   $
           scaling: 0L, $                 ; 0=linear, 1=log, 2=histeq
           offset: [0L, 0L], $            ; offset to viewport coords
           base_pad: [0L, 0L], $          ; padding around draw base
-          pad: [0L, 0L], $               ; padding around draw widget
           zoom_level: 0L, $              ; integer zoom level, 0=normal
           zoom_factor: 1.0, $            ; magnification factor = 2^zoom_level
           centerpix: [0L, 0L], $         ; pixel at center of viewport
@@ -228,9 +214,12 @@ phistory = intarr(pdata.nmax + ptext.nmax + pcon.nmax)
 ; Read in a color table to initialize !d.table_size
 ; As a bare minimum, we need the 8 basic colors used by ATV_ICOLOR(),
 ; plus 2 more for a color map.
+
 loadct, 0, /silent
-if (!d.table_size LT 10) then $
- message, 'Too few colors available for color table'
+if (!d.table_size LT 10) then begin
+    message, 'Too few colors available for color table'
+    atv_shutdown
+endif
 
 ; Define the widgets.  For the widgets that need to be modified later
 ; on, save their widget ids in state variables
@@ -280,20 +269,20 @@ top_menu = cw_pdmenu(top_menu, top_menu_desc, $
 
 track_base =    widget_base(base, /row)
 info_base = widget_base(track_base, /column, /base_align_right)
-;track_base_1 =  widget_base(track_base, /column, /align_right)
-;track_base_1a = widget_base(track_base_1, /row, /align_bottom)
-;slider_base =   widget_base(track_base_1a, /column, /align_right)
-;minmax_base =   widget_base(track_base_1a, /column, /align_right)
-;track_base_2 =  widget_base(track_base, /row, /base_align_bottom)
 button_base1 =  widget_base(base, /row, /base_align_bottom)
 button_base2 =  widget_base(base, /row, /base_align_bottom)
-;mode_base =     widget_base(button_base1, /row, /base_align_bottom, /exclusive)
 
 state.draw_base_id = $
   widget_base(base, $
               /column, /base_align_left, $
               /tracking_events, $
               uvalue = 'draw_base', $
+              frame = 2)
+
+state.colorbar_base_id = $
+  widget_base(base, $
+              uvalue = 'colorbar_base', $
+              /column, /base_align_left, $
               frame = 2)
 
 state.min_text_id = $
@@ -322,8 +311,6 @@ state.location_bar_id = $
                 value = tmp_string,  $
                 uvalue = 'location_bar',  frame = 1)
 
-
-
 pan_window = $
   widget_draw(track_base, $
               xsize = state.pan_window_size, $
@@ -338,43 +325,12 @@ track_window = $
               frame=2, uvalue='track_window')
 
 
-;state.brightness_slider_id = $
-;  widget_slider(slider_base, $
-;                /drag, $
-;                minimum = 1, $
-;                maximum = state.slidermax, $
-;                title = 'Brightness', $
-;                uvalue = 'brightness', $
-;                value = state.slidermax/2, $
-;                /suppress_value)
-
-
-;state.contrast_slider_id = $
-;  widget_slider(slider_base, $
-;                /drag, $
-;                minimum = 1, $
-;                maximum = state.slidermax, $
-;                title = 'Contrast', $
-;                uvalue = 'contrast', $
-;                value = state.slidermax/2, $
-;                /suppress_value)
-
 modelist = ['Color', 'Zoom', 'Blink']
 mode_droplist_id = widget_droplist(button_base1, $
                                    frame = 1, $
                                    title = 'MouseMode:', $
                                    uvalue = 'mode', $
                                    value = modelist)
-
-;zoommode_button = $
-;  widget_button(mode_base, $
-;                value = 'ZoomMode', $
-;                uvalue = 'zoom_mode')
-;
-;blinkmode_button = $
-;  widget_button(mode_base, $
-;                value = 'BlinkMode', $
-;                uvalue = 'blink_mode')
 
 invert_button = $
   widget_button(button_base1, $
@@ -442,11 +398,15 @@ state.draw_widget_id = $
               scr_xsize = state.draw_window_size[0], $
               scr_ysize = state.draw_window_size[1]) 
 
+state.colorbar_widget_id = $
+  widget_draw(state.colorbar_base_id, $
+              uvalue = 'colorbar', $
+              scr_xsize = state.draw_window_size[0], $
+              scr_ysize = state.colorbar_height)
+
 ; Create the widgets on screen
 
 widget_control, base, /realize
-
-;widget_control, zoommode_button, /set_button
 
 ; get the window ids for the draw widgets
 
@@ -456,6 +416,8 @@ widget_control, state.draw_widget_id, get_value = tmp_value
 state.draw_window_id = tmp_value
 widget_control, pan_window, get_value = tmp_value
 state.pan_window_id = tmp_value
+widget_control, state.colorbar_widget_id, get_value = tmp_value
+state.colorbar_window_id = tmp_value
 
 ; Find window padding sizes needed for resizing routines.
 ; Add extra padding for menu bar, since this isn't included in 
@@ -465,14 +427,11 @@ state.pan_window_id = tmp_value
 basegeom = widget_info(state.base_id, /geometry)
 drawbasegeom = widget_info(state.draw_base_id, /geometry)
 
-state.pad[0] = basegeom.xsize - state.draw_window_size[0] 
-state.pad[1] = basegeom.ysize - state.draw_window_size[1] + 30 
 state.base_pad[0] = basegeom.xsize - drawbasegeom.xsize $
   + (2 * basegeom.margin)
 state.base_pad[1] = basegeom.ysize - drawbasegeom.ysize + 30 $
   + (2 * basegeom.margin)
 
-; modified 7/28/99 AJB
 state.base_min_size = [state.base_pad[0] + 512, state.base_pad[1] + 100]
 
 ; Initialize the vectors that hold the current color table.
@@ -485,7 +444,32 @@ b_vector = bytarr(!d.table_size-8)
 atv_getct, 0
 state.invert_colormap = 0
 
+atv_colorbar
+
 xmanager, 'atv', state.base_id, /no_block
+
+end
+
+;--------------------------------------------------------------------
+
+pro atv_colorbar
+
+; Routine to tv the colorbar at the bottom of the atv window
+; Added by AJB 8/19/99
+
+common atv_state
+
+wset, state.colorbar_window_id
+
+xsize = (widget_info(state.colorbar_widget_id, /geometry)).xsize
+
+d = !d.table_size - 8
+
+b = congrid( findgen(d), xsize) + 8
+c = replicate(1, state.colorbar_height)
+a = b # c
+
+tv, a
 
 end
 
@@ -539,8 +523,8 @@ if (fitsfile NE '') then begin  ; 'cancel' button returns empty string
 
     endif else begin
         main_image = temporary(tmp_image)
-
         atv_getstats
+        atv_settitle, fitsfile
         state.zoom_level =  0
         state.zoom_factor = 1.0
         atv_set_minmax
@@ -554,6 +538,7 @@ endif
 end
 
 ;----------------------------------------------------------------------
+
 
 pro atv_writetiff
 
@@ -583,40 +568,49 @@ if (nfiles GT 0 and filename NE '') then begin
                              /question)                 
 endif
 
-; Modified by AJB 7/29/99 to do a screen capture with tvrd()
-; and stretch the screen color table to 256 colors
+
 if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
 
+ 
     wset, state.draw_window_id
-
+ 
     tvlct, rr, gg, bb, /get
-
+ 
     rn = congrid(rr[8:!d.table_size-1], 248)
     gn = congrid(gg[8:!d.table_size-1], 248)
     bn = congrid(bb[8:!d.table_size-1], 248)
-
+ 
     rvec = bytarr(256)
     gvec = bytarr(256)
     bvec = bytarr(256)
-
+ 
     rvec[0] = rr  ; load in the first 8 colors
     gvec[0] = gg
     bvec[0] = bb
-
+ 
     rvec[8] = temporary(rn)
     gvec[8] = temporary(gn)
     bvec[8] = temporary(bn)
+ 
+    img = tvrd()
+    w = where(img GT 7, count)
 
-    write_tiff, filename, tvrd(), $
+    if (count GT 0) then begin
+        tmp_img = img[w]
+        tmp_img = bytscl((img[w]), top = 247) + 8
+        img[w] = tmp_img
+    endif
+
+    write_tiff, filename, img, $
       red = temporary(rvec), $
       green = temporary(gvec), $
       blue = temporary(bvec)
+
 endif
 
 atv_cleartext
 
 end
-
 
 ;----------------------------------------------------------------------
 
@@ -674,8 +668,6 @@ if ((nfiles EQ 0 OR result EQ 'Yes') AND filename NE '') then begin
     bn = congrid(bb, 248)
     
     tvlct, temporary(rn), temporary(gn), temporary(bn), 8
-; AJB added atv_plotall below 7/28/99 to do plot overlays    
-;    tv, temporary(tmp_image)
     tv, bytscl(display_image, top = 247) + 8
     atv_plotall
 
@@ -867,7 +859,33 @@ state.centerpix = round(state.image_size / 2.)
 atv_getoffset
 
 ; Clear all plot annotations
-atverase, /norefresh    ; added AJB 7/27/99
+atverase, /norefresh  
+
+end
+ 
+;---------------------------------------------------------------------
+
+pro atv_settitle, imagename
+; Update title bar: added by AJB 8/20/99 
+
+; Note to self: for future revisions, it will probably be better to
+; keep imagename in a state variable, and to move the state structure
+; definition to the main atv.pro routine.  That way, fits header
+; information can also be saved in a state variable at the same time.
+
+common atv_state
+
+if (n_elements(imagename) EQ 0) then imagename = ''
+
+if (imagename EQ '') then begin
+    widget_control, state.base_id, tlb_set_title = 'atv'
+endif else begin
+    slash = rstrpos(imagename, '/')
+    if (slash NE -1) then name = strmid(imagename, slash+1) $
+      else name = imagename
+    title = strcompress('atv:  '+name)
+    widget_control, state.base_id, tlb_set_title = title
+endelse
 
 end
 
@@ -898,10 +916,8 @@ tv, track_image
 ; current mouse position
 
 ; Changed central x to be green always
-;device, set_graphics = 10
 plots, [0.46, 0.54], [0.46, 0.54], /normal, color = 2
 plots, [0.46, 0.54], [0.54, 0.46], /normal, color = 2
-;device, set_graphics = 3
 
 ; update location bar with x, y, and pixel value
 
@@ -929,9 +945,6 @@ common atv_color
 widget_control, event.id, get_uvalue = uvalue
 
 case uvalue of
-
-;    'zoom_mode': state.mode = 'zoom'
-;    'blink_mode': state.mode = 'blink'
 
     'mode': case event.index of
         0: state.mode = 'color'
@@ -1066,9 +1079,6 @@ case uvalue of
                     
     end
 
-;    'brightness': atv_stretchct      ; brightness slider move
-;    'contrast'  : atv_stretchct      ; contrast slider move
-
     'invert': begin                  ; invert the color table
         state.invert_colormap = abs(state.invert_colormap - 1)
         tvlct, r, g, b, 8, /get
@@ -1086,10 +1096,6 @@ case uvalue of
     end
 
     'reset_color': begin   ; set color sliders to default positions
-;        widget_control, $
-;          state.brightness_slider_id, set_value = state.slidermax / 2
-;        widget_control, $
-;          state.contrast_slider_id, set_value = state.slidermax / 2
         state.brightness = state.slidermax / 2
         state.contrast = state.slidermax / 2
         atv_stretchct, state.brightness, state.contrast
@@ -1253,7 +1259,6 @@ if (xregistered ('atv')) then begin
     widget_control, state.base_id, /destroy
 endif
 
-; Added 8/2/99 by AJB
 if (n_elements(phistory) GT 1) then begin
     atverase, /norefresh
     pdata = 0
@@ -1308,20 +1313,37 @@ pro atv_resize, event
 
 common atv_state
 
-tmp_event = [event.x, event.y]
+widget_control, event.top, tlb_get_size=tmp_event
+
+drawpad = (widget_info(state.draw_base_id,/geometry)).xsize - $
+  state.draw_window_size[0]
 
 window = (state.base_min_size > tmp_event)
 
 newbase = window - state.base_pad
 
-newsize = window - state.pad
+; modified by AJB 8/19/99
+; Note: don't know why the (-4) is needed below, but it seems
+; to work... without it the base becomes the wrong size when the
+; colorbar draw widget is resized.
+
+widget_control, state.colorbar_base_id, $
+  xsize = newbase[0]-4, ysize = state.colorbar_height + 6
 
 widget_control, state.draw_base_id, $
   xsize = newbase[0], ysize = newbase[1]
-widget_control, state.draw_widget_id, $
-  xsize = newsize[0], ysize = newsize[1]
 
-state.draw_window_size = newsize
+newxsize = (widget_info(state.draw_base_id,/geometry)).xsize - drawpad
+newysize = (widget_info(state.draw_base_id,/geometry)).ysize - drawpad
+
+widget_control, state.draw_widget_id, $
+  xsize = newxsize, ysize = newysize
+widget_control, state.colorbar_widget_id, $
+  xsize = newxsize, ysize = state.colorbar_height
+
+state.draw_window_size = [newxsize, newysize]
+
+atv_colorbar
 
 end
 
@@ -1348,20 +1370,19 @@ case state.scaling of
       bytscl(main_image, $                           
              min=state.min_value, $
              max=state.max_value, $
-             top = !d.table_size-8) + 8
+             top = !d.table_size - 9) + 8
     
-; AJB fixed following bit on 7/26/99:
     1: tmp_image = $                 ; log stretch
       bytscl( alog10 (bytscl(main_image, $                       
                              min=state.min_value, $
                              max=state.max_value) + 1),  $
-            top = !d.table_size - 8) + 8
+            top = !d.table_size - 9) + 8
     
     2: tmp_image = $                 ; histogram equalization
       bytscl(hist_equal(main_image, $
                         minv = state.min_value, $    
                         maxv = state.max_value), $
-             top = !d.table_size-8) + 8
+             top = !d.table_size - 9) + 8
     
 endcase
 
@@ -1375,10 +1396,9 @@ end
 ;----------------------------------------------------------------------
 function atv_icolor, color
 
-;   if (NOT keyword_set(color)) then color = !p.color
+; Routine to reserve the bottom 8 colors of the color table
+; for plot overlays and line plots.
 
-;  modified by AJB 7/29/99
-;   if (NOT keyword_set(color)) then return, 1 ; Default to red
    if (n_elements(color) EQ 0) then return, 1
 
    ncolor = N_elements(color)
@@ -1412,8 +1432,6 @@ end
 pro atv_plot1plot, iplot
 common atv_pdata
 
-; Added hourglass cursor here and in other plot1 routines
-; AJB 8/2/99
 widget_control, /hourglass
 
 oplot, *(pdata.x[iplot]), *(pdata.y[iplot]), $
@@ -1517,8 +1535,6 @@ end
 ;----------------------------------------------------------------------
 pro atv_plotwindow
 common atv_state
-
-;   wset, state.draw_window_id    commented out by AJB 7/26/99
 
 ; Set plot window
 xrange=[state.offset[0], $
@@ -1728,10 +1744,6 @@ common atv_pdata
 ; Routine to erase line plots from ATVPLOT, text from ATVXYOUTS, and
 ; contours from ATVCONTOUR.
 
-; keyword norefresh added AJB 7/27/99
-; The norefresh keyword is used by atv_getstats, when a new image
-;   has just been read in, and by atv_shutdown.
-
 nplotall = pdata.nplot + ptext.nplot + pcon.nplot
 if (N_params() LT 1) then nerase = nplotall $
 else if (nerase GT nplotall) then nerase = nplotall
@@ -1751,7 +1763,6 @@ for ihistory=nplotall-nerase, nplotall-1 do begin
       ; Erase a contour plot
       pcon.nplot = pcon.nplot - 1
       iplot = pcon.nplot
-; AJB fixed following line by adding [iplot] below, 8/2/99
       ptr_free, pcon.z[iplot], pcon.x[iplot], pcon.y[iplot], $
         pcon.c_annotation[iplot], pcon.c_colors[iplot], $
         pcon.c_labels[iplot], pcon.c_linestyle[iplot], $
@@ -1776,9 +1787,6 @@ common atv_images
 
 widget_control, /hourglass    ; added by AJB 7/26/99
 
-; Major change 7/26/99 AJB:
-; display_image is now equal in size to the display viewport,
-;   the way it should have been done in the first place.
 display_image = bytarr(state.draw_window_size[0], state.draw_window_size[1])
 
 view_min = round(state.centerpix - $
@@ -1795,7 +1803,6 @@ tmp_image = congrid(scaled_image[view_min[0]:view_max[0], $
                                             view_min[1]:view_max[1]], $
                                             newsize[0], newsize[1])
 
-; AJB modifications 7/26/99 to fit tmp_image into display_image
 xmax = newsize[0] < (state.draw_window_size[0] - startpos[0])
 ymax = newsize[1] < (state.draw_window_size[1] - startpos[1])
 
@@ -1813,7 +1820,7 @@ tv, display_image
 atv_plotall
 
 wset, state.draw_window_id
-unblink_image = tvrd()     ; moved here by AJB 8/11/99
+unblink_image = tvrd()     ; moved here by AJB 8/11/99 to fix bug
 
 end
 
@@ -2029,8 +2036,6 @@ bb = b[a + bshift]
 
 tvlct, rr, gg, bb, 8
 
-;atv_cleartext
-
 state.brightness = brightness
 state.contrast = contrast
 
@@ -2086,7 +2091,6 @@ sig = stdev(main_image)
 
 state.max_value = (med + (10 * sig)) < max(main_image)
 
-; AJB modified 7/26/99 to test for med GT 0
 state.min_value = (med - (2 * sig))  > min(main_image)
 if (state.min_value LT 0 AND med GT 0) then begin
   state.min_value = 0.0
@@ -2156,22 +2160,27 @@ pro atv_rowplot
 common atv_state
 common atv_images
 
-if (not (xregistered('atv_lineplot'))) then begin
-    atv_lineplot_init
-endif
+;if (not (xregistered('atv_lineplot'))) then begin
+;    atv_lineplot_init
+;endif
+;
+;wset, state.lineplot_window_id
+;erase
 
-wset, state.lineplot_window_id
-erase
+view_min = round(state.centerpix - $
+                  (0.5 * state.draw_window_size / state.zoom_factor))
+view_max = round(view_min + state.draw_window_size / state.zoom_factor)
 
-plot, main_image[*, state.mouse[1]], $
-  xst = 3, yst = 3, psym = 10, $
+splot, main_image[*, state.mouse[1]], $
+  psym = 10, $
   title = strcompress('Plot of row ' + $
                       string(state.mouse[1])), $
   xtitle = 'Column', $
   ytitle = 'Pixel Value', $
-  color = 7   ; added by AJB 7/26/99, and in the following 3 routines
+  xrange = [view_min[0], view_max[0]]
+  color = 7 
 
-widget_control, state.lineplot_base_id, /clear_events
+;widget_control, state.lineplot_base_id, /clear_events
 
 end
 
@@ -2182,14 +2191,14 @@ pro atv_colplot
 common atv_state
 common atv_images
 
-if (not (xregistered('atv_lineplot'))) then begin
-    atv_lineplot_init
-endif
+;if (not (xregistered('atv_lineplot'))) then begin
+;    atv_lineplot_init
+;endif
+;
+;wset, state.lineplot_window_id
+;erase
 
-wset, state.lineplot_window_id
-erase
-
-plot, main_image[state.mouse[0], *], $
+splot, main_image[state.mouse[0], *], $
   xst = 3, yst = 3, psym = 10, $
   title = strcompress('Plot of column ' + $
                       string(state.mouse[0])), $
@@ -2197,7 +2206,7 @@ plot, main_image[state.mouse[0], *], $
   ytitle = 'Pixel Value', $
   color = 7
 
-widget_control, state.lineplot_base_id, /clear_events
+;widget_control, state.lineplot_base_id, /clear_events
         
 end
 
@@ -2311,7 +2320,8 @@ end
 pro atv_help
 common atv_state
 
-h = strarr(70)
+
+h = strarr(82)
 i = 0
 h[i] =  'ATV HELP'
 i = i + 1
@@ -2343,10 +2353,6 @@ h[i] =  ''
 i = i + 1
 h[i] =  'CONTROL PANEL ITEMS:'
 i = i + 1
-h[i] =  'Brightness:      fairly self-explanatory'
-i = i + 1
-h[i] = 'Contrast:        also fairly self-explanatory'
-i = i + 1
 h[i] = 'Min:             shows minimum data value displayed; click to modify'
 i = i + 1
 h[i] = 'Max:             shows maximum data value displayed; click to modify'
@@ -2355,9 +2361,17 @@ h[i] = 'Pan Window:      use mouse to drag the image-view box around'
 i = i + 1
 h[i] = ''
 i = i + 1
-h[i] = 'BUTTONS:'
+h[i] = 'MOUSE MODE SELECTOR:'
 i = i + 1
-h[i] = 'ZoomMode:        toggles zoom mode:'
+h[i] =  'Color:          sets color-stretch mode:'
+i = i + 1
+h[i] = '                    With mouse button down, drag mouse to change the color stretch.  '
+i = i + 1
+h[i] = '                    Move vertically to change contrast, and'
+i = i + 1
+h[i] = '                    horizontally to change brightness.'
+i = i + 1
+h[i] = 'Zoom:            sets zoom mode:'
 i = i + 1
 h[i] = '                    button1 = zoom in & center'
 i = i + 1 
@@ -2365,13 +2379,15 @@ h[i] = '                    button2 = center on current position'
 i = i + 1
 h[i] = '                    button3 = zoom out & center'
 i = i + 1
-h[i] = 'BlinkMode:       toggles blink mode:'
+h[i] = 'Blink:           sets blink mode:'
 i = i + 1
 h[i] = '                    press mouse button in main window to show blink image'
+i = i + 2
+h[i] = 'BUTTONS:'
 i = i + 1
 h[i] = 'Invert:          inverts the current color table'
 i = i + 1
-h[i] = 'ResetColor:      sets the sliders back to defaults'
+h[i] = 'ResetColor:      sets brightness and contrast back to default values'
 i = i + 1
 h[i] = 'AutoScale:       sets min and max to show data values around histogram peak'
 i = i + 1
@@ -2385,7 +2401,7 @@ h[i] = 'Zoom1:           sets zoom level to original scale'
 i = i + 1
 h[i] = 'Center:          centers image on display window'
 i = i + 1
-h[i] = 'SetBlink:        puts current image in blink buffer'
+h[i] = 'SetBlink:        saves current display as the blink image'
 i = i + 1
 h[i] = 'Done:            quits atv'
 i = i + 1
@@ -2442,6 +2458,13 @@ i = i + 1
 h[i] = 'atv_shutdown:   quits atv'
 i = i + 1
 h[i] = 'NOTE: If atv should crash, type atv_shutdown at the idl prompt.'
+i = i + 5
+h[i] = strcompress('ATV.PRO version '+state.version+' by Aaron J. Barth')
+i = i + 1
+h[i] = 'For full instructions, or to download the most recent version, go to:'
+i = i + 1
+h[i] = 'http://cfa-www.harvard.edu/~abarth/atv/atv.html'
+
 
 if (not (xregistered('atv_help'))) then begin
     help_base =  widget_base(/floating, $
@@ -2776,7 +2799,7 @@ if (not (xregistered('atv_mapphot'))) then begin
                          format = '("Object counts: ",g12.6)' )
     
     state.photresult_id = $
-      widget_label(eapphot_base, $
+      widget_label(mapphot_base, $
                    value = tmp_string2, $
                    uvalue = 'photresult', $
                    /frame)
@@ -2897,35 +2920,36 @@ if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') ) then begin
     endif
 endif
 
-; Added by AJB 7/27/99: if image is a string, read in the fits file
-; whose name is that string.
-
+; If image is a filename, read in the file
 if ( (n_params() NE 0) AND (size(image, /tname) EQ 'STRING') ) then begin
     fits_read, image, tmp_image
-
     if ( (size(tmp_image))[0] NE 2 ) then begin
         print, 'Error-- selected file is not a 2-D fits image!'
         junk = size( temporary(tmp_image))
         retall
     endif
-
     main_image = temporary(tmp_image)
-
+    imagename = image
 endif
 
 if ( (n_params() EQ 0) AND (not (xregistered('atv')))) then begin
-;    main_image = bytscl(dist(500,500)^2 * sin(dist(500,500)/2.)^2)
+;   Define default startup image 
     main_image = byte((findgen(500)*2-200) # (findgen(500)*2-200))
+    imagename = ''
 endif else begin
     scaled_image = 0
     display_image = 0
-; next line modified by AJB 7/27/99
-    if (size(image, /tname) NE 'STRING') then main_image = image
+    if (size(image, /tname) NE 'STRING') then begin
+; If user has passed atv a data array, read it into main_image.
+        main_image = image
+        imagename = ''
+    endif
 endelse
 
 if (not (xregistered('atv'))) then atv_startup
 
 atv_getstats
+atv_settitle, imagename
 
 ; check for command line keywords
 
@@ -2955,4 +2979,9 @@ state.zoom_factor = 1.0
 atv_displayall
 
 end
+
+
+
+
+
 

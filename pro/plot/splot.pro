@@ -27,6 +27,7 @@
 ; EXAMPLES:
 ;
 ; BUGS:
+;   Doesn't use the passed XRANGE, YRANGE properly yet...
 ;   Move around widgets to be more compact above plotting window.
 ;   Write splot_readfits.
 ;   Make POSITION= changeable based upon CHARSIZE.
@@ -105,7 +106,7 @@ end
 
 pro splot_startup
 
-   common splot_state, state
+   common splot_state, state, graphkeys
    common splot_images, main_image
    common splot_pdata, nplot, maxplot, plot_ptr
    common splot_wcs, astr, equinox
@@ -143,9 +144,29 @@ pro splot_startup
     base_pad: [0L, 0L]             , $ ; Padding around draw base
     pad: [0L, 0L]                  , $ ; Padding around draw widget
     headinfo_base_id: 0L           , $ ; headinfo base widget id
-    plotparam_base_id: 0L          , $ ; plotting parameter base widget id
-    box_xtitle_id: 0L                $ ;
+    plotparam_base_id: 0L            $ ; plotting parameter base widget id
    }
+
+; Trim this list for the time being... ???
+; How to deal with elements that are arrays?
+;   graphlist = ['BACKGROUND', 'CHARSIZE', 'XCHARSIZE', 'YCHARSIZE', $
+;    'CHARTHICK', 'CLIP', 'COLOR', 'FONT', 'XGRIDSTYLE', 'YGRIDSTYLE', $
+;    'LINESTYLE', 'XMARGIN', 'YMARGIN', 'XMINOR', 'YMINOR', 'NOCLIP', $
+;    'NORMAL', 'ORIENTATION', 'POSITION', 'PSYM', 'XSTYLE', 'YSTYLE', $
+;    'SUBTITLE', 'SYMSIZE', 'THICK', 'XTHICK', 'YTHICK', $
+;    'XTICKFORMAT', 'YTICKFORMAT', 'TICKLEN', 'XTICKLEN', 'YTICKLEN', $
+;    'XTICKNAME', 'YTICKNAME', 'XTICKS', 'YTICKS', 'XTICKV', 'YTICKV', $
+;    'TITLE', 'XTITLE', 'YTITLE']
+   graphlist = ['CHARSIZE', 'XCHARSIZE', 'YCHARSIZE', $
+    'CHARTHICK', 'XGRIDSTYLE', 'YGRIDSTYLE', $
+    'LINESTYLE', 'XMINOR', 'YMINOR', $
+    'PSYM', 'XSTYLE', 'YSTYLE', $
+    'SYMSIZE', 'THICK', 'XTHICK', 'YTHICK', $
+    'TITLE', 'XTITLE', 'YTITLE']
+   graphkeys = $
+    replicate( { box_id: 0L, $
+    keyword: '', value: ptr_new() }, N_elements(graphlist) )
+   graphkeys.keyword = graphlist
 
    nplot = 0
    maxplot = 5000
@@ -1084,11 +1105,13 @@ pro splot_refresh
    ; Display all plots
    wset, state.draw_window_id
    splot_plotall
+   splot_plotparam_refresh ; ???
 
    splot_gettrack
 
    ; prevent unwanted mouse clicks
    widget_control, state.draw_base_id, /clear_events
+
 
    return
 end
@@ -1202,11 +1225,16 @@ pro splot_plotparam_refresh
    common splot_state
    common splot_pdata
 
-   options = (*(plot_ptr[0])).options ; Test if exists first ???
+   if (nplot GT 0 AND xregistered('splot_plotparam')) then begin
+      options = (*(plot_ptr[0])).options ; Test if exists first ???
+      opnames = tag_names(options)
 
-   c = where(tag_names(options) EQ 'XTITLE', ct)
-   if (ct EQ 1) then $
-    widget_control, state.box_xtitle_id, set_value=options.(c[0])
+      for i=0, N_elements(graphkeys)-1 do begin
+         c = where(opnames EQ graphkeys[i].keyword, ct)
+         if (ct EQ 1) then $
+          widget_control, graphkeys[i].box_id, set_value=options.(c[0])
+      endfor
+   endif
 
    return
 end
@@ -1269,13 +1297,15 @@ pro splot_plotparam
                   uvalue = 'plotparam_base')
 
       tmp_string = string('',format='(a30)')
-      state.box_xtitle_id = $ ; ???
-       cw_field(plotparam_base, $
-                   /string, $
-                   /return_events, $
-                  title = 'XTITLE:', $
-                   uvalue = 'xtitle', $
-                   value = tmp_string)
+      for i=0, N_elements(graphkeys)-1 do begin
+         graphkeys[i].box_id = $ ; ???
+          cw_field(plotparam_base, $
+                      /string, $
+                      /return_events, $
+                      title = graphkeys[i].keyword+':', $
+                      uvalue = graphkeys[i].keyword, $
+                      value = tmp_string)
+      endfor
 
       plotparam_done = $
        widget_button(plotparam_base, $
@@ -1446,7 +1476,8 @@ end
 
 ;------------------------------------------------------------------------------
 
-pro soplot, x, y, autoscale=autoscale, xrange=xrange, yrange=yrange, $
+pro soplot, x, y, autoscale=autoscale, replot=replot, $
+ xrange=xrange, yrange=yrange, $
  position=position, _EXTRA=options
 
    common splot_state
@@ -1489,9 +1520,13 @@ pro soplot, x, y, autoscale=autoscale, xrange=xrange, yrange=yrange, $
       nplot = nplot + 1
 
       wset, state.draw_window_id
-      if (keyword_set(autoscale)) then begin
-         splot_autoscale_x
+
+      if (keyword_set(autoscale) AND NOT keyword_set(xrange)) then $
+       splot_autoscale_x
+      if (keyword_set(autoscale) AND NOT keyword_set(yrange)) then $
          splot_autoscale_y
+
+      if (keyword_set(replot)) then begin
          splot_plotall
       endif else begin
          splot_plot1plot, nplot-1
@@ -1540,7 +1575,8 @@ pro splot, x, y, _EXTRA=KeywordsForSOPLOT
    endelse
 
    serase
-   soplot, xplot, yplot, /autoscale, _EXTRA=KeywordsForSOPLOT
+   soplot, xplot, yplot, /autoscale, /replot, _EXTRA=KeywordsForSOPLOT
+   splot_plotparam_refresh
 
    return
 end
