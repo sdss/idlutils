@@ -53,7 +53,7 @@ pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl
       node = 95.d
       incl = stripe_to_incl(stripe)
    endif else begin
-      if (n_elements(node) NE 1 AND n_elements(incl) NE 1) then $
+      if (n_elements(node) EQ 0 AND n_elements(incl) EQ 0) then $
        message, 'Must specify either STRIPE or NODE,INCL'
    endelse
    if (n_elements(mu) NE n_elements(nu)) then $
