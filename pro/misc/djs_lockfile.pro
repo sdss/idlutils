@@ -64,7 +64,8 @@ function djs_lockfile, filename, lun=lun
          res = 0
       endif else begin
          res = 1
-         openw, lun, filename, /get_lun
+         if (arg_present(lun)) then $
+          openw, lun, filename, /get_lun, /append
       endelse
       end
    else: begin
