@@ -719,6 +719,7 @@ pro/plot/splot.pro -text
 pro/radprof/asinh2.pro -text
 pro/radprof/fast_fit_sersic.pro -text
 pro/radprof/fit_sersic.pro -text
+pro/radprof/maggies2lups.pro -text
 pro/radprof/profinterp.pro -text
 pro/radprof/seeing_radial.pro -text
 pro/radprof/sersic.pro -text

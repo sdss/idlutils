@@ -38,7 +38,10 @@
 ;------------------------------------------------------------------------------
 function sersic,radius_vals,amp,nsersic,r0
 
-val=amp*exp(-(radius_vals/r0)^(1./nsersic))
+exponent=(radius_vals/r0)^(1./nsersic)
+val=dblarr(n_elements(radius_vals))
+indx=where(exponent lt 1.e+30,count)
+if(count gt 0) then val[indx]=amp*exp(-exponent[indx])
 return,val
 
 end
