@@ -96,6 +96,7 @@ maskbits ZWARNING  3 NEGATIVE_MODEL
 maskbits ZWARNING  4 MANY_OUTLIERS
 maskbits ZWARNING  5 Z_FITLIMIT
 maskbits ZWARNING  6 NEGATIVE_EMISSION
+maskbits ZWARNING  7 UNPLUGGED
 
 #------------------------------------------------------------------------------
 
