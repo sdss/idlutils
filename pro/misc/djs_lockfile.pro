@@ -22,9 +22,17 @@
 ;               we would have just locked it.
 ;
 ; COMMENTS:
-;   We use a lock file, which has a single byte written to it, to indicate
-;   that FILENAME should be locked (as determined by any subsequent calls
-;   to this routine).  Unlock files with DJS_UNLOCKFILE.
+;   For Unix systems running IDL 5.4 or later, we use the SPAWN command
+;   to create a symbolic link from FILENAME.lock -> FILENAME.  This can
+;   be done atomically, such that it is impossible for two processes
+;   to build that same link at once.
+;
+;   For other operating systems or ealier versions of IDL (which do
+;   not allow SPAWN to return an error), we use a lock file which
+;   has a single byte written to it to indicate that FILENAME should
+;   be locked (as determined by any subsequent calls to this routine).
+;
+;   For all OS-es, unlock files with DJS_UNLOCKFILE.
 ;
 ; BUGS:
 ;
@@ -36,22 +44,45 @@
 ;-----------------------------------------------------------------------
 function djs_lockfile, filename, lun=lun
 
+   if (n_elements(filename) NE 1 OR size(filename,/tname) NE 'STRING') $
+    then begin
+      splog, 'FILENAME must be specified'
+      return, 0
+   endif
+
    lockfile = filename + '.lock'
 
-   openw, olun, lockfile, /append, /get_lun
-   if ((fstat(olun)).size EQ 0) then begin
-      writeu, olun, 1B
-      flush, olun ; Flush output immediately
-      res = 1
-      if (arg_present(lun)) then begin
-         openw, lun, filename, /get_lun
-      endif
-   endif else begin
-      res = 0
-   endelse
+   osfamily = !version.os_family
+   if (osfamily EQ 'unix' AND !version.release LT '5.4') then $
+    osfamily = 'other'
 
-   close, olun ; This will flush output to this file
-   free_lun, olun
+   case osfamily of
+   'unix': begin
+      spawn, '\ln -s ' + filename + ' ' + lockfile, $
+       spawnres, spawnerr
+      if (keyword_set(spawnerr)) then begin
+         res = 0
+      endif else begin
+         res = 1
+         openw, lun, filename, /get_lun
+      endelse
+      end
+   else: begin
+      openw, olun, lockfile, /append, /get_lun
+      if ((fstat(olun)).size EQ 0) then begin
+         writeu, olun, 1B
+         flush, olun ; Flush output immediately
+         res = 1
+         if (arg_present(lun)) then begin
+            openw, lun, filename, /get_lun
+         endif
+      endif else begin
+         res = 0
+      endelse
+      close, olun ; This will flush output to this file
+      free_lun, olun
+      end
+   endcase
 
    return, res
 end

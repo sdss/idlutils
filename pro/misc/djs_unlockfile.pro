@@ -20,9 +20,9 @@
 ; OUTPUTS:
 ;
 ; COMMENTS:
-;   We use a lock file, which has a single byte written to it, to indicate
-;   that FILENAME has been locked by DJS_LOCKFILE().  This routine deletes
-;   that file.
+;   We use a lock file, which is either a symbolic link or a file with
+;   a single byte written to it, to indicate that FILENAME has been
+;   locked by DJS_LOCKFILE().  This routine deletes that file.
 ;
 ; BUGS:
 ;
