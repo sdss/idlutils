@@ -4,7 +4,7 @@
 ; NAME: 
 ;	FXBOPEN
 ; Purpose     : 
-;	Open binary table extension in a disk FITS file for reading.
+;	Open binary table extension in a disk FITS file for reading or updating
 ; Explanation : 
 ;	Opens a binary table extension in a disk FITS file for reading.  The
 ;	columns are then read using FXBREAD, and the file is closed when done

@@ -20,13 +20,17 @@ FUNCTION  BIWEIGHT_MEAN,Y,SIGMA, WEIGHTs
 ; OPTIONAL OUTPUT ARGUMENTS:
 ;
 ;	Sigma = An outlier-resistant measure of the dispersion about the 
-;	      center, analogous to the standard deviation. The half-width of the 
-;             95% confidence interval = |T_CVF( .95, .7*(N-1) )*SIGMA/SQRT(N)|,
-;	      where N = number of points.  
+;	      center, analogous to the standard deviation. 
 ;
 ;	Weights = The weights applied to the data in the last iteration, 
 ;                 floating point vector
 ;
+; NOTES:
+;       Since a sample mean  scaled by sigma/sqrt(N), has a Student's T 
+;       distribution, the half-width of the  95% confidence interval for 
+;       the sample mean  can be determined as follows: 
+;          ABS( T_CVF( .975, .7*(N-1) )*SIGMA/SQRT(N) ) 
+;       where N = number of  points, and  0.975 = 1 - (1 - 0.95)/2. 
 ; PROCEDURES USED:
 ;       ROBUST_SIGMA()
 ; REVISION HISTORY
@@ -37,6 +41,8 @@ FUNCTION  BIWEIGHT_MEAN,Y,SIGMA, WEIGHTs
 ;		convergence criterion rather than the change in center/SIGMA.
 ;       Modified May 2002  Use MEDIAN(/EVEN)
 ;       Modified October 2002, Faster computation of weights 
+;       Corrected documentation on 95% confidence interval of mean 
+;                 P.Broos/W. Landsman   July 2003 
 ;-
 
   ON_ERROR,2
@@ -54,7 +60,7 @@ FUNCTION  BIWEIGHT_MEAN,Y,SIGMA, WEIGHTs
 
 ; Calculate the weights:
   dev = y-y0
-  sigma = robust_sigma( dev ) 
+  sigma = ROBUST_SIGMA( dev ) 
 
   if sigma lt EPS then begin
 ;    The median is IT. Do we need the weights?
