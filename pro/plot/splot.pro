@@ -1594,7 +1594,7 @@ pro splot, x, y, _EXTRA=KeywordsForSOPLOT
       yplot = y
    endelse
 
-   serase
+   serase, /norefresh
    soplot, xplot, yplot, /autoscale, /replot, _EXTRA=KeywordsForSOPLOT
    splot_plotparam_refresh
 
