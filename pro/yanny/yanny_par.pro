@@ -10,6 +10,7 @@
 ;
 ; INPUTS:
 ;   hdr        - Header lines in Yanny file, which are usually keyword pairs.
+;   keyname    - Keyword name of which to find its corresponding value
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -44,11 +45,14 @@ function yanny_par, hdr, keyname, count=count
    endif
 
    nhead = N_elements(hdr)
-   if (nhead EQ 0) then return, -1
+   if (nhead EQ 0) then begin
+      print, 'Header contains no elements'
+      return, 0
+   endif
 
    if (size(keyname, /tname) EQ 'UNDEFINED') then begin
-      print, 'keyname is undefined, pass a string'
-      return, ''
+      print, 'KEYNAME is undefined'
+      return, 0
    endif
 
    keylist = strarr(nhead)
