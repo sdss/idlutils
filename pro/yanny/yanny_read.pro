@@ -6,7 +6,7 @@
 ;   Read a Yanny parameter file.
 ;
 ; CALLING SEQUENCE:
-;   yanny_read, filename, [ pdata, comments=comments ]
+;   yanny_read, filename, [ pdata, comments=comments, /quick ]
 ;
 ; INPUTS:
 ;   filename   - Input file name for Yanny parameter file
@@ -23,6 +23,8 @@
 ;   comments   - All non-data lines.  These lines differ from the original
 ;                text only by removing trailing whitespace, and concatenating
 ;                any lines with backslashes at the end with the next line.
+;   quick      - Quicker read using READF, but fails if continuation lines
+;                are present.
 ;
 ; COMMENTS:
 ;
@@ -34,6 +36,9 @@
 ;   a continuation of that line onto the next.  For this reason, I wrote
 ;   yanny_readstring as a replacement, though this will only work if all
 ;   lines are <= 255 characters.
+;
+;   The reading could probably be sped up by setting a format string for
+; each structure to use in the read.
 ;
 ; PROCEDURES CALLED:
 ;   mrd_struct
@@ -136,7 +141,6 @@ function yanny_nextline, ilun
       nchar = strlen(sline)
    endwhile
 
-print,sline
    return, sline
 end
 ;------------------------------------------------------------------------------
@@ -148,11 +152,11 @@ pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
    if (pcount EQ 0) then begin
       pname = stname
       pdata = newptr
-      pnumel = 0
+      pnumel = 0L
    endif else begin
       pname = [pname, stname]
       pdata = [pdata, newptr]
-      pnumel = [pnumel, 0]
+      pnumel = [pnumel, 0L]
    endelse
 
    pcount = pcount + 1
@@ -160,7 +164,7 @@ pro add_pointer, stname, newptr, pcount, pname, pdata, pnumel
    return
 end
 ;------------------------------------------------------------------------------
-pro yanny_read, filename, pdata, comments=comments
+pro yanny_read, filename, pdata, comments=comments, quick=quick
 
    if (N_params() LT 1) then begin
       print, 'Syntax - yanny_read, filename, [ pdata, comments=comments ]'
@@ -187,10 +191,12 @@ pro yanny_read, filename, pdata, comments=comments
    nline = numlines(filename)
    get_lun, ilun
    openr, ilun, filename
+   rawline = ''
 
    while (NOT eof(ilun)) do begin
       qdone = 0 ; Set to 1 when this line is processed as a structure element
-      rawline = yanny_nextline(ilun)
+      if (keyword_set(quick)) then readf, ilun, rawline $
+       else rawline = yanny_nextline(ilun)
       sline = yanny_strip_commas(rawline)
       words = str_sep(sline, ' ') ; Divide into words based upon whitespace
       nword = N_elements(words)
@@ -200,7 +206,8 @@ pro yanny_read, filename, pdata, comments=comments
          if (words[0] EQ 'typedef' AND words[1] EQ 'struct') then begin
             ntag = 0
             yanny_add_comment, rawline, comments
-            rawline = yanny_nextline(ilun)
+            if (keyword_set(quick)) then readf, ilun, rawline $
+             else rawline = yanny_nextline(ilun)
             sline = yanny_strip_commas(rawline)
             while (strmid(sline,0,1) NE '}') do begin
                sline = strcompress(sline)
@@ -246,7 +253,8 @@ pro yanny_read, filename, pdata, comments=comments
                endif
 
                yanny_add_comment, rawline, comments
-               rawline = yanny_nextline(ilun)
+               if (keyword_set(quick)) then readf, ilun, rawline $
+                else rawline = yanny_nextline(ilun)
                sline = yanny_strip_commas(rawline)
             endwhile
 
