@@ -61,7 +61,7 @@ function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
          endif else if keyword_set(everyn) then begin
             nbkpts = (nx / everyn) > 1
             if (nbkpts EQ 1) then xspot = [0] $
-             else xspot = lindgen(nbkpts)*nx / (nbkpts-1)
+             else xspot = lindgen(nbkpts)*(nx / (nbkpts-1))
             bkpt = x[xspot]
          endif else message, 'No information for bkpts'
       endif
