@@ -78,7 +78,6 @@ goddard/README -text
 goddard/contents.txt -text
 goddard/data/Makefile -text
 goddard/data/README -text
-goddard/data/ebcasc.dat -text svneol=unset#unset
 goddard/news.txt -text
 goddard/pro/Makefile -text
 goddard/pro/README -text
