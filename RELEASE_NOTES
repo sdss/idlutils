@@ -64,7 +64,12 @@ data/Makefile: Add "objects" subdirectory.
 data/objects/ned-query-clusters-lt0.03.dat,ned-query-clusters-lt0.03.txt,
                process_ned_list: Data files added by Blanton for returning
                the locations of nearby clusters.
-data/sdss/sdssMaskbits.par: change Q_EYEBALL flag meanings
+data/sdss/sdssMaskbits.par: Change Q_EYEBALL flag meanings (Blanton).
+               Add SEGUE_SURVEY target flag for TTARGET, which was
+               serrupticiously added by Brian Yanny.  Note that this
+               also means that the primary target flags have different
+               meanings when this bit is nothing -- nothing I can do
+               about that dumb change.
 
 lib/Makefile: For "make clean", also remove ".dylib" files.
 
