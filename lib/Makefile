@@ -18,7 +18,5 @@ install :
 	- cp Makefile $(IDLUTILS_DIR)/lib
 
 clean :
-	- /bin/rm -f *~ core *.so
-
-
+	- /bin/rm -f *~ core *.so *.a
 
