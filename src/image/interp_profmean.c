@@ -24,7 +24,6 @@ static float rscale,pmscale;
 static float *radius=NULL;
 static float *aaradius=NULL;
 
-static int initialized_profinterp=0;
 static float *profmean=NULL;
 static float *profcum=NULL;
 static float *aaprofcum=NULL;
@@ -38,13 +37,14 @@ int init_interp_profmean(int in_nprof,
                           float in_rscale, 
                           float in_pmscale)
 {
-	int i,j;
+	int i,j,initialized_profinterp;
 
 	/* initialize some variables if necessary */
   rscale=in_rscale;
   pmscale=in_pmscale;
 	nprof=in_nprof;
 	nrad=in_nrad;
+  initialized_profinterp=0;
 	if(!initialized_profinterp) {
     radius=(float *) malloc((nrad+4)*sizeof(float));
     aaradius=(float *) malloc((nrad+4)*sizeof(float));

@@ -43,15 +43,21 @@
 ;   16-Jan-2002  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-pro interp_profmean,nprof,profmean,radius,counts, rscale=rscale
+pro interp_profmean,nprof,profmean,radius,counts, rscale=rscale, runit=runit
+
+if(n_params() lt 4) then begin
+    print,'Syntax - interp_profmean, nprof, profmean, radius, counts [, rscale=, runit=]'
+    return
+endif
 
 if(NOT keyword_set(rscale)) then rscale=1.e-11
 if(NOT keyword_set(pmscale)) then pmscale=0.1
+if(NOT keyword_set(runit)) then runit=1.
 if(NOT keyword_set(profradius)) then $
   profradius=[0.564190, 1.692569, 2.585442, 4.406462, $
               7.506054, 11.576202, 18.584032, 28.551561, $
               45.503910, 70.510155, 110.530769, 172.493530, $
-              269.519104, 420.510529, 652.500061]
+              269.519104, 420.510529, 652.500061]*runit
 nrad=n_elements(profradius)
 
 PI=3.14159265358979d
