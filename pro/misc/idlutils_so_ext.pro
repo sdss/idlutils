@@ -16,7 +16,7 @@ function idlutils_so_ext
 common com_idlutils_so_ext, so_ext
 
 if(NOT keyword_set(so_ext)) then begin
-    spawn,'uname',uname
+    spawn, 'uname', uname, /noshell
     uname=uname[0]
     so_ext='so'
     if(uname eq 'HP-UX') then so_ext='sl'
