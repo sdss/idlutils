@@ -959,7 +959,9 @@ case eventchar of
     '8': atv_move_cursor, eventchar
     '9': atv_move_cursor, eventchar
     'r': atv_rowplot
+    'R': atv_rowplot, /overplot
     'c': atv_colplot
+    'C': atv_colplot, /overplot
     's': atv_surfplot
     't': atv_contourplot
     'p': atv_apphot
@@ -3599,78 +3601,61 @@ end
 
 ;--------------------------------------------------------------------
 
-pro atv_rowplot
+pro atv_rowplot, overplot=overplot
 
 common atv_state
 common atv_images
-
-;if (not (xregistered('atv_lineplot', /noshow))) then begin
-;    atv_lineplot_init
-;endif
-;
-;atv_setwindow, state.lineplot_window_id
-;erase
-;
-;plot, main_image[*, state.coord[1]], $
-;  xst = 3, yst = 3, psym = 10, $
-;  title = strcompress('Plot of row ' + $
-;                      string(state.coord[1])), $
-;  xtitle = 'Column', $
-;  ytitle = 'Pixel Value', $
-;  color = 7 
-;
-;widget_control, state.lineplot_base_id, /clear_events
-;
-;atv_resetwindow
 
 view_min = round(state.centerpix - $
                   (0.5 * state.draw_window_size / state.zoom_factor))
 view_max = round(view_min + state.draw_window_size / state.zoom_factor)
 
-splot, main_image[*, state.coord[1]], $
-  psym = 10, $
-  title = strcompress('Plot of row ' + $
-                      string(state.coord[1])), $
-  xtitle = 'Column', $
-  ytitle = 'Pixel Value', $
-  xrange = [view_min[0], view_max[0]]
-  color = 7
-
+  if keyword_set(overplot) then begin 
+     soplot, main_image[*, state.coord[1]], $
+       psym = 10, $
+       title = strcompress('Plot of row ' + $
+                           string(state.coord[1])), $
+       xtitle = 'Column', $
+       ytitle = 'Pixel Value', $
+       xrange = [view_min[0], view_max[0]]
+     color = 7
+  endif else begin 
+     splot, main_image[*, state.coord[1]], $
+       psym = 10, $
+       title = strcompress('Plot of row ' + $
+                           string(state.coord[1])), $
+       xtitle = 'Column', $
+       ytitle = 'Pixel Value', $
+       xrange = [view_min[0], view_max[0]]
+     color = 7
+  end 
 end
 
 ;--------------------------------------------------------------------
 
-pro atv_colplot
+pro atv_colplot, overplot=overplot
 
 common atv_state
 common atv_images
 
-;if (not (xregistered('atv_lineplot', /noshow))) then begin
-;    atv_lineplot_init
-;endif
-;
-;atv_setwindow, state.lineplot_window_id
-;erase
-;
-;plot, main_image[state.coord[0], *], $
-;  xst = 3, yst = 3, psym = 10, $
-;  title = strcompress('Plot of column ' + $
-;                      string(state.coord[0])), $
-;  xtitle = 'Row', $
-;  ytitle = 'Pixel Value', $
-;  color = 7
-;widget_control, state.lineplot_base_id, /clear_events
-;        
-;atv_resetwindow
-
-splot, main_image[state.coord[0], *], $
-  xst = 3, yst = 3, psym = 10, $
-  title = strcompress('Plot of column ' + $
-                      string(state.coord[0])), $
-  xtitle = 'Row', $
-  ytitle = 'Pixel Value', $
-  color = 7
-
+  if keyword_set(overplot) then begin 
+     soplot, main_image[state.coord[0], *], $
+       xst = 3, yst = 3, psym = 10, $
+       title = strcompress('Plot of column ' + $
+                           string(state.coord[0])), $
+       xtitle = 'Row', $
+       ytitle = 'Pixel Value', $
+       color = 7
+  endif else begin 
+     splot, main_image[state.coord[0], *], $
+       xst = 3, yst = 3, psym = 10, $
+       title = strcompress('Plot of column ' + $
+                           string(state.coord[0])), $
+       xtitle = 'Row', $
+       ytitle = 'Pixel Value', $
+       color = 7
+  endelse 
+  
 end
 
 ;--------------------------------------------------------------------
