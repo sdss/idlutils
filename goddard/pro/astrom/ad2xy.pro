@@ -5,9 +5,9 @@ pro ad2xy, a, d, astr, x, y
 ; PURPOSE:
 ;     Compute X and Y from  RA and DEC and a FITS  astrometry structure
 ; EXPLANATION:
-;     A tangent (gnomonic) projection is computed directly; other projections 
-;     are computed using WCSXY2SPH.     AD2XY is meant to be used internal to 
-;     other procedures.   For interactive purposes, use ADXY.
+;     The procedure WCSXY2SPH is used to compute native coordinates, and the 
+;     inverse of the CD matrix is applied to obtain X and Y. AD2XY is meant to
+;     be used internal to other procedures.   For interactive purposes, use ADXY.
 ;
 ; CALLING SEQUENCE:
 ;     AD2XY, a ,d, astr, x, y   
@@ -25,7 +25,10 @@ pro ad2xy, a, d, astr, x, y
 ;        .CRVAL - 2 element vector giving R.A. and DEC of reference pixel 
 ;               in DEGREES
 ;        .CTYPE - 2 element vector giving projection types 
-;
+;        .LONGPOLE - scalar longitude of north pole (default = 180) 
+;        .PROJP1 - Scalar parameter needed in some projections
+;        .PROJP2 - Scalar parameter needed in some projections
+;;
 ; OUTPUTS:
 ;     X     - row position in pixels, scalar or vector
 ;     Y     - column position in pixels, scalar or vector
@@ -41,6 +44,7 @@ pro ad2xy, a, d, astr, x, y
 ;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
 ;     Consistent conversion between CROTA and CD matrix W. Landsman October 2000
+;     No special case for tangent projection W. Landsman June 2003
 ;-
  On_error,2
 
@@ -56,24 +60,17 @@ pro ad2xy, a, d, astr, x, y
  coord = strmid(ctype,0,4)
  reverse = ((coord[0] EQ 'DEC-') and (coord[1] EQ 'RA--')) or $
            ((coord[0] EQ 'GLAT') and (coord[1] EQ 'GLON')) or $
-           ((coord[0] EQ 'ELON') and (coord[1] EQ 'ELAT'))
+           ((coord[0] EQ 'ELAT') and (coord[1] EQ 'ELON'))
  if reverse then crval = rotate(crval,2)        ;Invert CRVAL?
 
- if  (strmid(ctype[0],5,3) EQ 'TAN') or (ctype[0] EQ '') then begin   
-         crval = crval/ radeg
-  
-         radif = a/RADEG - crval[0]
-         dec = d / radeg
-         h = sin(dec)*sin(crval[1]) + cos(dec)*cos(crval[1])*cos(radif)
-
-         xsi = cos(dec)*sin(radif)/h
-         eta = (sin(dec)*cos(crval[1]) -  cos(dec)*sin(crval[1])*cos(radif))/h
- 
-         xsi = xsi*RADEG
-         eta = eta*RADEG
-
- endif else wcssph2xy, a, d, xsi, eta, CTYPE = ctype, PROJP1 = astr.projp1, $
-        PROJP2 = astr.projp2, LONGPOLE = astr.longpole, CRVAL = crval
+ if (ctype[0] EQ '') then begin   
+      ctype = ['RA---TAN','DEC--TAN']
+      message,'No CTYPE specified - assuming TANgent projection',/INF
+ endif      
+     
+  wcssph2xy, a, d, xsi, eta, CTYPE = ctype, PROJP1 = astr.projp1, $
+        PROJP2 = astr.projp2, LONGPOLE = astr.longpole, CRVAL = crval, $
+        LATPOLE = astr.latpole
 
   cd = astr.cd
   cdelt = astr.cdelt
