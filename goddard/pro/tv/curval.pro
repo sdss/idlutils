@@ -48,7 +48,7 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
 ; MINIMUM IDL VERSION:
 ;       V5.0   (uses !MOUSE, square brackets)
 ; PROCEDURES CALLED:
-;       EXTAST, GSSSXYAD, RADEC, SXPAR(), UNZOOM_XY, XY2AD
+;       ADSTRING(), EXTAST, GSSSXYAD, RADEC, SXPAR(), UNZOOM_XY, XY2AD
 ; REVISION HISTORY:
 ;       Written,  K. Rhode,  STX  May 1990
 ;       Added keyword FILENAME  D. Alexander  June 1991
@@ -60,6 +60,7 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
 ;       Converted to IDL V5.0   W. Landsman 10-Dec-1997
 ;       Remove unneeded calls to obsolete !ERR   W. Landsman   December 2000
 ;       Replace remaining !ERR calls with !MOUSE.BUTTON W. Landsman Jan 2001
+;       Allow for non-celestial (e.g. Galactic) coordinates W. Landsman Apr 2003
 ;-
  On_error,2    ;if an error occurs, return to caller
 
@@ -89,26 +90,23 @@ if (!D.FLAGS and 256) EQ 256 then wshow,!D.WINDOW  ;Bring active window to foreg
 
 ; Print formats and header for different astrometry,image, BSCALE combinations
 
- cr = string("15b)
+ cr = string(13b)
  line0 = '  X     Y     Byte Inten'
  line1 = '  X     Y     Byte Inten   Value'
- line2 = '  X     Y     Byte Inten        RA                Dec   '
- line3 = '  X     Y   ByteInten   Value        RA             Dec         Flux' 
- line4 = '  X     Y   ByteInten   Value        RA             Dec' 
  line5 = '  X     Y   ByteInten   Value   Flux'
 
  f0 = "($,a,i4,2x,i4,6x,i4)"
- f1 = "($,a,i4,2x,i4,6x,i4,3x,a)"
- f2 = "($,a,i4,2x,i4,6x,i4,5x,i4,i4,1x,f6.2,3x,i4,i4,1x,f6.2)"
- f3 = "($,a,i4,2x,i4,2x,i4,3x,a,2x,i4,i4,1x,f6.2,2x,i4,i4,1x,f6.2,5x,e9.2)"
- f4 = "($,a,i4,2x,i4,2x,i4,3x,a,2x,i4,i4,1x,f6.2,2x,i4,i4,1x,f6.2)"
+ f1 = "($,a,i4,2x,i4,6x,i4,5x,a)"
+ f2 = "($,a,i4,2x,i4,6x,i4,7x,a,1x,a)"
+ f3 = "($,a,i4,2x,i4,2x,i4,7x,a,2x,a,1x,a,3x,e9.2)"
+ f4 = "($,a,i4,2x,i4,2x,i4,7x,a,1x,a,a)"
  f5 = "($,a,i4,2x,i4,2x,i4,3x,a,5x,e9.2)"
 
  g0 = "(a,i4,2x,i4,6x,i4)"
- g1 = "(a,i4,2x,i4,6x,i4,3x,a)"
- g2 = "(a,i4,2x,i4,6x,i4,5x,i4,i4,1x,f6.2,3x,i4,i4,1x,f6.2)"
- g3 = "(a,i4,2x,i4,2x,i4,3x,a,2x,i4,i4,1x,f6.2,2x,i4,i4,1x,f6.2,5x,e9.2)"
- g4 = "(a,i4,2x,i4,2x,i4,3x,a,2x,i4,i4,1x,f6.2,2x,i4,i4,1x,f6.2)"
+ g1 = "(a,i4,2x,i4,6x,i4,5x,a)"
+ g2 = "(a,i4,2x,i4,6x,i4,7x,a,1x,a)"
+ g3 = "(a,i4,2x,i4,2x,i4,7x,a,2x,a,1x,a,3x,e9.2)"
+ g4 = "(a,i4,2x,i4,2x,i4,7x,a,2x,a,1x,a)"
  g5 = "(a,i4,2x,i4,2x,i4,3x,a,5x,e9.2)"
 
 if (npar gt 0) then begin
@@ -136,7 +134,7 @@ endif
 
  if f_header then begin     
 
-  extast, hd, astr, noparams                 ;Extract astrometry structure
+  EXTAST, hd, astr, noparams                 ;Extract astrometry structure
   if (noparams ge 0) then f_astrom = 1b
 
   if f_image then begin
@@ -150,6 +148,17 @@ endif
     f_bscale = 1b
   endif
   endif
+ endif
+
+ if f_astrom GT 0 then begin
+  coord = strmid(astr.ctype,0,4)
+  coord = repchr(coord,'-',' ')
+  line2 = '  X     Y     Byte Inten        '  + coord[0] + '       ' +coord[1]
+  line3 = '  X     Y   ByteInten    Value       ' + coord[0]  + '         ' + $
+             coord[1] + '           Flux' 
+  line4 = '  X     Y   ByteInten     Value      '  + coord[0] + '          ' + $
+             coord[1]
+  sexig = strupcase(strmid(coord[0],0,2))  EQ 'RA' 
  endif
 
  print,'Press left or center mouse button for new output line,'
@@ -178,6 +187,10 @@ endif
    curtype = 5  & print,line5 & end       ;Image array + BSCALE
 
 endcase
+ if f_image then begin
+      dtype = imtype[imtype[0]+1]
+      if (dtype LT 4) or (dtype GE 12) then dfmt = '(I8)' else  dfmt = '(G8.3)'
+ endif
 
  LOOP: sv_err = !MOUSE.BUTTON
  !MOUSE.BUTTON = 0
@@ -204,8 +217,14 @@ endcase
         else:  xy2ad, x, y, astr, a, d            ; convert to ra and dec
         endcase
 
-      radec, a, d, ihr, imin, xsec, deg, mn, sc   ; change to hr,min format
-
+        if sexig then begin 
+            str = adstring(a,d,2)
+            a = strmid(str,1,13)
+            d  = strmid(str,14,13)
+        endif else begin
+            a = string(a,'(f10.2)') + '   '
+            d = string(d,'(f10.2)') + '   '
+        endelse
  endif
 
  x = round(x)  & y = round(y)
@@ -214,27 +233,27 @@ endcase
       if (x LT 0) or (x GE imtype[1]) or $
          (y LT 0) or (y GE imtype[2]) then value = 0 else $
       if f_imhd then value = hd[x,y] else value = im[x,y]
+      svalue = string(value,f=dfmt)
  endif
 
  if f_bscale  then flux = bscale*value + bzero  
-
  case curtype of
         0:  print,form=f0,cr,x,y,inten  
-        1:  print,form=f1,cr,x,y,inten,value 
-        2:  print,form=f2,cr,x,y,inten,ihr,imin,xsec,deg,mn,sc        
-        3:  print,form=f3,cr,x,y,inten,value,ihr,imin,xsec,deg,mn,sc,flux
-        4:  print,form=f4,cr,x,y,inten,value,ihr,imin,xsec,deg,mn,sc
-        5:  print,form=f5,cr,x,y,inten,value,flux
+        1:  print,form=f1,cr,x,y,inten,svalue 
+        2:  print,form=f2,cr,x,y,inten,a,d        
+        3:  print,form=f3,cr,x,y,inten,svalue,a,d,flux
+        4:  print,form=f4,cr,x,y,inten,svalue,a,d
+        5:  print,form=f5,cr,x,y,inten,svalue,flux
  endcase
 
 ; Were left or center buttons been pressed?
 
  if (cr_err GE 1) and (cr_err LE 3) and (cr_err NE sv_err) then begin  
-    print,form="($,a)",string("12b)   ; print a form feed
+    print,form="($,a)",string(10b)   ; print a form feed
     if keyword_set(filename) and (not fileflag) then begin      ; open file & print table header to file
         get_lun,lun
         openw,lun,filename
-        printf,lun,'CURVAL:   ',systime(0)      ;print time and date to file
+        printf,lun,'CURVAL:   ',systime()      ;print time and date to file
         case 1 of               ;different print statements for file, depending on parameters
 
         (f_image eq 0b) and (f_astrom eq 0b) : begin
@@ -260,14 +279,11 @@ endcase
     if keyword_set(filename) then begin
         case curtype of 
            0: printf, lun, form=g0,'', x, y, inten
-           1: printf, lun, form=g1,'', x, y, inten, value 
-           2: printf, lun, form=g2,'', x, y, inten, ihr, imin, xsec, $
-                        deg, mn, sc
-           3: printf, lun, form=g3,'', x, y, inten, value, ihr, imin, xsec, $
-                        deg, mn, sc, flux
-           4: printf, lun, form=g4,'', x, y, inten, value, ihr, imin, xsec, $
-                        deg, mn, sc
-           5: printf, lun, form=g5,'', x, y, inten, value, flux
+           1: printf, lun, form=g1,'', x, y, inten, svalue 
+           2: printf, lun, form=g2,'', x, y, inten, a, d
+           3: printf, lun, form=g3,'', x, y, inten, svalue, a, d, flux
+           4: printf, lun, form=g4,'', x, y, inten, svalue, a, d
+           5: printf, lun, form=g5,'', x, y, inten, svalue, flux
         endcase
     endif
  endif
