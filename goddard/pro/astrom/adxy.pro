@@ -61,7 +61,7 @@ pro adxy, hdr, a, d, x, y, PRINT = print	;Ra, Dec to X,Y
  
  if npar lt 3 then begin
    RD: print,'Coordinates must be entered with either 2 or 6 parameters'
-   print,'Either RA,DEC or  HR,MIN,SEC,DEG,MIN,SEC
+   print,'Either RA,DEC or  HR,MIN,SEC,DEG,MIN,SEC'
    inp = ''
    read,'ADXY: Enter coordinates: ',inp
    radec = getopt(inp,'F')

@@ -50,7 +50,7 @@ pro GSSSxyad, gsa, xin, yin, ra, dec, PRINT = print
 
   arg = N_params()
   if (arg lt 3) then begin
-    print,'Syntax - GSSSXYAD, GSSS_Astrom_struct, x, y, ra, dec, [/PRINT ]
+    print,'Syntax - GSSSXYAD, GSSS_Astrom_struct, x, y, ra, dec, [/PRINT ]'
     return
     endif
 
