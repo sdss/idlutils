@@ -96,17 +96,25 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       loval = fmean - sigrej * fsig
       hival = fmean + sigrej * fsig
       nlast = ngood
+
+      ; Convert the MASK to type float to speed it up.
       mask = float(image GT loval AND image LT hival)
       ngood = total(mask)
+
       if (ngood GE 2) then begin
-         fmean = total(image*mask)/ngood
-         fsig = sqrt(total((image-fmean)^2*mask)/(ngood-1))
+         fmean = total(image*mask) / ngood
+         fsig = sqrt( total((image-fmean)^2*mask) / (ngood-1) )
+         savemask = mask ; Save for computing the median using the same points
       endif
+
       iiter = iiter + 1
    endwhile
 
-   igood = where(mask GT 0.5)
-   fmedian = median(image[igood])
+   if (keyword_set(savemask)) then $
+    fmedian = median(image[where(savemask EQ 1)], /even) $
+   else $
+    fmedian = fmean
+
    return
 end
 ;------------------------------------------------------------------------------
