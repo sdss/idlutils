@@ -623,6 +623,7 @@ pro/misc/cpbackup.pro -text
 pro/misc/djs_batch.pro -text
 pro/misc/djs_filepath.pro -text
 pro/misc/djs_laxisgen.pro -text
+pro/misc/djs_laxisnum.pro -text
 pro/misc/djs_locate_file.pro -text
 pro/misc/djs_lockfile.pro -text
 pro/misc/djs_readcol.pro -text
