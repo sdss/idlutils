@@ -225,13 +225,16 @@
 ;       Version 1.2: Stephane Beland 2003-03-17
 ;               Fixed problem in creating dummy dataset when passing undefined
 ;               data, caused by an update to FXADDPAR routine.
-;
+;       Version 1.2.1 Stephane Beland 2003-09-10
+;               Exit gracefully if write priveleges unavailable
+;       Version 1.3 Wayne Landsman 2003-10-24
+;               Don't use EXECUTE() statement if on a virtual machine
 ;              
 ;-
 
 ; What is the current version of this program.
 function mwr_version
-    return, '1.2'
+    return, '1.3'
 end
     
 
@@ -992,24 +995,45 @@ end
 ; Modify the structure to put the pointer column in.
 function mwr_retable, input, vtypes
 
+
     offset = 0L
-    str = "output=replicate({";
-    comma =""
     tags = tag_names(input);
-    for i=0, n_elements(tags) -1 do begin
-       if vtypes[i].status then begin
-           str = str + comma +tags[i] + ":lonarr(2)"
-       endif else begin
-           str = str + comma + tags[i]+ ":input[0].("+strtrim(i,2)+")"
-       endelse
-       comma= ","
-    endfor
-    str = str + "},"+strtrim(n_elements(input),2)+")"
-    stat = execute(str)
-    if stat eq 0 then begin
-        print,'MWRFITS: Error: Unable to create temporary structure for heap'
-       return, 0
-    endif
+    noexecute = 0b
+    if !VERSION.RELEASE GE '6.0' then if lmgr(/vm) then noexecute = 1b
+
+; If on a Virtual Machine, then the EXECUTE statement cannot be used
+    if noexecute then begin 
+      if vtypes[0].status then begin
+        output = CREATE_STRUCT(tags[0],lonarr(2))
+      endif else begin
+         output = CREATE_STRUCT(tags[0],input[0].(0))
+      endelse
+      for i=1, n_elements(tags) -1 do begin
+         if vtypes[i].status then begin
+           output = CREATE_STRUCT(temporary(output), tags[i], lonarr(2))
+         endif else begin
+           output = CREATE_STRUCT(temporary(output), tags[i], input[0].(i))
+         endelse
+      endfor
+      output = replicate(temporary(output), N_elements(input) )
+    endif else begin
+       str = "output=replicate({";
+       comma =""
+       for i=0, n_elements(tags) -1 do begin
+          if vtypes[i].status then begin
+             str = str + comma +tags[i] + ":lonarr(2)"
+          endif else begin
+             str = str + comma + tags[i]+ ":input[0].("+strtrim(i,2)+")"
+          endelse
+          comma= ","
+       endfor
+      str = str + "},"+strtrim(n_elements(input),2)+")"
+      stat = execute(str)
+      if stat eq 0 then begin
+         print,'MWRFITS: Error: Unable to create temporary structure for heap'
+         return, 0
+      endif
+    endelse
 
     for i=0, n_elements(tags)-1 do begin
        if vtypes[i].status then begin
@@ -1618,7 +1642,7 @@ pro mwrfits, xinput, file, header,              $
         on_ioerror, not_found
         openr, lun, file, /get_lun
         free_lun, lun
-        on_ioerror, null
+        on_ioerror, open_error
         if !version.os eq 'vms' then openu, lun, file, 2880, /block, /none, /get_lun, /append $
         else openu, lun, file, /get_lun, /append
         bof = 0
@@ -1626,10 +1650,11 @@ pro mwrfits, xinput, file, header,              $
     endif
 
   not_found:
-    on_ioerror, null
+    on_ioerror, open_error
     if !version.os eq 'vms' then openw, lun, file, 2880, /block, /none, /get_lun $
                             else openw, lun, file, /get_lun
     bof = 1
+    on_ioerror, null
 
   finished_open:
 
@@ -1687,6 +1712,7 @@ pro mwrfits, xinput, file, header,              $
   open_error:
     on_ioerror, null
     print, 'MWRFITS Error: Cannot open output: ', file
+	 print,!ERROR_STATE.SYS_MSG
     if n_elements(lun) gt 0 then free_lun, lun
     
     return
