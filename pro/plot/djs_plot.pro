@@ -27,7 +27,7 @@
 ;-
 ;-----------------------------------------------------------------------
 pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
- color=color, psym=psym, symsize=symsize, _EXTRA=KeywordsForPlot
+ color=color, psym=psym, symsize=symsize, nodata=nodata, _EXTRA=KeywordsForPlot
 
    ; If X values don't exist, then create them as PLOT or OPLOT would do
    npt = N_elements(x)
@@ -47,8 +47,10 @@ pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
 ;    title=title_tex, _EXTRA=KeywordsForPlot
    plot, xtmp, ytmp, xtitle=xtitle_tex, ytitle=ytitle_tex, $
     title=title_tex, _EXTRA=KeywordsForPlot, /nodata
-   djs_oplot, xtmp, ytmp, color=color,psym=psym, symsize=symsize, $
-    _EXTRA=KeywordsForPlot
+
+   if (NOT keyword_set(nodata)) then $
+    djs_oplot, xtmp, ytmp, color=color,psym=psym, symsize=symsize, $
+     _EXTRA=KeywordsForPlot
 
    return
 end 
