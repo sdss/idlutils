@@ -38,13 +38,14 @@ if [ $PRODVERS  != "cvs" ] && [ `echo $PRODVERS | head -1c` != "v" ] ; then
 fi
 
 # Set up "sdsscvs" if it exists as a product.
+# Note that the "setup" Fermi-UPS command would already need to be present.
 
-setup sdsscvs
-if [ -z "$CVSROOT" ] ; then
-   echo "Setting CVSROOT and CVS_RSH to default locations at Fermi"
-   CVSROOT=cvsuser@sdss.fnal.gov:/cvs/sdss
-   CVS_RSH=ssh
-fi
+# setup sdsscvs
+# if [ -z "$CVSROOT" ] ; then
+#    echo "Setting CVSROOT and CVS_RSH to default locations at Fermi"
+#    CVSROOT=cvsuser@sdss.fnal.gov:/cvs/sdss
+#    CVS_RSH=ssh
+# fi
 
 # Make a temporary directory for exporting the code, and make certain
 # that we can write to it.
