@@ -40,6 +40,9 @@ src/image/idl_photfrac.c, p_cisi.c, p_midpnt.c, p_polint.c, p_qromo.c,
                p_utils.c, ph.h, photfrac.c, test_photfrac.c:
                New tools added by Blanton for band-limited aperature
                photometry (as done by Lupton in PHOTO).
+src/mangle1.2/Makefile: For "make install", copy the source code into
+               the install directory.  This isn't necessary, but we
+               conventionally do it anyway.
 src/mangle1.2/mrb_balkanize.c, mwrmask.c: Destroy the polygons as they
                stream out, so that we try to conserve total memory as
                the C outputs are read into the IDL code.
