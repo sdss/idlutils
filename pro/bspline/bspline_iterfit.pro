@@ -41,6 +41,7 @@
 ;   fullbkpt   - If OLDSET is not specified, then the break points are
 ;                chosen with a call to BSPLINE_BKPTS() which can be returned
 ;                with this keyword.
+;   yfit       - B-spline fit evaluated at each data point.
 ;
 ; COMMENTS:
 ;   Data points can be masked either by setting their weights to zero
@@ -100,13 +101,15 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    endif
    if (n_elements(maxiter) EQ 0) then maxiter = 10
 
+   yfit = 0 * ydata ; Default return values
+
    if (NOT keyword_set(invvar)) then begin
       var = variance(ydata)
       if (var EQ 0) then var = 1
       invvar = 0.0 * ydata + 1.0/var
    endif
 
-   if NOT keyword_set(outmask) then outmask = (invvar EQ invvar)
+   outmask = make_array(size=size(invvar), /byte) + 1B
 
    maskwork = outmask * (invvar GT 0)
    these = where(maskwork, nthese)
@@ -206,7 +209,6 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
          ; Iterate the fit -- next rejection iteration.
          qdone = djs_reject(ywork, yfit, invvar=invwork, inmask=inmask, $
           outmask=maskwork, upper=upper, lower=lower, _EXTRA=EXTRA)
-
       endif
 
    endwhile
