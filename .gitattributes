@@ -789,6 +789,7 @@ pro/healpix/heal_rebin.pro -text
 pro/healpix/healcart_ind.pro -text
 pro/healpix/healgen.pro -text
 pro/healpix/healgen_lb.pro -text
+pro/healpix/ishealpix.pro -text
 pro/healpix/map_nest2ring.pro -text
 pro/healpix/map_ring2nest.pro -text
 pro/image/djs_maskinterp.pro -text
