@@ -1,4 +1,4 @@
-#$Id: makefile,v 1.2 1999-10-14 09:35:28 schlegel Exp $
+#$Id: makefile,v 1.3 1999-10-22 21:53:07 sburles Exp $
 #
 #  Copyright (c) 1988-1998, Research Systems Inc.  All rights reserved.
 #  This software includes information which is proprietary to and a
@@ -93,7 +93,7 @@ objs = arrmedian.o arravsigclip.o arravsigmask.o \
 
 libmath.$(SO_EXT): $(objs)
 	$(LD) $(X_LD_FLAGS) -o ../lib/libmath.$(SO_EXT) $(objs)
-	nm -s ../lib/libmath.$(SO_EXT)
+#	nm -s ../lib/libmath.$(SO_EXT)
 
 tidy :
 	rm -f *.o

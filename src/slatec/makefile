@@ -1,4 +1,4 @@
-#$Id: makefile,v 1.1 1999-10-15 06:43:29 scott Exp $
+#$Id: makefile,v 1.2 1999-10-22 21:53:08 sburles Exp $
 #
 #  Copyright (c) 1988-1998, Research Systems Inc.  All rights reserved.
 #  This software includes information which is proprietary to and a
@@ -17,14 +17,14 @@
 SHELL=/bin/sh
 # 	The following macro might need to be edited if the location
 #	of IDL is not the standard location on your system.
-IDL_DIR = /usr/local/rsi/idl
+#IDL_DIR = /usr/local/rsi/idl
 
 
 # The following macros establish general defaults. They are overridden
 # in the "all" rule as needed to satisfy a given platform's requirements.
 
 CC		= cc
-C_FLAGS		= -I$(IDL_DIR)/external -c $(CFLAGS) -g
+C_FLAGS		= -I$(IDL_DIR)/external -c $(CFLAGS) 
 LD 		= ld
 SHELL		= /bin/sh
 #platform specific C compiler flags (redefined below)
@@ -33,13 +33,6 @@ X_CFLAGS	=
 X_LD_FLAGS	=
 
 SO_EXT		=so
-
-.c.o :
-	$(CC) $(C_FLAGS) $(X_CFLAGS) $*.c
-
-.f.o :
-	$(F77) $(C_FLAGS) $*.f
-
 
 # The following is the default entry point. This section will determine
 # what system we are on, set the correct flags and call this same makefile
@@ -73,7 +66,7 @@ all :
 		"SO_EXT=so" \
 		"CC=cc" \
 		"LD=ld" \
-		"X_CFLAGS=-32 -KPIC" \
+		"X_CFLAGS=-32 -KPIC -o32" \
 		"X_LD_FLAGS=-shared -32";; \
 	"OSF1" )  make libslatecidl.$(SO_EXT) \
 		"SO_EXT=so" \
@@ -84,11 +77,20 @@ all :
 		"SO_EXT=so" \
 		"CC=gcc" \
 		"f77=g77" \
-		"LD=ld" \
+		"LD=g77" \
 		"X_CFLAGS=-fPIC -g -Wall" \
 		"X_LD_FLAGS=-shared" ;;\
 	*) echo "This system is not supported" ;; \
 	esac
+
+
+.c.o :
+	$(CC) $(C_FLAGS) $(X_CFLAGS) $*.c
+
+.f.o :
+	$(F77) $(C_FLAGS) $(X_CFLAGS) $*.f
+
+
 
 objs = bint4.o bndacc.o bndsol.o bnfac.o bnslv.o bsplvn.o bspvd.o bspvn.o \
 bvalu.o chkder.o csevl.o d1mach_Linux.o dasum.o daxpy.o dbint4.o dbintk.o dbndac.o \
@@ -106,7 +108,7 @@ sscal.o ssort.o sswap.o xercnt.o xerhlt.o xermsg.o xerprn.o xersve.o \
 xgetua.o xsetf.o 
 
 libslatecidl.$(SO_EXT): $(objs)
-	g77 $(X_LD_FLAGS) -o ../../lib/libslatecidl.$(SO_EXT) $(objs) 
+	$(LD) $(X_LD_FLAGS) -o ../../lib/libslatecidl.$(SO_EXT) $(objs) 
 #	nm -s ../../lib/libslatecidl.$(SO_EXT)
 
 tidy :
