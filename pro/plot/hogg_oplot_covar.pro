@@ -14,6 +14,7 @@
 ; OPTIONAL INPUTS:
 ;   nsigma  - plot n-sigma ellipse (default to 1)
 ;   color   - color or vector of [N] colors
+;   thick   - line thickness or vector of [N] line thicknesses
 ;   [keywords for IDL plot]
 ; COMMENTS:
 ;   Allows color to be a [N] array.
@@ -22,10 +23,11 @@
 ;-
 ;-----------------------------------------------------------------------
 pro hogg_oplot_covar,x,y,incovar,color=color,nsigma=nsigma,fill=fill, $
-                     _EXTRA=KeywordsForPlot
+                     thick=thick,_EXTRA=KeywordsForPlot
 
 ; set defaults, etc
-if NOT keyword_set(color) then color = !p.color
+if NOT keyword_set(color) then color= !p.color
+if NOT keyword_set(thick) then thick= !p.thick
 ndata= n_elements(x)
 x= reform([x],ndata)
 y= reform([y],ndata)
@@ -38,6 +40,9 @@ endelse
 ncolor= N_elements(color)
 if ncolor EQ 1 then icolor= intarr(ndata)+djs_icolor(color) $
 else icolor= djs_icolor(color)
+nthick= N_elements(thick)
+if nthick EQ 1 then ithick= fltarr(ndata)+thick $
+else ithick= thick
 if NOT keyword_set(nsigma) then nsigma= 1D0
 
 ; set up useful vectors
@@ -62,7 +67,7 @@ for ii=0L,ndata-1L do begin
     if keyword_set(fill) then $
       polyfill, xxx,yyy,color=icolor[ii],noclip=0 $
     else $
-      oplot, xxx,yyy,color=icolor[ii],_EXTRA=KeywordsForPlot
+      oplot, xxx,yyy,color=icolor[ii],thick=ithick[ii],_EXTRA=KeywordsForPlot
 endfor
 return
 end
