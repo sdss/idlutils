@@ -3,7 +3,7 @@ echo "OS type detected: "`uname`
 case `uname` in
 	"SunOS") if [  -d /proc ]; then
 			SO_EXT=so
-			X_CFLAGS="-K pic"
+			X_CFLAGS="-KPIC"
 			X_LD_FLAGS=-G
 		fi
 	;;
