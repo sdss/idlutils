@@ -23,43 +23,88 @@
 ;   2002-Nov-26   Written by Douglas Finkbeiner, Princeton
 ;
 ;----------------------------------------------------------------------
-function create_usnob10struct, n
+function create_usnob10struct, n, simple=simple
 
 ; Similar to the ASCII tables returned by database queries
 
-  ftemp = create_struct( $
-                         'ra',  0.0D, $   ; [deg] (J2000)
-                         'dec', 0.0D, $
-                         'sra', 0, $      ; [mas]
-                         'sde', 0, $
-                         'epoch', 0.0, $  ; [yr]
-                         'mura', 0, $     ; [mas/yr]
-                         'mudec', 0, $
-                         'muprob', 0B, $
-                         'muflag', 0B, $
-                         'smura', 0, $    ; [mas/yr]
-                         'smude', 0, $
-                         'sFitRA', 0, $   ; [mas]
-                         'sFitDE', 0, $
-                         'NFitPt', 0B, $
-                         'B1', 0.0, $   ; [mag]
-                         'R1', 0.0, $
-                         'B2', 0.0, $
-                         'R2', 0.0, $
-                         'I2', 0.0)
-  
+  if keyword_set(simple) then begin 
+
+     ftemp = create_struct( $
+                            'ra',  0.0D, $   ; [deg] (J2000)
+                            'dec', 0.0D, $
+                            'sra', 0, $      ; [mas]
+                            'sde', 0, $
+                            'epoch', 0.0, $  ; [yr]
+                            'mura', 0, $     ; [mas/yr]
+                            'mudec', 0, $
+                            'muprob', 0B, $
+                            'muflag', 0B, $
+                            'smura', 0, $    ; [mas/yr]
+                            'smude', 0, $
+                            'sFitRA', 0, $   ; [mas]
+                            'sFitDE', 0, $
+                            'NFitPt', 0B, $
+                            'B1', 0.0, $     ; [mag]
+                            'R1', 0.0, $
+                            'B2', 0.0, $
+                            'R2', 0.0, $
+                            'I2', 0.0)
+  endif else begin 
+     
+     ftemp = create_struct( $
+                            'ra',  0.0D, $   ; [deg] (J2000)
+                            'dec', 0.0D, $
+                            'sra', 0, $      ; [mas]
+                            'sde', 0, $
+                            'epoch', 0.0, $  ; [yr]
+                            'mura', 0, $     ; [mas/yr]
+                            'mudec', 0, $
+                            'muprob', 0B, $
+                            'muflag', 0B, $
+                            'smura', 0, $    ; [mas/yr]
+                            'smude', 0, $
+                            'sFitRA', 0, $   ; [mas]
+                            'sFitDE', 0, $
+                            'NFitPt', 0B, $
+                            'mag', fltarr(5), $     ; [mag] B1,R1,B2,R2,I2
+                            'FldID', intarr(5), $   ; 4-digit field ID
+                            'SG', bytarr(5), $      ; star/galaxy sep (0-11)
+                            'Fldepoch', fltarr(5) ) ; field epoch
+  endelse 
+
   usnostruct = replicate(ftemp, n)
   
   return, usnostruct
 end
 
 
-function usnob10_extract, data
+
+pro usnob10_extract_mag, data, ind, str
+
+  filter = ['B1', 'R1', 'B2', 'R2', 'I2']
+  arr = transpose(data[5+ind, *])
+  mag   = (arr mod 10000L) * 0.01
+  magind = where(tag_names(str) eq filter[ind], simple)
+
+  if simple then begin 
+     str.(magind) = mag
+     return
+  endif 
+
+  str.mag[ind]   = mag
+  str.fldid[ind] = (arr mod 100000000L) / 10000L
+  str.sg[ind]    = (arr / 100000000L)
+  return
+end
+
+
+
+function usnob10_extract, data, simple=simple
 
 ; -------- create empty structure  
   if size(data, /n_dim) EQ 1 then n = 1 else $
     n = (size(data,/dimens))[1]
-  a = create_usnob10struct(n)
+  a = create_usnob10struct(n, simple=simple)
 
 ; -------- fill structure
 
@@ -84,20 +129,7 @@ function usnob10_extract, data
   a.sde    = (sig mod 1000000L)/1000L
   a.epoch  = (sig mod 1000000000L)/1000000L *0.1 + 1950
 
-  mag = transpose(data[5, *])
-  a.b1   = (mag mod 10000L) * 0.01
-
-  mag = transpose(data[6, *])
-  a.r1   = (mag mod 10000L) * 0.01
-
-  mag = transpose(data[7, *])
-  a.b2   = (mag mod 10000L) * 0.01
-
-  mag = transpose(data[8, *])
-  a.r2   = (mag mod 10000L) * 0.01
-
-  mag = transpose(data[9, *])
-  a.i2   = (mag mod 10000L) * 0.01
+  for ind=0, 4 do usnob10_extract_mag, data, ind, a
 
   return, a
 end
