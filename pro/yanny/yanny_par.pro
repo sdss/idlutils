@@ -6,7 +6,7 @@
 ;   Obtain the value of a parameter in the header of a Yanny file.
 ;
 ; CALLING SEQUENCE:
-;   result = yanny_par( hdr, keyname, [count=count] )
+;   result = yanny_par( hdr, keyname, [count=, indx= ] )
 ;
 ; INPUTS:
 ;   hdr        - Header lines in Yanny file, which are usually keyword pairs.
@@ -19,7 +19,10 @@
 ;                array of strings; return '' if parameter not found
 ;
 ; OPTIONAL OUTPUTS:
-;   count      - Return the number of parameters found
+;   count      - Return the number of parameters found.  There may be more
+;                returned values than INDX, if there are several values on
+;                the same line.
+;   indx       - Index of the lines that match (0-indexed); -1 for no match.
 ;
 ; COMMENTS:
 ;   This routine is meant to be analogous to the Goddard function SXPAR()
@@ -38,7 +41,7 @@
 ;   02-Nov-1999  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-function yanny_par, hdr, keyname, count=count
+function yanny_par, hdr, keyname, count=count, indx=indx
 
    count = 0
 
@@ -75,6 +78,9 @@ function yanny_par, hdr, keyname, count=count
          if (NOT keyword_set(result)) then result = result1 $
           else result = [result, result1]
       endfor
+      ; If the result has only 1 element, then return a scalar.
+      count = n_elements(result)
+      if (count EQ 1) then result = result[0]
       return, result
    endelse
 
