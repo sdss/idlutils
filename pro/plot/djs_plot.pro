@@ -25,7 +25,17 @@
 pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
  _EXTRA=KeywordsForPlot
 
-   plot, x, y, xtitle=TeXtoIDL(xtitle), ytitle=TeXtoIDL(ytitle), $
+   ; If X values don't exist, then create them as PLOT or OPLOT would do
+   npt = N_elements(x)
+   if (keyword_set(y)) then begin
+      xtmp = x
+      ytmp = y
+   endif else begin
+      xtmp = lindgen(npt)
+      ytmp = x
+   endelse
+
+   plot, xtmp, ytmp, xtitle=TeXtoIDL(xtitle), ytitle=TeXtoIDL(ytitle), $
     title=TeXtoIDL(title), _EXTRA=KeywordsForPlot
 
    return
