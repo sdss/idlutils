@@ -37,10 +37,11 @@ newpoly.weight=poly1.weight
 newpoly.use_caps=(poly1.use_caps+ishft(poly2.use_caps,poly1.ncaps))
 set_use_caps,newpoly,list,/add
 newpoly.str=garea(newpoly)
+str=newpoly.str
 
 if(NOT keyword_set(noreturn)) then $
-  return,newpoly $
-else $
-  return,1
+  return,newpoly 
+destruct_polygon,newpoly
+return,(str gt 0.)
 
 end
