@@ -18,7 +18,7 @@
 ;   where TOPLEVEL is the last directory in the environment variable
 ;   $IDLUTILS_DIR.  For example, if you are using a version of the code
 ;   in the directory '/u/schlegel/idlutils/v0_0', then this returns
-;   'NOCVS: v0_0'.
+;   'NOCVS:v0_0'.
 ;
 ; BUGS:
 ;
@@ -44,9 +44,9 @@ function idlutils_version
       if (dirname NE '') then begin
          words = str_sep(dirname,'/')
          nword = N_elements(words)
-         vers = 'NOCVS: ' + words[nword-1]
+         vers = 'NOCVS:' + words[nword-1]
       endif else begin
-         vers = 'NOCVS: Unknown'
+         vers = 'NOCVS:Unknown'
       endelse
    endelse
 
