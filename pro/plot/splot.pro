@@ -535,16 +535,16 @@ pro splot_gettrack
     (state.mouse[1] - ydev0) * yphysize / ydevsize + state.yrange[0]
 
    loc_string = strcompress( string(state.mphys[0], state.mphys[1]) )
+   widget_control, state.location_bar_id, set_value=loc_string
+
    if keyword_set(state.plugin) then begin 
       coord0 = state.mphys[0]
       coord1 = state.mphys[1]
       command = 'plugin_string='+state.plugin+'(coord0,coord1)'
       result = execute(command)
       if result NE 1 then plugin_string = 'Plugin failed'
+      widget_control, state.comments_text_id, set_value=plugin_string
    endif
-
-   widget_control, state.location_bar_id, set_value=loc_string
-   widget_control, state.comments_text_id, set_value=plugin_string
 
    return
 end
