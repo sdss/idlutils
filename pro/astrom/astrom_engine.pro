@@ -22,8 +22,10 @@
 ; OPTIONAL INPUTS:
 ;   search_rad   - Unused ???
 ;   search_scale - Unused ???
-;   search_angle - ???
-;   poserr       - ???
+;   search_angle - If set, then search for rotations offset by +/-SEARCH_ANGLE
+;                  relative to the input astrometric guess.
+;   poserr       - Maximum position error in CCD coordinates; default to 1.
+;                  No stars will be matched at distances further than this.
 ;
 ; OUTPUTS:
 ;   gsa_out    - Output GSSS structure with astrometric solution;
@@ -65,6 +67,7 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
     message, 'Must pass gsa structure with initial guess'
 
    if (NOT arg_present(radial)) then radial = 0B
+   if (NOT keyword_set(poserr)) then poserr = 1.0
 
    ;----------
    ; Set default return values
@@ -80,14 +83,8 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
 
    xsep = (max(xpos) - min(xpos)) > poserr
    ysep = (max(ypos) - min(ypos)) > poserr
-   maxsep = poserr + 0.6 * sqrt(xsep^2 + ysep^2) / !radeg
-   binsz = 0.5 * maxsep
+   binsz = 0.5 * (poserr + 0.6 * sqrt(xsep^2 + ysep^2) / !radeg)
    dmax = xsep > ysep
-
-; These are some typical values ???
-;maxsep = 25
-;binsz = 5L
-;dmax = 2000L
 
    gsa1 = gsa_in
    gsssadxy, gsa1, catlon, catlat, catx, caty
@@ -170,29 +167,14 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
    cat.x = catx
    cat.y = caty
 
-   gsa1 = astrom_tweak(cat, im, maxsep, gsa1, errflag=errflag, nmatch=nmatch)
-
-   ; Hardwired ???
-   maxrad = [1000, 1200, 2000]
-
-   if (NOT keyword_set(errflag)) then $
-    gsa1 = astrom_tweak(cat, im, maxsep/2, gsa1, radial=radial, $
-     maxrad=maxrad[0], errflag=errflag, nmatch=nmatch)
-
-   if (NOT keyword_set(errflag)) then $
-    gsa1 = astrom_tweak(cat, im, maxsep/4., gsa1, radial=radial, $
-     maxrad=maxrad[1], errflag=errflag, nmatch=nmatch)
-
-   if (NOT keyword_set(errflag)) then $
-    gsa1 = astrom_tweak(cat, im, maxsep/8., gsa1, radial=radial, $
-     errflag=errflag, nmatch=nmatch)
-
-   if (NOT keyword_set(errflag)) then $
-    gsa1 = astrom_tweak(cat, im, maxsep/8., gsa1, radial=radial, $
-     errflag=errflag, catind=catind, obsind=obsind, nmatch=nmatch)
+   ; Call twice, since more stars may be matched on the 2nd call.
+   gsa1 = astrom_tweak(cat, im, gsa1, maxsep=poserr, errflag=errflag, $
+    nmatch=nmatch, radial=radial)
+   gsa1 = astrom_tweak(cat, im, gsa1, maxsep=poserr, errflag=errflag, $
+    nmatch=nmatch, radial=radial)
 
    if (errflag NE 0) then begin
-      splog, 'XY shift FAILED in astrom_tweak'
+      splog, 'WARNING: XY shift FAILED in astrom_tweak'
       return, 0
    endif
 
