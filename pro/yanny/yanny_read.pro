@@ -412,6 +412,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    if (err NE 0) then begin
       close, ilun
       free_lun, ilun
+      errcode = -2L
       return
    endif
 
