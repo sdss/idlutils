@@ -36,9 +36,12 @@ function repstr,obj,in,out
 ;       Convert loop to LONG, vectorize STRLEN call W. Landsman June 2002
 ;       Correct bug in optimization, case where STRLEN(OBJ) EQ
 ;         STRLEN(IN), C. Markwardt, Jan 2003
+;       Fixed problem when multiple replacements extend the string length
+;                 D. Finkbeiner, W. Landsman  April 2003
+;       Allow third parameter to be optional again W. Landsman  August 2003
 ;-
  On_error,2
- if N_params() LT 3 then begin
+ if N_params() LT 2 then begin
 	print,'Syntax - result = REPSTR( obj, in, out )'
 	return, obj
  endif
@@ -46,6 +49,7 @@ function repstr,obj,in,out
  if N_elements(out) EQ 0 then out = ''
  l1 = strlen(in)
  l2 = strlen(out)
+ diflen = l2- l1
  Nstring = N_elements(obj)
  object = obj
  lo = strlen(object) - l1             ;Last character needed to look at 
@@ -58,9 +62,9 @@ function repstr,obj,in,out
 	      first_part = strmid(object[i],0,pos)
 	      last_part  = strmid(object[i],pos+l1,9999)
 	      object[i] = first_part + out + last_part
-              lo[i] = lo[i]+(l2-l1)
    endif 
   last_pos = pos + l2
+  lo[i] = lo[i] + diflen           ;Length of string may have changed
  endwhile
  endfor
 
