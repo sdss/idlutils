@@ -21,12 +21,14 @@
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function circle_cap, xyz, radius, radec=radec
+function circle_cap, ra=ra, dec=dec, xyz=xyz , radius
 
 d2r=!DPI/180.D
 
-usexyz=xyz
-if(keyword_set(radec)) then usexyz=angles_to_x(xyz[0],(90.D)-xyz[1])
+if(keyword_set(ra)) then $
+  usexyz=angles_to_x(ra,(90.D)-dec) $
+else $
+  usexyz=xyz
 
 cap=construct_cap()
 cap.x=usexyz
