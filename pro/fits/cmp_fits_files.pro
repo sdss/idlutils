@@ -58,12 +58,24 @@ pro cmp_fits_files, filename1, filename2, verbose=verbose
    data1 = mrdfits(filename1, exten, status=stat1, /silent)
    data2 = mrdfits(filename2, exten, status=stat2, /silent)
    while (stat1 GE 0 AND stat2 GE 0) do begin
-      if (size(data1, /tname) NE size(data2, /tname)) then begin
-         splog, 'Extension ', exten, ' differs in variable type'
-      endif else if (size(data1, /tname) EQ 'STRUCT') then begin
+      type1 = size(data1, /tname)
+      type2 = size(data2, /tname)
+      ndat1 = n_elements(data1)
+      ndat2 = n_elements(data2)
+
+      if (type1 NE type2) then begin
+         splog, 'Extension ', exten, ' differs in variable type ', $
+          type1, ' vs. ', type2
+      endif else if (type1 EQ 'STRUCT') then begin
          tags = tag_names(data1)
-         if (n_tags(data1) NE n_tags(data2)) then begin
-            splog, 'Extension ', exten, ' differs in number of tags'
+         ntag1 = n_tags(data1)
+         ntag2 = n_tags(data2)
+         if (ntag1 NE ntag2) then begin
+            splog, 'Extension ', exten, ' differs in number of tags ', $
+             ntag1, ' vs. ', ntag2
+         endif else if (ndat1 NE ndat2) then begin
+            splog, 'Extension ', exten, ' differs in number of elements ', $
+             ndat1, ' vs. ', ndat2
          endif else begin
             for itag=0L, n_tags(data1)-1 do begin
                junk = where(data1.(itag) NE data2.(itag), nbad)
@@ -76,7 +88,7 @@ pro cmp_fits_files, filename1, filename2, verbose=verbose
             endfor
          endelse
       endif else begin
-         if (n_elements(data1) NE n_elements(data2)) then begin
+         if (ndat1 NE ndat2) then begin
             splog, 'Extension ', exten, ' differs in number of elements'
          endif else begin
             junk = where(data1 NE data2, nbad)
