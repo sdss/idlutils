@@ -14,6 +14,8 @@ GVERTS: Fix a loop variable that should have been type long.
         Move from mangle version 1.2 to mangle version 1.4.
 IS_IN_CAP,IS_IN_POLYGON,IS_IN_WINDOW: Change calling sequence, with
                ra=,dec=,xyz= instead of assuming xyz is passed.
+CONSTRUCT_POLYGON,CONSTRUCT_VERTEX,COPY_CAPS,DESTRUCT_POLYGON,SET_USE_CAPS:
+               Get rid of LONG64 in USE_CAPS.
 LOGSUM: Small bug fix.
 MWRFITS_CHUNKS: Small changes to internal proc MWRBIN_APPEND to allow
                support for files larger than 2 Gb.
