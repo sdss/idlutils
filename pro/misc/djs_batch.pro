@@ -49,6 +49,7 @@
 ;
 ; INTERNAL SUPPORT ROUTINES:
 ;   batch_spawn
+;   count_freelun()
 ;   create_program_list()
 ;   create_host_list()
 ;   batch_if_done()
@@ -380,6 +381,17 @@ pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
    if (NOT keyword_set(hostlist)) then return
    nhost = n_elements(hostlist)
    splog, 'Number of hosts = ', nhost
+
+   ; Do not try to use more hosts than there are free file pointers (LUNs).
+   ; This is because the SPAWN command uses GET_LUN to open pipes,
+   ; and will crash if it tries to allocate too many pipes.
+   ; Specifically, it will crash in the SPAWN command in the BATCH_SPAWN
+   ; procedure.
+   nlunmax = count_freelun()
+   if (nhost GT nlunmax) then begin
+      splog, 'WARNING: Trimming to use only the first ', nlunmax, ' hosts'
+      nhost = nlunmax
+   endif
 
    ;----------
    ; Find which programs are already done by looking at local files
