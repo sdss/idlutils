@@ -114,6 +114,10 @@ temp= minmax(bin_mean[limits_indx])
 if not keyword_set(levels) then $
   levels= temp[0]+(temp[1]-temp[0])/factor*dindgen(ceil(factor+1.0))
 nlevels= n_elements(levels)
+if (min(levels) EQ max(levels)) then begin
+    levels= levels[0]
+    nlevels= 1
+endif
 
 ; set x and y ranges
 if not keyword_set(xrange) then begin
