@@ -494,8 +494,9 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   if (i+sz GT n_elements(ww)) then begin
                      splog, 'Last line number read: ', lastlinenum
                      splog, 'Last line read: "' + rawline + '"'
-                     splog, 'ABORT: Invalid Yanny file ', filename, $
-                      ' at line number ', lastlinenum, ' !!'
+                     splog, 'ABORT: Invalid Yanny file ' + filename $
+                      + ' at line number ' $
+                      + strtrim(string(lastlinenum),2) + ' !!'
                      close, ilun
                      free_lun, ilun
                      yanny_free, pdata
