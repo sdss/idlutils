@@ -100,20 +100,22 @@ pro grow_object, image, mask, xstart=xstart1, ystart=ystart1, putval=putval1, $
       endfor
       return
    endif else begin
-      indx = where(image NE 0, ct)
-      if (ct EQ 0) then return
-      ystart = indx / nx
-      xstart = indx - ystart * nx
+      indx = where(image NE 0 AND mask EQ 0, ct)
       if (keyword_set(putval1)) then objid = putval1 $
        else objid = 1L
-      for i=0L, ct-1 do begin
-         grow_object, image, mask, xstart=xstart[i], ystart=ystart[i], $
+      while (ct GT 0) do begin
+         ystart = indx[0] / nx
+         xstart = indx[0] - ystart * nx
+         grow_object, image, mask, xstart=xstart, ystart=ystart, $
           putval=objid, nadd=nadd1, diagonal=diagonal
          if (nadd1 GT 0) then begin
             nadd = nadd + nadd1
             if (NOT keyword_set(putval1)) then objid = objid + 1L
          endif
-      endfor
+         ; Trim the list of object pixels to only those left to assign...
+         jndx = where(image[indx] NE 0 AND mask[indx] EQ 0, ct)
+         if (ct GT 0) then indx = indx[jndx]
+      endwhile
       return
    endelse
 
