@@ -41,9 +41,26 @@ pro djs_unlockfile, filename, lun=lun
    endif
 
    lockfile = filename + '.lock'
-   openw, olun, lockfile, /get_lun, /delete
-   close, olun
-   free_lun, olun
+
+   osfamily = !version.os_family
+   if (osfamily EQ 'unix' AND !version.release LT '5.4') then $
+    osfamily = 'other'
+
+   case osfamily of
+   'unix': begin
+      ; In this case, we've created a symlink, which must be
+      ; deleted with the Unix command "rm".  Otherwise, using
+      ; the IDL command OPENW,/DELETE would delete the lock
+      ; file but also set the contents of the actual file to null!
+      spawn, '\rm ' + lockfile, $
+       spawnres, spawnerr
+      end
+   else: begin
+      openw, olun, lockfile, /get_lun, /delete
+      close, olun
+      free_lun, olun
+      end
+   endcase
 
    return
 end
