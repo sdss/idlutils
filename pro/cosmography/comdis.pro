@@ -37,7 +37,7 @@ function comdis, z,OmegaM,OmegaL
     endelse
   endif else begin
     help, nz
-    for i=0,nz-1 do dC[i]= comdis(z[i],OmegaM,OmegaL)
+    for i=0L,nz-1L do dC[i]= comdis(z[i],OmegaM,OmegaL)
   endelse
   return, dC
 end
