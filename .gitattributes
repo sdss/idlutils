@@ -808,6 +808,7 @@ pro/healpix/map_ring2nest.pro -text
 pro/healpix/mqladvance.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
+pro/image/embed_stamp.pro -text
 pro/image/exact_photfrac.pro -text
 pro/image/extract_profmean.pro -text
 pro/image/fastconv.pro -text
@@ -815,6 +816,7 @@ pro/image/frac_profmean.pro -text
 pro/image/grow_object.pro -text
 pro/image/hogg_histogram.pro -text
 pro/image/interp_profmean.pro -text
+pro/image/multi_psf_fit.pro -text
 pro/image/populate_image.pro -text
 pro/image/qu_to_baphi.pro -text
 pro/image/qzap.pro -text
