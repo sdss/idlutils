@@ -109,7 +109,7 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
       imgtemp = imgconv / invtemp
    endif
 
-   if (NOT keyword_set(xstart)) then begin
+   if (n_elements(xstart) EQ 0) then begin
       ; Automatically find peaks for XSTART
 
       ; Extract NSUM rows from the image at YSTART
