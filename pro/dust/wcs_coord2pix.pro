@@ -78,8 +78,8 @@ pro wcs_coord2pix, lonvec, latvec, hdr, xpix, ypix, fractional=fractional
    ctype2 = sxpar(hdr, 'CTYPE2')
    ctype1_coord = (str_sep(ctype1,'-'))[0]
    ctype2_coord = (str_sep(ctype2,'-'))[0]
-   ctype1_proj = strmid(ctype1,5)
-   ctype2_proj = strmid(ctype2,5)
+   ctype1_proj = strmid(ctype1,5, 255) ; for compatibility with older IDL
+   ctype2_proj = strmid(ctype2,5, 255)
 
    ; Get information from FITS header necessary for any projection
    crval1 = sxpar(hdr, 'CRVAL1')
