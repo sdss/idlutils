@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-SUBDIRS = astrom bspline coord cosmography dust fits image math misc mpeg mpfit plot slatec spheregroup TeXtoIDL trace yanny
+SUBDIRS = astrom bspline coord cosmography djsphot dust fits image math misc mpeg mpfit plot slatec spheregroup TeXtoIDL trace yanny
 
 all :;
 
