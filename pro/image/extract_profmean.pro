@@ -190,9 +190,11 @@ if(arg_present(profmean_ivar)) then $
   profmean_ivar=fltarr(n_elements(cache))
 
 nprof=n_elements(cache)
-if(nnotenough gt 0) then nprof=inotenough[0]
-if(n_elements(ustokes) gt 0) then ustokes[inotenough]=0.
-if(n_elements(qstokes) gt 0) then qstokes[inotenough]=0.
+if(nnotenough gt 0) then begin 
+    nprof=inotenough[0]
+    if(n_elements(ustokes) gt 0) then ustokes[inotenough]=0.
+    if(n_elements(qstokes) gt 0) then qstokes[inotenough]=0.
+endif
 for i=0, nenough-1 do begin
     profmean[ienough[i]]=profflux[ienough[i]+1]/area[ienough[i]+1]
     if(arg_present(profmean_ivar)) then $
