@@ -149,7 +149,6 @@ if (iEnd GE iStart) then begin
           raA[indxA[iBvec[ii]]], decA[indxA[iBvec[ii]]], units=units )
          jj = where(adist LT dtheta, ctj)
          ; The following are matches in distances computed by djs_diff_angle.
-help,ctj
          if (ctj GT 0) then begin
             tempindx[nmatch:nmatch+ctj-1] = iBvec[ii[jj]]
             tempdist[nmatch:nmatch+ctj-1] = adist[jj]
