@@ -20,7 +20,8 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;               A[0]= the height of the Gaussian
 ;               A[1]= the mean
 ;               A[2]= the standard deviation
-;               A[3]= the half-width of the 95% conf. interval 
+;               A[3]= the half-width of the 95% conf. interval of the standard
+;                     mean
 ;               A[4]= 1/(N-1)*total( (y-mean)/sigma)^2 ) = a measure of 
 ;                       normality
 ;
@@ -63,6 +64,8 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;       Simplified calculation of Gaussian height, 5/95 HF
 ;       Convert to V5.0, use T_CVF instead of STUDENT_T, GAUSSFIT instead of
 ;           FITAGAUSS  W. Landsman April 2002 
+;       Correct call to T_CVF for calculation of A[3], 95% confidence interval
+;                P. Broos/W. Landsman   July 2003
 ;-
 
  On_error,2
@@ -108,9 +111,11 @@ A[1] = BIWEIGHT_MEAN(DATA,S)
 A[2] = S  
 ; The 95% confidence interval:
 M=.7*(N-1)  ;appropriate for a biweighted mean
-A[3]=ABS( T_CVF(.95,M) )*S/sqrt(n)
+CL = 0.95
+two_tail_area = 1 - CL
+A[3]=ABS( T_CVF(1 - (two_tail_area)/2.0,M) )*S/sqrt(n)
 
-; A measure of the Gausianness:
+; A measure of the Gaussianness:
 A[4]=TOTAL((DATA-A[1])^2)/((N-1)*A[2]^2)
 ;Q=WHERE( ABS(DATA-A(1)) LT (5.*S), COUNT )   ; "robust I" unreliable
 ;ROB_I=TOTAL((DATA(Q)-A(1))^2)/((COUNT-1)*A(2)^2)

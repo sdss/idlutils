@@ -6,7 +6,7 @@ pro sxhwrite,name,h
 ;	Procedure to write an STSDAS or FITS header to disk as a *.hhh file.
 ;
 ; CALLING SEQUENCE:
-;	sxhwrite,name,h
+;	SXHWRITE,name,h
 ;
 ; INPUTS:
 ;	name - file name. If an extension is supplied it must be 3 characters
@@ -37,11 +37,15 @@ pro sxhwrite,name,h
 ;-
 ;----------------------------------------------------------------
  On_error,2
+ if N_params() LT 2 then begin
+    print,'Syntax - SXHWRITE, name, hdr'
+    return
+ endif
 
 ; Create output file name
 
- zparcheck, 'SXHWRITE', name, 1, 7, 0, 'Disk file name'  ;Check for valid param
- fdecomp,name, disk, dir, file, qual
+ ZPARCHECK, 'SXHWRITE', name, 1, 7, 0, 'Disk file name'  ;Check for valid param
+ FDECOMP,name, disk, dir, file, qual
  if ( qual EQ '' ) then qual = 'hhh'			;default qualifier
 
 ; Check for valid qualifier
@@ -53,9 +57,9 @@ pro sxhwrite,name,h
 
 ; Check that valid FITS header was supplied
 
- zparcheck, 'SXHWRITE', h, 2, 7, 1, 'FITS header'   
+ ZPARCHECK, 'SXHWRITE', h, 2, 7, 1, 'FITS header'
 
- sxaddpar, h, 'SIMPLE', 'F', ' Written by IDL:  ' + systime()
+ SXADDPAR, h, 'SIMPLE', 'F', ' Written by IDL:  ' + systime()
 
 ; Determine if an END line occurs, and add one if necessary
 

@@ -13,7 +13,7 @@
 ; CALLING SEQUENCE:
 ;       ksone, data, func_name, D, prob, [ /PLOT ]
 ;
-; INPUT PARAMATERS:
+; INPUT PARAMETERS:
 ;       data -  vector of data values, must contain at least 4 elements for the
 ;               K-S statistic to be meaningful 
 ;       func_name - scalar string giving the name of the cumulative distribution
@@ -40,7 +40,7 @@
 ;
 ; EXAMPLE:
 ;       Determine if a vector created by the RANDOMN function is really 
-;       consistent with a Gaussian distribution.
+;       consistent with a Gaussian distribution with unit variance.
 ;       The CDF of a Gaussian is the error function except that a factor
 ;       of 2 is included in the error function.   So we must create a special
 ;       function:
@@ -52,12 +52,13 @@
 ;       IDL> data = randomn(seed, 50)          ;create data array to be tested
 ;       IDL> ksone, abs(data), 'gauss_cdf', D, prob, /PLOT     ;Use K-S test
 ;      
-;       PROB gives the probability that DATA came from a Gaussian distribution
+;       PROB gives the probability that the null hypothesis (DATA came from a 
+;       Gaussian distribution with unit variance) is correct.
 ;
 ; NOTES:
-;       Note that the 2nd (1992) edition of Numerical Recipes includes
-;       a more accurate computation of the K-S significance for small 
-;       values of N.
+;       The code for PROB_KS is from the 2nd (1992) edition of Numerical 
+;       Recipes which includes a more accurate computation of the K-S 
+;       significance for small values of N than the first edition.
 ;
 ; PROCEDURE CALLS
 ;       procedure PROB_KS - computes significance of K-S distribution
@@ -68,6 +69,7 @@
 ;       Fixed possible bug in plot display showing position maximum difference
 ;       in histogram   M. Fardal/ W. Landsman      March, 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Documentation updates   W. Landsman   June 2003
 ;-
  On_error, 2
 
@@ -78,7 +80,7 @@
 
  N = N_elements( data )
  if N LT 3 then message, $
-   'ERROR - Input data values (first param) must contain at least 3 values
+   'ERROR - Input data values (first param) must contain at least 3 values'
 
  sortdata = data[ sort( data ) ]                                   
 
@@ -100,7 +102,7 @@
     oplot,sortdata,ff,lines=1
 endif
 
- prob_ks, D, N, prob           ;Compute significance of K-S statistic
+ PROB_KS, D, N, prob           ;Compute significance of K-S statistic
 
  return
  end

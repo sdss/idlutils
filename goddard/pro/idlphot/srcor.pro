@@ -11,9 +11,9 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 ;       x1in,y1in - First set of x and y coordinates.  The program
 ;                   marches through this list element by element,
 ;                   looking in list 2 for the closest match.  So, the program
-;	            will run faster if this is the shorter of the two lists.
-;	            Unless you use the option or magnitude keyword, there is
-;	            nothing to guarantee unique matches.  
+;                   will run faster if this is the shorter of the two lists.
+;                   Unless you use the option or magnitude keyword, there is
+;                   nothing to guarantee unique matches.  
 ;       x2in,y2in - Second set of x and y coordinates.  This list is
 ;                   searched in its entirety every time one element of list 1
 ;                   is processed.
@@ -44,15 +44,15 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 ;             If this is supplied, then the brightest star from list 1
 ;             within the selected distance of the star in list 2 is taken.
 ;             The option keyword is ignored in this case.
-;	spherical
-;	      If SPHERICAL=1, it is assumed that the input arrays are in
-;	      celestial coordinates (RA and Dec), with x1in and x2in in
-;	      decimal hours and y1in and y2in in decimal degrees.  If
-;	      SPHERICAL=2 then it is assumed that the input arrays are in
-;	      longitude and latitude with x1in,x2in,y1in,y2in in decimal
-;	      degrees.  In both cases, the critial radius dcr is in
-;	      *arcseconds*.  Calculations of spherical distances are made
-;	      with the gcirc program.
+;       spherical
+;             If SPHERICAL=1, it is assumed that the input arrays are in
+;             celestial coordinates (RA and Dec), with x1in and x2in in
+;             decimal hours and y1in and y2in in decimal degrees.  If
+;             SPHERICAL=2 then it is assumed that the input arrays are in
+;             longitude and latitude with x1in,x2in,y1in,y2in in decimal
+;             degrees.  In both cases, the critial radius dcr is in
+;             *arcseconds*.  Calculations of spherical distances are made
+;             with the gcirc program.
 ; OUTPUTS:
 ;       ind1 - index of matched stars in first list
 ;       ind2 - index of matched stars in second list
@@ -63,8 +63,9 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 ; METHOD:
 ;       See under keyword LEVEL above.
 ; REVISON HISTORY:
-;	Adapted from UIT procedure  J.Wm.Parker, SwRI 29 July 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Adapted from UIT procedure  J.Wm.Parker, SwRI 29 July 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       
 ;-
 ;
  ON_Error,2   ; Return if error (incl. non-info message)
@@ -72,10 +73,10 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 ;;;
 ;   If not enough parameters, then print out the syntax.
 ;
-IF (n_params(0) lt 7) THEN BEGIN
+IF N_params() lt 7 THEN BEGIN
   print,'SRCOR calling sequence: '
   print,'srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2 [,option={0, 1, or 2}] $'
-  print,'      [,magnitude=mag_list_1, spherical={1 or 2}]
+  print,'      [,magnitude=mag_list_1, spherical={1 or 2}]'
   RETURN
 ENDIF
 
@@ -155,7 +156,7 @@ ENDIF ELSE BEGIN
    IF option eq 2 then message,/info,'Cleaning up output list (option = 2).'
 ENDELSE
 
-FOR i=0,max(ind2) DO BEGIN
+FOR i=0L,max(ind2) DO BEGIN
    csave = n_elements(ind2)
    ww = where(ind2 eq i,count) ; All but one of the list in WW must
                                ; eventually be removed.
