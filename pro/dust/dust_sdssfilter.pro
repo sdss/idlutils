@@ -51,19 +51,19 @@
 ;   sxpar()
 ;
 ; DATA FILES:
-;   $IDLUTILS_DIR/filters/kurucz_fstar.dat
-;   $IDLUTILS_DIR/filters/kpno_atmos.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_u_noatm.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_g_noatm.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_r_noatm.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_i_noatm.dat
-;   $IDLUTILS_DIR/filters/sdss_1994_z_noatm.dat
-;   $IDLUTILS_DIR/filters/sdss_jun2001_u_atm.dat
-;   $IDLUTILS_DIR/filters/sdss_jun2001_g_atm.dat
-;   $IDLUTILS_DIR/filters/sdss_jun2001_r_atm.dat
-;   $IDLUTILS_DIR/filters/sdss_jun2001_i_atm.dat
-;   $IDLUTILS_DIR/filters/sdss_jun2001_z_atm.dat
-;   $IDLUTILS_DIR/filters/sdss_meangalaxy_52223.dat
+;   $IDLUTILS_DIR/data/filters/kurucz_fstar.dat
+;   $IDLUTILS_DIR/data/filters/kpno_atmos.dat
+;   $IDLUTILS_DIR/data/filters/sdss_1994_u_noatm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_1994_g_noatm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_1994_r_noatm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_1994_i_noatm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_1994_z_noatm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_jun2001_u_atm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_jun2001_g_atm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_jun2001_r_atm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_jun2001_i_atm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_jun2001_z_atm.dat
+;   $IDLUTILS_DIR/data/filters/sdss_meangalaxy_52223.dat
 ;
 ; DATA FILES:
 ;
@@ -84,13 +84,13 @@ function dust_sdssfilter, ixval, source=source, zsource=zsource1, $
    filtnames = ['u','g','r','i','z']
    if (keyword_set(old)) then begin
       ffiles = filepath('sdss_1994_'+filtnames+'_noatm.dat', $
-       root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
+       root_dir=getenv('IDLUTILS_DIR'), subdirectory=['data','filters'])
       atmfilename1 = filepath('kpno_atmos.dat', $
-       root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
+       root_dir=getenv('IDLUTILS_DIR'), subdirectory=['data','filters'])
    endif else begin
       ffiles = 'sdss_jun2001_'+filtnames+'_atm.dat'
       ffiles = filepath(ffiles, $
-       root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
+       root_dir=getenv('IDLUTILS_DIR'), subdirectory=['data','filters'])
    endelse
    nfile = n_elements(ffiles)
 
@@ -99,11 +99,11 @@ function dust_sdssfilter, ixval, source=source, zsource=zsource1, $
 
    case source of
    'Fstar': sfilename = filepath('kurucz_fstar.dat', $
-              root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
+              root_dir=getenv('IDLUTILS_DIR'), subdirectory=['data','filters'])
    'Galaxy': sfilename = filepath('sdss_meangalaxy_52223.dat', $
-              root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
+              root_dir=getenv('IDLUTILS_DIR'), subdirectory=['data','filters'])
    'QSO': sfilename = filepath('sdss_meanqso_52223.dat', $
-              root_dir=getenv('IDLUTILS_DIR'), subdirectory='filters')
+              root_dir=getenv('IDLUTILS_DIR'), subdirectory=['data','filters'])
    else: message, 'Unknown SOURCE'
    endcase
 
