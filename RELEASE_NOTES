@@ -1,4 +1,9 @@
 
+MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
+               tables for string-type elements.  Bug fix to allow appending
+               string elements that are different lengths, though if the
+               appended strings are longer then they get truncated.
+
 -------------------------------------------------------------------------------
 v5_0_3 (August 18, 2004) running on IDL 5.4 - 6.0
 Tagged for photoop v1_6 (for the SDSS Orion data release)
