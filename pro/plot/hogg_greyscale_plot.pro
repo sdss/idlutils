@@ -81,9 +81,6 @@ if(keyword_set(filename) and keyword_set(startps)) then begin
     hogg_plot_defaults
 endif
 
-; adjust plotting parameters
-if keyword_set(title) then !P.TITLE= title
-
 ; hack to make axes default font
 xyouts, 0,0,'!3'
 
@@ -94,7 +91,7 @@ else !P.POSITION=[0.0,0.0,float(nx)/float(ny),1.0]
 
 ; plot contours and image
 x= (findgen(nx)-xcent)*pixscale & y= (findgen(ny)-ycent)*pixscale
-contour, [[0,0],[1,1]],/nodata,xstyle=4,ystyle=4,title=''
+contour, [[0,0],[1,1]],/nodata,xstyle=4,ystyle=4,title=title
 xsize=((1.0-margin)*size)
 if nx LT ny then xsize=xsize*float(nx)/float(ny)
 ysize=((1.0-margin)*size)
