@@ -49,7 +49,7 @@
 PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
                 nonlinearity,origin=origin,rebinfactor=rebinfactor, $
                 saturatetowhite=saturatetowhite,quality=quality, $
-                overlay=overlay,colors=colors,tiff=tiff
+                overlay=overlay,colors=colors,tiff=tiff,invert=invert
 
 ;set defaults
 IF (keyword_set(tiff)) THEN suffix='tif' ELSE suffix='jpg'
@@ -75,28 +75,29 @@ ENDIF ELSE BEGIN
     colors[*,*,1] = Gim
     colors[*,*,2] = Bim
 ENDELSE
-IF n_elements(rebinfactor) THEN BEGIN
-    colors = nw_rebin_image(colors,rebinfactor)
-ENDIF
+IF (n_elements(rebinfactor) GT 0) THEN $
+  IF (rebinfactor NE 1) THEN $
+  colors = nw_rebin_image(colors,rebinfactor)
 
-print, 'nw_scale_rgb'
+splog, 'nw_arcsinh'
 colors = nw_scale_rgb(colors,scales=scales)
-print, 'nw_arcsinh'
+splog, 'nw_arcsinh'
 colors = nw_arcsinh(colors,nonlinearity=nonlinearity, /inplace)
-print, 'nw_cut_to_box'
+splog, 'nw_cut_to_box'
 IF (NOT keyword_set(saturatetowhite)) THEN $
   colors = nw_cut_to_box(colors,origin=origin)
 IF keyword_set(overlay) THEN colors= (colors > overlay) < 1.0
-print, 'nw_float_to_byte'
+splog, 'nw_float_to_byte'
 colors = nw_float_to_byte(colors)
+if(keyword_set(invert)) then colors=255-colors
 
 IF keyword_set(tiff) THEN BEGIN
     colors = reverse(colors,2)
-    print, 'WRITE_TIFF'
+    splog, 'WRITE_TIFF'
     WRITE_TIFF,name,planarconfig=2,red=colors[*,*,0],$
       green=colors[*,*,1],blue=colors[*,*,2]
 ENDIF ELSE BEGIN
-    print, 'WRITE_JPEG'
+    splog, 'WRITE_JPEG'
     WRITE_JPEG,name,colors,TRUE=3,QUALITY=quality
 ENDELSE
 END
