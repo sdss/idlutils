@@ -306,7 +306,11 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
     
     if(i%100 == 0) {
       total_ncaps=0;
-      for(ic=0;ic<np;ic++) total_ncaps+=polys[ic]->np;
+#if 1
+      for(ic=0;ic<np;ic++) 
+        if(polys[ic]) 
+          total_ncaps+=polys[ic]->np;
+#endif
       fprintf(stderr, "polygon %d / %d (%d balkans) / %d caps\n",i,npoly,np,
               total_ncaps);
     } /* end if */
