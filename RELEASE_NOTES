@@ -1,18 +1,20 @@
 -------------------------------------------------------------------------------
 
 BSPLVN: Added code to break up task for 10^6 pts or more.
-              BSPLINE_ACTION was not carrying double precision all the way
-              through, now it should be.
+               BSPLINE_ACTION was not carrying double precision all the way
+               through, now it should be.
 BSPLINE_FIT: Test if SSET is set by demanding that it be a structure;
                as it was, setting SSET=0 would not cause it to self-initialize.
+BSPLINE_RADIAL, BSPLINE_RADIAL_VALU, BSPLINE_WORKIT: New radial B-splines
+               from Bolton & Burles.
 CHOLESKY_SOLVE: Up to date bspline implementation, passing structure and
                masking breakpoints (Burles).
                Make loop variables type long (Blanton).
 DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
                parameter for OmegaL.
 DJS_PHOTFRAC: Add documentation on /exact keyword, and report error in case
-              of non-integer center given with /exact keyword set. also, 
-              changed so it doesn't recenter on its own if /exact is set.
+               of non-integer center given with /exact keyword set. also, 
+               changed so it doesn't recenter on its own if /exact is set.
 DPF_REJECT_CR: ???
 DUST_GETMAP: Use EULER_2000_FAST instead of non-existent EULER_2000.
 EXACT_PHOTFRAC: fix bug involving calculation of annulus photometry
@@ -36,7 +38,7 @@ HOGG_OPLOT_COVAR: Add support for a vectorized THICK keyword.
 HOGG_PLOTHIST: Change in behviour for setting X range when using /OVERPLOT.
 HOGG_SCATTERPLOT: Added IOUTLIERS keyword, to plot the outliers differently.
 LABELLOC: Simple utility for XYOUTS plotting to get positions relative to 
-          plot frame
+               plot frame
 LG_TO_HELIO: Inverse function to HELIO_TO_LG.
 MRDFITS:       LONG64 stuff, handle degenerate excess NAXIS keywords
 MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
@@ -49,6 +51,8 @@ NW_RGB_MAKE: Trivial bug fixes; change SPLOG statements to PRINT.
                Change default quality to 100, add dpitiff keyword.
                Other changes???
 POLYWARP_SHIFT: Wrapper on polywarp to do a simple shift.
+PSF_REJECT_CR,PSF_REJECT_CR_SINGLE: Implementation by Finkbeiner of
+               Lupton and Gunn's CR code.
 SPLOT: The reported "Area" for the interactive gaussian fits was missing
                a factor of sigma.
 TRACE_CRUDE: Allow XSTART to be set to exactly zero as an input.
