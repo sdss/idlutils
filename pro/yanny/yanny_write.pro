@@ -175,10 +175,10 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
             struct_print, tmpstruct, lun=olun, alias=alias, /no_head, $
              formatcodes=formatcodes, fdigit=fdigit, ddigit=ddigit
          endif else begin
-            for iel=0, n_elements( *pdata[idat] )-1 do begin ; Loop over rows
+            for iel=0L, n_elements( *pdata[idat] )-1 do begin ; Loop over rows
                sline = stname1
 
-               for itag=0, ntag-1 do begin          ; Loop through each variable
+               for itag=0L, ntag-1 do begin          ; Loop through each variable
                   words = (*pdata[idat])[iel].(itag)
                   nword = n_elements(words)
 
