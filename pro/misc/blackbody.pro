@@ -1,4 +1,4 @@
-function blackbody, lambda, T
+function blackbody, lambda, T, retfnu=retfnu
 
 	; Lambda is in angstroms
 
@@ -6,14 +6,21 @@ function blackbody, lambda, T
 	hc = 1.988e-6  ; erg * A
 
 	wave = double(lambda)
-	answer = 2.0e16*hc*c/(wave^5) * 1.0/(exp(1.43868e8/(wave*T)) - 1.0)
 
 	;
-	;	Answer is in ergs/s cm^-2 Ang^-1 ster^-1
+	;	Fnu is prop to ergs/s cm^-2 Hz^-1 
 	;
-	
+	fnu = hc/(wave^3) * 1.0/(exp(1.43868e8/(wave*T)) - 1.0)
 
-	return, answer
+	if (keyword_set(retfnu)) then return, fnu
+
+	flam = fnu*c/wave^2 
+
+	;
+	;	flam is prop to ergs/s cm^-2 Ang^-1 
+	;
+
+	return, flam
 end 
 
 
