@@ -90,6 +90,9 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
    if (nbkpt LT 2*nord) then $
     message, 'Too few breakpoints: must have at least 2*NORD'
 
+   soname = filepath('libslatec.so', $
+    root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+
    qeval = 1
    while (qeval) do begin
 
@@ -102,8 +105,7 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
         lw = 10*nbkpt*nord + 2*max([ndata,nbkpt])
         w = fltarr(lw)
 
-        test = call_external(getenv('IDLUTILS_DIR')+'/lib/libslatec.so', $
-         'efc_idl', $
+        test = call_external(soname, 'efc_idl', $
          ndata, FLOAT(x), FLOAT(y), FLOAT(invsig), LONG(nord), $
          LONG(nbkpt), fullbkpt, mdein, mdeout, coeff, lw, w)
 

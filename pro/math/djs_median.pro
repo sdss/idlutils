@@ -87,8 +87,9 @@ function djs_median, array, dim, width=width
       newsize = N_elements(array) / dimvec[dim-1]
       medarr = reform(fltarr(newsize), newdimvec)
 
-      retval = call_external(getenv('IDLUTILS_DIR')+'/lib/libmath.so', $
-       'arrmedian', $
+      soname = filepath('libmath.so', $
+       root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+      retval = call_external(soname, 'arrmedian', $
        ndim, dimvec, float(array), long(dim), medarr)
 
    endif else begin

@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   spflatten
+;   rmfile
 ;
 ; PURPOSE:
 ;   Delete file from disk.
