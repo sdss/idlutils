@@ -1,16 +1,10 @@
-                                                              June 2002
+/astro                                                              July 2003
 
 This directory includes about 80 mostly self-contained astronomy utilities.
 
 The procedure UVBYBETA uses the non-standard system variable !TEXTOUT.
 The procedure ASTROLIB can be used to add this system variable to one's
 session.
-
-The procedure WCS_DEMO  demonstrates the world coordinate system (WCS) 
-transformation procedures WCSSPH2XY and WCSXY2SPH.   Information on the 
-proposed WCS standards is available from 
-http://fits.cv.nrao.edu/documents/wcs/wcs.html.    WCS_DEMO requires use of the
-SPHDIST() function in the /jhuapl directory.
 
 The routines JPLEPHREAD and JPLINTERP require a FITS file containing a JPL (Jet
 Propulsion Laboratory) ephemeris for solar system bodies.    A copy of the
@@ -119,11 +113,7 @@ TIC_ONE - Determine optimum position of the first tic in astronomical labeling
 UVBYBETA - Use Stromgren indices to derive dereddened colors, metallicity,
         and effective Temperature.
 VACTOAIR - Convert vacuum wavelengths to air wavelengths.
-WCSSPH2XY - Convert between longitude,latitude to X,Y angular coordinates for
-        25 different map projection types
-WCSXY2SPH - Inverse of WCSSPH2XY
-WCS_DEMO - Demo program for WCSSPH2XY and WCSXY2SPH
-WCS_ROTATE - Rotate between standard (e.g. celestial) and native coordinates
+WFPC2_METRIC -  Compute the distortion in a WFPC2 image and return coordinates
 XYZ - Compute heliocentric rectangular coordinates at given Julian date.
 YMD2DN() - Convert year,month,day to day number of the year (in /jhuapl)
 YDN2MD - Convert day number of the year to year, month,day
