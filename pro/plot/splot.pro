@@ -463,9 +463,13 @@ pro splot_zoom, zchange, recenter = recenter
          splot_autoscale_x
          splot_autoscale_y
       end
-      'none': begin ; no change to zoom level: recenter on current mouse pos'n
+      'x-recen': begin ; no change to zoom level: X recenter on mouse pos'n
          state.xrange = state.mphys[0] $
           + [-0.5, 0.5] * (state.xrange[1] - state.xrange[0])
+      end
+      'y-recen': begin ; no change to zoom level: Y recenter on mouse pos'n
+         state.yrange = state.mphys[1] $
+          + [-0.5, 0.5] * (state.yrange[1] - state.yrange[0])
       end
       else: print, 'Problem in splot_zoom!'
    endcase
@@ -595,7 +599,7 @@ pro splot_event, event
          xycase = keyword_set(event.modifiers) ? 'y' : 'x'
          case event.press of
             1: splot_zoom, xycase+'-in', /recenter
-            2: splot_zoom, 'none', /recenter
+            2: splot_zoom, xycase+'-recen', /recenter
             4: splot_zoom, xycase+'-out', /recenter
             else: print,  'trouble in splot_event, mouse zoom'
          endcase
