@@ -8,7 +8,8 @@
 ;
 ; CALLING SEQUENCE:
 ;   
-;   yfit  = bspline_valu( x, sset, x2=x2, action=action, indx=indx)
+;   yfit  = bspline_valu( x, sset, x2=x2, action=action, upper=upper, 
+;               lower=lower, mask=mask)
 ;
 ; INPUTS:
 ;   x          - independent variable
@@ -20,10 +21,15 @@
 ; OPTIONAL KEYWORDS:
 ;   x2         - Orthogonal dependent variable for 2d fits
 ;   action     - This keyword is overwritten with b-spline action matrix
-;   indx       - The index of bkpt which is just left of x[i], needed to
-;                  complete banded algebra
+;   lower,upper- Internal keywords used by action, maybe should replace
+;                action with a structure including lower and upper
 ;
+; OPTIONAL OUTPUTS:
+;   mask       - a mask array of good (1's) bspline evalutions
+; 
 ; COMMENTS:
+;   the mask attempts to show regions where the bspline was ill-defined
+;    and breakpoints had been dropped.
 ;
 ; EXAMPLES:
 ;
@@ -33,7 +39,9 @@
 ;   11-Sep-2000 Written by Scott Burles, FNAL
 ;-
 ;------------------------------------------------------------------------------
-function bspline_valu, x, sset, x2=x2, action=action, upper=upper, lower=lower
+function bspline_valu, x, sset, x2=x2, action=action, upper=upper, $
+    lower=lower, mask=mask
+
 
       if size(sset,/tname) NE 'STRUCT' then begin
          print, 'Please send in a proper B-spline structure'
@@ -67,9 +75,8 @@ function bspline_valu, x, sset, x2=x2, action=action, upper=upper, lower=lower
 
       
       sc = size(sset.coeff)
-      if sc[0] EQ 2 then goodcoeff = sset.coeff[0:npoly-1,coeffbk] $
+      if sc[0] EQ 2 then goodcoeff = sset.coeff[*,coeffbk] $
       else goodcoeff = sset.coeff[coeffbk]
-      gb = sset.fullbkpt[goodbk]
 
       maskthis = xwork * 0.0 
    
@@ -81,14 +88,26 @@ function bspline_valu, x, sset, x2=x2, action=action, upper=upper, lower=lower
           if (ict GT 0) then begin
              yfit[lower[i]:upper[i]] = action[lower[i]:upper[i],*] # $
                   goodcoeff[i*npoly+spot]
-             maskthis[lower[i]:upper[i]] = 1
           endif
 
       endfor
 
       yy = yfit
-      yy[xsort] = yfit * maskthis
+      yy[xsort] = yfit 
 
+      mask = lonarr(nx) + 1
+      gb = sset.fullbkpt[goodbk]
+
+      outside = where(x LT gb[nord-1] OR x GT gb[n])
+      if outside[0] NE -1 then mask[outside] = 0
+   
+      hmm = where(goodbk[1:*] - goodbk GT 2, nhmm) 
+      for jj=0, nhmm - 1 do begin
+        inside = where(x GE sset.fullbkpt[goodbk[hmm[jj]]] $
+                  AND  x LE sset.fullbkpt[goodbk[hmm[jj]+1]-1])
+        if inside[0] NE -1 then mask[inside] = 0
+      endfor
+        
       return, yy
 end
 

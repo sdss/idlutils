@@ -20,10 +20,9 @@
 ;   x2         - Orthogonal dependent variable for 2d fits
 ;
 ; OPTIONAL OUTPUTS:
-;   indx       - The index of bkpt which is just left of x[i], needed to
-;                  complete banded algebra
-;   lower      - ???
-;   upper      - ???
+;   lower      - A list of pixel positions, each corresponding to the first
+;                occurence of position greater than breakpoint indx
+;   upper      - Same as lower, but denotes the upper pixel positions
 ;
 ; COMMENTS:
 ;
@@ -72,6 +71,7 @@ function bspline_action, x, sset, x2=x2, lower=lower, upper=upper
       upper = lonarr(n-nord+1) - 1
 
       indx = intrv(x, gb, nord)
+
 
       bf1 = bsplvn(gb, nord, x, indx)
       action = bf1

@@ -12,7 +12,7 @@
 ; CALLING SEQUENCE:
 ;   
 ;   error_code = bspline_fit(x, y, invvar, sset, $
-;                fullbkpt=fullbkpt, nord=, x2=, npoly=, yfit=)
+;                fullbkpt=fullbkpt, nord=, x2=, npoly=, yfit=, mask=)
 ;
 ; INPUTS:
 ;   x          - independent variable
@@ -42,17 +42,23 @@
 ;
 ;
 ; PROCEDURES CALLED:
-;
-;   efc_idl in src/slatec/idlwrapper.c
-;         which wraps to efc.o in libslatecidl.so
+;   bspline_action()
+;   bspline_maskpoints()
+;   bspline_valu()
+;   cholesky_band()
+;   cholesky_solve()
 ;
 ; REVISION HISTORY:
 ;   20-Aug-2000 Written by Scott Burles, FNAL
+;   12-Oct-2000  Changed return codes
+;                 0 is good
+;                -1 is dropped breakpoints, try again
+;                -2 is failure, should abort
 ;-
 ;------------------------------------------------------------------------------
 
 function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
-       x2=x2, npoly=npoly, nord=nord, yfit=yfit
+       x2=x2, npoly=npoly, nord=nord, yfit=yfit, mask=mask
 
       if NOT keyword_set(nord) then nord=4L
 
@@ -123,7 +129,7 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 ;
 ;	This is an attempt to drop bkpts where minimal influence is located
 ;
-    minimum_influence = 1.0e-5 * total(invvar)/nfull
+    minimum_influence = 1.0e-10 * total(invvar)/nfull
     yfit = ydata*0.0
 
 ;
@@ -134,43 +140,15 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
     errb = cholesky_band(alpha, mininf=minimum_influence) 
 
 
-    if (errb[0] NE -1) then begin
-      hmm = errb[uniq(errb/npoly)]/npoly  
-      badontop = where(hmm GE (n - nord), nbad)
-
-      test = lonarr(nbkpt) + 1
-      test[hmm] = 0
-
-      if nbad GT 0 then begin
-         aa = reverse(where(test))
-         if aa[0] NE -1 then hmm[badontop] = aa[0:nbad-1]
-      endif
-
-      test[*] = 1
-      test[hmm] = 0
-
-      for jj=1,nord/2 do begin
-        test[(hmm - jj)>0] = 0
-        test[(hmm + jj)<(nbkpt-1)] = 0
-      endfor
- 
-      hmm = where(test EQ 0)
-          
-      currenterr =  (goodbk[hmm < (n - nord - 1) ] + nord) 
-
-      ; first entry is bad, get rid of lowest bkpt
-      ; if (where(hmm EQ nord))[0] NE -1 then $
-        ;  currenterr = [(where(sset.bkmask))[0], currenterr]
-      return, currenterr
-
+    if (errb[0] NE -1) then begin 
+      return, bspline_maskpoints(sset, errb, npoly)
     endif
-
+ 
 ; this changes beta to contain the solution
 
     errs = cholesky_solve(alpha, beta)   
     if (errs[0] NE -1) then begin
-      hmm = ((errs[uniq(errb/npoly)]/npoly - 1) > 0) < (n - nord - 1)
-      return, goodbk[hmm] + nord
+      return, bspline_maskpoints(sset, errs, npoly)
     endif
 
     sc = size(sset.coeff)
@@ -185,7 +163,8 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 ;
 ;	Now evaluate fit just since we can
 ;
-    yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, lower=lower)
+    yfit = bspline_valu(xdata, sset, x2=x2, action=a1, upper=upper, $
+            lower=lower, mask=mask)
 
-    return, -1L
+    return, 0L
 end 

@@ -60,7 +60,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
- x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, $
+ x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, mask=mask, $
  bkpt=bkpt, oldset=oldset, maxiter=maxiter, upper=upper, lower=lower, $
  outmask=outmask, _EXTRA=EXTRA
 
@@ -153,10 +153,11 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ; Iterate spline fit
 
    iiter = 0
-   error = -1L
+   error = 0
    outmask = invwork GT 0
+   inmask = invwork GT 0
 
-   while (((error[0] NE -1) OR (keyword_set(qdone) EQ 0)) $
+   while (((error[0] NE 0) OR (keyword_set(qdone) EQ 0)) $
     AND iiter LE maxiter) do begin
 
       ngood = total(outmask)
@@ -169,23 +170,20 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
         ; Do the fit.  The indices of ill-constrained values are returned,
         ; or -1 if all break points are good.
         error = bspline_fit(xwork, ywork, invwork*outmask, sset, $
-         x2=x2work, yfit=yfit)
+         x2=x2work, yfit=yfit, nord=nord, mask=mask)
       endelse
 
-      if (error[0] EQ -2) then begin
+      iiter = iiter + 1
+
+      if (error[0] EQ -2L) then begin
          ; All break points have been dropped.
          return, sset
-      endif else if (error[0] NE -1) then begin
-         ; Drop another break point.
-         sset.bkmask[error] = 0
-         iiter = iiter + 1 ; I don't understand why we need this!!??? (DJS)
-                           ; But we get in an infinite loop sometimes w/out it!
-      endif else begin
+      endif else if (error[0] EQ 0) then begin
          ; Iterate the fit -- next rejection iteration.
-         qdone = djs_reject(ywork, yfit, invvar=invwork, $
+         inmask = outmask
+         qdone = djs_reject(ywork, yfit, invvar=invwork, inmask=inmask, $
           outmask=outmask, upper=upper, lower=lower, _EXTRA=EXTRA)
-         iiter = iiter + 1
-      endelse
+      endif
 
    endwhile
 

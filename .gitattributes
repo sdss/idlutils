@@ -561,6 +561,7 @@ pro/bspline/bspline_bkpts.pro -text
 pro/bspline/bspline_fit.pro -text
 pro/bspline/bspline_indx.pro -text
 pro/bspline/bspline_iterfit.pro -text
+pro/bspline/bspline_maskpoints.pro -text
 pro/bspline/bspline_valu.pro -text
 pro/bspline/bsplvn.pro -text
 pro/bspline/bvalu.pro -text
