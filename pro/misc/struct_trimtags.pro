@@ -60,11 +60,12 @@ function struct_trimtags, instruct, select_tags=select_tags, $
    ;----------
    ; Select which tags are wanted according to SELECT_TAGS.
 
+   indx = -1L
    if (keyword_set(select_tags)) then begin
       for jtag=0, n_elements(select_tags)-1 do begin
          jj = where(strmatch(tags, strupcase(select_tags[jtag])))
          if (jj[0] NE -1) then begin
-            if (NOT keyword_set(indx)) then indx = jj $
+            if (indx[0] EQ -1) then indx = jj $
              else indx = [indx, jj]
          endif
       endfor
@@ -72,7 +73,7 @@ function struct_trimtags, instruct, select_tags=select_tags, $
       indx = lingden(ntag)
    endelse
 
-   if (NOT keyword_set(indx)) then return, 0
+   if (indx[0] EQ -1) then return, 0
 
    ;----------
    ; De-select which tags are excluded according to EXCEPT_TAGS.
