@@ -106,7 +106,14 @@ function usno_read, racen, deccen, rad, path=path, catname=catname
   if strupcase(cattype) eq 'USNO-B' then begin 
 
      usnostruct = usnob10_extract(data)
-
+; -------- add field epoch information
+     if 1 then begin 
+        epochfile = path+'/USNO-B-epochs.fit'
+        ep = mrdfits(epochfile, 1)
+        hash = fltarr(10000)
+        hash[ep.field] = ep.epoch
+        usnostruct.fldepoch = hash[usnostruct.fldid]
+     endif 
   endif
 
   return, usnostruct
