@@ -30,11 +30,12 @@
 ;   2003-01-08  written - Hogg
 ;-
 pro hogg_meanplot, x,y,z,weight=weight, $
-              xrange=xrange,yrange=yrange,dxbin=dxbin,dybin=dybin, $
-              levels=levels,c_colors=c_colors, $
-              minnum=minnum, $
-              noperimeter=noperimeter,nobox=nobox,nolines=nolines, $
-              maskonly=maskonly
+                   xrange=xrange,yrange=yrange,dxbin=dxbin,dybin=dybin, $
+                   levels=levels,c_colors=c_colors, $
+                   minnum=minnum, $
+                   noperimeter=noperimeter,nobox=nobox,nolines=nolines, $
+                   maskonly=maskonly, bin_mean=bin_mean, $
+                   bin_number=bin_number, input_mean=input_mean
 
 if(NOT keyword_set(minnum)) then minnum=1L
 
@@ -59,12 +60,12 @@ dxbin= abs(dxbin)
 dybin= abs(dybin)
 
 ; make (overlapping) bins
-factor= 3.0                            ; number of bin centers per bin width
-factor2= 8.0                           ; number of sigmas to cover
-if not keyword_set(xrange) then begin  ; base the bins on moments if no xrange
+factor= 3.0                     ; number of bin centers per bin width
+factor2= 8.0                    ; number of sigmas to cover
+if not keyword_set(xrange) then begin ; base the bins on moments if no xrange
     nxbin= ceil(factor*2.0*factor2*sqrt(xvar)/dxbin)+1
     xbin= xmean+(dxbin/factor)*(dindgen(nxbin)-0.5*double(nxbin-1))
-endif else begin                       ; base the bins on xrange if possible
+endif else begin                ; base the bins on xrange if possible
     nxbin= ceil(factor*abs((xrange[1]-xrange[0])/dxbin))+1
     sign= (xrange[1]-xrange[0])/abs(xrange[1]-xrange[0])
     xbin= xrange[0]+sign*(dxbin/factor)*dindgen(nxbin)
@@ -79,18 +80,13 @@ endif else begin
 endelse
 
 ; make mean image
-image= hogg_weighted_mean_surface(x,y,z,weight,xbin,ybin,dxbin,dybin)
-bin_number= image[*,*,0]
-bin_weight= image[*,*,1]
-bin_weight2= image[*,*,2]
-bin_mean= image[*,*,3]
-
-; make bin_mean lower than low 
-min_indx=where(bin_number lt minnum,min_count)
-min_mean=min(bin_mean)
-ignore_mean=min_mean-0.1*abs(min_mean)-1.
-limit_mean=0.5*(min_mean+ignore_mean)
-if(min_count gt 0) then bin_mean[min_indx]=ignore_mean
+if(NOT keyword_set(input_mean)) then begin
+    image= hogg_weighted_mean_surface(x,y,z,weight,xbin,ybin,dxbin,dybin)
+    bin_number= image[*,*,0]
+    bin_weight= image[*,*,1]
+    bin_weight2= image[*,*,2]
+    bin_mean= image[*,*,3]
+endif
 
 ; check values and set contour levels
 factor= 10.0
@@ -124,8 +120,7 @@ if not keyword_set(c_colors) then begin
 endif
 contour, bin_mean,xbin,ybin,levels=levels,/cell_fill, $
   c_colors=c_colors, $
-  xstyle=1,xrange=xrange,ystyle=1,yrange=yrange, $
-  min_value=limit_mean
+  xstyle=1,xrange=xrange,ystyle=1,yrange=yrange
 if NOT keyword_set(nolines) then begin
     contour, bin_mean,xbin,ybin,levels=levels,/overplot, $
       c_labels=lonarr(n_elements(levels))+1L,c_charthick=!P.CHARTHICK
@@ -141,10 +136,10 @@ if not keyword_set(nobox) then begin
 endif
 
 ; plot number perimeter
-numlevels=[0,minnum-1]
+numlevels=[0,minnum]
 if not keyword_set(noperimeter) then begin
     contour, bin_number,xbin,ybin,levels=numlevels, $
-      /overplot,cell_fill=maskonly, c_thick=10
+      /overplot,cell_fill=maskonly, c_thick=3
 endif
 
 end

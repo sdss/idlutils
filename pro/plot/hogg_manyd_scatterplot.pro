@@ -20,6 +20,7 @@
 ;   [etc]        [options for hogg_scatterplot, see documentation]
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
+;   manyd        [nx,ny,NX,NY] data
 ; BUGS:
 ;   Can get infinite plot ranges.
 ; DEPENDENCIES:
@@ -32,7 +33,7 @@ pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
                             axis_char_scale=axis_char_scale, $
                             default_font=default_font, $
                             xnpix=xnpix,ynpix=ynpix, $
-                            nodata=nodata, $
+                            nodata=nodata, manyd=manyd, $
                             _EXTRA=KeywordsForHoggScatterplot
 
 ; check dimensions
@@ -145,8 +146,11 @@ for id2=ydimen-1L,0L,-1 do begin
                     hogg_scatterplot, point[d1,*],point[d2,*], $
                       weight=weight, $
                       xrange=range[*,d1],yrange=range[*,d2], $
-                      xnpix=xnpix,ynpix=ynpix, $
+                      xnpix=xnpix,ynpix=ynpix, grid=grid, $
                       _EXTRA=KeywordsForHoggScatterplot
+                    if(n_elements(manyd) eq 0) then $
+                      manyd=dblarr(xnpix,ynpix,xdimen,ydimen)
+                    manyd[*,*,id1,id2]=grid
                 endelse
             endif else begin
                 if keyword_set(nodata) then begin

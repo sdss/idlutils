@@ -33,6 +33,8 @@ pro hogg_manyd_meanplot, weight,point,zdim,psfilename, $
                          xdims=xdims,ydims=ydims, $
                          axis_char_scale=axis_char_scale, $
                          default_font=default_font, $
+                         manyd_mean=manyd_mean, $
+                         input_mean=input_mean, $
                          _EXTRA=KeywordsForHoggMeanplot
 
 ; check dimensions
@@ -52,6 +54,16 @@ if(NOT keyword_set(ydims)) then ydims=lindgen(dimen)
 if(NOT keyword_set(default_font)) then default_font='!3'
 xdimen=n_elements(xdims)
 ydimen=n_elements(ydims)
+
+; set manyd_mean
+if(NOT keyword_set(input_mean)) then begin
+    manyd_mean1={range:dblarr(2,2), $
+                 label:strarr(2), $
+                 dbin:dblarr(2), $
+                 number:ptr_new(), $
+                 mean:ptr_new()}
+    manyd_mean=replicate(manyd_mean1,xdimen,ydimen)
+endif
 
 ; cram inputs into correct format
 point= reform(double(point),dimen,ndata)
@@ -147,11 +159,27 @@ for id2=ydimen-1L,0L,-1 do begin
 
 ; plot
             if d1 NE d2 then begin
+                if(NOT keyword_set(input_mean)) then begin
+                    manyd_mean[id1,id2].range[*,0]=range[*,d1]
+                    manyd_mean[id1,id2].range[*,1]=range[*,d2]
+                    manyd_mean[id1,id2].label[0]=label[d1]
+                    manyd_mean[id1,id2].label[1]=label[d2]
+                    manyd_mean[id1,id2].dbin[0]=dxbin
+                    manyd_mean[id1,id2].dbin[1]=dybin
+                endif else begin
+                    bin_mean=*manyd_mean[id1,id2].mean
+                    bin_number=*manyd_mean[id1,id2].number
+                endelse
                 hogg_meanplot, point[d1,*],point[d2,*],quantity, $
                   weight=weight, $
-                  dxbin=dxbin,dybin=dybin, $
+                  dxbin=dxbin,dybin=dybin, bin_mean=bin_mean, $
+                  bin_number=bin_number, input_mean=input_mean, $
                   xrange=range[*,d1],yrange=range[*,d2], $
                   _EXTRA=KeywordsForHoggMeanplot
+                if(NOT keyword_set(input_mean)) then begin
+                    manyd_mean[id1,id2].mean=ptr_new(bin_mean)
+                    manyd_mean[id1,id2].number=ptr_new(bin_number)
+                endif
             endif else begin
 ; HACK: placeholder
                 plot, [0],[0],xrange=range[*,d1],yrange=range[*,d2],/nodata
@@ -174,7 +202,7 @@ for id2=ydimen-1L,0L,-1 do begin
                 axis,!X.CRANGE[1],!Y.CRANGE[0],yaxis=1, $
                   ytitle=label[d2],ycharsize=axis_char_scale
             endif
-
+            
 ; end loops and close file
         endelse 
     endfor
