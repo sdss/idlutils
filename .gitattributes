@@ -682,6 +682,7 @@ pro/misc/splog.pro -text
 pro/misc/struct_addtags.pro -text
 pro/misc/struct_append.pro -text
 pro/misc/struct_print.pro -text
+pro/misc/struct_trimtags.pro -text
 pro/misc/which.pro -text
 pro/mpeg/ppmtompeg.pro -text
 pro/mpfit/INSTALL -text
