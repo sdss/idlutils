@@ -48,7 +48,7 @@ pro fits_close,fcb,no_abort=no_abort,message=message
 ; close unit
 ;
 	on_ioerror,ioerror
-	free_lun,fcb.unit
+	if (keyword_set(fcb)) then free_lun,fcb.unit
 	!err = 1
 	return
 ;
