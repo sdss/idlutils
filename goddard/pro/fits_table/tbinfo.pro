@@ -1,9 +1,8 @@
 pro tbinfo,h,tb_str
-;+
 ; NAME:
 ;       TBINFO
 ; PURPOSE:
-;       Return informational structure from a FITS binary table header.
+;       Return an informational IDL structure from a FITS binary table header.
 ;
 ; CALLING SEQUENCE:
 ;       tbinfo, h, tb_str
@@ -19,17 +18,25 @@ pro tbinfo,h,tb_str
 ;               7 - string, 4- real*4, 3-integer*4, 5-real*8
 ;       .numval - repeat count, longword vector
 ;       .tunit - string unit numbers, string vector
-;       .tnull - null value for the field, string vector
+;       .tnull - integer null value for the field, stored as a string vector
+;                 so that an empty string indicates that TNULL is not present
 ;       .tform - format for the field, string vector
 ;       .ttype - field name, string vector
 ;       .maxval- maximum number of elements in a variable length array, long
 ;               vector
-;       .tscale - scale factor for converting to physical values, default 1.0
-;       .tzero - additive offset for converting to physical values, default 0.0
+;       .tscal - pointer array giving the scale factor for converting to 
+;                physical values, default 1.0
+;       .tzero - pointer array giving the additive offset for converting to 
+;                physical values, default 0.0
 ;       .tdisp - recommended output display format
 ;
 ;       All of the output vectors will have same number of elements, equal
-;       to the number of columns in the binary table
+;       to the number of columns in the binary table.
+;
+;       The .tscal and .tzero values are stored as pointers so as to preserve
+;       the individual data types (e.g. float or double) which may differ 
+;       in different columns.   For example, to obtain the value of TSCAL for
+;       the third column use *tab_str.tscal[2]    
 ; SIDE EFFECTS:
 ;       If there are difficulties interpreting the table then !ERR is set 
 ;       to -1
@@ -44,6 +51,8 @@ pro tbinfo,h,tb_str
 ;       Release for IDL V5.0   August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added "unofficial" 64 bit integer "K" format W. Landsamn Feb. 2003
+;       Store .tscal and .tzero tags as pointers, so as to preserve 
+;       type information   W. Landsman          April 2003
 ;-
 ;----------------------------------------------------------------------------
  On_error,2
@@ -68,8 +77,8 @@ pro tbinfo,h,tb_str
  idltype = intarr(tfields) & tnull = idltype
  numval = lonarr(tfields) & tbcol = numval & width = numval & maxval = numval
  tunit = replicate('',tfields) & ttype = tunit & tdisp = tunit & tnull = tunit
- tscal = replicate(1.0, tfields) 
- tzero = replicate(0.0, tfields)
+ tscal = ptrarr(tfields,/all)
+ tzero = ptrarr(tfields,/all)
 
  type = sxpar(h,'TTYPE*', COUNT = N_ttype)
  if N_ttype GT 0 then ttype[0] = strtrim(type,2) 
@@ -80,21 +89,20 @@ pro tbinfo,h,tb_str
 
  tform =  strupcase(strtrim(tform,2))
                                                 
- unit = sxpar(h, 'TUNIT*', COUNT = N_tunit)     ;physical units
+ unit = strtrim(sxpar(h, 'TUNIT*', COUNT = N_tunit),2)     ;physical units
  if N_tunit GT 0 then tunit[0] = unit
 
  null = sxpar(h, 'TNULL*', COUNT = N_tnull)      ;null data value
  if N_tnull GT 0 then tnull[0] = null
 
- scale = sxpar(h,'TSCAL*', COUNT = N_tscal)     ;Scale factor
- if N_tscal GT 0 then begin                     ;Special check needed because
-        bad = where(scale EQ 0.0, Nbad)         ;TSCAL default is 1.0 not 0.0
-        if Nbad GT 0 then scale[bad] = 1.0
-        tscal[0] = scale
- endif
-
- zero = sxpar(h, 'TZERO*', COUNT = N_tzero)      ;Offset scale value
- if N_tzero GT 0 then tzero[0] = zero
+ index = strtrim(indgen(tfields)+1,2)
+ for i=0,tfields-1 do begin
+   scale = sxpar(h,'TSCAL' + index[i], COUNT = N_tscal)     ;Scale factor
+   if N_tscal GT 0 then *tscal[i] = scale else *tscal[i] = 1.0
+   zero = sxpar(h,'TZERO' + index[i], Count = N_tzero)
+   if N_tzero GT 0 then *tzero[i] = zero else *tzero[i] = 0
+ endfor
+   
 
  disp = sxpar(h,'TDISP*', COUNT = N_tdisp)       ;Display format string
  if N_tdisp GT 0 then tdisp[0] = disp
