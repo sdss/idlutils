@@ -1,0 +1,11 @@
+* text=auto !eol
+pro/dust/bh_rdfort.pro -text
+pro/dust/djs_planck.pro -text
+pro/dust/dust_getval.pro -text
+pro/dust/fac_flux2temp.pro -text
+pro/dust/planckcorr.pro -text
+pro/dust/predict_sync.pro -text
+pro/dust/predict_thermal.pro -text
+pro/dust/setlog.pro -text
+pro/dust/wcs_coord2pix.pro -text
+pro/dust/wcs_getval.pro -text
