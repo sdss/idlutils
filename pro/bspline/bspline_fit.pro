@@ -157,9 +157,9 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
    endif
 
    sc = size(sset.coeff)
-   if sc[0] EQ 2 then begin
-      sset.icoeff[*,goodbk] = reform(alpha[0,lindgen(nfull)],npoly,n)
-      sset.coeff[*,goodbk] = reform(beta[lindgen(nfull)], npoly, n) 
+   if (sc[0] EQ 2) then begin
+      sset.icoeff[*,goodbk] = reform(alpha[0,lindgen(nfull)],npoly,nn)
+      sset.coeff[*,goodbk] = reform(beta[lindgen(nfull)], npoly, nn)
    endif else begin
       sset.icoeff[goodbk] = alpha[0,lindgen(nfull)]
       sset.coeff[goodbk] = beta[lindgen(nfull)]
