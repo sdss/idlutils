@@ -5,6 +5,9 @@ FUNCTION ngp,value,posx,nx,posy,ny,posz,nz, $
 ;       NGP
 ;
 ; PURPOSE:
+;       Interpolate an irregularly sampled field using Nearest Grid Point
+;
+; EXPLANATION:
 ;       This function interpolates irregularly gridded points to a
 ;       regular grid using Nearest Grid Point.
 ;
@@ -13,8 +16,7 @@ FUNCTION ngp,value,posx,nx,posy,ny,posz,nz, $
 ;
 ; CALLING SEQUENCE:
 ;       Result = NGP, VALUE, POSX, NX[, POSY, NY, POSZ, NZ, 
-;                     AVERAGE = average, WRAPAROUND =  wraparound,
-;                     NO_MESSAGE = no_message]
+;                     /AVERAGE, /WRAPAROUND, /NO_MESSAGE]
 ;
 ; INPUTS:
 ;       VALUE: Array of sample weights (field values). For e.g. a
@@ -74,12 +76,12 @@ FUNCTION ngp,value,posx,nx,posy,ny,posz,nz, $
 ;       Grid point values are computed (sum or average of samples).
 ;
 ; EXAMPLE:
-;       nx=20
-;       ny=10
-;       posx=randomu(s,1000)
-;       posy=randomu(s,1000)
-;       value=posx^2+posy^2
-;       field=ngp(value,posx*nx,nx,posy*ny,ny,/average)
+;       nx = 20
+;       ny = 10
+;       posx = randomu(s,1000)
+;       posy = randomu(s,1000)
+;       value = posx^2+posy^2
+;       field = ngp(value,posx*nx,nx,posy*ny,ny,/average)
 ;       surface,field,/lego
 ;
 ; NOTES:
@@ -89,6 +91,7 @@ FUNCTION ngp,value,posx,nx,posy,ny,posz,nz, $
 ;       McGraw-Hill, 1981).
 ; MODIFICATION HISTORY:
 ;       Written by Joop Schaye, Feb 1999.
+;       Check for LONG overflow  P. Riley/W. Landsman   December 1999
 ;-
 
 nrsamples=n_elements(value)
@@ -99,7 +102,7 @@ IF dim LE 2 THEN BEGIN
     nz=1
     IF dim EQ 1 THEN ny=1
 ENDIF
-nxny=nx*ny
+nxny = long(nx)*long(ny)
 
 
 ;---------------------
@@ -111,7 +114,7 @@ on_error,2  ; Return to caller if an error occurs.
 IF NOT (nparams EQ 3 OR nparams EQ 5 OR nparams EQ 7) THEN BEGIN
     message,'Incorrect number of arguments!',/continue
     message,'Syntax: NGP, VALUE, POSX, NX[, POSY, NY, POSZ, NZ,' + $
-      ' AVERAGE = average, WRAPAROUND =  wraparound]'
+      ' /AVERAGE, /WRAPAROUND, /NO_MESSAGE]'
 ENDIF 
 
 IF (nrsamples NE n_elements(posx)) OR $

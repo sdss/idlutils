@@ -53,6 +53,7 @@ goddard/pro/astro/jdcnv.pro -text
 goddard/pro/astro/jprecess.pro -text
 goddard/pro/astro/juldate.pro -text
 goddard/pro/astro/mag2flux.pro -text
+goddard/pro/astro/month_cnv.pro -text
 goddard/pro/astro/moonpos.pro -text
 goddard/pro/astro/mphase.pro -text
 goddard/pro/astro/nutate.pro -text
@@ -198,6 +199,7 @@ goddard/pro/fits_bintable/fxbdimen.pro -text
 goddard/pro/fits_bintable/fxbfind.pro -text
 goddard/pro/fits_bintable/fxbfindlun.pro -text
 goddard/pro/fits_bintable/fxbfinish.pro -text
+goddard/pro/fits_bintable/fxbgrow.pro -text
 goddard/pro/fits_bintable/fxbheader.pro -text
 goddard/pro/fits_bintable/fxbhelp.pro -text
 goddard/pro/fits_bintable/fxbhmake.pro -text
@@ -206,10 +208,12 @@ goddard/pro/fits_bintable/fxbisopen.pro -text
 goddard/pro/fits_bintable/fxbopen.pro -text
 goddard/pro/fits_bintable/fxbparse.pro -text
 goddard/pro/fits_bintable/fxbread.pro -text
+goddard/pro/fits_bintable/fxbreadm.pro -text
 goddard/pro/fits_bintable/fxbstate.pro -text
 goddard/pro/fits_bintable/fxbtdim.pro -text
 goddard/pro/fits_bintable/fxbtform.pro -text
 goddard/pro/fits_bintable/fxbwrite.pro -text
+goddard/pro/fits_bintable/fxbwritm.pro -text
 goddard/pro/fits_bintable/fxfindend.pro -text
 goddard/pro/fits_bintable/fxhclean.pro -text
 goddard/pro/fits_bintable/fxhmake.pro -text
@@ -372,6 +376,7 @@ goddard/pro/misc/nulltrim.pro -text
 goddard/pro/misc/numlines.pro -text
 goddard/pro/misc/one_arrow.pro -text
 goddard/pro/misc/one_ray.pro -text
+goddard/pro/misc/oploterror.pro -text
 goddard/pro/misc/ordinal.pro -text
 goddard/pro/misc/osfcnvrt.pro -text
 goddard/pro/misc/product.pro -text

@@ -93,6 +93,8 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;	Written by:	D. Lindler	August, 1995
 ;	Work for variable length extensions  W. Landsman   August 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;	PCOUNT and GCOUNT added for IMAGE extensions   J. Graham  October 1999
+;       Write unsigned data types      W. Landsman   December 1999
 ;-
 ;-----------------------------------------------------------------------------
 ;
@@ -165,11 +167,11 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 	if naxis gt 0 then axis = s[1:naxis]
 	idltype = s[naxis+1]
 
-	if (idltype gt 5) then begin
+	if (idltype gt 5) and (idltype NE 12) and (idltype NE 13) then begin
 		message='Data array is an invalid type'
 		goto,error_exit
 	endif
-	bitpixs = [8,8,16,32,-32,-64]
+	bitpixs = [8,8,16,32,-32,-64,0,0,0,0,0,0,16,32]
 	bitpix = bitpixs[idltype]
 ;
 ; determine extname, extver, xtension and extlevel and delete current values
@@ -256,10 +258,20 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 	if fcb.nextend eq -1 then begin
 		sxaddpar,h,'EXTEND','T','file may contain extensions'
 	   end else begin
+ 		; PCOUNT and GCOUNT are mandatory for IMAGE extensions
+ 		if Axtension eq 'IMAGE   ' then begin
+ 		     sxaddpar,h,'PCOUNT',0
+ 		     sxaddpar,h,'GCOUNT',1
+ 		endif
 		if Aextname ne '' then sxaddpar,h,'extname',Aextname
 		if Aextver gt 0 then sxaddpar,h,'extver',Aextver
 		if Aextlevel gt 0 then sxaddpar,h,'extlevel',Aextlevel
 	end
+        if idltype EQ 12 then $
+               sxaddpar,header,'BZERO',32768,'Data is unsigned integer'
+        if idltype EQ 13 then $
+               sxaddpar,header,'BZERO',32768,'Data is unsigned long'
+        if idltype GE 12 then sxdelpar,header,'BSCALE'
 ;
 ; delete special keywords from user supplied header
 ;
@@ -275,6 +287,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;
 	last = where(strmid(h,0,8) eq 'END     ')
 	header = [h[0:last[0]-1],header]
+
 ;
 ; convert header to bytes and write
 ;
@@ -305,6 +318,8 @@ write_header:
 ; convert to IEEE
 ;
 	    newdata = data
+            if idltype EQ 12 then newdata = fix(data - 32768)
+            if idltype EQ 13 then newdata = long(data - 2147483648)
 	    host_to_ieee, newdata
 ;
 ; insert IEEE NaN values

@@ -72,7 +72,7 @@
 ;		Incorporated into CDS library.
 ; Version     : 
 ;	Version 1, 12 April 1993.
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Vectorized implementation improves performance, CM 18 Nov 1999
 ;-
 ;
 @fxbintable
@@ -95,36 +95,50 @@
 ;
 	TFIELDS0 = FXPAR(HEADER,'TFIELDS')
 	IF TFIELDS0 EQ 0 THEN MESSAGE,'No columns found in HEADER'
+
 ;
-;  Step through the columns one by one.
+;  Extract the keyword values all in one pass
+;        
+        KEYVALUES = FXPAR(HEADER, STRTRIM(KEYWORD,2)+'*')
+        N_FOUND = 0L
+
 ;
-	N_COLUMNS = 0
-	N_FOUND = 0
-	FOR I = 1,TFIELDS0 DO BEGIN
-		VALUE = FXPAR(HEADER,STRTRIM(KEYWORD,2)+STRTRIM(I,2))
-		IF !ERR GE 0 THEN BEGIN
-			N_FOUND = N_FOUND + 1
-			ADD_COL = 1
-		END ELSE IF N_PARAMS() EQ 6 THEN BEGIN
-			VALUE = DEFAULT
-			ADD_COL = 1
-		END ELSE BEGIN
-			ADD_COL = 0
-		ENDELSE
+;  INDEX is used as an array index to fill in the final output
 ;
-;  Append the found (or default) data to the arrays.
+        IF !ERR GE 0 THEN BEGIN
+            N_FOUND = N_ELEMENTS(KEYVALUES)
+            INDEX   = LINDGEN(N_FOUND)
+        ENDIF
+
 ;
-		IF ADD_COL THEN BEGIN
-			IF N_COLUMNS EQ 0 THEN BEGIN
-				COLUMNS = I
-				VALUES = VALUE
-			END ELSE BEGIN
-				COLUMNS = [COLUMNS,I]
-				VALUES = [VALUES,VALUE]
-			ENDELSE
-			N_COLUMNS = N_COLUMNS + 1
-		ENDIF
-	ENDFOR
+;  If a default was given, then we are a little more careful to 
+;  reproduce the correct number of values.
 ;
-	RETURN
+        IF N_ELEMENTS(DEFAULT) GT 0 THEN BEGIN
+            ;; If no values were found we need to fill KEYVALUES with
+            ;; *something*.
+            IF !ERR LE 0 THEN KEYVALUES = DEFAULT
+            COLUMNS  = LINDGEN(TFIELDS0) + 1
+
+            ;; Make an array with the number of columns in the table
+            SZ_VALUE = SIZE(KEYVALUES[0])
+            VALUES   = MAKE_ARRAY(TFIELDS0, TYPE=SZ_VALUE[1], VALUE=DEFAULT)
+
+            ;; Fill the columns which had this keyword
+            IF N_FOUND GT 0 THEN VALUES[INDEX] = KEYVALUES
+
+        ENDIF ELSE BEGIN
+
+;
+;  If no default was given, we can simply return the values returned
+;  by FXPAR.
+;
+            IF N_FOUND GT 0 THEN BEGIN
+                COLUMNS = INDEX + 1
+                VALUES  = KEYVALUES
+            ENDIF
+
+        ENDELSE
+        RETURN
+            
 	END

@@ -1,4 +1,4 @@
-	PRO FXFINDEND,UNIT
+	PRO FXFINDEND,UNIT, EXTENSION
 ;+
 ; Project     : SOHO - CDS
 ;
@@ -13,7 +13,7 @@
 ;	where the next FITS extension header would be if there is one, or to
 ;	the end of the file if not.
 ; Use         : 
-;	FXFINDEND, UNIT
+;	FXFINDEND, UNIT [, EXTENSION]
 ; Inputs      : 
 ;	UNIT	= Logical unit number for the opened file.
 ; Opt. Inputs : 
@@ -21,7 +21,8 @@
 ; Outputs     : 
 ;	None.
 ; Opt. Outputs: 
-;	None.
+;       EXTENSION = The extension number that a new extension would
+;                   have if placed at the end of the file.
 ; Keywords    : 
 ;	None.
 ; Calls       : 
@@ -45,17 +46,19 @@
 ; Version     : 
 ;	Version 1, 12 April 1993.
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added EXTENSION parameter, CM 1999 Nov 18
 ;-
 ;
 	ON_ERROR,2
 ;
 ;  Check the number of parameters.
 ;
-	IF N_PARAMS() EQ 0 THEN MESSAGE,'Syntax:  FXFINDEND, UNIT'
+	IF N_PARAMS() EQ 0 THEN MESSAGE,'Syntax:  FXFINDEND, UNIT [,EXTENSION]'
 ;
 ;  Go to the start of the file.
 ;
 	POINT_LUN,UNIT,0
+        EXTENSION = 0L
 ;
 ;  Read the next header, and get the number of bytes taken up by the data.
 ;
@@ -78,6 +81,7 @@ NEXT_EXT:
 	NREC = LONG((NBYTES + 2879) / 2880)
 	POINT_LUN, -UNIT, POINTLUN			;Current position
 	POINT_LUN, UNIT, POINTLUN + NREC*2880L		;Next FITS extension
+        EXTENSION = EXTENSION + 1L
 	IF NOT EOF(UNIT) THEN GOTO, NEXT_EXT
 ;
 ;  When done, make sure that the pointer is positioned at the first byte after

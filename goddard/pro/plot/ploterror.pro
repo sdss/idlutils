@@ -100,6 +100,7 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;     W. Landsman  Better default scaling when NSKIP supplied       Oct 1998 
 ;     W. Landsman  Ignore !P.PSYM when drawing error bars           Jan 1999
 ;     W. Landsman  Handle NSUM keyword correctly                    Aug 1999
+;     W. Landsman  Fix case of /XLOG but no X error bars            Oct 1999
 ;-
 ;                       Check the parameters.
  On_error, 2
@@ -237,7 +238,7 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
     endif
     ycrange = !Y.CRANGE   &  xcrange = !X.CRANGE
     if ylog EQ 1 then ylo = ylo > 10^ycrange[0]
-    if xlog EQ 1 then xlo = xlo > 10^xcrange[0]
+    if (xlog EQ 1) and (np EQ 4) then xlo = xlo > 10^xcrange[0]
     sv_psym = !P.PSYM & !P.PSYM = 0
     
  FOR i = 0L, (n-1), Nskip DO BEGIN     

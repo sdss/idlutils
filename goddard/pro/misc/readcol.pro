@@ -1,7 +1,7 @@
 pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
             v16,v17,v18,v19,v20,v21,v22,v23,v24,v25, $
             FORMAT = fmt, DEBUG=debug, SILENT=silent, SKIPLINE = skipline, $
-            NUMLINE = numline
+            NUMLINE = numline, DELIMITER = delimiter
 ;+
 ; NAME:
 ;       READCOL
@@ -15,7 +15,7 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;
 ; CALLING SEQUENCE:
 ;       READCOL, name, v1, [ v2, v3, v4, v5, ...  v25 , 
-;             FORMAT = , /DEBUG ,  /SILENT , SKIPLINE = , NUMLINE = ]
+;           DELIMITER= ,FORMAT = , /DEBUG ,  /SILENT , SKIPLINE = , NUMLINE = ]
 ;
 ; INPUTS:
 ;       NAME - Name of ASCII data file, scalar string.  In VMS, an extension of 
@@ -38,11 +38,13 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       If a FORMAT keyword string is not supplied, then all columns are 
 ;       assumed to be floating point.
 ;
-;       SILENT - Normally, READCOL will display each line that it skips over.
+;       /SILENT - Normally, READCOL will display each line that it skips over.
 ;               If SILENT is set and non-zero then these messages will be 
 ;               suppressed.
-;       DEBUG - If this keyword is non-zero, then additional information is
+;       /DEBUG - If this keyword is non-zero, then additional information is
 ;                printed as READCOL attempts to read and interpret the file.
+;       DELIMITER - single character specifying delimiter used to separate 
+;                columns.   Default is either a comma or a blank.
 ;       SKIPLINE - Scalar specifying number of lines to skip at the top of file
 ;               before reading.   Default is to start at the first line.
 ;       NUMLINE - Scalar specifying number of lines in the file to read.  
@@ -92,8 +94,8 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       (Fixed problem with over allocation of logical units.)
 ;       Added SKIPLINE and NUMLINE keywords  W. Landsman    March 92
 ;       Read a maximum of 25 cols.  Joan Isensee, Hughes STX Corp., 15-SEP-93.
-;       Call NUMLINES() function W. Lansdman          Feb. 1996
-;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Call NUMLINES() function W. Landsman          Feb. 1996
+;       Added DELIMITER keyword  W. Landsman          Nov. 1999
 ;-
   On_error,2                           ;Return to caller
 
@@ -155,20 +157,20 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
        fmt1 = gettok( frmt, ',' )
        if fmt1 EQ '' then fmt1 = 'F'         ;Default is F format
        case strmid(fmt1,0,1) of 
-          'A':  idltype[i] = 7          
-          'D':  idltype[i] = 5
-          'F':  idltype[i] = 4
-          'I':  idltype[i] = 2
-          'B':  idltype[i] = 1
-          'L':  idltype[i] = 3
-          'X':  idltype[i] = 0               ;IDL type of 0 ==> to skip column
+          'A':  idltype(i) = 7          
+          'D':  idltype(i) = 5
+          'F':  idltype(i) = 4
+          'I':  idltype(i) = 2
+          'B':  idltype(i) = 1
+          'L':  idltype(i) = 3
+          'X':  idltype(i) = 0               ;IDL type of 0 ==> to skip column
          ELSE:  message,'Illegal format ' + fmt1 + ' in field ' + strtrim(i,2)
       endcase
 
 ; Define output arrays
 
-      if idltype[i] NE 0 then begin
-          st = vv[k] + '= make_array(nlines,TYPE = idltype[i] )'  
+      if idltype(i) NE 0 then begin
+          st = vv(k) + '= make_array(nlines,TYPE = idltype[i] )'  
           tst = execute(st)
           k = k+1
       endif
@@ -191,16 +193,19 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
                        message,'Skipping Line ' + strtrim(skipline+j+1,2),/INF
           goto, BADLINE 
        endif
-    temp = repchr(temp,',','  ')        ;Replace comma delimiters by spaces
+    if not keyword_set(delimiter) then begin 
+           temp = repchr(temp,',','  ')    ;Replace comma delimiters by spaces
+           delimiter = ' '
+    endif
     k = 0
 
     for i = 0L,nfmt-1 do begin
 
        temp = strtrim(temp,1)                  ;Remove leading spaces
-       var = gettok(temp,' ')                  ;Read next field
-       if ( idltype[i] NE 0 ) then begin       ;Expecting data?
+       var = gettok(temp,delimiter)                  ;Read next field
+       if ( idltype(i) NE 0 ) then begin       ;Expecting data?
 
-          if ( idltype[i] NE 7 ) then begin    ;Check for valid numeric data
+          if ( idltype(i) NE 7 ) then begin    ;Check for valid numeric data
              tst = strnumber(var,val)          ;Valid number?
              if tst EQ 0 then begin            ;If not, skip this line
                  if not keyword_set(SILENT) then $ 
@@ -208,10 +213,10 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
                  ngood = ngood-1
                  goto, BADLINE 
              endif
-          st = vv[k] + '[ngood] = val'     
+          st = vv(k) + '[ngood] = val'     
 
          endif else $
-           st = vv[k] + '[ngood] = strtrim(var,2)'
+           st = vv(k) + '[ngood] = strtrim(var,2)'
 
       tst = execute(st)
       k = k+1
@@ -225,17 +230,18 @@ BADLINE:  ngood = ngood+1
    endfor
 
   free_lun,lun
-  if ngood EQ 0 then message,'ERROR - No valid lines found for specified format'
+  if ngood EQ 0 then begin 
+     message,'ERROR - No valid lines found for specified format',/INFORM
+     return
+  endif
 
   if not keyword_set(SILENT) then $
         message,strtrim(ngood,2) + ' valid lines read', /INFORM  
 
 ; Compress arrays to match actual number of valid lines
 
-  if ngood EQ 0 then return
-
   for i = 0,ncol-1 do begin 
-      tst = execute(vv[i] + '='+ vv[i]+ '[0:ngood-1]')
+      tst = execute(vv(i) + '='+ vv(i)+ '[0:ngood-1]')
   endfor
 
   return

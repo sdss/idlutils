@@ -40,9 +40,15 @@
 ;               (NaN) convention.   It specifies the value to translate any IEEE
 ;               NAN values in the FITS data array.  
 ;   
-;       NOSCALE - If present and non-zero, then the ouput data will not be
+;       /NOSCALE - If present and non-zero, then the ouput data will not be
 ;                scaled using the optional BSCALE and BZERO keywords in the 
 ;                FITS header.   Default is to scale.
+;
+;       /NO_UNSIGNED - By default, if theIDL Version is 5.2 or greater, and the
+;               header indicates an unsigned integer (BITPIX = 16, BZERO=2^15,
+;               BSCALE=1) then FITS_READ will output an IDL unsigned integer 
+;               data type (UINT).   But if /NO_UNSIGNED is set, or the IDL 
+;               version is before 5.2, then the data is converted to type LONG.  
 ;
 ;       NSLICE - An integer scalar specifying which N-1 dimensional slice of a 
 ;                N-dimensional array to read.   For example, if the primary 
@@ -144,12 +150,14 @@
 ;       Major rewrite to eliminate recursive calls when reading extensions
 ;                  W.B. Landsman  Raytheon STX                    October 1998
 ;       Add /binary modifier needed for Windows  W. Landsman    April 1999
+;       Read unsigned datatypes, added /no_unsigned   W. Landsman December 1999
 ;-
 
 function READFITS, filename, header, heap, NOSCALE = noscale, $
                    SILENT = silent, EXTEN_NO = exten_no, NUMROW = numrow, $
                    POINTLUN = pointlun, STARTROW = startrow, $
-                   NaNvalue = NaNvalue, NSLICE = nslice
+                   NaNvalue = NaNvalue, NSLICE = nslice, $
+                   NO_UNSIGNED = no_unsigned
 
 
   On_error,2                    ;Return to user
@@ -419,7 +427,26 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
                         blankval = where( data EQ blank, Nblank)
           endif
 
-          bscale = float( sxpar( header, 'BSCALE' , Count = N_bscale))
+          Bscale = float( sxpar( header, 'BSCALE' , Count = N_bscale))
+          Bzero = float( sxpar(header, 'BZERO', Count = N_Bzero ))
+ 
+; Check for unsigned integer (BZERO = 2^15) or unsigned long (BZERO = 2^31)
+; Write uint(32768) rather than 32768U to allow compilation prior to V5.2
+
+          if not keyword_set(No_Unsigned) and $
+                 !VERSION.RELEASE GE '5.2' then begin
+            no_bscale = (Bscale EQ 1) or (N_bscale EQ 0)
+            unsgn_int = (bitpix EQ 16) and (Bzero EQ 32768) and no_bscale
+            unsgn_lng = (bitpix EQ 32) and (Bzero EQ 2147483648) and no_bscale
+            unsgn = unsgn_int or unsgn_lng
+           endif else unsgn = 0
+
+          if unsgn then begin
+                 if unsgn_int then  data =  uint(data) - uint(32768) else $
+                 if unsgn_lng then  data = ulong(data) - ulong(2147483648) 
+                
+          endif else begin
+ 
           if N_Bscale GT 0  then $ 
                if ( Bscale NE 1. ) then begin
                    data = temporary(data) * Bscale 
@@ -427,7 +454,6 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
                    sxaddpar, header, 'O_BSCALE', Bscale,' Original BSCALE Value'
                endif
 
-         Bzero = float( sxpar(header, 'BZERO', Count = N_Bzero ))
          if N_Bzero GT 0  then $
                if (Bzero NE 0) then begin
                      data = temporary( data ) + Bzero
@@ -435,6 +461,8 @@ function READFITS, filename, header, heap, NOSCALE = noscale, $
                      sxaddpar, header, 'O_BZERO', Bzero,' Original BZERO Value'
                endif
         
+        endelse
+
         if (Nblank GT 0) and ((N_bscale GT 0) or (N_Bzero GT 0)) then $
                 data[blankval] = blank
 

@@ -58,7 +58,7 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no
 ; RESTRICTIONS:
 ;       (1) Cannot be used to modifiy the data in FITS files with random 
 ;           groups or variable length binary tables.   (The headers in such
-;           files *can* be modified.
+;           files *can* be modified.)
 ;
 ; PROCEDURES USED:
 ;       Functions:   SXPAR(), FXPOSIT(), IS_IEEE_BIG()
@@ -194,7 +194,7 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no
    return 
 
 BAD_EXIT:
-    if N_elements(unit) GT 0 then free_lun, unit
+    if N_elements(unit) GT 0 then if (unit NE -1) then free_lun, unit
     message,'FITS file ' + filename + ' not modified',/INF
     return
    end 

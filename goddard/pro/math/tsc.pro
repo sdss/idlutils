@@ -6,6 +6,9 @@ FUNCTION tsc,value,posx,nx,posy,ny,posz,nz, $
 ;       TSC
 ;
 ; PURPOSE:
+;       Interpolate an irregularly sampled field using a Triangular Shaped Cloud
+;
+; EXPLANATION:
 ;       This function interpolates an irregularly sampled field to a
 ;       regular grid using Triangular Shaped Cloud (nearest grid point
 ;       gets weight 0.75-dx^2, points before and after nearest grid
@@ -103,6 +106,7 @@ FUNCTION tsc,value,posx,nx,posy,ny,posz,nz, $
 ;
 ; MODIFICATION HISTORY:
 ;       Written by Joop Schaye, Feb 1999.
+;       Check for overflow for large dimensions  P. Riley/W. Landsman Dec. 1999
 ;-
 
 nrsamples=n_elements(value)
@@ -113,7 +117,7 @@ IF dim LE 2 THEN BEGIN
     nz=1
     IF dim EQ 1 THEN ny=1
 ENDIF
-nxny=nx*ny
+nxny=long(nx)*long(ny)
 
 
 ;---------------------

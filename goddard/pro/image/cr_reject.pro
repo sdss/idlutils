@@ -168,8 +168,8 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;
 ; COMMON BLOCKS:  none
 ;
-; SIDE EFFECTS:  none
-;
+; PROCEDURES USED:
+;     MEDARR, SKYADJ_CUBE
 ; METHOD: 
 ;     
 ;     COMPARISON WITH STSDAS
@@ -274,6 +274,7 @@ PRO cr_reject, input_cube, rd_noise_dn, dark_dn, gain, mult_noise, $
 ;                    skyadj_cube.  RSH
 ;      5 Mar. 1999 - Force init_min for 2 planes.  RSH
 ;        Jun  1999 - Exit with Return instead of RETALL.  --WBL
+;      1 Oct. 1999 - Make sure weighting=1 not given with noise cube.  RSH
 ;-
 on_error,0
 IF n_params(0) LT 6 THEN BEGIN
@@ -474,6 +475,13 @@ IF rd_noise_dn GE 0 THEN BEGIN
 ENDIF ELSE BEGIN
     IF verbose THEN print,'CR_REJECT:  Noise cube supplied.'
     supplied = 1b
+    IF wgt EQ 1 THEN BEGIN
+        print, 'CR_REJECT:  WEIGHTING=1 incompatible with supplying ', $
+            'noise cube.'
+        print, '            Executing RETALL.'
+        RETURN
+    ENDIF
+
 ENDELSE
 ;
 ;  Mask flags CR with zeroes

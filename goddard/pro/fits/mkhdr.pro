@@ -68,6 +68,7 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
 ;       May, 1990, Adapted for IDL Version 2.0, J. Isensee
 ;       Aug, 1997, Use SYSTIME(), new DATE format  W. Landsman
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Allow unsigned data types    W. Landsman   December 1999
 ;-                          
  On_error,2
 
@@ -109,6 +110,8 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
         5:      bitpix = -64 
         6:      bitpix = 64  
         7:      bitpix = 8
+       12:      bitpix = 16
+       13:      bitpix = 32
         else:   message,'Illegal Image Datatype'
         endcase
 
@@ -137,6 +140,8 @@ pro mkhdr, header, im, naxisx, IMAGE = image, EXTEND = extend
           sxaddpar, header, 'EXTEND', 'T', ' File May Contain Extensions'
  endelse
 
+ if stype EQ 12 then sxaddpar, header,'BZERO',32768,' Data is Unsigned Integer'
+ if stype EQ 13 then sxaddpar, header,'BZERO',2147483648,' Data is Unsigned Long'
  header = header[0:s[0]+7]
 
  end

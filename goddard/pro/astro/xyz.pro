@@ -13,7 +13,7 @@ pro xyz,date,x,y,z,xvel,yvel,zvel,equinox=equinox
 ;       Typical position accuracy is <1e-4 AU (15000 km).
 ;
 ; CALLING SEQUENCE:
-;       XYZ, date, x, y, z, [ xvel, yvel, zvel, EQUINXO = ]
+;       XYZ, date, x, y, z, [ xvel, yvel, zvel, EQUINOX = ]
 ;
 ; INPUT:
 ;       date: reduced julian date (=JD - 2400000), scalar or vector
@@ -155,6 +155,11 @@ pro xyz,date,x,y,z,xvel,yvel,zvel,equinox=equinox
        - 0.000014d*sin(g+g-el)    $
        - 0.000010d*cos(g-el-j)    
 
+;Precess_to new equator?
+   if keyword_set(equinox) then precess_xyz, x, y, z, 1950, equinox
+
+   if N_params() LE 3 then return
+   
    XVEL = -0.017200d * sin(el)           $
           -0.000288d * sin(g + el)       $
           -0.000005d * sin(2.d0*g + el)  $
@@ -176,13 +181,9 @@ pro xyz,date,x,y,z,xvel,yvel,zvel,equinox=equinox
          +0.000002 * cos(c)              $
          +0.000001 * cos(c - 2.d0*el)    
 
-;precess to new Equinox?
-;   call precess_xyz to precess both positon and velocity vectors
+;Precess to new equator?
 
-   if keyword_set(equinox) then begin
-      precess_xyz, x, y, z, 1950, equinox
-      precess_xyz, xvel, yvel, zvel, 1950, equinox
-   endif 
+   if keyword_set(equinox) then precess_xyz, xvel, yvel, zvel, 1950, equinox
 
    return
    end

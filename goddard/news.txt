@@ -1,8 +1,84 @@
+25-Dec-1999: W. Landsman is on vacation until 10-Jan-2000.
+
+21-Dec-1999: A number of updates to the fx* FITS I/O routines, mainly for
+               improved performance
+
+             FXBCREATE, FXFINDLUN - Now return newly created extension number
+             FXBFIND - vectorized for speed increase
+             FXPAR - Optimized to do local lookup using START keyword
+             FXBOPEN - added access = 'RW' for read/write on an existing table
+                      keyword REOPEN an already open file
+             FXBPARSE - performance increase by (1) using START keyword to FXPAR
+                      (2) using FXBFIND instead of multiple FXPARs
+             FXBTFORM - performance increase on calls to FXPAR using START
+                        keyword         
+
+
+20-Dec-1999: MWRFITS - Changed two ENDIF statements to END since IDL V5.3 is 
+                       now fussier about this
+
+             FXBGROW - Increase the number of rows in a binary table
+             FXBREAD - Now has /NOIEEE keyword to leave byteorder unchanged
+
+             CHECK_FITS, FITS_READ, FITS_WRITE, MKHDR, READFITS, WRITEFITS
+                - updated to recognize unsigned integer FITS data  
+                 (BITPIX=16, BZERO=32768) and convert to or from UINT data type
+                 for IDL V5.2 or later
+
+14-Dec-1999: QUADTERP - Fix possible integer overflow problem for input
+                   X tabular vector
+
+
+4-Dec-1999:  NGP, TSC, CIC - Now avoids integer overflow when interpolating 
+                  images of large dimension
+
+1-Dec-1999:  FXADDPAR - now write FITS keywords longer than 68 characters using
+                   the  FITS continuation convention described in
+    http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/ofwg_recomm/r13.html
+
+             New procedures set in the /contrib directory
+             /markwardt - (Craig Markwardt, Goddard) contains further 
+             enhancements of the FX* FITS I/O procedures (mainly for speed). 
+
+18-Nov-1999: Two FX* new procedures from C. Markwardt for faster I/O
+             FXBWRITM - Write multiple columns/rows to a FITS binary table file
+             FXBREADM - Read multiple columns/rows from a FITS binary table file.
+             
+17-Nov-1999: GLACTC - Now has /DEGREES keyword for R.A. input/output in degrees
+
+15-Nov-1999: OPLOTERROR - Now checks limits for logarithmic axes
+             READCOL - Now has DELIMITER keyword to specify column delimiter
+
+5-Nov-1999:  HELIO_JD - Make J2000 default equinox, add /B1950, /TIME_DIFF
+                        keywords, compute variation of the obliquity
+             XYZ - Don't compute velocities unless user asked for them
+
+1-Nov-1999:  DBINDEX, DBEXT_DBF - Now allow a maximum of 18 instead of 15 items
+
+19-Oct-1999: PLOTERROR - Fixed case where /XLOG is set but no X error bars given 
+
+16-Oct-1999: FITS_WRITE - Inserts required PCOUNT, GCOUNT keywords for IMAGE
+                          extensions
+
+13-Oct-1999: SXPAR() - Did not properly recognize numbers such as 1E-10 as 
+                       floating point.
+
+05-Oct-1999: The XCTV and XCTV2 procedures in /contrib/bhill now support 
+                 display of astronomical coordinates.
+
+04-Oct-1999: FINDPRO - Now checks for .sav files along with .pro files
+
+21-Sep-1999: DBPRINT - Fixed occasional problem when /NOHEADER supplied
+
 04-Sep-1999: DBCIRCLE - Fixed bug that could cause some entries to be missed
                         in large search fields at high latitudes.
 
 23-Aug-1999: The IDLAstro Web site was down between 18 Aug and 23 Aug due to 
              a system crash.
+
+13-Aug-1999: DATATYPE - major rewrite, recognize unsigned, 64 bit datatypes, 
+                now has /TNAME keyword to emulate the size(/TNAME) option 
+               introduced in V5.2
 
 12-Aug-1999: WFPC2_READ - Better astrometry handling of PC image in the 
                     "batwing" configuration
@@ -59,7 +135,7 @@
                       sequence
 
 02-May-1999: MODFITS - New Header and data need only be the same as the old
-                       within a mulitple of 2880 bytes
+                       within a multiple of 2880 bytes
 
 30-Apr-1999: IRAFWRT - Don't automatically apply strlowcase to .pix directory
                         name
@@ -84,7 +160,7 @@
 
 1-Mar-1999:  CSPLINE - Work for monotonic decreasing tabulated X vector 
 
-25-Feb-1999: GROUP - Convert input X,Y vectors to floating point, if necesary
+25-Feb-1999: GROUP - Convert input X,Y vectors to floating point, if necessary
 
 18-Feb-1999: WCSSPH2XY, WCSXY2SPH - Fixed algorithm for ARC projection
 

@@ -67,7 +67,7 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       
 ;       If a numeric value has no decimal point it is returned as type
 ;       LONG.   If it contains more than 8 numerals, or contains the 
-;       character 'D', then it is returned as type DOUBLE.  Otherwise
+;       characters 'D' or 'E', then it is returned as type DOUBLE.  Otherwise
 ;       it is returned as type FLOAT.    Very large integer values, outside
 ;       the range of valid LONG, are returned as DOUBLE.
 ;
@@ -107,6 +107,7 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       W. Landsman May 1998, Make sure integer values are within range of LONG
 ;       Converted to IDL V5.0, May 1998
 ;       W. Landsman Feb 1998, Recognize CONTINUE convention 
+;       W. Landsman Oct 1999, Recognize numbers such as 1E-10 as floating point
 ;-
 ;----------------------------------------------------------------------
  if N_params() LT 2 then begin
@@ -263,11 +264,12 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 
 NOT_COMPLEX:
                 On_IOerror, GOT_VALUE
-                  if strpos(value,'.') GE 0 then begin      
-                      if ( strpos(value,'D') GT 0 ) or $
+                  if (strpos(value,'.') GE 0) or (strpos(value,'E') GT 0) $
+                  or (strpos(value,'D') GE 0) then begin  ;Floating or double?
+                      if ( strpos(value,'D') GT 0 ) or $  ;Double?
                          ( strlen(value) GE 8 ) then value = double(value) $
                                                 else value = float(value)
-                       endif else begin
+                       endif else begin                   ;Long integer
                             lmax = 2.0d^31 - 1.0d
                             lmin = -2.0d31
                             value = double(value)

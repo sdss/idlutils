@@ -59,6 +59,14 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ;       /NOHEADER - If this keyword is set, then the column headers will not
 ;               be printed
 ;
+; EXAMPLE:
+;       The following example shows how a multiple valued item DATAMAX can be 
+;       printed as separate columns.   In the WFPC2 target database, DATAMAX
+;       is an item with 4 values, one for each of the 4 chips
+;
+;       IDL> dbopen,'wflog'
+;       IDL> dbprint,list,'entry,datamax(0),datamax(1),datamax(2),datamax(3)'
+;
 ; SYSTEM VARIABLES:
 ;       Output device controlled by non-standard system varaible !TEXTOUT, if 
 ;       TEXTOUT keyword is not used.    
@@ -77,6 +85,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
 ;       W. Landsman, GSFC, July, 1997, Use CATCH to catch errors
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Removed STRTRIM in table format output to handle byte values April 1999
+;       Fixed occasional problem when /NOHEADER is supplied   Sep. 1999
 ;-
 ;
  On_error,2                                ;Return to caller
@@ -184,19 +193,18 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NOHeader = noheader
     c1 = strmid( headers,0,15 )
     c2 = strmid( headers,15,15 )
     c3 = strmid( headers,30,15 )
+
+; Place value numbers for multiple valued items in h3
+    for i = 0,nitems-1 do begin
+          if nvals[i] GT 1 then $       ;multiple values?
+             c3[i] = '(' + strtrim(string(ivalnum[i]),2) + ')'
+    endfor        ;i
+
     h1 = dbtitle( c1,flen )
     h2 = dbtitle( c2,flen )
     h3 = dbtitle( c3,flen )
-  endif
 
-; Place value numbers for multiple valued items in h3
-
- for i = 0,nitems-1 do begin
-
-  if nvals[i] GT 1 then $       ;multiple values?
-        c3[i] = '(' + strtrim(string(ivalnum[i]),2) + ')'
-
- endfor        ;i
+ endif
 
 ; Loop on entries
 

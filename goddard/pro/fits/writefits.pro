@@ -65,6 +65,7 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
 ;	Use SYSTIME() instead of !STIME    W. Landsman  July 97
 ;	Create a default image extension header if needed W. Landsman June 98
 ;	Converted to IDL V5.0   W. Landsman         June 98
+;       Write unsigned data types W. Landsman       December 1999
 ;-
   On_error, 2
 
@@ -106,14 +107,18 @@ pro writefits, filename, data, header, NaNvalue = NaNvalue, Append = Append
   NaNtest = keyword_set(NaNvalue) and ( (type EQ 4) or (type EQ 5) )
   if NaNtest then NaNpts = where( data EQ NaNvalue, N_NaN)
       
-; If necessary, byte-swap the data.    Do not destroy the original data
+; If necessary, byte-swap the data, and convert unsigned to signed.    Do not 
+; destroy the original data
 
         vms = (!VERSION.OS EQ "vms")
         Big_endian = IS_IEEE_BIG()
         
-        if (not Big_endian) then begin
+        unsigned = (type EQ 12) or (type EQ 13)
+        if (not Big_endian) or unsigned then begin
              newdata = data
-             host_to_ieee, newdata
+             if type EQ 12 then newdata = fix(data - 32768)
+             if type EQ 13 then newdata = long(data - 2147483648)
+             if not Big_endian then host_to_ieee, newdata
         endif
 
 ; Write the NaN values, if necessary

@@ -1,4 +1,5 @@
-        Contents of IDL Astronomy User's Library                August, 1999
+        Contents of IDL Astronomy User's Library                December, 1999
+        (also see http://idlastro.gsfc.nasa.gov/contents.html)
 
 Astronomical Utilities    in pro/astro
 ________
@@ -46,6 +47,7 @@ JDCNV - Convert from calendar date to Julian date.
 JPRECESS - Precess positions & proper motions from B1950 to J2000
 JULDATE-Convert from calendar date to reduced Julian date. 
 MAG2FLUX() - Convert from magnitudes to flux units
+MONTH_CNV() Convert a month name to the equivalent number or vice-versa 
 MOONPOS- Compute the RA and Dec (and distance) of the Moon at a given date
 MPHASE - Compute illuminated fraction of the Moon's disk for given Julian dates
 NUTATE - Compute the nutation in longitude and latitude for given Julian date(s)
@@ -267,6 +269,7 @@ FXBDIMEN()	  - Returns the dimensions for a column in a FITS binary table.
 FXBFIND           - Find column keywords in a FITS binary table header.
 FXBFINDLUN()      - Find logical unit number UNIT in FXBINTABLE common block.
 FXBFINISH         - Close a FITS binary table extension file opened for write.
+FXBGROW           - Increase the number of rows in a binary table
 FXBHEADER()       - Returns the header of an open FITS binary table.
 FXBHELP           - Prints short description of columns in a FITS binary table.
 FXBHMAKE          - Create basic FITS binary table extension (BINTABLE) header.
@@ -275,10 +278,12 @@ FXBISOPEN()       - Returns true if UNIT points to an open FITS binary table.
 FXBOPEN           - Open binary table extension in a disk FITS file for reading
 FXBPARSE          - Parse the binary table extension header.
 FXBREAD           - Read a data array from a disk FITS binary table file.
+FXBREADM          - Read multiple columns/rows from a FITS binary table file.
 FXBSTATE()        - Returns the state of a FITS binary table.
 FXBTDIM()         - Parse TDIM-like keywords.
 FXBTFORM          - Returns information about FITS binary table columns.
 FXBWRITE          - Write a binary data array to a disk FITS binary table file.
+FXBWRITM          - Write multiple columns/rows to a FITS binary table file
 FXFINDEND         - Find the end of a FITS file.
 FXHCLEAN          - Removes required keywords from FITS header.
 FXHMAKE           - Create a basic FITS header array.

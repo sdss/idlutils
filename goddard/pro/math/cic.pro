@@ -6,6 +6,9 @@ FUNCTION cic,value,posx,nx,posy,ny,posz,nz, $
 ;       CIC
 ;
 ; PURPOSE:
+;       Interpolate an irregularly sampled field using Cloud in Cell method
+;
+; EXPLANATION:
 ;       This function interpolates an irregularly sampled field to a
 ;       regular grid using Cloud In Cell (nearest grid point gets
 ;       weight 1-dngp, point on other side gets weight dngp, where
@@ -101,6 +104,7 @@ FUNCTION cic,value,posx,nx,posy,ny,posz,nz, $
 ;
 ; MODIFICATION HISTORY:
 ;       Written by Joop Schaye, Feb 1999.
+;       Avoid integer overflow for large dimensions P.Riley/W.Landsman Dec. 1999
 ;-
 
 nrsamples=n_elements(value)
@@ -111,7 +115,7 @@ IF dim LE 2 THEN BEGIN
     nz=1
     IF dim EQ 1 THEN ny=1
 ENDIF
-nxny=long(nx*ny)
+nxny=long(nx)*long(ny)
 
 
 ;---------------------

@@ -1,5 +1,6 @@
 	PRO FXBREAD, UNIT, DATA, COL, ROW, NOSCALE=NOSCALE, VIRTUAL=VIR, $
-		DIMENSIONS=DIMENSIONS, NANVALUE=NANVALUE, ERRMSG=ERRMSG
+		DIMENSIONS=DIMENSIONS, NANVALUE=NANVALUE, ERRMSG=ERRMSG, $
+                NOIEEE=NOIEEE
 ;+
 ; Project     : SOHO - CDS
 ;
@@ -33,9 +34,12 @@
 ; Opt. Outputs: 
 ;	None.
 ; Keywords    : 
-;	NOSCALE	= If set, then the ouput data will not be scaled using the
+;	NOSCALE	= If set, then the output data will not be scaled using the
 ;		  optional TSCAL and TZERO keywords in the FITS header.
 ;		  Default is to scale.
+;       NOIEEE  = If set, then the output data is not byte-swapped to 
+;                 machine order.  NOIEEE implies NOSCALE.
+;                 Default is to perform the byte-swap.
 ;	VIRTUAL	= If set, and COL is passed as a name rather than a number,
 ;		  then if the program can't find a column with that name, it
 ;		  will then look for a keyword with that name in the header.
@@ -126,6 +130,7 @@
 ; Version     :
 ;       Version 12, 20 Feb 1998
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Add NOIEEE keyword, CM 1999 Nov 18
 ;-
 ;
 @fxbintable
@@ -372,7 +377,7 @@ CHECK_ROW:
 		IF (N_ELEMENTS(NANVALUE) EQ 1) AND (IDLTYPE[ICOL,ILUN] GE 4) $
 			AND (IDLTYPE[ICOL,ILUN] LE 6) THEN	$
 			W = WHERENAN(DATA,COUNT) ELSE COUNT = 0
-		IEEE_TO_HOST,DATA
+                IF NOT KEYWORD_SET(NOIEEE) THEN IEEE_TO_HOST,DATA
 	END ELSE COUNT = 0
 ;
 ;  If DIMS is simply the number 1, then convert DATA either to a scalar or to a
@@ -386,7 +391,7 @@ CHECK_ROW:
 ;  If the parameters TZERO and TSCAL are non-trivial, then adjust the array by
 ;  these values.
 ;
-	IF NOT KEYWORD_SET(NOSCALE) THEN BEGIN
+	IF NOT KEYWORD_SET(NOSCALE) AND NOT KEYWORD_SET(NOIEEE) THEN BEGIN
 		BZERO  = TZERO[ICOL,ILUN]
 		BSCALE = TSCAL[ICOL,ILUN]
 		IF (BSCALE NE 0) AND (BSCALE NE 1) THEN DATA = BSCALE*DATA

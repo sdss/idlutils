@@ -3,11 +3,10 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ; NAME:
 ;     FINDPRO
 ; PURPOSE:
-;     Find all locations of procedure in the IDL !PATH
+;     Find all locations of a procedure in the IDL !PATH
 ; EXPLANATION:
-;     The procedure is searched in all IDL Libraries or directories given
-;     in the !PATH system variable.  Finds and returns the paths of all
-;     examples of the procedure in the directories listed in the path.
+;     FINDPRO searces for the procedure name (as a .pro or a .sav file) in all 
+;     IDL libraries or directories given in the !PATH system variable.  
 ;               
 ; CALLING SEQUENCE:
 ;    FINDPRO, [ Proc_Name, /NoPrint, DirList = , ProList = ]
@@ -19,7 +18,7 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;             are permitted.
 
 ; OPTINAL KEYWORD INPUT:
-;     NoPrint - if set, then the file's path is not printed on the screen and
+;     /NoPrint - if set, then the file's path is not printed on the screen and
 ;             absolutely no error messages are printed on the screen.  If not
 ;             set, then - since the MESSAGE routine is used - error messages 
 ;             will be printed but the printing of informational messages
@@ -68,7 +67,7 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;       lower case.
 ;
 ; PROCEDURES USED:
-;       ZPARCHECK, FDECOMP
+;       ZPARCHECK, FDECOMP, UNIQ()
 ; REVISION HISTORY:
 ;       Based on code extracted from the GETPRO procedure, J. Parker 1994
 ;       Use the intrinsic EXPAND_PATH function    W. Landsman Nov. 1994
@@ -78,6 +77,7 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;       Don't include duplicate directories  in !PATH  WL   May 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use ROUTINE_INFO instead of undocumented ROUTINE_NAMES W.L. October 1998
+;       Also check for save sets   W. Landsman  October 1999    
 ;
 ;-
 ;/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -113,17 +113,21 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
  
  endcase
 
- path_dir = expand_path(!PATH,/ARRAY, Count = N_dir)
+ pathdir = expand_path(!PATH,/ARRAY, Count = N_dir)
+ cd,current = dir
+; Remove duplicate directories  in !PATH but keep original order
+ path_dir = [dir]
+ for i = 0,N_dir -1 do begin
+      test = where(path_dir EQ pathdir[i], Ndup)
+      if Ndup EQ 0 then path_dir = [path_dir,pathdir[i]]
+ endfor
+ N_dir = N_elements(path_dir)
 
 ; Loop over each directory in !PATH until procedure name found
 
-   for idir = -1, N_dir-1 do begin
+   for idir = 0, N_dir-1 do begin
 
-     if idir EQ -1 then cd,current=dir else dir = path_dir[idir]
-     dupid = where(dirlist EQ dir, Ndup)
-     if Ndup GT 0 then goto, SKIP
-; Loop over each directory in !PATH until procedure name found
-
+   dir = path_dir[idir]
    if (strmid(Dir,0,1) eq '@') then begin          ;Text Library?
 
          LibName = strmid( Dir, 1, strlen(Dir)-1 )      ;Remove the "@" symbol
@@ -142,25 +146,37 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
          endif
 
    endif else begin                              ;Directory
-      ProsFound = findfile(Dir + DirSep + Name + '.pro', COUNT=Nfile)
+     found = 0b
+      ProsFound = findfile(Dir + DirSep + Name + '.*', COUNT=Nfile)
+
       if (Nfile ge 1) then begin                     ;Found by FINDFILE?
-         DirList = [DirList, Dir]
-         ProList = [ProList, ProsFound]
-        for j = 0,nfile-1 do begin
-         fdecomp, ProsFound[j], ddisk,ddir,fname
-         Mess = 'Procedure ' + fname + ' found in directory  ' + disk + Dir
-         message, Mess, /CONT, NOPRINT=NoPrint, /NOPREFIX, /NONAME
+       for j = 0,nfile-1 do begin
+         fdecomp, ProsFound[j], ddisk,ddir,fname,ext
+         if ((ext EQ 'pro') or (ext EQ 'sav')) then begin
+         found = 1b
+         profound = prosfound[j]
+         if ext EQ 'pro' then $  
+           message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
+          'Procedure ' + fname + ' found in directory  ' + disk + Dir $
+         else if ext EQ 'sav' then $ 
+     message,/Con,NoPrint = NoPrint,/NoPrefix, /Noname, $
+          'Save set ' + fname + '.sav found in directory  ' + disk + Dir
+         endif
         endfor
-      endif
+         if found then begin
+         DirList = [DirList, Dir]
+         ProList = [ProList, ProsFound[0]]
+         endif
+       endif
    endelse
 
-SKIP:
 endfor
 
  if (N_elements(DirList) GT 1) then begin
         DirList = DirList[1:*]
         ProList = ProList[1:*]
  endif
+      
 
 ; At this point !PATH has been searched.  If the procedure has not been found
 ; (nothing is in DirList) check if it is an intrinsic IDL procedure or function

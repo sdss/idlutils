@@ -63,10 +63,9 @@
 ;	Version 5, W. Landsman, GSFC, 12 Aug 1997
 ;		Use double complex datatype, if needed
 ;	Version 6, W. Landsman GSFC 30 Aug 1997
-;		Version for IDL V5.0
 ; Version     : 
 ;	Version 6, 31 Aug 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Optimized FXPAR; call FXBFIND for speed, CM 1999 Nov 18
 ;-
 ;
 @fxbintable
@@ -99,13 +98,14 @@
 ;
 	STORE_ARRAY,HEAD,HEADER,ILUN
 	NHEADER[ILUN] = NHEAD0
-	NAXIS1[ILUN]  = FXPAR(HEADER,'NAXIS1')
-	NAXIS2[ILUN]  = FXPAR(HEADER,'NAXIS2')
-	TFIELDS[ILUN] = FXPAR(HEADER,'TFIELDS')
+	START = 0L
+	NAXIS1[ILUN]  = FXPAR(HEADER,'NAXIS1', START=START)
+	NAXIS2[ILUN]  = FXPAR(HEADER,'NAXIS2', START=START)
+	TFIELDS[ILUN] = FXPAR(HEADER,'TFIELDS', START=START)
 ;
 ;  If THEAP is not present, then set it equal to the size of the table.
 ;
-	THEAP = FXPAR(HEADER,'THEAP')
+	THEAP = FXPAR(HEADER,'THEAP', START=START)
 	IF !ERR LT 0 THEN THEAP = NAXIS1[ILUN]*NAXIS2[ILUN]
 	HEAP[ILUN] = THEAP
 ;
@@ -125,9 +125,10 @@
 ;  column from the TDIMn keywords.  If not found, then assume to be the number
 ;  of elements.
 ;
+	FXBFIND,HEADER,'TDIM',COLUMNS,TDIMS,N_FOUND,''
 	FOR ICOL = 0,TFIELDS[ILUN]-1 DO IF MAXVAL[ICOL,ILUN] EQ 0 THEN BEGIN
-		TDIM = FXPAR(HEADER,'TDIM'+STRTRIM(ICOL+1,2))
-		TDIM_USED = (!ERR GE 0) AND (NOT KEYWORD_SET(NO_TDIM))
+		TDIM = TDIMS[ICOL]
+		TDIM_USED = (TDIM NE '') AND (NOT KEYWORD_SET(NO_TDIM))
 		IF TDIM_USED THEN DIMS = FIX(FXBTDIM(TDIM))	$
 			     ELSE DIMS = N_ELEM[ICOL,ILUN]
 		DIMS = [N_ELEMENTS(DIMS),DIMS]

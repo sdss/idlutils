@@ -3,7 +3,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
                 extver=extver, extlevel=extlevel, xtension=xtension, $
                 no_abort=no_abort, message=message, first=first, last=last, $
                 group=group, header_only=header_only,data_only=data_only, $
-                no_pdu=no_pdu, enum = enum
+                no_pdu=no_pdu, enum = enum, no_unsigned = no_unsigned
 
 ;+
 ;
@@ -74,6 +74,11 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;               when an I/O error is encountered.  If set, the routine will
 ;               return with !err=-1 and a message in the keyword MESSAGE.
 ;               If not set, FITS_READ will print the message and issue a RETALL
+;       /NO_UNSIGNED - By default, if the IDL Version is 5.2 or greater, and the
+;               header indicates an unsigned integer (BITPIX = 16, BZERO=2^15,
+;               BSCALE=1) then FITS_READ will output an IDL unsigned integer 
+;               data type (UINT).   But if /NO_UNSIGNED is set, or the IDL 
+;               version is before 5.2, then the data is converted to type LONG.  
 ;       MESSAGE = value: Output error message
 ;       EXTEN_NO - extension number to read.  If not set, the next extension
 ;               in the file is read.  Set to 0 to read the primary data unit.
@@ -88,7 +93,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;       GROUP - group number to read for GCOUNT>1.  (Default=0, the first group)
 ;       NaNvalue - On non-IEEE floating point machines, it gives the value
 ;               to place into words with IEEE NaN.
-;       ENUM - Output extensiont number that was read.  
+;       ENUM - Output extension number that was read.  
 ;       
 ;*NOTES:
 ;       Determination or which extension to read.
@@ -153,6 +158,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;       Written by:     D. Lindler, August 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Avoid use of !ERR       W. Landsman   August 1999
+;       Read unsigned datatypes, added /no_unsigned   W. Landsman December 1999
 ;-
 
 ;
@@ -161,7 +167,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ; print calling sequence
 ;
         if n_params(0) eq 0 then begin
-          print,'CALLING SEQUENCE: fits_read,file_or_fcb,data,header,group_par,
+          print,'CALLING SEQUENCE: fits_read,file_or_fcb,data,header,group_par,'
           print,'KEYWORD PARAMETERS: noscale, NaNvalue, exten_no, extname, '
           print,'                    extver, extlevel, xtension, no_abort, '
           print,'                    message, first, last, group, header_only,'
@@ -460,9 +466,25 @@ read_data:
         if (n_elements(NaNvalue) gt 0) then if (count gt 0) then $
                                                 data[NaNpts] = NaNvalue
 ;
-; scale data if header was read and first and last not used
+; scale data if header was read and first and last not used.   Do a special
+; check of an unsigned integer (BZERO = 2^15) or unsigned long (BZERO = 2^31) 
 ;
         if (data_only eq 0) and (last eq 0) and (noscale eq 0) then begin
+
+        if not keyword_set(No_Unsigned) and $
+               !VERSION.RELEASE GE '5.2' then begin
+        unsgn_int = (bitpix EQ 16) and (Bzero EQ 32768) and (bscale EQ 1)
+        unsgn_lng = (bitpix EQ 32) and (Bzero EQ 2147483648) and (bscale EQ 1)
+        if unsgn_int then begin 
+                data =  uint(data) - uint(32768) 
+                sxaddpar, header,'BZERO',32768,' Data is Unsigned Integer'
+        endif else if unsgn_lng then begin 
+                data = ulong(data) - ulong(2147483648)
+                sxaddpar, header,'BZERO',2147483648,' Data is Unsigned Long'
+        endif
+        if unsgn_int or unsgn_lng then goto, DONE
+        endif
+
                 if bitpix lt 32 then begin      ;use real*4 for bitpix<32
                         bscale = float(bscale)
                         bzero = float(bzero)

@@ -49,7 +49,7 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ;       interpolated values of FLUX at the wavelengths given in WGRID.
 ;
 ;  EXTERNAL ROUTINES:
-;       TABINV, ZPARCHECK, DATATYPE()
+;       TABINV, ZPARCHECK, DATATYPE(), ISARRAY()
 ;  REVISION HISTORY:
 ;       31 October 1986 by B. Boothman, adapted from the IUE RDAF
 ;       12 December 1988 J. Murthy, corrected error in Xint
@@ -57,6 +57,8 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ;       August 1993, W. Landsman, added MISSING keyword
 ;       June, 1995, W. Landsman, use single quadratic near end points
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Fix occasional problem with integer X table,  
+;       YINT is a scalar if XINT is a scalar   W. Landsman Dec 1999
 ;-
  On_error,0
 
@@ -74,12 +76,12 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
  if datatype(xtab) NE 'DOU' then xt = float(xtab) else xt = xtab
  if datatype(xint) NE 'DOU' then yint = fltarr(m) else yint = dblarr(m)  
 
- decreasing =  (xtab[npts-1] - xtab[0]) lt 0 
+ decreasing =  (xt[npts-1] - xt[0]) lt 0 
 
  if npts LT 3 then  $
      message,' ERROR - At least 3 points required for quadratic interpolation'
 
- icen = where( (xint-xtab[1])*(xtab[npts-2]-xint) GT 0, no )
+ icen = where( (xint-xt[1])*(xt[npts-2]-xint) GT 0, no )
 
  if no gt 0 then begin
         x = xint[icen]
@@ -162,6 +164,8 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
         bad = where( (Xint LT Xmin) or (Xint GT Xmax ), Nbad)
         if Nbad GT 0 then Yint[bad] = missing
  endif
+
+ if not ISARRAY(xint) then yint = yint[0]
 
  return
  end

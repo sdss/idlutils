@@ -88,7 +88,6 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;      Added NSKIP keyword                       W. Landsman, Dec 1996
 ;      Added HIBAR and LOBAR keywords, M. Buie, Lowell Obs., Feb 1998
 ;      Rename to OPLOTERROR    W. Landsman    June 1998
-;      Converted to IDL V5.0   W. Landsman    June 1998
 ;      Ignore !P.PSYM when drawing error bars   W. Landsman   Jan 1999
 ;      Handle NSUM keyword correctly           W. Landsman    Aug 1999
 ;      Check limits for logarithmic axes       W. Landsman    Nov. 1999
@@ -160,10 +159,10 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  IF np GT 2 then n = n < N_elements(yerr)   
  IF np EQ 4 then n = n < N_elements(xerr)
 
- xx = xx[0:n-1]
- yy = yy[0:n-1]
- yerr = yerr[0:n-1]
- IF np EQ 4 then xerr = xerr[0:n-1]
+ xx = xx(0:n-1)
+ yy = yy(0:n-1)
+ yerr = yerr(0:n-1)
+ IF np EQ 4 then xerr = xerr(0:n-1)
 
  if N_elements(nsum) EQ 1 then begin
       n1 = float(n) / nsum
@@ -203,41 +202,41 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
     x_hi = convert_coord(xhi,yy,/TO_DEVICE)
  endif
  ycrange = !Y.CRANGE   &  xcrange = !X.CRANGE
-    if !Y.type EQ 1 then ylo = ylo > 10^ycrange[0]
-    if (!X.type EQ 1) and (np EQ 4) then xlo = xlo > 10^xcrange[0]
+    if !Y.type EQ 1 then ylo = ylo > 10^ycrange(0)
+    if (!X.type EQ 1) and (np EQ 4) then xlo = xlo > 10^xcrange(0)
  sv_psym = !P.PSYM & !P.PSYM = 0     ;Turn off !P.PSYM for error bars
     
  FOR i = 0L, (n-1), Nskip DO BEGIN
 
-    plots, [xx[i],xx[i]], [ylo[i],yhi[i]], LINESTYLE=est,THICK=eth,  $
+    plots, [xx(i),xx(i)], [ylo(i),yhi(i)], LINESTYLE=est,THICK=eth,  $
            NOCLIP = noclip, COLOR = ecol
 
     ; Plot X-error bars 
     ;
     if np EQ 4 then $
-       plots, [xlo[i],xhi[i]],[yy[i],yy[i]],LINESTYLE=est, $
+       plots, [xlo(i),xhi(i)],[yy(i),yy(i)],LINESTYLE=est, $
               THICK=eth, COLOR = ecol, NOCLIP = noclip
 
     IF (hat NE 0) THEN BEGIN
        IF (N_elements(hln) EQ 0) THEN hln = !D.X_VSIZE/100. 
-       exx1 = data_low[0,i] - hln/2.
+       exx1 = data_low(0,i) - hln/2.
        exx2 = exx1 + hln
        if lobar then $
-          plots, [exx1,exx2], [data_low[1,i],data_low[1,i]],COLOR=ecol, $
+          plots, [exx1,exx2], [data_low(1,i),data_low(1,i)],COLOR=ecol, $
                  LINESTYLE=est,THICK=eth,/DEVICE, noclip = noclip
        if hibar then $
-          plots, [exx1,exx2], [data_hi[1,i],data_hi[1,i]], COLOR = ecol,$
+          plots, [exx1,exx2], [data_hi(1,i),data_hi(1,i)], COLOR = ecol,$
                  LINESTYLE=est,THICK=eth,/DEVICE, noclip = noclip
 ;                                          
        IF np EQ 4 THEN BEGIN
           IF (N_elements(hln) EQ 0) THEN hln = !D.Y_VSIZE/100.
-             eyy1 = x_low[1,i] - hln/2.
+             eyy1 = x_low(1,i) - hln/2.
              eyy2 = eyy1 + hln
              if lobar then $
-                plots, [x_low[0,i],x_low[0,i]], [eyy1,eyy2],COLOR = ecol, $
+                plots, [x_low(0,i),x_low(0,i)], [eyy1,eyy2],COLOR = ecol, $
                        LINESTYLE=est,THICK=eth,/DEVICE, NOCLIP = noclip
              if hibar then $
-                plots, [x_hi[0,i],x_hi[0,i]], [eyy1,eyy2],COLOR = ecol, $
+                plots, [x_hi(0,i),x_hi(0,i)], [eyy1,eyy2],COLOR = ecol, $
                        LINESTYLE=est,THICK=eth,/DEVICE, NOCLIP = noclip
           ENDIF
        ENDIF

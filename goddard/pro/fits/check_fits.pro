@@ -68,6 +68,7 @@ pro check_FITS, im, hdr, dimen, idltype, UPDATE = update, NOTYPE = notype, $
 ;	Fixed bug for REAL*8 STSDAS data W. Landsman July 93
 ;	Make sure NAXIS agrees with NAXISi  W. Landsman  October 93
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Allow unsigned data types   W. Landsman December 1999
 ;- 
  On_error,2
 
@@ -158,7 +159,9 @@ DATATYPE:
            ( datatype NE 'UNSIGNED*4') then goto, DATATYPE_ERROR
      5: if ( datatype NE 'REAL*8' ) then goto, DATATYPE_ERROR
      6: if ( datatype NE 'COMPLEX*8' ) then goto, DATATYPE_ERROR
-     else: begin
+    12: if ( datatype NE 'UNSIGNED*2') then goto, DATATYPE_ERROR
+    13: if ( datatype NE 'UNSIGNED*4') then goto, DATATYPE_ERROR 
+    else: begin
 	   message,'Image array is non-numeric datatype',/CON
            !ERR = -1  & return
       end
@@ -170,7 +173,7 @@ DATATYPE:
  
 BITPIX:    
   bitpix = sxpar( hdr, 'BITPIX')
-
+  
     case idltype of
 
      1: if ( bitpix NE 8) then goto, BITPIX_ERROR
@@ -190,6 +193,18 @@ BITPIX:
         if bitpix EQ 64 then if datatype NE 'REAL*8' then goto, BITPIX_ERROR
         endelse
         end
+     12:begin
+        bzero = sxpar(hdr,'BZERO')
+        if bzero NE 32768 then if keyword_set(UPDATE) then $
+                sxaddpar,h,'BZERO',32768,'Data is Unsigned Integer'  
+        if bitpix NE 16 then goto, BITPIX_ERROR
+        end
+     13:begin
+        bzero = sxpar(hdr,'BZERO')
+        if bzero NE  2147483648 then if keyword_set(UPDATE) then $
+                sxaddpar,h,'BZERO',2147483648,'Data is Unsigned Long'  
+        if bitpix NE 32 then goto, BITPIX_ERROR
+        end
      else: begin
 	   if not ( (idltype EQ 6) and (datatype EQ 'COMPLEX*8') ) then  $
               message,'Data array is a non-numeric datatype',/CON
@@ -207,7 +222,7 @@ DATATYPE_ERROR:
     if  keyword_set( UPDATE ) then begin
 
        dtype = ['', 'INTEGER*1', 'INTEGER*2', 'INTEGER*4', 'REAL*4', $
-                       'REAL*8',  'COMPLEX*8' ]
+               'REAL*8',  'COMPLEX*8','','','','','','UNSIGNED*2','UNSIGNED*4']
        datatype = dtype[ idltype]
      if not keyword_set(SILENT) then message,/INF, $
 	'DATATYPE keyword of '+ datatype + ' added to FITS header'
@@ -222,14 +237,16 @@ DATATYPE_ERROR:
 
 BITPIX_ERROR:
     if keyword_set( UPDATE ) then begin
-    bpix = [0, 8, 16, 32, -32, -64, 32 ]
+    bpix = [0, 8, 16, 32, -32, -64, 32, 0, 0, 0, 0, 0, 16,32 ]
     if keyword_set(SDAS) then bpix = abs(bpix)
     comm = ['',' Character or unsigned binary integer', $
                ' 16-bit twos complement binary integer', $
                ' 32-bit twos complement binary integer', $
                ' IEEE single precision floating point', $
                ' IEEE double precision floating point', $
-               ' 32-bit twos complement binary integer' ]
+               ' 32-bit twos complement binary integer','','','','','', $
+               ' 16-bit unsigned binary integer', $
+               ' 32-bit unsigned binary integer' ]
     bitpix = bpix[idltype]
     comment = comm[idltype]
     if not keyword_set(SILENT) then message, /INF, $

@@ -1,4 +1,5 @@
         FUNCTION FXPAR, HDR, NAME, ABORT, COUNT=MATCHES, COMMENT=COMMENTS, $
+                        START=START, PRECHECK=PRECHECK, POSTCHECK=POSTCHECK, $
                                           NOCONTINUE = NOCONTINUE
 ;+
 ; NAME: 
@@ -47,6 +48,33 @@
 ;                 printed if the keyword parameter is not found.  If not
 ;                 supplied, FXPAR will return with a negative !err if a keyword
 ;                 is not found.
+;       START   = A best-guess starting position of the sought-after
+;                 keyword in the header.  If specified, then FXPAR
+;                 first searches for scalar keywords in the header in
+;                 the index range bounded by START-PRECHECK and
+;                 START+POSTCHECK.  This can speed up keyword searches
+;                 in large headers.  If the keyword is not found, then
+;                 FXPAR searches the entire header.  
+;
+;                 If not specified then the entire header is searched.
+;                 Searches of the form 'keyword*' also search the
+;                 entire header and ignore START.
+;
+;                 Upon return START is changed to be the position of
+;                 the newly found keyword.  Thus the best way to
+;                 search for a series of keywords is to search for
+;                 them in the order they appear in the header like
+;                 this:
+;
+;                       START = 0L
+;                       P1 = FXPAR('P1', START=START)
+;                       P2 = FXPAR('P2', START=START)
+;       PRECHECK = If START is specified, then PRECHECK is the number
+;                  of keywords preceding START to be searched.
+;                  Default: 5
+;       POSTCHECK = If START is specified, then POSTCHECK is the number
+;                   of keywords after START to be searched.
+;                   Default: 20
 ; OUTPUT: 
 ;       The returned value of the function is the value(s) associated with the
 ;       requested keyword in the header array.
@@ -103,6 +131,8 @@
 ;               Fixed potential problem with overflow of LONG values
 ;       Version 6, Craig Markwardt, GSFC, 28 Jan 1998, 
 ;               Added CONTINUE parsing         
+;       Version 7, Craig Markwardt, GSFC, 18 Nov 1999,
+;               Added START, PRE/POSTCHECK keywords for better performance
 ;-
 ;------------------------------------------------------------------------------
 ;
@@ -156,7 +186,21 @@
 ;  a number.  Store the positions of the located keywords in NFOUND, and the
 ;  value of the number field in NUMBER.
 ;
-        KEYWORD = STRMID( HDR, 0, 8)
+        IF N_ELEMENTS(START)     EQ 0 THEN START = -1L
+        START = LONG(START[0])
+        IF NOT VECTOR AND START GE 0 THEN BEGIN
+            IF N_ELEMENTS(PRECHECK)  EQ 0 THEN PRECHECK = 5
+            IF N_ELEMENTS(POSTCHECK) EQ 0 THEN POSTCHECK = 20
+            NHEADER = N_ELEMENTS(HDR)
+            MN = (START - PRECHECK)  > 0
+            MX = (START + POSTCHECK) < NHEADER-1
+            KEYWORD = STRMID(HDR[MN:MX], 0, 8)
+        ENDIF ELSE BEGIN
+            RESTART:
+            START   = -1L
+            KEYWORD = STRMID( HDR, 0, 8)
+        ENDELSE
+
         IF VECTOR THEN BEGIN
             NFOUND = WHERE(STRPOS(KEYWORD,NAM) GE 0, MATCHES)
             IF ( MATCHES GT 0 ) THEN BEGIN
@@ -177,10 +221,13 @@
 ;
         ENDIF ELSE BEGIN
             NFOUND = WHERE(KEYWORD EQ NAM, MATCHES)
+            IF MATCHES EQ 0 AND START GE 0 THEN GOTO, RESTART
+            IF START GE 0 THEN NFOUND = NFOUND + MN
             IF (MATCHES GT 1) AND (NAM NE 'HISTORY ') AND               $
                 (NAM NE 'COMMENT ') AND (NAM NE '') THEN        $
                 MESSAGE,/INFORMATIONAL, 'WARNING- Keyword ' +   $
                 NAM + 'located more than once in ' + ABORT
+            IF (MATCHES GT 0) THEN START = NFOUND[MATCHES-1]
         ENDELSE
 ;
 ;  Extract the parameter field from the specified header lines.  If one of the

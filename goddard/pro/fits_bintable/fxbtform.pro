@@ -62,11 +62,9 @@
 ;		the maximum array size is not in the header.
 ;	Version 5  Wayne Landsman, GSFC, August 1997
 ;		Recognize double complex array type if since IDL version 4.0
-;	Version 6  Wayne Landsman, GSFC, August 1997
-;		Version for IDL V5.0
 ; Version     :
-;       Version 6, 30 Aug 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Version 6
+;       Optimized FXPAR call, CM 1999 Nov 18
 ;-
 ;
 	ON_ERROR,2
@@ -84,7 +82,7 @@
 ;
 ;  Get the number of fields.
 ;
-	TFIELDS = FXPAR(HEADER,'TFIELDS')
+	TFIELDS = FXPAR(HEADER,'TFIELDS', START=0L)
 	IF !ERR LT 0 THEN BEGIN
 		MESSAGE = 'Invalid FITS header -- keyword TFIELDS is missing'
 		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN

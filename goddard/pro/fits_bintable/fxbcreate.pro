@@ -1,4 +1,4 @@
-	PRO FXBCREATE, UNIT, FILENAME, HEADER, ERRMSG=ERRMSG
+	PRO FXBCREATE, UNIT, FILENAME, HEADER, EXTENSION, ERRMSG=ERRMSG
 ;+
 ; Project     : SOHO - CDS
 ;
@@ -25,6 +25,7 @@
 ;	None.
 ; Outputs     : 
 ;	UNIT	 = Logical unit number of the opened file.
+;       EXTENSION= Extension number of newly created extension.
 ; Opt. Outputs: 
 ;	None.
 ; Keywords    : 
@@ -71,6 +72,7 @@
 ; Version     :
 ;	Version 5, 25 June 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added EXTENSION parameter, C. Markwardt 1999 Jul 15
 ;-
 ;
 @fxbintable
@@ -78,7 +80,7 @@
 ;
 ;  Check the number of parameters.
 ;
-	IF N_PARAMS() NE 3 THEN BEGIN
+	IF N_PARAMS() LT 3 THEN BEGIN
 		MESSAGE = 'Syntax:  FXBCREATE, UNIT, FILENAME, HEADER'
 		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
 			ERRMSG = MESSAGE
@@ -90,7 +92,7 @@
 ;
 	GET_LUN,UNIT
        	OPENU, UNIT, FILENAME, /BLOCK
-	FXFINDEND, UNIT
+	FXFINDEND, UNIT, EXTENSION
 ;
 ;  Store the UNIT number in the common block, and leave space for the other
 ;  parameters.  Initialize the common block if need be.  ILUN is an index into
