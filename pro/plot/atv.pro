@@ -5216,9 +5216,10 @@ if (not (xregistered('atv', /noshow))) then begin
    stretch = 0B   ; just starting up. 
 endif
 
+imtype = size(image, /tname)
 
 ; If image is a filename, read in the file
-if ( (n_params() NE 0) AND (size(image, /tname) EQ 'STRING')) then begin
+if ( (n_params() NE 0) AND (imtype EQ 'STRING')) then begin
     ifexists = findfile(image, count=count)
     if (count EQ 0) then begin
         print, 'ERROR: File not found!'
@@ -5228,14 +5229,22 @@ if ( (n_params() NE 0) AND (size(image, /tname) EQ 'STRING')) then begin
 endif
 
 ; Check for existence of array
-if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') AND $
-   (size(image, /tname) EQ 'UNDEFINED')) then begin
+if ( (n_params() NE 0) AND imtype NE 'STRING') AND $
+   (imtype EQ 'UNDEFINED') then begin
     print, 'ERROR: Data array does not exist!'
 endif
 
+; Check if array is complex
+if ( (n_params() NE 0) AND $
+     ((imtype EQ 'COMPLEX') OR (imtype EQ 'DCOMPLEX'))) then begin
+    print, 'ERROR: Data array is complex!'
+    return
+endif
+
+
 ; If user has passed atv a data array, read it into main_image.
-if ( (n_params() NE 0) AND (size(image, /tname) NE 'STRING') AND $
-   (size(image, /tname) NE 'UNDEFINED')) then begin
+if ( (n_params() NE 0) AND (imtype NE 'STRING') AND $
+   (imtype NE 'UNDEFINED')) then begin
 ; Make sure it's a 2-d array
     if ( (size(image))[0] NE 2) then begin
 
