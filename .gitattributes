@@ -800,6 +800,7 @@ pro/healpix/healpix_ring_weight.pro -text
 pro/healpix/ishealpix.pro -text
 pro/healpix/map_nest2ring.pro -text
 pro/healpix/map_ring2nest.pro -text
+pro/healpix/mqladvance.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
 pro/image/exact_photfrac.pro -text
