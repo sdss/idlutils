@@ -1045,7 +1045,6 @@ pro/spheregroup/spheregroup.pro -text
 pro/spheregroup/spherematch.pro -text
 pro/trace/fchebyshev.pro -text
 pro/trace/fchebyshev_split.pro -text
-pro/trace/flegendre.pro -text
 pro/trace/fpoly.pro -text
 pro/trace/func_fit.pro -text
 pro/trace/trace_crude.pro -text
