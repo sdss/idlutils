@@ -1,4 +1,14 @@
 
+pro/Makefile: Remove radprof from the SUBDIRS list, since there is nothing
+               left in that directory.
+src/mangle1.4/src/Makefile: Change the "make" command to put the executables
+               directly in the idlutils/bin directory, rather than copying
+               them there after a "make install".  And don't have "make"
+               automatically do a "make install".
+src/mangle1.4/src/GNUmakefile: Remove this file, since it appears to
+               be identical to the "Makefile", and I don't really want
+               to be worrying about two versions of the same Makefile.
+
 -------------------------------------------------------------------------------
 v4_10_5 (Sep 17, 2003)
 Upgraded version mangle code, and new features for SPLOT.
