@@ -77,7 +77,6 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
     message, 'Dimensions of XDATA and YDATA do not agree'
 
    if (NOT keyword_set(nord)) then nord = 4L
-   if (n_elements(maxiter) EQ 0) then maxiter = 10
    if (NOT ARG_PRESENT(upper)) then upper = 5
    if (NOT ARG_PRESENT(lower)) then lower = 5
 
@@ -91,16 +90,18 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
        message, 'Dimensions of X and X2 do not agree'
       if (NOT keyword_set(npoly)) then npoly = 2L
    endif
+   if (n_elements(maxiter) EQ 0) then maxiter = 10
 
-   if NOT keyword_set(invvar) then begin
-       var = variance(ydata)
-       if (var EQ 0) then return, -1
-       invvar = 0.0 * ydata + 1.0/var
+   if (NOT keyword_set(invvar)) then begin
+      var = variance(ydata)
+      if (var EQ 0) then return, -1
+      invvar = 0.0 * ydata + 1.0/var
    endif
 
-   these = where(invvar GT 0, nthese)
+   outmask = invvar GT 0
+   these = where(outmask, nthese)
  
-   if (nthese LT nord) then begin
+   if nthese LT nord then begin
       message, 'Number of good data points fewer the nord', /continue
       return, -1
    endif
@@ -140,33 +141,30 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ; fit is just set to zero outside.
 
    ;----------
-   ; Iterate spline fit
-
-   iiter = 0
-   error = -1L
-   outmask = 0
+   ; Sort the data so that X is in ascending order.
 
    xsort = sort(xdata)
    xwork = xdata[xsort]
    ywork = ydata[xsort]
    invwork = invvar[xsort]
-   if keyword_set(x2) then x2work = x2[xsort]
+   if (keyword_set(x2)) then x2work = x2[xsort]
+
+   ;----------
+   ; Iterate spline fit
+
+   iiter = 0
+   error = -1L
+   outmask = invwork GT 0
 
    while (((error[0] NE -1) OR (keyword_set(qdone) EQ 0)) $
     AND iiter LE maxiter) do begin
 
-      if (error[0] EQ -1) then begin
-         qdone = djs_reject(ywork, yfit, invvar=invwork, $
-          outmask=outmask, upper=upper, lower=lower, _EXTRA=EXTRA)
-         iiter = iiter + 1
-      endif
-
       ngood = total(outmask)
-      ngoodbk = total(sset.bkmask NE 0)
+      goodbk = where(sset.bkmask NE 0)
 
-      if (ngood LE 1 OR ngoodbk EQ 0) then begin
+      if (ngood LE 1 OR goodbk[0] EQ -1) then begin
          sset.coeff = 0
-         iiter = maxiter + 1 ; End iterations
+         iiter = maxiter + 1; End iterations
       endif else begin
         ; Do the fit.  The indices of ill-constrained values are returned,
         ; or -1 if all break points are good.
@@ -174,10 +172,25 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
          x2=x2work, yfit=yfit)
       endelse
 
-      if (error[0] EQ -2) then return, sset $
-       else if (error[0] NE -1) then sset.bkmask[error] = 0
+      if (error[0] EQ -2) then begin
+         ; All break points have been dropped.
+         return, sset
+      endif else if (error[0] NE -1) then begin
+         ; Drop another break point.
+         sset.bkmask[error] = 0
+         iiter = iiter + 1 ; I don't understand why we need this!!??? (DJS)
+                           ; But we get in an infinite loop sometimes w/out it!
+      endif else begin
+         ; Iterate the fit -- next rejection iteration.
+         qdone = djs_reject(ywork, yfit, invvar=invwork, $
+          outmask=outmask, upper=upper, lower=lower, _EXTRA=EXTRA)
+         iiter = iiter + 1
+      endelse
 
    endwhile
+
+   ;----------
+   ; Re-sort the output arrays OUTMASK and YFIT to agree with the input data.
 
    temp = outmask
    outmask[xsort] = temp
