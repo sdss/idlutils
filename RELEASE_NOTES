@@ -1,3 +1,19 @@
+v5_0_1 (Apr 15, 2004) running on IDL 5.4 - 6.0
+Tagged for photoop v1_2.
+
+Blanton and Hogg have added some files to radprof/ and rgbcolor/
+radprof/asinh2.pro
+radprof/fast_fit_sersic.pro
+radprof/fit_sersic.pro
+radprof/maggies2lups.pro
+radprof/petro.pro
+radprof/profinterp.pro
+radprof/seeing_radial.pro
+radprof/sersic.pro
+radprof/sersic_params.pro
+   
+rgbcolor/hogg_image_overlay.pro
+rgbcolor/hogg_rgb_entropy.pro
 
 ASINH: Copy in Landsman's latest version.
 COUNT_FREELUN: New function to count the number of logical file pointers
@@ -30,7 +46,8 @@ VMIDC,idl_vmidc.c,vmid.c: New function to return the central vector in
                a polygon.
 XY2TRACESET: A bug was found by Andy Marble (Arizona): The input mask
                was basically being ignored in all cases!
-UNDEFINE: Fanning procedure to wrap TEMPORARY calls to delete variables
+UNDEFINE: Fanning procedure to wrap TEMPORARY calls to delete
+               variables.  Similar to DELVARX, but only does one at a time.
 WHERE_POLYGONS_OVERLAP: Add optional output AREAMATCH.
 
 data/sdss/sdssMaskbits.par: Remove the RESOLVE bits, which have been deprecated
