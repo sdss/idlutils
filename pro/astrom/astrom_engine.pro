@@ -132,8 +132,8 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
       splog, 'XY shift FAILED'
       return, 0
    endif
-  
-   splog, 'XYSHIFT: ', xyshift * binsz, ' pix'
+
+   splog, 'XYSHIFT: ', xyshift, ' pix'
   
    xcen = gsa1.ppo3 / gsa1.xsz - 0.5d
    ycen = gsa1.ppo6 / gsa1.ysz - 0.5d
