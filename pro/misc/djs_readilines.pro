@@ -45,7 +45,7 @@ function djs_readilines, infile, indx=indx, nhead=nhead, Head=Head
    nline = numlines(infile)
    ndata = nline - nhead
    if (nline LT nhead) then return, -1
-   if (NOT keyword_set(indx)) then indx = lindgen(ndata)
+   if (n_elements(indx) EQ 0L) then indx = lindgen(ndata)
 
    ; Open file
    get_lun, ilun
