@@ -16,7 +16,9 @@
 ;   select_tags- List of tag names to include; this can use wildcards.
 ;   except_tags- List of tag names to exclude; this can use wildcards.
 ;   format     - If set, then convert all tags to strings using this
-;                array of format codes (one per output tag).
+;                array of format codes (one per output tag).  These format
+;                codes should not include parentheses.  For example,
+;                they could be ['f7.2','a'].
 ;
 ; OUTPUTS:
 ;   outstruct  - Ouput structure array
@@ -111,7 +113,8 @@ function struct_trimtags, instruct, select_tags=select_tags, $
    outstruct = replicate(outstruct, nout)
    if (keyword_set(format)) then begin
       for ii=0, nkeep-1 do begin
-         outstruct[*].(ii) = string(instruct.(indx[ii]), format=format[ii])
+         outstruct[*].(ii) = string(instruct.(indx[ii]), $
+          format='('+format[ii]+')')
       endfor
    endif else begin
       struct_assign, instruct, outstruct
