@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   djs_rgb_make, rimage, gimage, bimage, [ name=, origin=, scales=, $
-;    nonlinearity=, rebinfactor=, overlay=, quality= ]
+;    nonlinearity=, satvalue=, rebinfactor=, overlay=, quality= ]
 ;
 ; INPUTS:
 ;   rimage,gimage,bimage - Input 2-dimensional images or names of FITS files;
@@ -18,13 +18,16 @@
 ;   origin      - Subtract these zero-point values from the input images
 ;                 before any other scalings; default to [0,0,0]
 ;   scales      - Multiplicative scaling for each image; default to [1,1,1]
-;   nonlinearity- 'b'
-;               - b=0 for linear fit, b=Inf for logarithmic
-;               - default is 3
-;   rebinfactor - integer by which to rebin pixels in the x and y
+;   nonlinearity- Nonlinearity constant, =0 for linear, =Inf for logarithmic;
+;                 default to 3
+;   satvalue    - Saturation value (before applying rescaling with SCALES, but
+;                 after applying ORIGIN) for which we should group pixels
+;                 into saturated "objects"; default to 100;
+;                 set to zero to disable
+;   rebinfactor - Integer by which to rebin pixels in the x and y
 ;                 directions; eg, a rebinfactor of 2 halves the number
 ;                 of pixels in each direction and quarters the total
-;                 number of pixels in the image.
+;                 number of pixels in the image
 ;   overlay     - Optional overlay image, which must be dimensionsed as
 ;                 [NX/REBINFACTOR,NY/REBINFACTOR,3]
 ;   quality     - Quality for WRITE_JPEG; default to 75 per cent
@@ -44,6 +47,15 @@
 ;   where "b" is the input NONLINEARITY parameter and we define at each pixel
 ;     r = (RIMAGE + GIMAGE + BIMAGE)
 ;
+;   Note that there are two types of saturation.  The first is that objects
+;   can be considered saturated if they exceed SATVALUE in any of the input
+;   images.  For such objects, contiguous saturated pixels are combined into
+;   one "object" with the mean color of all included pixels.
+;   The second type of saturation is of the RGB image.  This saturation is
+;   dealt with at the pixel level, and each pixel rescaled in all three images
+;   such that the brightest color hits the JPEG limit (of 255), but the
+;   colors (ratios between the RGB images) are preserved.
+;
 ; EXAMPLES:
 ;
 ; BUGS:
@@ -55,7 +67,7 @@
 ;------------------------------------------------------------------------------
 pro djs_rgb_make, rimage, gimage, bimage, name=name, $
  origin=origin1, scales=scales1, nonlinearity=nonlinearity1, $
- rebinfactor=rebinfactor1, overlay=overlay, quality=quality
+ satvalue=satvalue1, rebinfactor=rebinfactor1, overlay=overlay, quality=quality
 
    t0 = systime(1)
    thismem = float(ulong(memory()))
@@ -68,11 +80,18 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
     else origin = float(origin1)
    if (n_elements(scales1) EQ 0) THEN scales = [1,1,1] $
     else scales = float(scales1)
-   if (n_elements(rebinfactor1) EQ 0) THEN rebinfactor = 1 $
+   if (NOT keyword_set(rebinfactor1)) THEN rebinfactor = 1 $
     else rebinfactor = float(rebinfactor1)
    if (NOT keyword_set(quality)) then quality = 75
    if (n_elements(nonlinearity1) EQ 0) then nonlinearity = 3. $
-    else nonlinearity = float(nonlinearity1)
+    else nonlinearity = float(nonlinearity1[0])
+   if (n_elements(satvalue1) EQ 0) then satvalue = 100. $
+    else satvalue = float(satvalue1[0])
+
+   if (n_elements(origin) NE 3) then $
+    message, 'ORIGIN must have 3 elements'
+   if (n_elements(scales) NE 3) then $
+    message, 'SCALES must have 3 elements'
 
    ;----------
    ; Read the 3 images, and sanity-check that they are the same dimensions
@@ -131,40 +150,23 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
     bimg = bimg > 0
 
    ;----------
-   ; Compute the nonlinear mapping, but do not apply it yet
-   ; (until after we deal with saturated stars)
-
-   radius = rimg + gimg + bimg
-   radius = nonlinearity * radius
-   radius = radius + (radius LE 0)
-   nonlinfac = asinh(radius) / radius
-   radius = 0 ; clear memory
-
-   ;----------
-   ; Determine where in the image we are saturating any of the 3 colors
-
-   satmask = (rimg * nonlinfac GT 1) $
-    OR (gimg * nonlinfac GT 1) $
-    OR (bimg * nonlinfac GT 1)
-
-   ;----------
-   ; Apply the nonlinearity corrections, **except** for saturated pixels
-
-   isat = where(satmask, nsat)
-   if (nsat GT 0) then nonlinfac[isat] = 1
-
-   rimg = rimg * nonlinfac
-   gimg = gimg * nonlinfac
-   bimg = bimg * nonlinfac
-   nonlinfac = 0 ; clear memory
-
-   ;----------
    ; Loop through each saturated object, and replace all pixels in each object
    ; with the mean color of that object
 
-   ; This function groups all contiguous saturated pixels into one object.
-   ; (This uses quite a bit of memory, though)
-   objmask = grow_object(satmask)
+   if (keyword_set(satvalue)) then begin
+      ; Determine where in the image we are saturating any of the 3 colors
+      satmask = (rimg GT satvalue*scales[0]) $
+       OR (gimg GT satvalue*scales[1]) $
+       OR (bimg GT satvalue*scales[2])
+      isat = where(satmask, nsat)
+
+      ; This function groups all contiguous saturated pixels into one object.
+      ; (This uses quite a bit of memory, though)
+      if (nsat GT 0) then $
+       objmask = grow_object(satmask)
+   endif else begin
+      nsat = 0
+   endelse
 
    if (nsat GT 0) then begin
       nobj = max(objmask[isat])
@@ -185,19 +187,45 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
       endelse
       for iobj=0L, nobj-1 do begin
          indx = isat[i1[iobj]:i2[iobj]]
-         rtmp = total(rimg[indx]) > 0
-         gtmp = total(gimg[indx]) > 0
-         btmp = total(bimg[indx]) > 0
-         maxval = max([rtmp,gtmp,btmp])
-         rimg[indx] = rtmp / maxval
-         gimg[indx] = gtmp / maxval
-         bimg[indx] = btmp / maxval
+         rimg[indx] = mean(rimg[indx])
+         gimg[indx] = mean(gimg[indx])
+         bimg[indx] = mean(bimg[indx])
       endfor
    endif
    objmask = 0 ; clear memory
    isat = 0
    i1 = 0
    i2 = 0
+
+   ;----------
+   ; Compute the nonlinear mapping
+
+   radius = rimg + gimg + bimg
+   radius = nonlinearity * radius
+   radius = radius + (radius LE 0)
+   nonlinfac = asinh(radius) / radius
+   radius = 0 ; clear memory
+
+   ;----------
+   ; Determine where in the image we are saturating any of the 3 colors
+
+   maxval = rimg > gimg > bimg
+   satmask = (rimg * nonlinfac GT 1) $
+    OR (gimg * nonlinfac GT 1) $
+    OR (bimg * nonlinfac GT 1)
+   isat = where(satmask, nsat)
+   satmask = 0 ; clear memory
+   if (nsat GT 0) then nonlinfac[isat] = 1. / maxval[isat]
+   maxval = 0 ; clear memory
+   isat = 0 ; clear memory
+
+   ;----------
+   ; Apply the nonlinearity corrections
+
+   rimg = rimg * nonlinfac
+   gimg = gimg * nonlinfac
+   bimg = bimg * nonlinfac
+   nonlinfac = 0 ; clear memory
 
    ;----------
    ; Optionally add the overlay images
