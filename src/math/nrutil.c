@@ -1,4 +1,4 @@
-#define free_vector nr_free_vector
+/* #define free_vector nr_free_vector */
 
 /* CAUTION: This is the ANSI C (only) version of the Numerical Recipes
    utility file nrutil.c.  Do not confuse this file with the same-named
