@@ -52,9 +52,9 @@ PRO healgen, nside, theta, phi, nest=nest, double=double
       lo = i*chunk
       hi = (i+1)*chunk
       if keyword_set(nest) then begin 
-         pix2ang_nest, nside, ipix[lo:hi-1], theta1, phi1
+         dpf_pix2ang_nest, nside, ipix[lo:hi-1], theta1, phi1, double=double
       endif else begin 
-         pix2ang_ring, nside, ipix[lo:hi-1], theta1, phi1
+         dpf_pix2ang_ring, nside, ipix[lo:hi-1], theta1, phi1, double=double
       endelse 
       phi[lo:hi-1] = phi1
       theta[lo:hi-1] = theta1
