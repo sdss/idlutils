@@ -571,10 +571,12 @@ pro/TeXtoIDL/textoidl.pro -text
 pro/astrom/angle_from_pairs.pro -text
 pro/astrom/astrom_engine.pro -text
 pro/astrom/astrom_tweak.pro -text
+pro/astrom/ll2uv.pro -text
 pro/astrom/offset_from_pairs.pro -text
 pro/astrom/usno_cone.pro -text
 pro/astrom/usno_read.pro -text
 pro/astrom/usno_readzone.pro -text
+pro/astrom/uv2ll.pro -text
 pro/bspline/bspline_action.pro -text
 pro/bspline/bspline_bkpts.pro -text
 pro/bspline/bspline_fit.pro -text
