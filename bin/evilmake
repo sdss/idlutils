@@ -30,6 +30,11 @@ case `uname` in
 		exit 1;;
 esac
 
-export SO_EXT X_CFLAGS X_LD_FLAGS
+# Always optimize when building with "evilmake"
+# Our Makefile's always build with $(SDSS_CFLAGS), so we can use that
+# variable to set optimization.
+SDSS_CFLAGS=-O3
+
+export SO_EXT X_CFLAGS X_LD_FLAGS SDSS_CFLAGS
 
 make "$@"
