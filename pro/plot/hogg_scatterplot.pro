@@ -19,10 +19,9 @@
 ;   levels      - contour levels; default in source code
 ;   quantiles   - quantiles to plot on conditional plot; default [0.25,0.5,0.75]
 ;   satfrac     - fraction of pixels to saturate in greyscale; default 0
+;   exponent    - stretch greyscale at exponent power; default 1.0
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
-;   sqrt        - make greyscale on sqrt stretch; default fourth-root (!)
-;   linear      - make greyscale on linear stretch
 ;   conditional - normalize each column separately
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
@@ -43,7 +42,8 @@ pro hogg_scatterplot, x,y,weight=weight, $
                       xrange=xrange,yrange=yrange,xnpix=xnpix,ynpix=ynpix, $
                       levels=levels,satfrac=satfrac, $
                       xvec=xvec,yvec=yvec,grid=grid,cumimage=cumimage, $
-                      sqrt=sqrt,conditional=conditional,quantiles=quantiles, $
+                      exponent=exponent, $
+                      conditional=conditional,quantiles=quantiles, $
                       _EXTRA=KeywordsForPlot
 
 ; set defaults
@@ -57,6 +57,7 @@ if not keyword_set(levels) then levels= errorf(0.5*(dindgen(3)+1))
 if not keyword_set(quantiles) then quantiles= [0.25,0.5,0.75]
 nquantiles= n_elements(quantiles)
 if not keyword_set(satfrac) then satfrac= 0.0
+if not keyword_set(exponent) then exponent= 1.0
 
 ; check inputs
 ; [tbd]
@@ -121,9 +122,6 @@ mingrey= 255.0
 maxgrey= 127.0
 maxgrid= grid[(reverse(sort(grid)))[ceil(satfrac*xnpix*ynpix)]]
 mingrid= 0.0
-if keyword_set(linear) then exponent= 1.0 $
-  else if keyword_set(sqrt) then exponent= 0.5 $
-  else exponent= 0.25
 tvgrid= mingrey+(maxgrey-mingrey)*((grid-mingrid)/(maxgrid-mingrid))^exponent
 tvgrid= (tvgrid < mingrey) > maxgrey
 

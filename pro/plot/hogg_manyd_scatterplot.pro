@@ -11,18 +11,12 @@
 ; OPTIONAL INPUTS:
 ;   nsig         number of sigma for half-width of each plot; default 5
 ;   label        [d] array of axis labels; default 'x_i'
-;   levels       confidence levels for contouring; defaults in source code
 ;   range        [2,d] array of plotting ranges
 ;   xdims,ydims  indices of data dimensions to use on each x and y axis
-;   xnpix,ynpix  number of pixels in x and y dimensions of each panel
-;   axis_char_scale  size of characters on labels
-;   quantiles    vector of fractions at which to plot quantiles on conditional
-;                   panels
-;   satfrac      fraction of pixels to saturate in each panel; default 0.0
-;   default_font  font command to send to set font for plotting
+;   axis_char_scale size of characters on labels
+;   default_font font command to send to set font for plotting
+;   [etc]        [options for hogg_scatterplot, see documentation]
 ; KEYWORDS:
-;   conditional  plot the conditional distribution of y on x 
-;   sqrt         sqrt stretch on image
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
 ; BUGS:
@@ -31,20 +25,17 @@
 ;   2002-12-14  re-constructed from ex_max_plot -- Hogg
 ;-
 pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
-                 label=label,levels=levels,range=range, $
-                 conditional=conditional,xdims=xdims,ydims=ydims, $
-                 sqrt=sqrt, $
-                 axis_char_scale=axis_char_scale,xnpix=xnpix,ynpix=ynpix, $
-                 quantiles=quantiles,satfrac=satfrac, $
-                 default_font=default_font
+                 label=label,range=range, $
+                 xdims=xdims,ydims=ydims, $
+                 axis_char_scale=axis_char_scale, $
+                 default_font=default_font, $
+                 xnpix=xnpix,ynpix=ynpix, $
+                 _EXTRA=KeywordsForHoggScatterplot
 
 ; set defaults
-if (keyword_set(conditional) and (not keyword_set(quantiles))) then $
-  quantiles=[0.25,0.5,0.75]
 if NOT keyword_set(label) then $
   label= 'x!d'+strcompress(string(lindgen(dimen)),/remove_all)
 if NOT keyword_set(nsig) then nsig= 5d
-if NOT keyword_set(contlevel) then contlevel= [0.01,0.05,0.32,2.0/3.0]
 if NOT keyword_set(axis_char_scale) then axis_char_scale= 1.75
 
 ; check dimensions
@@ -165,9 +156,7 @@ for id2=ydimen-1L,0L,-1 do begin
             if d1 NE d2 then begin
                 hogg_scatterplot, point[d1,*],point[d2,*],weight=weight, $
                   xrange=range[*,d1],yrange=range[*,d2], $
-                  xnpix=xnpix,ynpix=ynpix, $
-                  levels=levels,satfrac=satfrac,sqrt=sqrt, $
-                  conditional=conditional,quantiles=quantiles
+                  xnpix=xnpix,ynpix=ynpix,_EXTRA=KeywordsForPlot
             endif else begin
                 hogg_plothist, point[d1,*],weight=weight, $
                   xrange=range[*,d1],npix=xnpix,yticklen=1d-10
