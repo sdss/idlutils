@@ -151,7 +151,9 @@ function slatec_efc, x, y, coeff, bkpt=bkpt, nord=nord, fullbkpt=fullbkpt, $
                 ; below
 
       ; Test if the call to Slatec failed
-      if (total(coeff) EQ 0 AND total(y) NE 0) then begin
+     
+      inff = where(finite(coeff) EQ 0,ninff) 
+      if ((total(coeff) EQ 0 AND total(y) NE 0) OR ninff GT 0) then begin
 
          ; Assume that there are two break points without any data in between.
          ; Find them, and remove the second break point in those cases.
