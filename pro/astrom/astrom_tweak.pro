@@ -6,279 +6,136 @@
 ;   Tweak astrometric solution, given a good initial guess
 ;
 ; CALLING SEQUENCE:
-;   gsa_out = astrom_tweak(cat, im, gsa_in, $
-;    [ maxsep=, nminmatch=, /radial, errflag=, nmatch= ]
+;   gsa_out = astrom_tweak( gsa_in, catra, catdec, imx, imy, $
+;    [ dtheta=, errflag=, nmatch=, catind=, obsind=, /verbose ] )
 ;
 ; INPUTS:
+;   gsa_in     - Initial guess for astrometric solution (struct)
 ;   cat        - Structure (with fields .ra, .dec) of catalogue positions
 ;   im         - Structure (with fields .x, .y) of image star positions
-;   gsa-in     - Initial guess for astrometric solution (struct)
-;
-; REQUIRED KEYWORDS:
-;   maxsep     - Maximum allowed separation for good match (pixels).
-;                Stars are matched with the catalog that fall within 3*MAXSEP,
-;                but the final solution rejects any stars further than MAXSEP.
 ;
 ; OPTIONAL KEYWORDS:
-;   nminmatch  - Minimum number of stars for match; default to 5
-;   radial     - include higher-order radial terms in fit
+;   dtheta     - Match distance between catalog and image stars;
+;                default to 5 arcsec
+;   verbose    - If set, then print sizes of offsets
 ;  
 ; OUTPUTS:
 ;   gsa_out    - returned guess for astrometric solution (struct);
 ;                0 if solution failed
 ;
 ; OUTPUT OUTPUTS:
-;   errflag    - set to 1 if fatal error occurs
+;   errflag    - Set to 1 if fatal error occurs, 0 otherwise
 ;   nmatch     - Number of matched stars
+;   catind     - Indices of CATLON,CATLAT for matched objects.
+;   obsind     - Indices of XPOS,YPOS for matched objects.
 ;
 ; COMMENTS:
-;
 ;   Uses preliminary solution given in astr structure to match image
-;    and catalogue stars within maxsep pixels of each other.  These
-;    are then used by astrom_warp to determine a new solution, returned
-;    in astr.
+;   and catalogue stars within maxsep pixels of each other.  These
+;   are then used by astrom_warp to determine a new solution, returned
+;   in astr.
 ; 
-;   cat (.ra, .dec) will contain values from USNO SA2.0 catalogue or
-;    other catalogue, possibly derived from PT frames with good astrometry
-;
 ; BUGS:
+;   The terms AMDX[4],AMDY[4] in the GSSS structure should actually *not*
+;    be fit for since they are higher-order, but this was the easiest
+;    way to implement this code???
 ;
 ; PROCEDURES CALLED:
-;   poly_iter
+;   djs_angle_match()
 ;   gsssadxy
 ;   gsssxyad
 ;
-; INTERNAL SUPPORT PROCEDURES:
-;   warp_apply
-;   astrom_starmatch
-;   astrom_warp
-;
 ; REVISION HISTORY:
-;   26-Aug-2002  Written by D. Schlegel, Princeton.
-;                Modified from D. Finkbeiner's PT_TWEAK_ASTR.
+;   02-Feb-2003  Written by D. Schlegel and D. Hogg, APO
 ;-
 ;-----------------------------------------------------------------------------
-pro warp_apply, xraw, yraw, k_x, k_y, xwarp, ywarp
+function astrom_tweak, gsa_in, catra, catdec, imx, imy, dtheta=dtheta, $
+ errflag=errflag, nmatch=nmatch, catind=catind, obsind=obsind, $
+ verbose=verbose
 
-   dims = size(k_x, /dimens)
-   degree = dims[0]-1 ; Assume that k_x, k_y are [DEGREE+1,DEGREE+1] arrays
+   errflag = 0
+   if (NOT keyword_set(dtheta)) then dtheta = 5./3600.
 
-   xwarp = 0 * xraw
-   ywarp = 0 * yraw
-   for i=0, degree do begin
-      for j=0, degree do begin
-         xwarp = xwarp + k_x[i,j] * xraw^j * yraw^i
-         ywarp = ywarp + k_y[i,j] * xraw^j * yraw^i
-      endfor
-   endfor
-end
-;-----------------------------------------------------------------------------
-; Returns the indices of the catalog stars that match with the image stars
+   ;----------
+   ; Find matches between catalog (RA,DEC) and image X,Y
 
-pro astrom_starmatch, cat, im, indcat, indobs, maxsep=maxsep
+   gsssxyad, gsa_in, imx, imy, imra, imdec
+   nmatch = djs_angle_match(imra, imdec, catra, catdec, dtheta=dtheta, $
+    mcount=mcount, mindx=mindx)
+   if (nmatch LT 5) then begin
+      splog, 'Too few matches; returning original GSA'
+      errflag = 1
+      catind = -1L
+      obsind = -1L
+      return, gsa_in
+   endif
+   obsind = where(mcount GT 0)
+   catind = mindx[obsind]
 
-   ncat = n_elements(cat)
-   nobs = n_elements(im)
+   ;----------
+   ; Compute GSA internal coordinate system chi,eta,obx,oby
+   ; This code is replicated from GSSSADXY
 
-   indcat = lonarr(ncat)
-   indobs = lonarr(ncat)
+   radeg = 180.0d/!DPI
+   arcsec_per_radian= 3600.0d*radeg
+   dec_rad = catdec[catind] / radeg
+   ra_rad = catra[catind] / radeg
+   pltra = gsa_in.crval[0] / radeg
+   pltdec = gsa_in.crval[1] / radeg
 
-   k = 0L
-   for i=0L, ncat-1 do begin
-      dist = sqrt((cat[i].x-im.x)^2 + (cat[i].y-im.y)^2)
-      imin = where(dist LT maxsep, ct)
-      if (ct EQ 1) then begin ; Only match if exactly 1 star is in range
-         indcat[k] = i
-         indobs[k] = imin
-         k = k + 1L
-      endif
-   endfor
+   cosd = cos(dec_rad)
+   sind = sin(dec_rad)
+   ra_dif = ra_rad - pltra
 
-   ; Trim extra zeros
+   div = ( sind*sin(pltdec) + cosd*cos(pltdec) * cos(ra_dif))
+   xi = cosd*sin(ra_dif) * arcsec_per_radian / div
+   eta = (sind*cos(pltdec) - cosd*sin(pltdec) * cos(ra_dif)) $
+    * arcsec_per_radian / div
 
-   splog, k, ' matches between catalogue and image stars.'
-   if (k EQ 0) then begin
-      indcat = -1L
-      indobs =  -1L
-   endif else begin
-      indcat = indcat[0:k-1]
-      indobs = indobs[0:k-1]
-   endelse
+   obx = ( gsa_in.ppo3 - (gsa_in.xll + imx[obsind] + 0.5d) * gsa_in.xsz) / 1000.d
+   oby = (-gsa_in.ppo6 + (gsa_in.yll + imy[obsind] + 0.5d) * gsa_in.ysz) / 1000.d
 
-   return
-end
-;-----------------------------------------------------------------------------
-pro astrom_warp, catmatch, immatch, deltax, deltay, rot, shift=shift, $
- maxsep=maxsep
+   ;----------
+   ; Compute bilinear transformation between obx,oby <-> imx,imy
+   ; The terms kx[1,1] and ky[1,1] should actually *not* be fit for since they
+   ; are higher-order, but the POLYWARP procedure does not give you that option.
+   ; This should probably be fixed!???
 
-; determines the x and y offsets, rotation, and plate scale (first degree)
-
-   degree = 1
-
-; We subtract 1024.5 here so rotations are about
-;  the center of image, not (0,0)
-
-   if (NOT keyword_set(shift)) then shift = [1024.5, 1024.5]
-
-   x_0 = immatch.x-shift[0]
-   y_0 = immatch.y-shift[1]
-   x_i = catmatch.x-shift[0]
-   y_i = catmatch.y-shift[1]
-
-; coefficients   
-
-; (rot will always be 2x2)
-   rot = dblarr(2, 2)
-
-   ndata = n_elements(x_i)
-   qdone = 0
-   iiter = 0L
-   outmask = bytarr(ndata) + 1 ; Begin with all points good
-   adiff = 0 * x_i
-   while (NOT keyword_set(qdone) AND iiter LE ndata) do begin
-      igood = where(outmask NE 0, ngood)
-      if (ngood GE (degree+1)^2) then $
-       polywarp, x_i[igood], y_i[igood], x_0[igood], y_0[igood], $
-        degree, k_x, k_y
-      warp_apply, x_0, y_0, k_x, k_y, xwarp, ywarp
-      adiff = sqrt( (x_i-xwarp)^2 + (y_i-ywarp)^2 )
-      qdone = djs_reject(adiff, 0*adiff, outmask=outmask, $
-       maxdev=maxsep, maxrej=ceil(0.10*ndata)) ; Some hard-wired values ???
-      iiter = iiter + 1
-   endwhile
-   splog, 'Number of iterations = ', iiter
-   splog, 'Fraction of points rejected = ', mean(1-outmask)
-
-   ; Translational offset   
-
-   deltax = k_x[0,0]
-   deltay = k_y[0,0]
-
-   ; Rotation correction (radians)
-
-   rot[0,0] = k_x[0,1]
-   rot[0,1] = k_y[0,1]
-   rot[1,0] = k_x[1,0]
-   rot[1,1] = k_y[1,0]
-
-   ; Plate scale
-
-   splog, 'Initial scale guess off by factor of', determ(rot)
-
-   ; Cross terms
-
-   crossx = k_x[1,1]
-   crossy = k_y[1,1]
-   
-   if (abs(crossx) > abs(crossy)) GT 1E-4 then begin
-       splog, 'warning: Cross terms too big'
-   endif 
-
-   return
-end 
-;-----------------------------------------------------------------------------
-function astrom_tweak, cat, im, gsa_in, maxsep=maxsep, radial=radial, $
- nminmatch=nminmatch, errflag=errflag, catind=catind, obsind=obsind, $
- nmatch=nmatch
-
-   ; Set default return values
-   catind = -1L
-   obsind = -1L
-   nmatch = 0L
-
-   if (keyword_set(errflag)) then return, 0
-   if (NOT keyword_set(nminmatch)) then nminmatch = 5
-  
-   ; fill cat.x and .y fields using current astr structure
+   polywarp, xi, eta, obx, oby, 1, kx, ky
 
    gsa_out = gsa_in
-   gsssadxy, gsa_out, cat.ra, cat.dec, catx, caty
+   gsa_out.amdx[2] = kx[0,0]
+   gsa_out.amdy[2] = ky[0,0]
+   gsa_out.amdx[0] = kx[0,1]
+   gsa_out.amdy[0] = ky[1,0]
+   gsa_out.amdx[1] = kx[1,0]
+   gsa_out.amdy[1] = ky[0,1]
+   gsa_out.amdx[4] = kx[1,1]
+   gsa_out.amdy[4] = ky[1,1]
 
-   cat.x = catx
-   cat.y = caty
+   ;----------
+   ; Report the RMS differences between catalog and CCD positions
 
-   ; find matches between USNO catalogue and image stars; return index arrays
-   astrom_starmatch, cat, im, catind, obsind, maxsep=3*maxsep
-   nmatch = n_elements(catind) * (catind[0] NE -1)
-   if (nmatch LT nminmatch) then begin
-      splog, 'Only', nmatch, ' stars found - skipping'
-      nmatch = 0L
-      errflag = 1
-      return, 0
-   endif 
+   if (keyword_set(verbose)) then begin
+      gsssadxy, gsa_in, catra[catind], catdec[catind], catx, caty
+      xdiff = imx[obsind] - catx
+      ydiff = imy[obsind] - caty
+      splog, 'Input mean/stdev offset in X = ', mean(xdiff), stdev(xdiff)
+      splog, 'Input mean/stdev offset in Y = ', mean(ydiff), stdev(ydiff)
 
-   catmatch = cat[catind]        ; cat stars that match
-   immatch = im[obsind]          ; image stars that match
-
-   xcen = gsa_out.ppo3/gsa_out.xsz-.5d   ; 1023.5
-   ycen = gsa_out.ppo6/gsa_out.ysz-.5d   ; 1023.5
-
-   nord = 3
-   if (keyword_set(radial)) then begin ; fit radial part
-     
-      cx = catmatch.x-xcen
-      cy = catmatch.y-ycen
-      ix = immatch.x-xcen
-      iy = immatch.y-ycen
-;      xsi = cdelt[0]*(cd[0,0]*ix + cd[0,1]*iy) ;no matrix notation, in
-;      eta = cdelt[1]*(cd[1,0]*ix + cd[1,1]*iy) ;case X and Y are vectors
- 
-      catr = sqrt(cx^2+cy^2)
-      imr  = sqrt(ix^2+iy^2)
-      delr = imr-catr
-
-      poly_iter, [imr, -imr], [delr, -delr], nord, 3.0, yfit, coeff=coeff
-      cubecoeff  = -coeff[3]
-
-      ; this is not strictly correct - astrom_tweak must be iterated a few times
-      qd = (-cubecoeff*imr^2)
-      catmatch.x = catmatch.x+ix*qd ; bend catalogue to image
-      catmatch.y = catmatch.y+iy*qd
+      gsssadxy, gsa_out, catra[catind], catdec[catind], catx, caty
+      xdiff = imx[obsind] - catx
+      ydiff = imy[obsind] - caty
+      splog, 'Output mean/stdev offset in X = ', mean(xdiff), stdev(xdiff)
+      splog, 'Output mean/stdev offset in Y = ', mean(ydiff), stdev(ydiff)
    endif
-  
-   ; astrom_warp determines the translational, rotational, and scale coeffs
-  
-   astrom_warp, catmatch, immatch, deltax, deltay, rot, $
-    shift=[xcen, ycen], maxsep=maxsep
 
-   ; This routine coverts X,Y to RA, dec using information in astr
-   ; structure which contains the initial guess...
-
-   gsssxyad, gsa_out, xcen+deltax, ycen+deltay, tru_ra, tru_dec
-
-   err_ra  = tru_ra-gsa_out.crval[0]
-   err_dec = tru_dec-gsa_out.crval[1]
-   err = [err_ra, err_dec]*3600.   ; arcsec
-   splog, 'Pointing error: ', err[0], err[1], ' arcseconds'
-
-   ; update astr structure with results of ptwarp
-   gsa_out.crval = [tru_ra, tru_dec]
-   cd = [[gsa_out.amdx[0], gsa_out.amdy[1]], [gsa_out.amdx[1], gsa_out.amdy[0]]]/3600.
-   sc = sqrt(abs(determ(cd)))*3600.
-   cubelast = (gsa_out.amdx[10]+gsa_out.amdx[11])/(gsa_out.amdx[1]+gsa_out.amdx[0])*sc
-
-   cd = transpose(rot)##cd
-   gsa_out.amdx[0]  = cd[0, 0] *3600. ; x  coeff
-   gsa_out.amdx[1]  = cd[0, 1] *3600. ; y  
-   gsa_out.amdy[0]  = cd[1, 1] *3600. ; y  coeff (not a typo!)
-   gsa_out.amdy[1]  = cd[1, 0] *3600. ; x
-   sc = sqrt(abs(determ(cd)))*3600.
-
-   if (n_elements(cubecoeff) EQ 0) then cubecoeff = 0
-   cubecoeff = cubecoeff + cubelast
-
-;   astr.projp1 = astr.projp1+cubecoeff
-   ; Set amd coeffs corresponding to r^3 term 
-   gsa_out.amdx[8]  = cubecoeff/sc * gsa_out.amdx[1] ; y x^2
-   gsa_out.amdx[10] = cubecoeff/sc * gsa_out.amdx[1] ; y y^2
-   gsa_out.amdx[11] = cubecoeff/sc * gsa_out.amdx[0] ; x r^2
-   gsa_out.amdy[8]  = cubecoeff/sc * gsa_out.amdy[1] ; x y^2
-   gsa_out.amdy[10] = cubecoeff/sc * gsa_out.amdy[1] ; x x^2
-   gsa_out.amdy[11] = cubecoeff/sc * gsa_out.amdy[0] ; y r^2
-
-   gsssadxy, gsa_out, cat.ra, cat.dec, catx, caty
-   cat.x = catx & cat.y = caty
+;gsssadxy,gsa_in,catra[catind],catdec[catind],catx,caty
+;splot, imx,imy,ps=4
+;soplot,catx,caty,ps=5,color='red'
+;gsssadxy,gsa_out,catra[catind],catdec[catind],outx,outy
+;soplot,outx,outy,ps=4,color='green'
 
    return, gsa_out
-end
-;------------------------------------------------------------------------------
+end 
+;-----------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 ; CALLING SEQUENCE:
 ;   gsa_out = astrom_engine( xpos, ypos, catlon, catlat, gsa_in, $
 ;    [ search_rad=, search_scale=, search_angle=, $
-;    poserr=, nmatch=, catind=, obsind=, /radial ] )
+;    poserr=, nmatch=, catind=, obsind=, /radial, /verbose ] )
 ;
 ; INPUTS:
 ;   xpos       - X positions in CCD coordinates
@@ -17,7 +17,7 @@
 ;   catlat     - Catalog star latitutes in the same coordinate system as GSA_IN
 ;   gsa_in     - Input GSSS structure with initial guess for astrometric
 ;                solution
-;   radial     - If set, then fit for radial distortion terms; default to 0
+;   radial     - (Not used.)
 ;
 ; OPTIONAL INPUTS:
 ;   search_rad   - Unused ???
@@ -26,6 +26,7 @@
 ;                  relative to the input astrometric guess.
 ;   poserr       - Maximum position error in CCD coordinates; default to 1.
 ;                  No stars will be matched at distances further than this.
+;   verbose      - If set, then be verbose.
 ;
 ; OUTPUTS:
 ;   gsa_out    - Output GSSS structure with astrometric solution;
@@ -41,6 +42,8 @@
 ;   for the X,Y offsets by correlating with catalog stars.
 ;
 ; BUGS:
+;   The match distances are **hard-wired** to 6 arcsec on the first iteration,
+;   and 3 arcsec on the 2nd iteration???
 ;
 ; PROCEDURES CALLED:
 ;   angle_from_pairs()
@@ -57,7 +60,7 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
  search_rad=search_rad, $
  search_scale=search_scale, search_angle=search_angle, $
  poserr=poserr, nmatch=nmatch, catind=catind, $
- obsind=obsind, radial=radial
+ obsind=obsind, radial=radial, verbose=verbose
 
    if (n_params() LT 5) then begin
       doc_library, 'astrom_engine'
@@ -66,7 +69,6 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
    if (size(gsa_in,/tname) NE 'STRUCT') then $
     message, 'Must pass gsa structure with initial guess'
 
-   if (NOT arg_present(radial)) then radial = 0B
    if (NOT keyword_set(poserr)) then poserr = 1.0
 
    ;----------
@@ -77,7 +79,8 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
    nmatch = 0L
 
    ;----------
-   ; Set criterion for match on first pass through tweak_astrom [pix]
+   ; Set the bin size used in the ANGLE_FROM_PAIRS code,
+   ; based upon the value of POSERR.
    ; The factor 0.6 deg is pulled out of thin air, but should be based
    ; upon the step size used to search for the position angle error.
 
@@ -94,28 +97,28 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
 
    if (search_angle GT 1.) then begin 
       ang = angle_from_pairs(catx, caty, xpos, ypos, $
-       dmax=dmax, binsz=binsz, bestsig=bestsig, angrange=[-1., 1]*search_angle)
-    
+       dmax=dmax, binsz=binsz, bestsig=bestsig, $
+       angrange=[-1.,1.]*search_angle, verbose=verbose)
+
       if (bestsig gt 12) then begin 
-         splog, 'Best Angle: ', ang, '  sigma: ', bestsig
-         cd = fltarr(2, 2)
-         cd[0, 0] = gsa1.amdx[0]
-         cd[0, 1] = gsa1.amdx[1]
-         cd[1, 1] = gsa1.amdy[0]
-         cd[1, 0] = gsa1.amdy[1]
-         angrad = ang * !pi / 180.
+         if (keyword_set(verbose)) then $
+          splog, 'Best angle: ', ang, '  sigma: ', bestsig
+         cd = dblarr(2, 2)
+         cd[0,0] = gsa1.amdx[0]
+         cd[0,1] = gsa1.amdx[1]
+         cd[1,1] = gsa1.amdy[0]
+         cd[1,0] = gsa1.amdy[1]
+         angrad = ang * !dpi / 180.d0
          mm = [[cos(angrad), sin(angrad)], [-sin(angrad), cos(angrad)]]
          cd = cd # mm
-         print, cd
-         print
-         print, mm
-         gsa1.amdx[0] = cd[0, 0]
-         gsa1.amdx[1] = cd[0, 1]  
-         gsa1.amdy[0] = cd[1, 1]
-         gsa1.amdy[1] = cd[1, 0]
+         gsa1.amdx[0] = cd[0,0]
+         gsa1.amdx[1] = cd[0,1]  
+         gsa1.amdy[0] = cd[1,1]
+         gsa1.amdy[1] = cd[1,0]
          gsssadxy, gsa1, catlon, catlat, catx, caty
       endif else begin
-         splog, 'Warning: I think I am lost, but I will try anyway...'
+         if (keyword_set(verbose)) then $
+          splog, 'Warning: I think I am lost, but I will try anyway...'
       endelse
    endif 
   
@@ -123,17 +126,17 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
    ; Search for the X,Y offset between the catalogue stars and image stars
 
    xyshift = offset_from_pairs(catx, caty, xpos, ypos, $
-    dmax=dmax, binsz=binsz, errflag=errflag, bestsig=bestsig)
+    dmax=dmax, binsz=binsz, errflag=errflag, bestsig=bestsig, verbose=verbose)
 
    if (errflag NE 0) then begin
-      splog, 'XY shift FAILED in astrom_engine'
+      splog, 'XY shift FAILED'
       return, 0
    endif
   
    splog, 'XYSHIFT: ', xyshift * binsz, ' pix'
   
-   xcen = gsa1.ppo3 / gsa1.xsz - 0.5d   ; 1023.5
-   ycen = gsa1.ppo6 / gsa1.ysz - 0.5d   ; 1023.5
+   xcen = gsa1.ppo3 / gsa1.xsz - 0.5d
+   ycen = gsa1.ppo6 / gsa1.ysz - 0.5d
 
    ; NOTE: FITS crpix is 1-indexed but argument of xy2ad is 0-indexed
    refpix = [xcen, ycen] - xyshift
@@ -142,36 +145,16 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
    ; Update astrometry structure with new CRVALs
    gsa1.crval = [racen, deccen]
 
-   ; Update catalogue .x and .y fields
-   gsssadxy, gsa1, catlon, catlat, catx, caty
-
-   im_template = {im_specs, $
-                  x:   0.0, $
-                  y:   0.0, $
-                  ra:  0.d, $
-                  dec: 0.d  }
-
-   im = replicate(im_template, n_elements(xpos))
-   im.x = xpos
-   im.y = ypos
-
    ;----------
    ; Tweak astrometry structure with cat (ra,dec) and im (x,y) comparison
 
-   ; First pass
-   gsssadxy, gsa1, catlon, catlat, catx, caty
-
-   cat = replicate(im_template, n_elements(catlat))
-   cat.ra = catlon
-   cat.dec = catlat
-   cat.x = catx
-   cat.y = caty
-
    ; Call twice, since more stars may be matched on the 2nd call.
-   gsa1 = astrom_tweak(cat, im, gsa1, maxsep=poserr, errflag=errflag, $
-    nmatch=nmatch, radial=radial)
-   gsa1 = astrom_tweak(cat, im, gsa1, maxsep=poserr, errflag=errflag, $
-    nmatch=nmatch, radial=radial)
+   ;   The match distances are **hard-wired** to 6 arcsec on the first iteration,
+   ;   and 3 arcsec on the 2nd iteration???
+   gsa1 = astrom_tweak(gsa1, catlon, catlat, xpos, ypos, errflag=errflag, $
+    nmatch=nmatch, catind=catind, obsind=obsind, dtheta=6./3600., verbose=verbose)
+   gsa1 = astrom_tweak(gsa1, catlon, catlat, xpos, ypos, errflag=errflag, $
+    nmatch=nmatch, catind=catind, obsind=obsind, dtheta=3./3600., verbose=verbose)
 
    if (errflag NE 0) then begin
       splog, 'WARNING: XY shift FAILED in astrom_tweak'
