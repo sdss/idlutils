@@ -141,10 +141,10 @@ if not keyword_set(nobox) then begin
 endif
 
 ; plot number perimeter
-numlevels=[0,minnum]
+numlevels=[0,minnum-1]
 if not keyword_set(noperimeter) then begin
     contour, bin_number,xbin,ybin,levels=numlevels, $
-      /overplot,cell_fill=maskonly
+      /overplot,cell_fill=maskonly, c_thick=10
 endif
 
 end

@@ -5,9 +5,8 @@
 # Our Makefile's always build with $(SDSS_CFLAGS), so we can use that
 # variable to set optimization.
 
-export UNAME=`uname`
-echo "OS type detected: "$UNAME
-case $UNAME in
+echo "OS type detected: "`uname`
+case `uname` in
 	"SunOS") if [  -d /proc ]; then
 			SO_EXT=so
 			X_CFLAGS="-KPIC"

@@ -38,7 +38,7 @@ pro hogg_manyd_meanplot, weight,point,zdim,psfilename, $
 ; check dimensions
 ndata= n_elements(weight)       ; N
 dimen= n_elements(point)/n_elements(weight) ; d
-splog, ndata,' data points,',dimen,' dimensions
+splog, ndata,' data points,',dimen,' dimensions'
 
 ; set defaults
 if NOT keyword_set(label) then $
