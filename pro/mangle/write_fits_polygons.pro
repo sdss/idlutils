@@ -30,11 +30,11 @@ endfor
 
 outpoly=replicate(outpoly1,n_elements(polygons))
 struct_assign,polygons,outpoly
-for i=0L, n_elements(polygons)-1L do begin &$
+for i=0L, n_elements(polygons)-1L do begin 
     outpoly[i].xcaps[*,0:outpoly[i].ncaps-1L]= $
-      (*polygons[i].caps)[0:outpoly[i].ncaps-1].x & $
+      (*polygons[i].caps)[0:outpoly[i].ncaps-1].x 
     outpoly[i].cmcaps[0:outpoly[i].ncaps-1L]= $
-      (*polygons[i].caps)[0:outpoly[i].ncaps-1].cm & $
+      (*polygons[i].caps)[0:outpoly[i].ncaps-1].cm 
 endfor
 
 sxaddpar,hdr,'DATE',systime(),'Time of creation of polygon fits file'
