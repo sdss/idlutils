@@ -51,7 +51,7 @@ pro djs_modfits, filename, data, hdr, exten_no=exten_no
 
    ; Need at least 2 parameters
    if (N_params() LT 2) then begin
-      print, 'Syntax - modfits, filename, data, [hdr, exten_no=]'
+      print, 'Syntax - djs_modfits, filename, data, [hdr, exten_no=]'
       return
    endif
 
