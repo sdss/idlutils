@@ -42,6 +42,13 @@
 ;              data array (e.g. for variable length binary extensions).
 ;
 ; OPTIONAL INPUT KEYWORDS:
+;       /CHECKSUM - If set, then READFITS() will call FITS_TEST_CHECKSUM to 
+;                verify the data integrity if CHECKSUM keywords are present
+;                in the FITS header.   Cannot be used with the NSLICE, NUMROW
+;                or STARTROW keywords, since verifying the checksum requires 
+;               that all the data be read.  See FITS_TEST_CHECKSUM() for more
+;               information.
+;
 ;       /COMPRESS - Signal that the file is gzip compressed.  By default, 
 ;               READFITS will assume that if the file name extension ends in 
 ;               '.gz' then the file is gzip compressed.   The /COMPRESS keyword
@@ -179,10 +186,12 @@
 ;       Assume V5.2 or later            W. Landsman        Jan. 2003
 ;       Don't read entire header unless needed   W. Landsman  Jan. 2003
 ;       Added HBUFFER keyword    W. Landsman   Feb. 2003
+;       Added CHECKSUM keyword   W. Landsman   May 2003
 ;-
 ;
-function READFITS, filename, header, heap, COMPRESS = compress, HBUFFER=hbuf, $
-                   EXTEN_NO = exten_no, NOSCALE = noscale, NSLICE = nslice, $
+function READFITS, filename, header, heap, CHECKSUM=checksum, $ 
+                   COMPRESS = compress, HBUFFER=hbuf, EXTEN_NO = exten_no, $
+                   NOSCALE = noscale, NSLICE = nslice, $
                    NO_UNSIGNED = no_unsigned,  NUMROW = numrow, $
                    POINTLUN = pointlun, SILENT = silent, STARTROW = startrow
 
@@ -204,6 +213,7 @@ function READFITS, filename, header, heap, COMPRESS = compress, HBUFFER=hbuf, $
 ; Set default keyword values
 
    silent = keyword_set( SILENT )
+   do_checksum = keyword_set( CHECKSUM )
    if N_elements(exten_no) EQ 0 then exten_no = 0
 
 ;  Check if this is a compressed file.    Unix compressed files or gzip 
@@ -253,7 +263,7 @@ function READFITS, filename, header, heap, COMPRESS = compress, HBUFFER=hbuf, $
        if gzip then  readu,unit,bytarr(pointlun,/nozero) $
                else point_lun, unit, pointlun
   endif
-  doheader = arg_present(header)
+  doheader = arg_present(header) or do_checksum
   if doheader  then begin
           if N_elements(hbuf) EQ 0 then hbuf = 180 else begin
                   remain = hbuf mod 36
@@ -372,6 +382,16 @@ function READFITS, filename, header, heap, COMPRESS = compress, HBUFFER=hbuf, $
   if nbytes EQ 0 then begin
         if not SILENT then message, $
                 "FITS header has NAXIS or NAXISi = 0,  no data array read",/CON
+        if do_checksum then begin
+             result = FITS_TEST_CHECKSUM(header, data, ERRMSG = errmsg)
+             if not SILENT then begin
+               case result of 
+                1: message,/INF,'CHECKSUM keyword in header is verified'
+               -1: message,/CON, errmsg
+                else: 
+                endcase
+              endif
+        endif
         if not unitsupplied then free_lun, unit
         return,-1
  endif
@@ -385,9 +405,17 @@ function READFITS, filename, header, heap, COMPRESS = compress, HBUFFER=hbuf, $
 ; If an extension, did user specify row to start reading, or number of rows
 ; to read?
 
-   if not keyword_set(STARTROW) then startrow = 0
-   if naxis GE 2 then nrow = nax[1] else nrow = ndata
-   if not keyword_set(NUMROW) then numrow = nrow
+  if not keyword_set(STARTROW) then startrow = 0
+  if naxis GE 2 then nrow = nax[1] else nrow = ndata
+  if not keyword_set(NUMROW) then numrow = nrow
+  if do_checksum then if ((startrow GT 0) or $
+      (numrow LT nrow) or (N_elements(nslice) GT 0)) then begin 
+      message,/CON, $
+      'Warning - CHECKSUM not applied when STARTROW, NUMROW or NSLICE is set'
+      do_checksum = 0
+   endif 
+ 
+ 
    if exten_no GT 0 then begin
         xtension = strtrim( sxpar( header, 'XTENSION' , Count = N_ext),2)
         if N_ext EQ 0 then message, /INF, NoPRINT = Silent, $
@@ -463,9 +491,19 @@ function READFITS, filename, header, heap, COMPRESS = compress, HBUFFER=hbuf, $
         endif
         heap = bytarr(pcount*gcount*abs(bitpix)/8)
         readu, unit, heap
+        if do_checksum then $
+        result = fits_test_checksum(header,[data,heap],ERRMSG=errmsg)
+    endif else if do_checksum then $
+        result = fits_test_checksum(header, data, ERRMSG = errmsg)
+    if not unitsupplied then free_lun, unit
+    if do_checksum then if not SILENT then begin
+        case result of 
+        1: message,/INF,'CHECKSUM keyword in header is verified'
+       -1: message,/CON, 'CHECKSUM ERROR! ' + errmsg
+        else: 
+        endcase
     endif
 
-    if not unitsupplied then free_lun, unit
 
 ; Scale data unless it is an extension, or /NOSCALE is set
 ; Use "TEMPORARY" function to speed processing.  
