@@ -788,6 +788,7 @@ pro/image/grow_object.pro -text
 pro/image/hogg_histogram.pro -text
 pro/image/interp_profmean.pro -text
 pro/image/populate_image.pro -text
+pro/image/qu_to_baphi.pro -text
 pro/image/qzap.pro -text
 pro/mangle/angles_to_x.pro -text
 pro/mangle/cap_distance.pro -text
