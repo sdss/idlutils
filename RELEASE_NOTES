@@ -1,5 +1,40 @@
 
 -------------------------------------------------------------------------------
+
+
+early 2004 updates from Landsman:
+
+DEREDD:              UPDATE keyword
+GLACTC:              Fix major bug when year not 2000 and /FK4 not set
+IMCONTOUR:           Works with Galactic coordinates
+ISMEUV:		     Compute the continuum interstellar EUV optical depth
+PRECESS:             Work for arrays, not just vectors
+
+DELVARX:             /FREE_MEM - free memory associated with pointers
+FXPAR:               DATATYPE keyword to recast on the fly
+EXTAST:              ALT keyword for more general projections
+MAKE_ASTR:
+              The astrometry structure definition was slightly modified in
+                     July 2003; all angles are now double precision, and the
+                     LATPOLE tag was added.
+PUTAST:              Changes for ALT keyword
+
+
+
+FITSDIR:             NAXIS values must be integers
+FITS_TEST_CHECKSUM:  Return quietly if CHECKSUM keywords not found
+READFITS:            CHECKSUM keyword (tests FITS file checksums)
+HEADFITS:            Test output status of MRD_HREAD call
+MODFITS:             Major rewrite to allow changing size of data or header
+MRDFITS:             Major rewrite to improve binary table features
+                     Mar 2004: bug fixes, internal fxpar is faster
+MWRFITS:             Exit gracefully if write priveleges unavailable
+                     Don't use EXECUTE() statement if on a virtual machine
+SXADDPAR:            SAVECOMMENT keyword
+WRITEFITS:           NaNvalue keyword
+QUERY*:              New query procedures in sockets/
+
+-------------------------------------------------------------------------------
 v5_0_1 (Apr 15, 2004) running on IDL 5.4 - 6.0
 Tagged for photoop v1_2.
 
