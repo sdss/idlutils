@@ -66,7 +66,7 @@ PRO tmass_readzone, fitspath, zone, ra0, ra1, prefix, result
   indrange = long(interpol(ind, ra, raread))-1L
 
 ; read .fits file
-  data = mrdfits(fitsfile, 1, range=indrange)
+  data = mrdfits(fitsfile, 1, range=indrange, /silent)
 
 ; trim unwanted RA stars
   
