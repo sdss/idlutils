@@ -1,7 +1,7 @@
  pro wfpc2_metric,xin,yin,xout,yout,  chip, Header = h, GLOBAL = global, $
                                   YEAR = year, FILTER = filter, RADec = radec
 ;+
-; NAME
+; NAME:
 ;   WFPC2_METRIC
 ; PURPOSE:
 ;   Compute the distortion in a WFPC2 image and optionally return coordinates
@@ -88,7 +88,7 @@
 ;     Written     W. Landsman         March 2003
 ;-
  if N_params() LT 4 then begin
-     print,'Syntax - WFPC2_DISTORT, xin, yin, xout, yout, chip, /GLOBAL, '
+     print,'Syntax - WFPC2_METRIC, xin, yin, xout, yout, chip, /GLOBAL, '
      print,'                  /RADec, HEADER =, YEAR=, FILTER = '
      return
  endif
