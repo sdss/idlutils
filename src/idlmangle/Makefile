@@ -24,7 +24,7 @@ OBJECTS = \
 all : $(LIB)/libidlmangle.$(SO_EXT) 
 
 $(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle.a
-	$(FC) -shared $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
+	$(FC) $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
 		-lmangle -L$(IDLUTILS_DIR)/lib
 
 install :
