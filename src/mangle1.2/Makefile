@@ -10,7 +10,7 @@ CC = gcc
 CFLAGS = -g -Wall -O3 -DLINUX
 
 # f2c
-F77 = f77
+#F77 = f77
 #FFLAGS = -u -a -C -g -DF2C
 FFLAGS = -u -a -C -g -O3 -DF2C
 

@@ -60,12 +60,6 @@ int **ipv_p, **ev_p;
     *nv = poly->np;
     
     /* keep trying till the arrays are big enough */
-		nvmax=0;
-		ipv=NULL;
-		ev=NULL;
-		v=NULL;
-		ve=NULL;
-		angle=NULL;
     do {
 
 	/* make sure that allocated arrays contain enough space */

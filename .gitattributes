@@ -898,10 +898,6 @@ src/image/Makefile -text
 src/image/export.h -text
 src/image/pop_image.c -text
 src/mangle1.2/.cvsignore -text
-src/mangle1.2/A -text
-src/mangle1.2/A.F -text
-src/mangle1.2/A.c -text
-src/mangle1.2/A.f -text
 src/mangle1.2/HELP.unformatted -text
 src/mangle1.2/Makefile -text
 src/mangle1.2/Makefile.linux -text

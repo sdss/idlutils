@@ -6,10 +6,12 @@
 
 static int nv_int;
 static int nve_int;
+#if 0
 static double *ve_p_int=NULL;
 static double *angle_p_int=NULL;
 static int *ipv_p_int=NULL;
 static int *ev_p_int=NULL;
+#endif
 
 int gverts(polygon *poly, int vcirc, double *tol, int *nv, int nve, 
 					 double **ve_p, double **angle_p, int **ipv_p, int *nev, 
@@ -18,10 +20,12 @@ int gverts(polygon *poly, int vcirc, double *tol, int *nv, int nve,
 #define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
 static void free_memory()
 {
+#if 0
 	FREEVEC(ve_p_int);
 	FREEVEC(angle_p_int);
 	FREEVEC(ipv_p_int);
 	FREEVEC(ev_p_int);
+#endif
 }
 
 #define DEG2RAD .01745329251994
@@ -65,31 +69,10 @@ IDL_LONG idl_gverts
 	nev0 = ((IDL_LONG *)argv[i]); i++;
 	ev_p = ((IDL_LONG *)argv[i]); i++;
 	
-	/* 1. call gverts */
-	if((*nv)==0) {
-		/* 1a. if this is first call, we first must get numbers (can't do
-       idl memory allocation inside here :( */
-		retval=gverts(poly, vcirc, &tol, &nv_int, nve, &ve_p_int, &angle_p_int, 
-									&ipv_p_int, (int *) nev, (int *) nev0, &ev_p_int);
-	} else {
-		/* 1b. we know sizes, so we can do the real thing */
-		retval=gverts(poly, vcirc, &tol, &nv_int, nve, &ve_p_int, &angle_p_int, 
-									&ipv_p_int, (int *) nev, (int *) nev0, &ev_p_int);
-
-		/* copy vertices */
-		for(i=0;i<(nv_int+4)*nve*3;i++) {
-			ve_p[i]=ve_p_int[i];
-		}
-		
-		/* copy others */
-		for(i=0;i<(nv_int+4);i++) {
-			angle_p[i]=angle_p_int[i];
-			ev_p[i]=ev_p_int[i];
-			ipv_p[i]=ipv_p_int[i];
-		}
-	}
+	/* 1. we know sizes, so we can do the real thing */
+	retval=gvert(poly, *nv, vcirc, &tol, nv, nve, ve_p, angle_p, 
+							 ipv_p, (int *) nev, (int *) nev0, ev_p);
 	
-	(*nv)=nv_int;
 	FREEVEC(poly);
 	free_memory();
 	return retval;
