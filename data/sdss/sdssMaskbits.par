@@ -85,6 +85,7 @@ maskbits TTARGET  6 GUIDE_STAR
 maskbits TTARGET  7 BUNDLE_HOLE
 maskbits TTARGET  8 QUALITY_HOLE
 maskbits TTARGET  9 HOT_STD
+maskbits TTARGET 30 SEGUE_SURVEY
 maskbits TTARGET 31 SOUTHERN_SURVEY
 
 #------------------------------------------------------------------------------
