@@ -1,4 +1,3 @@
-;+
 ;+------------------------------------------------------------------------  
 ; NAME:
 ;       usno_cone
@@ -7,12 +6,17 @@
 ;       Determine RA,dec regions to read and call usno_readzone
 ;+------------------------------------------------------------------------  
 ; INPUTS:
-;   racen     - RA of region center (J2000)    (degrees)
-;   deccen    - dec of region center (J2000)   (degrees)
-;   rad       - radius of region               (degrees)
+;   catpath   - catalogue path
+;   racen     - RA of region center (J2000)    [degrees]
+;   deccen    - dec of region center (J2000)   [degrees]
+;   rad       - radius of region               [degrees]
+;
+; OPTIONAL INPUTS:
+;   catname   - Either 'USNO-A' or 'USNO-B'
+;
 ;+------------------------------------------------------------------------  
 ; OUTPUTS:
-;   data      - float(3,N) array of results.  
+;   result    - float(3,N) array of results.  
 ;                 data[0,*] = RA (in .01 arcsec)
 ;                 data[1,*] = (dec+90) (in .01 arcsec)
 ;                 data[2,*] = magnitudes packed in 32-bit int (see below)
@@ -22,15 +26,16 @@
 ;+------------------------------------------------------------------------  
 ; REVISION HISTORY
 ;   Written  2000 Apr 15 by D. P. Finkbeiner
-;   2002-Nov-25  Split from usno_read.pro - DPF
+;   2002-Nov-25  Split from usno_read.pro
+;                  and modified to work with USNO-B1.0 - DPF
 ;+------------------------------------------------------------------------  
 ;-
-PRO usno_cone, catpath, racen, deccen, rad, result
+PRO usno_cone, catpath, racen, deccen, rad, result, catname=catname
 
-  usnoa = 1B
+  if NOT keyword_set(catname) then catname = 'USNO-A'
 
 ; -------- For USNO-A (or SA)
-  if keyword_set(usnoa) then begin 
+  if strupcase(catname) eq 'USNO-A' then begin 
      rec_len = 12L
      prefix = 'zone'
      swap_if_little_endian = 1B
@@ -38,7 +43,7 @@ PRO usno_cone, catpath, racen, deccen, rad, result
   endif 
 
 ; -------- For USNO-B
-  if keyword_set(usnob) then begin 
+  if strupcase(catname) eq 'USNO-B' then begin 
      rec_len = 80L
      prefix = 'b'
      swap_if_big_endian = 1B
@@ -61,22 +66,27 @@ PRO usno_cone, catpath, racen, deccen, rad, result
   ENDELSE
      
 ; dec zone numbers
-  z0 = floor((90+dec0)/zonewidth) < 23
-  z1 = floor((90+dec1)/zonewidth) < 23
+  z0 = floor((90+dec0)/zonewidth) < long(180.0/zonewidth - 1)
+  z1 = floor((90+dec1)/zonewidth) < long(180.0/zonewidth - 1)
 
 ; loop over zones
   FOR z=z0, z1 DO BEGIN 
-
-     zone = z*(zonewidth*10)
+     
+     zone = long(z*(zonewidth*10))
+     print, z0, z1, zonewidth, zone, z
+     if keyword_set(usnob) then begin 
+        subdir = string(zone / 10, format='(I3.3)')
+     endif else subdir = ''
+     path = concat_dir(catpath, subdir)
      IF (ra0 LT ra1) THEN BEGIN 
-        usno_readzone, catpath, zone, ra0, ra1, rec_len, prefix, zdata, $
+        usno_readzone, path, zone, ra0, ra1, rec_len, prefix, zdata, $
           swap_if_little_endian=swap_if_little_endian, $
           swap_if_big_endian=swap_if_big_endian
      ENDIF ELSE BEGIN 
-        usno_readzone, catpath, zone, ra0, 360.0, rec_len, prefix, zdata1, $
+        usno_readzone, path, zone, ra0, 360.0, rec_len, prefix, zdata1, $
           swap_if_little_endian=swap_if_little_endian, $
           swap_if_big_endian=swap_if_big_endian
-        usno_readzone, catpath, zone, 0, ra1, rec_len, prefix, zdata2, $
+        usno_readzone, path, zone, 0, ra1, rec_len, prefix, zdata2, $
           swap_if_little_endian=swap_if_little_endian, $
           swap_if_big_endian=swap_if_big_endian
         zdata = [[zdata1], [zdata2]]
