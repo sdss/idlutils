@@ -35,12 +35,13 @@
 ;   (3) At least 2 pixels remain from which to compute statistics.  If not,
 ;       then the returned values are based upon the previous iteration.
 ;
-;   Note that this routine calls the IDL procedure MOMENT, which is stupidly
-;   slow.  I compound upon this sluggishness by calling MEDIAN in each
-;   iteration.
+; BUGS:
+;   Raw IDL routines are WAY too slow; this would be much faster if it
+;     was cast into C - Hogg
 ;
 ; REVISION HISTORY:
 ;   16-Jun-1999  Written by David Schlegel, Princeton
+;   11-Sep-2000  Speeded up by Hogg and Eisenstein
 ;-
 ;------------------------------------------------------------------------------
 pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
@@ -81,10 +82,10 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
    ; Compute the mean + stdev of the entire image.
    ; These values will be returned if there are fewer than 2 good points.
 
-   fmean = (moment(image, sdev=fsig))[0]
-   fmedian = fmean
+   mask = fltarr(ngood)+1.0
+   fmean = total(image*mask)/ngood
+   fsig = sqrt(total((image-fmean)^2*mask)/(ngood-1))
    iiter = 1
-   mask = bytarr(ngood)
 
    ;----------
    ; Iteratively compute the mean + stdev, updating the sigma-rejection
@@ -95,15 +96,17 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
       loval = fmean - sigrej * fsig
       hival = fmean + sigrej * fsig
       nlast = ngood
-      mask = image LT loval OR image GT hival
-      igood = where(mask EQ 0, ngood)
+      mask = float(image GT loval AND image LT hival)
+      ngood = total(mask)
       if (ngood GE 2) then begin
-         fmean = (moment(image[igood], sdev=fsig))[0]
-         fmedian = median(image[igood])
+         fmean = total(image*mask)/ngood
+         fsig = sqrt(total((image-fmean)^2*mask)/(ngood-1))
       endif
       iiter = iiter + 1
    endwhile
 
+   igood = where(mask GT 0.5)
+   fmedian = median(image[igood])
    return
 end
 ;------------------------------------------------------------------------------
