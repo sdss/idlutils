@@ -57,12 +57,15 @@
 ;   05-Oct-2002  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-function yanny_readone, filename, selectname, stnames=stnames, $
- _EXTRA=KeywordsForYannyRead
+function yanny_readone, filename, selectname, $
+ hdr=hdr, enums=enums, structs=structs, anonymous=anonymous, $
+ stnames=stnames, quick=quick, errcode=errcode
 
    retval = 0
 
-   yanny_read, filename, pp, stnames=stnames, _EXTRA=KeywordsForYannyRead
+   yanny_read, filename, pp, $
+    hdr=hdr, enums=enums, structs=structs, anonymous=anonymous, $
+    stnames=stnames, quick=quick, errcode=errcode
    if (keyword_set(selectname)) then begin
       if (n_elements(selectname) GT 1) then begin
          print, 'SELECTNAME must be a scalar'
