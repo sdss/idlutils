@@ -27,8 +27,12 @@ fi
 dirlist=`\ls -d $PATH2/*`
 for dirname in $dirlist ; do
     shortname=`echo $dirname | sed -n 's/.*\///p'`
-    echo Linking $PATH1/$shortname "->" $PATH2/$shortname
-    \ln -s $PATH2/$shortname $PATH1/$shortname
+    if [ -e $PATH1/$shortname ] ; then
+       echo Failure to build link over file $PATH1/$shortname
+    else
+       echo Linking $PATH1/$shortname "->" $PATH2/$shortname
+       \ln -s $PATH2/$shortname $PATH1/$shortname
+    fi
 done
 
 exit
