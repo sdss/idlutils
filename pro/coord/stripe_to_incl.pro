@@ -1,26 +1,49 @@
 ;+
 ; NAME:
 ;   stripe_to_incl
+;
 ; PURPOSE:
-;   given a stripe number, produce the inclination for the great circle; 
-;   hardwired to what astrotools v5_6 does
+;   Convert from SDSS stripe number to an inclination relative to the equator.
+;
 ; CALLING SEQUENCE:
-;   stripe_to_incl, eta, stripe
+;   inc = stripe_to_incl(stripe)
+;
 ; INPUTS:
-;   stripe   Survey Stripe
+;   stripe     - Stripe number for SDSS coordinate system.  If specified,
+;                the NODE,INCL are ignored; scalar or array.
+;
+; OPTIONAL INPUTS:
+;
 ; OUTPUTS:
-;   incl     Inlination of the great circle (deg)
+;   incl       - Inclination of great circle relative to the J2000
+;                celestial equator (degrees); scalar or array with same
+;                dimensions as STRIPE.
+;
+; OPTIONAL OUTPUTS:
+;
+; COMMENTS:
+;
+; EXAMPLES:
+;
 ; BUGS:
-;   Location of the survey center is hard-wired, not read from astrotools.
+;
+; PROCEDURES CALLED:
+;   stripe_to_eta()
+;
 ; REVISION HISTORY:
-;   2002-Feb-20  written by Blanton (NYU)
+;   20-Feb-2002  Written by M. Blanton, NYU
+;   03-Oct-2002  Modified by David Schlegel, Princeton.
 ;-
-pro stripe_to_incl,stripe,incl
+;------------------------------------------------------------------------------
+function stripe_to_incl, stripe
 
-dec_center=32.5D
+   if (n_params() NE 1) then $
+    message, 'Wrong number of arguments'
 
-stripe_to_eta,stripe,etacenter
-incl=etacenter+dec_center
+   dec_center = 32.5d
+   etacenter = stripe_to_eta(stripe)
+   incl = etacenter + dec_center
 
+   return, incl
 end
-
+;------------------------------------------------------------------------------

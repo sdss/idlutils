@@ -1,47 +1,80 @@
 ;+
 ; NAME:
-;   radec_to_munu
+;   munu_to_radec
+;
 ; PURPOSE:
-;   convert from ra, dec (SDSS survey coordinates) to GC coords
+;   Convert from equatorial coordinates to SDSS great circle coordinates.
+;
 ; CALLING SEQUENCE:
-;   radec_to_munu, ra,dec, mu,nu, stripe
+;   radec_to_munu, ra, dec, mu, nu, [ stripe=, node=, incl= ]
+;
 ; INPUTS:
-;   ra      Eq. 2000 coords (deg)
-;   dec
+;   ra         - Right ascension (J2000 degrees)
+;   dec        - Declination (J2000 degrees)
+;
+; OPTIONAL INPUTS:
+;   stripe     - Stripe number for SDSS coordinate system.  If specified,
+;                the NODE,INCL are ignored; scalar or array with same
+;                dimensions as MU.
+;   node       - Node of great circle on the J2000 celestial equator (degrees),
+;                scalar or array with same dimensions as MU.
+;   incl       - Inclination of great circle relative to the J2000
+;
 ; OUTPUTS:
-;   mu      Survey great circle longitude (deg)
-;   nu      Survey great circle latitude (deg)
+;
+; OPTIONAL OUTPUTS:
+;   mu         - Mu coordinate, scalar or array (degrees)
+;   nu         - Nu coordinate, scalar or array (degrees)
+;
+; COMMENTS:
+;   Either STRIPE or NODE,INCL must be specified.
+;
+; EXAMPLES:
+;
 ; BUGS:
-;   Location of the survey center is hard-wired, not read from astrotools.
-;   Incredible hack to get stripe and inclination
+;
+; PROCEDURES CALLED:
+;   cirrange
+;   stripe_to_incl()
+;
 ; REVISION HISTORY:
-;   2002-Feb-20  written by Blanton (NYU)
+;   20-Feb-2002  Written by M. Blanton, NYU
+;   03-Oct-2002  Modified by David Schlegel, Princeton.
 ;-
-pro radec_to_munu, ra,dec,mu,nu,stripe,setstripe=setstripe
-  racen= 185.0D  ; deg
-  deccen= 32.5D  ; deg
-  r2d= 180.0D/double(!PI)
-  d2r= 1.D/r2d
+;------------------------------------------------------------------------------
+pro radec_to_munu, ra, dec, mu, nu, stripe=stripe, node=node, incl=incl
 
-  ; set anode
-  anode=95.D
-  radec_to_etalambda,ra,dec,eta,lambda
-	if(n_elements(setstripe) gt 0) then begin
-	  stripe=long(ra-ra)+setstripe  
-	endif else begin
-    eta_to_stripe,eta,lambda,stripe
-	endelse
-  stripe_to_incl,stripe,incl
+   if (n_params() NE 4) then $
+    message, 'Wrong number of parameters'
 
-  x1=cos((ra-anode)*d2r)*cos(dec*d2r)
-  y1=sin((ra-anode)*d2r)*cos(dec*d2r)
-  z1=sin(dec*d2r)
-  x2 = x1
-  y2 = y1*cos(incl*d2r) + z1*sin(incl*d2r)
-  z2 =-y1*sin(incl*d2r) + z1*cos(incl*d2r)
+   if (keyword_set(stripe)) then begin
+      node = 95.d
+      incl = stripe_to_incl(stripe)
+   endif else begin
+      if (n_elements(node) NE 1 AND n_elements(incl) NE 1) then $
+       message, 'Must specify either STRIPE or NODE,INCL'
+   endelse
+   if (n_elements(ra) NE n_elements(dec)) then $
+    message, 'Number of elements in RA and DEC must agree'
 
-  mu = r2d*atan(y2,x2)+anode;
-  nu = r2d*asin(z2);
-  atbound2,nu,mu
+   r2d = 180.d / !dpi
+   d2r = !dpi / 180.d
 
+   if (n_elements(node) NE 1 OR n_elements(incl) NE 1) then begin
+      node = 95.d
+      incl = stripe_to_incl(stripe)
+   endif
+
+   x1 = cosdec * cosra
+   y1 = cosdec * sinra
+   z1 = sindec
+   x2 = x1
+   y2 = y1 * cosi + z1 * sini
+   z2 = -y1 * sini + z1 * cosi
+   mu = r2d * atan(y2,x2) + node
+   nu = r2d * asin(z2)
+   cirrange, mu
+
+   return
 end
+;------------------------------------------------------------------------------

@@ -1,37 +1,46 @@
 ;+
 ; NAME:
 ;   stripe_to_eta
+;
 ; PURPOSE:
-;   find the central eta value for a stripe; hardwired to what astrotools 
-;   v5_6 does
+;   Convert from SDSS great circle coordinates to equatorial coordinates.
+;
 ; CALLING SEQUENCE:
-;   stripe_to_eta, stripe, eta
+;   eta = stripe_to_eta(stripe)
+;
 ; INPUTS:
-;   stripe   Survey Stripe #
+;   stripe     - Stripe number for SDSS coordinate system.  If specified,
+;                the NODE,INCL are ignored; scalar or array.
+;
+; OPTIONAL INPUTS:
+;
 ; OUTPUTS:
-;   eta      Central value of eta (survey lat) in deg
+;   eta        - Eta in SDSS (lambda,eta) coordinate system (degrees);
+;                scalar or array with same dimensions as STRIPE.
+;
+; OPTIONAL OUTPUTS:
+;
+; COMMENTS:
+;
+; EXAMPLES:
+;
 ; BUGS:
-;   Location of the survey center is hard-wired, not read from astrotools.
+;
+; PROCEDURES CALLED:
+;
 ; REVISION HISTORY:
-;   2002-Feb-20  written by Blanton (NYU)
+;   20-Feb-2002  Written by M. Blanton, NYU
+;   03-Oct-2002  Modified by David Schlegel, Princeton.
 ;-
-pro stripe_to_eta,stripe,eta
+;------------------------------------------------------------------------------
+function stripe_to_eta, stripe
 
-stripe_separation=2.5D
-if(n_elements(stripe) eq 1) then begin
-  if(stripe le 46) then begin
-    eta=stripe*stripe_separation-(57.5D)
-  endif else begin
-    eta=stripe*stripe_separation-(57.5D)-(180.D)
-  endelse
-endif else begin
-  nindx=where(stripe le 46,ncount)
-  sindx=where(stripe gt 46,scount)
-	eta=dblarr(n_elements(stripe))
-	if(ncount gt 0) then eta[nindx]=stripe[nindx]*stripe_separation-(57.5D)
-	if(scount gt 0) then eta[sindx]=stripe[sindx]*stripe_separation-(57.5D) $
-	   -(180.D)
-endelse
+   if (n_params() NE 1) then $
+    message, 'Wrong number of arguments'
 
+   stripe_sep = 2.5d
+   eta = stripe * stripe_sep - 57.5d - 180.d * (stripe GT 46)
+
+   return, eta
 end
-
+;------------------------------------------------------------------------------

@@ -1,40 +1,83 @@
 ;+
 ; NAME:
 ;   munu_to_radec
+;
 ; PURPOSE:
-;   convert from GC coords to ra,dec
+;   Convert from SDSS great circle coordinates to equatorial coordinates.
+;
 ; CALLING SEQUENCE:
-;   munu_to_radec, mu,nu, stripe, ra, dec
+;   munu_to_radec, mu, nu, ra, dec, [ stripe=, node=, incl= ]
+;
 ; INPUTS:
-;   mu      Survey great circle longitude (deg)
-;   nu      Survey great circle latitude (deg)
+;   mu         - Mu coordinate, scalar or array (degrees)
+;   nu         - Nu coordinate, scalar or array (degrees)
+;
+; OPTIONAL INPUTS:
+;   stripe     - Stripe number for SDSS coordinate system.  If specified,
+;                the NODE,INCL are ignored; scalar or array with same
+;                dimensions as MU.
+;   node       - Node of great circle on the J2000 celestial equator (degrees),
+;                scalar or array with same dimensions as MU.
+;   incl       - Inclination of great circle relative to the J2000
+;                celestial equator (degrees); scalar or array with same
+;                dimensions as MU.
+;
 ; OUTPUTS:
-;   ra      Eq. 2000 coords (deg)
-;   dec
+;
+; OPTIONAL OUTPUTS:
+;   ra         - Right ascension (J2000 degrees)
+;   dec        - Declination (J2000 degrees)
+;
+; COMMENTS:
+;   Either STRIPE or NODE,INCL must be specified.
+;
+; EXAMPLES:
+;
 ; BUGS:
-;   Location of the survey center is hard-wired, not read from astrotools.
+;
+; PROCEDURES CALLED:
+;   cirrange
+;   stripe_to_incl()
+;
 ; REVISION HISTORY:
-;   2002-Feb-20  written by Blanton (NYU)
+;   20-Feb-2002  Written by M. Blanton, NYU
+;   03-Oct-2002  Modified by David Schlegel, Princeton.
 ;-
-pro munu_to_radec, mu,nu,stripe,ra,dec
-  racen= 185.0D  ; deg
-  deccen= 32.5D  ; deg
-  r2d= 180.0D/double(!PI)
-  d2r= 1.D/r2d
+;------------------------------------------------------------------------------
+pro munu_to_radec, mu, nu, ra, dec, stripe=stripe, node=node, incl=incl
 
-  ; set anode
-  anode=95.D
-  stripe_to_incl,stripe,incl
+   if (n_params() NE 4) then $
+    message, 'Wrong number of parameters'
 
-  x2=cos((mu-anode)*d2r)*cos(nu*d2r)
-  y2=sin((mu-anode)*d2r)*cos(nu*d2r)
-  z2=sin(nu*d2r)
-  x1 = x2;
-  y1 = y2*cos(incl*d2r) - z2*sin(incl*d2r);
-  z1 = y2*sin(incl*d2r) + z2*cos(incl*d2r);
+   if (keyword_set(stripe)) then begin
+      node = 95.d
+      incl = stripe_to_incl(stripe)
+   endif else begin
+      if (n_elements(node) NE 1 AND n_elements(incl) NE 1) then $
+       message, 'Must specify either STRIPE or NODE,INCL'
+   endelse
+   if (n_elements(mu) NE n_elements(nu)) then $
+    message, 'Number of elements in MU and NU must agree'
 
-  ra = r2d*atan(y1,x1)+anode;
-  dec = r2d*asin(z1);
-  atbound2,dec,ra
+   r2d = 180.d / !dpi
+   d2r = !dpi / 180.d
 
+   sinnu = sin(nu*d2r)
+   cosnu = cos(nu*d2r)
+   sini = sin(incl*d2r)
+   cosi = cos(incl*d2r)
+   sinmu = sin((mu-node)*d2r)
+   cosmu = cos((mu-node)*d2r)
+
+   xx = cosmu * cosnu
+   yy = sinmu * cosnu * cosi - sinnu * sini
+   zz = sinmu * cosnu * sini + sinnu * cosi
+
+   ra = r2d * atan(yy,xx) + node
+   dec = r2d * asin(zz)
+
+   cirrange, ra
+
+   return
 end
+;------------------------------------------------------------------------------
