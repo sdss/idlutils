@@ -1845,8 +1845,8 @@ endelse
 tmp_image = $
   scaled_image[5:state.image_size[0]+4, 5:state.image_size[1]+4]
 
-pan_image = congrid(tmp_image, round(state.pan_scale * state.image_size[0]), $
-                    round(state.pan_scale * state.image_size[1]) )
+pan_image = congrid(tmp_image, round(state.pan_scale * state.image_size[0])>1, $
+                    round(state.pan_scale * state.image_size[1])>1 )
 
 state.pan_offset[0] = round((state.pan_window_size - (size(pan_image))[1]) / 2)
 state.pan_offset[1] = round((state.pan_window_size - (size(pan_image))[2]) / 2)
