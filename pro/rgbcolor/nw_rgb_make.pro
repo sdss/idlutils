@@ -48,7 +48,7 @@
 PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
                 nonlinearity,origin=origin,rebinfactor=rebinfactor, $
                 saturatetowhite=saturatetowhite,quality=quality, $
-                overlay=overlay
+                overlay=overlay, colors=colors
 
 ;set defaults
 IF (NOT keyword_set(name)) THEN name = 'nw_rgb_make.jpg'
