@@ -79,14 +79,14 @@ pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $
 						RECUR_To     = recur_To,    $
 						RECUR_TANDEM = recur_tandem
 
-	if N_elements( Recur_Level ) NE 1 then Recur_Level = 0
+	if N_elements( Recur_Level ) NE 1 then Recur_Level = 0L
 
 	Ntag_from = N_tags( struct_From )
 	Ntag_to = N_tags( struct_To )
 
 	if (Recur_Level EQ 0) then begin	;check only at first user call.
 
-		NT_copied = 0
+		NT_copied = 0L
 
 		if (Ntag_from LE 0) OR (Ntag_to LE 0) then begin
 			message,"two arguments must be structures",/INFO
@@ -103,9 +103,9 @@ pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $
 		N_to = N_elements( struct_To )
 
 		if N_elements( index_From ) LE 0 then index_From = $
-								indgen( N_from )
+								lindgen( N_from )
 		Ni_from = N_elements( index_From )
-		if N_elements( index_To ) LE 0 then index_To = indgen( Ni_from )
+		if N_elements( index_To ) LE 0 then index_To = lindgen( Ni_from )
 		Ni_to = N_elements( index_To )
 
 		if (Ni_from LT Ni_to) then begin
@@ -159,7 +159,7 @@ pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $
 
 	Tags_from = Tag_names( struct_From )
 	Tags_to = Tag_names( struct_To )
-	wto = indgen( Ntag_to )
+	wto = lindgen( Ntag_to )
 
 ;Determine which Tags are selected or excluded from copying:
 
@@ -182,7 +182,7 @@ pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $
 
 		except_Tags = [strupcase( except_Tags )]
 
-		for t=0,Nextag-1 do begin
+		for t=0L,Nextag-1 do begin
 			w = where( Tags_to NE except_Tags[t], Ntag_to )
 			Tags_to = Tags_to[w]
 			wto = wto[w]
@@ -191,7 +191,7 @@ pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $
 
 ;Now find the matching Tags and copy them...
 
-	for t = 0, Ntag_to-1 do begin
+	for t = 0L, Ntag_to-1 do begin
 
 		wf = where( Tags_from EQ Tags_to[t] , nf )
 
@@ -229,18 +229,18 @@ pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $
 
 	if keyword_set( recur_From ) then begin
 
-		wfrom = indgen( Ntag_from )
+		wfrom = lindgen( Ntag_from )
 
 		if (Nextag GT 0) then begin
 
-			for t=0,Nextag-1 do begin
+			for t=0L,Nextag-1 do begin
 			    w = where( Tags_from NE except_Tags[t], Ntag_from )
 			    Tags_from = Tags_from[w]
 			    wfrom = wfrom[w]
 			  endfor
 		   endif
 
-		for t = 0, Ntag_from-1 do begin
+		for t = 0L, Ntag_from-1 do begin
 
 		     from = wfrom[t]
 
@@ -262,7 +262,7 @@ pro copy_struct_inx, struct_From, struct_To, NT_copied, Recur_Level,        $
 
 	if keyword_set( recur_To ) then begin
 
-		for t = 0, Ntag_to-1 do begin
+		for t = 0L, Ntag_to-1 do begin
 
 		   to = wto[t]
 
