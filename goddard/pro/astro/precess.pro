@@ -74,7 +74,8 @@ pro precess, ra, dec, equinox1, equinox2, PRINT = print, FK4 = FK4, $
 ;       Precession Matrix computation now in PREMAT   W. Landsman June 1994
 ;       Added /RADIAN keyword                         W. Landsman June 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
-;       Correct negative output RA values when /RADIAN used    March 1999  
+;       Correct negative output RA values when /RADIAN used    March 1999 
+;       Work for arrays, not just vectors  W. Landsman    September 2003 
 ;-    
   On_error,2                                           ;Return to caller
 
@@ -84,7 +85,7 @@ pro precess, ra, dec, equinox1, equinox2, PRINT = print, FK4 = FK4, $
    if ( npar LT 2 ) then begin 
 
      print,'Syntax - PRECESS, ra, dec, [ equinox1, equinox2,' + $ 
-                ' /PRINT, /FK4, /RADIAN ]
+                ' /PRINT, /FK4, /RADIAN ]'
      print,'         NOTE: RA and DEC must be in DEGREES unless /RADIAN is set'
      return 
 
@@ -94,6 +95,8 @@ pro precess, ra, dec, equinox1, equinox2, PRINT = print, FK4 = FK4, $
   npts = min( [N_elements(ra), N_elements(dec)] )
   if npts EQ 0 then $  
        message,'ERROR - Input RA and DEC must be vectors or scalars'
+  array  = size(ra,/N_dimen) GE 2
+  if array then dimen = size(ra,/dimen)
 
   if not keyword_set( RADIAN) then begin
           ra_rad = ra*deg_to_rad     ;Convert to double precision if not already
@@ -111,9 +114,9 @@ pro precess, ra, dec, equinox1, equinox2, PRINT = print, FK4 = FK4, $
    else: begin          
 
          x = dblarr(npts,3)
-         x[0,0] = a*cos(ra_rad)
-         x[0,1] = a*sin(ra_rad)
-         x[0,2] = sin(dec_rad)
+         x[0,0] = reform(a*cos(ra_rad),npts,/over)
+         x[0,1] = reform(a*sin(ra_rad),npts,/over)
+         x[0,2] = reform(sin(dec_rad),npts,/over)
          x = transpose(x)
          end
 
@@ -147,6 +150,11 @@ pro precess, ra, dec, equinox1, equinox2, PRINT = print, FK4 = FK4, $
         ra = ra_rad & dec = dec_rad
         ra = ra + (ra LT 0.)*2.0d*!DPI
   endelse
+
+  if array then begin
+       ra = reform(ra, dimen , /over)
+       dec = reform(dec, dimen, /over)
+  endif
 
   if keyword_set( PRINT ) then $
       print, 'Equinox (' + strtrim(equinox2,2) + '): ',adstring(ra,dec,1)
