@@ -22,11 +22,11 @@ pro hogg_oplot_covar,x,y,covar,color=color,nsigma=nsigma,_EXTRA=KeywordsForPlot
 ; set defaults, etc
   if NOT keyword_set(color) then color = !p.color
   ndata= n_elements(x)
-  x= reform(x,ndata)
-  y= reform(y,ndata)
+  x= reform([x],ndata)
+  y= reform([y],ndata)
   covar= reform(covar,2,2,ndata)
   ncolor= N_elements(color)
-  if ncolor EQ 1 then icolor= intarr(ncolor)+djs_icolor(color) $
+  if ncolor EQ 1 then icolor= intarr(ndata)+djs_icolor(color) $
   else icolor= djs_icolor(color)
   if NOT keyword_set(nsigma) then nsigma= 1D0
 
