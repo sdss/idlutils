@@ -4,7 +4,8 @@
 ; PURPOSE:
 ;   Check which polygons overlap a given polygon
 ; CALLING SEQUENCE:
-;   where_polygons_overlap, origpoly, matchpoly, matches, nmatches
+;   where_polygons_overlap, origpoly, matchpoly, matches, nmatches, $
+;    [ areamatch= ]
 ; INPUTS:
 ;   origpoly  - single polygon to check against
 ;   matchpoly - [N] array of polygons to check against origpoly
@@ -13,6 +14,7 @@
 ;   matches - [M<=N] indices of matching polygons (-1 if none)
 ;   nmatches - number of matching polygons
 ; OPTIONAL INPUT/OUTPUTS:
+;   areamatch - Overlapping area (Sr)
 ; COMMENTS:
 ; EXAMPLES:
 ; BUGS:
