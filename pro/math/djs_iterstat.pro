@@ -56,7 +56,10 @@ pro djs_iterstat, image, sigrej=sigrej, maxiter=maxiter, $
 
    ngood = N_elements(image)
    if (ngood EQ 0) then begin
-      print, 'no data points'
+      print, 'No data points'
+      fmean = 0.0
+      fmedian = 0.0
+      fsig = 0.0
       return
    endif
    if (ngood EQ 1) then begin
