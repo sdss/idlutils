@@ -632,6 +632,7 @@ pro/fits/djs_readmany.pro -text
 pro/fits/fits_wait.pro -text
 pro/fits/hdr2struct.pro -text
 pro/fits/modfitscard.pro -text
+pro/fits/mwrfits_chunks.pro -text
 pro/fits/rdss_fits.pro -text
 pro/fits/sxcombinepar.pro -text
 pro/image/djs_maskinterp.pro -text
