@@ -743,6 +743,7 @@ pro/cosmography/dcomdisdz.pro -text
 pro/cosmography/dcomvoldz.pro -text
 pro/cosmography/dpropdisdz.pro -text
 pro/cosmography/dpropmotdisdz.pro -text
+pro/cosmography/lookback.pro -text
 pro/cosmography/lumdis.pro -text
 pro/cosmography/propmotdis.pro -text
 pro/djsphot/djs_neff.pro -text
