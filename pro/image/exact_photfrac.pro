@@ -30,7 +30,13 @@
 ;
 ; COMMENTS:
 ;   Uses Robert Lupton's Aperture Photometry scheme to measure seeing-
-;   and pixel-convolved aperture photometry.
+;   and pixel-convolved aperture photometry in band-limited images.
+;
+;   xcen and ycen MUST be integers. This simplifies the caching 
+;   of the weights considerably. Note that for band-limited images 
+;   (the only kind that this code works for) you can always sshift 
+;   the image to get the center of the object at the center of a 
+;   pixel (ie. an integer pixel number). 
 ;
 ; BUGS:
 ;
@@ -93,6 +99,11 @@ if(n_elements(safefactor) eq 0) then safefactor=2.
 if(n_elements(xcen) eq 0) then xcen=0L
 if(n_elements(ycen) eq 0) then ycen=0L
 
+ini=where(long(xcen) ne xcen OR long(ycen) ne ycen, nni)
+if(nni gt 0) then begin
+    message, 'xcen and ycen MUST be integers' 
+endif
+
 ; define region to cut out
 if(keyword_set(safefactor)) then begin
     safedistance=(long(max(radius)*safefactor))>10L
@@ -111,7 +122,7 @@ ny=yend-ystart+1L
 xc=xcen-xstart
 yc=ycen-ystart
 
-fracs=get_exact_photfrac(nx,ny,radius,xc,yc)
+fracs=get_exact_photfrac(nx,ny,radius[0],xc,yc)
 if(n_elements(radius) gt 1) then begin
     fracs1=get_exact_photfrac(nx,ny,radius[1],xc,yc)
     fracs=fracs1-fracs
