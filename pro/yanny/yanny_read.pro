@@ -3,7 +3,7 @@
 ;   yanny_read
 ;
 ; PURPOSE:
-;   Read a Yanny parameter file.
+;   Read a Yanny parameter file into an IDL structure.
 ;
 ; CALLING SEQUENCE:
 ;   yanny_read, filename, [ pdata, hdr=hdr, enums=enums, structs=structs, $
@@ -17,7 +17,7 @@
 ; OUTPUT:
 ;
 ; OPTIONAL OUTPUTS:
-;   pdata      - Array of pointers to all strucutures read.  The i-th data
+;   pdata      - Array of pointers to all structures read.  The i-th data
 ;                structure is then referenced with "*pdata[i]".  If you want
 ;                to pass a single structure (eg, FOOBAR), then pass
 ;                ptr_new(FOOBAR).

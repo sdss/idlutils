@@ -1,9 +1,9 @@
 ;+
 ; NAME:
-;   yanny_read
+;   yanny_write
 ;
 ; PURPOSE:
-;   Write a Yanny parameter file.
+;   Write a Yanny parameter file from an IDL structure.
 ;
 ; CALLING SEQUENCE:
 ;   yanny_write, filename, [ pdata, hdr=hdr, enums=enums, structs=structs ]
@@ -12,14 +12,12 @@
 ;   filename   - Output file name for Yanny parameter file
 ;
 ; OPTIONAL INPUTS:
-;   pdata      - Array of pointers to all strucutures read.  The i-th data
+;   pdata      - Array of pointers to all structures write.  The i-th data
 ;                structure is then referenced with "*pdata[i]"
 ;   hdr        - Header lines in Yanny file, which are usually keyword pairs.
 ;   enums      - All "typedef enum" structures.
 ;   structs    - All "typedef struct" structures, which define the form
 ;                for all the PDATA structures.
-;   quick      - Quicker read using READF, but fails if continuation lines
-;                are present.
 ;
 ; OUTPUT:
 ;
@@ -56,7 +54,7 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
    ; as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
    ; Yanny files assume type INT is a 4-byte integer, whereas in IDL
    ; that type is only 2-byte.
-;   tname = ['char', 'short', 'int', 'long', 'float', 'double']
+;   tname = ['char', 'short', 'int', 'long', 'long', 'float', 'double']
    tname = ['char', 'short', 'int', 'int', 'long', 'float', 'double']
    idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'LONG64', 'FLOAT', 'DOUBLE']
 
