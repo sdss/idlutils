@@ -3,7 +3,7 @@
 #ifdef GCC
 # include <stdarg.h>
 #endif
-#ifdef LINUX
+#ifdef Linux
 # include <stdarg.h>
 #endif
 #ifdef SunOS

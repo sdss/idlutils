@@ -5,7 +5,7 @@
 #------
 # Linux
 
-CC = gcc
+#CC = gcc
 #CC = cc
 #CFLAGS = -g -Wall -DDEBUG -DLINUX
 CFLAGS = $(X_CFLAGS) -D$(UNAME)

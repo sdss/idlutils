@@ -7,4 +7,4 @@ not compile "rotate" which depends on starlink (yuck).
 Removed the "A" files since they are silly and unnecessary and screw
 up the MacOS CVS stuff.
 
-Changed msg.c to use evilmake UNAME values
+Changed msg.c to use evilmake UNAME values SunOS and Linux
