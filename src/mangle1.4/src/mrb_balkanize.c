@@ -305,7 +305,7 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
       add_parent(polys[m],i);
     
     if(i%100 == 0) 
-      fprintf(stderr, "polygon %d / %d (%d balkans)\n",i,npoly,npolys);
+      fprintf(stderr, "polygon %d / %d (%d balkans)\n",i,npoly,np);
 
     /* fragment successively against other polygons */
     for (jj = 0; jj < nlinks[i]; jj++) {
