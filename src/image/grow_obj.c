@@ -21,6 +21,10 @@ IDL_LONG grow_obj
    IDL_LONG    yi;
    IDL_LONG    xnext;
    IDL_LONG    ynext;
+   IDL_LONG    xmin; /* Lowest X pixel ever assigned */
+   IDL_LONG    ymin; /* Lowest Y pixel ever assigned */
+   IDL_LONG    xmax; /* Largest X pixel ever assigned */
+   IDL_LONG    ymax; /* Largest Y pixel ever assigned */
    IDL_LONG    iloc;
    IDL_LONG    retval = 0;
 
@@ -34,6 +38,11 @@ IDL_LONG grow_obj
    putval = *((IDL_LONG *)argv[6]);
    qdiag = *((IDL_LONG *)argv[7]);
 
+   xmin = nx;
+   ymin = ny;
+   xmax = 0;
+   ymax = 0;
+
    /* Only do anything if the starting pixel should be assigned. */
    xi = xstart;
    yi = ystart;
@@ -43,6 +52,27 @@ IDL_LONG grow_obj
 
       mask[xi+yi*nx] = putval;
       retval++;
+
+      if (xi == 0) {
+         xmin = 0;
+      } else if (xi-1 < xmin) {
+         xmin = xi - 1;
+      }
+      if (yi == 0) {
+         ymin = 0;
+      } else if (yi-1 < ymin) {
+         ymin = yi - 1;
+      }
+      if (xi == nx-1) {
+         xmax = nx-1;
+      } else if (xi+1 > xmax) {
+         xmax = xi + 1;
+      }
+      if (yi == ny-1) {
+         ymax = ny-1;
+      } else if (yi+1 > ymax) {
+         ymax = yi + 1;
+      }
 
       /* Mark any neighboring left-right-up-down pixels */
       if (yi > 0) {
@@ -119,16 +149,20 @@ IDL_LONG grow_obj
          xi = xnext;
          yi = ynext;
       } else {
-         xi = 0;
-         yi = 0;
-         while (xi < nx && yi < ny && mask[xi+yi*nx] != -1) {
+         xi = xmin;
+         yi = ymin;
+         while (xi <= xmax && yi <= ymax && mask[xi+yi*nx] != -1) {
             xi++;
-            if (xi == nx) {
-               xi = 0;
+            if (xi > xmax) {
+               xi = xmin;
                yi++;
             }
          }
-         if (yi == ny) yi = 0; /* This happens when we're all done */
+         if (xi > xmax || yi > ymax) {
+            /* This happens when we're all done */
+            xi = 0;
+            yi = 0;
+         }
       }
    }
 
