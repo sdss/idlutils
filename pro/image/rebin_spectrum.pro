@@ -1,0 +1,98 @@
+;+
+; NAME:
+;   rebin_spectrum
+;
+; PURPOSE:
+;   Rebin a 1-D spectrum
+;
+; CALLING SEQUENCE:
+;   yflux = rebin_spectrum( xflux, xwave, ywave )
+;
+; INPUTS:
+;   xflux      - Flux vector [NOLD]
+;   xwave      - Wavelengths of pixel edges for input XFLUX [NOLD+1],
+;                or the central wavelength of each pixel [NOLD]
+;   ywave      - Wavelengths of pixel edges for output YFLUX [NNEW+1],
+;                or the central wavelength of each pixel [NNEW]
+;
+; OPTIONAL INPUTS:
+;
+; OUTPUTS:
+;   yflux      - Rebinned spectrum
+;
+; COMMENTS:
+;   Both XWAVE and YWAVE must be in strictly ascending order.
+;
+; BUGS:
+;   This should probably be implmented in C for better speed.
+;
+; PROCEDURES CALLED:
+;
+; REVISION HISTORY:
+;   18-Jan-2003  Written by D. Schlegel, Princeton
+;-
+;------------------------------------------------------------------------------
+function rebin_spectrum, xflux, xwave, ywave
+
+   if (n_params() LT 3) then begin
+      print, 'Syntax - yflux = rebin_spectrum(xflux, xwave, ywave)'
+      return, 0
+   endif
+   npts = n_elements(xflux)
+   if (n_elements(xwave) EQ npts) then begin
+      ; In the case where the central wavelengths are specified,
+      ; we need to compute the wavelengths at the edges of the pixels
+      xtmp = interpol(xwave, 2*lindgen(npts)+1, 2*lindgen(npts+1))
+      ytmp = interpol(ywave, 2*lindgen(npts)+1, 2*lindgen(npts+1))
+      return, rebin_spectrum(xflux, xtmp, ytmp)
+   endif
+   if (n_elements(xwave) NE npts+1) then $
+    message, 'Number of elements in XWAVE must equal N or N+1'
+
+   nnew = n_elements(ywave)-1
+   yflux = make_array(nnew, type=size(xflux,/type)) ; Same data type as input
+
+   ;----------
+   ; If no overlapping wavelength region, then exit without assigning
+   ; any flux.
+
+   if (xwave[npts] LT ywave[0] OR xwave[0] GT ywave[nnew]) then return, yflux
+
+   ;----------
+   ; Start by skipping any pixels in the input spectrum where there is
+   ; no place to assign the flux
+
+   j1 = 0L
+   j2 = 0L
+   i = 0L
+   while (xwave[i] LT ywave[j1]) do i = i+1
+   if (i GT 0) then $
+    yflux[0] = xflux[i-1] * (xwave[i] - ywave[0]) / (xwave[i] - xwave[i-1])
+
+   ;----------
+   ; Loop over each pixel in the input spectrum, and assign its flux
+
+   while (i LT npts) do begin
+      while (ywave[j1+1] LT xwave[i] AND j1 LT nnew-1) do j1 = j1+1
+      while (ywave[j2+1] LT xwave[i+1] AND j2 LT nnew-1) do j2 = j2+1
+
+      if (j1 EQ j2) then begin
+         yflux[j1] = yflux[j1] + xflux[i]
+      endif else begin
+         dflux = xflux[i] / (xwave[i+1] - xwave[i])
+         yflux[j1] = yflux[j1] + dflux * (ywave[j1+1] - xwave[i])
+         for k=j1+1, j2-1 do $
+          yflux[k] = yflux[k] + dflux * (ywave[k+1] - ywave[k])
+         if (ywave[j2+1] LT xwave[i+1]) then begin
+            ; This is the case where we've run out of the new wavelength axis
+            i = npts
+         endif else begin
+            yflux[j2] = yflux[j2] + dflux * (xwave[i+1] - ywave[j2])
+         endelse
+      endelse
+      i = i + 1
+   endwhile
+
+   return, yflux
+end
+;------------------------------------------------------------------------------
