@@ -147,6 +147,7 @@ pro splog, noname=noname, prelog=prelog, $
        print, fullprelog+': ', format='(a,$)'
       if (nv EQ 0) then print, _EXTRA=extra $
        else print, textstring
+      flush, -1
    endif
 
    ;----------
