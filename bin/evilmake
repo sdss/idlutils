@@ -35,13 +35,13 @@ case $UNAME in
 	"IRIX64" )
 		SO_EXT=so
 		LDF77=g77
-		X_CFLAGS="-n32 -KPIC -mips3"
+		X_CFLAGS="-64 -KPIC -mips4"
 		CC=cc
 		LD=ld
 		LDF77=ld
-    X_FFLAGS="-n32 -extend_source -KPIC"
-    MAKE_FTNLIB="-lftn"
-		X_LD_FLAGS="-shared -n32 -mips3"
+		X_FFLAGS="-64 -extend_source -KPIC"
+		MAKE_FTNLIB="-lftn"
+		X_LD_FLAGS="-shared -64 -mips4"
 	;;
 	"OSF1" )
 		LDF77=g77
