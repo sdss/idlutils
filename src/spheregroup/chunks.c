@@ -238,7 +238,7 @@ assignchunks(double ra[],        /* degrees */
 {
 	CH_CODE result;
 	double currRa;
-	IDL_LONG decChunk,raChunk;
+	IDL_LONG decChunk,raChunk,currRaChunk;
 	IDL_LONG *raChunkMin, *raChunkMax, decChunkMin, decChunkMax;
 	IDL_LONG i,j;
 
@@ -345,9 +345,11 @@ assignchunks(double ra[],        /* degrees */
 					/* handle edge cases if necessary; setchunkbounds is
 					 * supposed to decide if raChunk can be -1 or nra[decChunk] */
 					if(raChunk<0) {
-						(*nChunk)[decChunk][raChunk+nRa[decChunk]]++;
+						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
+						(*nChunk)[decChunk][currRaChunk]++;
 					} else if (raChunk>nRa[decChunk]-1) {
-						(*nChunk)[decChunk][raChunk-nRa[decChunk]]++;
+						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
+						(*nChunk)[decChunk][currRaChunk]++;
 					} else {
 						(*nChunk)[decChunk][raChunk]++;
 					} /* end if */
@@ -453,13 +455,15 @@ assignchunks(double ra[],        /* degrees */
 					/* handle edge cases if necessary; setchunkbounds is
 					 * supposed to decide if raChunk can be -1 or nra[decChunk] */
 					if(raChunk<0) {
-						(*chunkList)[decChunk][raChunk+nRa[decChunk]]
-							[(*nChunk)[decChunk][raChunk+nRa[decChunk]]]=i;
+						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
+						(*chunkList)[decChunk][currRaChunk]
+							[(*nChunk)[decChunk][currRaChunk]]=i;
 						(*nChunk)[decChunk][raChunk+nRa[decChunk]]++;
 					} else if (raChunk>nRa[decChunk]-1) {
-						(*chunkList)[decChunk][raChunk-nRa[decChunk]]
-							[(*nChunk)[decChunk][raChunk-nRa[decChunk]]]=i;
-						(*nChunk)[decChunk][raChunk-nRa[decChunk]]++;
+						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
+						(*chunkList)[decChunk][currRaChunk]
+							[(*nChunk)[decChunk][currRaChunk]]=i;
+						(*nChunk)[decChunk][currRaChunk]++;
 					} else {
 						(*chunkList)[decChunk][raChunk][(*nChunk)[decChunk][raChunk]]=i;
 						(*nChunk)[decChunk][raChunk]++;
