@@ -1,6 +1,7 @@
 
 ADJUST_ERROR: New proc.
 ASINH2: Trig function; moved from vagc product.
+ASTROM_ENGINE: Fix print statement for "XSHIFT:".
 FIRST_READ,FIRST_COVERAGE: New functions for reading the FIRST radio survey
                data files.
 IS_IN_CAP,IS_IN_POLYGON,IS_IN_WINDOW: Change calling sequence, with
