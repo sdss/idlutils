@@ -269,13 +269,15 @@ C     print *,'....................'
 c
   420 continue
 c     if (verb.ge.1) then
-        print *,'*** from garea: total failure at tol =',tol
-        write (*,'(a3,a20,4a24)')
+c        print *,'*** from garea: total failure at tol =',tol
+        write (0, '(a50,g24.16)'), 
+     *       '*** from garea: total failure at tol =',tol
+        write (0,'(a3,a20,4a24)')
      *    ' ','x','y','z',
 c    *    'r',
      *    '1-c'
         do j=1,np
-          write (*,'(i3,5g24.16)')
+          write (0,'(i3,5g24.16)')
      *      j,(rp(i,j),i=1,3),
 c    *      sqrt(rp(1,j)**2+rp(2,j)**2+rp(3,j)**2),
      *      cm(j)
