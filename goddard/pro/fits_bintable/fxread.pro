@@ -2,7 +2,7 @@
 	PRO FXREAD, FILENAME, DATA, HEADER, P1, P2, P3, P4, P5,     $
 		NANVALUE=NANVALUE, PROMPT=PROMPT, AVERAGE=AVERAGE,	$
 		YSTEP=Y_STEP, NOSCALE=NOSCALE, NOUPDATE=NOUPDATE,	$
-		ERRMSG=ERRMSG
+		ERRMSG=ERRMSG, NODATA=NODATA
 ;+
 ; NAME: 
 ;	FXREAD
@@ -58,6 +58,8 @@
 ;			ERRMSG = ''
 ;			FXREAD, ERRMSG=ERRMSG, ...
 ;			IF ERRMSG NE '' THEN ...
+;       NODATA   = If set, then the array is not read in, but the
+;                  primary header is read.
 ;
 ; Calls       : 
 ;	GET_DATE, IEEE_TO_HOST, FXADDPAR, FXHREAD, FXPAR, WHERENAN
@@ -125,8 +127,10 @@
 ;       Version 6, 20-May-1998, David Schlegel/W. Thompson
 ;               Allow a single pixel to be read in.
 ;               Change the signal to read in the entire array to be -1
-; Version     :
-;       Version 6,   20-May-1998
+;       Version 7 C. Markwardt 22 Sep 2003
+;               If the image is empty (NAXIS EQ 0), or NODATA is set, then
+;               return only the header.  
+;
 ;-
 ;
 	ON_ERROR, 2
@@ -183,14 +187,17 @@
 ;
 	BITPIX = FXPAR(HEADER,'BITPIX')
 	NAXIS = FXPAR(HEADER,'NAXIS')
-	IF NAXIS EQ 0 THEN BEGIN
-		FREE_LUN,UNIT
-		MESSAGE = 'File does not contain a primary array'
-		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-			ERRMSG = MESSAGE
-			RETURN
-		END ELSE MESSAGE, MESSAGE
-	ENDIF
+
+        ;; Handle case of empty image, or no data requested
+        IF NAXIS EQ 0 OR KEYWORD_SET(NODATA) THEN BEGIN
+            ;; Make DATA an undefined variable, reflecting no data
+            DATA = 0 & DUMMY = TEMPORARY(DATA)
+
+            ERRMSG = ''
+            FREE_LUN,UNIT
+            RETURN
+        ENDIF
+
 	DIMS = FXPAR(HEADER,'NAXIS*')
 	N1 = DIMS[0]
 	IF NAXIS EQ 2 THEN N2 = DIMS[1] ELSE N2 = 1
@@ -311,7 +318,7 @@
 ;
 	IF XSTEP GT 1 THEN BEGIN
 	    IF NAXIS GT 2 THEN BEGIN
-	        FREE_LUN,UNIT
+		FREE_LUN,UNIT
 	        MESSAGE = 'STEP can only be set for one or ' +	$
 	            'two-dimensional arrays'
 		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
@@ -319,7 +326,7 @@
 			RETURN
 		END ELSE MESSAGE, MESSAGE
 	    END ELSE IF XSTEP NE LONG(XSTEP) THEN BEGIN
-	        FREE_LUN,UNIT
+		FREE_LUN,UNIT
 	        MESSAGE = 'STEP must be an integer value'
 		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
 			ERRMSG = MESSAGE
@@ -338,7 +345,7 @@
 ;
 	IF (NAXIS EQ 2) AND (YSTEP GT 1) THEN BEGIN
 	    IF YSTEP NE LONG(YSTEP) THEN BEGIN
-	        FREE_LUN,UNIT
+		FREE_LUN,UNIT
 	        MESSAGE = 'YSTEP must be an integer value'
 		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
 			ERRMSG = MESSAGE
