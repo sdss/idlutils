@@ -51,6 +51,8 @@ for ii=0L,ndata-1L do begin
 
 ; symmetrize and eigensolve covariance matrix
     tcovar= double(covar[*,*,ii])
+    infinite= where(finite(tcovar) EQ 0,ninf)
+    if (ninf GT 0) then tcovar[*,*]= 0D0
     tcovar= 5d-1*(tcovar+transpose(tcovar))
     eval= sqrt(eigenql(tcovar,eigenvectors=evec,/double))
 
