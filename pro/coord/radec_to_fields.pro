@@ -11,10 +11,13 @@
 ; REVISION HISTORY:
 ;   2002-Feb-21  written by Blanton (NYU)
 ;-
-pro radec_to_fields,ra,dec,objectlist,fieldlist,includereruns=includereruns
+pro radec_to_fields,ra,dec,objectlist,fieldlist,includereruns=includereruns,allfieldfile=allfieldfile 
+                    
 
 ; Input field list and make it uniq
-allfields=mrdfits('allFields.fits',1)
+if(NOT keyword_set(allfieldfile)) then $
+  allfieldfile='/data/sdss/fields/allFields.fits'
+allfields=mrdfits(allfieldfile,1)
 fieldindx=allfields.run*1000l*8l*10000l + $
           allfields.camcol*10000l*1000l + $
           allfields.field*1000l + $
