@@ -30,6 +30,7 @@
 ;   
 ; REVISION HISTORY:
 ;   2003-Mar-14  Written by Douglas Finkbeiner, Princeton
+;   2004-Aug-16  Avoid floating underflow in beam transform - DPF
 ;
 ;----------------------------------------------------------------------
 function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
@@ -58,7 +59,11 @@ function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
 
 ; -------- beam transform
   l   = dindgen(lmax)
-  bl  = exp(-0.5d * l*(l+1) * sigma^2)
+  exponent = -0.5d * l*(l+1) * sigma^2
+  smallexp = where(exponent LT -300, nsmall)
+  bl  = exp(exponent >  (-300))
+  if nsmall GT 0 then bl[nsmall] = 0
+
   plot, l, bl, title='beam transform'
 
 ; -------- apply smoothing to alm array
