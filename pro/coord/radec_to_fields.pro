@@ -16,7 +16,7 @@ pro radec_to_fields,ra,dec,objectlist,fieldlist,includereruns=includereruns,allf
 
 ; Input field list and make it uniq
 if(NOT keyword_set(allfieldfile)) then $
-  allfieldfile='/data/sdss/fields/allFields.fits'
+  allfieldfile='/global/data/sdss/fields/allFields.fits'
 allfields=mrdfits(allfieldfile,1)
 fieldindx=allfields.run*1000l*8l*10000l + $
           allfields.camcol*10000l*1000l + $
@@ -47,6 +47,8 @@ munu_to_radec,mufieldcenters,nufieldcenters,allfields.stripe,rafields,decfields
 
 ; Find "close" fields (within 0.18 degrees)
 spherematch,ra,dec,rafields,decfields,0.3,objects,fields,distance,maxmatch=0l
+if(n_elements(objects) eq 0) then return
+
 sortbyobject=sort(objects)
 objects=objects[sortbyobject]
 fields=fields[sortbyobject]
