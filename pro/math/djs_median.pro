@@ -86,15 +86,17 @@ function djs_median, array, dim, width=width, boundary=boundary
 
    if (NOT keyword_set(dim) AND NOT keyword_set(width)) then begin
 
-      medarr = median(array, /even)
+      if (n_elements(array) EQ 1) then medarr = array[0] $
+       else medarr = median(array, /even)
 
    endif else if (NOT keyword_set(dim)) then begin
 
       if (boundary EQ 'none') then begin
          if (n_elements(array) EQ 1) then medarr = array[0] $
+          else if (width EQ 1) then medarr = array $
           else medarr = median(array, width, /even)
       endif else begin
-         padsize = ceil(width/2)
+         padsize = ceil(width/2.)  ; This padding will be at least 1 pixel
          zero = array[0] - array[0] ; Zero in the type of ARRAY
          if (ndim EQ 1) then begin
             bigarr = bytarr(dimvec[0]+2*padsize) + zero
@@ -112,7 +114,8 @@ function djs_median, array, dim, width=width, boundary=boundary
             bigarr[padsize+dimvec[0]:padsize*2+dimvec[0]-1] = $
              array[dimvec[0]-padsize:dimvec[0]-1]
 
-            bigarr = temporary( median(bigarr, width, /even) )
+            if (width GT 1) then $
+             bigarr = temporary( median(bigarr, width, /even) )
             medarr = bigarr[padsize:padsize+dimvec[0]-1]
 
          endif else begin
@@ -156,7 +159,8 @@ function djs_median, array, dim, width=width, boundary=boundary
                 reverse(reverse(array[dimvec[0]-padsize:dimvec[0]-1, $
                 dimvec[1]-padsize:dimvec[1]-1],1),2)
 
-               bigarr = temporary( median(bigarr, width, /even) )
+               if (width GT 1) then $
+                bigarr = temporary( median(bigarr, width, /even) )
                medarr = bigarr[padsize:padsize+dimvec[0]-1, $
                 padsize:padsize+dimvec[1]-1]
 
