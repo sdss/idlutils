@@ -10,6 +10,9 @@
 #ifdef Linux
 # include <stdarg.h>
 #endif
+#ifdef Darwin
+# include <stdarg.h>
+#endif
 #ifdef SunOS
 # include <sys/varargs.h>
 #endif
