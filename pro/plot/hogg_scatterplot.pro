@@ -23,6 +23,7 @@
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
 ;   conditional - normalize each column separately
+;   labelcont   - label contours with numbers
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
@@ -43,7 +44,9 @@ pro hogg_scatterplot, x,y,weight=weight, $
                       levels=levels,satfrac=satfrac, $
                       xvec=xvec,yvec=yvec,grid=grid,cumimage=cumimage, $
                       exponent=exponent, $
-                      conditional=conditional,quantiles=quantiles, $
+                      conditional=conditional, $
+                      quantiles=quantiles, $
+                      labelcont=labelcont, $
                       _EXTRA=KeywordsForPlot
 
 ; set defaults
@@ -137,7 +140,9 @@ if keyword_set(conditional) then begin
 
 ; otherwise overplot contours
 endif else begin
-    contour, cumimage,xvec,yvec,levels=levels,thick=1,/overplot
+    if NOT keyword_set(labelcont) then labelcont=0
+    contour, cumimage,xvec,yvec,levels=levels,thick=1,/overplot, $
+      c_labels=lonarr(n_elements(levels))+labelcont
 endelse
 
 ; re-plot axes (yes, this is a HACK)
