@@ -57,5 +57,6 @@ for jj=0,1 do begin
     endfor
 endfor
 
-return, prefix+' J'+adstr
+if (prefix EQ '') then jstr= 'J' else jstr= ' J'
+return, prefix+jstr+adstr
 end
