@@ -80,6 +80,7 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
 ;       Added ERRMSG keyword    W. Landsman   July 2000
 ;       Added /SILENT keyword   W. Landsman    December 2000
 ;       Option to read a unit number rather than file name W.L    October 2001
+;       Test output status of MRD_HREAD call October 2003 W. Landsman
 ;-
  On_error,2
 
@@ -94,7 +95,7 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
 
   unitsupplied = size(filename,/TNAME) NE 'STRING'
   if unitsupplied then unit = filename else begin 
-     unit = fxposit( filename, exten, $
+     unit = FXPOSIT( filename, exten, $
                    /READONLY,compress = compress, SILENT=silent)
      if unit EQ -1 then begin 
          message = 'Unable to open file ' + filename 
@@ -110,8 +111,12 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
         return,-1
      endif
   endelse
-  mrd_hread, unit, header, status, SILENT = silent
+  
+  MRD_HREAD, unit, header, status, SILENT = silent
   if not unitsupplied then free_lun, unit
- 
-  return, header
+  if status LT 0 then begin
+         if N_elements(errmsg) GT 0 then errmsg = !ERROR_STATE.MSG else $
+          message,'ERROR - ' + !ERROR_STATE.MSG,/CON 
+          return, -1
+  endif else return, header	  
   end
