@@ -112,8 +112,11 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    ; (for any given tag name) by concatenating spaces.
 
    ntag = n_tags(input)
+   tags = tag_names(input)
    for itag=0L, ntag-1L do begin
       if (size(input[0].(itag), /tname) EQ 'STRING') then begin
+         if (NOT keyword_set(silent)) then $
+          print, 'Padding whitespace for string array ' + tags[itag]
          taglen = strlen(input.(itag))
          maxlen = max(taglen)
          padspace = string('', format='(a'+string(maxlen)+')')
@@ -129,7 +132,7 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
    nchunk = nrow / chunksize + ((nrow MOD chunksize) NE 0)
    for ichunk=0L, nchunk-1L do begin
       if (NOT keyword_set(silent)) then $
-       print,'Writing chunk number ', ichunk
+       print, 'Writing chunk number ', ichunk+1, ' of ', nchunk
 
       i1 = ichunk * chunksize
       i2 = ((ichunk+1) * chunksize - 1) < (nrow-1)
