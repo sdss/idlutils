@@ -7,15 +7,16 @@
 ;   (useful for plot limits).
 ;
 ; CALLING SEQUENCE:
-;   mjd2datelist, mjstart, mjend, [ step=, mjdlist=, datelist= ]
+;   mjd2datelist, mjstart, [ mjend, step=, mjdlist=, datelist= ]
 ;
 ; INPUTS:
 ;   mjstart    - Starting modified Julian date to span.
-;   mjend      - Ending modified Julian date to span.
 ;
 ; OPTIONAL INPUTS:
+;   mjend      - Ending modified Julian date to span; if not set, then
+;                only the date string for MJSTART is returned.
 ;   step       - Step in either 'year', '6month', 'month', or 'day';
-;                default to 'year'.
+;                default to 'year', or 'day' if MJEND not set.
 ;
 ; OUTPUTS:
 ;
@@ -55,11 +56,14 @@
 pro mjd2datelist, mjstart, mjend, step=step, $
  mjdlist=mjdlist, datelist=datelist
 
-   if (n_params() LT 2) then begin
-      print, 'Syntax - mjd2datelist, mjstart, mjend, [step=, mjdlist=, datelist= ]'
+   if (n_params() LT 1) then begin
+      doc_library, 'mjd2datelist'
       return
    endif
-   if (NOT keyword_set(step)) then step = 'year'
+   if (NOT keyword_set(step)) then begin
+      if (keyword_set(mjend)) then step = 'year' $
+       else step = 'day'
+   endif
 
    monthname = ['','Jan','Feb','Mar','Apr','May','Jun', $
     'Jul','Aug','Sep','Oct','Nov','Dec']
@@ -70,14 +74,29 @@ pro mjd2datelist, mjstart, mjend, step=step, $
    jd1 = offset + mjstart
    caldat, jd1, month1, day1, year1
 
-   ; Force back to the first day of the year
-   month1 = 1
-   day1 = 1
+   ; Force back to the first day of the month, 6-month, or year
+   case strupcase(step) of
+   'YEAR' : begin
+      month1 = 1
+      day1 = 1
+      end
+   '6MONTH' : begin
+      if (month1 GE 6) then month1 = 7 $
+       else month1 = 1
+      day1 = 1
+      end
+   'MONTH' : begin
+      day1 = 1
+      end
+   'DAY' : begin
+      end
+   endcase
    mjdlist = julday(month1, day1, year1) - offset
    jd1 = mjdlist + offset
 
    datelist = string(day1, monthname[month1], year1, $
     format='(i2.2,"-",a3,"-",i4.4)')
+   if (NOT keyword_set(mjend)) then return
 
    while (max(mjdlist) LT mjend) do begin
       case strupcase(step) of
