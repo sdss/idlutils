@@ -65,7 +65,7 @@ SLIB =
 # END OF LOCAL CONFIGURATION
 ###############################################################################
 
-BIN=$(IDLUTILS_DIR)/bin
+DEST=$(IDLUTILS_DIR)/bin
 ILIB = -L$(IDLUTILS_DIR)/lib
 LLIB = -lmangle
 
@@ -90,20 +90,6 @@ mangle:
 
 mangler:
 	$(MAKE) $(IDLUTILS_DIR)/lib/libmangle.a $(PROGS)
-	$(MAKE) install
-
-install:
-	if [ -d "$(BIN)" ] ; then mv $(PROGS) $(BIN) ; fi
-
-clean:
-	rm -f *.o core
-
-cleaner:
-	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a
-
-cleanest:
-	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a $(PROGS)
-	if [ -d "$(BIN)" ] ; then cd $(BIN) ; rm -f core $(PROGS) ; fi
 
 $(IDLUTILS_DIR)/lib/libmangle.a: $(COBJ) $(FOBJ) Makefile
 	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.a ] ; then echo "updating $(IDLUTILS_DIR)/lib/libmangle.a" ; else echo "creating $(IDLUTILS_DIR)/lib/libmangle.a" ; fi
@@ -111,46 +97,46 @@ $(IDLUTILS_DIR)/lib/libmangle.a: $(COBJ) $(FOBJ) Makefile
 	ranlib $(IDLUTILS_DIR)/lib/libmangle.a
 
 mrb_balkanize: mrb_balkanize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o mrb_balkanize mrb_balkanize.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)mrb_balkanize mrb_balkanize.o $(ILIB) $(LLIB)
 
 balkanize: balkanize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o balkanize balkanize.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)balkanize balkanize.o $(ILIB) $(LLIB)
 
 ddcount: ddcount.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o ddcount ddcount.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)ddcount ddcount.o $(ILIB) $(LLIB)
 
 drangle: drangle.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o drangle drangle.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)drangle drangle.o $(ILIB) $(LLIB)
 
 harmonize: harmonize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o harmonize harmonize.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)harmonize harmonize.o $(ILIB) $(LLIB)
 
 map: map.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o map map.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)map map.o $(ILIB) $(LLIB)
 
 polyid: polyid.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o polyid polyid.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)polyid polyid.o $(ILIB) $(LLIB)
 
 poly2poly: poly2poly.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o poly2poly poly2poly.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)poly2poly poly2poly.o $(ILIB) $(LLIB)
 
 ransack: ransack.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o ransack ransack.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)ransack ransack.o $(ILIB) $(LLIB)
 
 #rotate: rotate.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-#$(F77) $(FFLAGS) -o rotate rotate.o $(ILIB) $(LLIB) $(ISLIB) $(SLIB)
+#$(F77) $(FFLAGS) -o $(DEST)rotate rotate.o $(ILIB) $(LLIB) $(ISLIB) $(SLIB)
 
 rrcoeffs: rrcoeffs.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o rrcoeffs rrcoeffs.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)rrcoeffs rrcoeffs.o $(ILIB) $(LLIB)
 
 snap: snap.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o snap snap.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)snap snap.o $(ILIB) $(LLIB)
 
 unify: unify.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o unify unify.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)unify unify.o $(ILIB) $(LLIB)
 
 weight: weight.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
-	$(F77) $(FFLAGS) -o weight weight.o $(ILIB) $(LLIB)
+	$(F77) $(FFLAGS) -o $(DEST)weight weight.o $(ILIB) $(LLIB)
 
 advise_fmt.o: angunit.h manglefn.h advise_fmt.c
 	$(CC) $(CFLAGS) -c advise_fmt.c
@@ -325,3 +311,28 @@ wlm.s.o: pi.par wlm.s.f
 	$(F77) $(FFLAGS) -c wlm.s.f
 wrho.s.o: pi.par wrho.s.f
 	$(F77) $(FFLAGS) -c wrho.s.f
+
+#
+# Install things in their proper places in $(IDLUTILS_DIR)
+#
+install : 
+	-@ mkdir -p $(IDLUTILS_DIR)/src/mangle1.4/src
+	-@ cp ../CHANGES $(IDLUTILS_DIR)/src/mangle1.4
+	-@ cp ../COPYRIGHT $(IDLUTILS_DIR)/src/mangle1.4
+	-@ cp ../INSTALL $(IDLUTILS_DIR)/src/mangle1.4
+	-@ cp ../README* $(IDLUTILS_DIR)/src/mangle1.4
+	-@ cp *.c $(IDLUTILS_DIR)/src/mangle1.4/src
+	-@ cp *.f $(IDLUTILS_DIR)/src/mangle1.4/src
+	-@ cp *.h $(IDLUTILS_DIR)/src/mangle1.4/src
+	-@ cp Makefile $(IDLUTILS_DIR)/src/mangle1.4/src
+
+clean :
+	- /bin/rm -f *~ core *.o so_locations
+
+cleaner:
+	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a
+
+cleanest:
+	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a $(PROGS)
+	if [ -d "$(DEST)" ] ; then cd $(DEST) ; rm -f core $(PROGS) ; fi
+
