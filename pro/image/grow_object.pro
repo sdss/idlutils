@@ -48,7 +48,7 @@
 ;   Create a random image of 0s and 1s, and identify all contiguous pixels
 ;   as objects:
 ;   IDL> image=smooth(randomu(123,100,100),5) GT 0.55 & mask = 0
-;   IDL> grow_object, image, mask
+;   IDL> mask = grow_object(image)
 ;
 ; BUGS:
 ;
