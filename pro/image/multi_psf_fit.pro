@@ -74,7 +74,7 @@ common com_mpf
 
 ; check inputs
 if(n_params() lt 3) then begin
-    print, 'Syntax - multi_psf_fit, image, invvar, psf [, invvar=, x=, y=, flux=, $'
+    print, 'Syntax - multi_psf_fit, image, invvar, psf [, x=, y=, flux=, $'
     print, '              npsf=, /silent '
     return
 endif
