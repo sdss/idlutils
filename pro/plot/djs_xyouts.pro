@@ -38,7 +38,8 @@ pro djs_xyouts, x, y, s, color=color, charsize=charsize, $
    npt = n_elements(x)
 
    if (ncolor LE 1 AND nsize LE 1) then begin
-      xyouts, x, y, TeXtoIDL(s), color=icolor, _EXTRA=KeywordsForXyouts
+      xyouts, x, y, TeXtoIDL(s), color=icolor, charsize=charsize, $
+        _EXTRA=KeywordsForXyouts
    endif else begin
       for ipt=0L, npt-1 do begin
          color1 = icolor(ipt MOD ncolor)
