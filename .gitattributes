@@ -1,6 +1,7 @@
 * text=auto !eol
 /Makefile -text
 bin/Makefile -text
+bin/evilmake -text
 doc/Makefile -text
 goddard/Makefile -text
 goddard/README -text
