@@ -18,8 +18,8 @@
 ;   2004-04-14  started by you know who
 ;-
 function hogg_iau_name, ra,dec,prefix,precision=precision
-if (NOT keyword_set(prefix)) then prefix= 'SDSS'
+if (n_elements(prefix) eq 0) then prefix= 'SDSS '
 if (n_elements(precision) EQ 0) then precision= 1
 adstr= strcompress(adstring(ra,dec,precision,/truncate),/remove)
-return, prefix+' J'+adstr
+return, prefix+'J'+adstr
 end
