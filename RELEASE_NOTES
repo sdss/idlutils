@@ -1,4 +1,4 @@
-
+-------------------------------------------------------------------------------
 
 BSPLINE_FIT: Test if SSET is set by demanding that it be a structure;
                as it was, setting SSET=0 would not cause it to self-initialize.
@@ -6,6 +6,7 @@ DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
                parameter for OmegaL.
 FIND: Need to index some loops with type LONG to allow for large
                numbers of stars.
+MRDFITS:       LONG64 stuff, handle degenerate excess NAXIS keywords
 MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
                tables for string-type elements.  Bug fix to allow appending
                string elements that are different lengths, though if the
