@@ -869,6 +869,7 @@ pro/plot/imgscl.pro -text
 pro/plot/restore_sysvars.pro -text
 pro/plot/splot.pro -text
 pro/plot/sysvars.pro -text
+pro/sdss/findopfile.pro -text
 pro/sdss/sdss_flagname.pro -text
 pro/sdss/sdss_flagval.pro -text
 pro/slatec/bvalu2d.pro -text
