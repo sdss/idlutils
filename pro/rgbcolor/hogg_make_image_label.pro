@@ -62,15 +62,18 @@ printf, wlun,'}'
 printf, wlun,'\end{document}'
 close, wlun
 free_lun, wlun
-cmd= 'latex '+prefix
+cmd= '\rm -fv '+prefix+'.ppm'
+splog, cmd
+spawn, cmd
+cmd= '\latex '+prefix
 splog, cmd
 spawn, cmd
 spawn, cmd
-cmd= 'dvips -E -Ppdf '+prefix
+cmd= '\dvips -E -Ppdf '+prefix
 splog, cmd
 spawn, cmd
 factor= 2
-cmd= 'pstopnm -ppm -stdout -xborder 0 -yborder 0'+ $
+cmd= '\pstopnm -ppm -stdout -xborder 0 -yborder 0'+ $
   ' -ysize '+strtrim(string(factor*naxis1),2)+ $
   ' '+prefix+' > '+prefix+'.ppm'
 splog, cmd
