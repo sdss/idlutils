@@ -3,6 +3,9 @@
 ;   hogg_iter_linfit
 ; PURPOSE:
 ;   Perform iterated linear least-squares fit with sigma-clipping.
+; COMMENTS:
+;   Solves the over-constrained equation yy=aa##xx, where the yy are
+;     the "data" and the xx are the "parameters".
 ; CALLING SEQUENCE:
 ;   hogg_iter_linfit, aa,yy,ww,xx [,covar=covar]
 ; INPUTS:
@@ -26,7 +29,6 @@
 ;   ww      - ww values set to zero where data points clipped, and re-
 ;             scaled so that chisq^2 is unity per degree of freedom, unless
 ;             keyword "sacred" is set
-; COMMENTS:
 ; BUGS:
 ;   Covariance matrix is an approximation which assumes that the rms of the
 ;     fit is consistent with the errors in the yy, or something like that.
