@@ -2,7 +2,7 @@
 ;                 second peaks.  -DPF 4 Nov 2000
 ; set errflag if best value on edge - DPF 26 Nov 2000
 function offset_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
- minpeak=minpeak, errflag=errflag, bestsig=bestsig
+ minpeak=minpeak, errflag=errflag, bestsig=bestsig, verbose=verbose
 
    sigcut = 5.0 ; A detection is sigcut sigma above the mean
    errflag = 0B
@@ -13,7 +13,8 @@ function offset_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
    num1 = n_elements(x1)
    num2 = n_elements(x2)
 
-   IF (num1 > num2) GT 32000 THEN print, '  WARNING:  Awful lot of stars...', num1, num2
+   if (num1 > num2) GT 32000 then $
+    splog, 'WARNING:  Awful lot of stars...', num1, num2
 
    ;----------
    ; Construct an image and populate with the vector offsets for all
@@ -35,8 +36,7 @@ nhalf = nhalf > 2 ; ??? We need this to not crash further down - DJS
    xoff = reform(xoff, num1*num2) + (nhalf + 1)
    yoff = reform(yoff, num1*num2) + (nhalf + 1)
 
-; IMPORTANT:  only call populate_image once - calling overhead is
-;                                             large. 
+   ; Important: Only call populate_image once - calling overhead is large.
    populate_image, img, xoff, yoff, assign='cic'
 
    ;----------
@@ -54,27 +54,29 @@ nhalf = nhalf > 2 ; ??? We need this to not crash further down - DJS
    nsig2 = (max(img2)-mean(img))/std  ; use same mean and std
    prob1 = gauss_pdf(-double(nsig1))
    prob2 = gauss_pdf(-double(nsig2))
-   print, 'nsig1, nsig2, prob1, prob2, prob1/prob2'
-   print, nsig1, nsig2, prob1, prob2, prob1/prob2
+   if (keyword_set(verbose)) then begin
+      splog, 'nsig1, nsig2, prob1, prob2, prob1/prob2'
+      splog, nsig1, nsig2, prob1, prob2, prob1/prob2
+   endif
    
    smimg = smooth(img, 3, /edge)
    maxval = max(smimg, imax)
    bestsig = (maxval-mean(smimg))/stddev(smimg)
-; If prob1/prob2 is not really small then return
+
+   ; If prob1/prob2 is not really small then return
    IF (prob1/prob2) GT 1E-5 THEN BEGIN 
       errflag = 1B
-      print, 'Maxval is only', bestsig, ' sigma above mean'
-      print, 'Odds of ', prob1/prob2, ' are not good enough'
-      return, xyshift
+      splog, 'Maxval is only', bestsig, ' sigma above mean'
+      splog, 'Odds of ', prob1/prob2, ' are not good enough'
+      splog, xyshift
    ENDIF 
 
    if (maxval LE 0) then BEGIN 
-       print, 'maxval le 0!!!!'
+       splog, 'WARNING: maxval LE 0!'
        return, xyshift
    endif
    xmax = imax MOD nn
    ymax = imax / nn
-;print, xmax, ymax
 
    ;----------
    ; Find the sub-pixel peak by looking at only the nearest 3x3 sub-image,
@@ -94,4 +96,3 @@ nhalf = nhalf > 2 ; ??? We need this to not crash further down - DJS
 
    return, xyshift
 end
-

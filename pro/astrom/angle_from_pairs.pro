@@ -1,5 +1,5 @@
 function angle_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
-              bestsig=bestsig, angrange=angrange
+ bestsig=bestsig, angrange=angrange, verbose=verbose
 
    sigcut = 5.0 ; A detection is sigcut sigma above the mean
    if (NOT keyword_set(binsz)) then binsz = 1
@@ -8,14 +8,14 @@ function angle_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
    num1 = n_elements(x1)
    num2 = n_elements(x2)
 
-   IF (num1 > num2) GT 32000 THEN print, '  WARNING:  Awful lot of stars...', num1, num2
+   if (num1 > num2) GT 32000 then $
+    splog, 'WARNING:  Awful lot of stars...', num1, num2
 
    ;----------
    ; Construct an image and populate with the vector offsets for all
    ; distances between object positions X1,Y1 and X2,Y2.
 
-;   nhalf = fix(2*dmax/binsz) + 1
-   nhalf = fix(dmax/binsz)  ; I think this is what is intended - DPF
+   nhalf = fix(dmax/binsz)
    nn = 2*nhalf + 1
 
    xy1 = [[x1], [y1]]
@@ -42,15 +42,12 @@ function angle_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
       xoff = reform(xoff, num1*num2) + (nhalf + 1)
       yoff = reform(yoff, num1*num2) + (nhalf + 1)
 
-; IMPORTANT:  only call populate_image once - calling overhead is
-;                                             large. 
-;      t1 = systime(1)
-;      print, 'Start: ', t1
+      ; Important: Only call populate_image once - calling overhead is large.
       populate_image, img, xoff, yoff, assign='cic'
-;      print, 'End: ', systime(1)-t1
 
       pk[k] = max(img)
-      print, k, theta[k], pk[k]
+      if (keyword_set(verbose)) then $
+       splog, 'Angle=', theta[k], '  Peak=', pk[k]
    endfor
 
    bestsig = (max(pk, ind)-mean(img))/stddev(img)
@@ -58,4 +55,3 @@ function angle_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
 
    return, ang
 end
-
