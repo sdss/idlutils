@@ -12,6 +12,7 @@
 ;   filename   - Name of PostScript file
 ;
 ; OPTIONAL INPUTS:
+;   aspect     - retain aspect ratio in .ps file
 ;   _EXTRA     - Optional keywords for DEVICE
 ;
 ; OUTPUT:
@@ -37,7 +38,7 @@
 ;   08-May-2003  Written by J. Hennawi and D. Schlegel, Princeton
 ;-
 ;------------------------------------------------------------------------------
-pro atv_joe_writeps, filename, _EXTRA=KeywordsForTV
+pro atv_joe_writeps, filename, aspect=aspect, _EXTRA=KeywordsForTV
 
    common atv_state
    common atv_images
@@ -54,7 +55,7 @@ pro atv_joe_writeps, filename, _EXTRA=KeywordsForTV
    ysize = (state.draw_window_size[1] / state.zoom_factor) > $
     (view_max[1] - view_min[1] + 1)
 
-   aspect = float(ysize) / float(xsize)
+   viewaspect = float(ysize) / float(xsize)
    fname = strcompress(state.current_dir + 'atv.ps', /remove_all)
 
    tvlct, rr, gg, bb, 8, /get
@@ -85,6 +86,7 @@ pro atv_joe_writeps, filename, _EXTRA=KeywordsForTV
     'MEDIUM'        , 0, $
     'NARROW'        , 0, $
     'OBLIQUE'       , 0 )
+   if(keyword_set(aspect)) then forminfo.ysize=forminfo.ysize*viewaspect
    if (keyword_set(KeywordsForTV)) then begin
       tags_form = tag_names(forminfo)
       tags_in = tag_names(KeywordsForTV)
