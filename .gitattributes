@@ -199,6 +199,7 @@ goddard/pro/astrom/make_astr.pro -text
 goddard/pro/astrom/putast.pro -text
 goddard/pro/astrom/starast.pro -text
 goddard/pro/astrom/wcs_demo.pro -text
+goddard/pro/astrom/wcs_getpole.pro -text
 goddard/pro/astrom/wcs_rotate.pro -text
 goddard/pro/astrom/wcssph2xy.pro -text
 goddard/pro/astrom/wcsxy2sph.pro -text
