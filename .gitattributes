@@ -793,6 +793,7 @@ pro/healpix/healcart_header.pro -text
 pro/healpix/healcart_ind.pro -text
 pro/healpix/healgen.pro -text
 pro/healpix/healgen_lb.pro -text
+pro/healpix/healnpix.pro -text
 pro/healpix/healpix2alm.pro -text
 pro/healpix/healpix_ring_weight.pro -text
 pro/healpix/ishealpix.pro -text
