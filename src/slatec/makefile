@@ -1,4 +1,4 @@
-#$Id: makefile,v 1.2 1999-10-22 21:53:08 sburles Exp $
+#$Id: makefile,v 1.3 1999-10-22 21:56:57 scott Exp $
 #
 #  Copyright (c) 1988-1998, Research Systems Inc.  All rights reserved.
 #  This software includes information which is proprietary to and a
@@ -78,7 +78,7 @@ all :
 		"CC=gcc" \
 		"f77=g77" \
 		"LD=g77" \
-		"X_CFLAGS=-fPIC -g -Wall" \
+		"X_CFLAGS=-O -Wall" \
 		"X_LD_FLAGS=-shared" ;;\
 	*) echo "This system is not supported" ;; \
 	esac
