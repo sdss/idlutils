@@ -24,6 +24,7 @@
 ;   noperimeter - don't plot contour at minnum
 ;   nobox       - don't plot box
 ;   nolines     - don't plot lines between contours
+;   nodata      - don't plot anything other than axes
 ;   maskonly    - plot only the minnum mask
 ; BUGS:
 ; REVISION HISTORY:
@@ -83,7 +84,7 @@ endif else begin
 endelse
 
 ; make mean image
-if(NOT keyword_set(input_mean)) then begin
+if (NOT keyword_set(input_mean)) then begin
     image= hogg_weighted_mean_surface(x,y,z,weight,xbin,ybin,dxbin,dybin)
     bin_number= image[*,*,0]
     bin_weight= image[*,*,1]
