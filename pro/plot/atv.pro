@@ -694,7 +694,9 @@ case event_name of
     END 
     'Native': BEGIN 
        IF (state.wcstype EQ 'angle') THEN BEGIN 
-          state.display_coord_sys = strmid((*state.astr_ptr).ctype[0], 0, 4)
+                          ; Check if coordinates are reversed (i.e. dec, RA)
+          rev = atv_fits_ctype_reversed(astr.ctype)
+          state.display_coord_sys = strmid((*state.astr_ptr).ctype[rev], 0, 4)
           state.display_equinox = state.equinox
           atv_gettrack          ; refresh coordinate window
        ENDIF 
@@ -873,10 +875,22 @@ if (!d.name NE state.graphicsdevice) then return
 
 if (event.type EQ 0) then begin
     case event.press of
-        1: atv_apphot
-        2: atv_zoom, 'none', /recenter
-        4: atv_showstats
-        else: 
+       1: begin 
+          if (state.wcstype EQ 'angle') then begin
+             xy2ad, state.coord[0], state.coord[1], *(state.astr_ptr), lon, lat
+             
+             wcsstring = atv_wcsstring(lon, lat, (*state.astr_ptr).ctype,  $
+                              state.equinox, state.display_coord_sys, $
+                              state.display_equinox, state.display_base60)
+             print, state.coord, wcsstring, format='("x =",I5,"  y =",I5,5X,A)'
+          endif else begin 
+             print, state.coord, format='("x =",I5,"  y =",I5)'
+          endelse
+          atv_apphot
+       end
+       2: atv_zoom, 'none', /recenter
+       4: atv_showstats
+       else: 
     endcase
 endif
 
@@ -1496,8 +1510,22 @@ endelse
 
 end
 
+; Contributed by D. Finkbeiner, August 2001.
+; Sense reversal of coordsys names in CTYPE.  This must be done to
+; comply with the FITS standard. 
+; OUTPUT: 1 if coordinates are reversed (i.e. (dec, RA)) .
 ;---------------------------------------------------------------------
+function atv_fits_ctype_reversed, ctype
+  csys = strmid(ctype, 0, 4)
+  reverse = ((csys[0] EQ 'DEC-') and (csys[1] EQ 'RA--')) or $
+    ((csys[0] EQ 'GLAT') and (csys[1] EQ 'GLON')) or $
+    ((csys[0] EQ 'ELON') and (csys[1] EQ 'GLAT'))
+  
+  return, reverse
+end
 
+
+;---------------------------------------------------------------------
 function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox, $
             disp_base60
 
@@ -1509,7 +1537,10 @@ function atv_wcsstring, lon, lat, ctype, equinox, disp_type, disp_equinox, $
 ; ctype - coord system in header
 ; disp_type - type of coords to display
 
-headtype = strmid(ctype[0], 0, 4)
+
+; Check for reversed (RA,dec) etc. 
+reverse = atv_fits_ctype_reversed(ctype)
+headtype = strmid(ctype[reverse], 0, 4)
 
 ; need numerical equinox values
 IF (equinox EQ 'J2000') THEN num_equinox = 2000.0 ELSE $
@@ -1531,7 +1562,14 @@ CASE headtype OF
         ra = lon
         dec = lat
         IF num_equinox NE 2000.0 THEN precess, ra, dec, num_equinox, 2000.0
-    END 
+    END
+    ELSE: BEGIN
+       message, string('Unsupported FITS CTYPE  ', ctype, format='(2A,X,A)'), $
+         /informational
+       ra = 0.
+       dec = 0.
+       wcsstring = 'Unsupported'
+    END
 ENDCASE  
 
 ; Now convert RA,dec (J2000) to desired display coordinates:  
@@ -2742,7 +2780,9 @@ endelse
 
 ; Set default display to native system in header
 state.display_equinox = state.equinox
-state.display_coord_sys = strmid(astr.ctype[0], 0, 4)
+; Check if coordinates are reversed (i.e. dec, RA)
+reverse = atv_fits_ctype_reversed(astr.ctype)
+state.display_coord_sys = strmid(astr.ctype[reverse], 0, 4)
 
 end
 
