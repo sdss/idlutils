@@ -55,6 +55,7 @@ bin/evilmake: Changed some of the flags so that C code libraries load
                  X_LD_FLAGS="-shared -n32 -mips3"
 data/sdss/sdssMaskbits.par: Add CALIB_STATUS flag values.
                Add the "UNPLUGGED" value to the ZWARNING flag.
+lib/Makefile: For "make clean", also remove all "*.a" files.
 src/Makefile: Compile source code in "mangle1.4/src" instead of "mangle1.2".
 src/image/idl_photfrac.c, p_cisi.c, p_midpnt.c, p_polint.c, p_qromo.c,
                p_utils.c, ph.h, photfrac.c, test_photfrac.c:
