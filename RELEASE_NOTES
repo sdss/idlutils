@@ -20,6 +20,8 @@ POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and
                cubic approximation to the sinc shift.
 MAKE_RA_CAP,MAKE_DEC_CAP: Functions moved from photoop; make mangle
                caps along ra and dec lines. 
+REJECT_CR: A previous error in determining the background for rejection
+           has been fixed, so more cosmics are now successfully rejected. 
 
 Makefile: Install the RELEASE_NOTES file.
 bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
