@@ -24,9 +24,8 @@ OBJECTS = \
 all : $(LIB)/libidlmangle.$(SO_EXT) 
 
 $(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle.a
-	$(LD) -shared $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
-		-lmangle $(MAKE_FTNLIB) -L/usr/lib/gcc-lib/i386-redhat-linux/2.96 \
-		-L$(IDLUTILS_DIR)/lib
+	$(FC) -shared $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
+		-lmangle -L$(IDLUTILS_DIR)/lib
 
 install :
 	-@ cp *.c $(IDLUTILS_DIR)/src/idlmangle
