@@ -53,6 +53,9 @@
 ;
 ;   Not set up yet to deal with multi-dimensional arrays.
 ;
+;   The following does not look for semi-colons within strings,
+;   and will incorrectly split that different input lines (at STRSPLIT command).
+;
 ; PROCEDURES CALLED:
 ;   mrd_struct
 ;
@@ -143,6 +146,19 @@ end
 ; are continuation characters (backslashes) at the end of lines.
 
 function yanny_nextline, ilun
+
+   common yanny_lastline, lastline
+
+   ; If we had already parsed the last line read into several lines (by
+   ; semi-colon separation), then return the next of those.
+   if (keyword_set(lastline)) then begin
+      sline = lastline[0]
+      nlast = n_elements(lastline)
+      if (nlast EQ 1) then lastline = '' $
+       else lastline = lastline[1:nlast-1]
+      return, sline
+   endif
+
    sline = ''
    yanny_readstring, ilun, sline
    sline = strtrim(sline) ; Remove only trailing whitespace
@@ -154,6 +170,22 @@ function yanny_nextline, ilun
       sline = sline + stemp
       nchar = strlen(sline)
    endwhile
+
+   ; Now parse this line into several lines by semi-colon separation,
+   ; but then add the semi-colon back to each of those lines.
+   ; NOTE: The following does not look for semi-colons within strings,
+   ; and will incorrectly split that different input lines!!!???
+   lastline = strsplit(sline, ';', /extract, escape='\')
+   nlast = n_elements(lastline)
+   lastchar = strtrim(sline)
+   lastchar = strmid(lastchar, strlen(lastchar)-1, 1)
+
+   if (lastchar EQ ';') then lastline[nlast-1] = lastline[nlast-1] + ';'
+   if (nlast GT 1) then lastline[0:nlast-2] = lastline[0:nlast-2] + ';'
+
+   sline = lastline[0]
+   if (nlast EQ 1) then lastline = '' $
+    else lastline = lastline[1:nlast-1]
 
    return, sline
 end
