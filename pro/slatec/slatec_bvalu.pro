@@ -56,11 +56,11 @@ function slatec_bvalu, x, bkpt, coeff, ideriv=ideriv
    minbkpt = bkpt[k-1]
    maxbkpt = bkpt[n]
 
-   if (min(x) LT minbkpt) then $
-       message, 'x values fall below the first breakpoint'
+;   if (min(x) LT minbkpt) then $
+;       message, 'x values fall below the first breakpoint'
 
-   if (max(x) GT maxbkpt) then $
-       message, 'x values fall above the last breakpoint'
+;   if (max(x) GT maxbkpt) then $
+;       message, 'x values fall above the last breakpoint'
 
    work = fltarr(3*k)
    y = x

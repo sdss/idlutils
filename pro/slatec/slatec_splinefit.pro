@@ -8,8 +8,8 @@
 ; CALLING SEQUENCE:
 ;   
 ;    fullbkpt = slatec_splinefit(x, y, coeff, invvar=invvar, $
-;                  maxIter=maxIter, upper=upper, lower=lower, bkpt=bkpt,
-;                 _EXTRA = slatec_efc extras)
+;                  maxIter=maxIter, upper=upper, lower=lower, bkpt=bkpt,$
+;                  secondkludge=secondkludge, _EXTRA = slatec_efc extras)
 ;
 ; INPUTS:
 ;   x          - data x values
@@ -29,7 +29,7 @@
 ;   upper      - rejection threshold for positive deviations 
 ;                        (default 5 sigma)
 ;   invvar     - inverse variance of y
-;   EXTRA      - goodies passed to slatec_efc
+;   EXTRA      - goodies passed to slatec_efc:
 ;   nord       - Order of b-splines (default 4: cubic)
 ;   bkpsace    - Spacing of breakpoints in units of x
 ;   nbkpts     - Number of breakpoints to span x range
@@ -61,12 +61,14 @@
 ;-
 ;------------------------------------------------------------------------------
 function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
-         lower=lower, maxIter=maxIter, bkpt=bkpt, _EXTRA=KeywordsForEfc
+         lower=lower, maxIter=maxIter, bkpt=bkpt, $
+         secondkludge=secondkludge, _EXTRA=KeywordsForEfc
 
     if N_PARAMS() LT 3 then begin
         print, ' Syntax - fullbkpt = slatec_splinefit(x, y, coeff, '
         print, '         invvar=invvar, maxIter=maxIter, upper=upper, '
-        print, '         lower=lower, bkpt=bkpt, _EXTRA = slatec_efc extras)'
+        print, '         lower=lower, bkpt=bkpt, secondkludge=secondkludge,'
+        print, '          _EXTRA = slatec_efc extras)'
     endif
 
     if n_elements(maxIter) EQ 0 then maxIter = 5
@@ -100,6 +102,30 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, upper=upper, $
             if total(abs(good - oldgood)) EQ 0 then iiter=maxiter
         endelse
     endfor
+
+    if keyword_set(secondkludge) then begin
+	nfullbkpt = n_elements(fullbkpt) 
+	ncoeff = n_elements(coeff) 
+	nordtemp = nfullbkpt - ncoeff
+	nbkptfix = nfullbkpt - 2*nordtemp + 1
+
+	xbkpt = fullbkpt[nordtemp:nordtemp+nbkptfix-1]
+	deriv2 = sqrt(abs(slatec_bvalu(x, fullbkpt, coeff)))
+	deriv2total = deriv2
+	for i=1L,nx-1 do $
+	  deriv2total[i] = deriv2total[i] + deriv2total[i-1]
+	total2 = total(deriv2)
+	deriv2x = (findgen(nbkptfix)+1.0)*total2/float(nbkptfix)
+	invspl = spl_init(deriv2total,x)
+	newbkpt = spl_interp(deriv2total,x,invspl,deriv2x)
+
+	fullbkpt[nordtemp:nordtemp+nbkptfix-1] = newbkpt
+
+       these = where(good)
+       fullbkpt = slatec_efc(x[these], y[these], fullbkpt=fullbkpt, $
+              coeff, invsig=invsig[these], $
+                 _EXTRA=KeywordsForEfc)
+      endif
 
     return, fullbkpt
 end
