@@ -3,7 +3,7 @@ function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
 ; NAME:
 ;       ISMEUV
 ; PURPOSE:
-;       Compute the interstellar EUV optical depth 
+;       Compute the continuum interstellar EUV optical depth 
 ;
 ; EXPLANATION:
 ;       The EUV optical depth is computed from the photoionization of
@@ -53,11 +53,21 @@ function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
 ;       IDL> w = 180 + findgen(40000)*0.001        ;Need a fine wavelength grid
 ;       IDL> plot, w, ismeuv(w, 0, 1e18, /Fano)          
 ;
-; HISTORY
+; NOTES:
+;       (1) The more complete program  ismtau.pro at 
+;           http://hea-www.harvard.edu/PINTofALE/pro/ extends this work
+;           to shorter wavelengths and includes metal and molecular hydrogen
+;           opacities
+;       (2) This program only compute continuum opacities, and for example,
+;           the He ionization edges at 504 A  and 228 A are blurred by
+;           converging line absorptions (Dupuis et al. 1995. ApJ, 455, 574)
+;           
+; HISTORY:
 ;       Written,    W. Landsman                  October, 1994
 ;       Adapted from ism.c at anonymous ftp site cea-ftp.cea.berkeley.edu
 ;       by Pat Jelinsky, Todd Rumph & others.
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Avoid underflow messages, support double prec.  W. Landsman October 2003
 ;-
  On_error,2
 
@@ -72,15 +82,26 @@ function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
 ; Compute attenuation due to photoionization of hydrogen.   See Spitzer
 ; (Physical processes in the interstellar medium), page 105
 
+ if (size(wave,/TNAME) EQ 'DOUBLE') then begin 
+          pi = !dpi 
+          double  = 1b
+  endif else  begin 
+          pi = !pi
+          double = 0b
+ endelse
  ratio = wave/911.75
  tauh = wave*0.
  good = where(ratio LT 1, Ngood)
+ minexp = alog((machar(double=double)).xmin) ;Min exponent to avoid underflow
  if Ngood GT 0 then begin
         r = ratio[good]
         z = sqrt( r/(1.0-r) )
-        tauh[good] = Hcol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) /  $
-                 (1.0 - exp(-2*!PI*z)) 
- endif
+        denom = replicate(1.0, Ngood)
+        y = -2.*pi*z
+        good1 = where(y GT minexp, Ngood1)
+             if Ngood1 GT 0 then denom[good1] = (1.0 - exp(y[good1]))        
+        tauh[good] = Hcol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) /  denom
+  endif
 
 ; Now compute photoionization cross-section of He II; just like hydrogen but 
 ; with a nuclear charge Z = 2
@@ -91,8 +112,12 @@ function ismeuv,wave,Hcol,HeIcol,HeIIcol,Fano=fano
  if Ngood GT 0 then begin
         r = ratio[good]
         z = sqrt( r/(1.0-r) )
-        tauheII[good] = heiicol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) /  $
-                ((1.0 - exp(-2*!PI*z))* 4.) 
+        denom = replicate(1.0, Ngood)
+        y = -2*PI*z
+        good1 = where(y GT minexp, Ngood1)
+           if Ngood1 GT 0 then denom[good1] = 1.0 - exp(y[good1])*4.
+        tauheII[good] = heiicol * 3.44e-16 * (r^4)*exp(-4.0*z*atan(1/z)) / denom
+            
  endif
 
 ; Polynomial coefficients for He I cross-section taken from experimental
