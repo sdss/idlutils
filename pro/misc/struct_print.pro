@@ -89,7 +89,7 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
    ntag = n_elements(tags)
 
    if (keyword_set(html)) then begin
-      htmhdr = '<TABLE BORDER=1 CELLPADDING=3>'
+      htmhdr = '<TABLE BORDER=1 CELLPADDING=1>'
       hdr1 = ''
       hdr2 = '<TR>'
       rowsep = '"<TR>",'
