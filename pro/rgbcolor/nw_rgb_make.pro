@@ -72,7 +72,7 @@ ENDIF ELSE BEGIN
     colors[*,*,1] = Gim
     colors[*,*,2] = Bim
 ENDELSE
-overlay1= overlay
+if(keyword_set(overlay)) then overlay1= overlay
 IF n_elements(rebinfactor) THEN BEGIN
     colors = nw_rebin_image(colors,rebinfactor)
     IF keyword_set(overlay) THEN overlay1= nw_rebin_image(overlay,rebinfactor)
