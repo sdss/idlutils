@@ -35,12 +35,12 @@ function djs_icolor, color
       if (!d.name EQ 'X') then defcolor = 7 $ ; white for X-windows
        else defcolor = 0 ; black otherwise
 
-      ; Load a simple color table with the basic 8 colors
-      red   = [0, 1, 0, 0, 0, 1, 1, 1]
-      green = [0, 0, 1, 0, 1, 0, 1, 1]
-      blue  = [0, 0, 0, 1, 1, 1, 0, 1]
+      ; Load a simple color table with the basic 8 colors (plus a few)
+      red   = long(255*[0, 1, 0, 0, 0, 1, 1, 1, 0.5])
+      green = long(255*[0, 0, 1, 0, 1, 0, 1, 1, 0.5])
+      blue  = long(255*[0, 0, 0, 1, 1, 1, 0, 1, 0.5])
 
-      tvlct, 255*red, 255*green, 255*blue
+      tvlct, red, green, blue
       icolor = 0 * (color EQ 'black') $
              + 1 * (color EQ 'red') $
              + 2 * (color EQ 'green') $
@@ -49,10 +49,11 @@ function djs_icolor, color
              + 5 * (color EQ 'magenta') $
              + 6 * (color EQ 'yellow') $
              + 7 * (color EQ 'white') $
+             + 8 * (color EQ 'grey') $
              + defcolor * (color EQ 'default')
 
       if (!d.N_colors EQ 16777216) then begin
-        colors = 255L*red + ishft(255L*green,8) + ishft(255L*blue,16)  
+        colors = red + ishft(green,8) + ishft(blue,16)  
         icolor = colors[icolor]
       endif
 
