@@ -9,8 +9,8 @@ SHELL = /bin/sh
 #
 .c.o :
 	$(CC) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.c
-.f.o :
-	$(F77) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.f
+#.f.o :
+#	$(F77) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.f
 #
 CFLAGS  = -I$(IDL_DIR)/external $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(IDLUTILS_DIR)/include
 
@@ -20,10 +20,10 @@ OBJECTS = \
 	grow_obj.o pop_image.o \
 	idl_photfrac.o \
 	photfrac.o \
-	idl_interp_profmean.o \
-	ppvalu.o \
-	tautsp.o \
-	interv.o \
+#	idl_interp_profmean.o \
+#	ppvalu.o \
+#	tautsp.o \
+#	interv.o \
 	interp_profmean.o \
 	p_cisi.o \
 	p_midpnt.o \
@@ -34,7 +34,8 @@ OBJECTS = \
 all : $(LIB)/libimage.$(SO_EXT)
 
 $(LIB)/libimage.$(SO_EXT): $(OBJECTS) ph.h export.h
-	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) $(MAKE_FTNLIB)
+#	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) $(MAKE_FTNLIB)
+	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS)
 #	nm -s ../lib/libimage.$(SO_EXT)
 
 #
