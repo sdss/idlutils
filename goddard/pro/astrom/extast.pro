@@ -66,6 +66,7 @@ pro extast,hdr,astr,noparams
 ;      Consistent conversion between CROTA and CD matrix  October 2000
 ;      CTYPE = 'PIXEL' means no astrometry params  W. Landsman January 2001
 ;      Don't choke if only 1 CTYPE value given W. Landsman  August 2001
+;      Recognize GSSS in ctype also       D. Finkbeiner Jan 2002
 ;-
  On_error,2
 
@@ -84,23 +85,26 @@ pro extast,hdr,astr,noparams
 ; If the standard CTYPE* astrometry keywords not found, then check if the
 ; ST guidestar astrometry is present
 
- if N_ctype EQ 0 then begin            
-         gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
-         if N_ppo1 EQ 1 then begin 
-                gsssextast, hdr, astr, noparams
-                return
-        endif
-        ctype = ['RA---TAN','DEC--TAN']
-  endif
+ check_gsss = (N_ctype EQ 0)
+ if N_ctype GE 1 then check_gsss = (strmid(ctype[0], 5, 3) EQ 'GSS')
 
-  if (ctype[0] EQ 'PIXEL') then return
-  if N_ctype EQ 2 then if (ctype[1] EQ 'PIXEL') then return
+ if check_gsss then begin            
+    gsss = sxpar( hdr,'PPO1', COUNT = N_ppo1)
+    if N_ppo1 EQ 1 then begin 
+       gsssextast, hdr, astr, noparams
+       return
+    endif
+    ctype = ['RA---TAN','DEC--TAN']
+ endif
 
-  crval = sxpar( hdr, 'CRVAL*', Count = N )
-     if N LT 2 then return              ;No CRVAL parameters
-
-  crpix = sxpar( hdr, 'CRPIX*', Count = N )
-     if N lt 2 then return                 ;No CRPIX parameters?
+ if (ctype[0] EQ 'PIXEL') then return
+ if N_ctype EQ 2 then if (ctype[1] EQ 'PIXEL') then return
+ 
+ crval = sxpar( hdr, 'CRVAL*', Count = N )
+ if N LT 2 then return          ;No CRVAL parameters
+ 
+ crpix = sxpar( hdr, 'CRPIX*', Count = N )
+ if N lt 2 then return          ;No CRPIX parameters?
 
  CD11 = sxpar( hdr, 'CD001001', COUNT = N_CD001 )
 
