@@ -40,7 +40,9 @@
 ;   lines are <= 255 characters.
 ;
 ;   The reading could probably be sped up by setting a format string for
-; each structure to use in the read.
+;   each structure to use in the read.
+;
+;   Not set up yet to deal with multi-dimensional arrays.
 ;
 ; PROCEDURES CALLED:
 ;   mrd_struct
