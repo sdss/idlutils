@@ -842,6 +842,7 @@ pro/mangle/read_mangle_polygons.pro -text
 pro/mangle/read_mangle_vertices.pro -text
 pro/mangle/set_use_caps.pro -text
 pro/mangle/vmid.pro -text
+pro/mangle/vmidc.pro -text
 pro/mangle/where_polygons_overlap.pro -text
 pro/mangle/window_image.pro -text
 pro/mangle/write_fits_polygons.pro -text
@@ -1029,6 +1030,7 @@ src/idlmangle/Makefile -text
 src/idlmangle/idl_garea.c -text
 src/idlmangle/idl_gverts.c -text
 src/idlmangle/idl_vmid.c -text
+src/idlmangle/idl_vmidc.c -text
 src/idlmangle/idl_where_polygons_overlap.c -text
 src/image/Makefile -text
 src/image/grow_obj.c -text
