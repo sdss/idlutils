@@ -3,6 +3,7 @@
 bin/Makefile -text
 bin/evilinstall -text
 bin/evilmake -text
+bin/install_ups_table -text
 doc/Makefile -text
 doc/mk_doc -text
 doc/www/.cvsignore -text
