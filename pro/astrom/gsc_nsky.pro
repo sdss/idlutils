@@ -94,7 +94,7 @@ pro gsc_nsky, catall
    ;----------
    ; Write the output file
 
-   mwrfits, catall, filepath('gsc-Nsky.fits', root_dir=gsc_dir)
+   mwrfits, catall, filepath('gsc-Nsky.fits', root_dir=gsc_dir), /create
 
    return
 end
