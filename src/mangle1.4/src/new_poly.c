@@ -53,26 +53,26 @@ polygon *new_poly(int npmax)
 */
 void free_poly(polygon *poly)
 {
-    if (poly) {
-	fpoly++;
-	femory += sizeof(polygon);
-	if (poly->rp) {
+  if (poly) {
+    fpoly++;
+    femory += sizeof(polygon);
+    if (poly->rp) {
 	    free(poly->rp);
 	    poly->rp = 0x0;
 	    femory += sizeof(vec) * poly->npmax;
-	}
-	if (poly->cm) {
+    }
+    if (poly->cm) {
 	    free(poly->cm);
 	    poly->cm = 0x0;
 	    femory += sizeof(double) * poly->npmax;
-	}
-  if(poly->parent_polys) 
-    free(poly->parent_polys);
-  poly->parent_polys=0x0;  
-  poly->nparents=0;
-  poly->maxparents=0;
-	free(poly);
     }
+    if(poly->parent_polys) 
+      free(poly->parent_polys);
+    poly->parent_polys=0x0;  
+    poly->nparents=0;
+    poly->maxparents=0;
+    free(poly);
+  }
 }
 
 /*------------------------------------------------------------------------------
