@@ -24,6 +24,9 @@ USNO_READGC   - New proc to read the UCAC data files for a great circle
                 on the sky, analogous to UCAC_READGC.
 WCSXY2SPH     - Add HealCart projection.
 YANNY_READ    - Don't crash when FILENAME is a 1-element array!
+                The last step trims each structure to the actual number
+                of elements.  Be sure to free memory from the untrimmed,
+                unused pointers.
 YANNY_READONE - Free pointers before returning.
 
 bin/Makefile  - Take out "evilinstall" which has now moved to evilups product.
