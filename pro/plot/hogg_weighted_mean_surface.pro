@@ -56,7 +56,8 @@ for xi= 0L,nx-1 do for yi= 0L,ny-1 do begin
         image[xi,yi,1]= total(tw[isub],/double)
         image[xi,yi,2]= total((tw[isub])^2,/double)
         image[xi,yi,3]= total(tw[isub]*tq[isub],/double)/image[xi,yi,1]
-        image[xi,yi,4]= total(tw[isub]*tq[isub],/double)/image[xi,yi,1]
+        image[xi,yi,4]= total(tw[isub]*(tq[isub]-image[xi,yi,3])^2,/double)/ $
+          image[xi,yi,1]
     endif
 endfor
 

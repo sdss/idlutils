@@ -25,8 +25,12 @@ pro blanton_oned_meanplot, x,z,weight=weight, $
                            levels=levels, axis_char_scale=axis_char_scale, $
                            maskonly=maskonly, $
                            minnum=minnum, $
+                           nodata=nodata, $
                            bin_mean=bin_mean, $
-                           bin_number=bin_number, input_mean=input_mean
+                           bin_weight=bin_weight, $
+                           bin_number=bin_number, $ 
+                           bin_scatter=bin_scatter, $
+                           input_mean=input_mean
 
 if(NOT keyword_set(minnum)) then minnum=1L
 if(NOT keyword_set(axis_char_scale)) then axis_char_scale=1.75
@@ -66,6 +70,7 @@ if(NOT keyword_set(input_mean)) then begin
     bin_weight= image[*,1]
     bin_weight2= image[*,2]
     bin_mean= image[*,3]
+    bin_scatter= image[*,4]
 endif
 
 ; check values and set contour levels
@@ -93,45 +98,68 @@ nticks=6/axis_char_scale
 !X.TICKINTERVAL= hogg_interval(xrange,nticks=nticks)
 !Y.TICKINTERVAL= hogg_interval(yrange,nticks=nticks)
 
+tmpxticksize=!X.TICKLEN
+tmpyticksize=!Y.TICKLEN
+!X.TICKLEN=0.000001
+!Y.TICKLEN=0.000001
+tmpxminor=!X.MINOR
+tmpyminor=!Y.MINOR
+!X.MINOR=-1
+!Y.MINOR=-1
+tmpxticks=!X.TICKS
+tmpyticks=!Y.TICKS
+!X.TICKS=1
+!Y.TICKS=1
+
 if(keyword_set(maskonly)) then begin
-    tmpxticksize=!X.TICKLEN
-    !X.TICKLEN=0.0001
-    tmpyticksize=!Y.TICKLEN
-    !Y.TICKLEN=0.0001
     plot, [0],[0],xrange=xrange,yrange=yrange,/nodata
     !X.TICKLEN=tmpxticksize
     !Y.TICKLEN=tmpyticksize
+    !X.MINOR=tmpxminor
+    !Y.MINOR=tmpyminor
+    !X.TICKS=tmpxticks
+    !Y.TICKS=tmpyticks
     return
 endif
 plot,xbin[limits_indx],bin_mean[limits_indx],xrange=xrange, $
-  yrange=yrange,thick=4
+  yrange=yrange,thick=4, nodata=nodata
 
-nlimits_indx=n_elements(limits_indx)
-if(xrange[1] gt xrange[0]) then $
-  sign=1 $
-else $
-  sign=-1
-for i=0L, nlevels-1L do begin
-    icut=where((bin_mean[limits_indx[0:nlimits_indx-2]] lt levels[i] and $
-                bin_mean[limits_indx[1:nlimits_indx-1]] $
-                gt levels[i]) or $
-               (bin_mean[limits_indx[0:nlimits_indx-2]] gt levels[i] and $
-                bin_mean[limits_indx[1:nlimits_indx-1]] $
-                lt levels[i]),ncut)
-    for j=0L, ncut-1L do begin
-        xloc=xbin[limits_indx[icut[j]]]+ $
-          (xbin[limits_indx[icut[j]+1]]-xbin[limits_indx[icut[j]]])* $
-          (levels[i]-bin_mean[limits_indx[icut[j]]])/ $
-          (bin_mean[limits_indx[icut[j]+1]]-bin_mean[limits_indx[icut[j]]])
-        if(sign*xloc gt sign*xrange[0] and sign*xloc lt sign*xrange[1]) then $
-          begin
-            oplot,xloc+0.5*dxbin*[-1.,1.], [levels[i],levels[i]]
-            if(j eq 0 and bin_mean[limits_indx[icut[j]]] lt levels[i]) then $
-              djs_xyouts,xloc-sign*0.5*dxbin, levels[i], $
-              strtrim(string(levels[i],format='(f20.1)'),2), $ 
-              alignment=1., charsize=0.8, noclip=0
-        endif
+if(not keyword_set(nodata)) then begin
+    nlimits_indx=n_elements(limits_indx)
+    if(xrange[1] gt xrange[0]) then $
+      sign=1 $
+    else $
+      sign=-1
+    for i=0L, nlevels-1L do begin
+        icut=where((bin_mean[limits_indx[0:nlimits_indx-2]] lt levels[i] and $
+                    bin_mean[limits_indx[1:nlimits_indx-1]] $
+                    gt levels[i]) or $
+                   (bin_mean[limits_indx[0:nlimits_indx-2]] gt levels[i] and $
+                    bin_mean[limits_indx[1:nlimits_indx-1]] $
+                    lt levels[i]),ncut)
+        for j=0L, ncut-1L do begin
+            xloc=xbin[limits_indx[icut[j]]]+ $
+              (xbin[limits_indx[icut[j]+1]]-xbin[limits_indx[icut[j]]])* $
+              (levels[i]-bin_mean[limits_indx[icut[j]]])/ $
+              (bin_mean[limits_indx[icut[j]+1]]-bin_mean[limits_indx[icut[j]]])
+            if(sign*xloc gt sign*xrange[0] and sign*xloc lt sign*xrange[1]) $
+              then $
+              begin
+                oplot,xloc+0.5*dxbin*[-1.,1.], [levels[i],levels[i]]
+                if(j eq 0 and bin_mean[limits_indx[icut[j]]] lt levels[i]) $
+                  then $
+                  djs_xyouts,xloc-sign*0.5*dxbin, levels[i], $
+                  strtrim(string(levels[i],format='(f20.1)'),2), $ 
+                  alignment=1., charsize=0.8, noclip=0
+            endif
+        endfor
     endfor
-endfor
+endif
+!X.TICKLEN=tmpxticksize
+!Y.TICKLEN=tmpyticksize
+!X.MINOR=tmpxminor
+!Y.MINOR=tmpyminor
+!X.TICKS=tmpxticks
+!Y.TICKS=tmpyticks
 
 end

@@ -32,10 +32,10 @@
 pro hogg_meanplot, x,y,z,weight=weight, $
                    xrange=xrange,yrange=yrange,dxbin=dxbin,dybin=dybin, $
                    levels=levels,c_colors=c_colors, $
-                   minnum=minnum, $
+                   minnum=minnum, nodata=nodata, $
                    noperimeter=noperimeter,nobox=nobox,nolines=nolines, $
                    maskonly=maskonly, bin_mean=bin_mean, $
-                   bin_scatter=bin_scatter, $
+                   bin_scatter=bin_scatter, bin_weight=bin_weight, $
                    bin_number=bin_number, input_mean=input_mean, $
                    axis_char_scale=axis_char_scale
 
@@ -129,10 +129,11 @@ if not keyword_set(c_colors) then begin
 endif
 contour, bin_mean,xbin,ybin,levels=levels,/cell_fill, $
   c_colors=c_colors, $
-  xstyle=1,xrange=xrange,ystyle=1,yrange=yrange
+  xstyle=1,xrange=xrange,ystyle=1,yrange=yrange, nodata=nodata
 if NOT keyword_set(nolines) then begin
     contour, bin_mean,xbin,ybin,levels=levels,/overplot, $
-      c_labels=lonarr(n_elements(levels))+1L,c_charthick=!P.CHARTHICK
+      c_labels=lonarr(n_elements(levels))+1L,c_charthick=!P.CHARTHICK, $
+      nodata=nodata
 endif
 
 ; show sliding box
@@ -146,9 +147,8 @@ endif
 
 ; plot number perimeter
 numlevels=[0,minnum]
-if not keyword_set(noperimeter) then begin
-    contour, bin_number,xbin,ybin,levels=numlevels, $
-      /overplot,cell_fill=maskonly, c_thick=3
-endif
+if not keyword_set(noperimeter) and not keyword_set(nodata) then $
+  contour, bin_number,xbin,ybin,levels=numlevels, $
+  /overplot,cell_fill=maskonly, c_thick=3
 
 end

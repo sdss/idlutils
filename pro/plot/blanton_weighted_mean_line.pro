@@ -28,7 +28,7 @@ function blanton_weighted_mean_line, x,quantity,weight,xbin,dx, $
 ; set dimensions, defaults, arrays, etc
 npt= n_elements(x)
 nx= n_elements(xbin)
-image= dblarr(nx,4)
+image= dblarr(nx,5)
 splog, 'making ',nx,' surface from ',npt,' data points...'
 
 ; bootstrap?
@@ -52,6 +52,8 @@ for xi= 0L,nx-1 do begin
         image[xi,1]= total(tw[isub],/double)
         image[xi,2]= total((tw[isub])^2,/double)
         image[xi,3]= total(tw[isub]*tq[isub],/double)/image[xi,1]
+        image[xi,4]= total(tw[isub]*(tq[isub]-image[xi,3])^2,/double)/ $
+          image[xi,1]
     endif
 endfor
 
