@@ -10,6 +10,9 @@ function Queryusno, target, dis,magrange = magrange, HOURS = hours
 ;   Uses the IDL SOCKET command to query the USNO-A2.0 database over the Web.    
 ;   Requires IDL V5.4 or later.
 ; 
+;   With the introduction of QUERYVIZIER this routine became mostly obsolete
+;   as the newer USNO-B1 catalog can be accessed from QUERYVIZIER.
+;
 ;   USNO-A2.0 contains entries for over a half billion stars (526,230,881, to 
 ;   be exact!) which were detected in the digitized images of three photographic
 ;   sky surveys. For the entire northern sky and the southern sky down to 

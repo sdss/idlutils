@@ -1,5 +1,5 @@
 PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
-              SURVEY = survey
+              NED=ned, SURVEY = survey, OUTFILE = outfile
 ;+
 ; NAME: 
 ;   QueryDSS
@@ -19,13 +19,12 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;
 ; INPUTS:
 ;      TARGETNAME_OR_COORDS - Either a scalar string giving a target name, 
-;          (with J2000 coordinates determined by SIMBAD), or a 2-element
-;          numeric vector giving the J2000 right ascension in *degrees* and
-;          the target declination in degrees.
+;          (with J2000 coordinates determined by SIMBAD (default) or NED), or 
+;          a 2-element numeric vector giving the J2000 right ascension in 
+;          *degrees* and the target declination in degrees.
 ;
-; OPTIONAL INPUTS: None
-;
-;
+; OPTIONAL INPUTS: 
+;          None
 ;
 ; OPTIONAL KEYWORD PARAMETERS: 
 ;     ImSize - Numeric scalar giving size of the image to be retrieved in 
@@ -34,6 +33,10 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;     /ESO - Use the ESO server for image retrieval.    Default is to use
 ;            the STScI server if user is in the Western hemisphere, and 
 ;            otherwise to use the ESO server.
+;
+;     /NED - Query the Nasa Extragalactic Database (NED) for the
+;            target's coordinates.  The default is to use Simbad for
+;            the target search.
 ;
 ;     /STSCI - Use the STSCI server for image retrieval.  Default is to use
 ;            the STScI server if user is in the Western hemisphere, and 
@@ -57,6 +60,8 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;
 ;       Hdr - The FITS header of the image. Empty string in case of errors.
 ;
+;       If the OutFile keyword is set then no outputs are returned (only the
+;       file is written).
 ; SIDE EFFECTS: 
 ;     If Im and Hdr exist in advance,  they are overwritten.
 ;
@@ -71,24 +76,31 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;      Retrieve an 10'  image surrounding the ultracompact HII region
 ;       G45.45+0.06.   Obtain the 2nd generation blue image.
 ;
-;          > QueryDSS, 'GAL045.45+00.06', image, header, survey = '2b'
-;          > tvscl, image
-;          > hprint, header
-;          > writefits,'dss_image.fits', image, header
+;       IDL> QueryDSS, 'GAL045.45+00.06', image, header, survey = '2b'
+;       IDL> tvscl, image
+;       IDL> hprint, header
+;       IDL> writefits,'dss_image.fits', image, header
 ; Note that the coordinates could have been specified directly, rather than
 ; giving the target name.
-;          > QueryDSS, [288.587, 11.1510], image, header,survey='2b'
+;       IDL> QueryDSS, [288.587, 11.1510], image, header,survey='2b'
 ;
+; To write a file directly to disk, use the OutFile keyword
+;
+;       IDL> QueryDSS, [288.587, 11.1510], survey='2b', out='gal045_2b.fits'
+;   
 ; PROCEDURES CALLED:
 ;       QUERYSIMBAD, WEBGET()
 ; MODIFICATION HISTORY: 
 ;       Written by M. Feldt, Heidelberg, Oct 2001 <mfeldt@mpia.de>
 ;       Option to supply target name instead of coords  W. Landsman Aug. 2002
+;       Added OUTFILE, /NED keywords W. Landsman   April 2003
+;       Don't abort on Simbad failure W. landsman/J. Brauher  June 2003
 ;
 ;-
-  if N_params() LT 2 then begin
+  if N_params() LT 1 then begin
       print,'Syntax - QueryDSS, TargetName_or_coords, image, header'
-      print,"           [Imsize= ,/ESO, /STScI, Survey = ['1','2b','2r','2i'] ]"
+      print,"           [Imsize= ,/ESO, /STScI, Survey = ['1','2b','2r','2i'] "
+      print,'            /NED, OutFile = ]'
       return
    endif
 ;; Is the user in the Western Hemisphere?
@@ -101,9 +113,12 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
       ra = float(target[0])
       dec = float(target[1])
   endif else begin
-       QuerySimbad, target, ra,dec, Found = Found
-       if found EQ 0 then message,'Target name ' + target + $
+       QuerySimbad, target, ra,dec, NED= ned, Found = Found
+       if found EQ 0 then begin 
+             message,/inf,'Target name ' + target + $
                  ' could not be translated by SIMBAD'
+             return
+       endif
   endelse  
   if not keyword_set(ESO) then eso =  1b-keyword_Set(stsci) 
   IF NOT Keyword_Set(ImSize) THEN ImSize = 10
@@ -147,6 +162,12 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
                          "& format=FITS", /remove)
   ;;
 
+  if keyword_set(OutFile) then begin
+      if not ESO then dss = 'DSS' + dss
+      message,'Writing ' + dss + ' FITS file ' + outfile,/inf
+      Result = webget(QueryURL, copyfile= outfile)
+      return
+  endif
   Result = webget(QueryURL)
   Image = Result.Image
   Header = Result.ImageHeader
