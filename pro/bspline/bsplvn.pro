@@ -15,7 +15,7 @@ function bsplvn, bkpt, nord, x, ileft
    if nx GT 1000000L then begin
      lower = 0L
      upper = 639999L 
-     vnikx = fltarr(nx,nord)
+     vnikx = x # replicate(0,nord)
 
      while lower LT nx do begin
         print, lower, upper, nx
@@ -28,11 +28,11 @@ function bsplvn, bkpt, nord, x, ileft
      return, vnikx
    endif
 
-   vnikx = fltarr(nx,nord)
-   deltap = fltarr(nx,nord)
-   deltam = fltarr(nx,nord)
-   vmprev = fltarr(nx)
-   vm = fltarr(nx)
+   vnikx = x # replicate(0,nord)
+   deltap = vnikx
+   deltam = vnikx
+   vmprev = x * 0
+   vm = x * 0
 
    j = 0
    vnikx[*,0] = 1.
