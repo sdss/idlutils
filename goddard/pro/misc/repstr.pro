@@ -58,6 +58,7 @@ function repstr,obj,in,out
 	      first_part = strmid(object[i],0,pos)
 	      last_part  = strmid(object[i],pos+l1,9999)
 	      object[i] = first_part + out + last_part
+              lo[i] = lo[i]+(l2-l1)
    endif 
   last_pos = pos + l2
  endwhile
