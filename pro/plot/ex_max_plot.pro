@@ -372,13 +372,15 @@ for id2=ydimen-1,0L,-1 do begin
                                   (panelpoint[d2,*]-!Y.CRANGE[0])/ $
                                   (!Y.CRANGE[1]-!Y.CRANGE[0]))
                         amp1col=dblarr(usenpix_x)
+                        avgcol=total(image,1)
+                        avgcol=avgcol/total(avgcol)
                         if(keyword_set(quant)) then begin
-                            meduse=lonarr(nquant,usenpix_x) 
+                            quantuse=lonarr(nquant,usenpix_x) 
                         endif
                         for ii=0L, usenpix_x-1L do begin
                             indx=where(xx eq ii, countin)
                             if(countin gt 1) then begin
-                                amp1col[ii]=total(panelweight[indx],/double)
+                                amp1col[ii]=total(image[ii,*]^2)/total(image[ii,*]*avgcol)
                                 image[ii,*]=image[ii,*]/amp1col[ii]
                                 if(keyword_set(quant)) then begin
                                     sortindx=indx[sort(panelpoint[d2,indx])]
@@ -400,7 +402,7 @@ for id2=ydimen-1,0L,-1 do begin
                                         endif
                                         quantile[id1,id2,jj,ii,1]= $
                                           panelpoint[d2,sortindx[medindx[0]]]
-                                        meduse[jj,ii]=1L
+                                        quantuse[jj,ii]=1L
                                     endfor
                                 endif
                             endif
@@ -408,7 +410,7 @@ for id2=ydimen-1,0L,-1 do begin
                     endif
                     outimage=image
                     if(keyword_set(sigrejimage)) then begin
-                        sig=djsig(outimage,sigrej=100)
+                        sig=djsig(outimage,sigrej=sigrejimage*2)
                         indx=where(outimage gt sigrejimage*sig,count)
                         if(count gt 0) then begin
                             outimage[indx]=sigrejimage*sig
@@ -459,7 +461,7 @@ for id2=ydimen-1,0L,-1 do begin
                         if(keyword_set(quant)) then begin
                             for m=0L, nquant-1L do begin
                                 quantile[id1,id2,m,*,0]= xline
-                                outmedindx=where(meduse[m,*] ne 0,outcount)
+                                outmedindx=where(quantuse[m,*] ne 0,outcount)
                                 if(outcount gt 0) then begin
                                     djs_oplot,quantile[id1,id2,m,outmedindx,0], $
                                       quantile[id1,id2,m,outmedindx,1],thick=4,psym=10, $
