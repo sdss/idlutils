@@ -22,6 +22,13 @@ case `uname` in
 	"OSF1" )
 		SO_EXT=so
 		X_LD_FLAGS="-S -shared";;
+	"Darwin" )
+		SO_EXT=so
+		X_LD_FLAGS="-bundle /usr/lib/bundle1.o -L/usr/lib -lc -lcc_dynamic"
+# The following two lines should be equivalent to the above line
+#		LD=libtool
+#		X_LD_FLAGS="-dynamic -L/usr/lib -lc -lcc_dynamic"
+		X_CFLAGS="-g -Wall -dynamic";;
 	"Linux" )
 		SO_EXT=so
 		X_CFLAGS="-fPIC -g -Wall"
@@ -36,6 +43,6 @@ esac
 # Comment this out since it seems to fail on an SGI platform...
 SDSS_CFLAGS=-O3
 
-export SO_EXT X_CFLAGS X_LD_FLAGS SDSS_CFLAGS
+export SO_EXT X_CFLAGS X_LD_FLAGS SDSS_CFLAGS LD
 
 make "$@"
