@@ -618,6 +618,8 @@ pro/math/djs_reject.pro -text
 pro/math/djsig.pro -text
 pro/math/gauss_kernel.pro -text
 pro/math/gausspix1d.pro -text
+pro/math/sshift.pro -text
+pro/math/sshift2d.pro -text
 pro/math/stdev.pro -text
 pro/misc/blackbody.pro -text
 pro/misc/cpbackup.pro -text
