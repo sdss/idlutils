@@ -15,15 +15,19 @@
 ;
 ; OUTPUTS:
 ;
+; COMMENTS:
+;   Pass COLOR, PSYM, and SYMSIZE to djs_oplot.
+;
 ; PROCEDURES CALLED:
-;  TeXtoIDL()
+;   djs_oplot
+;   TeXtoIDL()
 ;
 ; REVISION HISTORY:
 ;   Written by D. Schlegel, 27 September 1997, Durham
 ;-
 ;-----------------------------------------------------------------------
 pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
- _EXTRA=KeywordsForPlot
+ color=color, psym=psym, symsize=symsize, _EXTRA=KeywordsForPlot
 
    ; If X values don't exist, then create them as PLOT or OPLOT would do
    npt = N_elements(x)
@@ -39,8 +43,12 @@ pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
    if (keyword_set(ytitle)) then ytitle_tex = TeXtoIDL(ytitle)
    if (keyword_set(title)) then title_tex = TeXtoIDL(title)
 
+;   plot, xtmp, ytmp, xtitle=xtitle_tex, ytitle=ytitle_tex, $
+;    title=title_tex, _EXTRA=KeywordsForPlot
    plot, xtmp, ytmp, xtitle=xtitle_tex, ytitle=ytitle_tex, $
-    title=title_tex, _EXTRA=KeywordsForPlot
+    title=title_tex, _EXTRA=KeywordsForPlot, /nodata
+   djs_oplot, xtmp, ytmp, color=color,psym=psym, symsize=symsize, $
+    _EXTRA=KeywordsForPlot
 
    return
 end 
