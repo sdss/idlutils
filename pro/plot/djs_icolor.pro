@@ -32,7 +32,7 @@ function djs_icolor, color
    if (size(color,/tname) EQ 'STRING') then begin ; Test if COLOR is a string
 
       ; Detemine the default color for the current device
-      if (!d.name EQ 'X') then defcolor = 26 $ ; white for X-windows
+      if (!d.name EQ 'X') then defcolor = 27 $ ; white for X-windows
        else defcolor = 0 ; black otherwise
 
       ; Load a simple color table with the basic 27 colors
@@ -43,6 +43,9 @@ function djs_icolor, color
       red   = long(255.0*(indgen(27) mod 3)/2.0)
       green = long(255.0*(fix(findgen(27)/3) mod 3)/2.0)
       blue  = long(255.0*fix(findgen(27)/9)/2.0)
+      red = [red, 70]
+      green = [green, 70]
+      blue = [blue, 70]
 
 ;for ii=0,26 do print, ii,red[ii],green[ii],blue[ii]
 
@@ -80,6 +83,7 @@ function djs_icolor, color
              + 24 * (color EQ 'cyan') $
              + 25 * (color EQ 'light cyan') $
              + 26 * (color EQ 'white') $
+             + 27 * (color EQ 'dark gray') $
              + defcolor * (color EQ 'default')
 
       if (!d.N_colors EQ 16777216) then begin
