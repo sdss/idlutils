@@ -19,10 +19,12 @@ bin/evilmake: For compiling on the Mac (Darwin) platform, add the following
                This lets Blanton's spherematch code build, since it needs
                to link to IDL's memory-management routines.  Note that we
                still cannot build the mangle routines on the Mac.
-               Blanton mysteriously changed the following for Linux:
+               Blanton changed the following for building Fortran code on Linux:
                 MAKE_FTNLIB="-lg2c"
                to have the following:
                 "-lg2c  -L/usr/lib/gcc-lib/i386-redhat-linux/`gcc -dumpversion
+               I've commented this out, since it fails on all our machines,
+               and compiles just fine without it.
 pro/Makefile: Remove radprof from the SUBDIRS list, since there is nothing
                left in that directory.
 src/idlmangle/Makefile: Build idl_vmid.c.
