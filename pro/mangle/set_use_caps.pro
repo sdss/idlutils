@@ -28,7 +28,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro set_use_caps, polygon, list, allow_doubles=allow_doubles, add=add, $
-                  tol=tol
+                  tol=tol, use_caps=use_caps
 
 if(NOT keyword_set(add)) then polygon.use_caps=0
 if(n_elements(tol) eq 0) then tol=1.D-10
@@ -61,5 +61,7 @@ if(NOT keyword_set(allow_doubles)) then begin
         endfor
     endfor
 endif
+
+use_caps=polygon.use_caps
 
 end
