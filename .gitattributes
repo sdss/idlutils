@@ -570,6 +570,7 @@ pro/cosmography/angdidis.pro -text
 pro/cosmography/comdis.pro -text
 pro/cosmography/dcomdisdz.pro -text
 pro/cosmography/dpropdisdz.pro -text
+pro/cosmography/lumdis.pro -text
 pro/cosmography/propmotdis.pro -text
 pro/fits/djs_modfits.pro -text
 pro/fits/djs_readmany.pro -text
