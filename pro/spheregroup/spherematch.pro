@@ -72,7 +72,12 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
            print,'illegal maxmatch value: '+maxmatch 
            return
        endif
-   endelse 
+   endelse
+
+   ; Set default return values
+   match1 = -1
+   match2 = -1
+   distance12 = 0
 
    if(NOT keyword_set(chunksize)) then chunksize=max([4.*matchlength,0.1])
 
