@@ -3,10 +3,10 @@
 ;   struct_print
 ;
 ; PURPOSE:
-;   Formatted print of a structure to either standard out or to a file.
+;   Formatted print of a structure to standard out, a file, or an array.
 ;
 ; CALLING SEQUENCE:
-;   struct_print, struct, [ lun=, filename= ]
+;   struct_print, struct, [ lun=, filename=, tarray=, /no_head, /html ]
 ;
 ; INPUTS:
 ;   struct     - Structure
@@ -14,13 +14,17 @@
 ; OPTIONAL INPUTS:
 ;   filename   - Output file name; open and close this file
 ;   lun        - LUN number for an output file if one is already open
+;   no_head    - Do not print the header lines that label the columns
+;   html       - If set, then output as an HTML table
 ;
 ; OUTPUTS:
 ;
 ; OPTIONAL OUTPUTS:
+;   tarray     - String array for output
 ;
 ; COMMENTS:
-;   If neither FILENAME or LUN is set, then write to the standard output.
+;   If neither FILENAME or LUN is set and TARRAY is not returned,
+;   then write to the standard output.
 ;
 ; EXAMPLES:
 ;
@@ -32,12 +36,13 @@
 ;   01-Nov-2000  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-pro struct_print, struct, filename=filename, lun=lun
+pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
+ no_head=no_head, html=html
 
    if (keyword_set(filename)) then $
     openw, lun, filename, /get_lun
 
-   if (NOT keyword_set(lun)) then lun = -1
+   if (NOT keyword_set(lun) AND NOT arg_present(tarray)) then lun = -1
 
    fdigit = 5
    ddigit = 7
@@ -49,6 +54,20 @@ pro struct_print, struct, filename=filename, lun=lun
    tags = tag_names(struct)
    ntag = n_elements(tags)
 
+   if (keyword_set(html)) then begin
+      hdr1 = '<TABLE BORDER=1 CELLPADDING=3>'
+      hdr2 = '<TR>'
+      rowsep = '"<TR>",'
+      colsep = '"<TD ALIGN=RIGHT>",'
+      hdrsep = '<TH>'
+      lastline = '</TABLE>'
+   endif else begin
+      hdr1 = ''
+      hdr2 = ''
+      rowsep = ''
+      colsep = ''
+   endelse
+
    ;----------
    ; Construct the header lines and format string
 
@@ -57,9 +76,7 @@ pro struct_print, struct, filename=filename, lun=lun
       for iarr=0L, narr-1 do begin
 
          if (itag EQ 0 AND iarr EQ 0) then begin
-            hdr1 = ''
-            hdr2 = ''
-            format = '('
+            format = '(' + rowsep
          endif else begin
             hdr1 = hdr1 + ' '
             hdr2 = hdr2 + ' '
@@ -102,10 +119,11 @@ pro struct_print, struct, filename=filename, lun=lun
          endelse
 
          schar = strtrim(string(nchar),2)
-         hdr1 = hdr1 + string(thisname, format='(a' + schar + ')')
-         hdr2 = hdr2 + string(replicate('-',nchar), $
-          format='(' + schar + 'a)')
-         format = format + thiscode
+         hdr1 = hdr1 + hdrsep + string(thisname, format='(a' + schar + ')')
+         if (NOT keyword_set(html)) then $
+          hdr2 = hdr2 + string(replicate('-',nchar), $
+           format='(' + schar + 'a)')
+         format = format + colsep + thiscode
 
       endfor
    endfor
@@ -115,14 +133,24 @@ pro struct_print, struct, filename=filename, lun=lun
    ;----------
    ; Now print one row at a time
 
-   printf, lun, hdr1
-   printf, lun, hdr2
-   for irow=0L, nrow-1 do begin
-      printf, lun, struct[irow], format=format
-   endfor
-
-   if (keyword_set(filename)) then $
-    close, lun
+   if (keyword_set(lun)) then begin
+      if (NOT keyword_set(no_head)) then begin
+         printf, lun, hdr1
+         printf, lun, hdr2
+      endif
+      for irow=0L, nrow-1 do begin
+         printf, lun, struct[irow], format=format
+      endfor
+      if (keyword_set(lastline)) then printf, lun, lastline
+      if (keyword_set(filename)) then close, lun
+   endif else begin
+      tarray = strarr(nrow)
+      for irow=0L, nrow-1 do begin
+         tarray[irow] = string(struct[irow], format=format)
+      endfor
+      if (NOT keyword_set(no_head)) then tarray = [hdr1, hdr2, tarray]
+      if (keyword_set(lastline)) then tarray = [tarray, lastline]
+   endelse
 
    return
 end
