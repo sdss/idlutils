@@ -1091,6 +1091,7 @@ src/mangle1.2/wrho.c -text
 src/mangle1.2/wrho.s.f -text
 src/mangle1.2/wrmask.c -text
 src/mangle1.2/wrspher.c -text
+src/mangle1.4/.cvsignore -text
 src/mangle1.4/CHANGES -text
 src/mangle1.4/COPYRIGHT -text
 src/mangle1.4/HELP.unformatted -text
