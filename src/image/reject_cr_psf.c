@@ -27,77 +27,117 @@ int reject_cr_psf(float *image,
                   int xnpix, 
                   int ynpix,
                   float nsig, /* number of sigma above background required */
-                  float psfvals[2], /* psf value at radii of 1 pix and 
-                                       sqrt(2) pix */
+                  float *psfvals, /* psf value at radii of 1 pix and 
+                                     sqrt(2) pix */
                   float cfudge, /* number of sigma inconsistent with
                                    PSF required */
                   float c2fudge, /* fudge factor applied to PSF */
-                  short *rejected)
+                  int *rejected, 
+                  int *ignoremask)
 {
-  float sigmaback[4],back[4],im,ival,lval,invsigma;
-  int i,j,nreject,lastreject;
+  float *sigmaback,*back,imcurr,ival,lval,invsigma,goodback[3][3];
+  int i,j,ip,jp;
+
+  sigmaback=(float *) malloc(4*sizeof(float));
+  back=(float *) malloc(4*sizeof(float));
   
-  nreject=0;
-  lastreject=-1;
   for(j=1;j<ynpix-1;j++) {
     for(i=1;i<xnpix-1;i++) {
       rejected[j*xnpix+i]=0;
-      if(image_ivar[j*xnpix+i]>0.) {
+      if(image_ivar[j*xnpix+i]>0. && ignoremask[j*xnpix+i]==0) {
         invsigma=sqrt(image_ivar[j*xnpix+i]);
-        im=image[j*xnpix+i];
+        imcurr=image[j*xnpix+i];
+        /*
+          printf("%d %d\n",i,j);
+        if(i==127 && j==186) printf("%e\n",imcurr); 
+        */
         
         /* check if it exceeds background for ALL four pairs */
-        ival=invsigma*im;
-        back[0]=0.5*(image[j*xnpix+(i-1)]+image[j*xnpix+(i+1)]);
+        ival=invsigma*imcurr;
+#if 0
+        for(ip=-1;ip<=1;ip++)
+          for(jp=-1;jp<=1;jp++)
+            goodback[jp+1][ip+1]=(float) (image_ivar[(j+jp)*xnpix+(i+ip)]>0.);
+        back[0]=(image[j*xnpix+(i-1)]*goodback[1][0]
+                 +image[j*xnpix+(i+1)]*goodback[1][2])/
+          (goodback[1][0]+goodback[1][2]);
         if(ival<back[0]*invsigma+nsig) continue;
-        back[1]=0.5*(image[(j-1)*xnpix+i]+image[(j+1)*xnpix+i]);
+        back[1]=(image[(j-1)*xnpix+i]*goodback[0][1]+
+                 image[(j+1)*xnpix+i]*goodback[2][1])/
+          (goodback[0][1]+goodback[2][1]);
         if(ival<back[1]*invsigma+nsig) continue;
-        back[2]=0.5*(image[(j-1)*xnpix+(i-1)]+image[(j+1)*xnpix+(i+1)]);
+        back[2]=(image[(j-1)*xnpix+(i-1)]*goodback[0][0]+
+                 image[(j+1)*xnpix+(i+1)]*goodback[2][2])/
+          (goodback[0][0]+goodback[2][2]);
         if(ival<back[2]*invsigma+nsig) continue;
-        back[3]=0.5*(image[(j+1)*xnpix+(i-1)]+image[(j-1)*xnpix+(i+1)]);
+        back[3]=(image[(j+1)*xnpix+(i-1)]*goodback[2][0]+
+                 image[(j-1)*xnpix+(i+1)]*goodback[0][2])/
+          (goodback[2][0]+goodback[0][2]);
         if(ival<back[3]*invsigma+nsig) continue;
+        ival=invsigma*imcurr;
+#else 
+        for(ip=-1;ip<=1;ip++)
+          for(jp=-1;jp<=1;jp++)
+            goodback[jp+1][ip+1]=1;
+        back[0]=(image[j*xnpix+(i-1)]*goodback[1][0]
+                 +image[j*xnpix+(i+1)]*goodback[1][2])/
+          (goodback[1][0]+goodback[1][2]);
+        if(ival<back[0]*invsigma+nsig) continue;
+        back[1]=(image[(j-1)*xnpix+i]*goodback[0][1]+
+                 image[(j+1)*xnpix+i]*goodback[2][1])/
+          (goodback[0][1]+goodback[2][1]);
+        if(ival<back[1]*invsigma+nsig) continue;
+        back[2]=(image[(j-1)*xnpix+(i-1)]*goodback[0][0]+
+                 image[(j+1)*xnpix+(i+1)]*goodback[2][2])/
+          (goodback[0][0]+goodback[2][2]);
+        if(ival<back[2]*invsigma+nsig) continue;
+        back[3]=(image[(j+1)*xnpix+(i-1)]*goodback[2][0]+
+                 image[(j-1)*xnpix+(i+1)]*goodback[0][2])/
+          (goodback[2][0]+goodback[0][2]);
+        if(ival<back[3]*invsigma+nsig) continue;
+#endif
 
         /* if it does, now check if ANY pair violates PSF conditions */
         sigmaback[0]=
-          0.5*sqrt(1./image_ivar[j*xnpix+(i-1)]+ 
-                   1./image_ivar[j*xnpix+(i+1)]);
+          sqrt((goodback[1][0]/(image_ivar[j*xnpix+(i-1)]+1.-goodback[1][0])+ 
+                goodback[1][2]/(image_ivar[j*xnpix+(i+1)]+1.-goodback[1][2]))/
+               (goodback[1][0]+goodback[1][2]));
         lval=(ival-cfudge)*c2fudge*psfvals[0];
         if(lval>invsigma*(back[0]+cfudge*sigmaback[0])) {
-          rejected[j*xnpix+i]=lastreject;
-          lastreject=j*xnpix+i;
+          rejected[j*xnpix+i]=1;
           image[j*xnpix+i]=back[0];
-          nreject++;
           continue;
         }
         sigmaback[1]=
-          0.5*sqrt(1./image_ivar[(j-1)*xnpix+i]+ 
-                   1./image_ivar[(j+1)*xnpix+i]);
+          sqrt((goodback[0][1]/(image_ivar[(j-1)*xnpix+i]+1.-goodback[0][1])+ 
+                goodback[2][1]/(image_ivar[(j+1)*xnpix+i]+1.-goodback[2][1]))/
+               (goodback[0][1]+goodback[2][1]));
         if(lval>invsigma*(back[1]+cfudge*sigmaback[1])) {
-          rejected[j*xnpix+i]=lastreject;
-          lastreject=j*xnpix+i;
+          rejected[j*xnpix+i]=1;
           image[j*xnpix+i]=back[1];
-          nreject++;
           continue;
         }
         sigmaback[2]=
-          0.5*sqrt(1./image_ivar[(j-1)*xnpix+(i-1)]+ 
-                   1./image_ivar[(j+1)*xnpix+(i+1)]);
+          sqrt((goodback[0][0]/(image_ivar[(j-1)*xnpix+(i-1)]+1.- 
+                                goodback[0][0])+ 
+                goodback[2][2]/(image_ivar[(j+1)*xnpix+(i+1)]+1.- 
+                                goodback[2][2]))/
+               (goodback[0][0]+goodback[2][2]));
         lval=(ival-cfudge)*c2fudge*psfvals[1];
         if(lval>invsigma*(back[2]+cfudge*sigmaback[2])) {
-          rejected[j*xnpix+i]=lastreject;
-          lastreject=j*xnpix+i;
+          rejected[j*xnpix+i]=1;
           image[j*xnpix+i]=back[2];
-          nreject++;
           continue;
         }
         sigmaback[3]=
-          0.5*sqrt(1./image_ivar[(j+1)*xnpix+(i-1)]+ 
-                   1./image_ivar[(j-1)*xnpix+(i+1)]);
+          sqrt((goodback[2][0]/(image_ivar[(j+1)*xnpix+(i-1)]+1.- 
+                                goodback[2][0])+ 
+                goodback[0][2]/(image_ivar[(j-1)*xnpix+(i+1)]+1.- 
+                                goodback[0][2]))/
+               (goodback[2][0]+goodback[0][2]));
         if(lval>invsigma*(back[3]+cfudge*sigmaback[3])) {
-          rejected[j*xnpix+i]=lastreject;
-          lastreject=j*xnpix+i;
+          rejected[j*xnpix+i]=1;
           image[j*xnpix+i]=back[3];
-          nreject++;
           continue;
         }
         
@@ -105,6 +145,8 @@ int reject_cr_psf(float *image,
     } /* end for j */
   } /* end for i */
   
+  FREEVEC(sigmaback);
+  FREEVEC(back);
   return(0);
   
 } /* end photfrac */

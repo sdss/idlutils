@@ -36,7 +36,7 @@ OBJECTS = \
 all : $(LIB)/libimage.$(SO_EXT)
 
 $(LIB)/libimage.$(SO_EXT): $(OBJECTS) ph.h export.h
-	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS)
+	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) -lm
 #	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) $(MAKE_FTNLIB)
 #	nm -s ../lib/libimage.$(SO_EXT)
 

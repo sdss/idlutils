@@ -9,8 +9,8 @@ static void free_memory()
 }
 
 int reject_cr_psf(float *image, float *image_ivar, int xnpix, int ynpix,
-                  float nsig, float psfvals[2], float cfudge, float c2fudge,
-                  short *rejected);
+                  float nsig, float *psfvals, float cfudge, float c2fudge,
+                  int *rejected, int *ignoremask);
 
 /********************************************************************/
 IDL_LONG idl_reject_cr_psf(int      argc,
@@ -20,24 +20,26 @@ IDL_LONG idl_reject_cr_psf(int      argc,
 	IDL_LONG retval=1;
 
   float *image, *image_ivar, nsig, *psfvals, cfudge, c2fudge;
-  short *rejected;
-  int xnpix, ynpix;
+  IDL_LONG *rejected, *ignoremask;
+  IDL_LONG xnpix, ynpix;
 
 	/* 0. allocate pointers from IDL */
 	i=0;
 	image=((float *)argv[i]); i++;
 	image_ivar=((float *)argv[i]); i++;
-	xnpix=*((int *)argv[i]); i++;
-	ynpix=*((int *)argv[i]); i++;
+	xnpix=*((IDL_LONG *)argv[i]); i++;
+	ynpix=*((IDL_LONG *)argv[i]); i++;
 	nsig=*(float *)argv[i]; i++;
 	psfvals=(float *)argv[i]; i++;
 	cfudge=*((float *)argv[i]); i++;
   c2fudge=*(float *)argv[i]; i++;
-	rejected=((short *)argv[i]); i++;
+	rejected=((IDL_LONG *)argv[i]); i++;
+	ignoremask=((IDL_LONG *)argv[i]); i++;
 	
 	/* 1. run the fitting routine */
-	retval=(IDL_LONG) reject_cr_psf(image,image_ivar,xnpix,ynpix,
-                                  nsig,psfvals,cfudge,c2fudge,rejected);
+	retval=(IDL_LONG) reject_cr_psf(image,image_ivar,(int) xnpix,(int) ynpix,
+                                  nsig,psfvals,cfudge,c2fudge,(int *)rejected, 
+                                  (int *)ignoremask);
   
 	/* 2. free memory and leave */
 	free_memory();
