@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   yanny_read, filename, [ pdata, hdr=hdr, enums=enums, structs=structs, $
-;    /anonymous, /quick ]
+;    /anonymous, /quick, errcode= ]
 ;
 ; INPUTS:
 ;   filename   - Input file name for Yanny parameter file
@@ -29,7 +29,9 @@
 ;                keyword to avoid possible conflicts between named structures
 ;                that are actually different.
 ;   quick      - Quicker read using READF, but fails if continuation lines
-;                are present.
+;                are present.  However, /QUICK must be used if there are any
+;                lines longer than 1023 characters (see bug section below).
+;   errcode    - Returns as non-zero if there was an error reading the file.
 ;
 ; COMMENTS:
 ;   Return 0's if the file does not exist.
@@ -46,7 +48,7 @@
 ;   is a backslash.  One can use such backslashes in Yanny files to indicate
 ;   a continuation of that line onto the next.  For this reason, I wrote
 ;   yanny_readstring as a replacement, though this will only work if all
-;   lines are <= 255 characters.
+;   lines are <= 1023 characters.
 ;
 ;   The reading could probably be sped up by setting a format string for
 ;   each structure to use in the read.
@@ -130,15 +132,19 @@ end
 ;------------------------------------------------------------------------------
 ; Procedure to read the next line from a file into a string, but work even
 ; if the last non-whitespace character is a backslash (READF will fail on
-; that).  Note that the line cannot be more than 255 characters long.
+; that).  Note that the line cannot be more than 1023 characters long.
 
 pro yanny_readstring, ilun, sline
 
-   sarray = strarr(255)
-   readf, ilun, sarray, format='(255a1)'
+   sarray = strarr(1023)
+   readf, ilun, sarray, format='(1023a1)'
 
-   sline = string(' ', format='(a255)')
-   for i=0, 254 do strput, sline, sarray[i], i
+   sline79='                                                                              '
+   sline = sline79+sline79+sline79+sline79+sline79+sline79+sline79+sline79 $
+    +sline79+sline79+sline79+sline79+sline79 ; actually, 1027 characters long
+;   sline = string(' ', format='(a1023)') ; This format cannot be larger
+                                          ; than 255 characters.
+   for i=0, 1022 do strput, sline, sarray[i], i
 
 end
 ;------------------------------------------------------------------------------
@@ -264,7 +270,7 @@ function yanny_getwords, sline
 end
 ;------------------------------------------------------------------------------
 pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
- anonymous=anonymous, quick=quick
+ anonymous=anonymous, quick=quick, errcode=errcode
 
    if (N_params() LT 1) then begin
       print, 'Syntax - yanny_read, filename, [ pdata, hdr=hdr, enums=enums, $
@@ -295,6 +301,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    hdr = 0
    enums = 0
    structs = 0
+   errcode = 0
 
    ; List of all possible structures
    pcount = 0       ; Count of structure types defined
@@ -441,6 +448,17 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                for itag=0, ntag-1 do begin
                   ; This tag could be an array - see how big it is
                   sz = N_elements( (*pdata[idat])[0].(itag) )
+
+                  ; Error-checking code below
+                  if (i+sz GT nword) then begin
+                     splog, 'ABORT: Invalid Yanny file!'
+                     close, ilun
+                     free_lun, ilun
+                     yanny_free, pdata
+                     errcode = -1L
+                     return
+                  endif
+
                   for j=0, sz-1 do begin
                      (*pdata[idat])[pnumel[idat]].(itag)[j] = ww[i]
                      i = i + 1
