@@ -6,10 +6,6 @@
 ; PURPOSE:
 ;   Modified version of OPLOT.
 ;
-;   Allows COLOR, PSYM, and SYMSIZE to be vectors.
-;   Also allows COLOR to be string descriptions of eight possible colors.
-;   If string descriptors are used, then load a basic 8-color color table.
-;
 ; CALLING SEQUENCE:
 ;   djs_oplot, [x,] y
 ;
@@ -18,6 +14,11 @@
 ;   y:
 ;
 ; OUTPUTS:
+;
+; COMMENTS:
+;   Allows COLOR, PSYM, and SYMSIZE to be vectors.
+;   Also allows COLOR to be string descriptions of eight possible colors.
+;   If string descriptors are used, then load a basic 8-color color table.
 ;
 ; PROCEDURES CALLED:
 ;   djs_icolor()
@@ -54,10 +55,10 @@ pro djs_oplot, x, y, $
        _EXTRA=KeywordsForPlot
    endif else begin
       for ipt=0L, npt-1 do begin
-         color1 = icolor(ipt MOD ncolor)
-         psym1 = psym(ipt MOD npsym)
-         symsize1 = symsize(ipt MOD nsize)
-         oplot, [xtmp(ipt)], [ytmp(ipt)], $
+         color1 = icolor[ipt MOD ncolor]
+         psym1 = psym[ipt MOD npsym]
+         symsize1 = symsize[ipt MOD nsize]
+         oplot, [xtmp[ipt]], [ytmp[ipt]], $
           color=color1, psym=psym1, symsize=symsize1, $
           _EXTRA=KeywordsForPlot
       endfor
