@@ -127,7 +127,7 @@ if not keyword_set(nobox) then begin
     box_y= 0.5*[-1,1,1,-1,-1]
     box_xc= mean(!X.CRANGE)
     box_yc= mean(!Y.CRANGE)
-    oplot, dxbin*box_x+box_xc,dybin*box_y+box_yc,psym=0
+    oplot, dxbin*box_x+box_xc,dybin*box_y+box_yc,psym=0,thick=0.5*!P.THICK
 endif
 
 ; plot number perimeter
