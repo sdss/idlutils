@@ -1,3 +1,22 @@
+;+
+; NAME:
+;	catfits
+; PURPOSE:
+;       Read and concatenate a bunch of binary FITS tables
+;
+; CALLING SEQUENCE:
+;	struc = catfits(flist)
+;
+; INPUTS:
+;       filst  - string array of FITS filenames to read and concatenate
+;		for each column of data to be read.  Allowed letters are 
+; OUTPUTS:
+;	struc  - IDL structure
+;
+; REVISION HISTORY:
+;	Written  2001-Nov-28 D. Finkbeiner
+;-
+
 function catfits, flist
   
   n = n_elements(flist)

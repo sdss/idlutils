@@ -1,3 +1,34 @@
+;+
+; NAME:
+;   poly_iter
+;
+; PURPOSE:
+;   Calls IDL poly_fit iteratively with outlier rejection
+;
+; CALLING SEQUENCE:
+;   poly_iter, x, y, ndeg, nsig, yfit, coeff=coeff
+;
+; INPUTS:
+;   x, y    - indep, dep variables
+;   ndeg    - degree of polynomial 
+;   yfit    - fit y at given x values
+;
+; OUTPUTS:
+;   coeff   - array of coefficients
+;
+; COMMENTS:
+;
+; EXAMPLES:
+;
+; BUGS:
+;
+; PROCEDURES CALLED:
+;   poly_fit
+;
+; REVISION HISTORY:
+;   moved from hoggpt 10-Jan-2002
+;-
+;------------------------------------------------------------------------------
 PRO poly_iter, x, y, ndeg, nsig, yfit, coeff=coeff
 
   good = bytarr(n_elements(x))+1B
