@@ -50,6 +50,7 @@
 ; BUGS:
 ;
 ; PROCEDURES CALLED:
+;   yanny_free
 ;   yanny_read
 ;
 ; REVISION HISTORY:
@@ -79,6 +80,8 @@ function yanny_readone, filename, selectname, $
    endif else begin
       if (keyword_set(pp)) then retval = *pp[0]
    endelse
+
+   yanny_free, pp
 
    return, retval
 end
