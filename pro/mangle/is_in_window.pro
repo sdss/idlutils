@@ -21,14 +21,10 @@
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function is_in_window, xyz, polygons, radec=radec, ncaps=ncaps, $
+function is_in_window, polygons, ra=ra, dec=dec, ncaps=ncaps, $
                        in_polygon=in_polygon
 
-if(keyword_set(radec)) then $
-  nxyz=n_elements(xyz)/2 $ 
-else $
-  nxyz=n_elements(xyz)/3
-
+nxyz=n_elements(ra) 
 in_window=lonarr(nxyz)
 in_polygon=lonarr(nxyz)-1L
 curr_polygon=0L
@@ -36,8 +32,9 @@ while(curr_polygon lt n_elements(polygons)) do begin
     indx_not_in=where(in_polygon eq -1L,count_not_in)
     if(count_not_in gt 0) then begin
         indx_in_curr_polygon= $
-          where(is_in_polygon(xyz[*,indx_not_in],polygons[curr_polygon], $
-                              radec=radec,ncaps=ncaps),count_in_curr_polygon)
+          where(is_in_polygon(ra=ra[indx_not_in],dec=dec[indx_not_in], $
+                              polygons[curr_polygon], ncaps=ncaps), $
+                count_in_curr_polygon)
         if(count_in_curr_polygon gt 0) then $
           in_polygon[indx_not_in[indx_in_curr_polygon]]=curr_polygon
     endif

@@ -20,10 +20,12 @@
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function is_in_cap, xyz, cap, radec=radec
+function is_in_cap, ra=ra, dec=dec, xyz=xyz, cap
 
-usexyz=xyz
-if(keyword_set(radec)) then usexyz=angles_to_x(xyz[0,*],(90.D)-xyz[1,*])
+if(keyword_set(xyz)) then $
+  usexyz=xyz $
+else $
+  usexyz=angles_to_x(ra,(90.D)-dec)
 
 nxyz=n_elements(usexyz)/3L
 dotp=(transpose(reform(usexyz,3,nxyz))#reform(cap.x,3,1))

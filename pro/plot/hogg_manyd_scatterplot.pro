@@ -150,6 +150,7 @@ for id2=ydimen-1L,0L,-1 do begin
                       weight=weight, $
                       xrange=range[*,d1],yrange=range[*,d2], $
                       xnpix=xnpix,ynpix=ynpix, grid=grid, $
+                      internal_weight=internal_weight, $
                       _EXTRA=KeywordsForHoggScatterplot
                     if(n_elements(manyd) ne xnpix*ynpix*xdimen*ydimen) then $
                       manyd=dblarr(xnpix,ynpix,xdimen,ydimen)

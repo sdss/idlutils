@@ -35,6 +35,7 @@ pro hogg_manyd_meanplot, weight,point,zdim,psfilename, $
                          default_font=default_font, $
                          manyd_mean=manyd_mean, $
                          input_mean=input_mean, $
+                         onedrange=onedrange, $
                          _EXTRA=KeywordsForHoggMeanplot
 
 ; check dimensions
@@ -198,7 +199,7 @@ for id2=ydimen-1L,0L,-1 do begin
                   bin_mean=bin_mean,bin_number=bin_number, $
                   bin_scatter=bin_scatter, bin_weight=bin_weight, $
                   input_mean=input_mean, xrange=range[*,d1], $
-                  _EXTRA=KeywordsForHoggMeanplot
+                  yrange=onedrange, _EXTRA=KeywordsForHoggMeanplot
                 if(NOT keyword_set(input_mean)) then begin
                     manyd_mean[id1,id2].mean=ptr_new(bin_mean)
                     manyd_mean[id1,id2].weight=ptr_new(bin_weight)

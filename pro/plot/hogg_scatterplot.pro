@@ -26,6 +26,7 @@
 ; KEYWORDS:
 ;   conditional - normalize each column separately
 ;   labelcont   - label contours with numbers
+;   internal_weight - use only the points in the image to determine contours
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
@@ -57,6 +58,7 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       exponent=exponent, $
                       satfrac=satfrac, $
                       darkest=darkest, $
+                      internal_weight=internal_weight, $
                       conditional=conditional, $
                       labelcont=labelcont, $
                       xvec=xvec,yvec=yvec,grid=grid, $
@@ -68,8 +70,8 @@ ndata= n_elements(xxx)
 if not keyword_set(weight) then weight= dblarr(ndata)+1.0
 if not keyword_set(xnpix) then xnpix= ceil(0.3*sqrt(ndata)) > 10
 if not keyword_set(ynpix) then ynpix= ceil(0.3*sqrt(ndata)) > 10
-if not keyword_set(xrange) then xrange= minmax(x)
-if not keyword_set(yrange) then yrange= minmax(y)
+if not keyword_set(xrange) then xrange= minmax(xxx)
+if not keyword_set(yrange) then yrange= minmax(yyy)
 if not keyword_set(levels) then levels= errorf(0.5*(dindgen(3)+1))
 if not keyword_set(quantiles) then quantiles= [0.25,0.5,0.75]
 nquantiles= n_elements(quantiles)
@@ -127,7 +129,10 @@ endif else begin
     cumimage[cumindex]= total(grid[cumindex],/cumulative) 
 ; renormalize the cumulated image so it really represents fractions of the
 ; *total* weight
-    cumimage= cumimage/total(weight)
+    if(NOT keyword_set(internal_weight)) then $
+      cumimage= cumimage/total(weight) $
+    else $
+      cumimage= cumimage/total(grid)
 endelse
 
 ; scale greyscale

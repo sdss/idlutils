@@ -126,6 +126,12 @@ maskbits RESOLVE  12 FULL_MARGINAL
 
 #------------------------------------------------------------------------------
 
+maskbits VAGC_SELECT  0 TILED
+maskbits VAGC_SELECT  1 PLATEHOLE
+maskbits VAGC_SELECT  2 MAIN
+
+#------------------------------------------------------------------------------
+
 maskbits OBJECT1 0 CANONICAL_CENTER 	
 maskbits OBJECT1 1 BRIGHT 	
 maskbits OBJECT1 2 EDGE 	

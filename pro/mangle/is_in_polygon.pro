@@ -21,13 +21,13 @@
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function is_in_polygon, xyz, polygon, radec=radec, ncaps=ncaps
+function is_in_polygon, ra=ra, dec=dec, xyz=xyz, polygon, ncaps=ncaps
 
 usencaps=polygon.ncaps
 if(keyword_set(ncaps)) then usencaps=ncaps < polygon.ncaps
 
-if(keyword_set(radec)) then $
-  nxyz=n_elements(xyz)/2 $ 
+if(keyword_set(ra)) then $
+  nxyz=n_elements(ra) $ 
 else $
   nxyz=n_elements(xyz)/3
 
@@ -35,7 +35,7 @@ in_polygon=lonarr(nxyz)+1L
 for icap=0L, usencaps-1L do begin 
     if(is_cap_used(polygon.use_caps,icap)) then $
       in_polygon=in_polygon and $
-      (is_in_cap(xyz,(*polygon.caps)[icap],radec=radec))
+      (is_in_cap(ra=ra,dec=dec,xyz=xyz,(*polygon.caps)[icap]))
 endfor
 
 return,in_polygon

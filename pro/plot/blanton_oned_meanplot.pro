@@ -21,7 +21,7 @@
 ;   2003-01-08  written - Hogg
 ;-
 pro blanton_oned_meanplot, x,z,weight=weight, $
-                           xrange=xrange,dxbin=dxbin, $
+                           xrange=xrange,yrange=yrange, dxbin=dxbin, $
                            levels=levels, axis_char_scale=axis_char_scale, $
                            maskonly=maskonly, $
                            minnum=minnum, $
@@ -86,13 +86,19 @@ temp= minmax(bin_mean[limits_indx])
 if not keyword_set(levels) then $
   levels= temp[0]+(temp[1]-temp[0])/factor*dindgen(ceil(factor+1.0))
 nlevels= n_elements(levels)
+dlevels=(levels[nlevels-1]-levels[0])/double(nlevels)
+declevels=strtrim(string((-long(alog10(dlevels)-1.)) > 0),2)
 
 ; set x and y ranges
-if not keyword_set(xrange) then begin
-    xrange= minmax(xbin[limits_indx])
-endif
-yrange=[-0.1,1.1*max(bin_mean[limits_indx])]
-
+; OK, the defaults are a little funky. so sue me.
+if not keyword_set(xrange) then $
+  xrange= minmax(xbin[limits_indx])
+if not keyword_set(yrange) then $
+  yrange=[(1.1*min(bin_mean[limits_indx])) < $
+          (-0.1*max(bin_mean[limits_indx])), $
+          (1.1*max(bin_mean[limits_indx])) > $
+          (0.1*min(bin_mean[limits_indx]))]
+    
 ; set plot range
 nticks=6/axis_char_scale
 !X.TICKINTERVAL= hogg_interval(xrange,nticks=nticks)
@@ -132,26 +138,67 @@ if(not keyword_set(nodata)) then begin
       sign=-1
     for i=0L, nlevels-1L do begin
         icut=where((bin_mean[limits_indx[0:nlimits_indx-2]] lt levels[i] and $
-                    bin_mean[limits_indx[1:nlimits_indx-1]] $
-                    gt levels[i]) or $
+                    bin_mean[limits_indx[1:nlimits_indx-1]] gt levels[i]) or $
                    (bin_mean[limits_indx[0:nlimits_indx-2]] gt levels[i] and $
-                    bin_mean[limits_indx[1:nlimits_indx-1]] $
-                    lt levels[i]),ncut)
+                    bin_mean[limits_indx[1:nlimits_indx-1]] lt levels[i]), $
+                   ncut)
+        if(ncut gt 0) then begin
+            xlocs=xbin[limits_indx[icut]]+ $
+              (xbin[limits_indx[icut+1]]-xbin[limits_indx[icut]])* $
+              (levels[i]-bin_mean[limits_indx[icut]])/ $
+            (bin_mean[limits_indx[icut+1]]-bin_mean[limits_indx[icut]])
+            drawn=(sign*xlocs gt sign*xrange[0] and $
+                   sign*xlocs lt sign*xrange[1]) 
+        endif
+        labeled=0
         for j=0L, ncut-1L do begin
-            xloc=xbin[limits_indx[icut[j]]]+ $
-              (xbin[limits_indx[icut[j]+1]]-xbin[limits_indx[icut[j]]])* $
-              (levels[i]-bin_mean[limits_indx[icut[j]]])/ $
-              (bin_mean[limits_indx[icut[j]+1]]-bin_mean[limits_indx[icut[j]]])
-            if(sign*xloc gt sign*xrange[0] and sign*xloc lt sign*xrange[1]) $
-              then $
-              begin
+            xloc=xlocs[j]
+            if(drawn[j]) then begin
                 oplot,xloc+0.5*dxbin*[-1.,1.], [levels[i],levels[i]]
-                if(j eq 0 and bin_mean[limits_indx[icut[j]]] lt levels[i]) $
-                  then $
-                  djs_xyouts,xloc-sign*0.5*dxbin, levels[i], $
-                  strtrim(string(levels[i],format='(f20.1)'),2), $ 
-                  alignment=1., charsize=0.8, noclip=0
-            endif
+                if(NOT labeled) then begin 
+                    outlabel= $
+                      strtrim(string(levels[i], $
+                                     format='(f20.'+declevels+')'),2)
+                    nchar=strlen(outlabel)
+                    label_char_scale=0.8
+                    sizefudge=70.
+                    outsize=nchar*label_char_scale/!X.S[1]/sizefudge
+                    ledge=xloc-!X.CRANGE[0]
+                    redge=!X.CRANGE[1]-xloc
+                    if(sign*ledge gt sign*outsize+0.5*dxbin) then begin
+                        overlapping=0
+                        for k=0, j-1L do $
+                          if(xloc-sign*0.5*dxbin-outsize lt $
+                             xlocs[k]+sign*0.5*dxbin and $
+                             drawn[k] gt 0) $
+                          then overlapping=1
+                        if(NOT overlapping) then begin
+                            djs_xyouts,xloc-sign*0.5*dxbin, levels[i], $
+                              outlabel, alignment=1., $
+                              charsize=label_char_scale, $
+                              noclip=0, color=djs_icolor('black')
+                            labeled=1
+                        endif
+                    endif 
+                    if(NOT labeled) then begin
+                        if(sign*redge gt sign*outsize+0.5*dxbin) then begin
+                            overlapping=0
+                            for k=j+1L, ncut-1L do $
+                              if(xloc+sign*0.5*dxbin+outsize gt $
+                                 xlocs[k]-sign*0.5*dxbin and $
+                                 drawn[k] gt 0) $
+                              then overlapping=1
+                            if(NOT overlapping) then begin
+                                djs_xyouts,xloc+sign*0.5*dxbin, levels[i], $
+                                  ' '+outlabel, alignment=0., $
+                                  charsize=label_char_scale, noclip=0, $
+                                  color=djs_icolor('black')
+                                labeled=1
+                            endif
+                        endif
+                    endif
+                endif
+            endif 
         endfor
     endfor
 endif
