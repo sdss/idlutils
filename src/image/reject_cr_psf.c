@@ -54,7 +54,7 @@ int reject_cr_psf(float *image,
         
         /* check if it exceeds background for ALL four pairs */
         ival=invsigma*imcurr;
-#if 0
+#if 1
         for(ip=-1;ip<=1;ip++)
           for(jp=-1;jp<=1;jp++)
             goodback[jp+1][ip+1]=(float) (image_ivar[(j+jp)*xnpix+(i+ip)]>0.);
