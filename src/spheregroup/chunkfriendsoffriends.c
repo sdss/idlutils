@@ -108,6 +108,7 @@ chunkfriendsoffriends(double x[],
 		} /* end if */
 	} /* end for i */
 	free((char *) renumberedCFOF);
+	renumberedCFOF=NULL;
 
 	/* Now set up clumps and llclumps based on inGroup() */
 	for(i=0;i<nTargets;i++)

@@ -104,7 +104,7 @@ IDL_LONG spheregroup
 			 iclump++;
 		 } /* end if */
 	 } /* end for i */
-	 free((char *) renumbered);
+	 FREEVEC(renumbered);
 	 
 	 /* 5b. reset the index lists */
 	 for(i=0;i<npoints;i++) 
