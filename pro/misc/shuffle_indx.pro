@@ -17,12 +17,12 @@
 ;-
 function shuffle_indx, num, num_sub=num_sub, seed=seed
 
-if(n_elements(num_sub) eq 0) then num_sub=num
-
 if(n_params() ne 1) then begin
     print, 'Usage: indx= shuffle_indx(num [, seed=, num_sub= ])'
     return, -1
 endif
+
+if(n_elements(num_sub) eq 0) then num_sub=num
 
 indx=lindgen(num)
 ran=randomu(seed,num_sub)
