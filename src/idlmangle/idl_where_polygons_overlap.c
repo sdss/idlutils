@@ -111,7 +111,7 @@ IDL_LONG idl_where_polygons_overlap
 {
 	polygon *poly;
   IDL_LONG ncaps,maxncaps, nmatch, *matchncaps, *ismatch;
-  double *x, *cm, *xmatch, *cmmatch;
+  double *x, *cm, *xmatch, *cmmatch, *areamatch;
 	
 	IDL_LONG i,j,k;
 	IDL_LONG retval=1;
@@ -132,6 +132,7 @@ IDL_LONG idl_where_polygons_overlap
   nmatch=*((IDL_LONG *) argv[i]); i++;
   matchncaps=((IDL_LONG *) argv[i]); i++;
   ismatch=((IDL_LONG *) argv[i]); i++;
+  areamatch=((double *) argv[i]); i++;
 
 	poly=new_poly(ncaps+maxncaps);
 
@@ -148,8 +149,8 @@ IDL_LONG idl_where_polygons_overlap
         poly->rp[ncaps+j][k]=xmatch[i*maxncaps*3+j*3+k];
     }
     trim_poly_ez(poly);
-    retval=garea(poly, &tol, verbose, &area);
-    if(area>0.) 
+    retval=garea(poly, &tol, verbose, &(areamatch[i]));
+    if(areamatch[i]>0.) 
       ismatch[i]=1; 
     else 
       ismatch[i]=0; 

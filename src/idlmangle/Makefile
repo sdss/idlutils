@@ -20,6 +20,7 @@ OBJECTS = \
 	idl_garea.o \
 	idl_where_polygons_overlap.o \
 	idl_vmid.o \
+	idl_vmidc.o \
 	idl_gverts.o 
 
 all : $(LIB)/libidlmangle.$(SO_EXT) 
