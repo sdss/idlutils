@@ -802,6 +802,7 @@ pro/fits/sxcombinepar.pro -text
 pro/healpix/alm2healpix.pro -text
 pro/healpix/atv_healcart_ind.pro -text
 pro/healpix/dpf_nest2ring.pro -text
+pro/healpix/dpf_pix2ang_nest.pro -text
 pro/healpix/dpf_pix2ang_ring.pro -text
 pro/healpix/heal_rebin.pro -text
 pro/healpix/heal_smooth.pro -text
