@@ -69,7 +69,6 @@
 ;   hip_epoch
 ;   mrdfits()
 ;   mwrfits
-;   numlines()
 ;   radec_to_munu
 ;   splog
 ;   tycho_epoch
@@ -128,7 +127,8 @@ pro tyc_rdindex, tyc_dir=tyc_dir
    ;----------
    ; Read the entire Tycho index file into a byte array
 
-   nline = numlines(indfile)
+;   nline = numlines(indfile) ; NUMLINES fails if the index file is compressed
+   nline = 9538
    splog, 'Reading Tycho index file ' + indfile
    barr = bytarr(43,nline)
    tmpString = ''
@@ -208,8 +208,13 @@ function tyc_readascii, filename, range=range1, columns=columns
    ;----------
    ; Read a single Tycho data file into a byte array
 
+   if (thisfile NE 'tyc2_19') then expectlines = 127000L $
+    else expectlines = 126913L
+;  NUMLINES fails if the index file is compressed
+;   if (keyword_set(range1)) then range = range1 $
+;    else range = [0L, numlines(thisfile)-1]
    if (keyword_set(range1)) then range = range1 $
-    else range = [0L, numlines(thisfile)-1]
+    else range = [0L, expectlines-1]
    nline = range[1] - range[0] + 1
    splog, 'Reading Tycho data file ' + thisfile + ' RANGE=', $
     range[0], range[1]
