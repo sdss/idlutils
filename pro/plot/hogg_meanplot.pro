@@ -21,6 +21,9 @@
 ;                 default 100
 ;   c_colors    - fill colors
 ;   c_thick     - contour line thicknesses
+;   axis_char_scale - scale to apply to axis labels
+;   nearest     - take mean over nearest few points based on this number
+;                 (instead of a fixed smoothing scale)
 ; KEYWORDS:
 ;   nofill      - don't fill the contours with color
 ;   noperimeter - don't plot contour at minnum
@@ -29,9 +32,17 @@
 ;   nodata      - don't plot anything other than axes
 ;   maskonly    - plot only the minnum mask
 ;   nocontourlabels  - don't label the contours
-; OUTPUTS:
-; BUGS:
-;   many undocumented outputs
+;   input_mean  - don't recalculate means, use input in bin_mean
+;   overplot    - don't remake axes, just plot over
+; OPTIONAL INPUT/OUTPUTS:
+;   bin_mean    - calculated mean value (or input mean value if 
+;                 /input_mean set) in each bin
+;   bin_scatter - calculated scatter around the mean in each bin
+;   bin_weight  - total weight in each bin
+;   bin_number  - total number of data points in each bin
+; COMMENTS:
+;   "nearest" input should be used with caution --- this is generally
+;     a BAD way to smooth!
 ; REVISION HISTORY:
 ;   2003-01-08  written - Hogg
 ;-
