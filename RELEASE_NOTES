@@ -1,11 +1,15 @@
 
 DUSTPLOT: Checking in this old proc for making SFD map figures.
+PLOT_POLY: Use SPLOT routine.
 POPULATE_IMAGE: If IMAGE is type DOUBLE, then do the assignments in
                double-precision.
 SPHEREMATCH: Some memory-saving changes by Blanton.
 
+data/sdss/sdssMaskbits.par: Change IMAGE_STATUS bit from "CLOUDS" to "CLOUDY".
 src/image/pop_image.c: A double-precision version of the code has been
                added to support the double-precision option in POPULATE_IMAGE.
+src/mangle1.4/src/Makefile: Add snap.
+src/mangle1.4/src/mrb_snap.c: New routine.
 
 -------------------------------------------------------------------------------
 v4_10_6 (Oct 15, 2003)
