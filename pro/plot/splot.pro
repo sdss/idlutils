@@ -32,7 +32,9 @@
 ;   readfits
 ;
 ; INTERNAL SUPPORT ROUTINES:
+;   gausspix
 ;   splot_startup
+;   splot_clearkeylist
 ;   splot_displayall
 ;   splot_readfits
 ;   splot_writetiff
@@ -64,10 +66,33 @@
 ;   28-Sep-1999  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
+; Routine to evaluate a gaussian function integrated over a pixel of width 1,
+; plus any number of polynomial terms for a background level
+;    A[0] = center of the Gaussian
+;    A[1] = sigma width of the Ith Gaussian
+;    A[2] = normalization of the Gaussian
+;    A[3...] = polynomial coefficients for background terms
+
+pro gausspix, x, a, f, pder
+
+   ncoeff = N_elements(a)
+   f = a[2] * a[1] * (gaussint((x+0.5-a[0])/a[1]) -gaussint((x-0.5-a[0])/a[1]))
+
+   if (ncoeff GT 3) then begin
+      f = f + poly(x, a[3:ncoeff-1])
+   endif
+
+   return
+end
+
+;------------------------------------------------------------------------------
+
 pro splot_startup
 
    common splot_state, state
    common splot_pdata, pdata, ptext, phistory
+
+   keylist = { key:' ', x:0.0, y:0.0 }
 
    state = {                     $
     base_id: 0L,                 $ ; ID of top-level base
@@ -78,7 +103,10 @@ pro splot_startup
     location_bar_id: 0L        , $ ; ID of (x,y,value) label
     xrange_text_id: 0L         , $ ; ID of XRANGE= widget
     yrange_text_id: 0L         , $ ; ID of YRANGE= widget
+    comments_text_id: 0L       , $ ; ID of comments output widget
     keyboard_text_id: 0L       , $ ; ID of keyboard input widget
+    nkey: 0                    , $ ; Number of elements in keylist
+    keylist: replicate(keylist,2), $ ; Record of keystrokes + cursor in plot
     xrange: [0.0,1.0]          , $ ; X range of plot window
     yrange: [0.0,1.0]          , $ ; Y range of plot window
     position: [0.15,0.15,0.95,0.95], $ ; POSITION for PLOT procedure
@@ -179,11 +207,16 @@ pro splot_startup
               uvalue = 'draw_base', $
               frame = 2)
 
-   tmp_string = '                         '
-   state.location_bar_id = $
-    widget_label (info_base, $
+   tmp_string = string('',format='(a30)')
+   state.location_bar_id = widget_label(info_base, $
                 value = tmp_string,  $
-                uvalue = 'location_bar',  frame = 1)
+                uvalue = 'location_bar', frame=1)
+
+   state.comments_text_id = widget_label(info_base, $
+;           value = '', $
+           value = tmp_string, $
+           uvalue='comments_text', $
+           xsize=state.draw_window_size[0]-20, frame=1)
 
    state.keyboard_text_id =  widget_text(button_base2, $
               /all_events, $
@@ -229,6 +262,17 @@ pro splot_startup
 
    xmanager, 'splot', state.base_id, /no_block
 
+end
+
+;------------------------------------------------------------------------------
+
+pro splot_clearkeylist
+
+   common splot_state
+
+   state.nkey = 0
+   state.keylist.key = ' '
+   return
 end
 
 ;------------------------------------------------------------------------------
@@ -323,8 +367,7 @@ pro splot_gettrack
    state.mphys[1] = $
     (state.mouse[1] - ydev0) * yphysize / ydevsize + state.yrange[0]
 
-   loc_string = strcompress( string(state.mphys[0], state.mphys[1], $
-    format='(F,F)') )
+   loc_string = strcompress( string(state.mphys[0], state.mphys[1]) )
 
    widget_control, state.location_bar_id, set_value=loc_string
 
@@ -419,6 +462,14 @@ pro splot_event, event
 
    'keyboard_text': begin  ; keyboard input with mouse in display window
       eventchar = string(event.ch)
+
+      if (state.nkey LT N_elements(state.keylist)) then begin
+         state.keylist[state.nkey].key = eventchar
+         state.keylist[state.nkey].x = state.mphys[0]
+         state.keylist[state.nkey].y = state.mphys[1]
+         state.nkey = state.nkey + 1
+      endif
+
       case eventchar of
          '1': splot_move_cursor, eventchar
          '2': splot_move_cursor, eventchar
@@ -428,7 +479,7 @@ pro splot_event, event
          '7': splot_move_cursor, eventchar
          '8': splot_move_cursor, eventchar
          '9': splot_move_cursor, eventchar
-         'g': splot_gaussfit ; ???
+         'g': splot_gaussfit
          else:  ;any other key press does nothing
       endcase
       widget_control, state.keyboard_text_id, /clear_events
@@ -810,12 +861,46 @@ end
 pro splot_gaussfit
 
    common splot_state
+   common splot_pdata
 
-widget_control, event.id, get_uvalue = uvalue
+   i = where(state.keylist.key EQ 'g', ct)
+   if (ct EQ 1) then begin
+      widget_control, state.comments_text_id, $
+       set_value='GAUSSFIT: Press g at other side of feature to fit'
+   endif else if (ct EQ 2) then begin
+      ; Select all data points in the first PDATA array within the
+      ; selected X boundaries.
+      xmin = min([state[i].keylist.x, state[i].keylist.x])
+      xmax = max([state[i].keylist.x, state[i].keylist.x])
+      j = where(*(pdata.x[0]) GE xmin AND *(pdata.x[0]) LE xmax)
+      if (N_elements(j) GT 3) then begin
+         xtemp = (*(pdata.x[0]))[j]
+         ytemp = (*(pdata.y[0]))[j]
+         ymin = min(ytemp)
+         ymax = max(ytemp, imax)
 
-; ???
-print,'AAA'
-print, state.mphys
+         ; Set initial guess for fitting coefficients
+         a = [xtemp[imax], 0.2*(max(xtemp)-min(xtemp)), ymax-ymin, ymin]
+
+         ; Fit a gaussian + a constant sky term
+         yfit = curvefit(xtemp, ytemp, xtemp*0+1.0, a, $
+          /noderivative, function_name='gausspix')
+
+         out_string = 'GAUSSFIT: ' $
+          + ' x0= ' + strtrim(string(a[0]),2) $
+          + ' sig= ' + strtrim(string(a[1]),2) $
+          + ' A= ' + strtrim(string(a[2]),2) $
+          + ' sky= ' + strtrim(string(a[3]),2)
+         widget_control, state.comments_text_id, set_value=out_string
+         soplot, xtemp, yfit, color='red', psym=10
+      endif else begin
+         widget_control, state.comments_text_id, $
+          set_value='GAUSSFIT: Too few points to fit'
+      endelse
+      splot_clearkeylist
+   endif else begin
+      splot_clearkeylist
+   endelse
 
    return
 end
