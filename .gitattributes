@@ -752,6 +752,7 @@ pro/djsphot/find_simple.pro -text
 pro/djsphot/quick_photfrac.pro -text
 pro/djsphot/squarephot.pro -text
 pro/dust/bh_rdfort.pro -text
+pro/dust/ccm_fitrv.pro -text
 pro/dust/djs_planck.pro -text
 pro/dust/dust_getmap.pro -text
 pro/dust/dust_getval.pro -text
@@ -761,6 +762,7 @@ pro/dust/ext_ccm.pro -text
 pro/dust/ext_odonnell.pro -text
 pro/dust/fac_flux2temp.pro -text
 pro/dust/fac_temp2flux.pro -text
+pro/dust/func_ccm_fitrv.pro -text
 pro/dust/planckcorr.pro -text
 pro/dust/predict_sync.pro -text
 pro/dust/predict_thermal.pro -text
