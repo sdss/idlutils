@@ -121,6 +121,10 @@ for i=0L,ndata-1 do begin
     var1= var1+weight[i]*delta#delta
 endfor
 var1= var1/amp1
+if NOT keyword_set(range) then begin
+  range= dblarr(2,dimen)
+  for d1= 0,dimen-1 do range[*,d1]= mean1[d1]+[-nsig,nsig]*sqrt(var1[d1,d1])
+endif
 
 ; save system plotting parameters for later restoration
 bangP= !P
@@ -244,15 +248,10 @@ for id2=ydimen-1,0L,-1 do begin
             !Y.TITLE= ''
 
 ; set plot range and make axes
-            if keyword_set(range) then begin
-                !X.RANGE= range[*,d1]
-                !Y.RANGE= range[*,d2]
-            endif else begin
-                !X.RANGE= mean1[d1]+[-nsig,nsig]*sqrt(var1[d1,d1])
-                !Y.RANGE= mean1[d2]+[-nsig,nsig]*sqrt(var1[d2,d2])
-            endelse
+            !X.RANGE= range[*,d1]
+            !Y.RANGE= range[*,d2]
             if d1 EQ d2 then begin
-                !Y.RANGE= 5d0*[-0.1,1.1]*amp1/abs(!X.RANGE[1]-!X.RANGE[0])
+                !Y.RANGE= 5d0*[-0.1,1.1]*amp1/abs(range[1,d1]-range[0,d1])
             endif
             xinterval= hogg_interval(!X.RANGE*axis_char_scale)
             yinterval= hogg_interval(!Y.RANGE*axis_char_scale)
@@ -284,23 +283,23 @@ for id2=ydimen-1,0L,-1 do begin
                 usenpix_x= usenpix_x*long(model_npix_factor)
                 usenpix_y= usenpix_y*long(model_npix_factor)
             endif
-            delta_x= (!X.CRANGE[1]-!X.CRANGE[0])/usenpix_x
-            delta_y= (!Y.CRANGE[1]-!Y.CRANGE[0])/usenpix_y
+            delta_x= (range[1,d1]-range[0,d1])/usenpix_x
+            delta_y= (range[1,d2]-range[0,d2])/usenpix_y
             image= dblarr(usenpix_x,usenpix_y)
-            ximg= !X.CRANGE[0]+delta_x*(dindgen(usenpix_x)+0.5)
-            yimg= !Y.CRANGE[0]+delta_y*(dindgen(usenpix_y)+0.5)
+            ximg= range[0,d1]+delta_x*(dindgen(usenpix_x)+0.5)
+            yimg= range[0,d2]+delta_y*(dindgen(usenpix_y)+0.5)
 
 ; increment greyscale image with data
             if NOT keyword_set(nodata) then begin
                 if ((d2 GE d1) OR $
                     (keyword_set(nomodel))) then begin
                     xx= floor(double(usenpix_x)* $
-                              (panelpoint[d1,*]-!X.CRANGE[0])/ $
-                              (!X.CRANGE[1]-!X.CRANGE[0]))
+                              (panelpoint[d1,*]-range[0,d1])/ $
+                              (range[1,d1]-range[0,d1]))
                     yy= floor(double(usenpix_y)* $
-                              (panelpoint[d2,*]-!Y.CRANGE[0])/ $
-                              (!Y.CRANGE[1]-!Y.CRANGE[0]))
-                    if d1 EQ d2 then yy= xx
+                              (panelpoint[d2,*]-range[0,d2])/ $
+                              (range[1,d2]-range[0,d2]))
+;                    if d1 eq d2 then yy= xx
                     for i=0L,n_elements(panelweight)-1 do begin
                         if xx[i] GE 0 AND xx[i] LT usenpix_x AND $
                           yy[i] GE 0 AND yy[i] LT usenpix_y then $
@@ -311,13 +310,13 @@ for id2=ydimen-1,0L,-1 do begin
 ; there is a second set of data, use it
                     if((d2 le d1) AND keyword_set(panelweight2)) then begin
                         xx= floor(double(usenpix_x)* $
-                                  (panelpoint2[d1,*]-!X.CRANGE[0])/ $
-                                  (!X.CRANGE[1]-!X.CRANGE[0]))
+                                  (panelpoint2[d1,*]-RANGE[0,d1])/ $
+                                  (RANGE[1,d1]-RANGE[0,d1]))
                         yy= floor(double(usenpix_y)* $
-                                  (panelpoint2[d2,*]-!Y.CRANGE[0])/ $
-                                  (!Y.CRANGE[1]-!Y.CRANGE[0]))
+                                  (panelpoint2[d2,*]-RANGE[0,d2])/ $
+                                  (RANGE[1,d2]-RANGE[0,d2]))
                         image2= dblarr(usenpix_x,usenpix_y)
-                        if d1 EQ d2 then yy= xx
+;                        if d1 EQ d2 then yy= xx
                         for i=0L,n_elements(panelweight2)-1 do begin
                             if xx[i] GE 0 AND xx[i] LT usenpix_x AND $
                               yy[i] GE 0 AND yy[i] LT usenpix_y then $
@@ -372,11 +371,11 @@ for id2=ydimen-1,0L,-1 do begin
                     loadct,0,/silent
                     if(keyword_set(conditional)) then begin
                         xx= floor(double(usenpix_x)* $
-                                  (panelpoint[d1,*]-!X.CRANGE[0])/ $
-                                  (!X.CRANGE[1]-!X.CRANGE[0]))
+                                  (panelpoint[d1,*]-RANGE[0,d1])/ $
+                                  (RANGE[1,d1]-RANGE[0,d1]))
                         yy= floor(double(usenpix_y)* $
-                                  (panelpoint[d2,*]-!Y.CRANGE[0])/ $
-                                  (!Y.CRANGE[1]-!Y.CRANGE[0]))
+                                  (panelpoint[d2,*]-RANGE[0,d2])/ $
+                                  (RANGE[1,d2]-RANGE[0,d2]))
                         amp1col=dblarr(usenpix_x)
                         avgcol=total(image,1)
                         avgcol=avgcol/total(avgcol)
@@ -446,8 +445,8 @@ for id2=ydimen-1,0L,-1 do begin
                     endif else begin
                         ylineupper=dblarr(usenpix_x)
                         ylinelower=dblarr(usenpix_x)
-                        xline=!X.CRANGE[0]+ $
-                          ((dindgen(usenpix_x)+0.5)*(!X.CRANGE[1]-!X.CRANGE[0])/ $
+                        xline=RANGE[0,d1]+ $
+                          ((dindgen(usenpix_x)+0.5)*(RANGE[1,d1]-RANGE[0,d1])/ $
                            double(usenpix_x))
                         if(keyword_set(quantfrac)) then begin
                             for m=0L, nquant-1L do begin
@@ -486,12 +485,12 @@ for id2=ydimen-1,0L,-1 do begin
                                               (cumimage[ilower[contindx[0]]]- $
                                                cumimage[ilower[contindx[0]]-1L])
                                             poslower=ilower[contindx[0]]-1L+sp
-                                            ylinelower[ii]=!Y.CRANGE[0]+ $
-                                              poslower*(!Y.CRANGE[1]-!Y.CRANGE[0])/ $
+                                            ylinelower[ii]=RANGE[0,d2]+ $
+                                              poslower*(RANGE[1,d2]-RANGE[0,d2])/ $
                                               double(usenpix_y)
                                         endif else begin
                                             if(ii gt 0) then ylinelower[ii]= $
-                                              !Y.CRANGE[0]
+                                              RANGE[0,d2]
                                         endelse
                                         iupper=imaximage+lindgen(usenpix_y- $
                                                                  imaximage)
@@ -507,12 +506,12 @@ for id2=ydimen-1,0L,-1 do begin
                                               (cumimage[iupper[contindx[0]]+1L]- $
                                                cumimage[iupper[contindx[0]]])
                                             posupper=iupper[contindx[0]]+sp
-                                            ylineupper[ii]=!Y.CRANGE[0]+ $
-                                              posupper*(!Y.CRANGE[1]- $
-                                                        !Y.CRANGE[0])/ $
+                                            ylineupper[ii]=RANGE[0,d2]+ $
+                                              posupper*(RANGE[1,d2]- $
+                                                        RANGE[0,d2])/ $
                                               double(usenpix_y)
                                         endif else begin
-                                            if(ii gt 0) then ylineupper[ii]=!Y.CRANGE[1]
+                                            if(ii gt 0) then ylineupper[ii]=RANGE[1,d2]
                                         endelse
                                     endif
                                     
@@ -573,7 +572,7 @@ for id2=ydimen-1,0L,-1 do begin
             if (d1 EQ d2) then begin
 
 ; plot data and model histograms
-                djs_oplot,!X.CRANGE,[0,0],psym=0,xstyle=5,ystyle=5,color='grey'
+                djs_oplot,RANGE[*,d1],[0,0],psym=0,xstyle=5,ystyle=5,color='grey'
                 if NOT keyword_set(nodata) then begin
                     if(keyword_set(conditional)) then begin
                         scale=abs(delta_y)/abs(delta_x)
