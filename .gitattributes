@@ -322,7 +322,6 @@ goddard/pro/fits_bintable/fxpar.pro -text
 goddard/pro/fits_bintable/fxparpos.pro -text
 goddard/pro/fits_bintable/fxread.pro -text
 goddard/pro/fits_bintable/fxwrite.pro -text
-goddard/pro/fits_bintable/sample.tex -text
 goddard/pro/fits_table/README -text
 goddard/pro/fits_table/ftab_delrow.pro -text
 goddard/pro/fits_table/ftab_ext.pro -text
