@@ -104,7 +104,6 @@ function ucac_readgc1, node, incl, hwidth, thiszone, decmin, decmax
 
    ; Now read the data, but watch for wrapping at RA=360 degrees!
    outdat = 0
-print,'RA: ',ravec
    if (ravec[0] LE ravec[1]) then begin
       outdat = ucac_readgc_add(outdat, thiszone, ravec[0:1])
    endif else begin
@@ -147,7 +146,6 @@ function ucac_readgc, node=node, incl=incl, hwidth=hwidth
    ; Loop over all zones
 
    for thiszone=min(uindex.zn), max(uindex.zn) do begin
-print,'ZONE ',thiszone,n_elements(outdat) ; ???
       jj = (where(uindex.zn EQ thiszone, ct))[0]
       if (ct GT 0) then begin
          decmax = uindex[jj].dcmax
