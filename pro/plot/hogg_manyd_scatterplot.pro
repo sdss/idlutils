@@ -15,6 +15,7 @@
 ;   xdims,ydims  indices of data dimensions to use on each x and y axis
 ;   axis_char_scale size of characters on labels
 ;   default_font font command to send to set font for plotting
+;   title        puts string title on top of page
 ; KEYWORDS:
 ;   nodata       don't plot anything at all, just axes!
 ;   [etc]        [options for hogg_scatterplot, see documentation]
@@ -36,7 +37,7 @@ pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
                             axis_char_scale=axis_char_scale, $
                             default_font=default_font, $
                             xnpix=xnpix,ynpix=ynpix, $
-                            nodata=nodata, manyd=manyd, $
+                            nodata=nodata, manyd=manyd, title=title, $
                             _EXTRA=KeywordsForHoggScatterplot
 
 ; check dimensions
@@ -189,6 +190,18 @@ for id2=ydimen-1L,0L,-1 do begin
         endelse 
     endfor
 endfor
+
+if(keyword_set(title)) then begin
+    !P.MULTI=[0,1,1]
+    !X.RANGE=[0,1]
+    !Y.RANGE=[0,1]
+    !X.CRANGE=[0,1]
+    !Y.CRANGE=[0,1]
+    !X.S=[0,1]
+    !Y.S=[0,1]
+    xyouts,0.5,1.05,title,align=0.5
+endif
+
 if keyword_set(psfilename) then device, /close
 
 ; restore system plotting parameters
