@@ -69,9 +69,9 @@ function bspline_valu, x, sset, x2=x2, action=action, indx=indx
       gb = sset.fullbkpt[goodbk]
 
       bw = npoly * nord   
-      indx = intrv(x, gb, nord)
+      indx = intrv(x[*], gb, nord)
 
-      largex = (x # replicate(1,npoly))[*]
+      largex = (x[*] # replicate(1,npoly))[*]
       largeindx = (indx # replicate(1,npoly))[*]
       bf = reform(bsplvn(gb, nord, largex, largeindx), nx, bw)
       action = bf
@@ -79,7 +79,7 @@ function bspline_valu, x, sset, x2=x2, action=action, indx=indx
 
       if keyword_set(x2) then begin
 
-         x2norm = 2.0 * (x2 - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
+         x2norm = 2.0 * (x2[*] - sset.xmin) / (sset.xmax - sset.xmin) - 1.0
 
          CASE sset.funcname OF
            'poly' : begin
