@@ -69,6 +69,7 @@ function yanny_readone, filename, selectname, $
    if (keyword_set(selectname)) then begin
       if (n_elements(selectname) GT 1) then begin
          print, 'SELECTNAME must be a scalar'
+         yanny_free, pp
          return, retval
       endif
       if (keyword_set(stnames)) then begin
