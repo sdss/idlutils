@@ -1,72 +1,72 @@
 PRO sunpos, jd, ra, dec, longmed, oblt, RADIAN = radian
 ;+
 ; NAME:
-;	SUNPOS
+;       SUNPOS
 ; PURPOSE:
-;	To compute the RA and Dec of the Sun at a given date.
+;       To compute the RA and Dec of the Sun at a given date.
 ;
 ; CALLING SEQUENCE:
-;	SUNPOS, jd, ra, dec, [elong, obliquity, /RADIAN ]
+;       SUNPOS, jd, ra, dec, [elong, obliquity, /RADIAN ]
 ; INPUTS:
-;	jd    - The Julian date of the day (and time), scalar or vector
-;		usually double precision
+;       jd    - The Julian date of the day (and time), scalar or vector
+;               usually double precision
 ; OUTPUTS:
-;	ra    - The right ascension of the sun at that date in DEGREES
-;		double precision, same number of elements as jd
-;	dec   - The declination of the sun at that date in DEGREES
+;       ra    - The right ascension of the sun at that date in DEGREES
+;               double precision, same number of elements as jd
+;       dec   - The declination of the sun at that date in DEGREES
 ;
 ; OPTIONAL OUTPUTS:
-;	elong - Ecliptic longitude of the sun at that date in DEGREES.
-;      	obliquity - the obliquity of the ecliptic, in DEGREES
+;       elong - Ecliptic longitude of the sun at that date in DEGREES.
+;       obliquity - the obliquity of the ecliptic, in DEGREES
 ;
 ; OPTIONAL INPUT KEYWORD:
-;	RADIAN - If this keyword is set and non-zero, then all output variables 
-;		are given in Radians rather than Degrees
+;       /RADIAN - If this keyword is set and non-zero, then all output variables 
+;               are given in Radians rather than Degrees
 ;
 ; NOTES:
-;	The accuracy in the 20th century  should be within 1"; however this 
-;	has not been extensively tested.
+;       The accuracy in the 20th century  should be within 1"; however this 
+;       has not been extensively tested.
 ;
-;	The returned RA and Dec are in the given date's equinox.
+;       The returned RA and Dec are in the given date's equinox.
 ;
-;	Procedure was extensively revised in May 1996, and the new calling
-;	sequence is incompatible with the old one.
+;       Procedure was extensively revised in May 1996, and the new calling
+;       sequence is incompatible with the old one.
 ; METHOD:
-;	Uses a truncated version of Newcomb's Sun.    Adapted from the IDL
-;	routine SUN_POS by CD Pike, which was adapted from a FORTRAN routine
-;	by B. Emerson (RGO).
+;       Uses a truncated version of Newcomb's Sun.    Adapted from the IDL
+;       routine SUN_POS by CD Pike, which was adapted from a FORTRAN routine
+;       by B. Emerson (RGO).
 ; EXAMPLE:
-;	(1) Find the apparent RA and Dec of the Sun on May 1, 1982
-;	
-;	IDL> jdcnv, 1982, 5, 1,0 ,jd      ;Find Julian date jd = 2445090.5   
-;	IDL> sunpos, jd, ra, dec
-;	IDL> print,adstring(ra,dec,2)
-;		 02 31 32.61  +14 54 34.9
+;       (1) Find the apparent RA and Dec of the Sun on May 1, 1982
+;       
+;       IDL> jdcnv, 1982, 5, 1,0 ,jd      ;Find Julian date jd = 2445090.5   
+;       IDL> sunpos, jd, ra, dec
+;       IDL> print,adstring(ra,dec,2)
+;                02 31 32.61  +14 54 34.9
 ;
-;	The Astronomical Almanac gives 02 31 32.58 +14 54 34.9 so the error
-;		in SUNPOS for this case is < 0.5".	
+;       The Astronomical Almanac gives 02 31 32.58 +14 54 34.9 so the error
+;               in SUNPOS for this case is < 0.5".      
 ;
-;	(2) Find the apparent RA and Dec of the Sun for every day in 1997
+;       (2) Find the apparent RA and Dec of the Sun for every day in 1997
 ;
-;	IDL> jdcnv, 1997,1,1,0, jd                ;Julian date on Jan 1, 1997
-;	IDL> sunpos, jd+ dindgen(365), ra, dec    ;RA and Dec for each day 
+;       IDL> jdcnv, 1997,1,1,0, jd                ;Julian date on Jan 1, 1997
+;       IDL> sunpos, jd+ dindgen(365), ra, dec    ;RA and Dec for each day 
 ;
 ; MODIFICATION HISTORY:
-;	Written by Michael R. Greason, STX, 28 October 1988.
-;	Accept vector arguments, W. Landsman     April,1989
-;	Eliminated negative right ascensions.  MRG, Hughes STX, 6 May 1992.
-;	Rewritten using the 1993 Almanac.  Keywords added.  MRG, HSTX, 
-;		10 February 1994.
-;	Major rewrite, improved accuracy, always return values in degrees
-;	W. Landsman  May, 1996 
-;	Added /RADIAN keyword,    W. Landsman       August, 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written by Michael R. Greason, STX, 28 October 1988.
+;       Accept vector arguments, W. Landsman     April,1989
+;       Eliminated negative right ascensions.  MRG, Hughes STX, 6 May 1992.
+;       Rewritten using the 1993 Almanac.  Keywords added.  MRG, HSTX, 
+;               10 February 1994.
+;       Major rewrite, improved accuracy, always return values in degrees
+;       W. Landsman  May, 1996 
+;       Added /RADIAN keyword,    W. Landsman       August, 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  On_error,2
-;			Check arguments.
+;                       Check arguments.
  if N_params() LT 3 then begin 
      print, 'Syntax - SUNPOS, jd, ra, dec, [elong, obliquity, /RADIAN] '
-     print, 'Inputs  -  jd (Julian date)
+     print, 'Inputs  -  jd (Julian date)'
      print, 'Outputs - Apparent RA and Dec, longitude, & obliquity'
      print, 'All angles in DEGREES unless /RADIAN is set'
      return
@@ -154,10 +154,10 @@ l = l + vencorr
  dec = asin(sin(l*dtor) * sin(oblt*dtor))
  
  if keyword_set(RADIAN) then begin
-	oblt = oblt*dtor 
-	longmed = longmed*dtor
+        oblt = oblt*dtor 
+        longmed = longmed*dtor
  endif else begin
-	ra = ra/dtor
-	dec = dec/dtor
+        ra = ra/dtor
+        dec = dec/dtor
  endelse
  end

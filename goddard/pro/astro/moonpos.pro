@@ -1,79 +1,84 @@
   PRO MOONPOS, jd, ra, dec, dis, geolong, geolat, RADIAN = radian
 ;+
 ; NAME:                                     
-;	MOONPOS
+;       MOONPOS
 ; PURPOSE:
-;	To compute the RA and Dec of the Moon at specified Julian date(s).
+;       To compute the RA and Dec of the Moon at specified Julian date(s).
 ;
 ; CALLING SEQUENCE:
-;	MOONPOS, jd, ra, dec, dis, geolong, geolat, [/RADIAN ]
+;       MOONPOS, jd, ra, dec, dis, geolong, geolat, [/RADIAN ]
 ;
 ; INPUTS:
-;	JD - Julian date, scalar or vector, double precision suggested
+;       JD - Julian date, scalar or vector, double precision suggested
 ;
 ; OUTPUTS:
-;	Ra  - Apparent right ascension of the moon in DEGREES, referred to the
-;		true equator of the specified date(s) 
-;	Dec - The declination of the moon in DEGREES 
-;	Dis - The Earth-moon distance in kilometers
-;	Geolong - Apparent longitude of the moon in DEGREES, referred to the
-;		ecliptic of the specified date(s)
-;	Geolat - Apparent longitude of the moon in DEGREES, referred to the
-;		ecliptic of the specified date(s)
+;       Ra  - Apparent right ascension of the moon in DEGREES, referred to the
+;               true equator of the specified date(s) 
+;       Dec - The declination of the moon in DEGREES 
+;       Dis - The Earth-moon distance in kilometers (between the center of the
+;             Earth and the center of the Moon).
+;       Geolong - Apparent longitude of the moon in DEGREES, referred to the
+;               ecliptic of the specified date(s)
+;       Geolat - Apparent longitude of the moon in DEGREES, referred to the
+;               ecliptic of the specified date(s)
 ;
-;	The output variables will all have the same number of elements as the
-;	input Julian date vector, JD.   If JD is a scalar then the output 
-;	variables will be also.
+;       The output variables will all have the same number of elements as the
+;       input Julian date vector, JD.   If JD is a scalar then the output 
+;       variables will be also.
 ;
 ; OPTIONAL INPUT KEYWORD:
-;	RADIAN - If this keyword is set and non-zero, then all output variables 
-;		are given in Radians rather than Degrees
+;       /RADIAN - If this keyword is set and non-zero, then all output variables 
+;               are given in Radians rather than Degrees
 ;
 ; EXAMPLES:
-;	(1) Find the position of the moon on April 6, 1982
+;       (1) Find the position of the moon on April 12, 1992
 ;
-;	IDL> jdcnv,1982,4,6,0,jd    ;Get julian date
-;	IDL> moonpos, jd, ra ,dec     ;Get RA and Dec of moon
-;	IDL> print,adstring(ra,dec)
-;		==> 11 17 14.9  +09 13 45.2
+;       IDL> jdcnv,1992,4,12,0,jd    ;Get Julian date
+;       IDL> moonpos, jd, ra ,dec     ;Get RA and Dec of moon
+;       IDL> print,adstring(ra,dec,1)
+;               ==> 08 58 45.23  +13 46  6.1
 ;
-;	This is within 1" from the position given in the Astronomical Almanac
-;	
-;	(2) Plot the Earth-moon distance for every day at 0 TD in July, 1996
+;       This is within 1" from the position given in the Astronomical Almanac
+;       
+;       (2) Plot the Earth-moon distance for every day at 0 TD in July, 1996
 ;
-;	IDL> jdcnv,1996,7,1,0,jd                   ;Get Julian date of July 1
-;	IDL> moonpos,jd+dindgen(31), ra, dec, dis  ;Position at all 31 days
-;	IDL> plot,indgen(31),dis, /YNOZ
+;       IDL> jdcnv,1996,7,1,0,jd                   ;Get Julian date of July 1
+;       IDL> moonpos,jd+dindgen(31), ra, dec, dis  ;Position at all 31 days
+;       IDL> plot,indgen(31),dis, /YNOZ
 ;
 ; METHOD:
-;	Derived from the Chapront ELP2000/82 Lunar Theory (Chapront-Touze' and
-;	Chapront, 1983, 124, 50), as described by Jean Meuus in Chapter 21 of
-;	``Astronomical Algorithms'' (Willmann-Bell, Richmond), 1991
+;       Derived from the Chapront ELP2000/82 Lunar Theory (Chapront-Touze' and
+;       Chapront, 1983, 124, 50), as described by Jean Meeus in Chapter 47 of
+;       ``Astronomical Algorithms'' (Willmann-Bell, Richmond), 2nd edition, 
+;       1998.    Meeus quotes an approximate accuracy of 10" in longitude and
+;       4" in latitude, but he does not give the time range for this accuracy.
 ;
-;	Comparison of this IDL procedure with the example in ``Astronomical
-;	Algorithms'' reveals a very small discrepancy (~1 km) in the distance 
-;	computation, but no difference in the position calculation.
+;       Comparison of this IDL procedure with the example in ``Astronomical
+;       Algorithms'' reveals a very small discrepancy (~1 km) in the distance 
+;       computation, but no difference in the position calculation.
 ;
-;	This procedure underwent a major rewrite in June 1996, and the new
-;	calling sequence is *incompatible with the old* (e.g. angles now 
-;	returned in degrees instead of radians).
+;       This procedure underwent a major rewrite in June 1996, and the new
+;       calling sequence is *incompatible with the old* (e.g. angles now 
+;       returned in degrees instead of radians).
 ;
 ; PROCEDURES CALLED:
-;	CIRRANGE, ISARRAY(), NUTATE  - from IDL Astronomy Library
-;	POLY() - from IDL User's Library
+;       CIRRANGE, ISARRAY(), NUTATE  - from IDL Astronomy Library
+;       POLY() - from IDL User's Library
 ; MODIFICATION HISTORY:
-;	Written by Michael R. Greason, STX, 31 October 1988.
-;	Major rewrite, new (incompatible) calling sequence, much improved 
-;		accuracy,	W. Landsman   Hughes STX      June 1996
-;	Added /RADIAN keyword  W. Landsman August 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Written by Michael R. Greason, STX, 31 October 1988.
+;       Major rewrite, new (incompatible) calling sequence, much improved 
+;               accuracy,       W. Landsman   Hughes STX      June 1996
+;       Added /RADIAN keyword  W. Landsman August 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use improved expressions for L',D,M,M', and F given in 2nd edition of
+;            Meeus (very slight change),  W. Landsman    November 2000
 ;-
  On_error,2
 
  if N_params() LT 3 then begin
-	print,'Syntax - MOONPOS, jd, ra, dec, dis, geolong, geolat, [/RADIAN] 
-	print,'Output angles in DEGREES unless RADIAN is set'
-	return
+        print,'Syntax - MOONPOS, jd, ra, dec, dis, geolong, geolat, [/RADIAN]' 
+        print,'Output angles in DEGREES unless /RADIAN is set'
+        return
  endif
 
  npts = N_elements(jd)
@@ -129,7 +134,7 @@
 
 ; Mean longitude of the moon refered to mean equinox of the date
 
- coeff0 = [218.3164591d, 481267.88134236d, -0.0013268d0, 1.0d/538841.0d, $
+ coeff0 = [218.3164477d, 481267.88123421d, -0.0015786d0, 1.0d/538841.0d, $
          -1.0d/6.5194d7 ]
  lprimed = poly(T, coeff0)
  cirrange, lprimed
@@ -137,7 +142,7 @@
 
 ; Mean elongation of the Moon
 
-  coeff1 = [297.8502042d, 445267.1115168d, -0.0016300d, 1.0d/545868.0d, $
+  coeff1 = [297.8501921d, 445267.1114034d, -0.0018819d, 1.0d/545868.0d, $
            -1.0d/1.13065d8 ]
   d = poly(T, coeff1)
   cirrange,d
@@ -152,7 +157,7 @@
 
 ; Moon's mean anomaly
 
-   coeff3 = [134.9634114d, 477198.8676313d, 0.0089970d, 1.0/6.9699d4, $
+   coeff3 = [134.9633964d, 477198.8675055d, 0.0087414d, 1.0/6.9699d4, $
              -1.0d/1.4712d7 ]
    Mprime = poly(T, coeff3) 
    cirrange, Mprime
@@ -160,7 +165,7 @@
 
 ; Moon's argument of latitude
 
-    coeff4 = [93.2720993d, 483202.0175273d, -0.0034029, -1.0d/3.526d7, $
+    coeff4 = [93.2720950d, 483202.0175233d, -0.0036539, -1.0d/3.526d7, $
              1.0d/8.6331d8 ]
     F = poly(T, coeff4 ) 
     cirrange, F
@@ -228,14 +233,14 @@
  dec = asin( sin(beta)*cos(eps) + cos(beta)*sin(eps)*sin(lambda) )
 
  if not isarray(jd) then begin
-	ra = ra[0] & dec = dec[0] & dis = dis[0]
-	geolong = geolong[0]  & geolat = geolat[0]
+        ra = ra[0] & dec = dec[0] & dis = dis[0]
+        geolong = geolong[0]  & geolat = geolat[0]
  endif
 
  if not keyword_set(RADIAN) then begin
-	ra = ra/dtor & dec = dec/dtor
+        ra = ra/dtor & dec = dec/dtor
  endif else begin
-	geolong = lambda & geolat = beta
+        geolong = lambda & geolat = beta
  endelse
 
  return
