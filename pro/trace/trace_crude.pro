@@ -83,7 +83,7 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
    if (keyword_set(invvar)) then begin
       invtemp = float(invvar)
    endif else begin
-      invtemp = 1.0 / (fimage > 1)
+      invtemp = 1.0 / (imgtemp > 1)
    endelse
 
    ; Median filter the entire image along columns by NMED rows
