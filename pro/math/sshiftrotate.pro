@@ -13,7 +13,7 @@
 ;   image      - Image (2-dimensional)
 ;
 ; OPTIONAL KEYWORDS:
-;   theta      - Rotate image clockwise this angle [degrees] about
+;   theta      - Rotate image counter-clockwise this angle [degrees] about
 ;                the 0-indexed point XCEN,YCEN; default to 0 degrees
 ;   xshift    - Shift in X direction
 ;   yshift    - Shift in Y direction
@@ -50,34 +50,95 @@
 ;     the "active" area!???  This will just be for a speed improvement.
 ;   Special-case rotations of 0,90,180,270 !???
 ;   Optionally return a mask of the illuminated region???
+;   Optionally fill in missing regions with some value???
+;   Allow double-precision.
 ;
 ; PROCEDURES CALLED:
+;   cirrange
 ;   sshift()
 ;
 ; REVISION HISTORY:
 ;   18-Sep-2002  Written by D. Schlegel, Princeton
 ;------------------------------------------------------------------------------
-function sshiftrotate, image, theta1, xshift=xshift, yshift=yshift, $
- xcen=xcen, ycen=ycen, bigger=bigger, xoffset=xoffset, yoffset=yoffset
+function sshiftrotate, image, theta1, xshift=xshift1, yshift=yshift1, $
+ xcen=xcen1, ycen=ycen1, bigger=bigger1, xoffset=xoffset, yoffset=yoffset
 
    if (n_params() LT 1) then $
     message, 'Incorrect number of arguments'
-   if (NOT keyword_set(xshift)) then xshift = 0
-   if (NOT keyword_set(yshift)) then yshift = 0
+   if (keyword_set(xshift1)) then xshift = xshift1 $
+    else xshift = 0
+   if (keyword_set(yshift1)) then yshift = yshift1 $
+    else yshift = 0
    dims = size(image, /dimens)
    nx = dims[0]
    ny = dims[1]
-   if (n_elements(xcen) EQ 0) then xcen = 0.5 * nx + 0.5
-   if (n_elements(ycen) EQ 0) then ycen = 0.5 * ny + 0.5
+   if (n_elements(xcen1) NE 0) then xcen = xcen1 $
+    else xcen = 0.5 * nx + 0.5
+   if (n_elements(ycen1) NE 0) then ycen = ycen1 $
+    else  ycen = 0.5 * ny + 0.5
    if (keyword_set(theta1)) then theta = theta1 $
     else theta = 0
+   ; Put this angle in the range [-45,+45).
+   theta = theta - 360 * floor((theta+45)/360)
+   if (n_elements(bigger1) NE 0) then bigger = bigger1 $
+    else bigger = 0
+
+   ;----------
+   ; If the rotation angle is not in the range [-45,+45) degrees, then rotate
+   ; the image first and call this routine recursively.
+
+   irot = fix( (theta+45) / 90 )
+   if (irot NE 0) then begin
+      thisang = theta - irot * 90
+
+      ; Rotate the image by a multiple of 90 degrees.
+      thisimg = rotate(image, irot)
+
+      xycen = [xcen, ny-ycen, nx-xcen, ycen]
+      xnewcen = xycen[irot]
+      ynewcen = xycen[irot-1]
+      xoffset = xnewcen - xcen
+      yoffset = ynewcen - ycen
+
+      xyshift = [xshift, -yshift, -xshift, yshift]
+      xnewshift = xyshift[irot]
+      ynewshift = xyshift[irot-1]
+
+      thisimg = sshiftrotate(thisimg, thisang, $
+       xshift=xnewshift, yshift=ynewshift, $
+       xcen=xnewcen, ycen=ynewcen, bigger=1, $
+       xoffset=xoff1, yoffset=yoff1)
+
+      xoffset = xoffset + xoff1 + xnewshift - xshift
+      yoffset = yoffset + yoff1 + ynewshift - yshift
+
+      ; Trim image to original size if /BIGGER not set.
+      if (NOT keyword_set(bigger)) then begin
+         thisdim = size(thisimg, /dimens)
+         trimimg = make_array(size=size(image))
+         ix = -xoffset * (xoffset LT 0)
+         jx = xoffset * (xoffset GT 0)
+         iy = -yoffset * (yoffset LT 0)
+         jy = yoffset * (yoffset GT 0)
+         xsz = (nx - ix) < (thisdim[0] - jx)
+         ysz = (ny - iy) < (thisdim[1] - jy)
+         if (xsz GT 0 AND ysz GT 0) then $
+          trimimg[ix:ix+xsz-1,iy:iy+ysz-1] = thisimg[jx:jx+xsz-1,jy:jy+ysz-1]
+         xoffset = 0
+         yoffset = 0
+         return, trimimg
+      endif
+
+      return, thisimg
+   endif
 
    t0 = systime(1)
 
+   ;----------
    ; Compute the offset functions for each of the 3 sinc shifts
 
-   sint = sin(-theta/!radeg)
-   cost = cos(-theta/!radeg)
+   sint = sin(theta/!radeg)
+   cost = cos(theta/!radeg)
    aslope = -sint / (1. + cost)
    bslope = sint
    cslope = aslope
