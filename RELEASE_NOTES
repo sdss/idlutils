@@ -1,31 +1,38 @@
+
+EXACT_PHOTFRAC,GROW_OBJECT,INTERP_PROFMEAN,POPULATE_IMAGE,REJECT_CR,
+               GAREA,GVERTS,READ_FITS_POLYGONS,VMID,DJS_AVSIGCLIP,
+               DJS_CORRELATE,DJS_MEDIAN,MEMSHIFT,NNLS,EFC2D,EFCMN,
+               SLATEC_BVALU,SLATEC_EFC,SPHEREGROUP,SPHEREMATCH,
+               TRACE_CRUDE,TRACE_FWEIGHT,TRACE_GWEIGHT:
+               Call IDLUTILS_SO_EXT() to get the suffix for dynamically
+               loaded libraries (rather than assuming ".so").
 POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
-                 poly_2d to perform a rotation of an imaging using the 
-                 cubic approximation to the sinc shift.
+               poly_2d to perform a rotation of an imaging using the 
+               cubic approximation to the sinc shift.
 
 Makefile: Install the RELEASE_NOTES file.
+bin/evilmake: Set SO_EXT=dylib for the Mac (Darwin) platform.
 
 -------------------------------------------------------------------------------
 v5_0_2b (April 17, 2004) running on IDL 5.4 - 6.0
 Tagged for photoop v1_3b (for the SDSS Orion data release)
 
-early 2004 updates from Landsman:
+The Goddard routines (in goddard/pro) have been brought up to
+the early 2004 versions from Landsman as follows:
 
 DEREDD:              UPDATE keyword
 GLACTC:              Fix major bug when year not 2000 and /FK4 not set
 IMCONTOUR:           Works with Galactic coordinates
-ISMEUV:		     Compute the continuum interstellar EUV optical depth
+ISMEUV:              Compute the continuum interstellar EUV optical depth
 PRECESS:             Work for arrays, not just vectors
 
 DELVARX:             /FREE_MEM - free memory associated with pointers
 FXPAR:               DATATYPE keyword to recast on the fly
 EXTAST:              ALT keyword for more general projections
-MAKE_ASTR:
-              The astrometry structure definition was slightly modified in
-                     July 2003; all angles are now double precision, and the
+MAKE_ASTR:           The astrometry structure definition was slightly modified
+                     in July 2003; all angles are now double precision, and the
                      LATPOLE tag was added.
 PUTAST:              Changes for ALT keyword
-
-
 
 FITSDIR:             NAXIS values must be integers
 FITS_TEST_CHECKSUM:  Return quietly if CHECKSUM keywords not found
@@ -44,20 +51,6 @@ QUERY*:              New query procedures in sockets/
 v5_0_1 (Apr 15, 2004) running on IDL 5.4 - 6.0
 Tagged for photoop v1_2.
 
-Blanton and Hogg have added some files to radprof/ and rgbcolor/
-radprof/asinh2.pro
-radprof/fast_fit_sersic.pro
-radprof/fit_sersic.pro
-radprof/maggies2lups.pro
-radprof/petro.pro
-radprof/profinterp.pro
-radprof/seeing_radial.pro
-radprof/sersic.pro
-radprof/sersic_params.pro
-   
-rgbcolor/hogg_image_overlay.pro
-rgbcolor/hogg_rgb_entropy.pro
-
 ASINH: Copy in Landsman's latest version.
 COUNT_FREELUN: New function to count the number of logical file pointers
                (LUNs) that are available.  This is to be called by DJS_BATCH.
@@ -74,6 +67,8 @@ GVERTS: Bug fix for the case of single-cap polygons.
 HELIO_TO_LG: Fixed sign error in correction.
 HOGG_IAU_NAME: New proc by Hogg to format astronomical source names to
                the IAU convention.
+HOGG_IMAGE_OVERLAY,HOGG_RGB_ENTROPY: New routines from Hogg for generating
+               true-color images.
 IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
 MULTI_PSF_FIT: New procedure which, given an image and a PSF, finds the
