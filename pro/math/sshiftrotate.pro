@@ -3,7 +3,7 @@
 ;   sshiftrotate
 ;
 ; PURPOSE:
-;   Routine to reject points when doing an iterative fit to data.
+;   Routine to sinc-shift and rotate a 2-D image, but preserving scale.
 ;
 ; CALLING SEQUENCE:
 ;   newimg =  sshiftrotate( image, [ theta, xshift=, yshift=, xcen=, ycen=, $
