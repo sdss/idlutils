@@ -35,8 +35,12 @@ pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
       ytmp = x
    endelse
 
-   plot, xtmp, ytmp, xtitle=TeXtoIDL(xtitle), ytitle=TeXtoIDL(ytitle), $
-    title=TeXtoIDL(title), _EXTRA=KeywordsForPlot
+   if (keyword_set(xtitle)) then xtitle_tex = TeXtoIDL(xtitle)
+   if (keyword_set(ytitle)) then ytitle_tex = TeXtoIDL(ytitle)
+   if (keyword_set(title)) then title_tex = TeXtoIDL(title)
+
+   plot, xtmp, ytmp, xtitle=xtitle_tex, ytitle=ytitle_tex, $
+    title=title_tex, _EXTRA=KeywordsForPlot
 
    return
 end 
