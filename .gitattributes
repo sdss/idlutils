@@ -809,6 +809,7 @@ pro/mangle/read_fits_polygons.pro -text
 pro/mangle/read_mangle_polygons.pro -text
 pro/mangle/read_mangle_vertices.pro -text
 pro/mangle/set_use_caps.pro -text
+pro/mangle/vmid.pro -text
 pro/mangle/window_image.pro -text
 pro/mangle/write_fits_polygons.pro -text
 pro/mangle/write_mangle_polygons.pro -text
