@@ -7,14 +7,20 @@
 ;   Modify FITS card(s) in a file without changing the data.
 ;
 ; CALLING SEQUENCE:
-;   modfitscard, filename, card, value, [ /delete _EXTRA=KeywordsForSxaddpar ]
+;   modfitscard, filename, card, value, [ comment, /delete, $
+;    _EXTRA=KeywordsForSxaddpar ]
 ;
 ; INPUTS:
-;   filename  - f
+;   filename  - File name(s) to modify; this can be an array of file names,
+;               and it can include wildcards
 ;   card      - Name of FITS card(s) to add or modify
-;   value     - New value(s) for FITS card
 ;
 ; OPTIONAL INPUTS:
+;   value     - New value(s) for FITS card; mandatory card if DELETE not set;
+;               must have the same number of elements as CARD.
+;   comment   - Comment to appear in the card after its value; passed to
+;               the routine SXADDPAR.  If specified, it must have the same
+;               number of elements as CARD.
 ;   delete    - If set, then delete all cards CARD from the header;
 ;               VALUE is ignored if set.
 ;
@@ -25,15 +31,15 @@
 ; COMMENTS:
 ;
 ; EXAMPLES:
-;   Modify the value of the DATE keyword in the primary header of a FITS file.
-;   IDL> modfitscard, 'test.fits', 'DATE', '1994-03-23'
+;   Modify the value of the DATE keyword in the primary header of all FITS
+;   files with '666' or '777' in the file name:
+;   IDL> modfitscard, ['*666*.fits','*777*.fits'], 'DATE', '1994-03-23'
 ;
 ; BUGS:
 ;   This routine calls MODFITS, which does not allow the size of the header
-;   to be changed.  If a card is deleted, we simply set it to spaces.  If a
-;   card if modified, that should work fine.  Adding cards could fail if
-;   this needs to increase the number of header blocks; an erro will be
-;   issued.
+;   to be changed.  Deleting or modifying cards will always work.  Adding
+;   cards could fail if this needs to increase the number of header blocks;
+;   an erro will be issued.
 ;
 ;   Wildcards are not supported for CARD, so you cannot say something like
 ;   IDL> modfitscard, 'test.fits', 'DATE*', '1994-03-23' ; Will not work!
@@ -47,7 +53,7 @@
 ;   19-Apr-2000  Written by David Schlegel, Princeton.
 ;-
 ;-----------------------------------------------------------------------
-pro modfitscard, filename, card, value, delete=delete, $
+pro modfitscard, filename, card, value, comment, delete=delete, $
  _EXTRA=KeywordsForSxaddpar
 
    ; Need at least 3 parameters
@@ -62,27 +68,55 @@ pro modfitscard, filename, card, value, delete=delete, $
       return
    endif
 
-   hdr = headfits(filename)
-   if (size(hdr, /tname) NE 'STRING') then begin
-      print, 'File does not exist or FITS header is invalid'
-      return
+   if (keyword_set(comment)) then begin
+      if (ncard NE N_elements(comment)) then begin
+         print, 'Number of elements in CARD and COMMENT do not agree'
+         return
+      endif
    endif
 
-   if (keyword_set(delete)) then begin
-      keyword = strmid(hdr, 0, 8)
-      for icard=0, ncard-1 do begin
-         cardname = string(card+'        ',format='(a8)')
-         ifound = where(keyword EQ cardname)
-         ilist = where(hdr EQ card[icard])
-         if (ifound[0] NE -1) then hdr[ifound] = ''
-      endfor
-   endif else begin
-      for icard=0, ncard-1 do begin
-         sxaddpar, hdr, card[icard], value[icard], _EXTRA=KeywordsForSxaddpar
-      endfor
-   endelse
+   ;----------
+   ; Parse the file name list to be all the specified files that are on disk.
 
-   modfits, filename, 0, hdr
+   for ii=0, N_elements(filename)-1 do begin
+      tempname = findfile(filename[ii], count=ct)
+      if (ct GT 0) then begin
+         if (keyword_set(fullname)) then fullname = [fullname, tempname] $
+          else fullname = tempname
+      endif
+   endfor
+   nfile = N_elements(fullname)
+
+   ;----------
+   ; Loop through 1 file at a time, modifying the header.
+
+   for ifile=0, nfile-1 do begin
+
+      hdr = headfits(fullname[ifile])
+      if (size(hdr, /tname) NE 'STRING') then begin
+         print, 'File does not exist or FITS header is invalid: ', $
+          fullname[ifile]
+      endif else begin
+
+         if (keyword_set(delete)) then begin
+;            sxdelpar, hdr, card
+            keyword = strmid(hdr, 0, 8)
+            for icard=0, ncard-1 do begin
+               cardname = string(strupcase(card[icard])+'        ',format='(a8)')
+               ifound = where(keyword EQ cardname)
+               if (ifound[0] NE -1) then $
+                hdr[ifound] = string(' ', format='(" ",a79)')
+            endfor
+         endif else begin
+            for icard=0, ncard-1 do begin
+               sxaddpar, hdr, card[icard], value[icard], comment[icard], $
+                _EXTRA=KeywordsForSxaddpar
+            endfor
+         endelse
+
+         modfits, fullname[ifile], 0, hdr
+      endelse
+   endfor
 
    return
 end 
