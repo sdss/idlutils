@@ -1,4 +1,3 @@
-
 ATV,ATV_JOE_WRITEPS,SPLOT,SXASCII_READ,TEXTOIDL,YANNY_READ:
                Replace calls to the obsolete function RSTRPOS()
                with STRPOS(/REVERSE_SEARCH).
@@ -23,6 +22,7 @@ HEALGEN        Updated to use dpf* routines and break dependence on HEALPIX
                No longer loop over chunks to save memory.
 HEALPIX_RING_WEIGHT: Fix fatal bug caused by new mrdfits() response to 
                Gorski's nonstandard file format for ring weights.
+HEAL_SMOOTH    Prevent "Floating underflow" condition
 HOGG_MANYD_SCATTERPLOT: Fix xdim=0 bug, add EXTRAFUN parameter,
                send plotting back to X.
 HOGG_SCATTERPLOT: Add /outliers keyword to show points outside last contour
