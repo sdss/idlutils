@@ -31,6 +31,7 @@ pro mrd_skip, unit, nskip
 ;	might reset the current pointer     W. Landsman        April 1996
 ;       Increase buffer size, check fstat.compress W. Landsman  Jan 2001
 ;       Only a warning if trying read past EOF   W. Landsman   Sep 2001
+;       Use 64bit longword for skipping in very large files W. Landsman Sep 2003
 ;-
         On_error,2
 
@@ -47,7 +48,7 @@ pro mrd_skip, unit, nskip
  	  on_ioerror, byte_read
 	  point_lun, -unit, curr_pos
 	  on_ioerror, null
-          if curr_pos NE -1 then point_lun, unit, long64(curr_pos)+nskip
+          if curr_pos NE -1 then point_lun, unit, long64(curr_pos) + nskip
            return
         endif 
 
