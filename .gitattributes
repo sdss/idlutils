@@ -735,6 +735,17 @@ pro/slatec/slatec_efc.pro -text
 pro/slatec/slatec_splinefit.pro -text
 pro/spheregroup/spheregroup.pro -text
 pro/spheregroup/spherematch.pro -text
+pro/trace/fchebyshev.pro -text
+pro/trace/fchebyshev_split.pro -text
+pro/trace/flegendre.pro -text
+pro/trace/fpoly.pro -text
+pro/trace/func_fit.pro -text
+pro/trace/trace_crude.pro -text
+pro/trace/trace_fweight.pro -text
+pro/trace/trace_gweight.pro -text
+pro/trace/traceset2pix.pro -text
+pro/trace/traceset2xy.pro -text
+pro/trace/xy2traceset.pro -text
 pro/yanny/sxascii_read.pro -text
 pro/yanny/yanny_diff.pro -text
 pro/yanny/yanny_free.pro -text
