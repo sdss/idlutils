@@ -36,17 +36,15 @@
 ;   IDL> modfitscard, ['*666*.fits','*777*.fits'], 'DATE', '1994-03-23'
 ;
 ; BUGS:
-;   This routine calls MODFITS, which does not allow the size of the header
-;   to be changed.  Deleting or modifying cards will always work.  Adding
-;   cards could fail if this needs to increase the number of header blocks;
-;   an erro will be issued.
+;   This routine calls DJS_MODFITS, which allows the size of the header
+;   to be changed.
 ;
 ;   Wildcards are not supported for CARD, so you cannot say something like
 ;   IDL> modfitscard, 'test.fits', 'DATE*', '1994-03-23' ; Will not work!
 ;
 ; PROCEDURES CALLED:
+;   djs_modfits
 ;   headfits()
-;   modfits
 ;   sxaddpar
 ;
 ; REVISION HISTORY:
@@ -118,7 +116,7 @@ pro modfitscard, filename, card, value, comment, delete=delete, $
             endfor
          endelse
 
-         modfits, fullname[ifile], 0, hdr
+         djs_modfits, fullname[ifile], 0, hdr
       endelse
    endfor
 
