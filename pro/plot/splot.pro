@@ -172,8 +172,8 @@ pro splot_startup
     keyword: '', value: ptr_new() }, N_elements(graphlist) )
    graphkeys.keyword = graphlist
 
-   nplot = 0
-   maxplot = 5000
+   nplot = 0L
+   maxplot = 20000L
    plot_ptr = ptrarr(maxplot)
 
    ; Load a simple color table with the basic 8 colors
