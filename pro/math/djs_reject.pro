@@ -43,6 +43,10 @@
 ;   groupsize  - If this and MAXREJ are set, then reject a maximum of MAXREJ
 ;                points per group of GROUPSIZE points.  If GROUPDIM is also
 ;                set, then this specifies sub-groups within that.
+;   groupbadpix- Overrides the other groupsizes:  This associates each
+;                consectuive string of bad pixels as a group.  And maxrej
+;                is applied to each group of bad pixels.
+;                ***Unlikely to Work with Multi-Dimension Data***
 ;   sticky     - If set, then points rejected in OUTMASK are kept rejected.
 ;                Otherwise, if a fit (YMODEL) changes between iterations,
 ;                points can alternate from being rejected to not rejected.
@@ -112,12 +116,12 @@
 function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
  sigma=sigma, invvar=invvar, upper=upper, lower=lower, maxdev=maxdev, $
  maxrej=maxrej, groupsize=groupsize, groupdim=groupdim, sticky=sticky, $
- sequential=sequential, grow=grow
+ groupbadpix=groupbadpix, grow=grow
 
    if (n_params() LT 2 OR NOT arg_present(outmask)) then begin
       print, 'Syntax: qdone = djs_reject(ydata, ymodel, outmask=, [ inmask=, $
       print, ' sigma=, invvar=, upper=, lower=, maxdev=, grow= $'
-      print, ' maxrej=, groupsize=, groupdim=, /sticky, /sequential ] )'
+      print, ' maxrej=, groupsize=, groupdim=, /sticky, /groupbadpix] )'
       return, 1
    endif
 
@@ -225,7 +229,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
 
    if (keyword_set(inmask)) then badness = badness * inmask
    if (keyword_set(sticky)) then badness = badness * outmask
-
+   
    ;----------
    ; Reject a maximum of MAXREJ (additional) points in all the data,
    ; or in each group as specified by GROUPSIZE, and optionally along
@@ -256,9 +260,10 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
             ; of points specified by GROUPSIZE (if set).
             nin = n_elements(indx)
 
-            if keyword_set(sequential) then begin
-              groups_lower = where([1,badness] - badness EQ 1)
-              groups_upper = where([badness[1:*],1] - badness EQ 1)
+            if keyword_set(groupbadpix) then begin
+              badtemp = badness GT 0
+              groups_lower = where([1,badtemp] - badtemp EQ 1)
+              groups_upper = where([badtemp[1:*],1] - badtemp EQ 1)
               ngroups = n_elements(groups_lower)
             endif else begin
               if (NOT keyword_set(groupsize)) then begin
