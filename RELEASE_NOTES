@@ -1,4 +1,5 @@
 
+ASINH: Copy in Landsman's latest version.
 COUNT_FREELUN: New function to count the number of logical file pointers
                (LUNs) that are available.  This is to be called by DJS_BATCH.
 DIERFC: New math function for erfc.
@@ -13,7 +14,8 @@ IDLUTILS_SO_EXT: New function to return the appropriate dynamic library
                extension given architecture.
 MULTI_PSF_FIT: New procedure which, given an image and a PSF, finds the
                best fit combination of N PSFs which explains the image
-               (user supplies number of desired PSFs N)  
+               (user supplies number of desired PSFs N).
+NW_ARCSINH: Changes to use less memory.
 NW_RGB_MAKE: add new keyword COLORS to pass back final colors used for jpg
 RADEC_GREATCIRCLE: In the internal function RADEC_GCFN, return the
                concatenation of all the chi values in both mu+nu,
