@@ -26,6 +26,7 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;
 ; SYSTEM VARIABLES:
 ;       Uses nonstandard system variables !TEXTOUT and !TEXTOPEN
+;       These will be defined (using ASTROLIB) if not already present.
 ;       Set !TEXTOUT = 3 to direct output to a disk file.   The system
 ;       variable is overriden by the value of the keyword TEXTOUT
 ;
@@ -53,6 +54,8 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       New FTINFO calling sequence    W. Landsman   May 2000
 ;       Parse scalar string with STRSPLIT   W. Landsman  July 2002
+;       Fix format display of row number  W. Landsman March 2003
+;       Fix format display of row number again  W. Landsman May 2003
 ;-
 ; On_error,2
 ;
@@ -64,6 +67,9 @@ pro ftprint,h,tab,columns,rows,textout=textout
    return
  endif
 
+ defsysv,'!textout',exists = i
+ if i EQ 0 then astrolib
+ 
  if N_elements(columns) EQ 0 then columns = -1
  if N_elements(rows) EQ 0 then rows= -1
  if  not keyword_set(TEXTOUT)  then textout = !TEXTOUT
@@ -132,7 +138,8 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ; open output file
 ;
  textopen,'FTPRINT',TEXTOUT=textout, MORE_SET = more_set
- ifmt = fix(alog10(max(r))) > 3
+
+ ifmt = fix(alog10(max(r)+1)) > 3
  title1 = strn('ROW',padtype=2,len = ifmt) +  title1
  title2 = string(replicate(32b,ifmt+1)) + title2
  ifmt = strtrim(ifmt,2)
