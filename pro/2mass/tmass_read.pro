@@ -25,6 +25,11 @@
 function tmass_read, racen, deccen, rad
 
   fitspath = concat_dir(getenv('TWOMASS_DIR'),'slice')
+  if fitspath eq 'slice' then begin 
+     print, 'You must set your $TWOMASS_DIR environment variable!'
+     stop
+  endif
+
   prefix = '2mass-'
   zonewidth = 0.1               ; [deg]
 
