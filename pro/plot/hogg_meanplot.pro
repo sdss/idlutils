@@ -35,6 +35,7 @@ pro hogg_meanplot, x,y,z,weight=weight, $
                    minnum=minnum, $
                    noperimeter=noperimeter,nobox=nobox,nolines=nolines, $
                    maskonly=maskonly, bin_mean=bin_mean, $
+                   bin_scatter=bin_scatter, $
                    bin_number=bin_number, input_mean=input_mean, $
                    axis_char_scale=axis_char_scale
 
@@ -88,6 +89,7 @@ if(NOT keyword_set(input_mean)) then begin
     bin_weight= image[*,*,1]
     bin_weight2= image[*,*,2]
     bin_mean= image[*,*,3]
+    bin_scatter= image[*,*,4]
 endif
 
 ; check values and set contour levels

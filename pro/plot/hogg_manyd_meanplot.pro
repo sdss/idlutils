@@ -34,6 +34,7 @@ pro hogg_manyd_meanplot, weight,point,zdim,psfilename, $
                          axis_char_scale=axis_char_scale, $
                          default_font=default_font, $
                          manyd_mean=manyd_mean, $
+                         manyd_scatter=manyd_scatter, $
                          input_mean=input_mean, $
                          _EXTRA=KeywordsForHoggMeanplot
 
@@ -61,7 +62,8 @@ if(NOT keyword_set(input_mean)) then begin
                  label:strarr(2), $
                  dbin:dblarr(2), $
                  number:ptr_new(), $
-                 mean:ptr_new()}
+                 mean:ptr_new(), $
+                 scatter:ptr_new()}
     manyd_mean=replicate(manyd_mean1,xdimen,ydimen)
 endif
 
@@ -168,11 +170,13 @@ for id2=ydimen-1L,0L,-1 do begin
                 hogg_meanplot, point[d1,*],point[d2,*],quantity, $
                   weight=weight, axis_char_scale=axis_char_scale, $
                   dxbin=dxbin,dybin=dybin, bin_mean=bin_mean, $
-                  bin_number=bin_number, input_mean=input_mean, $
+                  bin_number=bin_number, bin_scatter=bin_scatter, $
+                  input_mean=input_mean, $
                   xrange=range[*,d1],yrange=range[*,d2], $
                   _EXTRA=KeywordsForHoggMeanplot
                 if(NOT keyword_set(input_mean)) then begin
                     manyd_mean[id1,id2].mean=ptr_new(bin_mean)
+                    manyd_mean[id1,id2].scatter=ptr_new(bin_scatter)
                     manyd_mean[id1,id2].number=ptr_new(bin_number)
                 endif
             endif else begin

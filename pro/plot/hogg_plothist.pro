@@ -47,7 +47,7 @@ inxgrid= where(xgrid GE 0 AND xgrid LT npix,ninxgrid)
 for ii=0L,ninxgrid-1 do begin
     hist[xgrid[inxgrid[ii]]]= hist[xgrid[inxgrid[ii]]]+weight[inxgrid[ii]]
 endfor
-hist= hist*double(npix)/(xrange[1]-xrange[0])
+hist= hist*double(npix)/abs(xrange[1]-xrange[0])
 
 ; set y range
 if not keyword_set(yrange) then yrange= [-0.1,1.1]*max(hist)

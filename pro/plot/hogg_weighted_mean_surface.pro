@@ -29,7 +29,7 @@ function hogg_weighted_mean_surface, x,y,quantity,weight,xbin,ybin,dx,dy, $
 npt= n_elements(x)
 nx= n_elements(xbin)
 ny= n_elements(ybin)
-image= dblarr(nx,ny,4)
+image= dblarr(nx,ny,5)
 splog, 'making ',nx,' by ',ny,' surface from ',npt,' data points...'
 
 ; bootstrap?
@@ -56,6 +56,7 @@ for xi= 0L,nx-1 do for yi= 0L,ny-1 do begin
         image[xi,yi,1]= total(tw[isub],/double)
         image[xi,yi,2]= total((tw[isub])^2,/double)
         image[xi,yi,3]= total(tw[isub]*tq[isub],/double)/image[xi,yi,1]
+        image[xi,yi,4]= total(tw[isub]*tq[isub],/double)/image[xi,yi,1]
     endif
 endfor
 

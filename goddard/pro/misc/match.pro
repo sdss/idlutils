@@ -143,8 +143,8 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
   COUNT = 0L
  if (maxab lt minab) or (maxab lt 0) then return
  
- ha = histogram(a, MIN=minab, MAX=maxab, reverse_indices=reva)
- hb = histogram(b, MIN=minab, MAX=maxab, reverse_indices=revb)
+ ha = histogram([a], MIN=minab, MAX=maxab, reverse_indices=reva)
+ hb = histogram([b], MIN=minab, MAX=maxab, reverse_indices=revb)
  
  r = where((ha ne 0) and (hb ne 0), count)
  if count gt 0 then begin
