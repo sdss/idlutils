@@ -729,6 +729,14 @@ function splot_icolor, color
              + 7 * (color EQ 'white') $
              + defcolor * (color EQ 'default')
 
+     if (!d.N_colors EQ 16777216) then begin
+      red   = [0, 1, 0, 0, 0, 1, 1, 1]
+      green = [0, 0, 1, 0, 1, 0, 1, 1]
+      blue  = [0, 0, 0, 1, 1, 1, 0, 1]
+        colors = 255L*red + ishft(255L*green,8) + ishft(255L*blue,16)
+        icolor = colors[icolor]
+      endif
+
    endif else begin
       icolor = long(color)
    endelse
