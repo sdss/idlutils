@@ -4,11 +4,11 @@
 #include <polygon.h>
 #include "export.h"
 
-int gvert(polygon *poly, int vcirc, double *tol, int nvmax, int per, int nve, 
+IDL_LONG gvert(polygon *poly, int vcirc, double *tol, int nvmax, int per, int nve, 
           int *nv, vec ve[/*nvmax * nve*/], double angle[/*nvmax*/], 
           int ipv[/*nvmax*/], int gp[/*poly->np*/], int *nev, int *nev0, 
           int ev[/*nvmax*/]);
-int vmid(polygon *poly, double mtol, int nv, int nve, 
+IDL_LONG vmid(polygon *poly, double mtol, int nv, int nve, 
          vec ve[/*nv * nve*/], int ipv[/*nv*/], int ev[/*nv*/], int *nvm, 
          vec **vm_p);
 
@@ -40,7 +40,7 @@ IDL_LONG idl_vmid
 	IDL_LONG nev;
 	IDL_LONG nev0;
 	IDL_LONG *ev_p;
-	IDL_LONG i,j,k,l;
+	IDL_LONG i;
 	IDL_LONG retval=1;
   double mtol=1.e-15;
 

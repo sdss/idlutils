@@ -4,7 +4,7 @@
 #include <polygon.h>
 #include "export.h"
 
-int garea(polygon *poly, double *tol, IDL_LONG verb, double *area); 
+IDL_LONG garea(polygon *poly, double *tol, IDL_LONG verb, double *area); 
 polygon *new_poly(int npmax);
 
 /*---------------------------------------------------------------------------
@@ -113,7 +113,7 @@ IDL_LONG idl_where_polygons_overlap
   IDL_LONG ncaps,maxncaps, nmatch, *matchncaps, *ismatch;
   double *x, *cm, *xmatch, *cmmatch;
 	
-	IDL_LONG i,j,k,jp;
+	IDL_LONG i,j,k;
 	IDL_LONG retval=1;
 	double    tol,area;
 	IDL_LONG  verbose;

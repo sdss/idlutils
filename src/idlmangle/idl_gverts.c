@@ -4,7 +4,7 @@
 #include <polygon.h>
 #include "export.h"
 
-static int nv_int;
+static int ve_int;
 static int nve_int;
 #if 0
 static double *ve_p_int=NULL;
@@ -13,7 +13,7 @@ static int *ipv_p_int=NULL;
 static int *ev_p_int=NULL;
 #endif
 
-int gvert(polygon *poly, int vcirc, double *tol, int nvmax, int per, int nve, 
+IDL_LONG gvert(polygon *poly, int vcirc, double *tol, int nvmax, int per, int nve, 
           int *nv, vec ve[/*nvmax * nve*/], double angle[/*nvmax*/], 
           int ipv[/*nvmax*/], int gp[/*poly->np*/], int *nev, int *nev0, 
           int ev[/*nvmax*/]);
@@ -49,7 +49,7 @@ IDL_LONG idl_gverts
 	IDL_LONG *nev0;
 	IDL_LONG *ev_p;
 	
-	IDL_LONG i,j,k,l;
+	IDL_LONG i;
 	IDL_LONG retval=1;
 
 	poly=(polygon *) malloc(sizeof(polygon));
