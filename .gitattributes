@@ -811,6 +811,7 @@ pro/misc/lookforgzip.pro -text
 pro/misc/make_html_help.pro -text
 pro/misc/read_tbl.pro -text
 pro/misc/rmfile.pro -text
+pro/misc/shuffle_indx.pro -text
 pro/misc/splog.pro -text
 pro/misc/struct_addtags.pro -text
 pro/misc/struct_append.pro -text
