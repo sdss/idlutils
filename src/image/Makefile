@@ -32,7 +32,7 @@ OBJECTS = \
 all : $(LIB)/libimage.$(SO_EXT)
 
 $(LIB)/libimage.$(SO_EXT): $(OBJECTS) ph.h export.h
-	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) -lg2c -L/usr/lib/gcc-lib/i386-redhat-linux/2.96
+	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) $(MAKE_FTNLIB)
 #	nm -s ../lib/libimage.$(SO_EXT)
 
 #
