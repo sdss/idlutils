@@ -17,7 +17,6 @@
 ;   result
 ;
 ; PROCEDURES CALLED:
-;   fix()
 ;
 ; REVISION HISTORY:
 ;   Written D. Schlegel, 27 November 1996, Durham
@@ -31,7 +30,7 @@ function djs_ceil, xvalue
       return, -1
    endif
 
-   result = - fix(-xvalue + fix(xvalue) + 1) + fix(xvalue) + 1
+   result = - long(-xvalue + long(xvalue) + 1) + long(xvalue) + 1
 
    return, result
 end

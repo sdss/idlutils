@@ -16,7 +16,6 @@
 ;   result
 ;
 ; PROCEDURES CALLED:
-;   fix()
 ;
 ; REVISION HISTORY:
 ;   Written D. Schlegel, 15 May 1997, Durham
@@ -30,7 +29,7 @@ function djs_posmod, x, y
       return, -1
    endif
 
-;   result = x - y * fix(x/y)
+;   result = x - y * long(x/y)
    result = x MOD y
    indx = where(result LT 0)
    if (indx[0] NE -1) then result[indx] = result[indx] + abs(y)

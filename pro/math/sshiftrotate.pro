@@ -85,7 +85,7 @@ function sshiftrotate, image, theta1, xshift=xshift1, yshift=yshift1, $
    ; If the rotation angle is not in the range [-45,+45) degrees, then rotate
    ; the image first and call this routine recursively.
 
-   irot = fix( (theta+45) / 90 )
+   irot = long( (theta+45) / 90 )
    if (irot NE 0) then begin
       thisang = theta - irot * 90
 

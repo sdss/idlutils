@@ -55,7 +55,7 @@ function sshift,x,shift
    xp   = fltarr(npts)
 
 ; First, split the desired shift into a fractional and integer part.
-   ishift = fix(shift)
+   ishift = long(shift)
    fshift = shift - ishift
 
 ; Do the fractional shift first (if necessary).
