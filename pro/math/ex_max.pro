@@ -35,7 +35,7 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
   range=range, stopdamp=stopdamp, periodic_qa=periodic_qa
 
 ; set defaults
-  if NOT keyword_set(maxiterate) then maxiterate= 1000
+  if n_elements(maxiterate) eq 0 then maxiterate= 1000
   if NOT keyword_set(stopdamp) then stopdamp= 1.D-9
 
 ; check dimensions
