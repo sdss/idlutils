@@ -21,6 +21,9 @@
 ;   title        puts string title on top of page
 ; KEYWORDS:
 ;   nodata       don't plot anything at all, just axes!
+;   meanweight      - plot the mean of the weight values that land in
+;                     that pixel, rather than the total; don't use
+;                     with /conditional!
 ;   [etc]        [options for hogg_scatterplot, see documentation]
 ; OUTPUTS:
 ; OPTIONAL OUTPUTS:
@@ -40,8 +43,8 @@ pro hogg_manyd_scatterplot, weight,point,psfilename,nsig=nsig, $
                             axis_char_scale=axis_char_scale, $
                             default_font=default_font, $
                             xnpix=xnpix,ynpix=ynpix, $
-                            nodata=nodata, manyd=manyd, title=title, $
-                            extrafun=extrafun, $
+                            nodata=nodata,manyd=manyd,title=title, $
+                            extrafun=extrafun,meanweight=meanweight, $
                             _EXTRA=KeywordsForHoggScatterplot
 
 if(n_params() lt 2) then begin
@@ -164,7 +167,7 @@ for id2=ydimen-1L,0L,-1 do begin
                       weight=weight, $
                       xrange=range[*,d1],yrange=range[*,d2], $
                       xnpix=xnpix,ynpix=ynpix, grid=grid, $
-                      internal_weight=internal_weight, $
+                      internal_weight=internal_weight,meanweight=meanweight, $
                       _EXTRA=KeywordsForHoggScatterplot
                     if(n_elements(manyd) ne xnpix*ynpix*xdimen*ydimen) then $
                       manyd=dblarr(xnpix,ynpix,xdimen,ydimen)
@@ -177,7 +180,8 @@ for id2=ydimen-1L,0L,-1 do begin
                       /nodata,yticklen=1d-10
                 endif else begin
                     hogg_plothist, point[d1,*],weight=weight, $
-                      xrange=range[*,d1],npix=xnpix,yticklen=1d-10
+                      xrange=range[*,d1],npix=xnpix,yticklen=1d-10, $
+                      meanweight=meanweight
                 endelse
             endelse
 

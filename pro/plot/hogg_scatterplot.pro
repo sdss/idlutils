@@ -34,6 +34,9 @@
 ;                     contours
 ;   nogreyscale     - don't plot the greyscale
 ;   outliers        - NEEDS DOCUMENTATION
+;   meanweight      - plot the mean of the weight values that land in
+;                     that pixel, rather than the total; don't use
+;                     with /conditional!
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
@@ -73,6 +76,7 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       cumimage=cumimage,outquantiles=outquantiles, $
                       outliers=outliers, outpsym=outliers_psym, $
                       outcolor=outliers_color, outsymsize=outliers_symsize, $
+                      meanweight=meanweight, $
                       _EXTRA=KeywordsForPlot
 
 if(n_params() lt 2) then begin
@@ -124,6 +128,11 @@ endif
 ; (this puts the grid in units of the weights, not per unitx per unity)
 grid= hogg_histogram(transpose([[x],[y]]),[[xrange],[yrange]],[xnpix,ynpix], $
                      weight=weight)
+if keyword_set(meanweight) then begin
+    dgrid= hogg_histogram(transpose([[x],[y]]), $
+                          [[xrange],[yrange]],[xnpix,ynpix])
+    grid= grid/(dgrid+(dgrid EQ 0.0))
+endif
 
 ; renormalize columns, if necessary
 if keyword_set(conditional) then begin

@@ -15,6 +15,8 @@
 ;   overplot    - overplot, don't plot anew
 ;   ploterr     - plot Poisson error bars too
 ;   log         - take log_10 before plotting
+;   meanweight  - plot the mean of the weights in each bin rather than
+;                 the total of the weights
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [npix] vector of x values of grid pixel centers
 ;   hist        - the histogram itself (ie, the total weight in each
@@ -34,6 +36,7 @@ pro hogg_plothist, x,weight=weight, $
                    xrange=xrange,yrange=yrange,npix=npix, $
                    xvec=xvec,hist=hist,err=err, $
                    overplot=overplot,ploterr=ploterr,log=log, $
+                   meanweight=meanweight, $
                    _EXTRA=KeywordsForPlot
 
 ; set defaults
@@ -50,15 +53,22 @@ xvec= xrange[0]+(xrange[1]-xrange[0])*(dindgen(npix)+0.5)/double(npix)
 xgrid= floor(npix*(x-xrange[0])/(xrange[1]-xrange[0]))
 
 ; make and fill histogram
+num= dblarr(npix)
 hist= dblarr(npix)
 err= dblarr(npix)
 inxgrid= where(xgrid GE 0 AND xgrid LT npix,ninxgrid)
 for ii=0L,ninxgrid-1 do begin
+    num[xgrid[inxgrid[ii]]]= num[xgrid[inxgrid[ii]]] $
+      +1.0
     hist[xgrid[inxgrid[ii]]]= hist[xgrid[inxgrid[ii]]] $
       +weight[inxgrid[ii]]
     err[xgrid[inxgrid[ii]]]= err[xgrid[inxgrid[ii]]] $
       +(weight[inxgrid[ii]])^2
 endfor
+if keyword_set(meanweight) then begin
+    hist= hist/(num+(num eq 0.0))
+    err= err/(num+(num eq 0.0))^2
+endif
 hist= hist*double(npix)/abs(xrange[1]-xrange[0])
 err= sqrt(err)*double(npix)/abs(xrange[1]-xrange[0])
 
