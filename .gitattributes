@@ -830,11 +830,13 @@ pro/plot/ex_max_plot.pro -text
 pro/plot/hogg_combine_layers.pro -text
 pro/plot/hogg_interval.pro -text
 pro/plot/hogg_manyd_scatterplot.pro -text
+pro/plot/hogg_meanplot.pro -text
 pro/plot/hogg_oplot_covar.pro -text
 pro/plot/hogg_plot_defaults.pro -text
 pro/plot/hogg_plothist.pro -text
 pro/plot/hogg_scatterplot.pro -text
 pro/plot/hogg_usersym.pro -text
+pro/plot/hogg_weighted_mean_surface.pro -text
 pro/plot/imgexp.pro -text
 pro/plot/imgscl.pro -text
 pro/plot/splot.pro -text
