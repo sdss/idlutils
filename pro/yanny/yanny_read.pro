@@ -66,6 +66,7 @@
 ;   numlines
 ;
 ; INTERNAL SUPPORT ROUTINES:
+;   yanny_strip_commas()
 ;   yanny_add_comment
 ;   yanny_getwords()
 ;   yanny_add_pointer
@@ -84,7 +85,16 @@
 ;                and clarity.
 ;-
 ;------------------------------------------------------------------------------
+; All this function actually does is trim any semi-colons at the end
+; of a line.  This is to prevent the semi-colon from becoming part
+; of a structure's name.
+function yanny_strip_commas, rawline
 
+   pos = stregex(rawline+' ', '; +$', len=len)
+   if (pos[0] EQ -1) then return, rawline $
+    else return, strmid(rawline, 0, pos)
+end
+;------------------------------------------------------------------------------
 pro yanny_add_comment, rawline, comments
 
    if (size(comments,/tname) EQ 'INT') then $
@@ -94,7 +104,6 @@ pro yanny_add_comment, rawline, comments
 
    return
 end
-
 ;------------------------------------------------------------------------------
 ; Procedure to read the next line from a file into a string.
 ; This piece of code used to not use READF, since READF used to
@@ -156,9 +165,9 @@ function yanny_nextline, ilun
    rgx = hogg_unquoted_regex(';')
    while (strlen(sline) GT 0) do begin
       pos = strsplit(sline, rgx, /regex, length=len)
-      if (NOT keyword_set(lastline)) then lastline = strmid(sline, 0, len) $
-       else lastline = [lastline, strmid(sline, 0, len)]
-; But add back in the semi-colon!!!???
+      ; By using len+1 below, we are adding back in the semi-colon.
+      if (NOT keyword_set(lastline)) then lastline = strmid(sline, 0, len+1) $
+       else lastline = [lastline, strmid(sline, 0, len+1)]
       sline = strmid(sline, len+1)
    endwhile
 
@@ -193,12 +202,20 @@ end
 ; is protected from being split into separate words, and is returned as
 ; a single word without the quotes.
 
-function yanny_getwords, sline
+function yanny_getwords, sline_in
+
+   sline = sline_in ; Make a copy of this, since we modify it below
 
    ;----------
-   ; First, we need to replace any empty curly-bracket, like "{}" or "{{}}"
-   ; with a double-quoted empty string.
-; IMPLEMENT THIS!!! ???
+   ; First, we need to replace any empty double curly-bracket,
+   ; like "{ { } }" or "{{}}" with a double-quoted empty string.
+
+   pos = 0
+   while (pos GE 0) do begin
+      pos = stregex(sline,'\{ *\{ *\} *\}', length=len)
+      if (pos GE 0) then $
+       sline = strmid(sline,0,pos) + ' "" ' + strmid(sline,pos+len)
+   endwhile
 
    ;----------
    ; Dispose of any commas, semi-colons, or curly-brackets
@@ -276,8 +293,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       qdone = 0
 
       ; Read the next line
-      sline = yanny_nextline(ilun)
-;      sline = yanny_strip_commas(sline)
+      rawline = yanny_nextline(ilun)
+      sline = yanny_strip_commas(rawline)
       words = yanny_getwords(sline) ; Divide into words and strings
 
       nword = N_elements(words)
@@ -288,12 +305,12 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
          if (words[0] EQ 'typedef' AND words[1] EQ 'enum') then begin
 
             while (strmid(sline,0,1) NE '}') do begin
-               yanny_add_comment, sline, enums
-               sline = yanny_nextline(ilun)
-;               sline = yanny_strip_commas(sline)
+               yanny_add_comment, rawline, enums
+               rawline = yanny_nextline(ilun)
+               sline = yanny_strip_commas(rawline)
             endwhile
 
-            yanny_add_comment, sline, enums
+            yanny_add_comment, rawline, enums
 
             qdone = 1 ; This last line is still part of the enum string
 
@@ -302,12 +319,11 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
           then begin
 
             ntag = 0
-            yanny_add_comment, sline, structs
-            sline = yanny_nextline(ilun)
-;            sline = yanny_strip_commas(sline)
+            yanny_add_comment, rawline, structs
+            rawline = yanny_nextline(ilun)
+            sline = yanny_strip_commas(rawline)
 
             while (strmid(sline,0,1) NE '}') do begin
-               sline = strcompress(sline)
                ww = yanny_getwords(sline)
 
                if (N_elements(ww) GE 2) then begin
@@ -349,12 +365,12 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   ntag = ntag + 1
                endif
 
-               yanny_add_comment, sline, structs
-               sline = yanny_nextline(ilun)
-;               sline = yanny_strip_commas(sline)
+               yanny_add_comment, rawline, structs
+               rawline = yanny_nextline(ilun)
+               sline = yanny_strip_commas(rawline)
             endwhile
 
-            yanny_add_comment, sline, structs
+            yanny_add_comment, rawline, structs
 
             ; Now for the structure name - get from the last line read
             ; Force this to uppercase
@@ -401,7 +417,6 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 ;                *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
 
                ; Split this text line into words
-;               sline = strcompress( yanny_strip_brackets(sline) )
                ww = yanny_getwords(sline)
 
                i = 1 ; Counter for which word we're currently reading
@@ -416,7 +431,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   ; Error-checking code below
                   if (i+sz GT n_elements(ww)) then begin
                      splog, 'Last line number read: ', lastlinenum
-                     splog, 'Last line read: "' + sline + '"'
+                     splog, 'Last line read: "' + rawline + '"'
                      splog, 'ABORT: Invalid Yanny file ' + filename $
                       + ' at line number ' $
                       + strtrim(string(lastlinenum),2) + ' !!'
@@ -441,7 +456,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       endif
 
       if (qdone EQ 0) then $
-       yanny_add_comment, sline, hdr
+       yanny_add_comment, rawline, hdr
 
    endwhile
 
