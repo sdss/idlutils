@@ -1,4 +1,4 @@
-Miscellaneous Procedures                      pro/misc         December 2002
+Miscellaneous Procedures                      pro/misc         October 2003
 
 The procedures in this directory are general utility procedures that do not
 involve astronomy.   They are included here either because they are required
@@ -56,6 +56,7 @@ GETWRD() -  Get specified item (word) from a string (in /jhuapl)
 HGREP -  Find a substring in a FITS header (or any other string array)
 HOST_TO_IEEE - Convert IDL variable from host machine bit order to IEEE
 HPRINT -  Pretty terminal display of a FITS header (or other string array)
+IDL_VALIDNAME() - Emulate intrinsic IDL_VALIDNAME() function for V5.6 and earlier
 IEEE_TO_HOST - Convert IDL variable from IEEE bit order to host machine
 ISARRAY() - Determine if an IDL variable is an array (in /jhuapl)
 IS_IEEE_BIG() - Determine if the host machine is IEEE big endian 
