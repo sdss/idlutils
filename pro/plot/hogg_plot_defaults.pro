@@ -8,7 +8,8 @@
 ; REVISION HISTORY:
 ;   2003-01-08  written - Hogg
 ;-
-pro hogg_plot_defaults
+pro hogg_plot_defaults, axis_char_scale=axis_char_scale
+if not keyword_set(axis_char_scale) then axis_char_scale=1.0
 !P.FONT= -1
 !P.BACKGROUND= djs_icolor('white')
 !P.COLOR= djs_icolor('black')
@@ -20,7 +21,7 @@ pro hogg_plot_defaults
 !P.TITLE= ''
 !X.STYLE= 1
 !X.THICK= 0.5*!P.THICK
-!X.CHARSIZE= 1.0
+!X.CHARSIZE= 1.0*axis_char_scale
 !X.MARGIN= [1,1]*0.0
 !X.OMARGIN= [6,6]*axis_char_scale-!X.MARGIN
 !X.RANGE= 0

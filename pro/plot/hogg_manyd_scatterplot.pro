@@ -80,7 +80,7 @@ if keyword_set(psfilename) then begin
     device, file=psfilename,/inches,xsize=xsize,ysize=ysize, $
       xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color
 endif
-hogg_plot_defaults
+hogg_plot_defaults, axis_char_scale=axis_char_scale
 tiny= 1.d-4
 !X.CHARSIZE= tiny
 !Y.CHARSIZE= !X.CHARSIZE
