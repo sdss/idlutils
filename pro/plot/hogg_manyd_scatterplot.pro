@@ -24,6 +24,9 @@
 ; BUGS:
 ;   Can get infinite plot ranges.
 ; DEPENDENCIES:
+;   hogg_plot_defaults
+;   hogg_scatterplot
+;   plus much, much more
 ; REVISION HISTORY:
 ;   2002-12-14  re-constructed from ex_max_plot -- Hogg
 ;-
