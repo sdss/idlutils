@@ -513,10 +513,14 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
    ;----------
    ; Trim the structures from their maximum length to only the actual
-   ; number of elements.
+   ; number of elements.  Be sure to free memory from the untrimmed,
+   ; unused pointers.
 
-   for icount=0, pcount-1 do $
-    pdata[icount] = ptr_new( (*pdata[icount])[0:(pnumel[icount]-1)>0] )
+   for icount=0, pcount-1 do begin
+      oldptr = pdata[icount]
+      pdata[icount] = ptr_new( (*oldptr)[0:(pnumel[icount]-1)>0] )
+      ptr_free, oldptr
+   endfor
 
    return
 end
