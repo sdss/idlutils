@@ -114,12 +114,17 @@ int main(int argc, char *argv[])
                          links, nlinks, npolylink);
   if (npolys == -1) exit(1);
 
-	/* find parents */
+	/* find parents, output */
+	if(fmt.parents)
+		ofp=fopen(fmt.parents,"w");
+	else 
+		ofp=stdout;
   total_parents=0;
 	for(i=npoly;i<npoly+npolys;i++) 
     total_parents+=polys[i]->nparents;
   fprintf(stderr, 
           "total number of current parents: %d\n", total_parents);
+	fprintf(ofp,"%d\n",npolys);
 	for(i=npoly;i<npoly+npolys;i++) {
 		/* for each parent who contributed a cap, check all the possibly 
 			 involved parties */
@@ -167,21 +172,14 @@ int main(int argc, char *argv[])
 		}
 		free_poly(test_poly1);
 		test_poly1=0x0;
-	}
-  total_parents=0;
-  for(i=npoly;i<npoly+npolys;i++) 
-    total_parents+=polys[i]->nparents;
-  fprintf(stderr, "total number of parents: %d\n", total_parents);
-
-	if(fmt.parents)
-		ofp=fopen(fmt.parents,"w");
-	else 
-		ofp=stdout;
-	fprintf(ofp,"%d\n",npolys);
-	for(i=npoly;i<npoly+npolys;i++) {
+    
 		fprintf(ofp,"%d\n",polys[i]->nparents);
 		for(j=0;j<polys[i]->nparents;j++)
 			fprintf(ofp,"%d\n",polys[i]->parent_polys[j]);
+    free(polys[i]->parent_polys);
+    polys[i]->parent_polys=0x0;
+    polys[i]->nparents=0;
+    polys[i]->maxparents=0;
 	}
 	if(fmt.parents)
 		fclose(ofp);
