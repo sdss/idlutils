@@ -21,6 +21,7 @@ src/image/Makefile: Change some of the comment lines, since for some bizarre
                on the SGI IRIX platform.
 src/{idlmangle,image,math,slatec,spheregroup,trace}/Makefile: Changed the
                location of the include file to "../../include".
+src/trace/evilmath.c: Get rid of "sumf" variable which is unused.
 
 -------------------------------------------------------------------------------
 v4_10_8 (Jan 4, 2004)
