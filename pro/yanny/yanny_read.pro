@@ -150,6 +150,8 @@ end
 
 pro yanny_readstring, ilun, sline
 
+   common yanny_linenumber, lastlinenum ; Only for debugging
+
    sarray = strarr(2047)
    readf, ilun, sarray, format='(2047a1)'
 
@@ -164,6 +166,7 @@ pro yanny_readstring, ilun, sline
                                           ; than 255 characters.
    for i=0, 2047-1 do strput, sline, sarray[i], i
 
+   lastlinenum = lastlinenum + 1
 end
 ;------------------------------------------------------------------------------
 ; Read the next line from the input file, appending several lines if there
@@ -289,6 +292,9 @@ end
 ;------------------------------------------------------------------------------
 pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
  anonymous=anonymous, stnames=stnames, quick=quick, errcode=errcode
+
+   common yanny_linenumber, lastlinenum ; Only for debugging
+   lastlinenum = 0
 
    if (N_params() LT 1) then begin
       print, 'Syntax - yanny_read, filename, [ pdata, hdr=, enums=, structs=, $
@@ -472,7 +478,10 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
                   ; Error-checking code below
                   if (i+sz GT n_elements(ww)) then begin
-                     splog, 'ABORT: Invalid Yanny file!'
+                     splog, 'Last line number read: ', lastlinenum
+                     splog, 'Last line read: "' + rawline + '"'
+                     splog, 'ABORT: Invalid Yanny file ', filename, $
+                      ' at line number ', lastlinenum, ' !!'
                      close, ilun
                      free_lun, ilun
                      yanny_free, pdata
