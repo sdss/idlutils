@@ -57,6 +57,12 @@
 ;   minmax(bkpt), now I will set them equal to minmax with invvar = 0
 ;
 ; EXAMPLES:
+;   Construct a random function, and fit a B-spline to it without
+;   any rejection:
+;     IDL> x = findgen(1000)
+;     IDL> y = smooth(randomu(1234,1000),10)
+;     IDL> sset = bspline_iterfit(x,y,nord=3,maxiter=0,bkspace=10)
+;     IDL> yfit = bspline_valu(x,sset)
 ;
 ; PROCEDURES CALLED:
 ;   bspline_bkpts()
