@@ -823,6 +823,7 @@ pro/healpix/mqladvance.pro -text
 pro/healpix/ringwt.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
+pro/image/dpf_reject_cr.pro -text
 pro/image/embed_stamp.pro -text
 pro/image/exact_photfrac.pro -text
 pro/image/extract_profmean.pro -text
