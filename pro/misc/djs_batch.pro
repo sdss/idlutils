@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
-;    command, [ priority=, wtime= ]
+;    command, [ priority=, selecthost=, wtime= ]
 ;
 ; INPUTS:
 ;   topdir     - Local top-level directory for input and output files.
@@ -27,6 +27,8 @@
 ; OPTIONAL KEYWORDS:
 ;   priority   - Priority for each job, where the jobs with the largest
 ;                value are done first [NPROGRAM]
+;   selecthost - If set, then assign each job to only a host that matches
+;                the selected host per job [NPROGRAM]
 ;   wtime      - Sleep time between checking status of all jobs; default to
 ;                600 seconds.
 ;
@@ -70,7 +72,7 @@ end
 
 ;------------------------------------------------------------------------------
 function create_program_list, localfile, outfile, command, $
- priority=priority
+ priority=priority, selecthost=selecthost
 
    nprog = n_elements(localfile)
 
@@ -82,6 +84,7 @@ function create_program_list, localfile, outfile, command, $
     'PID', 0L, $
     'UNIT', 0L, $
     'PRIORITY', 1L, $
+    'SELECTHOST', '', $
     'STATUS', 'UNASSIGNED' )
 
    proglist = replicate(ftemp, nprog)
@@ -94,6 +97,7 @@ function create_program_list, localfile, outfile, command, $
 
    proglist.command = command
    if (keyword_set(priority)) then proglist.priority = priority
+   if (keyword_set(selecthost)) then proglist.selecthost = selecthost
 
    return, proglist
 end
@@ -341,7 +345,7 @@ end
 
 ;------------------------------------------------------------------------------
 pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
- command, priority=priority, wtime=wtime
+ command, priority=priority, selecthost=selecthost, wtime=wtime
 
    common com_batch, hostlist, proglist
 
@@ -353,7 +357,7 @@ pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
    ; Create a list of programs to execute (and their status)
 
    proglist = create_program_list(localfile, outfile, command, $ 
-    priority=priority)
+    priority=priority, selecthost=selecthost)
    nprog = n_elements(proglist)
    splog, 'Number of batch programs = ', nprog
    for iprog=0, nprog-1 do $
@@ -414,11 +418,15 @@ pro djs_batch, topdir, localfile, outfile, protocol, remotehost, remotedir, $
       splog, 'Number of DONE jobs = ', ndone
 
       ;----------
-      ; Assign jobs, doing the highest priority jobs first
+      ; Assign jobs, doing the highest priority jobs first.
+      ; If SELECTHOST is specified for a given job, then that job
+      ; can only be assigned to hosts by that name.
 
       if (nidle GT 0 AND nunassign GT 0) then begin
          for j=0, nidle-1 do begin ; Loop over available hosts
-            k = (where(proglist.status EQ 'UNASSIGNED'))
+            k = (where(proglist.status EQ 'UNASSIGNED' $
+             AND (proglist.selechost EQ '' $
+                  OR proglist.selecthost EQ hostlist.remotehost)))
             if (k[0] NE -1) then begin
                junk = max(proglist[k].priority, kmax)
                kbest = k
