@@ -6,6 +6,9 @@ REBIN_SPECTRUM: New function for rebinning 1-D spectra using CIC assignment
 TRACESET_TRIM: New function for trimming trace sets to selected traces.
 
 Makefile: Add include directory.
+bin/evilmake: Change build flags on the SGI platform (IRIX64) to be 64-bit
+               instead of 32-bit.  This involves adding "-64" and "-mips4"
+               flags.
 bin/Makefile: Should have "-n32" instead of "-32" in the X_FFLAGS
                for the IRIX64 platform, to avoid inconsistencies with
                the other compiler flags.
