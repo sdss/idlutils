@@ -33,7 +33,7 @@
 ;     yanny_write, 'testout.par', pdata, comments=comments
 ;
 ; BUGS:
-;   Need to write STRUCTS that is consistent with PDATA, even if not passed.
+;   There is no testing that STRUCTS is consistent with PDATA.
 ;
 ; PROCEDURES CALLED:
 ;
@@ -47,6 +47,9 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
       print, 'Syntax - yanny_write, filename, [ pdata, hdr=hdr, enums=enums, structs=structs]'
       return
    endif
+
+   tname = ['char', 'short', 'int', 'long', 'float', 'double']
+   idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'FLOAT', 'DOUBLE']
 
    get_lun, olun
    openw, olun, filename
@@ -73,13 +76,51 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs
          if (structs[i] NE '') then printf, olun, structs[i]
       endfor
       printf, olun, ''
-   endif
+   endif else begin
+      ; The "typedef struct" lines were not passed to this routine,
+      ; so generate those lines consistent with the data structures passed.
+      if (keyword_set(pdata)) then begin
+         for idat=0, N_elements(pdata)-1 do begin
+            ntag = N_tags( *pdata[idat] )
+            tags = tag_names( *pdata[idat] )
+            stname = tag_names( *pdata[idat], /structure_name)
+            if (stname EQ '') then stname = 'STRUCT' + strtrim(string(idat+1),2)
+
+            printf, olun, 'typedef struct {'
+
+            for itag=0, ntag-1 do begin          ; Loop through each variable
+               tt = size( (*pdata[idat])[0].(itag), /tname )
+               dims = size( (*pdata[idat])[0].(itag), /dimens )
+               ndim = size( (*pdata[idat])[0].(itag), /n_dimen )
+               tagname = tname[(where(idlname EQ tt))[0]]
+
+               sline = ' ' + tagname + ' ' + tags[itag]
+               for j=0, ndim-1 do begin
+                  sline = sline + '[' + strtrim(string(dims[j]),2) + ']'
+               endfor
+               if (tagname EQ 'char') then $
+                sline = sline + '[' $
+                + strtrim(string(max(strlen((*pdata[idat]).(itag)))+1),2) + ']'
+               sline = sline + ';'
+
+               printf, olun, sline
+            endfor
+
+            printf, olun, '} ' + stname + ';'
+            printf, olun, ''
+
+         endfor
+      endif
+   endelse
 
    ; Write the data in the Yanny file
    if (keyword_set(pdata)) then begin
       for idat=0, N_elements(pdata)-1 do begin
+         printf, olun, ''
+
          ntag = N_tags( *pdata[idat] )
          stname = tag_names( *pdata[idat], /structure_name)
+         if (stname EQ '') then stname = 'STRUCT' + strtrim(string(idat+1),2)
 
          for iel=0, N_elements( *pdata[idat] )-1 do begin ; Loop thru each row
 
