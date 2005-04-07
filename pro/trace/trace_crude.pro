@@ -122,7 +122,7 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
        else mthresh = median(imrow)
 
       ; Boxcar smooth along X
-      imrow = smooth(imrow,3)
+      imrow = smooth(imrow,radius/2 > 3)
 
       ; Find all local peaks that are also above THESH times the median
 ;      xstart = where( imrow[1:nx-2] GT imrow[0:nx-3] $
