@@ -59,7 +59,7 @@ device, /close
 !P= bangp
 !X= bangx
 !Y= bangy
-overlay1= hogg_image_overlay(prefix+'.ps',naxis1,naxis2,factor=factor)
+overlay1= 1.-hogg_image_overlay(prefix+'.ps',naxis1,naxis2,factor=factor)
 if keyword_set(overlay) then overlay= overlay+overlay1 $
   else overlay= overlay1
 return
