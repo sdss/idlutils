@@ -64,10 +64,10 @@ datahat=data
 datap.val=data.val*data_ivar.val
 
 ;; initialize templates and coeffs
-if(n_elements(templates) eq 0) then $
+if(keyword_set(templates) eq 0) then $
   templates=randomu(seed, nf, ncomp)+0.5  ;; HACK: scale hardwired 
 templates=templates/((dblarr(nf,1)+1.)#total(templates,1))
-if(n_elements(coeffs) eq 0) then begin
+if(keyword_set(coeffs) eq 0) then begin
 ;;    mdata=transpose(mmatrix)#data
     mmsparse, mdata, mmatrix, data
     coeffs=transpose(templates)#mdata
