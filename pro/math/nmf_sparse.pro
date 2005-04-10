@@ -34,10 +34,10 @@
 ;               Adapted from Matlab code of Sam Roweis
 ;
 ;----------------------------------------------------------------------
-pro nmf_sparse, data, data_ivar, ncomp, mmatrix, tol, coeffs=coeffs, $
+pro nmf_sparse, data, data_ivar, ncomp, mmatrix, in_tol, coeffs=coeffs, $
                 templates=templates
 
-if(n_elements(tol) eq 0) then tol=100
+if(n_elements(in_tol) eq 0) then in_tol=100
 
 ;; check nonneg
 ilezero=where(data.val le 0., nlezero)
@@ -84,10 +84,11 @@ err=1.d+99
 eold=1.d+100
 iters=1
 
-if(tol gt 1.) then begin
-    maxiters=tol
+if(in_tol gt 1.) then begin
+    maxiters=in_tol
     tol=0 
 endif else begin
+    tol=in_tol
     maxiters=1000000000L
 endelse
 
