@@ -1,4 +1,8 @@
+
 -------------------------------------------------------------------------------
+v5_0_4 (April 10, 2005) running on IDL 5.4 - 6.1
+Tagged for development of Longslit package.
+
 
 BSPLVN: Added code to break up task for 10^6 pts or more.
                BSPLINE_ACTION was not carrying double precision all the way
@@ -58,6 +62,7 @@ SPLOT: The reported "Area" for the interactive gaussian fits was missing
 TRACE_CRUDE: Allow XSTART to be set to exactly zero as an input.
                Bug fix, where the arrays were cast incorrectly if IMAGE
                was not type float, and INVVAR was not specified.
+               Use radius-dependent smoothing, which only matters if radius > 6.
 USNOB2FITS: Compress files locally, then copy to target.
 WRITE_FITS_POLYGONS: Allow it to propagate a header to the FITS file.
 
