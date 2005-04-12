@@ -1,4 +1,8 @@
 
+TRACE_CRUDE: Fix argument-passing as to not overwrite input variables.
+               If no peaks found, don't crash, just return zeros.
+               Make robust to [1,N] and [N,1] images.
+
 -------------------------------------------------------------------------------
 v5_0_4 (April 10, 2005) running on IDL 5.4 - 6.1
 Tagged for development of Longslit package.
