@@ -48,6 +48,7 @@
 ;
 ; PROCEDURES CALLED:
 ;   djs_laxisgen()
+;   splog
 ;
 ;   Dynamic link to trace_crude.c
 ;
@@ -57,9 +58,9 @@
 ;   06-Aug-1999  Added optional outpust XERR (DJS).
 ;-
 ;------------------------------------------------------------------------------
-function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
- radius=radius, yset=yset, nave=nave, nmed=nmed, thresh=thresh, $
- maxerr=maxerr, maxshifte=maxshift, maxshift0=maxshift0, xerr=xerr
+function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
+ radius=radius1, yset=yset, nave=nave1, nmed=nmed1, thresh=thresh, $
+ maxerr=maxerr1, maxshifte=maxshift_in, maxshift0=maxshift0_in, xerr=xerr
 
    ; Need 1 parameter
    if (N_params() LT 1) then begin
@@ -68,15 +69,25 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
       return, -1
    endif
 
-   nx = (size(fimage))[1]
-   ny = (size(fimage))[2]
-   if (NOT keyword_set(ystart)) then ystart = ny/2
-   if (NOT keyword_set(radius)) then radius = 3.0
-   if (NOT keyword_set(nmed)) then nmed = 1
-   if (NOT keyword_set(nave)) then nave = 5
-   if (NOT keyword_set(maxerr)) then maxerr = 0.2
-   if (NOT keyword_set(maxshift)) then maxshift = 0.1
-   if (NOT keyword_set(maxshift0)) then maxshift0 = 0.5
+   ndim = size(fimage, /n_dimen)
+   if (ndim NE 2) then message, 'FIMAGE must be 2-dimensional image'
+   dims = size(fimage, /dimens)
+   nx = dims[0]
+   ny = dims[1]
+   if (keyword_set(ystart1)) then ystart = ystart1 $
+    else ystart = long(ny/2)
+   if (keyword_set(radius1)) then radius = radius1 $
+    else radius = 3.0
+   if (keyword_set(nmed1)) then nmed = nmed1 > 1 $
+    else nmed = 1
+   if (keyword_set(nave1)) then nave = nave1 < ny $
+    else nave = 5 < ny
+   if (keyword_set(maxerr1)) then maxerr = maxerr1 $
+    else maxerr = 0.2
+   if (keyword_set(maxshift_in)) then maxshift = maxshift_in $
+    else maxshift = 0.1
+   if (keyword_set(maxshift0_in)) then maxshift0 = maxshift0_in $
+    else maxshift0 = 0.5
 
    ; Make a copy of the image and error map
    imgtemp = float(fimage)
@@ -92,11 +103,19 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
 
    ; Boxcar-sum the entire image along columns by NAVE rows
    if (nave GT 1) then begin
-      kernal = transpose(intarr(nave) + 1.0)
-      imgconv = convol(imgtemp*invtemp, kernal, /edge_truncate)
+      kernel = transpose(intarr(nave) + 1.0)
+      if (nx EQ 1) then $
+       imgconv = reform(convol(reform(imgtemp*invtemp,ny), $
+        reform(kernel,nave), /edge_truncate), 1, ny) $
+      else $
+       imgconv = convol(imgtemp*invtemp, kernel, /edge_truncate)
 
       ; Add the variances
-      invtemp = convol(invtemp, kernal, /edge_truncate)
+      if (nx EQ 1) then $
+       invtemp = reform(convol(reform(invtemp,ny), $
+        reform(kernel,nave), /edge_truncate), 1, ny) $
+      else $
+       invtemp = convol(invtemp, kernel, /edge_truncate)
 
       ; Look for pixels with infinite errors - replace with original values
       ibad = where(invtemp EQ 0, nbad)
@@ -109,7 +128,9 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
       imgtemp = imgconv / invtemp
    endif
 
-   if (n_elements(xstart) EQ 0) then begin
+   if (keyword_set(xstart1)) then begin
+      xstart = xstart1
+   endif else begin
       ; Automatically find peaks for XSTART
 
       ; Extract NSUM rows from the image at YSTART
@@ -125,17 +146,23 @@ function trace_crude, fimage, invvar, xstart=xstart, ystart=ystart, $
       imrow = smooth(imrow,radius/2 > 3)
 
       ; Find all local peaks that are also above THESH times the median
-;      xstart = where( imrow[1:nx-2] GT imrow[0:nx-3] $
-;                  AND imrow[1:nx-2] GT imrow[2:nx-1] $
-;                  AND imrow[1:nx-2] GT 1.0*medval) + 1
-      rderiv = imrow[1:nx-1] - imrow[0:nx-2]
-      izero = where( rderiv[0:nx-3] GT 0 AND rderiv[1:nx-2] LE 0 $
-       AND imrow[1:nx-2] GT mthresh)
-
-      if izero[0] EQ -1 then message, 'No peaks found'
+      if (nx GT 1) then begin
+         rderiv = imrow[1:nx-1] - imrow[0:nx-2]
+         izero = where( rderiv[0:nx-3] GT 0 AND rderiv[1:nx-2] LE 0 $
+          AND imrow[1:nx-2] GT mthresh, nzero)
+      endif else begin
+         nzero = 0
+      endelse
+      if (nzero EQ 0) then begin
+         yset = 0
+         xset = 0
+         xerr = 0
+         splog, 'Warning: No peaks found'
+         return, 0
+      endif
 
       xstart = izero + 0.5 + rderiv[izero] / (rderiv[izero] - rderiv[izero+1])
-   endif
+   endelse
 
    if (N_elements(ystart) EQ 1) then $
     ypass = replicate(long(ystart), N_elements(xstart)) $
