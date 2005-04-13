@@ -15,6 +15,7 @@
 ; OPTIONAL INPUTS:
 ;   filename   - Output file name; open and close this file
 ;   lun        - LUN number for an output file if one is already open
+;                (overrides FILENAME)
 ;   no_head    - Do not print the header lines that label the columns,
 ;                and do not increase the width of a column to occomodate
 ;                the column name.
@@ -85,21 +86,24 @@ function struct_checktype, tag, alias=alias
    return, tag
 end
 ;------------------------------------------------------------------------------
-pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
+pro struct_print, struct, filename=filename, lun=lun_in, tarray=tarray, $
  no_head=no_head, html=html, fdigit=fdigit, ddigit=ddigit, alias=alias, $
  formatcodes=formatcodes
 
-   if (keyword_set(filename)) then $
-    openw, lun, filename, /get_lun
+   if (size(struct,/tname) NE 'STRUCT') then return
+   nrow = n_elements(struct)
+   if (nrow EQ 0) then return
+
+   if (keyword_set(filename) AND keyword_set(lun_in) EQ 0) then begin
+      openw, lun, filename, /get_lun
+   endif else begin
+      if (keyword_set(lun_in)) then lun = lun_in
+   endelse
 
    if (NOT keyword_set(lun) AND NOT arg_present(tarray)) then lun = -1
 
    if (NOT keyword_set(fdigit)) then fdigit = 5
    if (NOT keyword_set(ddigit)) then ddigit = 7
-
-   if (size(struct,/tname) NE 'STRUCT') then return
-   nrow = n_elements(struct)
-   if (nrow EQ 0) then return
 
    tags = tag_names(struct)
    ntag = n_elements(tags)
@@ -207,7 +211,7 @@ pro struct_print, struct, filename=filename, lun=lun, tarray=tarray, $
          printf, lun, struct[irow], format=format
       endfor
       if (keyword_set(lastline)) then printf, lun, lastline
-      if (keyword_set(filename)) then close, lun
+      if (keyword_set(filename) AND keyword_set(lun_in) EQ 0) then close, lun
    endif
    if (arg_present(tarray)) then begin
       tarray = strarr(nrow)
