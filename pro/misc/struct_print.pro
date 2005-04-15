@@ -211,7 +211,10 @@ pro struct_print, struct, filename=filename, lun=lun_in, tarray=tarray, $
          printf, lun, struct[irow], format=format
       endfor
       if (keyword_set(lastline)) then printf, lun, lastline
-      if (keyword_set(filename) AND keyword_set(lun_in) EQ 0) then close, lun
+      if (keyword_set(filename) AND keyword_set(lun_in) EQ 0) then begin
+         close, lun
+         free_lun, lun
+      endif
    endif
    if (arg_present(tarray)) then begin
       tarray = strarr(nrow)
