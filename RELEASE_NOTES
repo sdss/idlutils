@@ -1,5 +1,7 @@
 
 BSPVN: Upped the huge array threshold by a factor of 12.
+RSEX, WSEX: L. Moustakas code to read and write SExtractor format
+            files to and from IDL structures.
 STRUCT_PRINT: Changes to prevent too many LUNs to be open.  Specifically,
                the only time a LUN is not closed is if LUN is passed as an
                input, otherwise we always close all files before returning.

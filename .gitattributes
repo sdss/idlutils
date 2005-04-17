@@ -954,6 +954,7 @@ pro/misc/lookforgzip.pro -text
 pro/misc/make_html_help.pro -text
 pro/misc/read_tbl.pro -text
 pro/misc/rmfile.pro -text
+pro/misc/rsex.pro -text
 pro/misc/shuffle_indx.pro -text
 pro/misc/sortinplace.pro -text
 pro/misc/splog.pro -text
@@ -966,6 +967,7 @@ pro/misc/tag_indx.pro -text
 pro/misc/undefine.pro -text
 pro/misc/where_array.pro -text
 pro/misc/which.pro -text
+pro/misc/wsex.pro -text
 pro/mpeg/ppmtompeg.pro -text
 pro/mpfit/INSTALL -text
 pro/mpfit/MPREADME -text
