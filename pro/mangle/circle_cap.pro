@@ -2,21 +2,17 @@
 ; NAME:
 ;   circle_cap
 ; PURPOSE:
-;   Return a cap centered on a certain set of coordinates
-;   of a certain size.
+;   Return a circular cap centered on a certain set of coordinates.
 ; CALLING SEQUENCE:
-;   cap=circle_cap(xyz, radius [, /radec])
+;   cap=circle_cap(radius, [ra=, dec=, xyz= ])
 ; INPUTS:
-;   xyz - xyz value (or radec if /radec is set)
-;   radius - proper radius in degrees of cap
-; OPTIONAL INPUTS:
-;   /radec - if set, assume xyz actually holds array [ra,dec]
-; OUTPUTS:
-; OPTIONAL INPUT/OUTPUTS:
+;   radius - proper radius of cap, in degrees
+;   ra, dec - coordinates of center
+;    OR
+;   xyz - xyz value of center (should be unit vector)
 ; COMMENTS:
-; EXAMPLES:
-; BUGS:
-; PROCEDURES CALLED:
+;   Use for the cap of a mangle polygon defining a circle.
+;   ra,dec inputs will override xyz inputs
 ; REVISION HISTORY:
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
