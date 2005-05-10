@@ -39,11 +39,12 @@ bangp= !P
 bangx= !X
 bangy= !Y
 set_plot, 'PS'
-dpi= floor((naxis1/7.5) < (naxis2/10.0))
+dpi= floor((naxis1/7.5) > (naxis2/10.0))
 xsize= double(naxis1)/double(dpi)
 ysize= double(naxis2)/double(dpi)
 device, filename=prefix+'.ps',xsize=xsize,ysize=ysize,/inches
 !P.MULTI= [0,1,1]
+!P.POSITION= [0.,0.,1.,1.]
 !X.MARGIN= [0,0]
 !X.OMARGIN= [0,0]
 !Y.MARGIN= !X.MARGIN
