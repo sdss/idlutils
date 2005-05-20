@@ -33,6 +33,8 @@
 ;   internal_weight - use only the points in the image to determine
 ;                     contours
 ;   nogreyscale     - don't plot the greyscale
+;   adqgreyscale    - do greyscale in the "ADQ" style (only works when
+;                     conditional is set)
 ;   outliers        - NEEDS DOCUMENTATION
 ;   meanweight      - plot the mean of the weight values that land in
 ;                     that pixel, rather than the total; don't use
@@ -72,7 +74,8 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       darkest=darkest, $
                       internal_weight=internal_weight, $
                       conditional=conditional, $
-                      labelcont=labelcont,nogreyscale=nogreyscale, $
+                      labelcont=labelcont, $
+                      nogreyscale=nogreyscale,adqgreyscale=adqgreyscale, $
                       xvec=xvec,yvec=yvec,grid=grid, $
                       cumimage=cumimage,outquantiles=outquantiles, $
                       outliers=outliers, outpsym=outliers_psym, $
@@ -99,12 +102,18 @@ if not keyword_set(ynpix) then ynpix= ceil(0.3*sqrt(ndata)) > 10
 if not keyword_set(xrange) then xrange= minmax(xxx)
 if not keyword_set(yrange) then yrange= minmax(yyy)
 if not keyword_set(levels) then levels= errorf(0.5*(dindgen(3)+1))
+nlevels= n_elements(levels)
 if not keyword_set(quantiles) then quantiles= [0.25,0.5,0.75]
 nquantiles= n_elements(quantiles)
 if not keyword_set(satfrac) then satfrac= 0.0
 if not keyword_set(exponent) then exponent= 1.0
 if not keyword_set(darkest) then darkest= 127.0
 if not keyword_set(cthick) then cthick= !P.THICK
+if (n_elements(cthick) EQ 1) then begin
+    if keyword_set(conditional) then cthick= replicate(cthick,nquantiles) $
+    else cthick= replicate(cthick,nlevels)
+endif
+if keyword_set(adqgreyscale) then nogreyscale=1
 
 ; check inputs
 ; [tbd]
@@ -118,8 +127,10 @@ plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
   _EXTRA=KeywordsForPlot,/nodata
 
 ; snap points to grid
-xvec= xrange[0]+(xrange[1]-xrange[0])*(dindgen(xnpix)+0.5)/double(xnpix)
-yvec= yrange[0]+(yrange[1]-yrange[0])*(dindgen(ynpix)+0.5)/double(ynpix)
+deltax= (xrange[1]-xrange[0])/double(xnpix)
+deltay= (yrange[1]-yrange[0])/double(xnpix)
+xvec= xrange[0]+deltax*(dindgen(xnpix)+0.5)
+yvec= yrange[0]+deltay*(dindgen(ynpix)+0.5)
 
 ; make and fill 1-d grid first, if necessary
 if keyword_set(conditional) then begin
@@ -190,8 +201,20 @@ endif
 
 ; plot quantiles, if necessary
 if keyword_set(conditional) then begin
+    if keyword_set(adqgreyscale) then begin
+        for ii=1L,nquantiles-1L do begin
+            shade= floor(256.999*(0.5+0.5*(abs(quantiles[ii-1]-0.5)+ $
+                                           abs(quantiles[ii]-0.5))))
+            for jj=0L,xnpix-1L do begin
+                xf= xvec[jj]+0.5*[-deltax,-deltax,deltax,deltax]
+                yf= [outquantiles[jj,ii-1],outquantiles[jj,ii], $
+                     outquantiles[jj,ii],outquantiles[jj,ii-1]]
+                polyfill, xf,yf,color=shade,noclip=0
+            endfor
+        endfor
+    endif
     for ii=0L,nquantiles-1 do begin
-        oplot, xvec,outquantiles[*,ii],psym=10,thick=cthick
+        oplot, xvec,outquantiles[*,ii],psym=10,thick=cthick[ii]
     endfor
 
 ; otherwise overplot contours
