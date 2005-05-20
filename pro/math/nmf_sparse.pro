@@ -57,6 +57,9 @@ if(nd ne nd2) then begin
     message, 'mmatrix dimensions do not match data dimensions'
 endif
 
+;; premake transpose of big mmatrix
+tmmatrix=transpose(mmatrix)
+
 ;; create datap=data*data_ivar
 datap=data
 datahatp=data
@@ -76,7 +79,7 @@ help,templates,coeffs
 
 ;; make first guess model
 mcoeffs=templates#coeffs
-mmeval, datahat, transpose(mmatrix), mcoeffs
+mmeval, datahat, tmmatrix, mcoeffs
 err=total((datahat.val-data.val)^2*data_ivar.val,/double)
 splog, 'initial error= '+strtrim(string(sqrt(err/(nd*nk))),2)
 
@@ -105,7 +108,7 @@ while(iters le maxiters and abs(err-eold)/err gt tol) do begin
     templates=templates/((dblarr(nf,1)+1.)#total(templates,1))
     mcoeffs=templates#coeffs
 ;;  datahat=mmatrix#mcoeffs
-    mmeval, datahat, transpose(mmatrix), mcoeffs
+    mmeval, datahat, tmmatrix, mcoeffs
 
     eold=err
     err=total((datahat.val-data.val)^2*data_ivar.val,/double)
