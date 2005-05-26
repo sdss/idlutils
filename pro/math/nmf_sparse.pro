@@ -81,7 +81,8 @@ help,templates,coeffs
 mcoeffs=templates#coeffs
 mmeval, datahat, tmmatrix, mcoeffs
 err=total((datahat.val-data.val)^2*data_ivar.val,/double)
-splog, 'initial error= '+strtrim(string(sqrt(err/(nd*nk))),2)
+splog, 'initial error= '+ $
+  strtrim(string(sqrt(err/float(n_elements(datahat.val)))),2)
 
 err=1.d+99
 eold=1.d+100
@@ -113,7 +114,7 @@ while(iters le maxiters and abs(err-eold)/err gt tol) do begin
     eold=err
     err=total((datahat.val-data.val)^2*data_ivar.val,/double)
     splog, 'error at iter '+strtrim(string(iters),2)+' = '+ $
-      strtrim(string(sqrt(err/(nd*nk))),2)
+      strtrim(string(sqrt(err/float(n_elements(datahat.val)))),2)
     iters=iters+1
 endwhile
 

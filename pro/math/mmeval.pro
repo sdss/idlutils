@@ -29,8 +29,8 @@
 ;----------------------------------------------------------------------
 pro mmeval, cc, bb, aa
 
-ny=(size(aa,/dim))[1]
 nx=(size(bb,/dim))[0]
+ny=n_elements(aa)/nx 
 nz=(size(bb,/dim))[1]
 
 if(NOT keyword_set(soname)) then $
