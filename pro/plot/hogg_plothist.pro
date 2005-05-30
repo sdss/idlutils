@@ -54,7 +54,7 @@ endif
 
 ; snap points to grid
 xvec= xrange[0]+(xrange[1]-xrange[0])*(dindgen(npix)+0.5)/double(npix)
-xgrid= floor(npix*(x-xrange[0])/(xrange[1]-xrange[0]))
+xgrid= reform(floor(npix*(x-xrange[0])/(xrange[1]-xrange[0])),ndata)
 
 ; make and fill histogram
 num= dblarr(npix)
