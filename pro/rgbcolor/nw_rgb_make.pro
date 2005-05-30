@@ -93,7 +93,6 @@ IF keyword_set(underlay) THEN colors= (colors < (1.-underlay)) > 0.0
 splog, 'nw_float_to_byte'
 colors = nw_float_to_byte(temporary(colors))
 if(keyword_set(invert)) then colors=255-colors
-print, 'WRITE_JPEG'
 
 IF keyword_set(tiff) THEN BEGIN
     colors = reverse(temporary(colors),2)
