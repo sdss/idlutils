@@ -16,7 +16,8 @@
 ;   ploterr     - plot Poisson error bars too
 ;   log         - take log_10 before plotting
 ;   meanweight  - plot the mean of the weights in each bin rather than
-;                 the total of the weights
+;                 the total of the weights; don't divide by binwidth
+;   totalweight - plot the total weight; don't divide by binwidth
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [npix] vector of x values of grid pixel centers
 ;   hist        - the histogram itself (ie, the total weight in each
@@ -25,7 +26,8 @@
 ;                 sqrt of the sum of the squares of the weights,
 ;                 divided by the binwidth).
 ; COMMENTS:
-;   Divides total weight in each bin by binwidth.
+;   Divides total weight in each bin by binwidth, unless /totalweight
+;   or /meanweight is set.
 ; BUGS:
 ;   Doesn't check inputs.
 ;   Super-slow!
@@ -36,7 +38,7 @@ pro hogg_plothist, x,weight=weight, $
                    xrange=xrange,yrange=yrange,npix=npix, $
                    xvec=xvec,hist=hist,err=err, $
                    overplot=overplot,ploterr=ploterr,log=log, $
-                   meanweight=meanweight, $
+                   meanweight=meanweight,totalweight=totalweight, $
                    _EXTRA=KeywordsForPlot
 
 ; set defaults
@@ -71,8 +73,11 @@ if keyword_set(meanweight) then begin
     hist= hist/(num+(num eq 0.0))
     err= err/(num+(num eq 0.0))^2
 endif
-hist= hist*double(npix)/abs(xrange[1]-xrange[0])
-err= sqrt(err)*double(npix)/abs(xrange[1]-xrange[0])
+if ((NOT keyword_set(meanweight)) AND $
+    (NOT keyword_set(totalweight))) then begin
+    hist= hist*double(npix)/abs(xrange[1]-xrange[0])
+    err= sqrt(err)*double(npix)/abs(xrange[1]-xrange[0])
+endif
 
 ; take log?
 if keyword_set(log) then begin
