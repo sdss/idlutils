@@ -5,6 +5,7 @@ RSEX, WSEX: L. Moustakas code to read and write SExtractor format
 STRUCT_PRINT: Changes to prevent too many LUNs to be open.  Specifically,
                the only time a LUN is not closed is if LUN is passed as an
                input, otherwise we always close all files before returning.
+TMASS_READZONE: Bug fix for crash condition desribed in PR #6502.
 TRACE_CRUDE: Fix argument-passing as to not overwrite input variables.
                If no peaks found, don't crash, just return zeros.
                Make robust to [1,N] and [N,1] images.
