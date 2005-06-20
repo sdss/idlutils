@@ -64,6 +64,7 @@ PRO tmass_readzone, fitspath, zone, ra0, ra1, prefix, result
 
 ; get (zero-indexed) offsets in .fits file
   indrange = long(interpol(ind, ra, raread))-1L
+  if (indrange[1] LT 0) then indrange = [0,0]
 
 ; read .fits file
   data = mrdfits(fitsfile, 1, range=indrange, /silent)
