@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   res = func_fit( x, y, ncoeff, [invvar=, function_name=, $
-;    ia=, inputans=, yfit=, _EXTRA= ]
+;    ia=, inputans=, yfit=, double=double, _EXTRA= ]
 ;
 ; INPUTS:
 ;   x          - X values (independent variable)
@@ -23,6 +23,8 @@
 ;   ia         - Array specifying free (1) and fixed (0) variables [NCOEFF]
 ;   inputans   - If holding parameters fixed, set this array to those values
 ;                [NCOEFF]
+;   double     - If set, or if X, Y, or INVVAR are double-precision, then
+;                return double-precision values
 ;   _EXTRA     - Optional keywords for fitting function
 ;
 ; OUTPUTS:
@@ -49,16 +51,19 @@
 ;   10-Jul-2001  Added fpoly, S. Burles
 ;-
 ;------------------------------------------------------------------------------
-
 function func_fit, x, y, ncoeff, invvar=invvar, function_name=function_name, $
  ia=ia, inputans=inputans, yfit=yfit, inputfunc=inputfunc, $
-    _EXTRA=KeywordsForFunc
+ double=double1, _EXTRA=KeywordsForFunc
 
    if (N_params() LT 3) then begin
-      print,'function func_fit, x, y, ncoeff, [invvar=invvar, function_name=function_name' 
-      print,' yfit=yfit, ia=ia, inputans=inputans]'
+      print,'res = func_fit( x, y, ncoeff, [ invvar=, function_name='
+      print,' ia=, inputans=, yfit=, inputfunc=, /double ] )'
       return, 0
    endif
+
+   if (size(x,/tname) EQ 'DOUBLE' OR size(y,/tname) EQ 'DOUBLE' $
+    OR size(invvar,/tname) EQ 'DOUBLE' OR keyword_set(double1)) then $
+    double = 1B
 
    if (NOT keyword_set(function_name)) then function_name = 'flegendre'
    nx = N_elements(x)
@@ -81,13 +86,14 @@ function func_fit, x, y, ncoeff, invvar=invvar, function_name=function_name, $
    ; then declare INPUTANS and set all those fixed coefficients equal to zero.
    fixed = where(goodia EQ 0, nfix)
    if (nfix GT 0) then $
-    if (NOT keyword_set(inputans)) then inputans = fltarr(ncoeff)
+    if (NOT keyword_set(inputans)) then $
+     inputans = keyword_set(double) ? dblarr(ncoeff) : fltarr(ncoeff)
 
    ;------
    ; Select unmasked points
 
    igood = where(invvar GT 0, ngood)
-   res = fltarr(ncoeff)
+   res = keyword_set(double) ? dblarr(ncoeff) : fltarr(ncoeff)
 
    if (ngood EQ 0) then begin
 
@@ -140,7 +146,8 @@ function func_fit, x, y, ncoeff, invvar=invvar, function_name=function_name, $
          ysub = y
       endelse
 
-      extra2 = finalarr * ((fltarr(nparams) + 1) ## (invvar > 0))
+      tempvec = keyword_set(double) ? dblarr(nparams) : fltarr(nparams)
+      extra2 = finalarr * ((tempvec + 1) ## (invvar > 0))
       alpha = transpose(finalarr) # extra2
 
       ; Don't send just one parameter to SVD fit

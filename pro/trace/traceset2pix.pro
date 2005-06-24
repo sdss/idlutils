@@ -68,7 +68,6 @@ function traceset2pix, tset, lambda, nicoeff=nicoeff, silent=silent
       endelse
 
       nlambda = N_elements(lambda)
-      pixpos = fltarr(nlambda, ntrace)
       if (NOT keyword_set(nicoeff)) then nicoeff = ncoeff + 2
 
       ; Invert the trace set
@@ -81,6 +80,8 @@ function traceset2pix, tset, lambda, nicoeff=nicoeff, silent=silent
       if (tset.func EQ 'poly') then legarr = fpoly(xvec, nicoeff)
       if (tset.func EQ 'legendre') then legarr = flegendre(xvec, nicoeff)
       if (tset.func EQ 'chebyshev') then legarr = fchebyshev(xvec, nicoeff)
+      if (size(xmin,/tname) EQ 'DOUBLE') then pixpos = dblarr(nlambda,ntrace) $
+       else pixpos = fltarr(nlambda,ntrace)
       for itrace=0, ntrace-1 do $
        pixpos[*,itrace] = legarr # invset.coeff[*,itrace]
 

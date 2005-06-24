@@ -6,8 +6,8 @@
 ;   Create a crude trace set given one position (eg, a center) in each trace.
 ;
 ; CALLING SEQUENCE:
-;   xset = trace_crude( fimage, invvar, [xstart=, ystart=, radius=, yset=, $
-;    nave=, nmed=, thresh=, maxerr=, maxshifte=, maxshift0=, xerr= ] )
+;   xset = trace_crude( fimage, [ invvar, xstart=, ystart=, radius=, yset=, $
+;    nave=, nmed=, thresh=, maxerr=, maxshifte=, maxshift0=, xerr=, /double ] )
 ;
 ; INPUTS:
 ;   fimage     - Image
@@ -34,6 +34,8 @@
 ;                default to 0.1
 ;   maxshift0  - Maximum shift in centroid allowed for initial row;
 ;                default to 0.5
+;   double     - If set, then return values are double-precision; values are
+;                already double-precision if FIMAGE or XSTART already are
 ;
 ; OUTPUTS:
 ;   xset       - X centers for all traces
@@ -60,7 +62,8 @@
 ;------------------------------------------------------------------------------
 function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
  radius=radius1, yset=yset, nave=nave1, nmed=nmed1, thresh=thresh, $
- maxerr=maxerr1, maxshifte=maxshift_in, maxshift0=maxshift0_in, xerr=xerr
+ maxerr=maxerr1, maxshifte=maxshift_in, maxshift0=maxshift0_in, xerr=xerr, $
+ double=double1
 
    ; Need 1 parameter
    if (N_params() LT 1) then begin
@@ -88,6 +91,8 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
     else maxshift = 0.1
    if (keyword_set(maxshift0_in)) then maxshift0 = maxshift0_in $
     else maxshift0 = 0.5
+   if (size(fimage,/tname) EQ 'DOUBLE' OR size(xstart,/tname) EQ 'DOUBLE') $
+    OR keyword_set(double1)) then double = 1B
 
    ; Make a copy of the image and error map
    imgtemp = float(fimage)
@@ -172,8 +177,13 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
     message, 'Wrong number of elements for YSTART'
 
    ntrace = N_elements(xstart)
-   xset = fltarr(ny, ntrace)
-   xerr = fltarr(ny, ntrace)
+   if (keyword_set(double)) then begin
+      xset = dblarr(ny, ntrace)
+      xerr = dblarr(ny, ntrace)
+   endif else begin
+      xset = fltarr(ny, ntrace)
+      xerr = fltarr(ny, ntrace)
+   endelse
 
    soname = filepath('libtrace.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')

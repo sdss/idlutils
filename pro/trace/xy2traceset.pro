@@ -9,7 +9,7 @@
 ;   xy2traceset, xpos, ypos, tset, [ invvar=, func=func, ncoeff=ncoeff, $
 ;    xmin=xmin, xmax=xmax, maxiter=maxiter, inputfunc=inputfunc, $
 ;    inmask=inmask, outmask=outmask, yfit=yfit, inputans=inputans, $
-;    _EXTRA=EXTRA ]
+;    double=double, silent=silent, _EXTRA=EXTRA ]
 ;
 ; INPUTS:
 ;   xpos       - X positions corresponding to YPOS as an [nx,Ntrace] array
@@ -37,6 +37,9 @@
 ;   inputans   - ???
 ;   inputfunc  - An array which matches the size of ypos, which is multiplied
 ;                  to the normal function before SVD decomposition
+;   double     - If set, then the traceset will contain all double-precision
+;                values, which will occur anyway if XPOS, YPOS or INVVAR
+;                are double-precision
 ;   silent     - Set to suppress print and splog outputs
 ;   EXTRA      - Keywords passed to either the function FUNC, or DJS_REJECT().
 ;                Note that keywords like MAXREJ relate to each individual trace.
@@ -82,7 +85,7 @@
 pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
  xmin=xmin, xmax=xmax, maxiter=maxiter, inputfunc=inputfunc, $
  inmask=inmask, outmask=outmask, yfit=yfit, inputans=inputans, $
- silent=silent, _EXTRA=EXTRA
+ double=double1, silent=silent, _EXTRA=EXTRA
 
    ; Need 3 parameters
    if (N_params() LT 3) then begin
@@ -116,11 +119,13 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
    endcase
 
    if (NOT keyword_set(ncoeff)) then ncoeff = 3
+   if (size(xpos,/tname) EQ 'DOUBLE' OR size(ypos,/tname) EQ 'DOUBLE' $
+    OR size(invvar,/tname) EQ 'DOUBLE' OR keyword_set(double1)) then double = 1B
 
    tset = $
    { func    :    func              , $
-     xmin    :    0.0               , $
-     xmax    :    0.0               , $
+     xmin    :    keyword_set(double) ? 0.d0 : 0.0, $
+     xmax    :    keyword_set(double) ? 0.d0 : 0.0, $
      coeff   :    dblarr(ncoeff, ntrace) $
    }
 
@@ -134,7 +139,8 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
    outmask = bytarr(nx, ntrace)
 
    yfit = ypos*0.0
-   if (NOT keyword_set(inputans)) then curans = fltarr(ncoeff)
+   if (NOT keyword_set(inputans)) then $
+    curans = keyword_set(double) ? dblarr(ncoeff) : fltarr(ncoeff)
 
    ; Header for Burles counter
    if (NOT keyword_set(silent)) then print, ''
@@ -156,7 +162,7 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
       qdone = 0
       ycurfit = 0
       if (keyword_set(invvar)) then tempivar = invvar[*,itrace] $
-       else tempivar = fltarr(nx) + 1.
+       else tempivar = replicate(keyword_set(double) ? 1.d0 : 1.0, nx)
       if (keyword_set(inmask)) then tempivar = tempivar * inmask[*,itrace]
       thismask = tempivar GT 0
 
@@ -166,11 +172,11 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
           res = func_fit(xnorm, ypos[*,itrace], ncoeff, $
            invvar=tempivar*thismask, $
            function_name=function_name, yfit=ycurfit, inputans=curans, $
-           inputfunc=inputfunc[*,itrace], _EXTRA=EXTRA) $
+           inputfunc=inputfunc[*,itrace], double=double, _EXTRA=EXTRA) $
          else res = func_fit(xnorm, ypos[*,itrace], ncoeff, $
           invvar=tempivar*thismask, $
           function_name=function_name, yfit=ycurfit, inputans=curans, $
-          _EXTRA=EXTRA)
+          double=double, _EXTRA=EXTRA)
 
          qdone = djs_reject(ypos[*,itrace], ycurfit, invvar=tempivar, $
           outmask=thismask, _EXTRA=EXTRA)
