@@ -1,5 +1,8 @@
 
 BSPVN: Upped the huge array threshold by a factor of 12.
+FUNC_FIT, TRACE_CRUDE, TRACESET2PIX, XY2TRACESET: Add support for double-
+               precision, either by passing certain inputs as such, or
+               by explicitly setting the /double keyword.
 HOGG_PLOTHIST: Add /totalweight keyword.
 IS_FILE_READABLE: New function to determine if a file is readable,
                which is always true unless a filesystem is corrupted.
