@@ -16,6 +16,8 @@
 ;
 ; REVISION HISTORY:
 ;   2003-July-12  Written by Douglas Finkbeiner, Princeton
+;   2005-June-25  Fix bug that corrupts .acc file if zero stars in any
+;           RA step.  - DPF
 ;
 ;----------------------------------------------------------------------
 
@@ -40,7 +42,7 @@ pro tmass_writeslice, ind, a, outpath
   thisind = 1
   for j=0, round(24/step)-1 do begin 
      jnd = where((rah ge (j*step)) and (rah lt ((j+1)*step)), ngood)
-     if ngood ne 0 then thisind = min(jnd)+1
+     thisind += ngood
      printf, wlun, j*step, thisind, ngood, format='(F5.2,I12,I12)'
   endfor 
   free_lun, wlun
