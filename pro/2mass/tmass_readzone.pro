@@ -59,12 +59,12 @@ PRO tmass_readzone, fitspath, zone, ra0, ra1, prefix, result
 
 ; pad acc arrays
   ra = [ra_acc, 24.] *15. ; convert to degrees
-  indmax = ind[ntag-1]+n[ntag-1]-1
+  indmax = ind[ntag-1]+n[ntag-1]  ; one-indexed (see below)
   ind = [ind, indmax ]
 
 ; get (zero-indexed) offsets in .fits file
-  indrange = long(interpol(ind, ra, raread))-1L
-  if (indrange[1] LT 0) then indrange = [0,0]
+  indrange = long(interpol(ind, ra, raread))-1L  ; zero-indexed
+  if (indrange[1] LT 0) then stop ; this indicates corrupted .acc file
 
 ; read .fits file
   data = mrdfits(fitsfile, 1, range=indrange, /silent)
