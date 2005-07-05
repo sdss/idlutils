@@ -42,8 +42,8 @@ pro tmass_writeslice, ind, a, outpath
   thisind = 1
   for j=0, round(24/step)-1 do begin 
      jnd = where((rah ge (j*step)) and (rah lt ((j+1)*step)), ngood)
-     thisind += ngood
      printf, wlun, j*step, thisind, ngood, format='(F5.2,I12,I12)'
+     thisind += ngood
   endfor 
   free_lun, wlun
 
