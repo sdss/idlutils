@@ -1,6 +1,11 @@
+;+
+; BUGS:
+;   - No correct code header!
+;
 ; D. Finkbeiner - modified to compare probabilities of first and
 ;                 second peaks.  -DPF 4 Nov 2000
 ; set errflag if best value on edge - DPF 26 Nov 2000
+;-
 function offset_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
  minpeak=minpeak, errflag=errflag, bestsig=bestsig, verbose=verbose
 

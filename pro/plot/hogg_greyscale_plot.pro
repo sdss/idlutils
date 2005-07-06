@@ -4,7 +4,7 @@
 ; PURPOSE:
 ;   Make a pretty greyscale plot from an astronomical image.
 ; CALLING SEQUENCE:
-;   greyscale, data,pixscale,scalename,lo,hi,filename,[title='title',/sigma]
+;   hogg_greyscale_plot, data,filename
 ; INPUTS:
 ;   data       the image
 ;   filename   name for the output PostScript file
@@ -16,7 +16,8 @@
 ;              hi<lo, the image is made negative
 ;   title      title for the plot
 ;   xpt,ypt    x and y vectors of points to overplot -- set symbols with
-;                !P.SYM and !P.SYMSIZE
+;                psym and !P.SYMSIZE
+;   psym       plotting symbol (may be vector)
 ; OUTPUTS:
 ;              a PostScript file called filename
 ; KEYWORDS:
@@ -38,7 +39,7 @@
 ;-
 pro hogg_greyscale_plot, data,filename, $
                          pixscale=pixscale,scalename=scalename,lo=lo,hi=hi, $
-                         title=title,sigma=sigma,xpt=xpt,ypt=ypt, $
+                         title=title,sigma=sigma,xpt=xpt,ypt=ypt,psym=psym, $
                          noaxes=noaxes
 
 ; set defaults
@@ -108,7 +109,7 @@ endif
 
 ; overplot points
 if keyword_set(xpt) and keyword_set(ypt) then begin
-    djs_oplot, xpt,ypt,psym=!P.PSYM,symsize=!P.SYMSIZE
+    djs_oplot, xpt,ypt,psym=psym,symsize=!P.SYMSIZE
 endif
 
 ; close PS file if necessary

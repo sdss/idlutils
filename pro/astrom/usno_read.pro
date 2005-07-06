@@ -43,6 +43,9 @@ end
 ; 
 ;   For information on the USNO-A2.0 see http://www.usno.navy.mil
 ;+------------------------------------------------------------------------  
+; BUGS:
+;   - Outputs described in header all wrong.
+;+------------------------------------------------------------------------  
 ; REVISION HISTORY
 ;   Loosely based on starlist.pro by Doug Finkbeiner and John
 ;   Moustakas, 1999 mar 26
