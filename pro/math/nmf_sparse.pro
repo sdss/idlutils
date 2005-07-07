@@ -86,7 +86,7 @@ splog, 'initial error= '+ $
 
 err=1.d+99
 eold=1.d+100
-iters=1
+iters=1L
 
 if(in_tol gt 1.) then begin
     maxiters=in_tol
@@ -106,7 +106,10 @@ while(iters le maxiters and abs(err-eold)/err gt tol) do begin
                    (transpose(templates)#mdatahatp))
     templates=templates*((mdatap#transpose(coeffs))/ $
                          (mdatahatp#transpose(coeffs)))
-    templates=templates/((dblarr(nf,1)+1.)#total(templates,1))
+    ttot=total(templates, 1)
+	  for i=0L, n_elements(ttot)-1L do $
+      templates[*,i]=templates[*,i]/ttot[i]
+    
     mcoeffs=templates#coeffs
 ;;  datahat=mmatrix#mcoeffs
     mmeval, datahat, tmmatrix, mcoeffs
