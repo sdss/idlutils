@@ -60,7 +60,7 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
  search_rad=search_rad, $
  search_scale=search_scale, search_angle=search_angle, $
  poserr=poserr, nmatch=nmatch, catind=catind, $
- obsind=obsind, radial=radial, verbose=verbose
+ obsind=obsind, radial=radial, verbose=verbose, start_angle=start_angle
 
    if (n_params() LT 5) then begin
       doc_library, 'astrom_engine'
@@ -95,10 +95,16 @@ function astrom_engine, xpos, ypos, catlon, catlat, gsa_in, $
    ;----------
    ; Search for the angle between the catalogue stars and image stars
 
-   if (search_angle GT 1.) then begin 
-      ang = angle_from_pairs(catx, caty, xpos, ypos, $
-       dmax=dmax, binsz=binsz, bestsig=bestsig, $
-       angrange=[-1.,1.]*search_angle, verbose=verbose)
+   if (search_angle GT 1. OR keyword_set(start_angle) gt 0) then begin 
+      if(search_angle gt 1.) then begin
+	      if(NOT keyword_set(start_angle)) then start_angle=0.
+        ang = angle_from_pairs(catx, caty, xpos, ypos, $
+         dmax=dmax, binsz=binsz, bestsig=bestsig, $
+         angrange=[-1.,1.]*search_angle+start_angle, verbose=verbose)
+      endif else begin
+        ang=start_angle
+        bestsig=1000
+      endelse
 
       if (bestsig gt 12) then begin 
          if (keyword_set(verbose)) then $
