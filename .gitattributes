@@ -682,6 +682,7 @@ pro/TeXtoIDL/FILES -text
 pro/TeXtoIDL/README -text
 pro/TeXtoIDL/str_sep.pro -text
 pro/TeXtoIDL/textoidl.pro -text
+pro/astrom/acssip_xy2ad.pro -text
 pro/astrom/angle_from_pairs.pro -text
 pro/astrom/astrom_engine.pro -text
 pro/astrom/astrom_tweak.pro -text
