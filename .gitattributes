@@ -665,6 +665,7 @@ include/Makefile -text
 include/export.h -text
 lib/.cvsignore -text
 lib/Makefile -text
+pro/2mass/hst_guidetest.pro -text
 pro/2mass/tmass_ascii2fits.pro -text
 pro/2mass/tmass_cone.pro -text
 pro/2mass/tmass_decslice.pro -text
