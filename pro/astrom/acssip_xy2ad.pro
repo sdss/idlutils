@@ -37,8 +37,8 @@
 
 pro acssip_xy2ad, x, y, hdr, rab, decb
 
-      xd = x - (sxpar(hdr, 'OCRPIX1') - 1.0d)
-      yd = y - (sxpar(hdr, 'OCRPIX2') - 1.0d)
+      xd = x - (sxpar(hdr, 'CRPIX1') - 1.0d)
+      yd = y - (sxpar(hdr, 'CRPIX2') - 1.0d)
      
       f = xd*0.0d
       g = yd*0.0d
@@ -60,8 +60,8 @@ pro acssip_xy2ad, x, y, hdr, rab, decb
       xd = xd + f
       yd = yd + g
 
-      rab  = 3600.0*(xd*sxpar(hdr, 'OCD1_1') + yd*sxpar(hdr,'OCD1_2'))  
-      decb = 3600.0*(xd*sxpar(hdr, 'OCD2_1') + yd*sxpar(hdr,'OCD2_2'))  
+      rab  = 3600.0*(xd*sxpar(hdr, 'CD1_1') + yd*sxpar(hdr,'CD1_2'))  
+      decb = 3600.0*(xd*sxpar(hdr, 'CD2_1') + yd*sxpar(hdr,'CD2_2'))  
 
     return
     end
