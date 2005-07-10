@@ -63,7 +63,7 @@
 function bspline_radial, r, theta, data, invvar=invvar, _EXTRA=EXTRA, $
                         rbkpt=rbkpt, ntheta=ntheta, yfit=yfit, outmask=outmask
 
-      if NOT keyword_set(ntheta) then ntheta=[0,-2,2] 
+      if N_elements(ntheta) EQ 0 then ntheta=[0,-2,2] 
       if NOT keyword_set(nord) then nord = 4L
       if (n_elements(maxiter) EQ 0) then maxiter = 25L
       if NOT keyword_set(upper) then upper=5.0
