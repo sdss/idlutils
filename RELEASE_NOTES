@@ -1,5 +1,7 @@
 
+ACSSIP_AD2XY,ACSSIP_XY2AD: Conversion between HST ACS pixels and coordinates.
 ASTROM_ENGINE: Added optional keyword start_angle.
+BSPLINE_RADIAL: Allow one to set ntheta=0.
 BSPVN: Upped the huge array threshold by a factor of 12.
 FUNC_FIT, TRACE_CRUDE, TRACESET2PIX, XY2TRACESET: Add support for double-
                precision, either by passing certain inputs as such, or
@@ -14,6 +16,7 @@ STRUCT_PRINT: Changes to prevent too many LUNs to be open.  Specifically,
                the only time a LUN is not closed is if LUN is passed as an
                input, otherwise we always close all files before returning.
 TMASS_DECSLICE,TMASS_READZONE: Bug fix for crash condition desribed in PR #6502.
+TMASS_READZONE: Fix indmax bug that affected highest RA star in each dec slice.
 TRACE_CRUDE: Fix argument-passing as to not overwrite input variables.
                If no peaks found, don't crash, just return zeros.
                Make robust to [1,N] and [N,1] images.
