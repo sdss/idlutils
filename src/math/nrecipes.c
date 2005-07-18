@@ -1,8 +1,8 @@
 #define NRANSI
 #include "nrutil.h"
-#define M 64
+#define NR_M 64
 #define BIG 1.0e30
-#define FREEALL free_vector(sel,1,M+2);free_lvector(isel,1,M+2);
+#define FREEALL nr_free_vector(sel,1,NR_M+2);nr_free_lvector(isel,1,NR_M+2);
 
 float selip(unsigned long k, unsigned long n, float arr[])
 {
@@ -11,23 +11,23 @@ float selip(unsigned long k, unsigned long n, float arr[])
 	float ahi,alo,sum,*sel;
 
 	if (k < 1 || k > n || n <= 0) nrerror("bad input to selip");
-	isel=lvector(1,M+2);
-	sel=vector(1,M+2);
+	isel=nr_lvector(1,NR_M+2);
+	sel=nr_vector(1,NR_M+2);
 	kk=k;
 	ahi=BIG;
 	alo = -BIG;
 	for (;;) {
 		mm=nlo=0;
 		sum=0.0;
-		nxtmm=M+1;
+		nxtmm=NR_M+1;
 		for (i=1;i<=n;i++) {
 			if (arr[i] >= alo && arr[i] <= ahi) {
 				mm++;
 				if (arr[i] == alo) nlo++;
-				if (mm <= M) sel[mm]=arr[i];
+				if (mm <= NR_M) sel[mm]=arr[i];
 				else if (mm == nxtmm) {
-					nxtmm=mm+mm/M;
-					sel[1 + ((i+mm+kk) % M)]=arr[i];
+					nxtmm=mm+mm/NR_M;
+					sel[1 + ((i+mm+kk) % NR_M)]=arr[i];
 				}
 				sum += arr[i];
 			}
@@ -36,20 +36,20 @@ float selip(unsigned long k, unsigned long n, float arr[])
 			FREEALL
 			return alo;
 		}
-		else if (mm <= M) {
+		else if (mm <= NR_M) {
 			shell(mm,sel);
 			ahi = sel[kk];
 			FREEALL
 			return ahi;
 		}
-		sel[M+1]=sum/mm;
-		shell(M+1,sel);
-		sel[M+2]=ahi;
-		for (j=1;j<=M+2;j++) isel[j]=0;
+		sel[NR_M+1]=sum/mm;
+		shell(NR_M+1,sel);
+		sel[NR_M+2]=ahi;
+		for (j=1;j<=NR_M+2;j++) isel[j]=0;
 		for (i=1;i<=n;i++) {
 			if (arr[i] >= alo && arr[i] <= ahi) {
 				jl=0;
-				ju=M+2;
+				ju=NR_M+2;
 				while (ju-jl > 1) {
 					jm=(ju+jl)/2;
 					if (arr[i] >= sel[jm]) jl=jm;
@@ -66,7 +66,7 @@ float selip(unsigned long k, unsigned long n, float arr[])
 		ahi=sel[j];
 	}
 }
-#undef M
+#undef NR_M
 #undef BIG
 #undef FREEALL
 #undef NRANSI
