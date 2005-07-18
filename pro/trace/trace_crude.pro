@@ -92,7 +92,7 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
    if (keyword_set(maxshift0_in)) then maxshift0 = maxshift0_in $
     else maxshift0 = 0.5
    if (size(fimage,/tname) EQ 'DOUBLE' OR size(xstart,/tname) EQ 'DOUBLE') $
-    OR keyword_set(double1)) then double = 1B
+    OR keyword_set(double1) then double = 1B
 
    ; Make a copy of the image and error map
    imgtemp = float(fimage)
