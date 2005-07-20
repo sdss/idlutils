@@ -26,6 +26,7 @@ TRACE_CRUDE: Fix argument-passing as to not overwrite input variables.
                If no peaks found, don't crash, just return zeros.
                Make robust to [1,N] and [N,1] images.
 
+include/export.h: New export.h file in the IDL 6.2 beta distribution.
 src/math/nrecipes.c,nrutil.c,nrutil.h: Trying to compile on the newest 64-bit
                Linux OS (2.6.11-6-21.caos.smp) results in crashing code that
                I've tracked down to the overloading of some of the definitions
