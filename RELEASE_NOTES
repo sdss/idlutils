@@ -1,6 +1,10 @@
 
 ACSSIP_AD2XY,ACSSIP_XY2AD: Conversion between HST ACS pixels and coordinates.
+ANGLE_FROM_PAIRS,DJS_REJECT,POLY_ITER,SLATEC_SPLINEFIT: Add /double keyword
+               to STDDEV() call, such the behaviour will be the same on 32-bit
+               or 64-bit machines.
 ASTROM_ENGINE: Added optional keyword start_angle.
+ASTROM_TWEAK: Change calls to the deprecated STDEV() to STDDEV().
 BSPLINE_RADIAL: Allow one to set ntheta=0.
 BSPVN: Upped the huge array threshold by a factor of 12.
 FUNC_FIT, TRACE_CRUDE, TRACESET2PIX, XY2TRACESET: Add support for double-
