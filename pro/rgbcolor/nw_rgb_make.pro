@@ -25,9 +25,7 @@
 ;  overlay     - [nx/rebinfactor,ny/rebinfactor,3] image to overlay on
 ;                the input images
 ;OPTIONAL KEYWORDS:
-;  saturatetowhite
-;              - choose whether to saturate high-value pixels to white
-;                or to color
+;  saturatetowhite  - saturate high-value pixels to white rather than to color
 ;  tiff        - make tiff instead of jpeg
 ;  dpitiff     - set TIFF "dots per inch" resolution (only if /tiff set)
 ;  invert      - ???
@@ -85,9 +83,10 @@ IF (n_elements(rebinfactor) GT 0) THEN $
 colors = nw_scale_rgb(temporary(colors),scales=scales)
 splog, 'nw_arcsinh'
 colors = nw_arcsinh(temporary(colors),nonlinearity=nonlinearity, /inplace)
-IF (NOT keyword_set(saturatetowhite)) THEN $
-  splog, 'nw_cut_to_box'
-  colors = nw_cut_to_box(temporary(colors),origin=origin)
+IF (NOT keyword_set(saturatetowhite)) THEN BEGIN
+    splog, 'nw_cut_to_box'
+    colors = nw_cut_to_box(temporary(colors),origin=origin)
+ENDIF
 IF keyword_set(overlay) THEN colors= (colors > overlay) < 1.0
 IF keyword_set(underlay) THEN colors= (colors < (1.-underlay)) > 0.0
 splog, 'nw_float_to_byte'
