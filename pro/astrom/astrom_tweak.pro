@@ -120,14 +120,14 @@ function astrom_tweak, gsa_in, catra, catdec, imx, imy, dtheta=dtheta, $
       gsssadxy, gsa_in, catra[catind], catdec[catind], catx, caty
       xdiff = imx[obsind] - catx
       ydiff = imy[obsind] - caty
-      splog, 'Input mean/stdev offset in X = ', mean(xdiff), stdev(xdiff)
-      splog, 'Input mean/stdev offset in Y = ', mean(ydiff), stdev(ydiff)
+      splog, 'Input mean/stdev offset in X = ', mean(xdiff), stddev(xdiff)
+      splog, 'Input mean/stdev offset in Y = ', mean(ydiff), stddev(ydiff)
 
       gsssadxy, gsa_out, catra[catind], catdec[catind], catx, caty
       xdiff = imx[obsind] - catx
       ydiff = imy[obsind] - caty
-      splog, 'Output mean/stdev offset in X = ', mean(xdiff), stdev(xdiff)
-      splog, 'Output mean/stdev offset in Y = ', mean(ydiff), stdev(ydiff)
+      splog, 'Output mean/stdev offset in X = ', mean(xdiff), stddev(xdiff)
+      splog, 'Output mean/stdev offset in Y = ', mean(ydiff), stddev(ydiff)
    endif
 
 ;gsssadxy,gsa_in,catra[catind],catdec[catind],catx,caty
