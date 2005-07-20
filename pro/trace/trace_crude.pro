@@ -48,6 +48,9 @@
 ;
 ; EXAMPLES:
 ;
+; BUGS:
+;   This linked C code is always single-precision, even if /DOUBLE is set.
+;
 ; PROCEDURES CALLED:
 ;   djs_laxisgen()
 ;   splog
@@ -177,19 +180,20 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
     message, 'Wrong number of elements for YSTART'
 
    ntrace = N_elements(xstart)
-   if (keyword_set(double)) then begin
-      xset = dblarr(ny, ntrace)
-      xerr = dblarr(ny, ntrace)
-   endif else begin
-      xset = fltarr(ny, ntrace)
-      xerr = fltarr(ny, ntrace)
-   endelse
+   xset = fltarr(ny, ntrace)
+   xerr = fltarr(ny, ntrace)
 
    soname = filepath('libtrace.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+help,imgtemp,invtemp,ypass,xset,xerr
    result = call_external(soname, 'trace_crude', $
     nx, ny, imgtemp, invtemp, float(radius), ntrace, float(xstart), ypass, $
     xset, xerr, float(maxerr), float(maxshift), float(maxshift0))
+
+   if (keyword_set(double)) then begin
+      xset = double(xset)
+      xerr = double(xerr)
+   endif
 
    yset = djs_laxisgen([ny,nTrace], iaxis=0)
 
