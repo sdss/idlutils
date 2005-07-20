@@ -16,6 +16,7 @@ IS_FILE_READABLE: New function to determine if a file is readable,
 NMF_SPARSE: Improve error estimates.
 RSEX, WSEX: L. Moustakas code to read and write SExtractor format
                files to and from IDL structures.
+STDEV: Remove this copy of this obsolete routine (we now use STDDEV instead).
 STRUCT_PRINT: Changes to prevent too many LUNs to be open.  Specifically,
                the only time a LUN is not closed is if LUN is passed as an
                input, otherwise we always close all files before returning.
