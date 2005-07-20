@@ -923,7 +923,6 @@ pro/math/poly_iter.pro -text
 pro/math/sshift.pro -text
 pro/math/sshift2d.pro -text
 pro/math/sshiftrotate.pro -text
-pro/math/stdev.pro -text
 pro/math/weighted_quantile.pro -text
 pro/mcmc/README -text
 pro/mcmc/hogg_mcmc.pro -text
