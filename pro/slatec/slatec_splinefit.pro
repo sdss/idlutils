@@ -87,7 +87,7 @@ function slatec_splinefit, x, y, coeff, invvar=invvar, x2=x2, npoly=npoly, $
    if (NOT keyword_set(lower)) then lower = 5.0
    if (NOT keyword_set(invvar)) then begin
       ; Set INVVAR to be consistent with the standard deviation
-      invvar = y - y + 1.0 / (stddev(y))^2
+      invvar = y - y + 1.0 / (stddev(y,/double))^2
    endif else begin
       if (N_elements(y) NE N_elements(invvar)) then $
        message, 'Dimensions of Y and INVVAR do not agree'

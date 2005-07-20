@@ -50,7 +50,7 @@ function angle_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
        splog, 'Angle=', theta[k], '  Peak=', pk[k]
    endfor
 
-   bestsig = (max(pk, ind)-mean(img))/stddev(img)
+   bestsig = (max(pk, ind)-mean(img))/stddev(img,/double)
    ang = theta[ind]
 
    return, ang

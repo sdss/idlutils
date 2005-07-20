@@ -41,7 +41,7 @@ PRO poly_iter, x, y, ndeg, nsig, yfit, coeff=coeff
        coeff = poly_fit(x[w], y[w], ndeg, yfit, /double)
 
       res = y[w]-yfit
-      sig = stddev(res)
+      sig = stddev(res, /double)
       good[w] = good[w]*(abs(res) LE nsig*sig)
       w = where(good)
   ENDFOR 

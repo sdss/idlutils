@@ -169,7 +169,7 @@ function djs_reject, ydata, ymodel, outmask=outmask, inmask=inmask, $
       if (keyword_set(inmask)) then igood = where(inmask AND outmask, ngood) $
        else igood = where(outmask, ngood)
       if (ngood GT 1) then $
-       sigma = stddev(ydata[igood] - ymodel[igood]) $ ; scalar value
+       sigma = stddev(ydata[igood] - ymodel[igood], /double) $ ; scalar value
       else $
        sigma = 0
    endif
