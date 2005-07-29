@@ -6,7 +6,9 @@ ANGLE_FROM_PAIRS,DJS_REJECT,POLY_ITER,SLATEC_SPLINEFIT: Add /double keyword
 ASTROM_ENGINE: Added optional keyword start_angle.
 ASTROM_TWEAK: Change calls to the deprecated STDEV() to STDDEV().
 BSPLINE_RADIAL: Allow one to set ntheta=0.
-BSPVN: Upped the huge array threshold by a factor of 12.
+BSPLVN: Upped the huge array threshold by a factor of 12.
+               Bug fix reported by Andy Marble on July 29, 2005, whereby
+               values of zero were returned if X was not floating-point.
 FUNC_FIT, TRACE_CRUDE, TRACESET2PIX, XY2TRACESET: Add support for double-
                precision, either by passing certain inputs as such, or
                by explicitly setting the /double keyword.
