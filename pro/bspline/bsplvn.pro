@@ -15,7 +15,7 @@ function bsplvn, bkpt, nord, x, ileft
    if nx GT 12000000L then begin
      lower = 0L
      upper = 6399999L 
-     vnikx = x # replicate(0,nord)
+     vnikx = x # replicate(0.,nord)
 
      while lower LT nx do begin
         splog, lower, upper, nx
@@ -28,7 +28,7 @@ function bsplvn, bkpt, nord, x, ileft
      return, vnikx
    endif
 
-   vnikx = x # replicate(0,nord)
+   vnikx = x # replicate(0.,nord)
    deltap = vnikx
    deltam = vnikx
    vmprev = x * 0
