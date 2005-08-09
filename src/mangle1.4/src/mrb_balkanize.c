@@ -305,6 +305,7 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
       add_parent(polys[m],i);
     
     if(i%100 == 0) {
+      fflush(stderr);
       for(ic=0;ic<np;ic++) 
         if(polys[ic]) 
           clean_poly(&(polys[ic]));
@@ -314,6 +315,7 @@ int mrb_balkanize(int npoly, polygon *poly[/*npoly*/], int npolys,
           total_ncaps+=polys[ic]->npmax;
       fprintf(stderr, "polygon %d / %d (%d balkans) / %d caps\n",i,npoly,np,
               total_ncaps);
+      fflush(stderr);
     } /* end if */
 
     /* fragment successively against other polygons */

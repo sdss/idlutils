@@ -42,16 +42,16 @@ int main(int argc, char *argv[])
     parse_args(argc, argv);
 
     /* at least one input and output filename required as arguments */
-    if (argc - optind < 2) {
-	if (optind > 1 || argc - optind == 1) {
-	    fprintf(stderr, "%s requires at least 2 arguments: polygon_infile and polygon_outfile\n", argv[0]);
-	    usage();
-	    exit(1);
-	} else {
-	    usage();
-	    exit(0);
-	}
-    }
+		/*    if (argc - optind < 2) {
+					if (optind > 1 || argc - optind == 1) {
+					fprintf(stderr, "%s requires at least 2 arguments: polygon_infile and polygon_outfile\n", argv[0]);
+					usage();
+					exit(1);
+					} else {
+					usage();
+					exit(0);
+					}
+    } */
 
     msg("---------------- mrb_snap ----------------\n");
 
