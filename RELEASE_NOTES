@@ -38,6 +38,7 @@ src/math/nrecipes.c,nrutil.c,nrutil.h: Trying to compile on the newest 64-bit
                within the Numerical Recipes code.  I've changed these files
                to prefix all the routines in nrutil.c with "nr_", for example
                "vector" is now "nr_vector".
+src/mangle1.4/src/mrb_snap.c: allow stdin input
 
 -------------------------------------------------------------------------------
 v5_0_4 (April 10, 2005) running on IDL 5.4 - 6.1
