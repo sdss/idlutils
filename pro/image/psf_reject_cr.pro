@@ -59,12 +59,18 @@ function psf_reject_cr, image, ivar, psfvals, satmask=satmask, $
   gd = bytarr(sz[0], sz[1])+1B
   cr = bytarr(sz[0], sz[1])
 
-; -------- work on crunched image to save time.
+; -------- sample some rows and take minimum sig and sky
   nrow = 100
   drow = sz[1]/nrow
   yrow = lindgen(nrow)*drow
-  crunch = im[*, yrow]
-  djs_iterstat, crunch, mean=sky, sigma=sig, sigrej=5
+  sky = 1e+38
+  sig = 1e+38
+  for i=0, nrow-1 do begin 
+     djs_iterstat, im[*, yrow[i]], mean=sky0, sigma=sig0, sigrej=3
+     sky = sky < sky0
+     sig = sig < sig0
+  endfor
+
   im = im-sky
   msig = im GT (nsigma*sig)
 
