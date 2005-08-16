@@ -711,6 +711,7 @@ pro/bspline/bspline_fit.pro -text
 pro/bspline/bspline_indx.pro -text
 pro/bspline/bspline_iterfit.pro -text
 pro/bspline/bspline_maskpoints.pro -text
+pro/bspline/bspline_psf_action.pro -text
 pro/bspline/bspline_radial.pro -text
 pro/bspline/bspline_radial_valu.pro -text
 pro/bspline/bspline_valu.pro -text
