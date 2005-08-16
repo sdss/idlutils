@@ -31,6 +31,11 @@ TRACE_CRUDE: Fix argument-passing as to not overwrite input variables.
                Bug fix in the case of double-precision: we never reallyl do
                double-precision in the call to C, but erroneously we could
                passing some double-precision arrays to the C code.
+UCAC_READ: This is a new version of UCAC_READGC (now deprecated) that
+               allows one to specify either a great circle on the sky,
+               or a circle on the sky.  This is now analagous to TMASS_READ.
+UCAC_READGC: Deleted, since this has now been replaced with the more general
+               piece of code UCAC_READ.
 
 include/export.h: New export.h file in the IDL 6.2 beta distribution.
 src/math/nrecipes.c,nrutil.c,nrutil.h: Trying to compile on the newest 64-bit
