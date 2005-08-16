@@ -16,6 +16,7 @@ HOGG_PLOTHIST: Add /totalweight keyword.
 IS_FILE_READABLE: New function to determine if a file is readable,
                which is always true unless a filesystem is corrupted.
 NMF_SPARSE: Improve error estimates.
+PSF_REJECT_CR: Better determination of sky and sigma in crowded field.
 RSEX, WSEX: L. Moustakas code to read and write SExtractor format
                files to and from IDL structures.
 STDEV: Remove this copy of this obsolete routine (we now use STDDEV instead).
@@ -38,7 +39,8 @@ src/math/nrecipes.c,nrutil.c,nrutil.h: Trying to compile on the newest 64-bit
                within the Numerical Recipes code.  I've changed these files
                to prefix all the routines in nrutil.c with "nr_", for example
                "vector" is now "nr_vector".
-src/mangle1.4/src/mrb_snap.c: allow stdin input
+src/mangle1.4/src/mrb_balkanize.c: Add calls to fflush.
+src/mangle1.4/src/mrb_snap.c: Allow stdin input.
 
 -------------------------------------------------------------------------------
 v5_0_4 (April 10, 2005) running on IDL 5.4 - 6.1
