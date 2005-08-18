@@ -16,6 +16,8 @@ FUNC_FIT, TRACE_CRUDE, TRACESET2PIX, XY2TRACESET: Add support for double-
                precision, either by passing certain inputs as such, or
                by explicitly setting the /double keyword.
 HOGG_PLOTHIST: Add /totalweight keyword.
+HST_GUIDETEST: New procedure for testing whether potential HST guide stars
+               are good, by looking at the 2MASS and UCAC catalogs.
 IS_FILE_READABLE: New function to determine if a file is readable,
                which is always true unless a filesystem is corrupted.
 NMF_SPARSE: Improve error estimates.
