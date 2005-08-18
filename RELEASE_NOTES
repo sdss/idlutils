@@ -1,4 +1,4 @@
-TMASS_READ:    Return 0 when no stars are within search radius
+
 ACSSIP_AD2XY,ACSSIP_XY2AD: Conversion between HST ACS pixels and coordinates.
 ANGLE_FROM_PAIRS,DJS_REJECT,POLY_ITER,SLATEC_SPLINEFIT: Add /double keyword
                to STDDEV() call, such the behaviour will be the same on 32-bit
@@ -29,6 +29,7 @@ STRUCT_PRINT: Changes to prevent too many LUNs to be open.  Specifically,
                the only time a LUN is not closed is if LUN is passed as an
                input, otherwise we always close all files before returning.
 TMASS_DECSLICE,TMASS_READZONE: Bug fix for crash condition desribed in PR #6502.
+TMASS_READ: Return zero when no objects are within radius, and better comments.
 TMASS_READZONE: Fix indmax bug that affected highest RA star in each dec slice.
 TRACE_CRUDE: Fix argument-passing as to not overwrite input variables.
                If no peaks found, don't crash, just return zeros.
