@@ -98,20 +98,24 @@ pro hst_guidetest, radeg, decdeg, name_in, filename=filename, $
 
    for istar=0L, nstar-1L do begin
       obj1 = tmass_read(radeg[istar], decdeg[istar], searchrad)
-      if (NOT keyword_set(objs)) then begin
+      if (keyword_set(objs) EQ 0 AND keyword_set(obj1)) then begin
          blankobj = obj1
          struct_assign, {junk:0}, blankobj
          objs = replicate(blankobj, nstar)
       endif
-      objs[istar] = obj1[0]
+      if (keyword_set(obj1)) then objs[istar] = obj1[0]
    endfor
 
    ; Prepend NAME,TMASS_DIST to the structure
-   adiff = djs_diff_angle(radeg, decdeg, objs.tmass_ra, objs.tmass_dec) * 3600.
    addtags = replicate(create_struct('NAME', '', 'TMASS_DIST', 0.), nstar)
    addtags.name = name
-   addtags.tmass_dist = adiff
-   objs = struct_addtags(addtags, objs)
+   if (keyword_set(objs)) then objs = struct_addtags(addtags, objs) $
+    else objs = addtags
+   if (tag_exist(objs, 'TMASS_RA')) then begin
+      adiff = djs_diff_angle(radeg, decdeg, $
+       objs.tmass_ra, objs.tmass_dec) * 3600.
+      objs.tmass_dist = adiff
+   endif
 
    ;----------
    ; Decide if there is a UCAC match
@@ -132,11 +136,15 @@ pro hst_guidetest, radeg, decdeg, name_in, filename=filename, $
    addtags = replicate(create_struct('GOOD', ''), nstar)
    objs = struct_addtags(objs, addtags)
    qbad = objs.tmass_dist EQ 0 OR objs.tmass_dist GT goodrad*3600. $
-    OR objs.tmass_bl_flg NE 111 $
-    OR objs.tmass_cc_flg NE '000' $
-    OR objs.tmass_gal_contam NE 0 $
-    OR objs.tmass_mp_flg NE 0 $
     OR objs.ucac_dist EQ 0 OR objs.ucac_dist GT goodrad*3600.
+   if (tag_exist(objs,'TMASS_BL_FLG')) then $
+    qbad = qbad $
+     OR objs.tmass_bl_flg NE 111 $
+     OR objs.tmass_cc_flg NE '000' $
+     OR objs.tmass_gal_contam NE 0 $
+     OR objs.tmass_mp_flg NE 0 $
+   else $
+    qbad[*] = 1B
    ibad = where(qbad, nbad)
    if (nbad GT 0) then objs[ibad].good = 'BAD'
 
