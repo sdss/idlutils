@@ -1,31 +1,31 @@
-;+------------------------------------------------------------------------  
+;+
 ; NAME:
 ;       tmass_read
-;+------------------------------------------------------------------------  
+;
 ; PURPOSE:
-;       Determine RA,dec regions to read and call tmass_readzone
-;+------------------------------------------------------------------------  
+;       Read 2MASS stars near a given RA, dec
+;
 ; INPUTS:
 ;   racen     - RA of region center (J2000)    [degrees]
 ;   deccen    - dec of region center (J2000)   [degrees]
 ;   rad       - radius of region               [degrees]
 ;
-;+------------------------------------------------------------------------  
+;
 ; OUTPUTS:
 ;   result    - data structure defined by FITS file
-;+------------------------------------------------------------------------  
+;
 ; COMMENTS:    
-;   calls tmass_readzone
-;+------------------------------------------------------------------------  
+;   Determines RA,dec regions to read and calls tmass_readzone
+;
 ; REVISION HISTORY
-;   2003-Jul-14 
-;   Written  2003 Jul 14 by D. P. Finkbeiner
-;+------------------------------------------------------------------------  
-;-
+;   2003-Jul-14   Written by D. P. Finkbeiner
+;   2005-Aug-18   Return 0 if no objects are within radius - DPF
+;
+;------------------------------------------------------------------------  
 function tmass_read, racen, deccen, rad
 
-  fitspath = concat_dir(getenv('TWOMASS_DIR'),'slice')
-  if fitspath eq 'slice' then begin 
+  fitspath = concat_dir(getenv('TWOMASS_DIR'), 'slice')
+  if fitspath EQ 'slice' then begin 
      splog, 'You must set your $TWOMASS_DIR environment variable!'
      stop
   endif
@@ -40,7 +40,7 @@ function tmass_read, racen, deccen, rad
 ; RA range (overly conservative)
   maxdec = abs(dec0) > abs(dec1)
   cosd = cos(maxdec/!radeg)
-  IF cosd GT rad/180. THEN BEGIN 
+  IF cosd GT rad/180. THEN BEGIN ; avoid erroneous wrap
      ra0 = ((racen-rad/cosd) + 360) MOD 360
      ra1 = ((racen+rad/cosd) + 360) MOD 360
   ENDIF ELSE BEGIN 
@@ -55,7 +55,6 @@ function tmass_read, racen, deccen, rad
 ; loop over zones
   FOR zone=z0, z1 DO BEGIN 
      
-;     splog, z0, z1, zonewidth, zone
      subdir = string(zone / 10, format='(I3.3)')
      path = concat_dir(fitspath, subdir)
      IF (ra0 LT ra1) THEN BEGIN 
@@ -77,22 +76,21 @@ function tmass_read, racen, deccen, rad
   IF ct GT 0 THEN BEGIN 
      dtrim = data[good]
   ENDIF ELSE BEGIN 
-     dtrim = data  ; keep padding
+     return, 0B         ; give up and return nothing
   ENDELSE 
   
 ; Now use dot products to strip extras
   racat  = dtrim.tmass_ra
   deccat = dtrim.tmass_dec
-  uvobj = ll2uv(double([[racat], [deccat]]), /double) ; (n,3) array
-  uvcen = ll2uv(double([[racen], [deccen]]), /double) ; (1,3) array
-  dot   = uvobj#transpose(uvcen)
-  good = where(dot GE cos(rad*!dpi/180.d), ct)
+  uvobj  = ll2uv(double([[racat], [deccat]]), /double) ; (n,3) array
+  uvcen  = ll2uv(double([[racen], [deccen]]), /double) ; (1,3) array
+  dot    = uvobj#transpose(uvcen)
+  good   = where(dot GE cos(rad*!dpi/180.d), ct)
 
   IF ct GT 0 THEN BEGIN 
      result = dtrim[good]
   ENDIF ELSE BEGIN 
-     result = dtrim  ; keep padding
-     splog, 'Problem!!!'
+     return, 0B         ; give up and return nothing
   ENDELSE 
 
   return, result
