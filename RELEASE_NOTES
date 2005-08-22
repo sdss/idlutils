@@ -43,6 +43,8 @@ UCAC_READ: This is a new version of UCAC_READGC (now deprecated) that
 UCAC_READGC: Deleted, since this has now been replaced with the more general
                piece of code UCAC_READ.
 
+bin/evilmake: added line to deal with difference between Darwin versions
+              8 and later, and previous versions.
 include/export.h: New export.h file in the IDL 6.2 beta distribution.
 src/math/nrecipes.c,nrutil.c,nrutil.h: Trying to compile on the newest 64-bit
                Linux OS (2.6.11-6-21.caos.smp) results in crashing code that
