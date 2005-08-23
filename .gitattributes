@@ -690,6 +690,7 @@ pro/astrom/astrom_tweak.pro -text
 pro/astrom/gsc_nsky.pro -text
 pro/astrom/gsc_read_table.pro -text
 pro/astrom/gsssputast.pro -text
+pro/astrom/hogg_tp_shift.pro -text
 pro/astrom/ll2uv.pro -text
 pro/astrom/offset_from_pairs.pro -text
 pro/astrom/tycho_epoch.pro -text
