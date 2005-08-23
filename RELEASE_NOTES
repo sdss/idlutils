@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v5_0_5 (August 23, 2005) running on IDL 5.4 - 6.2
+Tagged for photoop v1_7_8
+
 ACSSIP_AD2XY,ACSSIP_XY2AD: Conversion between HST ACS pixels and coordinates.
 ANGLE_FROM_PAIRS,DJS_REJECT,POLY_ITER,SLATEC_SPLINEFIT: Add /double keyword
                to STDDEV() call, such the behaviour will be the same on 32-bit
@@ -16,6 +20,7 @@ FUNC_FIT, TRACE_CRUDE, TRACESET2PIX, XY2TRACESET: Add support for double-
                precision, either by passing certain inputs as such, or
                by explicitly setting the /double keyword.
 HOGG_PLOTHIST: Add /totalweight keyword.
+HOGG_TP_SHIFT: New routine for shifting WCS headers.
 HST_GUIDETEST: New procedure for testing whether potential HST guide stars
                are good, by looking at the 2MASS and UCAC catalogs.
 IS_FILE_READABLE: New function to determine if a file is readable,
@@ -58,7 +63,6 @@ src/mangle1.4/src/mrb_snap.c: Allow stdin input.
 -------------------------------------------------------------------------------
 v5_0_4 (April 10, 2005) running on IDL 5.4 - 6.1
 Tagged for development of Longslit package.
-
 
 BSPLVN: Added code to break up task for 10^6 pts or more.
                BSPLINE_ACTION was not carrying double precision all the way
