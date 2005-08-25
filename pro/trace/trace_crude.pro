@@ -185,7 +185,6 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
 
    soname = filepath('libtrace.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-help,imgtemp,invtemp,ypass,xset,xerr
    result = call_external(soname, 'trace_crude', $
     nx, ny, imgtemp, invtemp, float(radius), ntrace, float(xstart), ypass, $
     xset, xerr, float(maxerr), float(maxshift), float(maxshift0))
