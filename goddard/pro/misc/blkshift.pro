@@ -31,16 +31,19 @@
 ;  The block can be moved beyond the current end of file point, in
 ;  which case the intervening gap is filled with zeros (optionally).
 ;  The gap left at the old position of the block is also optionally
-;  zero-filled.
+;  zero-filled.    If a set of data up to the end of the file is being
+;  moved forward (thus making the file smaller) and the IDL version is 
+;  5.6 or larger (so that the TRUNCATE_LUN procedure is available) then
+;  the file is truncated at the new end.
 ;
 ; INPUTS:
 ;
 ;   UNIT - a logical unit number, opened for reading and writing.
 ;
-;   POS - POS(0) is the position of the block in the file, in bytes,
-;         before moving.  POS(1), if present, is the size of the block
-;         in bytes.  If POS(1) is not given, then the block is from
-;         POS(0) to the end of the file.
+;   POS - POS[0] is the position of the block in the file, in bytes,
+;         before moving.  POS[1], if present, is the size of the block
+;         in bytes.  If POS[1] is not given, then the block is from
+;         POS[0] to the end of the file.
 ;
 ;   DELTA - the (optional) offset in bytes between the old and new
 ;           positions, from the start of the block.  Positive values
@@ -85,6 +88,8 @@
 ;   Documented and re-written, CM, 20 Jul 2000
 ;   Renamed from FXSHIFT to BLKSHIFT, CM, 21 Jul 2000
 ;   Documentation, CM, 12 Dec 2002
+;   Truncate if moving data block forward from  the end of file 
+;             using TRUNCATE_LUN   W. Landsman Feb. 2005 
 ;
 ;-
 ; Copyright (C) 2000, 2002, Craig Markwardt
@@ -176,8 +181,8 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
       endwhile
   endif else begin
 
-      ;; Shift backward (toward begining of file)
-      bdat = pos_beg   ;; Begining of to-be-copied data segment
+      ;; Shift backward (toward beginning of file)
+      bdat = pos_beg   ;; Beginning of to-be-copied data segment
       while bdat LT pos_fin do begin
           ntrans = (pos_fin - bdat) < buffersize
           if n_elements(bb0) NE ntrans then bb0 = bytarr(ntrans)
@@ -189,6 +194,10 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
           if cc NE ntrans then goto, IO_FINISH
           bdat = bdat + ntrans
       endwhile
+      if pos_fin EQ fs.size  then if !VERSION.RELEASE GE '5.6' then begin 
+                  Truncate_Lun, unit
+                  goto, GOOD_FINISH
+      endif
   endelse
   bb0 = [0b] & dummy = temporary(bb0)
 

@@ -9,15 +9,15 @@
 ; CALLING SEQUENCE:
 ;     putast, hdr              ;Prompt for all values
 ;               or
-;     putast, hdr, astr, [EQUINOX =, CD_TYPE = ]
+;     putast, hdr, astr, [EQUINOX =, CD_TYPE =, ALT= ]
 ;               or
-;     putast, hdr, cd,[ crpix, crval, ctype], [ EQUINOX =, CD_TYPE = ]    
+;     putast, hdr, cd,[ crpix, crval, ctype], [ EQUINOX =, CD_TYPE =, ALT= ]    
 ;
 ; INPUTS:
 ;     HDR -  FITS header, string array.   HDR will be updated to contain
 ;             the supplied astrometry.
 ;     ASTR - IDL structure containing values of the astrometry parameters
-;            CDELT, CRPIX, CRVAL, CTYPE, LONGPOLE, PROJP1, and PROJP2
+;            CDELT, CRPIX, CRVAL, CTYPE, LONGPOLE, and PV2
 ;            See EXTAST.PRO for more info about the structure definition
 ;                            or
 ;     CD   - 2 x 2 array containing the astrometry parameters CD1_1 CD1_2
@@ -38,6 +38,13 @@
 ;               A brief HISTORY record is also added.
 ;
 ; OPTIONAL KEYWORD INPUTS:
+;       ALT -  single character 'A' through 'Z' or ' ' specifying an alternate 
+;              astrometry system to write in the FITS header.    The default is
+;              to write primary astrometry or ALT = ' '.   If /ALT is set, 
+;              then this is equivalent to ALT = 'A'.   See Section 3.3 of 
+;              Greisen & Calabretta (2002, A&A, 395, 1061) for information about
+;              alternate astrometry keywords.
+;
 ;      EQUINOX - numeric scalar giving the year of equinox  of the reference 
 ;                coordinates.   Default (if EQUINOX keyword is not already
 ;                present in header) is 2000.
@@ -51,14 +58,17 @@
 ;            All three forms are valid representations according to Greisen &
 ;            Calabretta (2002, A&A, 395, 1061), also available at 
 ;            http://www.aoc.nrao.edu/~egreisen/) although form (0) is preferred.
-;            Form (1) is the former AIPS standard and is now  deprecated.
+;            Form (1) is the former AIPS standard and is now  deprecated and
+;            cannot be used if any skew is present.
 ;            If CD_TYPE is not supplied, PUTAST will try to determine the 
 ;            type of astrometry already in the header.   If there is no 
-;            astrometry in the header then the default is CD_TYPE = 2
+;            astrometry in the header then the default is CD_TYPE = 2.
 ; NOTES:
 ;       The recommended use of this procedure is to supply an astrometry
 ;       structure.    
 ;
+;       PUTAST does not delete astrometry parameters already present in the 
+;       header, unless they are explicity overwritten.    
 ; PROMPTS:
 ;       If only a header is supplied, the user will be prompted for a plate 
 ;       scale, the X and Y coordinates of a reference pixel, the RA and
@@ -89,11 +99,15 @@
 ;       Allow direct specification of CTYPE W.L.        June 2002
 ;       Don't assume celestial coordinates W. Landsman  April 2003
 ;       Make default CD_TYPE = 2  W. Landsman   September 2003
+;       Add projection parameters, e.g. PV2_1, PV2_2 if present in the 
+;       input structure   W. Landsman    May 2004
+;       Correct interactive computation of image center W. Landsman Feb. 2005
+;       Don't use CROTA (CD_TYPE=1) if a skew exists W. Landsman  May 2005
 ;-
  npar = N_params()
 
  if ( npar EQ 0 ) then begin    ;Was header supplied?
-        print,'Syntax: PUTAST, Hdr, astr, [ EQUINOX = , CD_TYPE = ]'
+        print,'Syntax: PUTAST, Hdr, astr, [ EQUINOX = , CD_TYPE =, ALT = ]'
         print,'       or'
         print,'Syntax: PUTAST, Hdr, [ cd, crpix, crval, EQUINOX = , CD_TYPE =]'   
         return
@@ -115,7 +129,7 @@
   'Enter X and Y position of a reference pixel ([RETURN] for plate center)'
    read, inp
    if ( inp EQ '' ) then $ 
-          crpix = [ sxpar(hdr,'NAXIS1'), sxpar(hdr,'NAXIS2')] / 2. $
+          crpix = [ sxpar(hdr,'NAXIS1')+1, sxpar(hdr,'NAXIS2')+1] / 2. $
      else crpix = getopt( inp, 'F')
 
    if N_elements( crpix ) NE 2 then begin
@@ -146,6 +160,7 @@ RD_CEN:
         ctype = astr.ctype
 	longpole = astr.longpole
         if tag_exist(astr,'latpole') then latpole = astr.latpole
+        if tag_exist(astr,'pv2') then pv2 = astr.pv2
    endif else  begin
         cd = astr
         zparcheck,'PUTAST', cd, 2, [4,5], 2, 'CD matrix'
@@ -173,24 +188,28 @@ RD_CEN:
      sxaddpar,hdr, 'EQUINOX', equinox, 'Equinox of Ref. Coord.', 'HISTORY',/Sav
 
 ; Add coordinate description (CD) matrix to FITS header
-; 1. PCn_m keywords 
-
-
-
-; 2. CROTA + CDELT     2: CD1_1 
+; 0. PCn_m keywords  1. CROTA + CDELT     2: CD1_1 
   
  
  if (N_elements(cd_type) EQ 0) then begin
  cd_type = 2
- pc1_1 = sxpar( hdr, 'PC1_1', Count = N_PC)
+ pc1_1 = sxpar( hdr, 'PC1_1'+alt, Count = N_PC)
       if N_pc EQ 0 then begin 
-      cd1_1 = sxpar( hdr, 'CD1_1', Count = N_CD)
+      cd1_1 = sxpar( hdr, 'CD1_1'+alt, Count = N_CD)
       if N_CD EQ 0 then begin               ; 
-             CDELT1 = sxpar( hdr,'CDELT1', COUNT = N_CDELT1)
+             CDELT1 = sxpar( hdr,'CDELT1'+alt, COUNT = N_CDELT1)
              if N_CDELT1 GE 1 then cd_type = 1
       endif       
      endif else cd_type = 0
  endif
+
+; If there is a skew then we can't use a simple CROTA representation
+
+  if CD_TYPE EQ 1 then if abs(cd[1,0]) NE abs(cd[0,1]) then begin
+         cd_type = 0
+	 sxdelpar,hdr,['CROTA1' + alt,'CROTA2' + alt]
+  endif	 
+
 
   degpix  = ' Degrees / Pixel'
   if cd_type EQ 0 then begin
@@ -301,6 +320,16 @@ RD_CEN:
     if N_elements(latpole) EQ 1 then $
         sxaddpar, hdr, 'LATPOLE' +alt ,double(latpole), $
 	 ' ' + coord + ' latitude of native pole', 'HISTORY',/SaveC 
+
+    Npv2 = N_elements(pv2)
+    if Npv2 GT 0 then begin
+         case strmid( ctype[0], 5, 3) of 
+         'ZPN': for i=0,npv2-1 do sxaddpar,hdr,'PV2_' + strtrim(i,2) + alt, $
+               pv2[i],'Projection parameter ' + strtrim(i,2),'HISTORY',/SaveC 
+          else: for i=0,npv2-1 do sxaddpar,hdr,'PV2_' + strtrim(i+1,2) + alt, $
+               pv2[i],'Projection parameter ' + strtrim(i+1,2),'HISTORY',/SaveC 
+          endcase
+     endif
 
  sxaddhist,'PUTAST: ' + strmid(systime(),4,20) + hist,hdr
 

@@ -71,6 +71,8 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
 ;       Work correctly for negative CDELT values   W. Landsman   Feb. 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use GETROT to compute rotation   W. Landsman    June 2003
+;       Restored /NotVertex keyword which was not working after June 2003 change
+;                  W. Landsman  January 2004
 ;-
 
   On_error,2                            ;Return to caller
@@ -94,7 +96,7 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
 
 ;  Derive Position Angles for North and East separately
 
-  getrot,h,npa, cdelt, /SILENT
+  getrot,h,npa, cdelt,/SILENT
   sgn = 1 - 2*(cdelt[0]*cdelt[1] GT 0) 
   epa = npa + sgn*90   
 
@@ -103,7 +105,6 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
   arrowlen_dev = arrowlen*!D.y_ch_size
   arrowsize = [arrowlen_dev, arrowlen_dev/3.5, 35.0]  ; See one_arrow.pro
 
-;  Adjust Center to 'Center of Mass' if NotVertex set
   if keyword_set( NORMAL) then begin
 	newcen = convert_coord( xcen, ycen, /NORMAL, /TO_DEVICE)
         xcent = newcen[0]
@@ -116,7 +117,13 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
          xcent=xcen & ycent=ycen
   endelse 
 
+;  Adjust Center to 'Center of Mass' if NotVertex set
  if NotVertex then begin
+    rot = npa/!RADEG
+    dRAdX = cdelt[0]*cos(rot)
+    dRAdY = cdelt[1]*sin(rot)
+    dDECdX = cdelt[0]*sin(rot) 
+    dDECdY = cdelt[1]*cos(rot)
     RAnorm = sqrt( dRAdX^2 + dRAdY^2 )
     DECnorm = sqrt(dDECdX^2 + dDECdY^2 )
     xcent = xcen - (dRAdX+dDECdX)/2/RAnorm*arrowsize[0]

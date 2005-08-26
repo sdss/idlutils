@@ -1,6 +1,6 @@
 pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
        SETSKYVAL = setskyval,PRINT = print, SILENT = silent, FLUX=flux, $
-       EXACT = exact
+       EXACT = exact, Nan = nan, READNOISE = readnoise
 ;+
 ; NAME:
 ;      APER
@@ -13,7 +13,8 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;
 ; CALLING SEQUENCE:
 ;     APER, image, xc, yc, [ mags, errap, sky, skyerr, phpadu, apr, skyrad, 
-;                       badpix, /EXACT, /FLUX, PRINT = , /SILENT, SETSKYVAL = ]
+;                       badpix, /NAN, /EXACT, /FLUX, PRINT = , /SILENT, 
+;                       SETSKYVAL = ]
 ; INPUTS:
 ;     IMAGE -  input image array
 ;     XC     - vector of x coordinates. 
@@ -28,9 +29,12 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;               to be used for the sky annulus.   Ignored if the SETSKYVAL
 ;              keyword is set.
 ;     BADPIX - Two element vector giving the minimum and maximum value
-;               of a good pix (Default [-32765,32767]).    If BADPIX[0] is
+;               of a good pixel.   If badpix is not supplied or if BADPIX[0] is
 ;               equal to BADPIX[1] then it is assumed that there are no bad
-;               pixels.
+;               pixels.     Note that fluxes will not be computed for any star
+;               with a bad pixel within the aperture area, but that bad pixels
+;               will be simply ignored for the sky computation.    The BADPIX
+;               parameter is ignored if the /NAN keyword is set.
 ;
 ; OPTIONAL KEYWORD INPUTS:
 ;     /EXACT -  By default, APER counts subpixels, but uses a polygon 
@@ -44,9 +48,18 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;     /FLUX - By default, APER uses a magnitude system where a magnitude of
 ;               25 corresponds to 1 flux unit.   If set, then APER will keep
 ;              results in flux units instead of magnitudes.
+;     /NAN  - If set then APER will check for NAN values in the image.   /NAN
+;             takes precedence over the BADPIX parameter.   Note that fluxes 
+;             will not be computed for any star with a NAN pixel within the 
+;             aperture area, but that NAN pixels will be simply ignored for 
+;             the sky computation.
 ;     PRINT - if set and non-zero then APER will also write its results to
 ;               a file aper.prt.   One can specify the output file name by
 ;               setting PRINT = 'filename'.
+;     READNOISE - Scalar giving the read noise (or minimum noise for any
+;              pixel.   This value is passed to the procedure mmm.pro when
+;              computing the sky, and is only need for images where
+;              the noise is low, and pixel values are quantized.   
 ;     /SILENT -  If supplied and non-zero then no output is displayed to the
 ;               terminal.
 ;     SETSKYVAL - Use this keyword to force the sky to a specified value 
@@ -103,7 +116,6 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;       FLUX keyword added                       J. E. Hollis, February, 1996
 ;       SETSKYVAL keyword, increase maxsky       W. Landsman, May 1997
 ;       Work for more than 32767 stars           W. Landsman, August 1997
-;       Converted to IDL V5.0                    W. Landsman   September 1997
 ;       Don't abort for insufficient sky pixels  W. Landsman  May 2000
 ;       Added /EXACT keyword                     W. Landsman  June 2000 
 ;       Allow SETSKYVAL = 0                      W. Landsman  December 2000 
@@ -111,7 +123,11 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 ;       Fix chk_badpixel problem introduced Jan 01 C. Ishida/W.L. February 2001
 ;       Set bad fluxes and error to NAN if /FLUX is set  W. Landsman Oct. 2001 
 ;       Remove restrictions on maximum sky radius W. Landsman  July 2003
+;       Added /NAN keyword  W. Landsman November 2004
+;       Set badflux=0 if neither /NAN nor badpix is set  M. Perrin December 2004
+;       Added READNOISE keyword   W. Landsman January 2005
 ;-
+ COMPILE_OPT IDL2
  On_error,2
 ;             Set parameter limits
  minsky = 20   ;Smallest number of pixels from which the sky may be determined
@@ -120,7 +136,8 @@ pro aper,image,xc,yc,mags,errap,sky,skyerr,phpadu,apr,skyrad,badpix, $
 if N_params() LT 3 then begin    ;Enough parameters supplied?
   print, $
   'Syntax - APER, image, xc, yc, [ mags, errap, sky, skyerr, phpadu, apr, '
-  print,'             skyrad, badpix, /EXACT, /FLUX, SETSKYVAL = ,PRINT =, ]'
+  print,'             skyrad, badpix, /EXACT, /FLUX, SETSKYVAL = ,PRINT=, ]'
+  print,'             /SILENT, /NAN'
   return
 endif 
 
@@ -131,12 +148,13 @@ endif
 
   silent = keyword_set(SILENT)
 
- if N_elements(badpix) NE 2 then begin ;Bad pixel values supplied
+ if not keyword_set(nan) then begin
+ if (N_elements(badpix) NE 2) then begin ;Bad pixel values supplied
 GET_BADPIX:  
    ans = ''
    print,'Enter low and high bad pixel values, [RETURN] for defaults'
-   read,'Low and high bad pixel values [-32765,32767]: ',ans
-   if ans EQ  '' then badpix = [-32765,32767] else begin
+   read,'Low and high bad pixel values [none]: ',ans
+   if ans EQ  '' then badpix = [0,0] else begin
    badpix = getopt(ans,'F')
    if ( N_elements(badpix) NE 2 ) then begin
         message,'Expecting 2 scalar values',/continue
@@ -146,6 +164,7 @@ GET_BADPIX:
  endif 
 
  chk_badpix = badpix[0] LT badpix[1]     ;Ignore bad pixel checks?
+ endif
 
  if ( N_elements(apr) LT 1 ) then begin              ;Read in aperture sizes?
    apr = fltarr(10)
@@ -290,7 +309,9 @@ DONE:
  if N_elements(SETSKYVAL) EQ 0 then begin
 
  skypix = ( rsq GE rinsq ) and ( rsq LE routsq )
- if chk_badpix then skypix = skypix and ( rotbuf GT badpix[0] )
+ if keyword_set(nan) then skypix = skypix and finite(rotbuf) $
+ else if chk_badpix then skypix = skypix and ( rotbuf GT badpix[0] ) and $
+        (rotbuf LT badpix[1] )
  sindex =  where(skypix, Nsky) 
  Nsky =   Nsky < maxsky   ;Must be less than MAXSKY pixels
  if ( nsky LT minsky ) then begin                       ;Sufficient sky pixels?
@@ -300,7 +321,7 @@ DONE:
     goto, BADSTAR
  endif
   skybuf = rotbuf[ sindex[0:nsky-1] ]     
-  mmm, skybuf, skymod, skysig, skyskw
+  mmm, skybuf, skymod, skysig, skyskw, readnoise=readnoise
 
 ;  Obtain the mode, standard deviation, and skewness of the peak in the
 ;      sky histogram, by calling MMM.
@@ -334,9 +355,9 @@ endelse
      if keyword_set(EXACT) then begin
        mask = fltarr(nx[i],ny[i])
        good = where( ( x1 LT smallrad[k] ) and (y1 LT smallrad[k] ), Ngood)
-       if Ngood GT 0 then mask(good) = 1.0
+       if Ngood GT 0 then mask[good] = 1.0
        bad = where(  (x1 GT bigrad[k]) or (y1 GT bigrad ))
-       mask(bad) = -1
+       mask[bad] = -1
 
        gfract = where(mask EQ 0.0, Nfract) 
        if Nfract GT 0 then mask[gfract] = $
@@ -360,14 +381,16 @@ endelse
 ;     If the pixel is bad, set the total counts in this aperture to a large
 ;        negative number
 ;
-   if chk_badpix then begin
+   if keyword_set(NaN) then $
+      badflux =  min(finite(thisapd)) EQ 0   $
+   else if chk_badpix then begin
      minthisapd = min(thisapd, max = maxthisapd)
-     if ( (minthisapd LE badpix[0] ) or ( maxthisapd GE badpix[1]) ) then $
-     apmag[k] = -555.55 else apmag[k] = total(thisapd*fractn) 
-   endif else $
-      apmag[k] = total(thisapd*fractn)  ;Total over irregular aperture
-  endelse
- endfor ;k
+     badflux = (minthisapd LE badpix[0] ) or ( maxthisapd GE badpix[1])
+   endif else badflux = 0
+   if badflux then apmag[k] = -555.55 else  $
+                 apmag[k] = total(thisapd*fractn) ;Total over irregular aperture
+  endelse 
+endfor ;k
 
  apmag = apmag - skymod*area  ;Subtract sky from the integrated brightnesses
 

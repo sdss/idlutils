@@ -1,22 +1,25 @@
-pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
+pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
+       EXTENDBOX = extendbox, KeepCenter = KeepCenter
 ;+
 ;  NAME: 
 ;       CNTRD
 ;  PURPOSE:
-;       Compute the centroid coordinates of a stellar object 
+;       Compute the centroid  of a star using a derivative search 
 ; EXPLANATION:
-;       CNTRD uses the DAOPHOT "FIND" centroid algorithm by locating the 
+;       CNTRD uses an early DAOPHOT "FIND" centroid algorithm by locating the 
 ;       position where the X and Y derivatives go to zero.   This is usually a 
 ;       more "robust"  determination than a "center of mass" or fitting a 2d 
 ;       Gaussian  if the wings in one direction are affected by the presence
-;       of a neighboring star .
+;       of a neighboring star.
 ;
 ;  CALLING SEQUENCE: 
-;       CNTRD, img, x, y, xcen, ycen, [ fwhm , /SILENT, /DEBUG]
+;       CNTRD, img, x, y, xcen, ycen, [ fwhm , /KEEPCENTER, /SILENT, /DEBUG
+;                                       EXTENDBOX = ]
 ;
 ;  INPUTS:     
 ;       IMG - Two dimensional image array
-;       X,Y - Scalar or vector integers giving approximate stellar center
+;       X,Y - Scalar or vector integers giving approximate integer stellar 
+;             center
 ;
 ;  OPTIONAL INPUT:
 ;       FWHM - floating scalar; Centroid is computed using a box of half
@@ -25,7 +28,8 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;
 ;  OUTPUTS:   
 ;       XCEN - the computed X centroid position, same number of points as X
-;       YCEN - computed Y centroid position, same number of points as Y
+;       YCEN - computed Y centroid position, same number of points as Y, 
+;              floating point
 ;
 ;       Values for XCEN and YCEN will not be computed if the computed
 ;       centroid falls outside of the box, or if the computed derivatives
@@ -37,14 +41,36 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;               to compute the centroid.   Set /SILENT to suppress this.
 ;       /DEBUG - If this keyword is set, then CNTRD will display the subarray
 ;               it is using to compute the centroid.
-;
+;       EXTENDBOX = {non-negative positive integer}.   CNTRD searches a box with
+;              a half width equal to 1.5 sigma  = 0.637* FWHM to find the 
+;              maximum pixel.    To search a larger area, set EXTENDBOX to 
+;              the number of pixels to enlarge the half-width of the box.
+;              Default is 0; prior to June 2004, the default was EXTENDBOX= 3
+;       /KeepCenter = By default, CNTRD finds the maximum pixel in a box 
+;              centered on the input X,Y coordinates, and then extracts a new
+;              box about this maximum pixel.   Set the /KeepCenter keyword  
+;              to skip then step of finding the maximum pixel, and instead use
+;              a box centered on the input X,Y coordinates.                          
 ;  PROCEDURE: 
 ;       Maximum pixel within distance from input pixel X, Y  determined 
 ;       from FHWM is found and used as the center of a square, within 
 ;       which the centroid is computed as the value (XCEN,YCEN) at which 
 ;       the derivatives of the partial sums of the input image over (y,x)
-;       with respect to (x,y) = 0.
+;       with respect to (x,y) = 0.    In order to minimize contamination from
+;       neighboring stars stars, a weighting factor W is defined as unity in 
+;       center, 0.5 at end, and linear in between 
 ;
+;  RESTRICTIONS:
+;       (1) Does not recognize (bad) pixels.   Use the procedure GCNTRD.PRO
+;           in this situation. 
+;       (2) DAOPHOT now uses a newer algorithm (implemented in GCNTRD.PRO) in 
+;           which centroids are determined by fitting 1-d Gaussians to the 
+;           marginal distributions in the X and Y directions.
+;       (3) The default behavior of CNTRD changed in June 2004 (from EXTENDBOX=3
+;           to EXTENDBOX = 0).
+;       (4) Stone (1989, AJ, 97, 1227) concludes that the derivative search
+;           algorithm in CNTRD is not as effective (though faster) as a 
+;            Gaussian fit (used in GCNTRD.PRO).
 ;  MODIFICATION HISTORY:
 ;       Written 2/25/86, by J. K. Hill, S.A.S.C., following
 ;       algorithm used by P. Stetson in DAOPHOT.
@@ -56,11 +82,13 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 ;       Better checking of edge of frame David Hogg October 2000
 ;       Avoid integer wraparound for unsigned arrays W.Landsman January 2001
 ;       Handle case where more than 1 pixel has maximum value W.L. July 2002
+;       Added /KEEPCENTER, EXTENDBOX (with default = 0) keywords WL June 2004
 ;-      
  On_error,2                          ;Return to caller
 
  if N_params() LT 5 then begin
-        print,'Syntax: CNTRD, img, x, y, xcen, ycen, [ fwhm, /SILENT, /DEBUG ]'
+        print,'Syntax: CNTRD, img, x, y, xcen, ycen, [ fwhm, ' 
+        print,'              EXTENDBOX= , /KEEPCENTER, /SILENT, /DEBUG ]'
         PRINT,'img - Input image array'
         PRINT,'x,y - Input scalars giving approximate X,Y position'
         PRINT,'xcen,ycen - Output scalars giving centroided X,Y position'
@@ -78,20 +106,21 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
 
 ;   Compute size of box needed to compute centroid
 
+ if not keyword_set(extendbox) then extendbox = 0
  nhalf =  fix(0.637*fwhm) > 2  ;
  nbox = 2*nhalf+1             ;Width of box to be used to compute centroid
- nhalfbig = nhalf +3
- nbig = nbox + 6        ;Extend box 3 pixels on each side to search for max pixel value
+ nhalfbig = nhalf + extendbox
+ nbig = nbox + extendbox*2        ;Extend box 3 pixels on each side to search for max pixel value
  npts = N_elements(x) 
- xcentroid = fltarr(npts)  & ycentroid = xcentroid
  xcen = float(x) & ycen = float(y)
- ix = fix( x + 0.5 )          ;Central X pixel        ;Added 3/93
- iy = fix( y + 0.5 )          ;Central Y pixel
+ ix = round( x )          ;Central X pixel        ;Added 3/93
+ iy = round( y )          ;Central Y pixel
 
  for i = 0,npts-1 do begin        ;Loop over X,Y vector
 
  pos = strtrim(x[i],2) + ' ' + strtrim(y[i],2)
 
+ if not keyword_set(keepcenter) then begin
  if ( (ix[i] LT nhalfbig) or ((ix[i] + nhalfbig) GT xsize-1) or $
       (iy[i] LT nhalfbig) or ((iy[i] + nhalfbig) GT ysize-1) ) then begin
      if not keyword_set(SILENT) then message,/INF, $
@@ -116,8 +145,12 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug
      idy = idy[0]
  endelse
 
- xmax = ix[i] - (nhalf+3) + idx  ;X coordinate in original image array
- ymax = iy[i] - (nhalf+3) + idy  ;Y coordinate in original image array
+ xmax = ix[i] - (nhalf+extendbox) + idx  ;X coordinate in original image array
+ ymax = iy[i] - (nhalf+extendbox) + idy  ;Y coordinate in original image array
+ endif else begin
+    xmax = ix[i]
+    ymax = iy[i]
+ endelse
 
 ; ---------------------------------------------------------------------
 ; check *new* center location for range

@@ -16,13 +16,12 @@
 ;
 ;       The number of columns is limited to 49 if data are passed by
 ;       positional argument.  However, this limitation can be overcome
-;       by having FXBREADM return the data in an array of pointers or
-;       handles.  The user should set the PASS_METHOD keyword to
-;       'POINTER' or 'HANDLE' as appropriate, and an array of pointers
-;       to the data will be returned in the POINTERS keyword.  The
-;       user is responsible for freeing the pointers; however,
-;       FXBREADM will reuse any pointers or handles passed into the
-;       procedure, and hence any pointed-to data will be destroyed.
+;       by having FXBREADM return the data in an array of pointers.
+;       The user should set the PASS_METHOD keyword to 'POINTER', and an 
+;       array of pointers to the data will be returned in the POINTERS keyword.
+;       The  user is responsible for freeing the pointers; however,
+;       FXBREADM will reuse any pointers  passed into the procedure, and 
+;       hence any pointed-to data will be destroyed.
 ;
 ;       FXBREADM can also read variable-length columns from FITS
 ;       binary tables.  Since such data is not of a fixed size, it is
@@ -59,7 +58,7 @@
 ;                 list in COL.  If the read operation fails for a
 ;                 particular column, then the corresponding output Dn
 ;                 variable is not altered.  See the STATUS keyword.
-;                 Ignored if PASS_METHOD is 'POINTER' or 'HANDLE'
+;                 Ignored if PASS_METHOD is 'POINTER'.
 ;
 ; OPTIONAL INPUT KEYWORDS: 
 ;       ROW     = Either row number in the binary table to read data from,
@@ -85,20 +84,16 @@
 ;                 Ignored unless DATA is of type float, double-precision or
 ;                 complex.
 ;       PASS_METHOD = A scalar string indicating method of passing
-;                 data from FXBREADM.  One of 'ARGUMENT' (indicating
-;                 pass by positional argument), 'POINTER' (indicating
+;                 data from FXBREADM.  Either 'ARGUMENT' (indicating
+;                 pass by positional argument), or 'POINTER' (indicating
 ;                 passing an array of pointers by the POINTERS
-;                 keyword), or 'HANDLE' (indicating passing an array
-;                 of handles by the POINTERS keyword).
+;                 keyword).
 ;                 Default: 'ARGUMENT'
 ;       POINTERS = If PASS_METHOD is 'POINTER' then an array of IDL
 ;                 pointers is returned in this keyword, one for each
-;                 requested column.  If PASS_METHOD is 'HANDLE' then
-;                 an array of IDL handles is returned instead.  Any
-;                 handles or pointers passed into FXBREADM will have
-;                 their pointed-to data destroyed.  Ultimately the
-;                 user is responsible for deallocating pointers and
-;                 handles.
+;                 requested column.    Any pointers passed into FXBREADM will 
+;                 have their pointed-to data destroyed.  Ultimately the
+;                 user is responsible for deallocating pointers. 
 ;       BUFFERSIZE = Raw data are transferred from the file in chunks
 ;                 to conserve memory.  This is the size in bytes of
 ;                 each chunk.  If a value of zero is given, then all
@@ -163,6 +158,7 @@
 ;       C. Markwardt, 23 Feb 2003
 ;   Fix bug in handling of FOUND and numeric columns, 
 ;       C. Markwardt 12 May 2003
+;   Removed pre-V5.0 HANDLE options  W. Landsman July 2004
 ;
 ;
 ;-
@@ -270,13 +266,12 @@ PRO FXBREADM, UNIT, COL, $
         COLNAMES = 'D'+STRTRIM(LINDGEN(NUMCOLS),2)
 
 ;
-;  For IDL 5, it is possible to extract the data via pointers
+;  Determine whether the data is to be extracted as pointers or arguments
 ;
         IF N_ELEMENTS(PASS_METHOD) EQ 0 THEN PASS_METHOD = 'ARGUMENT'
         PASS = STRUPCASE(STRTRIM(PASS_METHOD[0],2))
-        IF PASS NE 'ARGUMENT' AND PASS NE 'POINTER' $
-          AND PASS NE 'HANDLE' THEN BEGIN
-            MESSAGE = 'ERROR: PASS_METHOD must be ARGUMENT, POINTER or HANDLE'
+        IF PASS NE 'ARGUMENT' AND PASS NE 'POINTER' THEN BEGIN
+            MESSAGE = 'ERROR: PASS_METHOD must be ARGUMENT or POINTER'
             IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
                 ERRMSG = MESSAGE
                 RETURN
@@ -284,17 +279,8 @@ PRO FXBREADM, UNIT, COL, $
         ENDIF
 
         NP = N_ELEMENTS(POINTERS)
-        IF PASS EQ 'POINTER' THEN BEGIN
-            IF DOUBLE(!VERSION.RELEASE) LT 5 THEN BEGIN
-                MESSAGE = 'ERROR: pointers cannot be used for IDL < 5'
-                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-                        ERRMSG = MESSAGE
-                        RETURN
-                END ELSE MESSAGE, MESSAGE
-            ENDIF
 
-            FORWARD_FUNCTION PTRARR, PTR_NEW, PTR_VALID
-            IF NP EQ 0 THEN POINTERS = PTRARR(NUMCOLS, /ALLOCATE_HEAP)
+             IF NP EQ 0 THEN POINTERS = PTRARR(NUMCOLS, /ALLOCATE_HEAP)
             NP = N_ELEMENTS(POINTERS)
             SZ = SIZE(POINTERS)
             IF SZ[SZ[0]+1] NE 10 THEN BEGIN
@@ -318,39 +304,6 @@ PRO FXBREADM, UNIT, COL, $
             WH = WHERE(PTR_VALID(POINTERS) EQ 0, CT)
             IF CT GT 0 THEN POINTERS[WH] = PTRARR(CT, /ALLOCATE_HEAP)
                 
-        ENDIF
-
-        IF PASS EQ 'HANDLE' THEN BEGIN
-
-            FORWARD_FUNCTION HANDLE_CREATE, HANDLE_INFO
-            IF NP EQ 0 THEN POINTERS = LONARR(NUMCOLS)-1L
-            NP = N_ELEMENTS(POINTERS)
-            SZ = SIZE(POINTERS)
-            IF SZ[SZ[0]+1] NE 3 THEN BEGIN
-                MESSAGE = 'ERROR: POINTERS must be an array of handles'
-                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-                        ERRMSG = MESSAGE
-                        RETURN
-                END ELSE MESSAGE, MESSAGE
-            ENDIF
-
-;
-;  Expand the handle array if necessary
-;
-            IF NP LT NUMCOLS THEN $
-              POINTERS = [POINTERS[*], LONARR(NUMCOLS-NP)-1]
-            NP = N_ELEMENTS(POINTERS)
-
-;
-;  Make sure there are no invalid handles, which cannot be assigned to.
-;
-            WH = WHERE(HANDLE_INFO(POINTERS) EQ 0, CT)
-            IF CT GT 0 THEN BEGIN
-                FOR I = 0, CT-1 DO $
-                  POINTERS[WH[I]] = HANDLE_CREATE()
-            ENDIF
-                
-        ENDIF
 
 ;
 ;  Find the logical unit number in the FXBINTABLE common block.
@@ -761,7 +714,7 @@ PRO FXBREADM, UNIT, COL, $
 ;  there are more than one then coalescence will not occur.
 ;
 
-        ;; Width of the various data typs in bytes
+        ;; Width of the various data types in bytes
         WIDARR = [0L, 1L, 2L, 4L, 4L, 8L, 8L, 1L, 0L,16L, 0L]
         WV = WHERE(OUTSTATUS EQ 1 AND VARICOL EQ 1, WVCOUNT)
         FOR J = 0, WVCOUNT-1 DO BEGIN
@@ -881,9 +834,7 @@ PRO FXBREADM, UNIT, COL, $
             IF PASS EQ 'ARGUMENT' THEN $
               CMD = COLNAMES[I]+' = ' + CMD $
             ELSE IF PASS EQ 'POINTER' THEN $
-              CMD = '*(POINTERS[I]) = ' + CMD $
-            ELSE IF PASS EQ 'HANDLE' THEN $
-              CMD = 'HANDLE_VALUE, /NO_COPY, /SET, POINTERS[I], ' + CMD
+              CMD = '*(POINTERS[I]) = ' + CMD 
 
             RESULT = EXECUTE(CMD)
             LOOP_END_FINAL:

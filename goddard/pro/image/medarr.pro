@@ -33,7 +33,7 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       outarr -- The output array.  It will have dimensions equal to the
 ;                 first two dimensions of the input array.
 ;
-; OPTIONAL OUPUT:
+; OPTIONAL OUTPUT:
 ;       output_mask -- Same structure as outarr, byte array with 1b
 ;                      pixels are valid, 0b where all the input pixels
 ;                      have been masked out.
@@ -79,6 +79,7 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       Use MEDIAN(/DIMEN) for V5.6 or later   W. Landsman   November 2002
 ;       Use keyword_set() instead of ARG_present() to test for presence of mask
 ;           parameter  D. Hanish/W. Landsman   June 2003
+;       Use MEDIAN(/EVEN) when mask not set V5.6 or later W. Landsman Feb 2004
 ;-
  On_error,2
 ;                       Check parameters.
@@ -92,7 +93,7 @@ PRO medarr, inarr, outarr, mask, output_mask
  if s[0] NE 3 then $                    ; Input array size.
         message, "Input array must have 3 dimensions"
  if !VERSION.RELEASE GE '5.6' and (N_elements(mask) EQ 0) then begin
-        outarr = median(inarr,dimension=3)
+        outarr = median(inarr,dimension=3,/even)
         return
  endif
 

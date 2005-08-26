@@ -223,7 +223,7 @@ case strlowcase(obsname[i]) of
 	longitude = [98,18,50]
 	latitude = [19,01,58]
 	tz = 8
-        altitude = -999999    ; Altiutude not supplied
+        altitude = -999999    ; Altitude not supplied
         end
  "palomar": begin
 	name = "The Hale Telescope"

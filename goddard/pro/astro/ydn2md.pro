@@ -21,9 +21,6 @@
 ;       IDL> ydn2md, 2001, [155,255], m, d
 ;         ==> m = [6,9]   & d = [4,12]        ; = June 4 and September 12 
 ;       
-; NOTES:
-;       In V5.3 or later uses the intrinisc VALUE_LOCATE function.   
-;       Otherwise, uses the Astronomy Library procedure value_locate.pro
 ; MODIFICATION HISTORY:
 ;       Adapted from Johns Hopkins University/Applied Physics Laboratory
 ;       Update to use VALUE_LOCATE,   W. Landsman    January 2001  

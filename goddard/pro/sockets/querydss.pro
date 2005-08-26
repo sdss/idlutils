@@ -90,6 +90,8 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;   
 ; PROCEDURES CALLED:
 ;       QUERYSIMBAD, WEBGET()
+; MINIMUM IDL VERSION:
+;       V5.4  (uses SOCKET)
 ; MODIFICATION HISTORY: 
 ;       Written by M. Feldt, Heidelberg, Oct 2001 <mfeldt@mpia.de>
 ;       Option to supply target name instead of coords  W. Landsman Aug. 2002

@@ -82,13 +82,14 @@ pro lineid_plot,wave,flux,wline,text1,text2, extend=extend, $
 ;	Sep 1996, W. Landsman,  added _EXTRA keyword, changed keyword names
 ;		CHARTHICK==>LCHARTHICK, CHARSIZE==>LCHARSIZE
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Work with !P.MULTI   W. Landsman   December 2003
 ;-
 ;----------------------------------------------------------------------------
 	On_error,2
 
 	if n_params() lt 4 then begin
 	   print,'Syntax - LINEID_PLOT, wave, flux, wline, text1 [,text2, '
-	   print,'        LCHARTHICK=, EXTEND=, LCHARSIZE= ...plotting keywords]
+	   print,'       LCHARTHICK=, EXTEND=, LCHARSIZE= ...plotting keywords]'
 	   return
 	end
 ;
@@ -107,13 +108,18 @@ pro lineid_plot,wave,flux,wline,text1,text2, extend=extend, $
 				      else cthick = lcharthick
 	if n_elements(cthick) eq 1 then cthick = replicate(cthick,n)
 ;
-; set plot area
-;
-	set_viewport,0.13,0.95,0.1,0.65
-;
-; plot data
+; First make a plot without any data to get the region size.    Then use
+; the position keyword to assign a plot area that allows room for the 
+; line annotation and plot the data
 ;       
-	plot,wave,flux,_EXTRA=extra
+        plot,wave,flux,xsty=4,ysty=4,/nodata,/noerase
+        x0 = !X.region[0]
+        y0 = !Y.region[0]
+        xsize = !X.region[1] - x0
+        ysize = !Y.region[1] - y0
+        pos = [x0+xsize*0.13,y0+ysize*0.1, x0+xsize*0.95, y0+ysize*0.65]
+	plot,wave,flux,_EXTRA=extra,pos = pos        
+
 ;
 ; get data ranges
 ;
@@ -242,7 +248,7 @@ print_text:
 	ymax = !y.crange[1]
 	ymin = !y.crange[0]
 	offset = (ymax-ymin)/20.0
-	for i=0,n-1 do plots,[ww[i],ww[i]],[(ff[i]+offset)<ymax,ymax], $
+	for i=0,n-1 do plots,[ww[i],ww[i]],[(ff[i]+offset)<ymax>ymin,ymax], $
 				line=2,thick = ethick[i]
 
 return

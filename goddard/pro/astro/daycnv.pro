@@ -28,7 +28,7 @@ PRO DAYCNV, XJD, YR, MN, DAY, HR
 ;       maintain accuracy at the fractional hour level.
 ;
 ; METHOD:
-;       Uses the algorithm of Fliegel and Van Falndern (1968) as reported in
+;       Uses the algorithm of Fliegel and Van Flandern (1968) as reported in
 ;       the "Explanatory Supplement to the Astronomical Almanac" (1992), p. 604
 ;       Works for all Gregorian calendar dates with XJD > 0, i.e., dates after
 ;       -4713 November 23.

@@ -16,8 +16,8 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;             function. Do not include the ".pro" extension. If Proc_Name is
 ;             omitted, the program will prompt for PROC_NAME.  "*" wildcards
 ;             are permitted.
-
-; OPTINAL KEYWORD INPUT:
+;
+; OPTIONAL KEYWORD INPUT:
 ;     /NoPrint - if set, then the file's path is not printed on the screen and
 ;             absolutely no error messages are printed on the screen.  If not
 ;             set, then - since the MESSAGE routine is used - error messages 

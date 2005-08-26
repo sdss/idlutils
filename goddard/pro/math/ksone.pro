@@ -18,7 +18,8 @@
 ;               K-S statistic to be meaningful 
 ;       func_name - scalar string giving the name of the cumulative distribution
 ;               function.    The function must be defined to accept the data
-;               vector as its only input (see example).
+;               vector as its only input (see example), though keywords may be
+;               passed via the _EXTRA facility.
 ;
 ; OUTPUT PARAMETERS:
 ;       D - floating scalar giving the Kolmogorov-Smirnov statistic.   It 
@@ -70,6 +71,7 @@
 ;       in histogram   M. Fardal/ W. Landsman      March, 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Documentation updates   W. Landsman   June 2003
+;       Pass _EXTRA to func_name  M. Fitzgerald    April, 2005
 ;-
  On_error, 2
 
@@ -86,7 +88,7 @@
 
  f0 = findgen(N)/ N
  fn = ( findgen( N ) +1. ) / N
- ff = call_function( func_name, sortdata )
+ ff = call_function( func_name, sortdata, _EXTRA = extra)
 
  D = max( [ max( abs(f0-ff), sub0 ), max( abs(fn-ff), subn ) ], msub )
 

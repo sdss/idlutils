@@ -6,9 +6,7 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
 ; PURPOSE:
 ;       Read a FITS (primary or extension) header into a string array.
 ; EXPLANATION:
-;       Under Unix, HEADFITS() can also read gzip (.gz) or Unix compressed
-;       (.Z) FITS files.   In IDL V5.3 or later, HEADFITS() can read gzip files
-;       under any machine OS. 
+;       HEADFITS() can also read gzip (.gz) or Unix compressed (.Z) FITS files.
 ;
 ; CALLING SEQUENCE:
 ;       Result = HEADFITS(Filename/Fileunit ,[ ERRMSG =, EXTEN= , COMPRESS=, 
@@ -18,8 +16,9 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
 ;       Filename = String containing the name of the FITS file to be read.
 ;                File names ending in '.gz' are assumed to be gzip'ed compressed
 ;                and under Unix file names ending in '.Z' are assumed to be
-;                Unix compressed.    If this default behaviour is not sufficient
-;                then use the COMPRESS keyword.
+;                Unix compressed, and file names ending in .bz2 are assumed to
+;                be bzip2 compressed.    If this default behaviour is not 
+;                sufficient then use the COMPRESS keyword.
 ;                            or
 ;       Fileunit - A scalar integer specifying the unit of an already opened
 ;                  FITS file.  The unit will remain open after exiting 
@@ -39,11 +38,11 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
 ;               (EXTEN = 0).    The EXTEN keyword cannot be used when a unit
 ;               number is supplied instead of a file name.
 ;     COMPRESS - If this keyword is set and non-zero, then treat the file
-;              as compressed.  If 1 assume a gzipped file.   Where possible use
-;              IDLs internal decompression facilities (i.e., v5.3 or greater) 
-;              or on Unix systems spawn off a process to decompress and use its
-;              output as the FITS stream.  If the keyword is not 1, then use 
-;              its value as a string giving the command needed for 
+;              as compressed.  If 1 assume a gzipped file.   Use IDL's
+;              internal decompression facilities for gzip files, while for 
+;              Unix or bzip2 compression spawn off a process to decompress and 
+;              use its output as the FITS stream.  If the keyword is not 1, 
+;              then use its value as a string giving the command needed for 
 ;              decompression.   See FXPOSIT for more info.
 ;     /SILENT - If set, then suppress any warning messages about invalid 
 ;              characters in the FITS file.

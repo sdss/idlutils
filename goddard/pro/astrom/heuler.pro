@@ -58,6 +58,7 @@ pro heuler,h_or_astr, Galactic = galactic, celestial = celestial, $
 ;       EULER, EXTAST, GSSS_STDAST, WCS_ROTATE
 ; REVISION HISTORY:
 ;       Written    W. Landsman                  June 2003
+;       Use PV2 tag in astrometry structure rather than PROJP1 W. L. May 2004
 ;-
 if N_params() LT 1 then begin
      print,'Syntax - HEULER, hdr, /GALACTIC, /CELESTIAL, /ECLIPTIC, ALT_IN=,'
@@ -89,7 +90,7 @@ imap = where(map_types EQ proj, N_imap)
 if N_imap EQ 0 then message,'ERROR - Unrecognized map projection of ' + proj
 imap = imap[0]
 if imap LE 9 then theta0 = 90 else $
-if (imap GE 18) and (imap LE 21) then theta0 = astr.projp1 else theta0 = 0
+if (imap GE 18) and (imap LE 21) then theta0 = astr.pv2[0] else theta0 = 0
           
 if keyword_set(GALACTIC) then begin
     case coord of

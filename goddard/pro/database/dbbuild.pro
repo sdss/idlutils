@@ -67,6 +67,7 @@ pro dbbuild,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, $
 ;       Use SIZE(/TNAME) for error mesage display  W.Landsman   July 2001
 ;       Fix message display error introduced July 2001  W. Landsman   Oct. 2001 
 ;-
+  COMPILE_OPT IDL2
   On_error,2                            ;Return to caller
   npar = N_params()
   if npar LT 1 then begin
@@ -98,8 +99,8 @@ pro dbbuild,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, $
     if s[s[0] + 1] NE idltype[i] then begin
         message, 'Item ' + strtrim( db_item_info('NAME',i),2) + $
            ' - parameter '+strtrim(i,2) + ' - has an incorrect data type',/INF
-        message, 'Required data type is ' + dtype(idltype[i]), /INF
-        message, 'Supplied data type is ' + dtype(s[s[0]+1]), /INF
+        message, 'Required data type is ' + dtype[idltype[i]], /INF
+        message, 'Supplied data type is ' + dtype[s[s[0]+1]], /INF
         return
      endif
 

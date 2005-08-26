@@ -57,6 +57,7 @@ pro fits_read,file_or_fcb,data,header,group_par,noscale=noscale, $
 ;               parameter /PDU is supplied in the calling sequence.
 ;
 ;       GROUP_PAR - Group parameter block for FITS random groups format files
+;               or the heap area for variable length binary tables.
 ;               Any scale factors in the header (PSCALn and PZEROn) are not
 ;               applied to the group parameters.
 ;

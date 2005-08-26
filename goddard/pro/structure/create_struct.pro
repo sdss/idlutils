@@ -109,9 +109,10 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;       Write temporary file in HOME directory if necessary  W. Landsman Jul 98
 ;       Use OPENR,/DELETE for OS-independent file removal W. Landsman Jan 99
 ;       Use STRSPLIT() instead of GETTOK() W. Landsman  July 2002
+;       Assume since V5.3 W. Landsman  Feb 2004
+;       Added RESOLVE_ROUTINE to ensure recompilation W. Landsman Sep. 2004
 ;-
 ;-------------------------------------------------------------------------------
- FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
 
  if N_params() LT 4 then begin
    print,'Syntax - CREATE_STRUCT, STRUCT, strname, tagnames, tag_descript,' 
@@ -141,9 +142,7 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ; If tagname is a scalar string separated by commas, convert to a string array
 
  if size(tagnames,/N_dimensions) EQ 0 then begin
-    if !VERSION.RELEASE GE '5.3' then $
-            tagname = strsplit(tagnames,',',/EXTRACT) else $
-            tagname = str_sep(strtrim(tagnames,2),',')
+            tagname = strsplit(tagnames,',',/EXTRACT) 
  endif else tagname = tagnames
 
  Ntags = N_elements(tagname)
@@ -297,6 +296,7 @@ EXIST:
 ; If using the HOME directory, it needs to be included in the IDL !PATH
 
  if cdhome then cd,getenv('HOME'),curr=curr
+  resolve_routine, name
   Call_procedure, name, struct
  if cdhome then cd,curr
 

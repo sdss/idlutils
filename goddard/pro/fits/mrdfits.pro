@@ -314,6 +314,11 @@
 ;       V2.9b Fix to ensure order of TFORMn doesn't matter
 ;       V2.9c Check if extra degenerate NAXISn keyword are present W.L. Oct 2004 
 ;       V2.9d Propagate /SILENT to MRD_HREAD, more LONG64 casting W. L. Dec 2004
+;       V2.9e Add typarr[good] to fix a problem reading zero-length columns
+;             A.Csillaghy, csillag@ssl.berkeley.edu (RHESSI)
+;       V2.9f Fix problem with string variable binary tables, possible math 
+;             overflow on non-IEEE machines  WL Feb. 2005 
+;       V2.9g Fix problem when setting /USE_COLNUM   WL Feb. 2005
 ;-
 PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 ;
@@ -584,10 +589,10 @@ function  mrd_dofn, name, index, use_colnum, alias=alias
         if sz[nsz-2] eq 7 then begin 
             str = name[0] 
         endif else begin 
-            str = 'C'+string(index) 
+            str = 'C'+strtrim(index,2) 
         endelse 
     endif else begin 
-        str = 'C'+string(index) 
+        str = 'C'+strtrim(index,2) 
     endelse 
  
     return, IDL_VALIDNAME(str,/CONVERT_ALL) 
@@ -713,7 +718,7 @@ end
     
 ; Return the currrent version string for MRDFITS
 function mrd_version
-    return, '2.9c'
+    return, '2.9g'
 end
 ;=====================================================================
 ; END OF GENERAL UTILITY FUNCTIONS ===================================
@@ -1633,7 +1638,6 @@ pro mrd_fixcolumn, vtype, array, heap, off, siz
     off = off[w]
 
     for j=0, nw-1 do begin
-
         case vtype of
             'L': array[0:siz[j]-1,w[j]] = byte(heap,off[j],siz[j])  
             'X': array[0:siz[j]-1,w[j]] = byte(heap,off[j],siz[j])
@@ -1643,23 +1647,32 @@ pro mrd_fixcolumn, vtype, array, heap, off, siz
             'J': array[0:siz[j]-1,w[j]] = long(heap, off[j], siz[j]) 
             'K': array[0:siz[j]-1,w[j]] = long64(heap, off[j], siz[j]) 
 			  
-            'E': array[0:siz[j]-1,w[j]] = float(heap, off[j], siz[j]) 
-            'D': array[0:siz[j]-1,w[j]] = double(heap, off[j], siz[j]) 
-			  
+            'E': begin                  ;Delay conversion until after byteswapping to avoid possible math overflow   Feb 2005
+	         temp = heap[off[j]: off[j] + 4*siz[j]-1 ]
+		 byteorder, temp, /XDRTOF		 
+	         array[0:siz[j]-1,w[j]] = float(temp,0,siz[j]) 
+                 end			  
+           'D': begin 
+	         temp = heap[off[j]: off[j] + 8*siz[j]-1 ]
+		 byteorder, temp, /XDRTOD		 
+	         array[0:siz[j]-1,w[j]] = double(temp,0,siz[j]) 
+                 end			  
             'C': array[0:siz[j]-1,w[j]] = complex(heap, off[j], siz[j]) 
             'M': array[0:siz[j]-1,w[j]] = dcomplex(heap, off[j], siz[j]) 
 			   
-            'A': array[w] = string(heap[off:off+siz]) 
+            'A': array[w[j]] = string(byte(heap,off[j],siz[j])) 
 
             '1': array[0:siz[j]-1,w[j]] = uint(heap, off[j], siz[j]) 
             '2': array[0:siz[j]-1,w[j]] = ulong(heap, off[j], siz[j])
             '3': array[0:siz[j]-1,w[j]] = ulong64(heap, off[j], siz[j])
       
         endcase
+
     endfor
 
     ; Fix endianness
-    if vtype ne 'A' and vtype ne 'B' and vtype ne 'X' and vtype ne 'L' then begin
+    if (vtype ne 'A') and (vtype ne 'B') and (vtype ne 'X') and (vtype ne 'L')  and $
+       (vtype NE 'D')  and (vtype NE 'E') then begin
 	ieee_to_host, array
     endif
 
@@ -2227,6 +2240,7 @@ pro mrd_table, header, structyp, use_colnum,           $
       IF nwsc NE 0 THEN scales[wsc] = 1.0d
     endif
 
+    xten = strtrim(xten,2)
     if xten ne 'BINTABLE' and xten ne 'A3DTABLE' then begin 
         print, 'MRDFITS: ERROR - Header is not from binary table.' 
         nfld = 0 & status = -1 
@@ -2462,6 +2476,8 @@ pro mrd_table, header, structyp, use_colnum,           $
         good    = where(dimfld GE 0)
         fnames  = fnames[good]
         fvalues = fvalues[good]
+        typarr = typarr[good]      ;Added 2005-1-6   (A.Csillaghy)
+
     endif
 
     if n_elements(vcls) eq 0  and  (not scaling) and not keyword_set(columns) then begin
@@ -2508,7 +2524,7 @@ function mrdfits, file, extension, header,      $
     
     ;   Let user know version if MRDFITS being used.
     if keyword_set(version) then begin
-        print,'MRDFITS: Version '+mrd_version()+' Mar 02, 2004'
+        print,'MRDFITS: Version '+mrd_version()+' Feb 07, 2005'
     endif
     
     ;

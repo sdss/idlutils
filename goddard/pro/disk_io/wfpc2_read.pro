@@ -31,8 +31,7 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
 ;            is not found, then WFPC2_READ first tries appending a '.fits'
 ;            extension, and then tries appending a '.c0h' extension.  
 ;
-;            The file may be gzip compressed (with a .gz extension) for IDL
-;            V5.3 or later.
+;            The file may als be gzip compressed (with a .gz extension) 
 ; INPUT KEYWORD PARAMETERS:
 ;    NUM_CHIP - Integer scalar or vector, subset of 1, 2, 3, 4, specifying 
 ;               particular chip numbers to read.    Outputs will be in same 

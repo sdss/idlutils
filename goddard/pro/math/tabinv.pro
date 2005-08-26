@@ -5,10 +5,6 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
 ; PURPOSE:  
 ;       To find the effective index of a function value in an ordered vector.
 ;       
-; EXPLANTION:
-;       This version calls VALUE_LOCATE() internally, either as an intrinsic
-;       IDL Function (V5.3 or later) or from the procedure
-;       http://idlastro.gsfc.nasa.gov/ftp/pro/math/value_locate.pro
 ; CALLING SEQUENCE:
 ;       TABINV, XARR, X, IEFF, [/FAST]
 ; INPUTS:
@@ -31,7 +27,7 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
 ;       zeroes could cause routine to abort.
 ;
 ; PROCEDURE:
-;       A binary search is used to find the values XARR[I]
+;       VALUE_LOCATE() is used to find the values XARR[I]
 ;       and XARR[I+1] where XARR[I] < X < XARR[I+1].
 ;       IEFF is then computed using linear interpolation 
 ;       between I and I+1.
@@ -86,7 +82,7 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
  endif
 
  
- ieff = float(value_locate(xarr,x)) 
+ ieff = float(VALUE_LOCATE(xarr,x)) 
  g = where( (ieff LT npt) and (ieff GE 0), Ngood)
  if Ngood GT 0 then begin
       neff = ieff[g]

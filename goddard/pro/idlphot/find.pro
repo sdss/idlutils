@@ -25,17 +25,17 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	fwhm  - FWHM to be used in the convolve filter
 ;	sharplim - 2 element vector giving low and high cutoff for the
 ;		sharpness statistic (Default: [0.2,1.0] ).   Change this
-;		default only if the stars have siginificantly larger or 
+;		default only if the stars have significantly larger or 
 ;		or smaller concentration than a Gaussian
 ;	roundlim - 2 element vector giving low and high cutoff for the
 ;		roundness statistic (Default: [-1.0,1.0] ).   Change this 
 ;		default only if the stars are significantly elongated.
 ;
 ; OPTIONAL INPUT KEYWORDS:
-;	SILENT - Normally, FIND will write out each star that meets all
+;	/SILENT - Normally, FIND will write out each star that meets all
 ;		selection criteria.   If the SILENT keyword is set and 
 ;		non-zero, then this printout is suppressed.
-;	PRINT - if set and non-zero then T_FIND will also write its results to
+;	PRINT - if set and non-zero then FIND will also write its results to
 ;		a file find.prt.   Also one can specify a different output file 
 ;		name by setting PRINT = 'filename'.
 ;
@@ -43,19 +43,23 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	x - vector containing x position of all stars identified by FIND
 ;	y-  vector containing y position of all stars identified by FIND
 ;	flux - vector containing flux of identified stars as determined
-;		by a gaussian fit.  Fluxes are NOT converted to magnitudes.
+;		by a Gaussian fit.  Fluxes are NOT converted to magnitudes.
 ;	sharp - vector containing sharpness statistic for identified stars
 ;	round - vector containing roundness statistic for identified stars
 ;
 ; NOTES:
-;	The sharpness statistic compares the central pixel to the mean of the
-;	surrounding pixels.   If this difference is greater than the originally
-;	estimated height of the Gaussian or less than 0.2 the height of the
+;	(1) The sharpness statistic compares the central pixel to the mean of 
+;       the surrounding pixels.   If this difference is greater than the 
+;       originally estimated height of the Gaussian or less than 0.2 the height of the
 ;	Gaussian (for the default values of SHARPLIM) then the star will be
 ;	rejected. 
 ;
+;       (2) More recent versions of FIND in DAOPHOT allow the possibility of
+;       ignoring bad pixels.    Unfortunately, to implement this in IDL
+;       would preclude the vectorization made possible with the CONVOL function
+;       and would run extremely slowly.
 ; PROCEDURE CALLS:
-;	GETOPT
+;	GETOPT()
 ; REVISION HISTORY:
 ;	Written W. Landsman, STX  February, 1987
 ;	ROUND now an internal function in V3.1   W. Landsman July 1993
@@ -65,9 +69,11 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Replace DATATYPE() with size(/TNAME)   W. Landsman Nov. 2001
 ;       Fix problem when PRINT= filename   W. Landsman   October 2002
+;       Fix problems with >32767 stars   D. Schlegel/W. Landsman Sep. 2004
 ;-
 ;
  On_error,2                         ;Return to caller
+ compile_opt idl2
 
  npar   = N_params()
  if npar EQ 0 then begin
@@ -79,16 +85,16 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 
  maxbox = 13 	;Maximum size of convolution box in pixels 
 
-;Determine if hardcopy output is desired
+; Get information about the input image 
 
  type = size(image)
  if ( type[0] NE 2 ) then message, $
      'ERROR - Image array (first parameter) must be 2 dimensional'
  n_x  = type[1] & n_y = type[2]
-
  message,  $
     'Input Image Size is '+strtrim(n_x,2) + ' by '+ strtrim(n_y,2),/INF
 
+;Determine if hardcopy output is desired
  doprint = keyword_set( PRINT)
  if not keyword_set( SILENT ) then silent = 0
  if ( N_elements(fwhm) NE 1 ) then $

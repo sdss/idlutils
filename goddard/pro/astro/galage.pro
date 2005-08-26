@@ -64,6 +64,10 @@
 ;    (2) Should probably be fixed to use a different integrator from QSIMP when
 ;    computing age from an "infinite" redshift of formation.    But using a 
 ;    large value of zform seems to work adequately.
+;
+;     (3) An alternative set of IDL procedures for computing cosmological
+;    parameters is available at 
+;            http://cerebus.as.arizona.edu/~ioannis/research/red/
 ; PROCEDURES CALLED:
 ;    COSMO_PARAM, QSIMP
 ; HISTORY: 

@@ -75,9 +75,11 @@
 ;               Modified so that ERRMSG is not touched if not defined.
 ;	Version 4, Wayne Landsman, GSFC, 12 August 1997
 ;		Recognize double complex data type
-; Version     :
-;       Version 4, 12 Aug 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Version 6, William Thompson, GSFC, 22 September 2004
+;               Recognize unsigned integer types.
+; Version     :
+;       Version 6, 22 September 2004
 ;-
 ;
 	ON_ERROR,2
@@ -154,7 +156,18 @@
 				S = [S[0]+1, 2, S[1:*]]		;with extra dim
 				COMMENT = 'Real*8 (dcomplex, stored as double)'
 				END
-
+;
+;  Unsigned data types may require use of BZERO/BSCALE--handled in writer.
+;
+			12: BEGIN       ;Unsigned integer
+				BITPIX = 16
+				COMMENT = 'Integer*2 (short integer)'
+				END
+			13:  BEGIN      ;Unsigned long integer
+				BITPIX = 32
+				COMMENT = 'Integer*4 (long integer)'
+				END
+                                
 		ENDCASE
 	ENDELSE
 ;

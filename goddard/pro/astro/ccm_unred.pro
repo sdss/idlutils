@@ -54,6 +54,10 @@ pro ccm_UNRED, wave, flux, ebv, funred, R_V = r_v
 ;             Longo et al. (1989, ApJ, 339,474)
 ;     (4) Use the 4 parameter calling sequence if you wish to save the 
 ;               original flux vector.
+;     (5) Valencic et al. (2004, ApJ, 616, 912) revise the ultraviolet CCM
+;             curve (3.3 -- 8.0 um-1).    But since their revised curve does
+;             not connect smoothly with longer and shorter wavelengths, it is
+;             not included here.
 ;
 ; REVISION HISTORY:
 ;       Written   W. Landsman        Hughes/STX   January, 1992

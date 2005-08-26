@@ -359,6 +359,7 @@ goddard/pro/idlphot/cntrd.pro -text
 goddard/pro/idlphot/dao_value.pro -text
 goddard/pro/idlphot/daoerf.pro -text
 goddard/pro/idlphot/find.pro -text
+goddard/pro/idlphot/gcntrd.pro -text
 goddard/pro/idlphot/getpsf.pro -text
 goddard/pro/idlphot/group.pro -text
 goddard/pro/idlphot/mmm.pro -text
@@ -418,6 +419,8 @@ goddard/pro/math/gaussian.pro -text
 goddard/pro/math/hermite.pro -text
 goddard/pro/math/ksone.pro -text
 goddard/pro/math/kstwo.pro -text
+goddard/pro/math/kuiperone.pro -text
+goddard/pro/math/kuipertwo.pro -text
 goddard/pro/math/linterp.pro -text
 goddard/pro/math/meanclip.pro -text
 goddard/pro/math/minf_bracket.pro -text
@@ -432,6 +435,7 @@ goddard/pro/math/polint.pro -text
 goddard/pro/math/poly_smooth.pro -text
 goddard/pro/math/polyleg.pro -text
 goddard/pro/math/prob_ks.pro -text
+goddard/pro/math/prob_kuiper.pro -text
 goddard/pro/math/qsimp.pro -text
 goddard/pro/math/qtrap.pro -text
 goddard/pro/math/quadterp.pro -text

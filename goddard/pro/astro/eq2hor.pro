@@ -178,7 +178,7 @@ if n_elements(aberration_) eq 0 then aberration_ = 1
 if n_elements(refract_) eq 0 then refract_ = 1
 v = keyword_set(verbose)
 
-; converstion factors
+; conversion factors
 d2r = !dpi/180.
 h2r = !dpi/12.
 h2d = 15.d

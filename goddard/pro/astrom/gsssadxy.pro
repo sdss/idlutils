@@ -7,7 +7,7 @@ pro GSSSadxy,gsa,ra,dec,x,y, PRINT = print
 ; EXPLANATION:
 ;       The sky coordinates may be printed and/or returned in variables.
 ;
-; CALLING SEQEUNCE:
+; CALLING SEQUENCE:
 ;       GSSSADXY, GSA, Ra,Dec, [ X, Y, /Print ] 
 
 ; INPUT:
@@ -45,6 +45,7 @@ pro GSSSadxy,gsa,ra,dec,x,y, PRINT = print
 ;       June 1994 - Dropped PRFLAG parameter, added /PRINT  W. Landsman (HSTX)
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       29-JUN-99 Added support for AMD[X,Y]1[2-3] for DSS images by E. Deutsch
+;       Reduce memory requirements for large arrays D. Finkbeiner April 2004
 ;-
   On_error,2
   arg = N_params()

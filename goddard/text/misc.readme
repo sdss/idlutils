@@ -1,4 +1,4 @@
-Miscellaneous Procedures                      pro/misc         December 2001
+Miscellaneous Procedures                      pro/misc         March 2004
 
 The procedures in this directory are general utility procedures that do not
 involve astronomy.   They are included here either because they are required
@@ -24,6 +24,8 @@ Library.)
 
 ASTROLIB - Add the non-standard system variables in use in the IDL
            Astronomy User's Library
+BLKSHIFT - Shift a block of data to a new (possibly overlapping) position in a 
+          file
 BOOST_ARRAY - Append one array onto another, adjusting dimensions if necessary
 BREAK_PATH() - break up a !PATH-like string into individual directories
 BSORT() - Like the IDL SORT function but subscript order is maintained when
@@ -54,6 +56,7 @@ GETWRD() -  Get specified item (word) from a string (in /jhuapl)
 HGREP -  Find a substring in a FITS header (or any other string array)
 HOST_TO_IEEE - Convert IDL variable from host machine bit order to IEEE
 HPRINT -  Pretty terminal display of a FITS header (or other string array)
+IDL_VALIDNAME() - Emulate intrinsic IDL_VALIDNAME() function for V5.6 and earlier
 IEEE_TO_HOST - Convert IDL variable from IEEE bit order to host machine
 ISARRAY() - Determine if an IDL variable is an array (in /jhuapl)
 IS_IEEE_BIG() - Determine if the host machine is IEEE big endian 
@@ -91,7 +94,6 @@ SELECT_O - VT100 terminal branch of SCREEN_SELECT
 SELECT_W - IDL widget branch of SCREEN_SELECT.
 SPEC_DIR() - Complete specification of a file name using default disk & directory
 STORE_ARRAY - Insert one array into another, adjusting dimensions if necessary
-STREBCASC() - Convert an EBCDIC string scalar or vector to its ASCII equivalent
 STR_INDEX - Get all indicies of a substring within a string
 STRN() - Convert a number to a string and remove padded blanks.
 STRNUMBER()- Determine whether a string is a valid numeric value.
@@ -103,5 +105,4 @@ TRIM() - Convert numbers to strings, without trailing zeros.
 VALID_NUM() - Determine if a string is a valid number (cf. STRNUMBER)
 VECT() - Display a set of numbers to a string with delimiters
 WHERENAN() - Find points equal to IEEE NaN (not a number) values
-WHERE_NEGZERO() - Find locations of IEEE -0.0 values
 ZPARCHECK - Check the type and size of a parameter

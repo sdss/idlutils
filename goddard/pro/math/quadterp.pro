@@ -5,8 +5,9 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ; PURPOSE:
 ;       Quadratic interpolation of X,Y vectors onto a new X grid
 ; EXPLANATION:
-;       Quadratically interpolate (3 point Lagrangian) a function Y = f(X)
-;       at specified grid points.  Use LINTERP for linear interpolation
+;       Interpolate a function Y = f(X) at specified grid points using an
+;       average of two neighboring 3 point quadratic (Lagrangian) interpolants.
+;       Use LINTERP for linear interpolation
 ;
 ; CALLING SEQUENCE:
 ;       QUADTERP, Xtab, Ytab, Xint, Yint, [ MISSING = ]
@@ -34,8 +35,8 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ;       to locate center point of the interpolation.
 ;
 ; NOTES:
-;       QUADTERP provides one method of high-order interpolation.   In IDL V5.3
-;           the following alternatives became available:
+;       QUADTERP provides one method of high-order interpolation.   The 
+;           RSI interpol.pro function includes the following alternatives:
 ;
 ;       interpol(/LSQUADRATIC) - least squares quadratic fit to a 4 pt 
 ;               neighborhood
@@ -60,9 +61,6 @@ PRO quadterp, xtab, ytab, xint, yint, MISSING = MISSING
 ;       interpolated values of FLUX at the wavelengths given in WGRID.
 ;
 ;  EXTERNAL ROUTINES:
-;       VALUE_LOCATE -- this is an intrinsic function in IDL V5.3 and later.
-;           For earlier IDL versions one can substitute the emulation procedure 
-;           http://idlastro.gsfc.nasa.gov/ftp/pro/math/value_locate.pro
 ;       ZPARCHECK
 ;  REVISION HISTORY:
 ;       31 October 1986 by B. Boothman, adapted from the IUE RDAF

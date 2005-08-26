@@ -34,7 +34,9 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;	XTENSION: type of extension to write (Default="IMAGE"). If not
 ;		supplied, it will be taken from HEADER_IN.  If not in either
 ;		place, the default is "IMAGE".  This parameter is ignored
-;		when writing the primary data unit.
+;		when writing the primary data unit.     Note that binary and
+;               and ASCII table extensions already have a properly formatted
+;               header (e.g. with TTYPE* keywords) and byte array data. 
 ;	EXTNAME: EXTNAME for the extension.  If not supplied, it will be taken
 ;		from HEADER_IN.  If not supplied and not in HEADER_IN, no
 ;		EXTNAME will be written into the output extension.
@@ -47,10 +49,8 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;       /NO_ABORT: Set to return to calling program instead of a RETALL
 ;               when an I/O error is encountered.  If set, the routine will
 ;               return  a non-null string (containing the error message) in the
-;               keyword MESSAGE.    (For backward compatibility, the obsolete 
-;               system variable !ERR is also set to -1 in case of an error.)   
-;               If /NO_ABORT not set, then FITS_WRITE will print the message and
-;               issue a RETALL
+;               keyword MESSAGE.   If /NO_ABORT not set, then FITS_WRITE will 
+;               print the message and issue a RETALL
 ;	/NO_DATA: Set if you only want FITS_WRITE to write a header.  The
 ;		header supplied will be written without modification and
 ;		the user is expected to write the data using WRITEU to unit
@@ -102,12 +102,14 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;       Ensure that required extension table keywords are in proper order
 ;             W.V. Dixon/W. Landsman          March 2001
 ;       Assume since V5.1, remove NaNValue keyword   W. Landsman Nov. 2002
+;       Removed obsolete !ERR system variable  W. Landsman Feb 2004
+;       Check that byte array supplied with table extension W. Landsman Mar 2004
 ;-
 ;-----------------------------------------------------------------------------
 ;
 ; print calling sequence if no parameters supplied
 ;
-	if n_params(0) lt 1 then begin
+	if n_params() lt 1 then begin
 	    print,'Calling Sequence: FITS_WRITE,file_or_fcb,data,header_in'
 	    print,'Input Keywords: extname, extver, xtension, extlevel,' + $
                                     '/no_abort, /no_data'
@@ -189,7 +191,13 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 	   end else begin
 		Axtension = sxpar(header,'xtension', Count = N_Axtension)
 		if N_Axtension EQ 0 then Axtension = ''
-	end
+ 	end
+        if Axtension EQ 'BINTABLE' or (Axtension EQ 'TABLE') then $
+                if idltype GT 1 then begin
+                     message='A Byte array must be supplied with a ' + $
+                             'BINTABLE or TABLE extension'
+                     goto, error_exit
+                 endif
 
 	if n_elements(extname) gt 0 then begin
 		Aextname = extname
@@ -227,7 +235,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 		hpos2 = n_elements(header)-1
 	end
 ;
-; determine if a extention was supplied and no primary data unit (PDU)
+; determine if a extension was supplied and no primary data unit (PDU)
 ; was written
 ;
 	if (fcb.nextend eq -1) then begin		;no pdu written yet?
@@ -345,17 +353,17 @@ write_header:
 ;
 	fcb.nextend = fcb.nextend + 1
 	if fcbtype eq 7 then fits_close,fcb else file_or_fcb = fcb
-	!err = 1
+        !err = 1
 	return
 ;
 ; error exit
 ;
 ioerror:
-	message = !err_string
+	message = !error_state.msg
 error_exit:
 	if fcbtype eq 7 then free_lun,fcb.unit
-	!err = -1
+        !err = -1
 	if keyword_set(no_abort) then return
-	print,'FITS_WRITE ERROR: '+message
+	message,' ERROR: '+message,/CON
 	retall
 end

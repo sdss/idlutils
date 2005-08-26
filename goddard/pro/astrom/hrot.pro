@@ -34,8 +34,11 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ; OPTIONAL INPUT KEYWORD:
 ;       MISSING - Set this keyword to a scalar value which will be assigned
 ;               to pixels in the output image which do not correspond to 
-;               existing imput images (e.g if one rotates off-center). 
+;               existing input images (e.g if one rotates off-center). 
 ;               If not supplied then linear extrapolation is used.
+;               ***NOTE: A bug was introduced into the POLY_2D function in IDL
+;               V5.5 (fixed in V6.1) such that the MISSING keyword
+;               may not work properly with floating point data***
 ;
 ;       INTERP - scalar set to either 0 (nearest neighbor interpolation),
 ;               1 (bilinear interpolation), or 2 (cubic interpolation).    

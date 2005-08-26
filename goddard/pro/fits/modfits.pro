@@ -73,7 +73,7 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;           inheritance convention is adopted.
 ;
 ; NOTES:
-;       Use the BLKSHIFT procedure to shift the contents of the FITS file if 
+;       Uses the BLKSHIFT procedure to shift the contents of the FITS file if 
 ;       the new data or header differs in size by more than 2880 bytes from the
 ;       old data or header.
 ;
@@ -88,6 +88,8 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;       (2) If a data array but no FITS header is supplied, then MODFITS does 
 ;           not check to make sure that the existing header is consistent with
 ;           the new data.
+;
+;       (3) Does not work with compressed files
 ; PROCEDURES USED:
 ;       Functions:   IS_IEEE_BIG(), N_BYTES(), SXPAR()
 ;       Procedures:  BLKSHIFT, CHECK_FITS, FITS_OPEN, FITS_READ, HOST_TO_IEEE
@@ -107,6 +109,8 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;       Only check XTENSION value if EXTEN_NO > 1   W. Landsman Feb. 2003
 ;       Correct for unsigned data on little endian machines W. Landsman Apr 2003
 ;       Major rewrite to allow changing size of data or header W.L. Aug 2003
+;       Fixed case where updated header exactly fills boundary W.L. Feb 2004
+;       More robust error reporting W.L. Dec 2004
 ;-
   On_error,2                    ;Return to user
 
@@ -123,6 +127,7 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
    ndata = N_elements(data)
    dtype = size(data,/TNAME)
    printerr =  not arg_present(ERRMSG) 
+   fcbsupplied = size(filename,/TNAME) EQ 'STRUCT'
 
    if (nheader GT 1) and (ndata GT 1) then begin
         check_fits, data, header, /FITS, ERRMSG = MESSAGE
@@ -149,7 +154,6 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 
 ; Was a file name or file control block supplied?
 
-   fcbsupplied = size(filename,/TNAME) EQ 'STRUCT'
    if not fcbsupplied then begin 
        fits_open, filename, io,/update,/No_Abort,message=message
        if message NE '' then GOTO, BAD_EXIT
@@ -199,7 +203,7 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
         point_lun, unit, io.start_header[exten_no]      ;Position header start  
         writeu, unit, byte(header)
         remain = newbytes mod 2880
-	writeu, unit, replicate( 32b, 2880 - remain)
+	if remain GT 0 then writeu, unit, replicate( 32b, 2880 - remain)
  
    endif 
 

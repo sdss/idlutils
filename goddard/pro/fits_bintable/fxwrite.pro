@@ -51,7 +51,8 @@
 ;	array is changed so that BSCALE=1 and BZERO=0.  This is so that these
 ;	scaling parameters are not applied to the data a second time by another
 ;	routine.  Also, history records are added storing the original values
-;	of these constants.
+;	of these constants.  (Other values of BZERO are used for unsigned
+;	integers.)
 ;
 ;	If the /NOUPDATE keyword is set, however, then the BSCALE and BZERO
 ;	keywords are not changed.  The user should then be aware that FITS
@@ -91,8 +92,10 @@
 ;		Catch error if unable to open file.
 ;       Version 4.1 Wayne Landsman, GSFC, 02 May 2000
 ;               Remove !ERR in call to CHECK_FITS, Use ARG_PRESENT()
+;       Version 5, William Thompson, GSFC, 22 September 2004
+;               Recognize unsigned integer types
 ; Version     : 
-;	Version 4.1, 2 May 2000
+;	Version 5, 22 Sep 2004
 ;-
 ;
 	ON_ERROR, 2
@@ -123,6 +126,9 @@
 ;
 ;  Set the BSCALE and BZERO keywords to their default values.
 ;
+        SZ = SIZE(DATA)
+        TYPE = SZ[SZ[0]+1]
+        IF N_PARAMS() EQ 3 THEN NEWDATA = DATA
 	IF NOT KEYWORD_SET(NOUPDATE) THEN BEGIN
 	    BZERO  = FXPAR(HEADER,'BZERO')
 	    BSCALE = FXPAR(HEADER,'BSCALE')
@@ -131,9 +137,22 @@
 		FXADDPAR,HEADER,'BSCALE',1.
 		FXADDPAR,HEADER,'HISTORY',DTE+' reset BSCALE, was '+ $
 			STRTRIM(BSCALE,2)
-	    ENDIF
-	    IF BZERO NE 0 THEN BEGIN
-		FXADDPAR,HEADER,'BZERO',0.
+            ENDIF
+;
+;  If an unsigned data type then redefine BZERO to allow all the data to be
+;  stored in the file.
+;
+            BZERO0 = 0
+            IF (TYPE EQ 12) AND (NOT KEYWORD_SET(NOUPDATE)) THEN BEGIN
+                BZERO0 = '8000'X
+                NEWDATA = FIX(TEMPORARY(NEWDATA) - BZERO)
+            ENDIF
+            IF (TYPE EQ 13) AND (NOT KEYWORD_SET(NOUPDATE)) THEN BEGIN
+                BZERO0 = '80000000'X
+                NEWDATA = LONG(TEMPORARY(NEWDATA) - BZERO)
+            ENDIF
+	    IF BZERO NE BZERO0 THEN BEGIN
+		FXADDPAR,HEADER,'BZERO',BZERO0
 		FXADDPAR,HEADER,'HISTORY',DTE+' reset BZERO, was '+ $
 			STRTRIM(BZERO,2)
 	    ENDIF
@@ -174,8 +193,6 @@
 ;  If necessary, then byte-swap the data before writing it out.  Also, replace
 ;  any values corresponding data dropout with IEEE NaN.
 ;
-	    SZ = SIZE(DATA)
-	    TYPE = SZ[SZ[0]+1]
 	    IF (N_ELEMENTS(NANVALUE) EQ 1) AND (TYPE GE 4) AND	$
 		    (TYPE LE 6) THEN BEGIN
 		W = WHERE(DATA EQ NANVALUE, COUNT)
@@ -187,9 +204,9 @@
 		ENDCASE
 	    END ELSE COUNT = 0
 ;
-	    NEWDATA = DATA
 	    HOST_TO_IEEE, NEWDATA
 	    IF COUNT GT 0 THEN NEWDATA[W] = NAN
+;
 	    WRITEU,UNIT,NEWDATA
 ;
 ;  If necessary, then pad out to an integral multiple of 2880 bytes.

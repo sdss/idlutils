@@ -4,7 +4,7 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ; NAME:
 ;       FTAB_EXT
 ; PURPOSE:
-;       Routine to extract columns from a FITS (binary or ASCII) table
+;       Routine to extract columns from a FITS (binary or ASCII) table. 
 ;
 ; CALLING SEQUENCE:
 ;       FTAB_EXT, name_or_fcb, columns, v1, [v2,..,v9, ROWS=, EXTEN_NO= ]
@@ -41,19 +41,20 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;       
 ; PROCEDURES CALLED:
 ;       FITS_READ, FITS_CLOSE, FTINFO, FTGET(), TBINFO, TBGET()
+; MINIMUM IDL VERSION:
+;       V5.3 (uses STRSPLIT)
 ; HISTORY:
 ;       version 1        W.   Landsman         August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Improve speed processing binary tables  W. Landsman   March 2000
 ;       Use new FTINFO calling sequence  W. Landsman   May 2000  
 ;       Don't call fits_close if fcb supplied W. Landsman May 2001 
-;       Use STRSPLIT to parse column string  W. Landsman July 2002
-;       Cleanup pointers in TBINFO structure  W. Landsman November 2003 
+;       Use STRSPLIT to parse column string  W. Landsman July 2002 
+;       Cleanup pointers in TBINFO structure  W. Landsman November 2003
 ;-
 ;---------------------------------------------------------------------
- FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
  if N_params() LT 3 then begin
-        print,'Syntax - ftab_ext, name, columns, v1, [v2,...,v9, ROWS=, EXTEN=]'
+        print,'Syntax - FTAB_EXT, name, columns, v1, [v2,...,v9, ROWS=, EXTEN=]'
         return
  endif
  N_ext = N_params() - 2
@@ -92,9 +93,7 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
                 ext_type + 'is not a FITS table format'
  endcase
 
- if strng then if !VERSION.RELEASE GE '5.3' then $
-               colnames= strsplit(columns,',',/EXTRACT) else $
-               colnames = str_sep(strtrim(columns,2),',') else $
+ if strng then colnames= strsplit(columns,',',/EXTRACT) else $
                colnames = columns
  if binary then tbinfo,htab,tb_str else ftinfo,htab,ft_str
 
@@ -106,7 +105,7 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
         command = 'v'+strtrim(i+1,2)+'=v'
         istat = execute(command)
         endfor
- if binary then begin 
+ if binary then begin
         ptr_free, tb_str.tscal
         ptr_free, tb_str.tzero
  endif

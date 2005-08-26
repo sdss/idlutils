@@ -45,7 +45,9 @@ pro nutate, jd, nut_long, nut_obliq
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Corrected minor typos in values of d_lng W. Landsman  December 2000
 ;       Updated typo in cdelt term              December 2000
+;       Avoid overflow for more than 32767 input dates W. Landsman January 2005
 ;-
+ compile_opt idl2
  On_error,2
  
  if N_params() LT 2 then begin
@@ -130,7 +132,7 @@ pro nutate, jd, nut_long, nut_obliq
  arg = d_lng#d + m_lng#m +mp_lng#mprime + f_lng#f +om_lng#omega
  sarg = sin(arg)
  carg = cos(arg)
- for i=0,n-1 do begin
+ for i=0L,n-1 do begin
         nut_long[i] =  0.0001d*total( (sdelt*t[i] + sin_lng)*sarg[*,i] )
         nut_obliq[i] = 0.0001d*total( (cdelt*t[i] + cos_lng)*carg[*,i] )
  end

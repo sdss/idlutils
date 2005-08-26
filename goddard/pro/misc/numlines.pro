@@ -16,6 +16,7 @@ function numlines,file
 ;          Set to -1 if the number of lines could not be determined
 ; METHOD:
 ;     If Unix then spawn to wc; otherwise read 1 line at a time and count
+;     Call FILE_LINES() if V5.6 or later
 ;
 ; PROCEDURE CALLS:
 ;     EXPAND_TILDE(), SPEC_DIR()
@@ -25,6 +26,7 @@ function numlines,file
 ;     Use EXPAND_TILDE() under Unix         September 1997
 ;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Call intrinsic FILE_LINES() if V5.6 or later   December 2002
+;     Always return a scalar even if 1 element array is input  March 2004
 ;-
  On_error,2
 
@@ -33,7 +35,7 @@ function numlines,file
         return,-1
  endif
 
- if !VERSION.RELEASE GE '5.6' then return,file_lines(file)
+ if !VERSION.RELEASE GE '5.6' then return,file_lines(file[0])
   nl = -1L
  openr,lun,file,/get_lun, ERROR = err
  if err NE 0 then begin

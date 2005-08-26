@@ -68,6 +68,8 @@
 ;               W. Landsman/R. Arendt  June 2002
 ;       Call WCS_GETPOLE, accept LATPOLE keyword, update cylindrical coords
 ;               W. Landsman  June 2003 
+;       Don't attempt to rotate NaN values   W. Landsman  May 2004
+;       
 ;-
 
 pro wcs_rotate, longitude, latitude, phi, theta, crval, LONGPOLE = longpole, $
@@ -127,10 +129,15 @@ pro wcs_rotate, longitude, latitude, phi, theta, crval, LONGPOLE = longpole, $
 ; solve the set of equations for each datum point
 
  if keyword_set(REVERSE) then begin
-        phi1 = double(phi)/radeg
-        theta1 = double(theta)/radeg
+        latitude = phi
+        longitude = theta
+        g = where( finite(phi) and finite(theta), Ng )
+        if Ng EQ 0 then return
+        phi1 = double(phi[g])/radeg
+        theta1 = double(theta[g])/radeg
         r = transpose(r)
  endif else begin
+        phi = longitude
         phi1 = double(longitude)/radeg
         theta1 = double(latitude)/radeg
  endelse
@@ -151,8 +158,8 @@ pro wcs_rotate, longitude, latitude, phi, theta, crval, LONGPOLE = longpole, $
 ; use b0,b1,b2 to compute "native" latitude and longitude
 
  if keyword_set(REVERSE) then begin
-        latitude = asin(b2)*radeg
-        longitude = atan( b1, b0)*radeg
+        latitude[g] = asin(b2)*radeg
+        longitude[g] = atan( b1, b0)*radeg
  endif else begin
         theta = asin(b2)*radeg
         phi = atan( b1, b0)*radeg

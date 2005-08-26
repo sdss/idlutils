@@ -49,6 +49,8 @@ PRO QuerySimbad, name, ra, de, id, Found = found, NED = ned, ERRMSG = errmsg
 ; PROCEDURES USED:
 ;       REPSTR(), WEBGET()
 ;
+; MINIMUM IDL VERSION:
+;    V5.4 (uses SOCKET)
 ; MODIFICATION HISTORY: 
 ;     Written by M. Feldt, Heidelberg, Oct 2001   <mfeldt@mpia.de>
 ;     Minor updates, W. Landsman   August 2002

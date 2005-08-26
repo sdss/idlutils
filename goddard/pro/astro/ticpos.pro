@@ -44,6 +44,8 @@ pro ticpos,deglen,pixlen,ticsize,incr,units      ;Compute tic positions
 ;       written by W. Landsman            November, 1988
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Don't use all capital letters  W. Landsman May 2003
+;       Fix case where incr crosses degree/minute or minute/degree boundary
+;               A. Mortier/W.Landsman April 2005
 ;-
   On_error,2
 
@@ -61,12 +63,12 @@ pro ticpos,deglen,pixlen,ticsize,incr,units      ;Compute tic positions
     incr GE 120.0  : incr =  4.         ;degrees
     incr GE  60.0  : incr =  2.         ;degrees
     incr GE  30.0  : incr =  1.         ;degrees
-    incr GE  15.0  : incr = 30.         ;minutes 
+    incr GT  15.0  : incr = 30.         ;minutes 
     incr GE  10.0  : incr = 15.         ;minutes  
     incr GE   5.0  : incr = 10.         ;minutes
     incr GE   2.0  : incr =  5.         ;minutes
     incr GE   1.0  : incr =  2.         ;minutes
-    incr GE   0.5  : incr =  1.         ;minutes
+    incr GT   0.5  : incr =  1.         ;minutes
     incr GE   0.25 : incr = 30.         ;seconds
     incr GE   0.16 : incr = 15.         ;seconds
     incr GE   0.08 : incr = 10.         ;seconds
@@ -81,6 +83,6 @@ pro ticpos,deglen,pixlen,ticsize,incr,units      ;Compute tic positions
 
   ticsize= incr/abs(minpix)                ;determine ticsize
   incr = incr*sgn
-
+ 
   return 
   end

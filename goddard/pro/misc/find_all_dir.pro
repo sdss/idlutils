@@ -1,5 +1,5 @@
-	FUNCTION FIND_ALL_DIR, PATH, PATH_FORMAT=PATH_FORMAT,	$
-		PLUS_REQUIRED=PLUS_REQUIRED, RESET=RESET
+        FUNCTION FIND_ALL_DIR, PATH, PATH_FORMAT=PATH_FORMAT,   $
+                PLUS_REQUIRED=PLUS_REQUIRED, RESET=RESET
 ;+
 ; NAME:
 ;       FIND_ALL_DIR()
@@ -11,7 +11,6 @@
 ;       having a directory with a plus in front of it in the environment
 ;       variable IDL_PATH.
 ;
-;       Users with Windows OS and V5.2 or earlier should see the warning below.
 ; CALLING SEQUENCE:
 ;       Result = FIND_ALL_DIR( PATH )
 ;
@@ -67,145 +66,160 @@
 ;       (available only on VMS distribution) to find the directories.  This
 ;       command file must be in one of the directories in IDL's standard search
 ;       path, !PATH.
-;
-;       In order to use this procedure on Windows in IDL V5.2 or earlier, you 
-;       must obtain the procedure find_wind_dir.pro and supporting procedures
-;       from the Solar library 
-;
+;;
 ; REVISION HISTORY:
 ;               Version 11, Zarro (SM&A/GSFC), 23-March-00
 ;                       Removed all calls to IS_DIR
-;		Version 12, William Thompson, GSFC, 02-Feb-2001
-;			In Windows, use built-in expand_path if able.
-;		Version 13, William Thompson, GSFC, 23-Apr-2002
-;			Follow logical links in Unix
-;			(Suggested by Pascal Saint-Hilaire)
+;               Version 12, William Thompson, GSFC, 02-Feb-2001
+;                       In Windows, use built-in expand_path if able.
+;               Version 13, William Thompson, GSFC, 23-Apr-2002
+;                       Follow logical links in Unix
+;                       (Suggested by Pascal Saint-Hilaire)
+;               Version 14, Zarro (EER/GSFC), 26-Oct-2002
+;                       Saved/restored current directory to protect against
+;                       often mysterious directory changes caused by 
+;                       spawning FIND in Unix
+;               Version 15, William Thompson, GSFC, 9-Feb-2004
+;                       Resolve environment variables in Windows.
 ;
-; Version     :	Version 13
+; Version     : Version 15
 ;-
 ;
-	ON_ERROR, 2
+        ON_ERROR, 2
+        compile_opt idl2
 ;
-	IF N_PARAMS() NE 1 THEN MESSAGE,	$
-		'Syntax:  Result = FIND_ALL_DIR( PATH )'
+        IF N_PARAMS() NE 1 THEN MESSAGE,        $
+                'Syntax:  Result = FIND_ALL_DIR( PATH )'
+
+;-- save current directory
+
+   cd,current=current
+
 ;
 ;  If more than one directory was passed, then call this routine reiteratively.
 ;  Then skip directly to the test for the PATH_FORMAT keyword.
 ;
-	PATHS = BREAK_PATH(PATH, /NOCURRENT)
-	IF N_ELEMENTS(PATHS) GT 1 THEN BEGIN
-		DIRECTORIES = FIND_ALL_DIR(PATHS[0],	$
-			PLUS_REQUIRED=PLUS_REQUIRED)
-		FOR I = 1,N_ELEMENTS(PATHS)-1 DO DIRECTORIES =	$
-			[DIRECTORIES, FIND_ALL_DIR(PATHS[I],	$
-				PLUS_REQUIRED=PLUS_REQUIRED)]
-		GOTO, TEST_FORMAT
-	ENDIF
+        PATHS = BREAK_PATH(PATH, /NOCURRENT)
+        IF N_ELEMENTS(PATHS) GT 1 THEN BEGIN
+                DIRECTORIES = FIND_ALL_DIR(PATHS[0],    $
+                        PLUS_REQUIRED=PLUS_REQUIRED)
+                FOR I = 1,N_ELEMENTS(PATHS)-1 DO DIRECTORIES =  $
+                        [DIRECTORIES, FIND_ALL_DIR(PATHS[I],    $
+                                PLUS_REQUIRED=PLUS_REQUIRED)]
+                GOTO, TEST_FORMAT
+        ENDIF
 ;
 ;  Test to see if the first character is a plus sign.  If it is, then remove
 ;  it.  If it isn't, and PLUS_REQUIRED is set, then remove any trailing '/'
 ;  character and skip to the end.
 ;
-	DIR = PATHS[0]
-	IF STRMID(DIR,0,1) EQ '+' THEN BEGIN
-		DIR = STRMID(DIR,1,STRLEN(DIR)-1)
-	END ELSE IF KEYWORD_SET(PLUS_REQUIRED) THEN BEGIN
-		DIRECTORIES = PATH
-		IF STRMID(PATH,STRLEN(PATH)-1,1) EQ '/' THEN	$
-			DIRECTORIES = STRMID(PATH,0,STRLEN(PATH)-1)
-		GOTO, TEST_FORMAT
-	ENDIF
+        DIR = PATHS[0]
+        IF STRMID(DIR,0,1) EQ '+' THEN BEGIN
+                DIR = STRMID(DIR,1,STRLEN(DIR)-1)
+        END ELSE IF KEYWORD_SET(PLUS_REQUIRED) THEN BEGIN
+                DIRECTORIES = PATH
+                IF STRMID(PATH,STRLEN(PATH)-1,1) EQ '/' THEN    $
+                        DIRECTORIES = STRMID(PATH,0,STRLEN(PATH)-1)
+                GOTO, TEST_FORMAT
+        ENDIF
 ;
 ;  On VMS machines, spawn a command file to find the directories.  Make sure
 ;  that any logical names are completely translated first.  A leading $ may be
 ;  part of the name, or it may be a signal that what follows is a logical name.
 ;
-	IF !VERSION.OS_FAMILY EQ 'vms' THEN BEGIN
-		REPEAT BEGIN
-			IF STRMID(DIR,STRLEN(DIR)-1,1) EQ ':' THEN	$
-				DIR = STRMID(DIR,0,STRLEN(DIR)-1)
-			TEST = TRNLOG(DIR,VALUE) MOD 2
-			IF (NOT TEST) AND (STRMID(DIR,0,1) EQ '$') THEN BEGIN
-				TEMP = STRMID(DIR,1,STRLEN(DIR)-1)
-				TEST = TRNLOG(TEMP, VALUE) MOD 2
-			ENDIF
-			IF TEST THEN DIR = VALUE
-		ENDREP UNTIL NOT TEST
-		COMMAND_FILE = FIND_WITH_DEF('FIND_ALL_DIR.COM',!PATH,'.COM')
-		SPAWN,'@' + COMMAND_FILE + ' ' + COMMAND_FILE + ' ' + DIR, $
-			DIRECTORIES
+        IF !VERSION.OS_FAMILY EQ 'vms' THEN BEGIN
+                REPEAT BEGIN
+                        IF STRMID(DIR,STRLEN(DIR)-1,1) EQ ':' THEN      $
+                                DIR = STRMID(DIR,0,STRLEN(DIR)-1)
+                        TEST = TRNLOG(DIR,VALUE) MOD 2
+                        IF (NOT TEST) AND (STRMID(DIR,0,1) EQ '$') THEN BEGIN
+                                TEMP = STRMID(DIR,1,STRLEN(DIR)-1)
+                                TEST = TRNLOG(TEMP, VALUE) MOD 2
+                        ENDIF
+                        IF TEST THEN DIR = VALUE
+                ENDREP UNTIL NOT TEST
+                COMMAND_FILE = FIND_WITH_DEF('FIND_ALL_DIR.COM',!PATH,'.COM')
+                SPAWN,'@' + COMMAND_FILE + ' ' + COMMAND_FILE + ' ' + DIR, $
+                        DIRECTORIES
 ;
-;  For windows, if IDL version 5.3 or later, use the built-in EXPAND_PATH
-;  program.
+;  For windows,  use the built-in EXPAND_PATH program.   However, first 
+;  resolve any environment variables.
 ;
-	END ELSE IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
-;		IF IS_DIR(DIR, OUT=TEMP) NE 1 THEN MESSAGE,	$
-;			'A valid directory must be passed'
-;		DIR = TEMP
-;
-		IF !VERSION.RELEASE GE '5.3' THEN BEGIN
-		    TEMP = DIR
-		    TEST = STRMID(TEMP, STRLEN(TEMP)-1, 1)
-		    IF (TEST EQ '/') OR (TEST EQ '\') THEN	$
-			    TEMP = STRMID(TEMP,0,STRLEN(TEMP)-1)
-		    DIRECTORIES = EXPAND_PATH('+' + TEMP, /ALL, /ARRAY)
-		END ELSE DIRECTORIES = FIND_WIND_DIR(DIR)
+        END ELSE IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
+                WHILE STRMID(DIR,0,1) EQ '$' DO BEGIN
+                    FSLASH = STRPOS(DIR,'/')
+                    IF FSLASH LT 1 THEN FSLASH = STRLEN(DIR)
+                    BSLASH = STRPOS(DIR,'/')
+                    IF BSLASH LT 1 THEN BSLASH = STRLEN(DIR)
+                    SLASH = FSLASH < BSLASH
+                    TEST = STRMID(DIR,1,SLASH-1)
+                    DIR = GETENV(TEST) + STRMID(DIR,SLASH,STRLEN(DIR)-SLASH)
+                ENDWHILE
+                TEMP = DIR
+                TEST = STRMID(TEMP, STRLEN(TEMP)-1, 1)
+                IF (TEST EQ '/') OR (TEST EQ '\') THEN  $
+                      TEMP = STRMID(TEMP,0,STRLEN(TEMP)-1)
+                DIRECTORIES = EXPAND_PATH('+' + TEMP, /ALL, /ARRAY)
 ;
 ;  On Unix machines spawn the Bourne shell command 'find'.  First, if the
 ;  directory name starts with a dollar sign, then try to interpret the
 ;  following environment variable.  If the result is the null string, then
 ;  signal an error.
 ;
-	END ELSE BEGIN
-		IF STRMID(DIR,0,1) EQ '$' THEN BEGIN
-		    SLASH = STRPOS(DIR,'/')
-		    IF SLASH LT 0 THEN SLASH = STRLEN(DIR)
-		    EVAR = GETENV(STRMID(DIR,1,SLASH-1))
-		    IF SLASH EQ STRLEN(DIR) THEN DIR = EVAR ELSE	$
-			    DIR = EVAR + STRMID(DIR,SLASH,STRLEN(DIR)-SLASH)
-		ENDIF
-;		IF IS_DIR(DIR) NE 1 THEN MESSAGE,	$
-;			'A valid directory must be passed'
-		IF STRMID(DIR,STRLEN(DIR)-1,1) NE '/' THEN DIR = DIR + '/'
-		SPAWN,'find ' + DIR + ' -follow -type d -print | sort -', $
-			DIRECTORIES, /SH
+        END ELSE BEGIN
+                IF STRMID(DIR,0,1) EQ '$' THEN BEGIN
+                    SLASH = STRPOS(DIR,'/')
+                    IF SLASH LT 0 THEN SLASH = STRLEN(DIR)
+                    EVAR = GETENV(STRMID(DIR,1,SLASH-1))
+                    IF SLASH EQ STRLEN(DIR) THEN DIR = EVAR ELSE        $
+                            DIR = EVAR + STRMID(DIR,SLASH,STRLEN(DIR)-SLASH)
+                ENDIF
+;               IF IS_DIR(DIR) NE 1 THEN MESSAGE,       $
+;                       'A valid directory must be passed'
+                IF STRMID(DIR,STRLEN(DIR)-1,1) NE '/' THEN DIR = DIR + '/'
+                SPAWN,'find ' + DIR + ' -follow -type d -print | sort -', $
+                        DIRECTORIES, /SH
 ;
 ;  Remove any trailing slash character from the first directory.
 ;
-		TEMP = DIRECTORIES[0]
-		IF STRMID(TEMP,STRLEN(TEMP)-1,1) EQ '/' THEN	$
-			DIRECTORIES[0] = STRMID(TEMP,0,STRLEN(TEMP)-1)
-	ENDELSE
+                TEMP = DIRECTORIES[0]
+                IF STRMID(TEMP,STRLEN(TEMP)-1,1) EQ '/' THEN    $
+                        DIRECTORIES[0] = STRMID(TEMP,0,STRLEN(TEMP)-1)
+        ENDELSE
 ;
 ;  Reformat the string array into a single string, with the correct separator.
 ;  If the PATH_FORMAT keyword was set, then this string will be used.  Also use
 ;  it when the RESET keyword was passed.
 ;
 TEST_FORMAT:
-	DIR = DIRECTORIES[0]
-	CASE !VERSION.OS_FAMILY OF
-		'vms':  SEP = ','
-		'Windows':  SEP = ';'
-		'MacOS': Sep = ','
-		ELSE:  SEP = ':'
-	ENDCASE
-	FOR I = 1,N_ELEMENTS(DIRECTORIES)-1 DO DIR = DIR + SEP + DIRECTORIES[I]
+        DIR = DIRECTORIES[0]
+        CASE !VERSION.OS_FAMILY OF
+                'vms':  SEP = ','
+                'Windows':  SEP = ';'
+                'MacOS': Sep = ','
+                ELSE:  SEP = ':'
+        ENDCASE
+        FOR I = 1,N_ELEMENTS(DIRECTORIES)-1 DO DIR = DIR + SEP + DIRECTORIES[I]
 ;
 ;  If the RESET keyword is set, and the PATH variable contains a *single*
 ;  environment variable, then call SETENV to redefine the environment variable.
 ;  If the string starts with a $, then try it both with and without the $.
 ;
-	IF KEYWORD_SET(RESET) THEN BEGIN
-		EVAR = PATH
-		TEST = GETENV(EVAR)
-		IF TEST EQ '' THEN IF STRMID(EVAR,0,1) EQ '$' THEN BEGIN
-			EVAR = STRMID(EVAR,1,STRLEN(EVAR)-1)
-			TEST = GETENV(EVAR)
-		ENDIF
-		IF (TEST NE '') AND (TEST NE PATH) AND (DIR NE PATH) THEN $
-			DEF_DIRLIST, EVAR, DIR
-	ENDIF
+        IF KEYWORD_SET(RESET) THEN BEGIN
+                EVAR = PATH
+                TEST = GETENV(EVAR)
+                IF TEST EQ '' THEN IF STRMID(EVAR,0,1) EQ '$' THEN BEGIN
+                        EVAR = STRMID(EVAR,1,STRLEN(EVAR)-1)
+                        TEST = GETENV(EVAR)
+                ENDIF
+                IF (TEST NE '') AND (TEST NE PATH) AND (DIR NE PATH) THEN $
+                        DEF_DIRLIST, EVAR, DIR
+        ENDIF
 ;
-	IF KEYWORD_SET(PATH_FORMAT) THEN RETURN, DIR ELSE RETURN, DIRECTORIES
+;-- restore current directory
+
+        cd,current
+
+        IF KEYWORD_SET(PATH_FORMAT) THEN RETURN, DIR ELSE RETURN, DIRECTORIES
 ;
-	END
+        END

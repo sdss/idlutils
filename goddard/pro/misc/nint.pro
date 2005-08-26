@@ -40,7 +40,7 @@ function nint, x, LONG = long             ;Nearest Integer Function
 ;	Always start with ROUND function    April 1995
 ;	Return LONG values, if some input value exceed 32767
 ;		and accept string values   February 1998 
-;       Use size(/TNAME) intead of DATATYPE()      October 2001
+;       Use size(/TNAME) instead of DATATYPE()      October 2001
 ;-
  xmax = max(x,min=xmin)
  xmax = abs(xmax) > abs(xmin)

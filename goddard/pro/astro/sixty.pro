@@ -22,7 +22,7 @@
 ;	Mostly involves checking arguments and setting the sign.
 ;
 ; EXAMPLE:
-;	If x = -0.345d then sixty(x) = [0.0, -20.0, 24.0]
+;	If x = -0.345d then sixty(x) = [0.0, -20.0, 42.0]
 ;
 ; MODIFICATION HISTORY:
 ;	Written by R. S. Hill, STX, 19-OCT-87         

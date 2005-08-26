@@ -9,7 +9,7 @@ PRO RESISTANT_Mean,Y,CUT,Mean,Sigma,Num_Rej
 ; EXPLANATION:
 ;    RESISTANT_Mean trims away outliers using the median and the median 
 ;    absolute deviation.    An approximation formula is used to correct for
-;    the trunction caused by trimming away outliers
+;    the truncation caused by trimming away outliers
 ;
 ; CALLING SEQUENCE:
 ;    RESISTANT_Mean, VECTOR, Sigma_CUT, Mean, Sigma_Mean, Num_RejECTED

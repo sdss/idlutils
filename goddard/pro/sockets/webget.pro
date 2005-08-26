@@ -78,7 +78,8 @@
 ;          > print,a.ImageHead
 ;
 ;
-;
+; MINIMUM IDL VERSION:
+;     V5.4  (uses SOCKET)
 ; MODIFICATION HISTORY: 
 ;     Written by M. Feldt, Heidelberg, Oct 2001 <mfeldt@mpia.de>
 ;     Use /swap_if_little_endian keyword to SOCKET  W. Landsman August 2002

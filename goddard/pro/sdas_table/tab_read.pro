@@ -65,8 +65,8 @@ fname=disk+dir+root+'.'+ext
 openr,unit,fname,/block,/get_lun
 if !err lt 0 then begin
 	free_lun,unit
-	print,'TAB_READ- Error opening file '+fname
-	print,strmessage(-!err)
+	message,'Error opening file '+fname,/CON
+	print,!ERROR_STATE.MSG
 	retall
 end
 ;

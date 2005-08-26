@@ -1,8 +1,8 @@
-\documentstyle[twoside,12pt]{article}
+\documentclass[twoside,12pt]{article}
 \topmargin -0.5in
 \oddsidemargin-.15in
 \evensidemargin-.25in
-\textheight 8.5in     
+%\textheight 8.5in     
 \textwidth 6.5in
 \newcommand{\exbegin}{\par\medskip}
 \newcommand{\exend}{\medskip\noindent}
@@ -22,10 +22,11 @@
 \section{Introduction} 
 
 This document describes how to use the procedures located in \\
-http://idlastro.gsfc.nasa.gov/ftp/pro/fits\_table to process FITS ASCII and
+http://idlastro.gsfc.nasa.gov/ftp/pro/fits\_table to read and write FITS ASCII
+tables  and to read FITS 
 binary tables.    These procedures provide one of three methods in the IDL
 Astronomy Library to process FITS tables: the other two methods are to use (1)
-{\tt MRDFITS/MWRFITS} which convert between FITS tables and IDL structures, and (2)
+{\tt MRDFITS()/MWRFITS} which convert between FITS tables and IDL structures, and (2)
 the FX* procedures in \\
 http://idlastro.gsfc.nasa.gov/ftp/pro/fits\_bintable/ which allow one to read
 and write any type of binary table.  See
@@ -33,7 +34,7 @@ http://idlastro.gsfc.nasa.gov/fitsio.html for further discussion of reading
 FITS files with IDL.
 
 This text concentrates on processing FITS ASCII tables after the data array and
-header  has been read into IDL memory using the procedures {\tt READFITS} or
+header  has been read into IDL memory using the procedures {\tt READFITS()} or
 {\tt FITS\_READ}.   For example,
 
 \exone{tab = READFITS('myfile.fits', h, EXT = 2) }
@@ -87,7 +88,7 @@ FITS convention, column numbers start with 1.
         IDLTYPE specifies the IDL type of field (as in the SIZE
         function).  For string data, IDLTYPE should be minus the
         string length.  The remaining parameters are further optional
-        specifications of the field.  \\
+        specifications of the field.   \\
  
 {\tt FTCREATE,MAXCOLS,MAXROWS,H,TAB} \\
 
@@ -103,7 +104,7 @@ FITS convention, column numbers start with 1.
 
 {\tt TBDELCOL,H,TAB,FIELD} \\
 
-        Procedure to delete column specified by FIELD from table
+        Procedures to delete column specified by FIELD from table
         with header, H, and data array, TAB.   When changing the
         data format of a column, it is first necessary to delete
         the column with {\tt FTDELCOL}, and then add a new column with
@@ -113,14 +114,14 @@ FITS convention, column numbers start with 1.
 
 {\tt TBDELROW, H, TAB, ROWS} \\
 
-        Procedure to delete row(s) specified ROWS (scalar or vector)
+        Procedures to delete row(s) specified ROWS (scalar or vector)
         from a FITS table with header, H, and data array, TAB. \\
 
-{\tt FTGET(H,TAB,FIELD,ROWS,[NULLS]) or FTGET(FT\_STR,TAB,FIELD,ROWS,[NULLS])}	\\
+{\tt FTGET(H,TAB,FIELD,ROWS,[NULLS]) or FTGET(FT\_STR,TAB,FIELD,ROWS,[NULLS])}	
 
-{\tt TBGET(H,TAB,FIELD,ROWS,[NULLS]) or TBGET(TB\_STR,TAB,FIELD,ROWS,[NULLS])}   \\\
+{\tt TBGET(H,TAB,FIELD,ROWS,[NULLS]) or TBGET(TB\_STR,TAB,FIELD,ROWS,[NULLS])}   \\
 
-	Function to extract the specified row(s) from field
+	Functions to extract the specified row(s) from field
 	number (beginning with 1) or name FIELD from the 
         table with header, H, and data, TAB.  If ROWS is not 
         supplied, or set = --1, then values for all rows are 
@@ -133,7 +134,7 @@ FITS convention, column numbers start with 1.
 
 {\tt TBHELP,H, TEXTOUT = } \\
 
-	This routine will print a short description of the table
+	These routines will print a short description of the table
 	on the terminal.  Information includes field names, units,
         print formats, and column numbers. Output can be directed 
         to a disk file by setting the TEXTOUT keyword  \\
@@ -142,7 +143,7 @@ FITS convention, column numbers start with 1.
 
 {\tt TBPRINT, H, TAB,[ COLUMNS, ROWS, TEXTOUT = ]} \\
 
-	This routine prints the specified columns in ASCII form
+	These routines print the specified columns in ASCII form
 	for the table specified by H and TAB.  Columns can be
 	specified by a string array of column names, or an integer
 	array of column numbers, or a scalar string with column
@@ -213,7 +214,7 @@ FITS convention, column numbers start with 1.
 
 {\tt TBSIZE,H,TAB,NCOLS,ROWS,TFIELDS,NCOLS\_ALL,NROWS\_ALL} \\
  
-	This routine returns the size of the table specified with H
+	These routines return the size of the table specified with H
         and TAB.  NCOLS and NROWS are the actual table size.  ALLCOLS
 	and ALLROWS are the allocated size.  TFIELDS is the number of
         fields per row.  NCOLS\_ALL and NROWS\_ALL are the actual

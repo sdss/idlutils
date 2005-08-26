@@ -55,10 +55,13 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;
 ; NOTES:
 ;       (1) The contour plot will have the same dimensional ratio as the input
-;               image array
+;           image array
 ;       (2) To contour a subimage, use HEXTRACT before calling IMCONTOUR
 ;       (3) Use the /NODATA keyword to simply provide astronomical labeling
 ;           of a previously displayed image.
+;       (4) The IMCONTOUR display currently does not indicate the image 
+;           rotation in any way, but only specifies coordinates along the 
+;           edges of the image 
 ;
 ; EXAMPLE:
 ;       Overlay the contour of an image, im2, with FITS header, h2, on top
@@ -84,7 +87,6 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;       Add _EXTRA CONTOUR plotting keywords  W. Landsman  August, 1995
 ;       Add XDELTA, YDELTA keywords  W. Landsman   November, 1995
 ;       Use SYSTIME() instead of !STIME                August, 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Remove obsolete !ERR system variable W. Landsman   May 2000 
 ;       Added XMID, YMID keywords to specify central position (default is still
 ;          center of image)  W. Landsman               March 2002     
@@ -92,6 +94,7 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;           W. Landsman                May 2003
 ;       Correct conversion from seconds of RA to arcmin is 4 not 15.
 ;       	M. Perrin					July 2003
+;       Fix integer truncation which appears with tiny images WL  July 2004
 ;       
 ;-
   On_error,2                                 ;Return to caller
@@ -155,8 +158,8 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
   if !X.TICKS GT 0 then xtics = abs(!X.TICKS) else xtics = 8
   if !Y.TICKS GT 0 then ytics = abs(!Y.TICKS) else ytics = 8
 
-  pixx = xsize/xtics                ;Number of X pixels between tic marks
-  pixy = ysize/ytics                ;Number of Y pixels between tic marks
+  pixx = float(xsize)/xtics            ;Number of X pixels between tic marks
+  pixy = float(ysize)/ytics            ;Number of Y pixels between tic marks
 
   getrot,hdr,rot,cdelt               ;Get the rotation and plate scale
 
@@ -172,8 +175,8 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 
      xy2ad, xedge, yedge, astr, a, d
  
-     pixx = xsize/xtics                ;Number of X pixels between tic marks
-     pixy = ysize/ytics                ;Number of Y pixels between tic marks
+     pixx = float(xsize)/xtics          ;Number of X pixels between tic marks
+     pixy = float(ysize)/ytics          ;Number of Y pixels between tic marks
 
 ; Find an even increment on each axis
      tics, a[0], a[1], xsize, pixx, raincr, RA=sexig  ;Find an even increment for RA
@@ -183,8 +186,8 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
      tic_one, a[0], pixx, raincr, botmin, xtic1, RA= sexig  ;Position of first RA tic
      tic_one, d[0], pixy, decincr,leftmin,ytic1       ;Position of first Dec tic
 
-     nx = fix( (xsize1-xtic1-1)/pixx )             ;Number of X tic marks
-     ny = fix( (ysize1-ytic1-1)/pixy )             ;Number of Y tic marks
+     nx = fix( (xsize1-xtic1)/pixx )             ;Number of X tic marks
+     ny = fix( (ysize1-ytic1)/pixy )             ;Number of Y tic marks
 
      if sexig then ra_grid = (botmin + findgen(nx+1)*raincr/4.) else $ 
                    ra_grid = (botmin + findgen(nx+1)*raincr/60.)
@@ -195,6 +198,7 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 
      xpos = cons_ra( ra_grid,0,astr )     ;Line of constant RA
      ypos = cons_dec( dec_grid,0,astr)   ;Line of constant Dec
+
      if sexig then begin 
         xunits = 'Right Ascension'
         yunits = 'Declination'
@@ -208,9 +212,8 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
      numx = fix(xmid/pixx)              ;Number of ticks from left edge
      ticpos, ysize1*cdelt[1], ysize, pixy, incry, yunits
      numy = fix(ymid/pixy)             ;Number of ticks from bottom to center
-
-     nx = numx + fix((xsize-xmid)/pixx)    ;Total number of X ticks 
-     ny = numy + fix((ysize-ymid)/pixy)    ;Total number of Y ticks  
+     nx = numx + fix((xsize1-xmid)/pixx)    ;Total number of X ticks 
+     ny = numy + fix((ysize1-ymid)/pixy)    ;Total number of Y ticks  
      xpos = xmid + (findgen(nx+1)-numx)*pixx
      ypos = ymid + (findgen(ny+1)-numy)*pixy
      xlab = string(indgen(nx+1)*incrx - incrx*numx,'(I3)')

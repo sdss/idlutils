@@ -1,5 +1,5 @@
-pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
-	NaNvalue = NaNvalue
+pro writefits, filename, data, header, heap, Append = Append,  $
+       compress = compress, CheckSum = checksum, NaNValue = NaNvalue
 ;+
 ; NAME:
 ;       WRITEFITS
@@ -11,7 +11,7 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 ;       WRITEFITS works for all types of FITS files except random groups
 ;
 ; CALLING SEQUENCE:
-;       WRITEFITS, filename, data [, header, /APPEND, /CHECKSUM] 
+;       WRITEFITS, filename, data [, header, /APPEND, /COMPRESS, /CHECKSUM] 
 ;
 ; INPUTS:
 ;       FILENAME = String containing the name of the file to be written.
@@ -22,8 +22,10 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 ;
 ; OPTIONAL INPUT:
 ;       HEADER = String array containing the header for the FITS file.
-;                If the variable HEADER is not supplied, the program will 
-;                generate a minimal FITS header.
+;                If variable HEADER is not given, the program will generate
+;                a minimal FITS header.
+;       HEAP -   A byte array giving the heap area following, e.g. a variable
+;                length binary table
 ;
 ; OPTIONAL INPUT KEYWORD:
 ;       /APPEND - If this keyword is set then the supplied header and data
@@ -34,6 +36,10 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 ;                extension header and array.     Note that the primary
 ;                header in an existing file must already have an EXTEND
 ;                keyword to indicate the presence of an FITS extension.
+;       /COMPRESS - If this keyword is set, then the FITS file is written as
+;                a gzip compressed file.   An extension '.gz' is appended to
+;                to the file name if it does not already exist.   The /COMPRESS
+;                option is incompatible with the /APPEND option.
 ;      /Checksum - If set, then the CHECKSUM keywords to monitor data integrity
 ;                 will be included in the FITS header.    For more info, see
 ;                  http://heasarc.gsfc.nasa.gov/docs/heasarc/fits/checksum.html
@@ -60,29 +66,28 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 ;
 ; MODIFICATION HISTORY:
 ;       WRITTEN, Jim Wofford, January, 29 1989
-;       MODIFIED, Wayne Landsman, added BITPIX = -32,-64 support for UNIX
-;       Use new BYTEODER keywords 22-Feb-92
-;       Modify OPENW for V3.0.0   W. Landsman       Dec 92
-;       Work for "windows"   R. Isaacman            Jan 93
-;       More checks for null data                   Mar 94
-;       Work for Linux  W. Landsman                 Sep 95
 ;       Added call to IS_IEEE_BIG()  W. Landsman  Apr 96
 ;       Make sure SIMPLE is written in first line of header  W. Landsman Jun 97
 ;       Use SYSTIME() instead of !STIME    W. Landsman  July 97
 ;       Create a default image extension header if needed W. Landsman June 98
 ;       Converted to IDL V5.0   W. Landsman         June 98
 ;       Write unsigned data types W. Landsman       December 1999
+;       Update for IDL V5.3, add /COMPRESS keyword W. Landsman  February 2000
 ;       Correct BZERO value for unsigned data  W. Landsman   July 2000
-;       Assume at least V5.1 remove NANValue keyword W. Landsman July 2001
+;       Eliminate duplication of input array if possible W. Landsman April 2001
 ;       Use FILE_SEARCH for V5.5 or later     W. Landsman    April 2002
 ;       Create the file if not already present and /APPEND is set
 ;                                             W. Landsman    September 2002
-;       Fix MRD_HREAD call if /APPEND is set  W. Landsman    December 2002
+;       Proper call to MRD_HREAD if /APPEND is set  W. Landsman December 2002 
 ;       Added /CHECKSUM keyword              W. Landsman     December 2002
 ;	Restored NANvalue keyword, William Thompson,	     October 2003
+;       Write BZERO in beginning of header for unsigned integers WL April 2004
+;       Added ability to write heap array       WL             October 2004
+;       Correct checksum if writing heap array   WL           November 2004
 ;-
   On_error, 2
-  FORWARD_FUNCTION FILE_SEARCH      ;For pre-V5.5 compatibility
+  compile_opt idl2  
+     ;For pre-V5.5 compatibility
 
   if N_params() LT 2 then begin 
        print,'Syntax - WRITEFITS, filename, data,[ header, /APPEND, /CHECKSUM]'
@@ -118,17 +123,19 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 ; If necessary,convert unsigned to signed.    Do not destroy the original data
 
   if naxis NE 0 then begin
-        
+              
         unsigned = (type EQ 12) or (type EQ 13)
-        if unsigned then begin
-              if type EQ 12 then begin
-                     sxaddpar,hdr,'BZERO',32768,'Data is Unsigned Integer'
+        if  unsigned then begin
+             if type EQ 12 then begin
+                     sxaddpar,hdr,'BZERO',32768,'Data is Unsigned Integer', $
+                              before = 'DATE'
                      newdata = fix(data - 32768)
              endif else if type EQ 13 then begin 
-                    sxaddpar,hdr,'BZERO',2147483648,'Data is Unsigned Long'
+                    sxaddpar,hdr,'BZERO',2147483648,'Data is Unsigned Long', $
+                              before = 'DATE'
                     newdata = long(data - 2147483648)
              endif
-         endif
+         endif 
 
 ; For floating or double precision test for NaN values to write
 
@@ -136,11 +143,12 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
   if NaNtest then begin
      NaNpts = where( data EQ NaNvalue, N_NaN)
      if (N_NaN GT 0) then begin
-         if type EQ 4 then data(NaNpts)  = !Values.F_NaN	$
-     else if type EQ 8 then data(NaNpts) = !Values.D_NaN
+         if type EQ 4 then data[NaNpts]  = !Values.F_NaN	$
+     else if type EQ 8 then data[NaNpts] = !Values.D_NaN
      endif
   endif 
- endif
+  endif
+
 
 ; Open file and write header information
 
@@ -153,18 +161,19 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
             if !VERSION.RELEASE GE '5.5' then $
             test = file_search(filename, COUNT = n) else $
             test = findfile( filename, COUNT = n)
-            if n EQ 0 then  begin       ;Create default primary header
-                mkhdr,h0,0,/exten
-                writefits,filename,0,h0, checksum=checksum
-                openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
-            endif else begin
+             if n EQ 0 then  begin       ;Create default primary header
+                 mkhdr,h0,0,/exten
+                 writefits,filename,0,h0, checksum = checksum
+                 openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
+             endif else begin
             openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
             mrd_hread, unit, hprimary
             extend = where( strmid(hprimary,0,8) EQ 'EXTEND  ', Nextend)
-             if Nextend EQ 0 then begin
+            if Nextend EQ 0 then begin
                message,'EXTEND keyword not found in primary FITS header',/CON
                message,'Recreate primary FITS header with EXTEND keyword ' + $
                        'before adding extensions', /CON
+               free_lun, unit
                return
             endif
             endelse
@@ -177,10 +186,17 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 
     endif else begin
 
+        ext = ''
+        if keyword_set(COMPRESS) then $
+            if strlowcase(strmid(filename,2,3,/reverse)) NE '.gz' $
+               then ext = '.gz' $
+        else compress = 0
+
         if !VERSION.OS EQ "vms" then $
-                openw, unit, filename, /NONE, /BLOCK, /GET_LUN, 2880, $
-                       /swap_if_little_endian   else $
-                openw, unit, filename, /GET_LUN, /swap_if_little_endian
+             openw, unit, filename +ext, /NONE, /BLOCK, /GET_LUN, 2880, $
+                    /swap_if_little_endian,compress=compress  else $
+             openw, unit, filename + ext, /GET_LUN, /swap_if_little_endian, $
+                             compress = compress
 
     endelse
 
@@ -197,16 +213,17 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 
 ; Add any CHECKSUM keywords if desired
 
-       if keyword_set(checksum) then begin 
-               FITS_ADD_CHECKSUM, hdr, data
+       if keyword_set(CHECKSUM) then begin 
+               if N_elements(heap) GT 0 then $
+	         FITS_ADD_CHECKSUM, hdr, [data,heap] else $
+                 FITS_ADD_CHECKSUM, hdr, data
                endline = where( strmid(hdr,0,8) EQ 'END     ', Nend)
        endif
        nmax = endline[0] + 1
 
-
 ; Convert to byte and force into 80 character lines
 
-      bhdr = replicate(32b, 80l*nmax)
+       bhdr = replicate(32b, 80l*nmax)
        for n = 0l, endline[0] do bhdr[80*n] = byte( hdr[n] )
        npad = 80l*nmax mod 2880
        writeu, unit, bhdr
@@ -220,7 +237,21 @@ pro writefits, filename, data, header, Append = Append, CheckSum = Checksum, $
 
         if unsigned then writeu, unit, newdata $
                     else writeu, unit, data 
-   
+
+; Write optional heap area
+        if N_elements(heap) GT 0 then begin
+              theap = sxpar(hdr,'THEAP', Count=N_Theap)
+              if N_Theap GT 0 then begin
+                  offset = theap - nbytes
+                  if offset GT 0 then begin
+                      writeu, unit, bytarr(offset)
+                      npad = (npad + offset) mod 2880
+                  endif
+                  writeu, unit, heap
+                  npad = (npad + N_elements(heap)) mod 2880
+              endif
+         endif
+
 ; ASCII Tables padded with blanks (32b) otherwise pad with zeros
         if keyword_set( APPEND) then begin
              exten = sxpar( header, 'XTENSION')

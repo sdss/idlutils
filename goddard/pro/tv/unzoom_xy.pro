@@ -28,6 +28,12 @@ pro unzoom_xy,xtv,ytv,xim,yim,OFFSET=offset, ZOOM = zoom
 ; OUTPUTS:
 ;      XIM,YIM - X and Y coordinates of the image corresponding to the
 ;            cursor position on the TV display.
+; COMMON BLOCKS:
+;       If present, ZOOM_XY will use the TV and IMAGE common blocks which are
+;       defined in the MOUSSE software system (see 
+;        http://archive.stsci.edu/uit/analysis.html)   If the user is not using
+;       the MOUSSE software (which keeps track of the offset and zoom in each
+;       window) then the common blocks are ignored.
 ; NOTES:
 ;       The integer value of a pixel is assumed to refer to the *center*
 ;       of a pixel.
@@ -35,17 +41,30 @@ pro unzoom_xy,xtv,ytv,xim,yim,OFFSET=offset, ZOOM = zoom
 ;       Adapted from MOUSSE procedure  W. Landsman       March 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Proper handling of offset option          S. Ott/W. Landsman May 2000
+;       Put back common blocks for MOUSSE compatibility    September 2004
 ;-
 
  On_error,2
+ Compile_opt idl2
+ common tv,chan,czoom,xroam,yroam
+ common images,x00,y00,xsize,ysize 
 
  if N_params() LT 2 then begin
         print,'Syntax - UNZOOM_XY, xtv, ytv, xim, yim, [OFFSET= ,ZOOM = ]'
         return
  endif
+
     
- if N_elements(offset) NE 2 then offset = [0,0] 
- if N_elements(zoom) NE 1 then zoom = 1
+ if N_elements(offset) NE 2 then begin
+;Determine if Images common block defined
+      if n_elements(x00) eq 0 then offset = [0,0] $ 
+                              else offset = [x00[chan],y00[chan]]
+ endif
+ if N_elements(zoom) NE 1 then begin 
+          if N_elements(czoom) GT 0 then zoom = czoom[chan] else $
+             zoom = 1
+ endif
+
 
  cen =  (zoom-1)/2.
  xim =  float((xtv-cen)/zoom) - offset[0]/float(zoom)

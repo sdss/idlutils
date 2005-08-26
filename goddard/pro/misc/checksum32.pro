@@ -23,14 +23,14 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
 ;       checksum - unsigned long scalar, giving sum of array elements using 
 ;                  ones-complement arithmetic
 ; OPTIONAL INPUT KEYWORD:
-;      The following two keywords only have an effect on little endian machines
-;      (e.g. Linux boxes)
 ;
 ;      /FROM_IEEE - If this keyword is set, then the input is assumed to be in
-;           big endian format (e.g. an untranslated FITS array)
-;      /NoSAVE - if set, then the input array is not restored to its original
-;          byte ordering upon exiting.   Use the NoSave keyword to save time
-;           if the input array is not needed in further computations. 
+;           big endian format (e.g. an untranslated FITS array).   This keyword
+;           only has an effect on little endian machines (e.g. Linux boxes).
+;
+;      /NoSAVE - if set, then the input array is not saved upon exiting.   Use 
+;           the /NoSave keyword to save time if the input array is not needed 
+;           in further computations. 
 ; METHOD:
 ;       Uses TOTAL() to sum the array into a double precision variable.  The
 ;       overflow bits beyond 2^32 are then shifted back to the least significant
@@ -55,14 +55,29 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
 ;       Work correctly on little endian machines, added /FROM_IEEE and /NoSave
 ;                  W. Landsman          November 2002
 ;       Pad with zeros when array size not a multiple of 4 W.Landsman Aug 2003
+;       Always copy to new array, somewhat slower but more robust algorithm
+;           especially for Linux boxes   W. Landsman Sep. 2004 
+;       Sep. 2004 update not implemented correctly (sigh) W. Landsman Dec 2004         
+;       
 ;-
  if N_params() LT 2 then begin
       print,'Syntax - CHECKSUM32, array, checksum, /FROM_IEEE, /NoSAVE'
       return
  endif
+ idltype = size(array,/type)
  N = N_bytes(array)
- Nremain = N mod 4 
-
+ Nremain = N mod 4
+ if Nremain GT 0 then begin 
+     if keyword_set(nosave) then $
+           uarray = [ byte(temporary(array),0,N), bytarr(4-Nremain)]  $
+           else uarray =  [ byte(array,0,N), bytarr(4-Nremain)] 
+      N = N + 4 - Nremain 
+ endif else  begin 
+      if keyword_set(nosave) then $
+           uarray =  byte( temporary(array) ,0,N) else $
+           uarray =  byte( array ,0,N) 
+ endelse
+ 	    
 ; Get maximum number of base 2 digits available in double precision, and 
 ; compute maximum number of longword values that can be coadded without losing
 ; any precision.    Since we will sum unsigned longwords, the original array
@@ -76,8 +91,8 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
   word32 =  2.d^32
   bswap  = 1 - is_ieee_big()
   if bswap then begin
-       if not keyword_set( from_ieee) then host_to_ieee, array
-      byteorder,array,/NTOHL
+       if not keyword_set( from_ieee) then host_to_ieee, uarray,idltype=idltype   
+      byteorder,uarray,/NTOHL
  endif
 
  for i=0, Niter do begin
@@ -87,13 +102,7 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
            if nbyte EQ 0 then nbyte = maxnum
    endif else nbyte = maxnum
 
-   if Nremain NE 0 and i EQ Niter then begin
-   nbyte = nbyte + 4 - Nremain
-    checksum = checksum + total(ulong([byte(array,0,N), bytarr(4-Nremain)],  $
-           maxnum*i,nbyte/4), /double) 
-   endif else $
-     checksum = checksum + total(ulong(  array,maxnum*i,nbyte/4), /double)
- 
+   checksum = checksum + total(ulong(  uarray,maxnum*i,nbyte/4), /double)
 ; Fold any overflow bits beyond 32 back into the word.
 
    hibits = long(checksum/word32)
@@ -106,10 +115,5 @@ pro checksum32, array, checksum, FROM_IEEE = from_IEEE, NOSAVE = nosave
 
  endfor
 
- if bswap then if not keyword_set(NoSAVE) then begin
-        byteorder,array,/HTONL
-       if not keyword_set( from_ieee) then ieee_to_host, array
- endif
-      
  return
  end

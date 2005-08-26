@@ -1,5 +1,5 @@
  pro hrebin, oldim, oldhd, newim, newhd, newx, newy, $
-            SAMPLE=sample, OUTSIZE = outsize, ERRMSG = errmsg
+            SAMPLE=sample, OUTSIZE = outsize, ERRMSG = errmsg, ALT=alt
 ;+
 ; NAME:
 ;    HREBIN
@@ -41,6 +41,10 @@
 ;    OUTSIZE - Two element integer vector which can be used instead of the
 ;             NEWX and NEWY parameters to specify the output image dimensions
 ;
+;    ALT - Single character 'A' through 'Z' or ' ' specifying which astrometry
+;          system to modify in the FITS header.    The default is to use the
+;          primary astrometry of ALT = ' '.    See Greisen and Calabretta (2002)
+;          for information about alternate astrometry keywords.
 ; OPTIONAL KEYWORD OUTPUT:
 ;       ERRMSG - If this keyword is supplied, then any error mesasges will be
 ;               returned to the user in this parameter rather than depending on
@@ -75,6 +79,8 @@
 ;     Use double precision formatting for CD matrix W. Landsman April 2000
 ;     Recognize PC00n00m astrometry format   W. Landsman   December 2001
 ;     Correct astrometry for integral contraction W. Landsman  April 2002
+;     Fix output astrometry for non-equal plate scales for PC matrix or
+;     CROTA2 keyword, added ALT keyword.   W. Landsman May 2005
 ;- 
  On_error,2
 
@@ -159,8 +165,9 @@
 
 ; Update astrometry info if it exists
 
- extast, newhd, astr, noparams
+ extast, newhd, astr, noparams, ALT = alt
  if noparams GE 0 then begin
+
  if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
         gsss_stdast, newhd
         extast, newhd, astr, noparams
@@ -168,6 +175,7 @@
 
  xratio = float(newx) / xsize   ;Expansion or contraction in X
  yratio = float(newy) / ysize   ;Expansion or contraction in Y
+ lambda = yratio/xratio         ;Measures change in aspect ratio.
  pix_ratio = xratio*yratio      ;Ratio of pixel areas
 
 ; Correct the position of the reference pixel.   Note that CRPIX values are
@@ -187,24 +195,38 @@
       crpix2 = (crpix[1]-1.0)*yratio + 1.0                  else $
       crpix2 = (crpix[1]-0.5)*yratio + 0.5
 
- sxaddpar, newhd, 'CRPIX1', crpix1, FORMAT='(G14.7)'
- sxaddpar, newhd, 'CRPIX2', crpix2, FORMAT='(G14.7)'
+ if N_elements(alt) EQ 0 then alt = ''
+ sxaddpar, newhd, 'CRPIX1' + alt, crpix1, FORMAT='(G14.7)'
+ sxaddpar, newhd, 'CRPIX2' + alt, crpix2, FORMAT='(G14.7)'
 
 ; Scale either the CDELT parameters or the CD1_1 parameters.
 
  if (noparams NE 2) then begin 
 
     cdelt = astr.cdelt
-    sxaddpar, newhd, 'CDELT1', CDELT[0]/xratio
-    sxaddpar, newhd, 'CDELT2', CDELT[1]/yratio
+    sxaddpar, newhd, 'CDELT1' + alt, CDELT[0]/xratio
+    sxaddpar, newhd, 'CDELT2' + alt, CDELT[1]/yratio
+; Adjust the PC matrix if aspect ratio has changed.   See equation 187 in 
+; Calabretta & Greisen (2002)
+    if lambda NE 1.0 then begin
+        cd = astr.cd
+	if noparams EQ 1 then begin
+;Can no longer use the simple CROTA2 convention, change to PC keywords
+	 sxaddpar,newhd,'PC1_1'+alt, cd[0,0]
+	 sxaddpar, newhd,'PC2_2'+alt, cd[1,1]
+         sxdelpar, newhd, ['CROTA2','CROTA1']
+        endif	
+        sxaddpar, newhd, 'PC1_2'+alt, cd[0,1]/lambda
+        sxaddpar, newhd, 'PC2_1'+alt, cd[1,0]*lambda
+   endif	
 
  endif else begin     ;CDn_m Matrix format
 
     cd = astr.cd
-    sxaddpar, newhd, 'CD1_1', cd[0,0]/xratio
-    sxaddpar, newhd, 'CD1_2', cd[0,1]/yratio
-    sxaddpar, newhd, 'CD2_1', cd[1,0]/xratio
-    sxaddpar, newhd, 'CD2_2', cd[1,1]/yratio
+    sxaddpar, newhd, 'CD1_1'+alt, cd[0,0]/xratio
+    sxaddpar, newhd, 'CD1_2'+alt, cd[0,1]/yratio
+    sxaddpar, newhd, 'CD2_1'+alt, cd[1,0]/xratio
+    sxaddpar, newhd, 'CD2_2'+alt, cd[1,1]/yratio
 
  endelse
  endif

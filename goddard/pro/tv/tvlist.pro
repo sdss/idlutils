@@ -82,12 +82,12 @@ pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
 ;       Major rewrite to call IMLIST, recognize new integer data types
 ;                                           W. Landsman Jan 2000
 ;       Remove all calls to !TEXTUNIT   W. Landsman   Sep 2000
+;       Always call UNZOOM_XY for MOUSSE compatibility  W. Landsman Sep. 2004
 ;-
  On_error,2
+ Compile_opt idl2
 
  npar = N_params()
-
- unzoom = (N_elements(offset) NE 0) or (N_elements(zoom) NE 0)
 
  if npar GE 2 then $
     if N_elements( dx) NE 1 then $
@@ -129,11 +129,11 @@ pro tvlist, image, dx, dy, TEXTOUT = textout, OFFSET = offset, ZOOM = ZOOM
 
  tvcrs, 1                                    ;Make sure cursor is on
  print, 'Put the cursor on the area you want to list; press any mousse button'
- if (npar NE 0) and  (unzoom) then begin              ;Get image coordinates.
-	cursor, xtv, ytv, /WAIT, /DEVICE
-	unzoom_xy, xtv, ytv, xim, yim, OFFSET=offset, ZOOM=zoom 
-	xim = fix(xim+0.5)
-	yim = fix(yim+0.5)
+ if Npar GT 0 then begin
+   cursor, xtv, ytv, /WAIT, /DEVICE
+   unzoom_xy, xtv, ytv, xim, yim, OFFSET=offset, ZOOM=zoom 
+   xim = fix(xim+0.5)
+   yim = fix(yim+0.5)
  endif else cursor, xim, yim, /WAIT, /DEVICE
 
  if npar LT 3 then dy = dx

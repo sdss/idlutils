@@ -79,6 +79,7 @@
 ;       /horizontal = flag to make the legend horizontal
 ;       /vertical = flag to make the legend vertical (D=vertical)
 ;       box = flag to include/omit box around the legend (D=include)
+;		  outline_color = color of box outline (D = !P.color)
 ;       clear = flag to clear the box area before drawing the legend
 ;       delimiter = embedded character(s) between symbol and text (D=none)
 ;       colors = array of colors for plot symbols/lines (D=!P.color)
@@ -199,6 +200,7 @@
 ;       was lined up after sym/line column.    10 Oct 2000, Kim Tolbert
 ;       Make default value of thick = !P.thick  W. Landsman  Jan. 2001
 ;       Don't overwrite existing USERSYM definition  W. Landsman Mar. 2002
+;	     Added outline_color BT 24 MAY 2004
 ;-
 pro legend, items, BOTTOM_LEGEND=bottom, BOX = box, CENTER_LEGEND=center, $
     CHARTHICK=charthick, CHARSIZE = charsize, CLEAR = clear, COLORS = colorsi, $
@@ -207,7 +209,8 @@ pro legend, items, BOTTOM_LEGEND=bottom, BOX = box, CENTER_LEGEND=center, $
     LINESTYLE=linestylei, MARGIN=margin, NORMAL=normal, NUMBER=number, $
     POSITION=position,PSPACING=pspacing, PSYM=psymi, RIGHT_LEGEND=right, $
     SPACING=spacing, SYMSIZE=symsize, TEXTCOLORS=textcolorsi, THICK=thicki, $
-    TOP_LEGEND=top, USERSYM=usersym,  VECTORFONT=vectorfonti, VERTICAL=vertical
+    TOP_LEGEND=top, USERSYM=usersym,  VECTORFONT=vectorfonti, VERTICAL=vertical, $
+    OUTLINE_COLOR = outline_color
 ;
 ;       =====>> HELP
 ;
@@ -297,6 +300,9 @@ if n_elements(number) eq 0 then number = 1
  endcase 
  fill = keyword_set(fill)
 if n_elements(usersym) eq 1 then usersym = 2*[[0,0],[0,1],[1,1],[1,0],[0,0]]-1
+
+if n_elements(outline_color) EQ 0 then outline_color = !P.Color
+
 ;
 ;       =====>> INITIALIZE SPACING
 ;
@@ -450,7 +456,8 @@ for iclr = 0,clear do begin
         if vertical then bottom = n else bottom = 1
         ywidth = - (2*margin+bottom-0.5)*yspacing
         corners = [x,y+ywidth,xend,y]
-        if box then plots,[x,xend,xend,x,x],y + [0,0,ywidth,ywidth,0],/norm
+        if box then plots,[x,xend,xend,x,x],y + [0,0,ywidth,ywidth,0],/norm, $
+        	color = outline_color
         return
  endelse
 endfor

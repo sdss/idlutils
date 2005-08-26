@@ -514,10 +514,10 @@ if (map lt 23) then begin
   if (n_elements(param1) eq 0) then begin
     printf,file_unit,"wcsxy2sph,x,y,longitude_inv,latitude_inv,map"
   endif else if (n_elements(param2) eq 0) then begin
-  printf,file_unit,"wcsxy2sph,x,y,longitude_inv,latitude_inv,map,projp1=param1"
+  printf,file_unit,"wcsxy2sph,x,y,longitude_inv,latitude_inv,map,pv2=param1"
   endif else begin
     printf,file_unit,$
-     "wcsxy2sph,x,y,longitude_inv,latitude_inv,map,projp1=param1,projp2=param2"
+     "wcsxy2sph,x,y,longitude_inv,latitude_inv,map,pv2= [param1, param2] "
   endelse
 endif else begin
   printf,file_unit,$
@@ -1110,19 +1110,19 @@ if (map lt 23) then begin
   endif else if (n_elements(param2) eq 0) then begin
     if (n_elements(alpha) ne 0) then begin
       printf,file_unit,$
-        "wcssph2xy,longitude,latitude,x,y,map,projp1=param1, $"
+        "wcssph2xy,longitude,latitude,x,y,map,pv2=param1, $"
       printf,file_unit,"          crval=[alpha,delta],longpole=longpole"
     endif else begin
-       printf,file_unit,"wcssph2xy,longitude,latitude,x,y,map,projp1=param1"
+       printf,file_unit,"wcssph2xy,longitude,latitude,x,y,map,pv2=param1"
     endelse
   endif else begin
     if (n_elements(alpha) ne 0) then begin
       printf,file_unit,$
-        "wcssph2xy,longitude,latitude,x,y,map,projp1=param1,projp2=param2,$
+        "wcssph2xy,longitude,latitude,x,y,map,pv2=[param1,param2],$
       printf,file_unit,"          crval=[alpha,delta],longpole=longpole"
     endif else begin
       printf,file_unit,$
-        "wcssph2xy,longitude,latitude,x,y,map,projp1=param1,projp2=param2"
+        "wcssph2xy,longitude,latitude,x,y,map,pv2=[param1,param2]"
     endelse
   endelse
 endif else begin

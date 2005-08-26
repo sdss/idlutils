@@ -104,6 +104,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 ;       No page eject for TEXTOUT =5           W. Landsman  Nov. 2001
 ;       No initial page eject                  W. Landsman  Jan. 2002
 ;       Added AdjustFormat keyword             W. Landsman  Sep. 2002
+;       Assume since V5.3 (STRJOIN)            W. Landsman Feb. 2004
 ;-
 ;
  On_error,2                                ;Return to caller
@@ -208,13 +209,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
      if Nstring GT 0 then begin
        alen = intarr(Nstring)
        varnames = 'v' + strtrim(indgen(Nstring)+1,2)
-       if !VERSION.RELEASE GE '5.3' $
-                 then stringitems = strjoin(varnames,',') $
-                 else begin
-                 stringitems = varnames[0]
-                 if Nstring GT 1 then for i=1,Nstring-1 do $
-                    stringitems = stringitems + ',' + varnames[i]
-                 endelse
+       stringitems = strjoin(varnames,',') 
        result = execute('dbext,list,it[stringvar],' + stringitems)
        for i=0, Nstring-1 do begin
             result = execute( 'alen[i] = max(strlen(strtrim(temporary(' + $

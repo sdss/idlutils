@@ -1,4 +1,4 @@
-pro getrot, hdr, rot, cdelt, DEBUG = debug, SILENT = silent      ;GET ROTation 
+pro getrot, hdr, rot, cdelt, DEBUG = debug, SILENT = silent, ALT=alt      ;GET ROTation 
 ;+
 ; NAME:
 ;    GETROT
@@ -35,6 +35,10 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug, SILENT = silent      ;GET ROTation
 ;
 ; OPTIONAL INPUT KEYWORD
 ; 
+;       ALT - single character 'A' through 'Z' or ' ' specifying an alternate
+;             astrometry system present in the FITS header.   See extast.pro
+;             for more information on the ALT keyword.    Ignored if an
+;             astrometry structure rather than FITS header is supplied.
 ;       DEBUG - if DEBUG is set, GETROT will print the rotation for both the 
 ;           X and Y axis when these values are unequal.  If DEBUG is set to 2, 
 ;           then the output parameter ROT will contain both X and Y rotations.
@@ -62,12 +66,16 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug, SILENT = silent      ;GET ROTation
 ;       Consistent conversion between CROTA and CD matrix  WL  October 2000
 ;       Correct CDELT computations for rotations near 90 deg WL November 2002
 ;       Preserve sign in the CDELT output  WL June 2003
+;       Check if latitude/longitude reversed in CTYPE  WL  February 2004
+;       Fix problem in latitude check  M.Lombardi/W.Landsman Sep 2004
+;       Added ALT keyword W. Landsman May 2005
 ;-
+ Compile_opt IDL2
  On_error,2
 
  if N_params() EQ 0 then begin
-        print,'Syntax: GETROT, Hdr, [ Rot, CDelt, DEBUG= ]'
-        print,'    OR: GETROT, Astr, [ Rot, CDelt, DEBUG= ]'
+        print,'Syntax: GETROT, Hdr, [ Rot, CDelt, DEBUG= , /SILENT, ALT=]'
+        print,'    OR: GETROT, Astr, [ Rot, CDelt, DEBUG= , /SILENT]'
         return
  endif
 
@@ -78,7 +86,7 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug, SILENT = silent      ;GET ROTation
  if ((sz.N_dimensions eq 1) and $
      (sz.type_name EQ 'STRING')) then begin     ;FITS header?
 
-        extast,hdr,astr             ;Extract astrometry from header,
+        extast,hdr,astr,alt=alt             ;Extract astrometry from header,
         if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
                 hdr1 = hdr
                 gsss_stdast, hdr1
@@ -101,7 +109,11 @@ endif else $
         cd[0,0] = cd[0,0]*cdelt[0] & cd[0,1] =   cd[0,1]*cdelt[0]
         cd[1,1] = cd[1,1]*cdelt[1] & cd[1,0] =   cd[1,0]*cdelt[1]
  endif else  cd = astr.cd/RADEG                                        
-
+ 
+ ctype = strmid(astr.ctype[0],0,4)
+; Check if first coordinate in CTYPE is latitude
+ if (ctype EQ 'DEC-') or (strmid(ctype, 1) EQ 'LAT')  then $
+      cd = reverse(cd,1)
  det = cd[0,0]*cd[1,1] - cd[0,1]*cd[1,0]
  if det LT 0 then sgn = -1 else sgn = 1
  if not keyword_set(SILENT) then if det GT 0 then $

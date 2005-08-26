@@ -79,6 +79,8 @@ Function adstring,ra_dec,dec,precision, TRUNCATE = truncate
 ;       Added /TRUNCATE keyword, put leading zeros in seconds display
 ;                               P. Broos/W. Landsman September 2002
 ;       Hours values always less than 24   W. Landsman September 2002
+;       Fix zero declinations for vector processing W. Landsman February 2004
+;       Fix possible problem in leading zero display W. Landsman June 2004
 ;-
   On_error,2
 
@@ -130,7 +132,7 @@ Function adstring,ra_dec,dec,precision, TRUNCATE = truncate
                      string(   precision+1,'(I1)' ) + ')'
 
     leadzero = replicate(' ',N_elements(xsec))
-    less10 = where(xsec LT 10.,Nzero)
+    less10 = where(xsec LT (10.-10^(-float(precision+1))/2. ),Nzero)
     if Nzero GT 0 then leadzero[less10] = ' 0'
      result = fstring(ihr,'(I3.2)') + fstring(imin,'(I3.2)') + $
               leadzero + strtrim(fstring(xsec,secfmt),2) + '  ' 
@@ -180,7 +182,7 @@ Function adstring,ra_dec,dec,precision, TRUNCATE = truncate
    deg = fstring(ideg,'(I3.2)')
    zero = where(ideg EQ 0, Nzero)
    if Nzero GT 0 then begin
-       negzero = where( dec LT 0, Nneg)
+       negzero = where( dec[zero] LT 0, Nneg)
        if Nneg GT 0 then begin
          ineg = zero[negzero]
          deg[ineg] = '-00' 
@@ -193,7 +195,7 @@ Function adstring,ra_dec,dec,precision, TRUNCATE = truncate
    
    leadzero = replicate(' ',N_elements(xsc))
    if precision NE 0 then begin
-      less10 = where(xsc LT 10.,Nzero)
+      less10 = where(xsc LT (10.- 10^(-float(precision))/2.),Nzero)
       if Nzero GT 0 then leadzero[less10] = ' 0'
    endif 
 

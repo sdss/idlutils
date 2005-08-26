@@ -31,15 +31,19 @@ pro extast,hdr,astr,noparams, alt=alt
 ;      .LONGPOLE - scalar giving native longitude of the celestial pole 
 ;             (default = 180 for zenithal projections) 
 ;      .LATPOLE - scalar giving native latitude of the celestial pole default=0)
-;      .PROJP1 - Scalar parameter needed in some projections, FITS keyword PV2_1
-;      .PROJP2 - Scalar parameter needed in some projections, FITS keyword PV2_2
+;      .PV2 - Vector of projection parameter associated with latitude axis
+;             PV2 will have up to 21 elements for the ZPN projection, up to 3 
+;             for the SIN projection and no more than 2 for any other 
+;             projection  
+;      .DISTORT - optional substructure specifying any distortion parameters
+;                 currently implemented only for "SIP" (Spitzer Imaging 
+;                 Polynomial) distortion parameters
 ;
 ;       NOPARAMS -  Scalar indicating the results of EXTAST
 ;             -1 = Failure - Header missing astrometry parameters
 ;             1 = Success - Header contains CROTA + CDELT (AIPS-type) astrometry
-;             2 = Success - Header contains CDn_m astrometry.    
-;             3 = Success - Header contains PCn_m + CDELT astrometry. As of
-;                           December 2001, this is the recommended format 
+;             2 = Success - Header contains CDn_m astrometry, rec.    
+;             3 = Success - Header contains PCn_m + CDELT astrometry. 
 ;             4 = Success - Header contains ST  Guide Star Survey astrometry
 ;                           (see gsssextast.pro )
 ; OPTIONAL INPUT KEYWORDS:
@@ -57,7 +61,7 @@ pro extast,hdr,astr,noparams, alt=alt
 ;       (3) CROTA2 (or CROTA1) and CDELT plus CRPIX and CRVAL.
 ;
 ;       All three forms are valid FITS according to the paper "Representations 
-;       of World Coordinates in FITS by Griesen and Calabretta (2002, A&A, 395,
+;       of World Coordinates in FITS by Greisen and Calabretta (2002, A&A, 395,
 ;       1061 http://www.aoc.nrao.edu/~egreisen) although form (1) is preferred/
 ;
 ; NOTES:
@@ -85,11 +89,19 @@ pro extast,hdr,astr,noparams, alt=alt
 ;      Fix error introduced June 2003 where free-format values would be
 ;      truncated if more than 20 characters.  W. Landsman Aug 2003
 ;      Further fix to free-format values -- slash need not be present Sep 2003
+;      Default value of LATPOLE is 90.0  W. Landsman February 2004
+;      Allow for distortion substructure, currently implemented only for
+;          SIP (Spitzer Imaging Polynomial)   W. Landsman February 2004 
+;      Correct LONGPOLE computation if CTYPE = ['*DEC','*RA'] W. L. Feb. 2004
+;      Assume since V5.3 (vector STRMID)  W. Landsman Feb 2004
+;      Yet another fix to free-format values   W. Landsman April 2004
+;      Introduce PV2 tag to replace PROJP1, PROJP2.. etc.  W. Landsman May 2004
+;      Convert NCP projection to generalized SIN   W. Landsman Aug 2004
 ;-
 ; On_error,2
 
  if ( N_params() LT 2 ) then begin
-     print,'Syntax - extast, hdr, astr, [ noparams, ALT = ]'
+     print,'Syntax - EXTAST, hdr, astr, [ noparams, ALT = ]'
      return
  endif
 
@@ -99,20 +111,15 @@ pro extast,hdr,astr,noparams, alt=alt
  keyword = strtrim(strmid( hdr, 0, 8), 2)
 
 ; Extract values from the FITS header.   This is either up to the first slash
-; (free format) or characters 11-30 (fixed format) 
+; (free format) or first space
 
  space = strpos( hdr, ' ', 10) + 1
  slash = strpos( hdr, '/', 10)  > space
- len = (slash-10) > 20
- N = N_elements(hdr)
- if !VERSION.RELEASE GE '5.3' then  begin
-    len = reform(len,1,N)
-    lvalue = strtrim(strmid(hdr, 10, len),2)
- endif else begin
-     lvalue = strarr(N)
-     for i=0,N-1 do lvalue[i] = strtrim(strmid(hdr, 10, len[i]),2)
- endelse
  
+ N = N_elements(hdr)
+ len = (slash -10) > 20
+ len = reform(len,1,N)
+ lvalue = strtrim(strmid(hdr, 10, len),2)
  zparcheck,'EXTAST',hdr,1,7,1,'FITS image header'   ;Make sure valid header
  noparams = -1                                    ;Assume no astrometry to start
 
@@ -124,6 +131,7 @@ pro extast,hdr,astr,noparams, alt=alt
  l = where(keyword EQ 'CTYPE2'+alt,  N_ctype2)
  if N_ctype2 GT 0 then ctype[1] = lvalue[l[0]]
  remchar,ctype,"'"
+ ctype = strtrim(ctype,2)
 
 ; If the standard CTYPE* astrometry keywords not found, then check if the
 ; ST guidestar astrometry is present
@@ -146,6 +154,7 @@ pro extast,hdr,astr,noparams, alt=alt
   if N_ctype2 EQ 1 then if (ctype[1] EQ 'PIXEL') then return
 
  crval = dblarr(2)
+
  l = where(keyword EQ 'CRVAL1'+alt,  N_crval1)
  if N_crval1 GT 0 then crval[0] = lvalue[l[0]]
  l = where(keyword EQ 'CRVAL2'+alt,  N_crval2)
@@ -194,7 +203,7 @@ cdelt = [1.0d,1.0d]
 
 ; Now get rotation, first try CROTA2, if not found try CROTA1, if that
 ; not found assume North-up.   Then convert to CD matrix - see Section 5 in
-; Griesen and Calabretta
+; Greisen and Calabretta
 
         l = where(keyword EQ 'CDELT1' + alt,  N_cdelt1) 
         if N_cdelt1 GT 0 then cdelt[0]  =lvalue[l[0]]
@@ -214,53 +223,64 @@ cdelt = [1.0d,1.0d]
   endelse
   endelse
 
+  proj = strmid( ctype[0], 5, 3)
+  case proj of 
+ 'ZPN': npv = 21
+ 'SZP': npv = 3
+ else:  npv = 2
+  endcase
 
-  l = where(keyword EQ 'PV2_1' + alt,  N_pv2_1)
-  if N_pv2_1 GT 0 then  pv2_1 = double(lvalue[l[0]]) else pv2_1 = 0.0d
-  
-  l = where(keyword EQ 'PV2_2' + alt,  N_pv2_2)
-  if N_pv2_2 GT 0 then  pv2_2 = double(lvalue[l[0]]) else pv2_2 = 0.0d
-
-         
-  l = where(keyword EQ 'PV2_3' + alt,  N_pv2_3)
-  if N_pv2_3 GT 0 then  longpole = double(lvalue[l[0]]) else begin
+  index = proj EQ 'ZPN' ? strtrim(indgen(npv),2) : strtrim(indgen(npv)+1,2)
+      pv2 = dblarr(npv)
+      for i=0,npv-1 do begin 
+      l = where(keyword EQ 'PV2_' + index[i] + alt,  N_pv2)
+      if N_pv2 GT 0 then pv2[i] = lvalue[l[0]] 
+      endfor
+ 
+          
+  l = where(keyword EQ 'PV1_3' + alt,  N_pv1_3)
+  if N_pv1_3 GT 0 then  longpole = double(lvalue[l[0]]) else begin
       l = where(keyword EQ 'LONPOLE' + alt,  N_lonpole)
       if N_lonpole GT 0 then  longpole = double(lvalue[l[0]]) 
   endelse
 
-; If LONPOLE (or PV2_3) is not defined in the header, then we must determine 
+; If LONPOLE (or PV1_3) is not defined in the header, then we must determine 
 ; its default value.    This depends on the value of theta0 (the native
 ; longitude of the fiducial point) of the particular projection)
 
-  proj = strmid( ctype[0], 5, 3)
   conic = (proj EQ 'COP') or (proj EQ 'COE') or (proj EQ 'COD') or $
           (proj EQ 'COO')
-  pv2_1 = 0.0 & pv2_2 = 0.0
 
-  if conic then begin
-  l = where(keyword EQ 'PV2_1' + alt,  N_pv2_1)
-  if N_pv2_1 GT 0 then  pv2_1 = double(lvalue[l[0]])
-  
-  l = where(keyword EQ 'PV2_2' + alt,  N_pv2_2)
-  if N_pv2_2 GT 0 then  pv2_2 = double(lvalue[l[0]]) 
-  endif
 
   if N_elements(longpole) EQ 0 then  begin 
     if conic then begin 
-      if N_pv2_1 EQ 0 then message, $
+      if N_pv2 EQ 0 then message, $
      'ERROR -- Conic projections require a PV2_1 keyword in FITS header' else $
-      theta0 = PV2_1
+      theta0 = PV2[0]
     endif else if (proj EQ 'ZAP') or (proj EQ 'SZP') or (proj EQ 'TAN') or $
           (proj EQ 'STG') or (proj EQ 'SIN') or (proj EQ 'ARC') or $
           (proj EQ 'ZPN') or (proj EQ 'ZEA') or (proj EQ 'AIR') then begin
        theta0 = 90.0
     endif else theta0 = 0. 
-    if crval[1] GE theta0 then longpole = 0.0 else longpole = 180.0
+    celcoord = strmid(ctype[1],0,4)
+;Check to see if RA and DEC are reversed in CRVAL
+    if (celcoord EQ 'RA--') or (celcoord EQ 'GLON') or (celcoord EQ 'ELON') $
+           then cellat = crval[0] else cellat = crval[1]
+    if cellat GE theta0 then longpole = 0.0 else longpole = 180.0
  endif
 
   l = where(keyword EQ 'LATPOLE' + alt,  N_latpole)
-  if N_latpole GT 0 then  latpole = double(lvalue[l[0]]) else latpole = 0.0d
+  if N_latpole GT 0 then  latpole = double(lvalue[l[0]]) else latpole = 90.0d
 
+
+; Convert NCP projection to generalized SIN projection (see Section 6.1.2 of 
+; Calabretta and Greisen (2002)
+
+  if proj EQ 'NCP' then begin
+       ctype = repstr(ctype,'NCP','SIN')
+       PV2 = [0., 1/tan(crval[1]/radeg) ]
+       longpole = 180.0
+  endif 
 
 ; Note that the dimensions and datatype of each tag must be explicit, so that
 ; there is no conflict with structure definitions from different FITS headers
@@ -268,8 +288,54 @@ cdelt = [1.0d,1.0d]
   ASTR = {CD: cd, CDELT: cdelt, $
                 CRPIX: crpix, CRVAL:crval, $
                 CTYPE: string(ctype), LONGPOLE: double( longpole[0]),  $
-                LATPOLE: double(latpole[0]), PROJP1: double(pv2_1[0]), $
-                PROJP2: double(pv2_2[0])}
+                LATPOLE: double(latpole[0]), PV2: pv2 }
 
+; Check for any distortion keywords
+
+  if strlen(ctype[0]) GE 12 then begin
+       distort_flag = strmid(ctype[0],9,3)
+       case distort_flag of 
+       'SIP': begin
+              l = where(keyword EQ 'A_ORDER',  N) 
+              if N GT 0 then a_order  = lvalue[l[0]] else a_order = 0
+              l = where(keyword EQ 'B_ORDER',  N) 
+              if N GT 0 then b_order  = lvalue[l[0]] else b_order = 0
+              l = where(keyword EQ 'AP_ORDER',  N) 
+              if N GT 0 then ap_order  = lvalue[l[0]] else ap_order = 0
+              l = where(keyword EQ 'BP_ORDER',  N) 
+              if N GT 0 then bp_order  = lvalue[l[0]] else bp_order = 0
+  a = fltarr(a_order+1,a_order+1) & b = fltarr(b_order+1,b_order+1) 
+  ap = fltarr(ap_order+1,ap_order+1) &  bp = fltarr(bp_order+1,bp_order+1)
+
+  for i=0, a_order do begin
+    for j=0, a_order do begin
+     l = where(keyword EQ 'A_' + strtrim(i,2) + '_' + strtrim(j,2), N)
+     if N GT 0 then a[i,j] = lvalue[l[0]]
+  endfor & endfor
+
+   for i=0, b_order  do begin
+    for j=0, b_order do begin
+     l = where(keyword EQ 'B_' + strtrim(i,2) + '_' + strtrim(j,2), N)
+     if N GT 0 then b[i,j] = lvalue[l[0]]
+  endfor & endfor
+
+   for i=0, bp_order do begin
+    for j=0, bp_order do begin
+     l = where(keyword EQ 'BP_' + strtrim(i,2) + '_' + strtrim(j,2), N)
+     if N GT 0 then bp[i,j] = lvalue[l[0]]
+  endfor & endfor
+
+    for i=0, ap_order do begin
+    for j=0, ap_order do begin
+     l = where(keyword EQ 'AP_' + strtrim(i,2) + '_' + strtrim(j,2), N)
+     if N GT 0 then ap[i,j] = lvalue[l[0]]
+  endfor & endfor
+   
+  distort = {name:distort_flag, a:a, b:b, ap:ap, bp:bp}
+  astr = create_struct(temporary(astr), 'distort', distort)
+  end
+  else: message,/con,'Unrecognized distortion acronym: ' + distort_flag 
+  endcase
+  endif
   return
   end

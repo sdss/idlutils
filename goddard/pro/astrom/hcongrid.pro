@@ -1,5 +1,6 @@
 pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
-              INTERP=interp, OUTSIZE = outsize, CUBIC = cubic, ERRMSG = errmsg
+              INTERP=interp, OUTSIZE = outsize, CUBIC = cubic, ERRMSG = errmsg,$
+	      ALT = alt
 ;+
 ; NAME:
 ;       HCONGRID
@@ -12,7 +13,7 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
 ; CALLING SEQUENCE:
 ;       HCONGRID, oldhd                       ;Update FITS header only
 ;       HCONGRID, oldim, oldhd, [ newim, newhd, newx, newy, /HALF_HALF
-;                                 CUBIC = , INTERP=, OUTSIZE =, ERRMSG = ]
+;                                 CUBIC = , INTERP=, OUTSIZE=, ERRMSG=, ALT= ]
 ;
 ; INPUTS:
 ;       OLDIM - the original image array
@@ -32,6 +33,11 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
 ;               to contain the new array and updated header.
 ;
 ; OPTIONAL KEYWORD INPUTS:
+;      ALT - Single character 'A' through 'Z' or ' ' specifying which astrometry
+;          system to modify in the FITS header.    The default is to use the
+;          primary astrometry of ALT = ' '.    See Greisen and Calabretta (2002)
+;          for information about alternate astrometry keywords.
+
 ;       CUBIC - If set and non-zero, then cubic interpolation is used.   Valid
 ;               ranges are  -1 <= Cubic < 0.   Setting /CUBIC is equivalent to
 ;               CUBIC = -1 and also equivalent to INTERP = 2.   See INTERPOLATE
@@ -97,13 +103,15 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
 ;       Added ERRMSG keyword, use double precision formatting W.L.  April 2000
 ;       Recognize PC00n00m astrometry format  W. Landsman   December 2001
 ;       Now works when both /INTERP and /HALF are set W. Landsman January 2002
+;       Fix output astrometry for non-equal plate scales for PC matrix or
+;       CROTA2 keyword, added ALT keyword.   W. Landsman May 2005
 ;- 
  On_error,2
  Npar = N_params()      ;Check # of parameters
 
  if Npar EQ 0  then begin 
      print,'    Syntax - HCONGRID, oldim, oldhd,[ newim, newhd, newx, newy'
-     print,'                 CUBIC = , INTERP =, /HALF, OUTSIZE = , ERRMSG=]'
+     print,'           ALT=, CUBIC = , INTERP =, /HALF, OUTSIZE = , ERRMSG=]'
      return
  endif
 
@@ -163,6 +171,7 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
 
  xratio = float(newx)/xsize
  yratio = float(newy)/ysize
+ lambda = yratio/xratio         ;Measures change in aspect ratio.
 
 
  if ( npar GT 1 ) then begin
@@ -202,7 +211,7 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
 
 ; Update astrometry info if it exists
 
- extast, newhd ,astr, noparams
+ extast, newhd ,astr, noparams, ALT = alt
  if noparams GE 0 then begin
  if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
         gsss_stdast, newhd
@@ -214,26 +223,42 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
   crpix = astr.crpix - 1.0
   
  if keyword_set(half_half) then begin
-     sxaddpar, newhd, 'CRPIX1', (crpix[0]+0.5)*xratio + 0.5, FORMAT='(G14.7)'
-     sxaddpar, newhd, 'CRPIX2', (crpix[1]+0.5)*yratio + 0.5, FORMAT='(G14.7)'
+     sxaddpar, newhd, 'CRPIX1' + alt, $
+                      (crpix[0]+0.5)*xratio + 0.5, FORMAT='(G14.7)'
+     sxaddpar, newhd, 'CRPIX2' + alt,  $
+                       (crpix[1]+0.5)*yratio + 0.5, FORMAT='(G14.7)'
  endif else begin 
-     sxaddpar, newhd, 'CRPIX1', crpix[0]*xratio + 1.0, FORMAT='(G14.7)'
-     sxaddpar, newhd, 'CRPIX2', crpix[1]*yratio + 1.0, FORMAT='(G14.7)'
+     sxaddpar, newhd, 'CRPIX1' + alt , crpix[0]*xratio + 1.0, FORMAT='(G14.7)'
+     sxaddpar, newhd, 'CRPIX2' + alt , crpix[1]*yratio + 1.0, FORMAT='(G14.7)'
  endelse 
 
  if (noparams NE 2) then begin 
 
     cdelt = astr.cdelt
-    sxaddpar, newhd, 'CDELT1', CDELT[0]/xratio
-    sxaddpar, newhd, 'CDELT2', CDELT[1]/yratio
+    sxaddpar, newhd, 'CDELT1' + alt , CDELT[0]/xratio
+    sxaddpar, newhd, 'CDELT2' + alt , CDELT[1]/yratio
+; Adjust the PC matrix if non-equal plate scales.   See equation 187 in 
+; Calabretta & Greisen (2002)
+    if lambda NE 1.0 then begin
+        cd = astr.cd
+	if noparams EQ 1 then begin
+;Can no longer  use the simple CROTA2 convention, change to PC keywords
+	 sxaddpar,newhd,'PC1_1'+alt, cd[0,0]
+	 sxaddpar, newhd,'PC2_2'+alt, cd[1,1]
+         sxdelpar, newhd, ['CROTA2','CROTA1']
+        endif	
+        sxaddpar, newhd, 'PC1_2'+alt, cd[0,1]/lambda
+        sxaddpar, newhd, 'PC2_1'+alt, cd[1,0]*lambda
+   endif	
+
 
  endif else begin
 
     cd = astr.cd
-    sxaddpar, newhd, 'CD1_1', cd[0,0]/xratio
-    sxaddpar, newhd, 'CD1_2', cd[0,1]/yratio
-    sxaddpar, newhd, 'CD2_1', cd[1,0]/xratio
-    sxaddpar, newhd, 'CD2_2', cd[1,1]/yratio
+    sxaddpar, newhd, 'CD1_1' + alt, cd[0,0]/xratio
+    sxaddpar, newhd, 'CD1_2' + alt, cd[0,1]/yratio
+    sxaddpar, newhd, 'CD2_1' + alt, cd[1,0]/xratio
+    sxaddpar, newhd, 'CD2_2' + alt , cd[1,1]/yratio
 
  endelse
  endif 

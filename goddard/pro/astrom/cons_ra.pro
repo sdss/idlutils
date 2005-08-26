@@ -74,7 +74,7 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
   
   'TAN': begin
  
-  cdi = invert( cdelta # cd )     ;Griesen uses invert of CD matrix
+  cdi = invert( cdelta # cd )     ;Greisen uses invert of CD matrix
   yy = y - ( crpix[1])    ;New coordinate origin, Unit pixel offset in CRPIX
   delta = atan( sdel0*cdelra*cdi[1,1] - sin(delra)*cdi[1,0] + yy*cdelra*cdel0, $
               cdel0*cdi[1,1] - yy*sdel0)

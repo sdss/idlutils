@@ -14,7 +14,7 @@
 ;
 ; OPTIONAL KEYWORD:
 ;       /FREE_MEM - If set, then free memory associated with pointers 
-;                   and objects.   Requires V5.3 or later
+;                   and objects.   
 ; RESTRICTIONS: 
 ;	Can't use recursively due to EXECUTE function
 ;
@@ -38,7 +38,6 @@ PRO delvarx, p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,free_mem = free_mem
 
       IF defined GT 0 THEN BEGIN
          if keyword_set(free_mem) then begin
-            if !VERSION.RELEASE GE '5.3' then $
                   exestat = execute("heap_free," + param)
          ENDIF
          exestat = execute(param + "=0")

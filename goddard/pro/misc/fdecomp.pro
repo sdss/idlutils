@@ -1,11 +1,9 @@
+pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 ;+
 ; NAME:
 ;     FDECOMP
 ; PURPOSE:
-;     Routine to decompose file name(s) for any operating system
-; EXPLANATION:
-;     A faster version of this procedure for V5.3 or later is available in 
-;     http://idlastro.gsfc.nasa.gov/ftp/v53/fdecomp.pro
+;     Routine to decompose file name(s) for any operating system. V5.3 or later
 ;
 ; CALLING SEQUENCE:
 ;     FDECOMP, filename, disk, dir, name, qual, version, [OSFamily = ]
@@ -21,7 +19,7 @@
 ;       dir - directory name, scalar or vector string
 ;       name - file name, scalar or vector string 
 ;       qual - qualifier, set equal to the characters beyond the last "."
-;       version - version number, always '' on a non-VMS machine
+;       version - version number, always '' on a non-VMS machine, scalar string
 ;
 ; OPTIONAL INPUT KEYWORD:
 ;     OSFamily - one of the four scalar strings specifying the operating 
@@ -30,9 +28,9 @@
 ; EXAMPLES:
 ;     Consider the following file names 
 ;
-;     Unix:    file = '/rsi/idl40/avg.pro' 
-;     VMS:     file = '$1$dua5:[rsi.idl40]avg.pro;3
-;     Mac:     file = 'Macintosh HD:Programs:avg.pro'
+;     unix:    file = '/rsi/idl40/avg.pro' 
+;     vms:     file = '$1$dua5:[rsi.idl40]avg.pro;3
+;     MacOS:   file = 'Macintosh HD:Programs:avg.pro'
 ;     Windows: file =  'd:\rsi\idl40\avg.pro'
 ;       
 ;     then IDL> FDECOMP,  file, disk, dir, name, qual, version
@@ -51,28 +49,31 @@
 ;     (2) On VMS the filenames "MOTD" and "MOTD." are distinguished by the 
 ;         fact that qual = '' for the former and qual = ' ' for the latter.
 ;
-;     A faster version of this procedure for V5.3 or later is available in 
-;     http://idlastro.gsfc.nasa.gov/ftp/v53/fdecomp.pro
 ; ROUTINES CALLED:
-;     Function GETTOK()
+;     None.
 ; HISTORY
 ;     version 1  D. Lindler  Oct 1986
 ;     Include VMS DECNET machine name in disk    W. Landsman  HSTX  Feb. 94
 ;     Converted to Mac IDL, I. Freedman HSTX March 1994          
 ;     Converted to IDL V5.0   W. Landsman   September 1997
-;     Allow vector file name input    W. Landsman   October 2002
-;     Fixed bug in version parameter introduced October 2002 W. Landsman April03
+;     Major rewrite to accept vector filenames V5.3   W. Landsman June 2000
+;     Fix cases where disk name not always present  W. Landsman  Sep. 2000
+;     Make sure version defined for Windows  W. Landsman April 2004
 ;-
 ;--------------------------------------------------------
 ;
-
-  pro fdecomp_scalar, filename, disk, dir, name, qual, version, $
-                      OSfamily = osfamily
   On_error,2                            ;Return to caller
 
+  if N_params() LT 2 then begin
+     print, 'Syntax - FDECOMP, filename, disk, [dir, name, qual, ver ] '
+     return
+  endif
 
 ; Find out what machine you're on, and take appropriate action.
  if not keyword_set(OSFAMILY) then osfamily = !VERSION.OS_FAMILY
+ sz = size(filename)
+ scalar = sz[0] EQ 0
+ if scalar then filename = strarr(1) + filename
 
  case OSFAMILY of
 
@@ -84,179 +85,204 @@
 ; version   is null string
    
   st = filename
-  if strpos(st,':') GE 0 then disk = gettok(st,':')  else disk = ''
-         
-     dir = ':' & tok = ''
-     REPEAT BEGIN
-        oldtok = tok
-        tok = gettok(st,':')
-        dir = dir + oldtok + ':'   
-     ENDREP UNTIL tok EQ ''
+  N= N_elements(st)
+  disk = st
+  replicate_inplace,disk,''
+  version = disk
+  qual = disk
+  lpos = strpos(st,':')
+  good = where( lpos GE 0, Ngood)
+  if Ngood GT 0 then begin 
+       stg = st[good]
+       lpos = reform( lpos[good], 1, Ngood) 
+       disk[good] = strmid( stg, 0, lpos)
+       st[good] = strmid(stg,lpos+1 ) 
+   endif
 
-       dir = strmid(dir,1,strpos(dir,oldtok)-1)   
-         
-     fname = oldtok     & qual = ''
-     pos = strpos(fname,'.')
-     if pos GE 0 then begin
-       name = gettok(fname,'.')
-       qual   = fname
-     endif 
+   dir = disk
+   lpos = strpos(st,':',/reverse_search)
+   good = where(lpos GT 0, Ngood)
+   if Ngood GT 0 then begin
+             stg = st[good]
+             lpos = reform( lpos[good], 1, Ngood) 
+             dir[good] = ':' + strmid( stg, 0, lpos ) + ':'
+             st[good] = strmid(stg, lpos+1 )
+    endif
 
-    version = ''
+    name = st
+    lpos = strpos(st,'.',/reverse_search)
+    good = where(lpos GE 0, Ngood)
+    
+    if Ngood GT 0 then begin
+             stg = st[good]
+             lpos = reform( lpos[good], 1, Ngood) 
+ 
+             name[good] = strmid(stg,0,lpos )
+             qual[good] = strmid(stg,lpos+1 )
+     endif
+
         
-        end
+    end
 
  "vms":  begin                     ; begin VMS version
 
     st = filename
+    disk = st
+    replicate_inplace,disk,''
+    dir = disk
+    name = disk
+    version = disk
 
 ; get disk
 
     nodepos = strpos(st,'::')          ; Node name included in directory?
-    if nodepos GE 0 then begin
-        disk = strmid(st,0,nodepos+2) 
-        st = strmid(st,nodepos+2, 999 )
-    endif else disk = ''
-    if strpos(st,':') GE 0 then disk = disk + gettok(st,':') + ':' else $
-                                disk = disk + ''
+    good = where(nodepos GE 0, Ngood)
+    if Ngood GT 0 then begin
+        stg = st[good]
+        nodepos = reform( nodepos[good], 1, Ngood) 
+      
+        disk[good] = strmid(stg,0,nodepos+2) 
+        st[good] = strmid(stg,nodepos+2, len-nodepos-2)
+    endif
 
+    lpos = strpos(st,':')
+    good = where(lpos GE 0, Ngood)
+    if Ngood GT 0 then begin
+        stg = st[good]
+        lpos = reform( lpos[good], 1, Ngood) 
+        disk[good] = disk[good] + strmid(stg,0,lpos+1)
+        st[good] = strmid(stg,lpos+1 )
+    endif
+  
 ; get dir
-
-    if strpos( st, ']' ) GE 0 then dir = gettok( st, ']' ) + ']' else dir=''
-    if strpos( st, ']' ) GE 0 then dir = dir + gettok( st, ']' ) + ']' 
+    lpos = strpos(st,']',/reverse_search)
+    good = where(lpos GE 0, Ngood)
+    if Ngood GT 0 then begin
+        stg = st[good]
+        lpos = reform( lpos[good], 1, Ngood) 
+        dir[good] = strmid(stg,0,lpos+1) 
+        st[good] = strmid(stg,lpos+1 )
+    endif
+ 
+   
 
 ; get name
 
-    sv_name = st
-    name = gettok(st,'.')
+    lpos = strpos(st,'.',/reverse_search)
+    good = where(lpos GE 0, Ngood)
+    if Ngood GT 0 then begin
+        stg = st[good]
+        lpos = reform( lpos[good], 1, Ngood)
+         name[good] = strmid(stg,0,lpos) 
+        st[good] = strmid(stg,lpos+1)
+    endif
 
-; get qualifier
+   qual = st
+   lpos = strpos(st,';',/reverse_search)
+   good = where(lpos GE 0, Ngood)
+   if Ngood GT 0 then begin 
+       lpos = reform(lpos[good],1,Ngood)
+       qual[good] = strmid(st[good], 0, lpos)
+       version[good] = strmid(st[good],lpos+1 )
 
-    if (name + '.') EQ sv_name then qual = ' ' else $
-    qual = gettok(st,';')
-
-; get version
-
-    version = st
-
+   endif
   end   ;  end VMS version
 
  "Windows": begin
-
      st = filename
-     pos = strpos( st, ':')                 ; DOS diskdrive (i.e. c:)
-     if (pos gt 0) then disk = gettok(st,':') + ':' else disk=''
+     disk = st
+     replicate_inplace,disk,''
+     dir = disk
+     qual = disk
+     version = disk
+     lpos = strpos( st, ':')                 ; DOS diskdrive (i.e. c:)
+     good = where(lpos GT 0, Ngood) 
+     if Ngood GT 0 then begin
+         stg = st[good]
+         lpos = reform( lpos[good], 1, Ngood)
+         disk[good] = strmid( stg, 0, lpos+1) 
+         st[good] = strmid(stg,lpos+1 )
+     endif
 
 ;  Search the path name (i.e. \dos\idl\) and locate all backslashes
 
-     lpos = -1  ; directory position path (i.e. \dos\idl\)
-     pos = -1
-     repeat begin
-        pos = strpos(st, '\',pos+1)
-        if (pos GE 0) then lpos = pos
-     endrep until pos lt 0
-
+     lpos = strpos(st,'\',/reverse_search)
+     good = where(lpos Gt 0, Ngood)
      ;  Parse off the directory path 
+    if Ngood GT 0 then begin
+             stg = st[good]
+             lpos = reform( lpos[good],1, Ngood)
+             dir[good] = strmid( stg, 0, lpos )
+             st[good] = strmid(stg, lpos+1 )
+    endif
 
-     if lpos ge 0 then begin
-        dir = strmid(st, 0, lpos+1)
-        len = strlen(st)
-        if lpos eq (len-1) then $
-                st = '' else st = strmid(st,lpos+1,len-lpos-1)
-     endif else dir=''
-
+ 
 ; get Windows name and qualifier (extension)...qual is optional
 
-     lpos=-1
-     repeat begin                               
-        pos = strpos(st,'.',pos+1)
-        if (pos ge 0) then lpos = pos
-    endrep until pos lt 0
+    lpos = strpos(st,'.',/reverse_search)
+    good = where(lpos GE 0, Ngood)
+    name = st
 
-    ; Parse name and qual (if a qual was found )
+    if Ngood GT 0 then begin
+             stg = st[good]
+             lpos = reform(lpos[good], 1, Ngood)
+ 
+             name[good] = strmid(stg,0,lpos )
+             qual[good] = strmid(stg,lpos+1 )
+     endif
 
-     if lpos ge 0 then begin
-        len = strlen(st)
-        name = strmid(st,0,lpos)
-        qual = strmid(st,lpos+1,len-lpos-1)
-     endif else begin
-        name = st
-        qual = '' 
-     endelse
+    end
 
-     version = ''               ; no version numbers in Windows         
-     end
-
- ELSE: begin
+ 
+ ELSE: begin                 ;Unix
 
     st = filename
-
+    n = N_elements(st)
+ 
 ; get disk
 
-    disk = ''
+    disk = st 
+    replicate_inplace,disk, ''
+    version =disk
+    qual = disk
+    dir = disk
 
 ; get dir
 
-    lpos = -1
-    pos = -1
-    repeat begin
-            pos = strpos(st, '/', pos+1)
-            if (pos GE 0) then lpos = pos
-    endrep until pos LT 0
-
-    if lpos GE 0 then begin
-            dir = strmid(st, 0, lpos+1)
-            len = strlen(st)
-            if lpos eq (len-1) then st = '' else $
-                                    st = strmid(st,lpos+1,len-lpos-1)
-    endif else dir = ''
-
+    lpos = strpos(st,'/',/reverse_search)
+    good = where(lpos GE 0, Ngood)
+    if Ngood GT 0 then begin 
+          stg = st[good] 
+          lpos = reform( lpos[good],1, Ngood )
+ 
+             dir[good] = strmid(stg,0, lpos+1) 
+             st[good] = strmid(stg,lpos+1 )
+    endif
 ; get name and qual
 
-    pos = -1
-    lpos = -1
-    repeat begin
-             pos = strpos(st,'.',pos+1)
-             if (pos GE 0) then lpos = pos
-    endrep until pos LT 0
-
-    if lpos GE 0 then begin
-             len = strlen(st)
-             name = strmid(st,0,lpos)
-             qual = strmid(st,lpos+1,len-lpos-1)
-     endif else begin
-         name = st
-         qual = '' 
-     endelse
-
-    version = ''
+   name = st
+   lpos = strpos(st,'.',/reverse_search)
+    good = where(lpos GE 0, Ngood)
+ 
+    if Ngood GT 0 then begin
+             stg = st[good]
+             lpos = reform( lpos[good], 1, Ngood )
+             name[good] = strmid(stg,0,lpos )
+             qual[good] = strmid(stg,lpos+1 )
+     endif
+ 
 
  end 
 
 ENDCASE                         ; end OTHER version
- return
- end
 
-  pro fdecomp, filename, disk, dir, name, qual, ver, OSfamily = osfamily
-
-  if N_params() LT 2 then begin
-     print, 'Syntax - FDECOMP, filename, disk, [dir, name, qual, ver ] '
-     return
+  if scalar then begin
+       name = name[0]
+       qual = qual[0]
+       disk = disk[0]
+       dir = dir[0]
+       version = version[0]
+       filename = filename[0]
   endif
-  
-  scalar = size(filename,/N_dimen)  eq 0
-  if scalar then $
-       fdecomp_scalar, filename, disk, dir, name, qual, ver, OSfamily=osfamily $
-            else begin
-       N = N_elements(filename)
-       if N EQ 0 then message,'ERROR - Filename (first parameter) not defined'
-       dir = strarr(n) & name = dir & qual = dir & disk = dir & ver = dir
-       for i=0,n-1 do begin
-           fdecomp_scalar, filename[i], xdisk, xdir, xname, xqual, xver, $
-                  OSfamily=osfamily  
-           disk[i] = xdisk & dir[i] = xdir & name[i] = xname 
-           qual[i] = xqual & ver[i] = xver
-       endfor
-       endelse
   return
   end

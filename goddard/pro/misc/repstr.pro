@@ -39,6 +39,7 @@ function repstr,obj,in,out
 ;       Fixed problem when multiple replacements extend the string length
 ;                 D. Finkbeiner, W. Landsman  April 2003
 ;       Allow third parameter to be optional again W. Landsman  August 2003
+;       Remove limitation of 9999 characters, C. Markwardt Dec 2003
 ;-
  On_error,2
  if N_params() LT 2 then begin
@@ -60,7 +61,7 @@ function repstr,obj,in,out
    pos = strpos(object[i],in,last_pos)
    if (pos GE 0) then begin
 	      first_part = strmid(object[i],0,pos)
-	      last_part  = strmid(object[i],pos+l1,9999)
+	      last_part  = strmid(object[i],pos+l1)
 	      object[i] = first_part + out + last_part
    endif 
   last_pos = pos + l2

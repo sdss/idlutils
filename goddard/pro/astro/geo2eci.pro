@@ -43,11 +43,12 @@
 ;       IDL> print,ECIcoord
 ;      -3902.9606       5044.5548       0.0000000
 ;
-;       (The above is the ECI coordinates of the intersection of the equator and Greenwitch's 
-;       meridien on 2002/03/09 21:21:21.021)
+;       (The above is the ECI coordinates of the intersection of the equator and
+;       Greenwich's meridian on 2002/03/09 21:21:21.021)
 ;
 ; MODIFICATION HISTORY:
-;       Written by Pascal Saint-Hilaire (shilaire@astro.phys.ethz.ch) on 2002/05/14
+;       Written by Pascal Saint-Hilaire (shilaire@astro.phys.ethz.ch) 
+;             on 2002/05/14
 ;               
 ;-
 

@@ -51,6 +51,7 @@
 ; REVISION HISTORY:
 ;     W. Landsman  SSAI               December 2002
 ;     Return quietly if CHECKSUM keywords not found W. Landsman May 2003
+;     Add /NOSAVE to CHECKSUM32 calls when possible W. Landsman Sep 2004
 ;-
   if N_Params() LT 1 then begin
       print,'Syntax - result = FITS_TEST_CHECKSUM(Hdr, [Data,' +  $
@@ -68,7 +69,7 @@
   endif 
   if N_datasum EQ 0 then datasum = '0' 
   ch  = shift(byte(checksum),-1)
-  checksum32,ch-48b, sum32
+  checksum32,ch-48b, sum32, /NOSAVE
   bhdr = byte(hdr)
   remain = N_elements(bhdr) mod 2880 
   if remain  NE 0 then $
@@ -81,9 +82,9 @@
            if remain GT 0 then begin
               exten = sxpar( hdr, 'XTENSION', Count = N_exten)
               if N_exten GT 0 then if exten EQ 'TABLE   ' then $
-                      checksum32,[dsum,replicate(32b,2880-remain)],dsum
+                      checksum32,[dsum,replicate(32b,2880-remain)],dsum,/NOSAVE
            endif
-           checksum32, [dsum, hsum], hdusum
+           checksum32, [dsum, hsum], hdusum, /NOSAVE
            dsum = strtrim(dsum,2)
            if dsum NE datasum then begin
                   result = 1

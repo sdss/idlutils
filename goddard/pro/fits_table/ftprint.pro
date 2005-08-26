@@ -48,6 +48,8 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;               the FORMAT specified for the column
 ;       (3) Program does not check for null values
 ;
+; MINIMUM IDL VERSION:
+;       V5.3 (uses STRSPLIT)
 ; HISTORY:
 ;       version 1  D. Lindler Feb. 1987
 ;       Accept undefined values of rows, columns   W. Landsman August 1997
@@ -61,7 +63,6 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;
 ; set defaulted parameters
 ;
- FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
  if N_params() LT 2 then begin
    print,'Syntax -  FTPRINT, h, tab, [ columns, rows, TEXTOUT= ]'
    return
@@ -93,16 +94,14 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;
  title1 = ''
  title2 = ''
- ftinfo,h,ft_str
+ FTINFO,h,ft_str
  
 ;
 ; if columns is a string, change it to string array
 ;
  if size(columns,/TNAME) EQ 'STRING'  then begin 
-        if !VERSION.RELEASE GE '5.3' then $
-            colnames = strsplit(columns,',',/EXTRACT) else $
-            colnames = str_sep(strtrim(columns,2),',') 
-        numcol = N_elements(colnames)
+         colnames = strsplit(columns,',',/EXTRACT) 
+         numcol = N_elements(colnames)
         colnames = strupcase(strtrim(colnames,2))
         ttype = strtrim(ft_str.ttype,2)
         colnum = intarr(numcol)

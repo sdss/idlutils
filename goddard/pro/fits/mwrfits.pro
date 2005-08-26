@@ -233,12 +233,14 @@
 ;               Fix for variable type arrays
 ;       Version 1.4 Wayne Landsman 2004-07-16
 ;               Use STRUCT_ASSIGN when modifying structure with pointer tags
+;       Version 1.4a Wayne Landsman 2005-01-03
+;               Fix writing of empty strings in binary tables 
 ;              
 ;-
 
 ; What is the current version of this program.
 function mwr_version
-    return, '1.4'
+    return, '1.4a'
 end
     
 
@@ -702,9 +704,8 @@ pro mwr_tablehdr, lun, input, header, vtypes,     $
        type_ele = sz[sz[0]+1]
        
        if type_ele eq 7 then begin
-           maxstr = max(strlen(input.(i)))
+           maxstr = max(strlen(input.(i)) > 1)
        endif               
-       
        dims[i] = nelem
        
         if (sz[0] lt 1) or (sz[0] eq 1 and type_ele ne 7) then begin
@@ -1432,7 +1433,7 @@ pro mwr_image, input, siz, lun, bof, hdr,       $
             print, 'MWRFITS Error: strings all have zero length'
            return
         endif
-       
+
         for i=0L, n_elements(input)-1 do begin
             t = len - strlen(input[i])
            if t gt 0 then input[i] = input[i] + string(replicate(32B, len))
@@ -1589,7 +1590,7 @@ pro mwrfits, xinput, file, header,              $
     ; Check required keywords.
 
     if (keyword_set(Version)) then begin
-        print, "MWRFITS V"+mwr_version()+":  February 18, 2002"
+        print, "MWRFITS V"+mwr_version()+":  January 3, 2005"
     endif
 
     if n_elements(file) eq 0 then begin

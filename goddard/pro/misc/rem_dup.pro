@@ -84,6 +84,6 @@ function rem_dup, a, flag
 	endelse
  endfor
  good = good[0:ngood]
- return, sub[good]		;return subscripts in orignal a
+ return, sub[good]		;return subscripts in original a
  end
 

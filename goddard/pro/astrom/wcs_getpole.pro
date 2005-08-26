@@ -27,6 +27,7 @@
 ;       LATPOLE - native latitude of the celestial North Pole (degrees)
 ; REVISION HISTORY:
 ;       Written    W. Landsman               June, 2003
+;       Fix calculation when theta0 is not 0 or 90     February 2004
 ;-
 
 pro WCS_GETPOLE, crval, lonpole, theta0, alpha_p, delta_p, LATPOLE = latpole
@@ -97,7 +98,7 @@ pro WCS_GETPOLE, crval, lonpole, theta0, alpha_p, delta_p, LATPOLE = latpole
               if (sdelt EQ 1) then alpha_p = alpha_0 - phi_p - !DPI else $
               if (sdelt EQ -1) then alpha_p = alpha_0 -phi_p else $
               alpha_p = alpha_0 - $
-               atan(sp*ctheta/cd, (stheta-sin(delta_p)*sd)/(cos(delta_p)*cd) )
+               atan( (stheta-sin(delta_p)*sd)/(cos(delta_p)*cd), sp*ctheta/cd )
            endelse
          endelse
  endelse 

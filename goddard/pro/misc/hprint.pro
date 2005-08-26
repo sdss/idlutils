@@ -48,8 +48,12 @@ pro hprint, h, firstline
 ;       Modified for when STDOUT is not a TTY W. Landsman  September 1995
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fixed printing in IDLDE, C. Gehman      August, 1998
+;       Skip PRINTF if IDL in demo mode  W. Landsman  October 2004
+;       Fixed bug on non-terminals, William Thompson, 18-Oct-2004
+;       
 ;-
   On_error,2                        ;Return to Caller
+  compile_opt idl2
 
   if N_params() EQ 0 then begin
        print,'Syntax - HPRINT, h, [ firstline ]'
@@ -59,20 +63,23 @@ pro hprint, h, firstline
   n = N_elements(h)
   if ( n EQ 0 ) then    $               ;Make sure input array is defined
      message,'String array (first parameter) not defined'
-  stdout = fstat(-1)
-
-  if stdout.isatty then $       ;Open with /MORE if a TTY
-        openw, outunit, filepath(/TERMINAL), /MORE, /GET_LUN  
 
   if N_elements( firstline ) EQ 0 then firstline = 1
   if ( firstline[0] LT 0 ) then firstline = ( n + firstline[0]) > 1 < n  $
                                 else firstline = firstline[0] > 1 < n
 
+  if lmgr(/demo) then begin      ;in demo mode?
+      for i=firstline-1, n-1 do print,h[i]
+      return
+  endif
+
+
 ; Now print the array one line at a time
-
- if stdout.isatty then begin
-
-  for i = firstline-1, n-1 do begin
+  stdout = fstat(-1)
+  if (stdout.isatty) and (not stdout.isagui) then begin  ;Open with /MORE if a TTY
+      
+      openw, outunit, filepath(/TERMINAL), /MORE, /GET_LUN  
+      for i = firstline-1, n-1 do begin
 
      printf, outunit, strtrim( h[i] )
      if !ERR EQ 1 then goto, DONE      ;User entered "Q" in response to /more
@@ -81,7 +88,7 @@ pro hprint, h, firstline
 
 DONE:  free_lun, outunit
 
- endif else printf,-1,strtrim(h[firstline:*]), FORMAT='(A)'
+ endif else printf,-1,strtrim(h[firstline-1:*]), FORMAT='(A)'
 
   return
   end

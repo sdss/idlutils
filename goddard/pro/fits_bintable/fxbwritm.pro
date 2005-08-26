@@ -25,22 +25,25 @@
 ;
 ;       The number of columns is limited to 50 if data are passed by
 ;       positional argument.  However, this limitation can be overcome
-;       by passing either pointers or handles to FXBWRITM.  The user
-;       should set the PASS_METHOD keyword to 'POINTER' or 'HANDLE' as
-;       appropriate, and an array of pointers or handles to the data
-;       in the POINTERS keyword.  The user is responsible for freeing
-;       the pointers.
+;       by passing pointers to FXBWRITM.  The user should set the PASS_METHOD 
+;       keyword to 'POINTER'  as appropriate, and  an array of pointers to 
+;       the data in the POINTERS keyword.  The user is responsible for freeing 
+;        the pointers.
 ;
 ; CALLING SEQUENCE: 
-;	FXBWRITM, UNIT, COL, D0, D1, D2, ..., [ ROW= ]
+;	FXBWRITM, UNIT, COL, D0, D1, D2, ..., [ ROW= , PASS_METHOD, NANVALUE=
+;                               POINTERS=,  BUFFERSIZE= ]
 ;    
 ; INPUT PARAMETERS: 
 ;	UNIT	= Logical unit number corresponding to the file containing the
 ;		  binary table.
 ;	D0,..D49= An IDL data array to be written to the file, one for
-;                 each column.
-;	COL	= Column in the binary table to place data in, starting from
-;		  column one.
+;                 each column.      These parameters will be igonred if data
+;                 is passed through the POINTERS keyword.
+;	COL	= Column in the binary table to place data in.   May be either
+;                 a list of column numbers where the first column is one, or 
+;                 a string list of column names.  
+
 ; OPTIONAL INPUT KEYWORDS: 
 ;	ROW	= Either row number in the binary table to write data to,
 ;		  starting from row one, or a two element array containing a
@@ -51,17 +54,14 @@
 ;		  unless DATA is of type float, double-precision or complex.
 ;       PASS_METHOD = A scalar string indicating method of passing
 ;                 data to FXBWRITM.  One of 'ARGUMENT' (indicating
-;                 pass by positional argument), 'POINTER' (indicating
+;                 pass by positional argument),  or'POINTER' (indicating
 ;                 passing an array of pointers by the POINTERS
-;                 keyword), or 'HANDLE' (indicating passing an array
-;                 of handles by the POINTERS keyword).
+;                 keyword).  
 ;                 Default:  'ARGUMENT'
 ;       POINTERS = If PASS_METHOD is 'POINTER' then the user must pass
 ;                 an array of IDL pointers to this keyword, one for
-;                 each column.  If PASS_METHOD is 'HANDLE' then pass
-;                 an array of IDL handles instead.  Ultimately the
-;                 user is responsible for deallocating pointers and
-;                 handles.
+;                 each column.    Ultimately the user is responsible for 
+;                 deallocating pointers.
 ;       BUFFERSIZE = Data are transferred in chunks to conserve
 ;                 memory.  This is the size in bytes of each chunk.
 ;                 If a value of zero is given, then all of the data
@@ -89,7 +89,7 @@
 ;      21 x 21 PSF at each position:
 ;
 ;      (1) First, create sample values
-;      x = findgen(43) & y = findgen(43)+1 & psf = randomn(seed,21,21,32)
+;      x = findgen(43) & y = findgen(43)+1 & psf = randomn(seed,21,21,43)
 ;      
 ;      (2) Create primary header, write it to disk, and make extension header
 ;      fxhmake,header,/initialize,/extend,/date
@@ -121,6 +121,9 @@
 ;	The row number must be consistent with the number of rows stored in the
 ;	binary table header.
 ;
+;       A PASS_METHOD of POINTER does not use the EXECUTE() statement and can be
+;       used with the IDL Virtual Machine.   However, the EXECUTE() statement is
+;       used when the PASS_METHOD is by arguments.      
 ; CATEGORY: 
 ;	Data Handling, I/O, FITS, Generic.
 ; PREVIOUS HISTORY: 
@@ -132,9 +135,12 @@
 ;               Documented this routine, 18 January 1999. 
 ;       C. Markwardt, added ability to pass by handle or pointer.
 ;               Some bug fixes, 20 July 2001  
-;       W. Landsman/B.Schulz  Allow more than 50 arguments when using pointers     
+;       W. Landsman/B.Schulz  Allow more than 50 arguments when using pointers
+;       W. Landsman  Remove pre-V5.0 HANDLE options      July 2004
+;       W. Landsman Remove EXECUTE() call with POINTERS   May 2005
 ;-
 ;
+        compile_opt idl2
 @fxbintable
 	ON_ERROR, 2
 ;
@@ -142,7 +148,7 @@
 ;
         IF N_PARAMS() LT 2 THEN BEGIN
 		MESSAGE = 'Syntax:  FXBWRITM, UNIT, COL, DATA1, DATA2, ' $
-                  +' ..., ROW=ROW'
+                  +' ..., ROW=, POINTERS=, PASS_METHOD=, NANVALUE=, BUFFERSIZE='
 		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
 			ERRMSG = MESSAGE
 			RETURN
@@ -163,13 +169,12 @@
         COLNAMES = 'D'+STRTRIM(LINDGEN(50),2)
 
 ;
-;  For IDL 5, it is possible to extract the data via pointers
+;  Determine whether the data has been passed as arguments or pointers
 ;
         IF N_ELEMENTS(PASS_METHOD) EQ 0 THEN PASS_METHOD = 'ARGUMENT'
         PASS = STRUPCASE(STRTRIM(PASS_METHOD[0],2))
-        IF PASS NE 'ARGUMENT' AND PASS NE 'POINTER' $
-          AND PASS NE 'HANDLE' THEN BEGIN
-            MESSAGE = 'ERROR: PASS_METHOD must be ARGUMENT, POINTER or HANDLE'
+        IF PASS NE 'ARGUMENT' AND PASS NE 'POINTER'  THEN BEGIN
+            MESSAGE = 'ERROR: PASS_METHOD must be ARGUMENT or POINTER'
             IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
                 ERRMSG = MESSAGE
                 RETURN
@@ -186,14 +191,6 @@
         ENDIF
 
         IF PASS EQ 'POINTER' THEN BEGIN
-            IF DOUBLE(!VERSION.RELEASE) LT 5 THEN BEGIN
-                MESSAGE = 'ERROR: pointers cannot be used for IDL < 5'
-                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-                    ERRMSG = MESSAGE
-                    RETURN
-                END ELSE MESSAGE, MESSAGE
-            ENDIF
-
             SZ = SIZE(POINTERS)
             IF SZ[SZ[0]+1] NE 10 THEN BEGIN
                 MESSAGE = 'ERROR: POINTERS must be an array of pointers'
@@ -203,7 +200,6 @@
                 END ELSE MESSAGE, MESSAGE
             ENDIF
 
-            FORWARD_FUNCTION PTR_VALID
             WH = WHERE(PTR_VALID(POINTERS[0:NUMCOLS-1]) EQ 0, CT)
             IF CT GT 0 THEN BEGIN
                 MESSAGE = 'ERROR: POINTERS contains invalid pointers'
@@ -215,29 +211,7 @@
 
         ENDIF
         
-        IF PASS EQ 'HANDLE' THEN BEGIN
-
-            SZ = SIZE(POINTERS)
-            IF SZ[SZ[0]+1] NE 3 THEN BEGIN
-                MESSAGE = 'ERROR: POINTERS must be an array of handles'
-                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-                        ERRMSG = MESSAGE
-                        RETURN
-                END ELSE MESSAGE, MESSAGE
-            ENDIF
-
-            FORWARD_FUNCTION HANDLE_INFO
-            WH = WHERE(HANDLE_INFO(POINTERS[0:NUMCOLS-1]) EQ 0, CT)
-            IF CT GT 0 THEN BEGIN
-                MESSAGE = 'ERROR: POINTERS contains invalid handles'
-                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-                        ERRMSG = MESSAGE
-                        RETURN
-                END ELSE MESSAGE, MESSAGE
-            ENDIF
-        ENDIF
-
-
+ 
 ;
 ;  Find the logical unit number in the FXBINTABLE common block.
 ;
@@ -435,24 +409,15 @@
             COLTYPE[I] = IDLTYPE[ICOL[I],ILUN]
 
             SZ = 0
-            IF PASS EQ 'ARGUMENT' THEN $
-              RESULT = EXECUTE('SZ = SIZE('+COLNAMES[I]+')') $
-            ELSE IF PASS EQ 'POINTER' THEN $
-              RESULT = EXECUTE('SZ = SIZE(*(POINTERS[I]))') $ ;; IDL 4!!
-            ELSE IF PASS EQ 'HANDLE' THEN BEGIN
-                HANDLE_VALUE, POINTERS[I], DD
-                IF N_ELEMENTS(DD) LE 0 THEN RESULT = 0 $
-                ELSE BEGIN
-                    SZ = SIZE(TEMPORARY(DD))
-                    RESULT = 1
-                ENDELSE
-            ENDIF
-
-            IF RESULT EQ 0 THEN BEGIN
+            IF PASS EQ 'ARGUMENT' THEN BEGIN
+              RESULT = EXECUTE('SZ = SIZE('+COLNAMES[I]+')') 
+              IF RESULT EQ 0 THEN BEGIN
                 MESSAGE = MESSAGE + '; Could not extract type info (column '+$
                   STRTRIM(MYCOL[I],2)+')'
                 FOUND[I] = 0
-            ENDIF
+              ENDIF
+            ENDIF ELSE SZ = SIZE(*(POINTERS[I])) 
+
 
             TYPE = SZ[SZ[0]+1]
             IF TYPE NE COLTYPE[I] THEN BEGIN
@@ -586,23 +551,12 @@
             IF NOT FOUND[I] THEN GOTO, LOOP_END_WRITE
 
             ;; Copy data into DD
-            IF PASS EQ 'ARGUMENT' THEN $
-              RESULT = EXECUTE('DD = '+COLNAMES[I]) $
-            ELSE IF PASS EQ 'POINTER' THEN $
-              RESULT = EXECUTE('DD = *(POINTERS[I])') $
-            ELSE IF PASS EQ 'HANDLE' THEN BEGIN
-                HANDLE_VALUE, POINTERS[I], DD
-                RESULT = 1
-            ENDIF
-            IF RESULT EQ 0 THEN BEGIN
-                GOTO, LOOP_END_WRITE
-;                MESSAGE = 'ERROR: Could not get data (column '+$
-;                  STRTRIM(MYCOL(I),2)+')'
-;                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-;                    ERRMSG = MESSAGE
-;                    RETURN
-;                ENDIF ELSE MESSAGE, MESSAGE
-            ENDIF
+            IF PASS EQ 'ARGUMENT' THEN BEGIN
+              RESULT = EXECUTE('DD = '+COLNAMES[I]) 
+              IF RESULT EQ 0 THEN GOTO, LOOP_END_WRITE
+            ENDIF ELSE DD = *(POINTERS[I])
+
+;             ENDIF
             IF N_ELEMENTS(DD) EQ 1 THEN DD = [DD]
             DD = REFORM(DD, NOUTPUT[I]/NROWS0, NROWS0, /OVERWRITE)
             IF POS GT 0 OR NR LT NROWS0 THEN $

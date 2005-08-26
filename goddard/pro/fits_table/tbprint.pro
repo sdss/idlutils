@@ -57,6 +57,8 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 ;       (3) Program does not check for null values
 ;       (4) Does not work with variable length columns
 ;
+; MINIMUM IDL VERSION:
+;       V5.3 (uses STRSPLIT)
 ; HISTORY:
 ;       version 1  D. Lindler Feb. 1987
 ;       Accept undefined values of rows,columns W. Landsman  August 1997
@@ -68,7 +70,7 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 ;-
  On_error,2
 
- FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility 
+
  if N_params() LT 2 then begin
    print,'Syntax -  TBPRINT, h, tab, [ columns, rows, device, TEXTOUT= ,FMT= ]'
    return
@@ -90,7 +92,8 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
  if r[0] eq -1 then r = lindgen(nrows)          ;default
  n = N_elements(r)
 ;
- case size(hdr_or_tbstr,/type) of 
+
+ case  size(hdr_or_tbstr,/type) of 
  7: tbinfo,hdr_or_tbstr,tb_str
  8: tb_str = hdr_or_tbstr
  else: message,'ERROR - Invalid FITS header or structure supplied' 
@@ -101,9 +104,7 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 ; if columns is a string, change it to string array
 
  if size(columns,/tname) eq 'STRING' then begin
-           if !VERSION.RELEASE GE '5.3' then $
-           colnames = strsplit(columns,',',/extract) else $
-           colnames = str_sep(strtrim(columns,2),',')
+        colnames = strsplit(columns,',',/extract) 
         numcol = N_elements(colnames) 
         colnum = intarr(numcol)
         field = strupcase(colnames)
@@ -186,6 +187,7 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
  if N_elements(form) GT 0 then for i=1,N_elements(form)-1 do $
         format = format + ',' + form[i]
  format = '(' + format + ')'
+
 
  if minnumval EQ 1 then $
  result = execute('for i=0,n-1 do printf,!TEXTUNIT,' +  $

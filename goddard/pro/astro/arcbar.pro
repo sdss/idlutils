@@ -29,6 +29,8 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ;               is set) at which to place the  scale bar.   If not supplied, 
 ;               then the user will be prompted to place the cursor at the 
 ;               desired position
+;       /SECONDS - if set, then arlen is specified in arcseconds rather than
+;               arcminutes
 ;       SIZE  - scalar specifying character size of label, default = 1.0
 ;       THICK -  Character thickness of the label, default = !P.THICK
 ;
@@ -59,11 +61,12 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ;       Use device-independent label offset  W. Landsman   August 2001
 ;-
 ;
+ compile_opt idl2
  On_error,2                                  ;Return to caller
 
  if N_params() LT 1 then begin
-      print, 'Syntax - ' + $
-     'ARCBAR, hdr,[ arclen, COLOR=, /DATA, LABEL=, /NORM, POS=, SIZE=, THICK= ]'
+      print, 'Syntax - ARCBAR, hdr,[ arclen, COLOR= '
+      print, '         /DATA, LABEL=, /NORM, POS=, /SECONDS, SIZE=, THICK= ]'
       return
  endif
 

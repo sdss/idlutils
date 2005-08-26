@@ -1,4 +1,4 @@
-pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
+pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename, ALT = alt
 ;+
 ; NAME:
 ;       CURVAL
@@ -20,6 +20,12 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
 ;       Im  = Array containing values that are displayed.  Any type.
 ;
 ; OPTIONAL KEYWORD INPUTS:
+;      ALT - single character 'A' through 'Z' or ' ' specifying an alternate
+;            astrometry system present in the FITS header.    The default is
+;            to use the primary astrometry or ALT = ' '.   If /ALT is set,
+;            then this is equivalent to ALT = 'A'.   See Section 3.3 of
+;            Greisen & Calabretta (2002, A&A, 395, 1061) for information about
+;            alternate astrometry keywords.
 ;      OFFSET - 2 element vector giving the location of the image pixel (0,0) 
 ;               on the window display.   OFFSET can be positive (e.g if the 
 ;               image is centered in a larger window) or negative (e.g. if the
@@ -61,8 +67,12 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
 ;       Remove unneeded calls to obsolete !ERR   W. Landsman   December 2000
 ;       Replace remaining !ERR calls with !MOUSE.BUTTON W. Landsman Jan 2001
 ;       Allow for non-celestial (e.g. Galactic) coordinates W. Landsman Apr 2003
+;       Work if RA/Dec reversed in CTYPE keyword  W. Landsman Feb. 2004
+;       Always call UNZOOM_XY for MOUSSE compatibility W. Landsman Sep. 2004
+;       Added ALT keyword  W. Landsman October 2004 
 ;-
  On_error,2    ;if an error occurs, return to caller
+ compile_opt idl2
 
  if !VERSION.OS EQ 'MacOS' then begin
   print,'Macintosh Mouse maps to "LEFT" button and LEFT and RIGHT arrow keys to'
@@ -82,9 +92,6 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename
         return
  endif
 
-; Determine if an offset or zoom supplied
-
- unzoom = (N_elements(offset) NE 0) or (N_elements(zoom) NE 0)
 
 if (!D.FLAGS and 256) EQ 256 then wshow,!D.WINDOW  ;Bring active window to foreground
 
@@ -134,7 +141,7 @@ endif
 
  if f_header then begin     
 
-  EXTAST, hd, astr, noparams                 ;Extract astrometry structure
+  EXTAST, hd, astr, noparams, alt=alt                 ;Extract astrometry structure
   if (noparams ge 0) then f_astrom = 1b
 
   if f_image then begin
@@ -150,14 +157,21 @@ endif
   endif
  endif
 
+; Determine if an offset or zoom supplied
+ unzoom = f_image  or f_header
+
  if f_astrom GT 0 then begin
   coord = strmid(astr.ctype,0,4)
   coord = repchr(coord,'-',' ')
+  if (coord[0] EQ 'DEC ') or (coord[0] EQ 'ELAT') or $
+     (coord[0] EQ 'GLAT') then coord = rotate(coord,2)
+
   line2 = '  X     Y     Byte Inten        '  + coord[0] + '       ' +coord[1]
   line3 = '  X     Y   ByteInten    Value       ' + coord[0]  + '         ' + $
              coord[1] + '           Flux' 
   line4 = '  X     Y   ByteInten     Value      '  + coord[0] + '          ' + $
              coord[1]
+
   sexig = strupcase(strmid(coord[0],0,2))  EQ 'RA' 
  endif
 

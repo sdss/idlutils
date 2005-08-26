@@ -22,7 +22,7 @@
 ;	Result -  double, decimal equivalent of input sexigesimal 
 ;		quantities.  Same number of elements as the input parameters.
 ;		If the nth element in any of the input parameters is negative 
-;		then the nth element in Result wil also be negative.
+;		then the nth element in Result will also be negative.
 ;
 ; EXAMPLE:
 ;	If dd = [60,60,0], and mm = [30,-30,-30], then

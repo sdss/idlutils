@@ -1,4 +1,5 @@
-function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada
+function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
+               CONSTRAINT = constraint
 ;+
 ; NAME: 
 ;   QUERYVIZIER
@@ -27,11 +28,14 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada
 ;            'NVSS'  - NRAO VLA Sky Survey (1998)
 ;            'B/DENIS/DENIS' - 2nd Deep Near Infrared Survey of southern Sky
 ;            'I/259/TYC2' - Tycho-2 main catalog (2000)
+;            'I/239/HIP_MAIN' - Hipparcos main catalog (1997)
 ;
 ;          Note that some names will prompt a search of multiple catalogs
 ;          and QUERYVIZIER will only return the result of the first search.
-;          Thus, (as in the case of the Tycho catalog above), it may be 
-;          important to use the specific VIZIER name.
+;          Thus, setting catalog to "HIPPARCOS" will search all catalogs 
+;          associated with the Hipparcos mission, and return results for the
+;          first catalog found.    To specifically search the Hipparcos or
+;          Tycho main catalogs use the VIZIER catalog names listed above
 ;                             
 ;      TARGETNAME_OR_COORDS - Either a scalar string giving a target name, 
 ;          (with J2000 coordinates determined by SIMBAD), or a 2-element
@@ -41,18 +45,20 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada
 ; OPTIONAL INPUT:
 ;    dis - scalar or 2-element vector.   If one value is supplied then this
 ;          is the search radius in arcminutes.     If two values are supplied
-;          then this is the width (i.e., in longitude direction) and height of the
+;          then this is the width (i.e., in longitude direction) and height
 ;          of the search box.   Default is a radius search with radius of
 ;          5 arcminutes
 ;
 ; OUTPUTS: 
-;   info - IDL structure containing information on the catalog stars within the 
-;          specified distance of the specified center.   The structure tags
-;          are identical with the VIZIER catalog column names, with the 
-;          exception of an occasional underscore addition, if necessary to 
-;          convert the column name to a valid structure tag.    The VIZIER Web 
-;          page should consulted for the column names and their meaning for 
-;          each particular catalog..
+;   info - Named IDL structure containing information on the catalog stars 
+;          within the specified distance of the specified center.   The
+;          structure name is taken from the searched VIZIER catalog (which may
+;          differ from the input 'CATALOG' parameter if multiple catalogs are 
+;          searched).  The structure tag names are identical with the VIZIER 
+;          catalog column names, with the exception of an occasional underscore
+;          addition, if necessary to convert the column name to a valid 
+;          structure tag.    The VIZIER Web  page should consulted for the 
+;          column names and their meaning for each particular catalog..
 ;           
 ;          If the tagname is numeric and the catalog field is blank then either
 ;          NaN  (if floating) or -1 (if integer) is placed in the tag.
@@ -65,6 +71,22 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada
 ;            at the Canadian Astronomical Data Center (CADC) is used instead.
 ;            Note that not all Vizier sites have the option to return
 ;            tab-separated values (TSV) which is required by this program.
+;
+;          CONSTRAINT - string giving additional nonpositional numeric 
+;            constraints on the entries to be selected.     For example, when 
+;            in the GSC2.2  catalog, to only select sources with Rmag < 16 set 
+;            Constraint = 'Rmag < 16'.    Multiple constraints can be 
+;            separated by commas.    Use '!=' for "not equal", '<=' for smaller
+;            or equal, ">=" for greater than or equal.  See the complete list
+;            of operators at  
+;                 http://vizier.u-strasbg.fr/doc/asu.html#AnnexQual
+;            For this keyword only, **THE COLUMN NAME IS CASE SENSITIVE** and 
+;            must be written exactly as displayed on the VIZIER Web page.  
+;            Thus for the GSC2.2 catalog one must use 'Rmag' and not 'rmag' or
+;            'RMAG'.
+;         
+;           /VERBOSE - If set then the query sent to the VIZIER site is
+;               displayed, along with the returned title(s) of found catalog(s)
 ; EXAMPLES: 
 ;          (1) Plot a histogram of the J magnitudes of all 2MASS point sources 
 ;          stars within 10 arcminutes of the center of the globular cluster M13 
@@ -77,17 +99,32 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada
 ;          
 ;          IDL> str = queryvizier('GSC2.2',[ten(10,12,34)*15,ten(-23,34,35)],3)
 ;          IDL> print,min(str.rmag,/NAN)
+;
+;          (3) Find sources with V < 19 in the Magellanic Clouds Photometric 
+;              Survey (Zaritsky+, 2002) within 5 arc minutes of  the position 
+;              00:47:34 -73:06:27
+;
+;              Checking the VIZIER Web page we find that this catalog is
+;          IDL>  catname =  'J/AJ/123/855/table1'
+;          IDL>  ra = ten(0,47,34)*15 & dec = ten(-73,6,27)
+;          IDL> str = queryvizier(catname, [ra,dec], 5, constra='Vmag<19')
+;
 ; PROCEDURES USED:
 ;          GETTOK(),IDL_VALIDNAME()(if prior to V6.0), RADEC, REMCHAR, REPSTR(),
 ;          WEBGET()
 ; TO DO:
 ;       (1) Allow specification of output sorting
-;       (2) Allow non-positional queries.
 ; MODIFICATION HISTORY: 
 ;         Written by W. Landsman  SSAI  October 2003
+;         Give structure name returned by VIZIER not that given by user
+;                    W. Landsman   Feburary 2004 
+;         Don't assume same format for all found sources W. L. March 2004
+;         Added CONSTRAINT keyword for non-positional constraints WL July 2004
+;         Remove use of EXECUTE() statement WL June 2005
 ;-
   if N_params() LT 3 then begin
        print,'Syntax - info = QueryVizier(catalog, targetname_or_coord, dis,'
+       print,'                            [ /VERBOSE, /CANADA, CONSTRAINT= ]'
        print,'                       '
        print,'  Coordinates (if supplied) should be J2000 RA (degrees) and Dec'
        print,'  dis -- search radius or box in arcminutes'
@@ -114,7 +151,20 @@ if keyword_set(canada) then root = "http://vizier.hia.nrc.ca" $
        targname = 1b 
   endelse
  source = catalog
- ;;
+
+; Add any addition constraints to the search.    Convert an URL special 
+; special characters in the constraint string.
+
+ if N_elements(constraint) EQ 0 then constraint = '' 
+ if strlen(constraint) GT 0 then begin
+     urlconstrain = strtrim(constraint,2)
+     urlconstrain = repstr(urlconstrain, ',','&')
+     urlconstrain = repstr(urlconstrain, '<','=%3C')
+     urlconstrain = repstr(urlconstrain, '>','=%3E')
+     urlconstrain = repstr(urlconstrain, '!','=!')
+     search = search + '&' + urlconstrain
+ endif
+ ;
  if targname then $
   QueryURL = $
    root + "/cgi-bin/asu-tsv/?-source=" + source + $
@@ -125,11 +175,12 @@ if keyword_set(canada) then root = "http://vizier.hia.nrc.ca" $
        search + '&-out.max=unlimited'
    ;;  
  if keyword_set(verbose) then message,queryurl,/inf
-  Result = webget(QueryURL)
-;
 
+  Result = webget(QueryURL)
+
+;
   t = strtrim(result.text,2)
-  keyword = strmid(t,0,7)
+  keyword = strtrim(strmid(t,0,7),2)
 
   lcol = where(keyword EQ "#Column", Nfound)
   if Nfound EQ 0 then begin
@@ -147,8 +198,9 @@ if keyword_set(canada) then root = "http://vizier.hia.nrc.ca" $
   endif
 
   if keyword_set(verbose) then begin
-    titcol = where(keyword EQ '#Title:', Ntit)
-    if Ntit GT 0 then message,strtrim(strmid(t[titcol[0]],8,70),2),/inf
+    titcol = where(keyword EQ '#Title:', Ntit)    
+    if Ntit GT 0 then message,/inform, $
+        strtrim(strmid(t[titcol[0]],8),2)
   endif
 
   trow = t[lcol]
@@ -161,38 +213,54 @@ if keyword_set(canada) then root = "http://vizier.hia.nrc.ca" $
   val = fix(strmid(fmt,1,4))
   for i=0,N_elements(colname)-1 do $
          colname[i] = IDL_VALIDNAME(colname[i],/convert_all)
+
+;Check if any Warnings or fatal errors in the VIZIER output
+   badflag = strmid(keyword,0,5)
+   warn = where(badflag EQ '#++++', Nwarn)
+   if Nwarn GT 0 then for i=0,Nwarn-1 do $
+        message,'Warning: ' + strtrim(t[warn[i]],2),/info
+   
+   fatal = where(badflag EQ '#****', Nfatal)
+   if Nfatal GT 0 then for i=0,Nfatal-1 do $
+        message,'Error: ' + strtrim(t[fatal[i]],2),/info
+
+
+   table = where(keyword EQ '#Table', Ntable)
+   if Ntable GT 0 then begin
+          source = strmid(t(table[0]),7)
+          remchar,source,':'
+   endif 
+
   source = IDL_VALIDNAME(source, /convert_all)
 
- ex_string = 'Name="' + source + '",["' +  strjoin(colname,'","') + '"]'
  ntag = N_elements(colname)
  for i=0,Ntag-1 do begin
  case strmid(fmt[i],0,1) of 
-  'A': ex_string = ex_string  + ",''"
-  'I': if val[i] LE 4 then ex_string = ex_string + ',0' else $
-                           ex_string = ex_string + ',0L'
-  'F': if val[i] LE 7 then ex_string = ex_string + ',0.' else $ 
-                           ex_string = ex_string + ',0.0d'
+  'A': cval = ' '
+  'I': if val[i] LE 4 then cval = 0 else $
+                           cval = 0L
+  'F': if val[i] LE 7 then  cval = 0. else $ 
+                           cval = 0.0d
    else: message,'ERROR - unrecognized format'
+ 
   endcase
+   if i EQ 0 then   info = create_struct(colname[0], cval) else $
+   info =  create_struct(temporary(info), colname[i],cval)
  endfor
+   info = create_struct(temporary(info), name=source)
 
-  status = execute( 'info = Create_struct(' +  ex_string + ')' )
 
   i0 = max(lcol) + 5  
   iend = where( t[i0:*] EQ '', Nend)
   if Nend EQ  0  then iend = N_elements(t) else iend = iend[0] + i0
   nstar = iend - i0 
-  info = replicate(info,nstar)
+    info = replicate(info, nstar)
 
 ; Find positions of tab characters 
   t = t[i0:iend-1]
-  slen = max(strlen(t),c)  
-  tt = t[c]
-  spos = [strsplit(tt,string(9b)),slen]
-  val = spos[1:*] - spos - 1
 
-  for j=0,N_elements(spos)-2 do begin
-      x = strtrim(strmid(t,spos[j],val[j] ),2)
+  for j=0,Ntag-1 do begin
+      x = strtrim( gettok(t,string(9b),/exact ),2)
        dtype = size(info[0].(j),/type)
       if dtype NE 7 then begin
       bad = where(strlen(x) EQ 0, Nbad)
@@ -202,7 +270,6 @@ if keyword_set(canada) then root = "http://vizier.hia.nrc.ca" $
       endif
       info.(j) = x 
    endfor
-
 
  return,info
 END 

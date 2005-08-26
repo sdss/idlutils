@@ -9,19 +9,18 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       Read a free-format ASCII file with columns of data into IDL vectors 
 ; EXPLANATION:
 ;       Lines of data not meeting the specified format (e.g. comments) are 
-;       ignored.  Columns may be separated by commas, tabs or spaces.
+;       ignored.  Columns may be separated by commas or spaces.
 ;
 ;       Use READFMT to read a fixed-format ASCII file.   Use RDFLOAT for
 ;       much faster I/O (but less flexibility).    Use FORPRINT to write 
-;       columns of data (inverse of READCOL).
+;       columns of data (inverse of READCOL).    
 ;
 ; CALLING SEQUENCE:
 ;       READCOL, name, v1, [ v2, v3, v4, v5, ...  v25 , COMMENT=
 ;           DELIMITER= ,FORMAT = , /DEBUG ,  /SILENT , SKIPLINE = , NUMLINE = ]
 ;
 ; INPUTS:
-;       NAME - Name of ASCII data file, scalar string.  In VMS, an extension of 
-;               .DAT is assumed, if not supplied.
+;       NAME - Name of ASCII data file, scalar string.  
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;       FORMAT - scalar string containing a letter specifying an IDL type
@@ -50,7 +49,7 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;                beginning with this character will be skipped.   Default is
 ;                no comment lines.
 ;       DELIMITER - single character specifying delimiter used to separate 
-;                columns.   Default is either a comma, tab, or a blank.
+;                columns.   Default is either a comma or a blank.
 ;       SKIPLINE - Scalar specifying number of lines to skip at the top of file
 ;               before reading.   Default is to start at the first line.
 ;       NUMLINE - Scalar specifying number of lines in the file to read.  
@@ -93,8 +92,10 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       the value 0.13 read with an 'I' format will be converted to 0.
 ;
 ; PROCEDURES CALLED
-;       GETTOK(), NUMLINES(), REPCHR(), STRNUMBER()
+;       GETTOK(), NUMLINES(), STRNUMBER()
 ;
+; MINIMUM IDL VERSION:
+;       V5.3 (Uses STRSPLIT)
 ; REVISION HISTORY:
 ;       Written         W. Landsman                 November, 1988
 ;       Modified             J. Bloch                   June, 1991
@@ -107,21 +108,22 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       Hexadecimal support added.  MRG, RITSS, 15 March 2000.
 ;       Default is comma or space delimiters as advertised   W.L. July 2001
 ;       Faster algorithm, use STRSPLIT if V5.3 or later  W.L.  May 2002
-;       Restore default recognition of tab delimiter  W.L. June 2002
-;       Use SKIP_LUN if V5.6 or later W.L. Nov. 2002
+;       Accept null strings separated by delimiter ,e.g. ',,,'
+;       Use SCOPE_VARFETCH instead of EXECUTE() for >V6.1  W.L. Jun 2005
+;       Added compile_opt idl2   W. L.  July 2005
 ;-
-   On_error,2                           ;Return to caller
-   FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility 
+  On_error,2                           ;Return to caller
+  compile_opt idl2
 
   if N_params() lt 2 then begin
-     print,'Syntax - readcol, name, v1, [ v2, v3,...v25, '
+     print,'Syntax - READCOL, name, v1, [ v2, v3,...v25, '
      print,'        FORMAT= ,/SILENT  ,SKIPLINE =, NUMLINE = , /DEBUG]'
      return
   endif
 
+  no_exec = !VERSION.RELEASE GE '6.1'
 ; Get number of lines in file
 
-   since_v53 = !VERSION.RELEASE GE '5.3'
    nlines = NUMLINES( name )
    if nlines LT 0 then return
 
@@ -191,9 +193,10 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ; Define output arrays
 
       if idltype[i] GT 0 then begin
-          st = vv[k] + '= make_array(nlines,TYPE = idltype[i] )'  
-          tst = execute(st)
-          k = k+1
+          if no_exec then (SCOPE_VARFETCH(vv[k], LEVEL=0))= $
+	        make_array(nlines,TYPE = idltype[i]) else $
+          tst = execute(vv[k] + '= make_array(nlines,TYPE = idltype[i] )' ) 
+           k = k+1
       endif
 
    endfor
@@ -208,8 +211,7 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
    if skipline GT 0 then $
        for i = 0, skipline-1 do readf, lun, temp        ;Skip any lines
 
-    noset_delimiter = not keyword_set(delimiter)
-   if noset_delimiter then delimiter = ' '
+   if not keyword_set(delimiter) then delimiter = ' ,'
  
    for j = 0L, nlines-1 do begin
 
@@ -220,9 +222,6 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
                        message,'Skipping Line ' + strtrim(skipline+j+1,2),/INF
           goto, BADLINE 
        endif
-    if noset_delimiter then $ 
-           temp = repchr(temp,',','  ')  ;Replace any comma delimiters by spaces
-
     k = 0
     temp = strtrim(temp,1)                  ;Remove leading spaces
     if keyword_set(comment) then if strmid(temp,0,1) EQ comment then begin
@@ -232,8 +231,7 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
           goto, BADLINE 
        endif
 
-     if since_v53 then var = strsplit(strcompress(temp),delimiter,/extract) $
-                 else var = str_sep(strcompress(temp),delimiter)
+    var = strsplit(strcompress(temp),delimiter,/extract, /preserve_null) 
     if N_elements(var) LT nfmt then begin 
                  if not keyword_set(SILENT) then $ 
                       message,'Skipping Line ' + strtrim(skipline+j+1,2),/INF 
@@ -252,12 +250,15 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
                  ngood = ngood-1
                  goto, BADLINE 
              endif
-          st = vv[k] + '[ngood] = val'     
+          if no_exec then $
+	      (SCOPE_VARFETCH(vv[k], LEVEL=0))[ngood] = val else $
+	       tst = execute(vv[k] + '[ngood] = val')
 
          endif else $
-           st = vv[k] + '[ngood] = var[i]'
+         if no_exec then $
+	 (SCOPE_VARFETCH(vv[k], LEVEL=0))[ngood] = var[i] else $
+           tst = execute(vv[k] + '[ngood] = var[i]')
 
-      tst = execute(st)
       k = k+1
 
   endfor
@@ -276,10 +277,14 @@ BADLINE:  ngood = ngood+1
         message,strtrim(ngood,2) + ' valid lines read', /INFORM  
 
 ; Compress arrays to match actual number of valid lines
-
-  for i = 0,ncol-1 do begin 
+  if no_exec then begin
+  for i=0,ncol-1 do $
+       (SCOPE_VARFETCH(vv[i], LEVEL=0)) = $
+            (SCOPE_VARFETCH(vv[i], LEVEL=0))[0:ngood-1]
+ endif else begin
+  for i = 0,ncol-1 do $
       tst = execute(vv[i] + '='+ vv[i]+ '[0:ngood-1]')
-  endfor
+ endelse 
 
   return
   end

@@ -72,7 +72,10 @@
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use improved expressions for L',D,M,M', and F given in 2nd edition of
 ;            Meeus (very slight change),  W. Landsman    November 2000
+;       Avoid 32767 overflow   W. Landsman January 2005
+;       
 ;-
+ compile_opt idl2 
  On_error,2
 
  if N_params() LT 3 then begin
@@ -195,7 +198,7 @@
 
  geolong = dblarr(npts) & geolat = geolong & dis = geolong
 
- for i=0,npts-1 do begin
+ for i=0L,npts-1 do begin
 
    sinlng = sin_lng & coslng = cos_lng & sinlat = sin_lat
 

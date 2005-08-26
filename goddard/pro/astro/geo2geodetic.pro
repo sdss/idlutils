@@ -114,8 +114,8 @@ FUNCTION geo2geodetic,gcoord,PLANET=planet, $
                  60268.d0,      25559.d0,    24764.d0,    1195.d0]
         Rpole = [2439.7d0, 6051.8d0, 6356.752d0, 3379.3845d0, 67136.5562d0, $
                  54890.7686d0, 24986.1354d0, 24347.6551d0, 1195.d0]
-        Re = Requator(index)            ; equatorial radius
-        Rp = Rpole(index)                       ; polar radius
+        Re = Requator[index]            ; equatorial radius
+        Rp = Rpole[index]                    ; polar radius
         
         IF KEYWORD_SET(EQUATORIAL_RADIUS) THEN Re=DOUBLE(equatorial_radius[0])
         IF KEYWORD_SET(POLAR_RADIUS) THEN Rp=DOUBLE(polar_radius[0])

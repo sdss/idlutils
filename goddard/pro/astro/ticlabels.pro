@@ -45,6 +45,8 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 ;			W. Landsman  Hughes STX,  Nov 95  
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Allow sub arcsecond formatting  W. Landsman   May 2000
+;       Better formatting for non-unity DELTA values  W. Landsamn July 2004
+;       
 ;-
  On_error,2
 ;                               convert min to hours, minutes, secs
@@ -94,13 +96,15 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
  
  endelse
 
+      inc1 = incr*60.0d
       inc = incr*60.0d*delta           ;increment in arc seconds
-      if abs(inc) GE 1.0 then begin 
-            sfmt = '(i2.2)'
-             inc = round(inc)
+      if abs(inc1) GE 1.0 then begin 
              mins = round(mins)
-     endif else if abs(inc) GT 0.1 then  sfmt = '(f4.1)' else sfmt = '(f5.2)'
- 
+            sfmt = '(i2.2)' 
+      endif else $  
+         if abs(inc1) GT 0.1 then  sfmt = '(f4.1)' else sfmt = '(f5.2)'
+      if abs(inc) GE 1.0 then  inc = round(inc)
+
      while (mins GE 60) do begin
             mins = mins - 60
             minm = minm + 1
@@ -116,7 +120,6 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 
     ticlabs[0] = sgn + string( abs(minh), '(i2.2)') + sd + ' ' + $
             string(minm,'(i2.2)') + sm + ' ' + string( mins, sfmt) + ss  
- 
   
       for i = delta,numtics-1, delta do begin
          mins = mins + neg*inc
@@ -173,7 +176,6 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
       inc = fix(incr*DELTA)
       ticlabs[0] = sgn + string(abs(minh),'(i2.2)')+ sd+ ' ' + $
 		string(minm,'(i2.2)') + sm
-
       for i = delta,numtics-1, delta do begin
          minm = minm + neg*inc
 

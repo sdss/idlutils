@@ -5,7 +5,7 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
 ; NAME:
 ;      RDFLOAT
 ; PURPOSE:
-;      Quickly read a numeric ASCII data file into IDL floating/double vectors.  
+;      Quickly read a numeric ASCII data file into IDL floating/double vectors.
 ; EXPLANATION:
 ;      Columns of data may be separated by tabs or spaces.      This 
 ;      program is fast but is restricted to data files where all columns can 
@@ -65,6 +65,8 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
 ;      (2) Cannot be used to read strings
 ; PROCEDURES USED:
 ;      NUMLINES()
+; MINIMUM IDL VERSION:
+;      V5.3 (uses STRSPLIT() )
 ; REVISION HISTORY:
 ;      Written         W. Landsman                 September 1995
 ;      Call NUMLINES() function                    February 1996
@@ -73,10 +75,9 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
 ;      Allow to skip more than 32767 lines  W. Landsman  June 2001
 ;      Added /SILENT keyword   W. Landsman         March 2002
 ;      Added COLUMNS keyword, use STRSPLIT    W. Landsman May 2002
-;      Use SKIP_LUN if V5.6 or later          W. Landsamn Nov 2002
+;      Use SKIP_LUN if V5.6 or later    W. Landsman Nov 2002
 ;-
   On_error,2                           ;Return to caller
-  FORWARD_FUNCTION strsplit            ;Pre V5.3 compatibility
 
   if N_params() lt 2 then begin
      print,'Syntax - RDFLOAT, name, v1, [ v2, v3,...v19 '
@@ -98,13 +99,12 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
    openr, lun, name, /GET_LUN
    temp = ''
    if skipline GT 0 then $
-        if !VERSION.RELEASE GE '5.6' then skip_lun, lun, skipline, /lines else $
-        for i=0L,skipline-1 do readf, lun, temp
+        if !VERSION.RELEASE GE '5.6' then $
+            skip_lun, lun, skipline, /lines else $
+            for i=0L,skipline-1 do readf, lun, temp
    readf,lun,temp
    
-   if !VERSION.RELEASE GE '5.3' then $
-   colval = strsplit(temp) else $
-   colval = str_sep( strtrim( strcompress(temp),2),' ')
+   colval = strsplit(temp)           ;Determine number of columns 
    ncol = N_elements(colval)
 
 ;Create big output array and read entire file into the array
@@ -115,7 +115,7 @@ pro rdfloat,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17, $
    close,lun
    openr, lun, name
    if skipline GT 0 then $
-        if !VERSION.RELEASE GE '5.6' then skip_lun, lun, skipline, /lines else $
+       if !VERSION.RELEASE GE '5.6' then skip_lun, lun, skipline, /lines else $
         for i=0L,skipline-1 do readf, lun, temp
 
    readf, lun, bigarr

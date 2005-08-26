@@ -4,13 +4,14 @@
 ; PURPOSE:
 ;       Read a FITS file into IDL data and header variables. 
 ; EXPLANATION:
+;       READFITS() can also read gzip or Unix compressed FITS files.
 ;       See http://idlastro.gsfc.nasa.gov/fitsio.html for other ways of
-;       reading FITS files with IDL.
+;       reading FITS files with IDL.   
 ;
 ; CALLING SEQUENCE:
 ;       Result = READFITS( Filename/Fileunit,[ Header, heap, /NOSCALE, EXTEN_NO=,
-;                       NSLICE=, /SILENT, STARTROW =, NUMROW = , HBUFFER=,
-;                       /COMPRESS, /No_Unsigned ] )
+;                     NSLICE=, /SILENT , STARTROW =, NUMROW = , HBUFFER=,
+;                     /CHECKSUM, /COMPRESS, /No_Unsigned, NaNVALUE = ]
 ;
 ; INPUTS:
 ;       Filename = Scalar string containing the name of the FITS file  
@@ -25,11 +26,12 @@
 ;                  to specify a unit number rather than a file name:
 ;          (1) For a FITS file with many extensions, one can move to the 
 ;              desired extensions with FXPOSIT() and then use READFITS().  This
-;              is more efficient that repeatedly starting at the beginning of 
+;              is more efficient than repeatedly starting at the beginning of 
 ;              the file.
 ;          (2) For reading a FITS file across a Web http: address after opening
 ;              the unit with the SOCKET procedure (IDL V5.4 or later,
 ;              Unix and Windows only) 
+;
 ; OUTPUTS:
 ;       Result = FITS data array constructed from designated record.
 ;                If the specified file was not found, then Result = -1
@@ -37,7 +39,9 @@
 ; OPTIONAL OUTPUT:
 ;       Header = String array containing the header from the FITS file.
 ;              If you don't need the header, then the speed may be improved by
-;              not supplying this parameter.
+;              not supplying this parameter.    Note however, that omitting 
+;              the header can imply /NOSCALE, i.e. BSCALE and BZERO values
+;              may not be applied.
 ;       heap = For extensions, the optional heap area following the main
 ;              data array (e.g. for variable length binary extensions).
 ;
@@ -53,25 +57,32 @@
 ;               READFITS will assume that if the file name extension ends in 
 ;               '.gz' then the file is gzip compressed.   The /COMPRESS keyword
 ;               is required only if the the gzip compressed file name does not 
-;               end in '.gz'.   Keyword only valid for IDL V5.3 or later.
+;               end in '.gz' or .ftz
+;              
 ;
-;       EXTEN_NO - positive scalar integer specifying the FITS extension to
+;       EXTEN_NO - non-negative scalar integer specifying the FITS extension to
 ;               read.  For example, specify EXTEN = 1 or /EXTEN to read the 
 ;               first FITS extension.   
+;   
+;        HBUFFER - Number of lines in the header, set this to slightly larger
+;                than the expected number of lines in the FITS header, to 
+;               improve performance when reading very large FITS headers. 
+;               Should be a multiple of 36 -- otherwise it will be modified
+;               to the next higher multiple of 36.   Default is 180
 ;
 ;       /NOSCALE - If present and non-zero, then the ouput data will not be
 ;                scaled using the optional BSCALE and BZERO keywords in the 
 ;                FITS header.   Default is to scale.
 ;
-;       /NO_UNSIGNED -By default, if the header indicates an unsigned integer 
-;              (BITPIX = 16, BZERO=2^15, BSCALE=1) then FITS_READ will output 
+;       /NO_UNSIGNED - By default, if the header indicates an unsigned integer 
+;               (BITPIX = 16, BZERO=2^15, BSCALE=1) then FITS_READ will output 
 ;               an IDL unsigned integer data type (UINT).   But if /NO_UNSIGNED
 ;               is set, then the data is converted to type LONG.  
 ;
-;       NSLICE - Non-negative integer scalar specifying which N-1 dimensional 
-;                slice of a N-dimensional array to read.   For example, if the 
-;                primary image of a file 'wfpc.fits' contains a 800 x 800 x 4 
-;                array, then 
+;       NSLICE - An integer scalar specifying which N-1 dimensional slice of a 
+;                N-dimensional array to read.   For example, if the primary 
+;                image of a file 'wfpc.fits' contains a 800 x 800 x 4 array, 
+;                then 
 ;
 ;                 IDL> im = readfits('wfpc.fits',h, nslice=2)
 ;                           is equivalent to 
@@ -81,7 +92,9 @@
 ;
 ;       NUMROW -  Scalar non-negative integer specifying the number of rows 
 ;                 of the image or table extension to read.   Useful when one 
-;                 does not want to read the entire image or table.    
+;                 does not want to read the entire image or table.   This
+;                 keyword is only for extensions and is ignored for primary
+;                 arrays.
 ;
 ;       POINT_LUN  -  Position (in bytes) in the FITS file at which to start
 ;                 reading.   Useful if READFITS is called by another procedure
@@ -94,13 +107,12 @@
 ;
 ;        STARTROW - Non-negative integer scalar specifying the row
 ;               of the image or extension table at which to begin reading. 
-;               Useful when one does not want to read the entire table.
+;               Useful when one does not want to read the entire table.  This
+;               keyword is ignored when reading a primary data array.
 ;
-;        HBUFFER - Number of lines in the header, set this to slightly larger
-;                than the expected number of lines in the FITS header, to 
-;               improve performance when reading very large FITS headers. 
-;               Should be a multiple of 36 -- otherwise it will be modified
-;               to the next higher multiple of 36.   Default is 180
+;       NaNVALUE - This keyword is included only for backwards compatibility
+;                  with routines that require IEEE "not a number" values to be
+;                  converted to a regular value.
 ;
 ; EXAMPLE:
 ;       Read a FITS file test.fits into an IDL image array, IM and FITS 
@@ -125,9 +137,10 @@
 ;
 ; ERROR HANDLING:
 ;       If an error is encountered reading the FITS file, then 
-;               (1) the system variable !ERROR is set (via the MESSAGE facility)
+;               (1) the system variable !ERROR_STATE.CODE is set negative 
+;                   (via the MESSAGE facility)
 ;               (2) the error message is displayed (unless /SILENT is set),
-;                   and the message is also stored in !ERR_STRING
+;                   and the message is also stored in !!ERROR_STATE.MSG
 ;               (3) READFITS returns with a value of -1
 ; RESTRICTIONS:
 ;       (1) Cannot handle random group FITS
@@ -145,23 +158,28 @@
 ;       (2) The use of the NSLICE keyword is incompatible with the NUMROW
 ;       or STARTROW keywords.
 ;
-;       (3) READFITS() underwent a substantial rewrite in October 1998 to 
-;       eliminate recursive calls, and improve efficiency when reading
-;       extensions.
-;            1. The NUMROW and STARTROW keywords can now be used when reading
-;              a primary image (extension = 0).
-;            2. There is no error check for moving past the end of file when
-;               reading the data array.
+;       (3) READFITS() underwent a substantial rewrite in February 2000 to 
+;       take advantage of new features in IDL V5.3
+;            1. The /swap_if_little_endian keyword is now used to OPENR rather
+;                than calling IEEE_TO_HOST for improved performance
+;            2. The /compress keyword is now used with OPENR to allow gzip files
+;                to be read on any machine architecture.
+;            3. Removed NANvalue keyword, since in V5.3, NaN is recognized on
+;                all machine architectures
+;            4. Assume unsigned integers are always allowed
+;            5. Use STRJOIN to display image size
+;            6. Use !ERROR_STATE.MSG rather than !ERR_STRING
+;      
 ;
 ;       (4) On some Unix shells, one may get a "Broken pipe" message if reading
-;        a UNIX compressed file, and not reading to the end of the file (i.e. 
-;        the decompression has not gone to completion).     This is an 
-;        informative message only, and should not affect the output of 
-;        READFITS().  
-;
+;        a Unix compressed (.Z) file, and not reading to the end of the file 
+;       (i.e. the decompression has not gone to completion).     This is an 
+;        informative message only, and should not affect the output of READFITS.   
 ; PROCEDURES USED:
-;       Functions:   SXPAR() 
+;       Functions:   SXPAR()
 ;       Procedures:  SXADDPAR, SXDELPAR
+; MINIMUM IDL VERSION:
+;       V5.3 (Uses STRJOIN, /COMPRESS keyword to OPENR)
 ;
 ; MODIFICATION HISTORY:
 ;       Original Version written in 1988, W.B. Landsman   Raytheon STX
@@ -171,40 +189,38 @@
 ;       Add /binary modifier needed for Windows  W. Landsman    April 1999
 ;       Read unsigned datatypes, added /no_unsigned   W. Landsman December 1999
 ;       Output BZERO = 0 for unsigned data types   W. Landsman   January 2000
-;       Open with /swap_if_little_endian if since V5.1 W. Landsman February 2000
-;       Fixed logic error when using NSLICE keyword W. Landsman March 2000
-;       Fixed byte swapping problem for compressed files on little endian 
-;             machines introduced in Feb 2000     W. Landsman       April 2000
-;       Fix error handling so FREE_LUN is called in case of READU error
-;						W. Landsman N. Rich, Aug. 2000
-;       Assume since V5.1, remove NANvalue keyword  W. Landsman   July 2001 
-;       Support the unofficial 64bit integer format W. Landsman   September 2001
+;       Update to V5.3 (see notes)  W. Landsman                  February 2000
+;       Fixed logic error in use of NSLICE keyword  W. Landsman  March 2000
+;       Fixed byte swapping for Unix compress files on little endian machines
+;                                    W. Landsman    April 2000
+;       Added COMPRESS keyword, catch IO errors W. Landsman September 2000
 ;       Option to read a unit number rather than file name W.L    October 2001
-;       Fix byte swapping problem for compressed files again (sigh...) 
-;                W. Landsman   March 2002
-;       Make sure gzip defined when using a unit number W. Landsman Oct. 2002 
-;       Assume V5.2 or later            W. Landsman        Jan. 2003
+;       Fix undefined variable problem if unit number supplied W.L. August 2002
 ;       Don't read entire header unless needed   W. Landsman  Jan. 2003
 ;       Added HBUFFER keyword    W. Landsman   Feb. 2003
 ;       Added CHECKSUM keyword   W. Landsman   May 2003
+;       Restored NaNVALUE keyword for backwards compatibility,
+;               William Thompson, 16-Aug-2004, GSFC
+;       Recognize .ftz extension as compressed  W. Landsman   September 2004
+;       Fix unsigned integer problem introduced Sep 2004 W. Landsman Feb 2005
 ;-
-;
 function READFITS, filename, header, heap, CHECKSUM=checksum, $ 
                    COMPRESS = compress, HBUFFER=hbuf, EXTEN_NO = exten_no, $
                    NOSCALE = noscale, NSLICE = nslice, $
                    NO_UNSIGNED = no_unsigned,  NUMROW = numrow, $
-                   POINTLUN = pointlun, SILENT = silent, STARTROW = startrow
-
+                   POINTLUN = pointlun, SILENT = silent, STARTROW = startrow, $
+                   NaNvalue = NaNvalue
 
   On_error,2                    ;Return to user
-  ON_IOerror, BAD
+  compile_opt idl2
+  On_IOerror, BAD
 
 ; Check for filename input
 
    if N_params() LT 1 then begin                
       print,'Syntax - im = READFITS( filename, [ h, heap, /NOSCALE, /SILENT,'
       print,'                 EXTEN_NO =, STARTROW = , NUMROW=, NSLICE = ,'
-      print,'                 HBUFFER = ,/NO_UNSIGNED, /COMPRESS]'
+      print,'                 HBUFFER = ,/NO_UNSIGNED, /CHECKSUM, /COMPRESS]'
       return, -1
    endif
 
@@ -216,49 +232,36 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
    do_checksum = keyword_set( CHECKSUM )
    if N_elements(exten_no) EQ 0 then exten_no = 0
 
-;  Check if this is a compressed file.    Unix compressed files or gzip 
-;  compressed files (on Unix) prior to V5.3 read through a pipe.   Gzip 
-;  compressed files since V5.3 are read using the /COMPRESS keyword to OPENR 
-                
-    unixZ = 0
+;  Check if this is a Unix compressed file.   (gzip files are handled 
+;  separately using the /compress keyword to OPENR).
+
+    unixZ = 0                
     if unitsupplied then unit = filename else begin
-       len = strlen(filename)
-       gzip = strmid(filename,len-3,3) EQ '.gz' 
-       if (!VERSION.RELEASE GE '5.3') then $
-             compress = keyword_set(compress) or gzip else begin
-              compress = 0
-              if gzip and (!VERSION.OS_FAMILY EQ 'unix')  then begin
-                 ucmprs = 'gzip -cd '
-                 unixZ = 1
-             endif
-       endelse
-       if (strmid(filename, len-2, 2) EQ '.Z') and $
-                (!VERSION.OS_FAMILY EQ 'unix') then begin 
-                 ucmprs = 'uncompress -c '
-                 unixZ = 1
-       endif
- 
+    len = strlen(filename)
+    ext = strlowcase(strmid(filename,len-3,3))
+    gzip = (ext EQ '.gz') or (ext EQ 'ftz')
+    compress = keyword_set(compress) or gzip[0]
+    unixZ =  (strmid(filename, len-2, 2) EQ '.Z') and $
+             (!VERSION.OS_FAMILY EQ 'unix') 
+
 ;  Go to the start of the file.
 
-       if compress then $
-       openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary, $
-                COMPRESS = compress, /swap_if_little_endian else $
-       openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary, $
-                          /swap_if_little_endian
-       if error NE 0 then begin
-           message,/con,' ERROR - Unable to locate file ' + filename
-           return, -1
-       endif
+   openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary, $
+                COMPRESS = compress, /swap_if_little_endian
+   if error NE 0 then begin
+        message,/con,' ERROR - Unable to locate file ' + filename
+        return, -1
+   endif
 
 ;  Handle Unix compressed files.   On some Unix machines, users might wish to 
 ;  force use of /bin/sh in the line spawn, ucmprs+filename, unit=unit,/sh
 
         if unixZ then begin
                 free_lun, unit
-                spawn, ucmprs + filename, unit=unit                 
+                spawn, 'uncompress -c '+filename, unit=unit                 
                 gzip = 1b
-        endif
-   endelse      
+        endif 
+  endelse
   if keyword_set(POINTLUN) then begin
        if gzip then  readu,unit,bytarr(pointlun,/nozero) $
                else point_lun, unit, pointlun
@@ -280,7 +283,7 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
        if ((ext EQ exten_no) and (doheader)) then header = strarr(hbuf) $
                                              else header = strarr(36)
        headerblock = 0L
-       i = 0L
+       i = 0L      
 
        while w[0] EQ -1 do begin
           
@@ -337,7 +340,9 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
                 
                 nbytes = (abs(bitpix) / 8) * gcount * (pcount + ndata)
 
-;  Move to the next extension header in the file.
+;  Move to the next extension header in the file.   Although we could use
+;  POINT_LUN with compressed files, a faster way is to simply read into the 
+;  file
 
       if ext LT exten_no then begin
                 nrec = long((nbytes + 2879) / 2880)
@@ -357,7 +362,7 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
            8:   IDL_type = 1          ; Byte
           16:   IDL_type = 2          ; Integer*2
           32:   IDL_type = 3          ; Integer*4
-          64:   IDL_type = 14         ; Integer*8   (unofficial)
+          64:   IDL_type = 14         ; Integer*8
          -32:   IDL_type = 4          ; Real*4
          -64:   IDL_type = 5          ; Real*8
         else:   begin
@@ -405,23 +410,22 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
 ; If an extension, did user specify row to start reading, or number of rows
 ; to read?
 
-  if not keyword_set(STARTROW) then startrow = 0
-  if naxis GE 2 then nrow = nax[1] else nrow = ndata
-  if not keyword_set(NUMROW) then numrow = nrow
-  if do_checksum then if ((startrow GT 0) or $
+   if not keyword_set(STARTROW) then startrow = 0
+   if naxis GE 2 then nrow = nax[1] else nrow = ndata
+   if not keyword_set(NUMROW) then numrow = nrow
+   if do_checksum then if ((startrow GT 0) or $
       (numrow LT nrow) or (N_elements(nslice) GT 0)) then begin 
       message,/CON, $
       'Warning - CHECKSUM not applied when STARTROW, NUMROW or NSLICE is set'
       do_checksum = 0
    endif 
- 
- 
+
    if exten_no GT 0 then begin
         xtension = strtrim( sxpar( header, 'XTENSION' , Count = N_ext),2)
         if N_ext EQ 0 then message, /INF, NoPRINT = Silent, $
                 'WARNING - Header missing XTENSION keyword'
    endif 
-      
+
    if (exten_no GT 0) and ((startrow NE 0) or (numrow NE nrow)) then begin
         if startrow GE nax[1] then begin
            message,'ERROR - Specified starting row ' + strtrim(startrow,2) + $
@@ -451,11 +455,11 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
         sxaddpar,header,'NAXIS',naxis
         ndata = ndata/lastdim
         nskip = nslice*ndata*abs(bitpix/8) 
-        if gzip then begin 
-            if (Ndata GT 0) then  begin 
+        if gzip then  begin 
+              if Ndata GT 0 then begin
                   buf = bytarr(nskip,/nozero)
-                  readu,unit,buf   
-             endif
+                  readu,unit,buf
+               endif   
         endif else begin 
                    point_lun, -unit, currpoint          ;Current position
                    point_lun, unit, currpoint + nskip
@@ -467,20 +471,16 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
 
          if exten_no GT 0 then message, $
                      'Reading FITS extension of type ' + xtension, /INF
-         snax = strtrim(NAX,2)
-         st = snax[0]
-         if Naxis GT 1 then for I=1,NAXIS-1 do st = st + ' by '+SNAX[I] $
-                            else st = st + ' element'
-         st = 'Now reading ' + st + ' array'
+         st = 'Now reading ' + strjoin(strtrim(NAX,2),' by ') + ' array'
          if (exten_no GT 0) and (pcount GT 0) then st = st + ' + heap area'
          message,/INF,st   
    endif
 
-; Read Data in a single I/O call
+; Read Data in a single I/O call.   Only need byteswapping for Unix compress
+; files
 
     data = make_array( DIM = nax, TYPE = IDL_type, /NOZERO)
-
-     readu, unit, data
+    readu, unit, data
     if unixZ then if not is_ieee_big() then ieee_to_host,data
     if (exten_no GT 0) and (pcount GT 0) then begin
         theap = sxpar(header,'THEAP')
@@ -503,7 +503,6 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
         else: 
         endcase
     endif
-
 
 ; Scale data unless it is an extension, or /NOSCALE is set
 ; Use "TEMPORARY" function to speed processing.  
@@ -536,7 +535,7 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
                  sxaddpar, header, 'O_BZERO', bzero, $
                           'Original Data is unsigned Integer'
                    if unsgn_int then $ 
-                        data =  uint(data) - 32768U else $
+                        data =  uint(data) - 32768US else $
                    if unsgn_lng then  data = ulong(data) - 2147483648UL 
                 
           endif else begin
@@ -562,13 +561,18 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
 
         endif
 
-; Return array
+; Return array.  If necessary, first convert NaN values.
 
-        return, data
+        if n_elements(nanvalue) eq 1 then begin
+            w = where(finite(data,/nan),count)
+            if count gt 0 then data[w] = nanvalue
+        endif
+        return, data    
 
 ; Come here if there was an IO_ERROR
     
  BAD:   print,!ERROR_STATE.MSG
         if (not unitsupplied) and (N_elements(unit) GT 0) then free_lun, unit
         if N_elements(data) GT 0 then return,data else return, -1
+
  end 

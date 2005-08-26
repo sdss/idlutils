@@ -22,7 +22,7 @@ PRO cirrange, ang, RADIANS=rad
 ;       Negative values (if any) are then transformed between 0 and 360
 ; MODIFICATION HISTORY:
 ;       Written by Michael R. Greason, Hughes STX, 10 February 1994.
-;       Get rid of WHILE loop, W. Landsman, Hughex STX, May 1996
+;       Get rid of WHILE loop, W. Landsman, Hughes STX, May 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  On_error,2

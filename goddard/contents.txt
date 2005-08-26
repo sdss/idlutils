@@ -1,4 +1,4 @@
-        Contents of IDL Astronomy User's Library              March, 2003
+        Contents of IDL Astronomy User's Library              July, 2004
         (also see http://idlastro.gsfc.nasa.gov/contents.html)
 
 Astronomical Utilities    in pro/astro
@@ -96,11 +96,6 @@ TIC_ONE - Determine optimum position of the first tic in astronomical labeling
 UVBYBETA - Use Stromgren indices to derive dereddened colors, metallicity,
         and effective Temperature.
 VACTOAIR - Convert vacuum wavelengths to air wavelengths.
-WCSSPH2XY - Convert between longitude,latitude to X,Y angular coordinates for
-        25 different map projection types
-WCSXY2SPH - Inverse of WCSSPH2XY
-WCS_DEMO - Demo program for WCSSPH2XY and WCSXY2SPH
-WCS_ROTATE - Rotate between standard (e.g. celestial) and native coordinates
 XYZ - Compute heliocentric rectangular coordinates at given Julian date.
 YMD2DN() - Convert year,month,day to day number of the year (in /jhuapl)
 YDN2MD - Convert day number of the year to year, month,day
@@ -112,11 +107,12 @@ DAOPHOT-Type Photometry Procedures    in pro/idlphot (see text/daophot.tex)
 ________
 --------
 APER -   Circular APERture photometry
-CNTRD - Obtain the centroid of a star in an image array, using the FIND algorithm
+CNTRD -  Obtain the centroid of a star by locating where derivatives go to zero
 DAOERF - Calculate the intensity, (and optionally, the derivatives) of
          a bivariate Gaussian, integrated over pixels.  Called by DAO_VALUE
 DAO_VALUE -  Obtain the value of a DAOPHOT PSF function at a given set of points
 FIND -   FIND point sources within an image
+GCNTRD - Determine centroid by Gaussian fits to the marginal X,Y distributions 
 GETPSF - Obtain a PSF (Gaussian + residuals) from isolated stars.
 GROUP -  Place stars with non-overlapping PSF's in distinct groups
 MMM -    (Mean, Median, Mode) sophisticated sky background computation
@@ -198,7 +194,7 @@ CONS_DEC() - Obtain the X and Y coordinates of a line of constant
 CONS_RA() - Obtain the X and Y coordinates of a line of constant right
         ascension
 EXTAST- EXTract ASTrometry parameters from a FITS header into an IDL structure
-FITS_CD_FIX - Convert between different representations of the CD matrix
+FITS_CD_FIX - Update obsolete representations of the CD matrix in a FITS header
 GET_EQUINOX() - Return a numeric equinox value from a FITS header
 GETROT - GET ROTation and plate scale from a FITS header
 GSSS_STDAST - Insert the closest tangent projection astrometry into an STScI
@@ -210,6 +206,8 @@ HASTROM - Rotate, Congrid, and/or shift an image until astrometry matches
         that in a reference FITS header.  Used to align images.
 HBOXAVE - Boxaverage an image and update astrometry in a FITS header
 HCONGRID - CONGRID an image and update astrometry in a FITS header
+HEULER - Convert between Galactic, celestial and ecliptic coordinates in FITS a
+header
 HEXTRACT - Extract a subimage and update astrometry in a FITS header
 HPRECESS - Precess the astrometry in a FITS header to a new equinox.
 HREBIN - REBIN an image and update the astrometry in a FITS header
@@ -222,8 +220,13 @@ PRECESS_CD - Precess coordinate description (CD) matrix in a FITS header
           to a new equinox.   Called by HPRECESS
 PUTAST - Put astrometry parameters (e.g. rotation, plate scale) into a FITS header. 
 STARAST - Obtain an exact astrometry solution given the coordinates and
-        plate position of 2 or 3 stars.  
-WFPC2_METRIC -  Compute the distortion in a WFPC2 image and return coordinates
+        plate position of 2 or 3 stars.
+WCS_GETPOLE -  Compute the coordinates of the native pole for non-polar projection
+WCSSPH2XY - Convert between longitude,latitude to X,Y angular coordinates for
+        25 different map projection types
+WCSXY2SPH - Inverse of WCSSPH2XY
+WCS_DEMO - Demo program for WCSSPH2XY and WCSXY2SPH
+WCS_ROTATE - Rotate between standard (e.g. celestial) and native coordinates
 XYAD  - Use FITS header to convert pixel (X,Y) to celestial(RA, Dec) coordinates
 XY2AD - Use astrometry structure to convert pixel to celestial coordinates
 XYXY -  Convert X,Y values on one image to X,Y values in another image
@@ -303,7 +306,7 @@ FXBHELP           - Prints short description of columns in a FITS binary table.
 FXBHMAKE          - Create basic FITS binary table extension (BINTABLE) header.
 FXBINTABLE        - Common block FXBINTABLE used by "FXB" routines.
 FXBISOPEN()       - Returns true if UNIT points to an open FITS binary table.
-FXBOPEN           - Open binary table extension in a disk FITS file for reading
+FXBOPEN           - Open FITS binary table extension  for read or update
 FXBPARSE          - Parse the binary table extension header.
 FXBREAD           - Read a data array from a disk FITS binary table file.
 FXBREADM          - Read multiple columns/rows from a FITS binary table file.
@@ -395,6 +398,8 @@ GAUSSIAN() - Evaluate a 1-d Gaussian and optionally its derivative
 HERMITE() - Interpolate a tabulated function using a Hermite spline
 KSONE -  Compute the one-sided Kolmogorov-Smirnov statistic
 KSTWO -  Compute the two-sided Kolmogorov-Smirnov statistic
+KUIPERONE - Compute the one-sided Kuiper statistic (NR)
+KUIPERTWO - Compute the two-sided Kuiper statistic (NR)
 LINTERP - Linearly interpolate X,Y vectors onto a new X grid      
 MEANCLIP - Compute an iteratively sigma-clipped mean on a data set
 MINF_BRACKET - Find 3 points which bracket the minimum of a function
@@ -410,6 +415,7 @@ POLINT - Polynomial interpolation of an (X,Y) pair
 POLYLEG() - Evaluate a Legendre polynomial with specified coefficients
 POLY_SMOOTH() - Apply a least-squares (Savitzky-Golay) polynomial smoothing filter
 PROB_KS - Return the significance of a Kolmogorov-Smirnov statistic
+PROB_KUIPER - Return the significance of the Kuiper statistic 
 QSIMP - Integrate using Simpson's rule to specified accuracy
 QTRAP - Integrate using trapezoidal rule to specified accuracy.  
 QUADTERP - Quadratic interpolation of X,Y vectors onto a new X grid
@@ -420,7 +426,6 @@ TABINV - Find the effective index of a function value.
 TRAPZD - Compute Nth iteration of trapezoidal rule.  Called by QSIMP, QTRAP
 TSC - Triangular Shaped Cloud interpolation of irregularly gridded data onto a regular grid
 TSUM() - Trapezoidal integration of the area under a curve
-VALUE_LOCATE() - Emulate V5.3 intrinsic function to find an effective index
 ZBRENT() - Find the root of a function known to lie between specified limits
 
 ----------------------------------------------------------------------------
@@ -505,8 +510,9 @@ ___________
 WEBGET() - Use the IDL SOCKET procedure to get data from http servers
 QUERYGSC() - Query the Guide Star Catalog (GSC V2.2) at STScI by position  
 QUERYDSS - Query the digital sky survey (DSS) online at the ESO or STSCI servers
-QUERYSIMBAD - Query the SIMBAD name resolver at ESO to obtain J2000 coordinates
-
+QUERYSIMBAD - Query the SIMBAD or NED name resolver to obtain J2000 coordinates
+QUERYUSNO() - Query the USNO-A2.0 Catalog at the ESO/ST-ECF Archive by position
+QUERYVIZIER() - Positional query of any catalog in the VIZIER database.
 
 ----------------------------------------------------------------------------
 TV Display Procedures                    in pro/tv                   
@@ -562,6 +568,7 @@ GETWRD() -  Get specified item (word) from a string (in /jhuapl)
 HGREP - Find a substring in a FITS header or other string array
 HOST_TO_IEEE - Convert IDL variable from host machine bit order to IEEE
 HPRINT -  Pretty terminal display of a FITS header (or other string array)
+IDL_VALIDNAME - Emulate intrinsic IDL_VALIDNAME() function for V5.6 and earlier
 IEEE_TO_HOST - Convert IDL variable from IEEE bit order to host machine
 ISARRAY() - Determine if an IDL variable is an array (in /jhuapl)
 IS_IEEE_BIG() - Determine if the host machine is IEEE big endian 
@@ -603,8 +610,6 @@ TEXTOPEN - Open a file for text output as specified by TEXTOUT keyword
 TEXTCLOSE - Close a file that had been opened by TEXTOPEN.
 TO_HEX()    - Translate a decimal integer to a hex string.  Called by AIPSNAME.
 VALID_NUM() - Determine if a string is a valid number (cf. STRNUMBER)
-VALUE_LOCATE() - Emulate intrinsic VALUE_LOCATE function for V5.2 & earlier
 VECT() - Display a set of numbers to a string with delimiters
 WHERENAN() - Find points equal to IEEE NaN (not a number) values
-WHERE_NEGZERO() - Find locations of IEEE -0.0 values
 ZPARCHECK - Check the type and size of a parameter

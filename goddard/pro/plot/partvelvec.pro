@@ -3,7 +3,7 @@
 ;      PARTVELVEC
 ;
 ; PURPOSE:
-;	Plot the velocity vectors of particles at their positions
+;       Plot the velocity vectors of particles at their positions
 ; EXPLANATION:
 ;       This procedure plots the velocity vectors of particles (at the
 ;       positions of the particles).
@@ -17,30 +17,33 @@
 ; INPUTS:
 ;       VELX:  An array of any dimension, containing the x-components
 ;              of the particle velocities.
-;       VELY:  An array of the same dimension as velx, containing the 
+;       VELY:  An array of the same dimension as velx, containing the
 ;              y-components of the particle velocities.
 ;       POSX:  An array of the same dimension as velx, containing the
 ;              x-components of the particle positions.
-;       POSY:  An array of the same dimension as velx, containing the 
+;       POSY:  An array of the same dimension as velx, containing the
 ;              y-components of the particle positions.
 ;
 ; OPTIONAL INPUTS:
 ;       X:   Optional abcissae values. X must be a vector.
-;       Y:   Optional ordinate values. Y must be a vector. If only X 
+;       Y:   Optional ordinate values. Y must be a vector. If only X
 ;            is specified, then Y is taken equal to be equal to X.
-;	
+;
 ; OPTIONAL INPUT KEYWORD PARAMETERS:
 ;       FRACTION:   The fraction of the vectors to plot. They are
 ;                   taken at random from the complete sample.    Default is
-;	            FRACTION = 1.0, use all vectors
+;              FRACTION = 1.0, use all vectors
 ;
 ;       LENGTH:     The maximum vectorlength relative to the plot data
 ;                   window.   Default = 0.08
 ;
-;       COLOR:      The color for the vectors, axes and titles. 
-;	            Default=!P.COLOR
+;       COLOR:      The color for the vectors, axes and titles.
+;              Default=!P.COLOR
 ;
 ;       OVER:       Plot over the previous plot
+;
+;       VECCOLORS:  The vector colors. Must be either a scalar, or
+;                   a vector the same size as VELX. Is set to COLOR by default.
 ;
 ;       Plot        All other keywords available to PLOT are also used
 ;       Keywords:   by this procedure.
@@ -50,7 +53,7 @@
 ;       positions of the particles, (POSX,POSY). If X and Y are not
 ;       specified, then the size of the plot is such that all vectors
 ;       just fit within in the plot data window.
-;            
+;
 ; SIDE EFFECTS:
 ;       Plotting on the current device is performed.
 ;
@@ -66,13 +69,26 @@
 ;
 ;         PARTVELVEC, VELX, VELY, POSX, POSY
 ;
+;       Example using vector colors.
+;
+;         POSX=RANDOMU(seed,200)
+;         POSY=RANDOMU(seed,200)
+;         VELX=RANDOMU(seed,200)-0.5
+;         VELY=RANDOMU(seed,200)-0.5
+;         magnitude = SQRT(velx^2 + vely^2)
+;         LOADCT, 5, NCOLORS=254, BOTTOM=1 ; Load vector colors
+;         TVLCT, 0, 255, 0, 255 ; Plot in GREEN
+;         colors = BytScl(magnitude, Top=254) + 1B
+;         PARTVELVEC, VELX, VELY, POSX, POSY, COLOR=255, VECCOLORS=colors
+;
 ; MODIFICATION HISTORY:
 ;       Written by:  Joop Schaye (jschaye@astro.rug.nl), Sep 1996.
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /OVER keyword   Theo Brauers (th.brauers@fz-juelich.de) Jul 2002
+;       Added VECCOLORS keyword. David Fanning (david@dfanning.com) March, 2005
 ;-
 
-PRO partvelvec,velx,vely,posx,posy,x,y, OVER = over, $
+PRO partvelvec,velx,vely,posx,posy,x,y, OVER = over, VECCOLORS=vecColors, $
                FRACTION=fraction,LENGTH=length,COLOR=color,_EXTRA=extra
 
 
@@ -96,7 +112,7 @@ on_error,2  ; Return to caller if an error occurs.
 
 nparams=n_params()
 IF nparams NE 4 THEN BEGIN
-    IF (nparams NE 5 AND nparams NE 6) THEN BEGIN 
+    IF (nparams NE 5 AND nparams NE 6) THEN BEGIN
         message,'Wrong number of parameters!',/continue
         message,'Syntax: PARTVELVEC, VELX, VELY, POSX, POSY [, X, Y]', $
           /noname,/noprefix
@@ -164,8 +180,17 @@ cosangle=cos(angle)
 ;-----------
 
 IF n_elements(color) EQ 0 THEN color=!p.color
-
-IF n_elements(over) EQ 0 THEN BEGIN 
+IF n_elements(veccolors) EQ 0 THEN BEGIN
+   veccolors = Replicate(color, nvecs)
+ENDIF ELSE BEGIN
+   nvc = N_Elements(veccolors)
+   CASE nvc OF
+      1: veccolors = Replicate(veccolors, nvecs)
+      nvecs:
+      ELSE: Message, 'Vector color array VECCOLORS must be same size as VELX.'
+   ENDCASE
+ENDELSE
+IF n_elements(over) EQ 0 THEN BEGIN
 IF nparams EQ 4 THEN $
   plot,[minposx,maxposx],[minposy,maxposy], $
   /nodata,/xstyle,/ystyle,COLOR=color,_EXTRA=extra $
@@ -196,7 +221,7 @@ plotall:
     px=posx
     py=posy
 ENDELSE
-    
+
 FOR i=0l,nvecs-1l DO BEGIN  ; Loop over particles.
     ; Note that we cannot put the next three lines outside the loop,
     ; because we want the arrow size to be relative to the vector length.
@@ -209,7 +234,7 @@ FOR i=0l,nvecs-1l DO BEGIN  ; Loop over particles.
     plots,[px[i],x1[i],x1[i]-(vx[i]*rcos+vy[i]*rsin)/vel[i], $
            x1[i],x1[i]-(vx[i]*rcos-vy[i]*rsin)/vel[i]], $
           [py[i],y1[i],y1[i]-(vy[i]*rcos-vx[i]*rsin)/vel[i], $
-           y1[i],y1[i]-(vy[i]*rcos+vx[i]*rsin)/vel[i]],COLOR=color
-ENDFOR 
+           y1[i],y1[i]-(vy[i]*rcos+vx[i]*rsin)/vel[i]],COLOR=vecColors[i]
+ENDFOR
 
 END  ; End of procedure PARTVELVEC.

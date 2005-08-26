@@ -8,8 +8,9 @@
 ;	The tag names are displayed in a header line.
 ;
 ; CALLING SEQUENCE:
-;	print_struct, structure, Tags_to_print [ , title, string_matrix ]
-;
+;	print_struct, structure, Tags_to_print [ , title, string_matrix 
+;                FILE=, LUN_OUT=, TNUMS= , TRANGE= , FRANGE=, WHICH=
+;                FORM_FLOAT =, MAX_ELEMENTS
 ; INPUTS:
 ;	structure = array of structured variables
 ;
@@ -29,14 +30,13 @@
 ;		(default float format is G12.4).
 ;	MAX_ELEMENTS = positive integer, print only tags that have less than
 ;			this number of elements (default is no screening).
+;       /NO_TITLE - If set, then the header line of tag names is not printed
 ;	/STRINGS : instead of printing, return the array of strings in
 ;		fourth argument of procedure: string_matrix.
 ; OUTPUTS:
 ;	title = optional string, list of tags printed/processed.
 ;	string_matrix = optional output of string matrix of tag values,
 ;			instead of printing to terminal or file, if /STRINGS.
-; EXTERNAL CALLS:
-;	function N_struct
 ; PROCEDURE:
 ;	Check the types and lengths of fields to decide formats,
 ;	then loop and form text string from requested fields, then print.
@@ -47,21 +47,31 @@
 ;	F.V.1997, added WHICH and MAX_ELEM keyword options.
 ;	WBL 1997, Use UNIQ() rather than UNIQUE function
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Remove call to N_STRUCT()   W. Landsman  March 2004
 ;-
 
 pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
 			FRANGE=fran, TRANGE=tran, FILE=filout, LUN_OUT=Lun, $
 			STRINGS=strings, FORM_FLOAT=formf, NO_TITLE=no_tit, $
 			WHICH_TO_PRINT=which, MAX_ELEMENTS=max_elements
-
+       
+        if N_params() LT 1 then begin
+	print, $
+       'Syntax - PRINT_STRUCT, structure, Tags_to_print [ ,title, string_matrix' 
+        print,'        FILE=, LUN_OUT=, TNUMS= , TRANGE= , FRANGE=, WHICH= '
+        print,'        FORM_FLOAT =, MAX_ELEMENTS, /NO_TITLE'
+        return
+        end
+   
+        Ntag = N_tags(a)
 	Nstruct = N_struct( structure, Ntag )
 
-	if (Nstruct LE 0) then begin
-		message,"expecting a structure",/INFO
+	if (Ntag LE 0) then begin
+		message,"ERROR - expecting a structure",/INFO
 		return
 	   endif
 
-	if (Nstruct EQ 1) then structure = [structure]
+	if N_elements(structure) EQ 1 then structure = [structure]
 
 	tags = [tag_names( structure )]
 	Npr = N_elements( Tags_to_print )

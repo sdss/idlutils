@@ -11,7 +11,7 @@ The Tape IO procedures were into two classes:
     (1) Unix procedures that emulate the intrinsic VMS IDL tape manipulation
         commands (e.g. TAPRD, TAPWRT).    These procedures were written by
         Bill Thompson for the SERTS (Solar EUV Rocket Telescope & Spectrograph)
-        and are detailed below.
+        instrument
     (2) Procedures that use the VMS IDL tape commands to read, write and
         manipulate a FITS tape.   By using the the procedures of class (1),
         these FITS tape procedures can also be used on Unix machines

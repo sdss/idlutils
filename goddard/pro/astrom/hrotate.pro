@@ -54,6 +54,9 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
 ;      are updated for the new rotation.
 ;      History records are also added to the header
 ;
+; RESTRICTIONS: 
+;     Does not work Guide Star Survey (GSS) astrometry.    Use GSSS_STDAST to
+;     first convert 
 ; PROCEDURES USED:
 ;     CHECK_FITS(), SXADDPAR, EXTAST
 ;
@@ -65,7 +68,8 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
 ;     Added ERRMSG, Use double precision formatting, W. Landsman April 2000
 ;     Consistent conversion between CROTA and CD matrix W. Landsman Oct 2000
 ;     Correct update when CROTA keyword present W. Landsman  June 2003
-;     Update CDELT for AIPS-style astrometry headers M. Perrin/Landsman Jul 2003
+;     Update CDELT for AIPS-style astrometry headers M. Perrin/WL Jul 2003
+;     Convert GSS astrometry to WCS W. Landsman  November 2004
 ;- 
  On_error,2
  npar = N_params()
@@ -114,9 +118,15 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
  label = 'HROTATE: ' + strmid(systime(),4,20)
  sxaddhist, label + ' Image = ROTATE(Image,' + strtrim(direction,2) + ')',newhd
 
-; Update astrometry info if it exists
+; Update astrometry info if it exists.   If GSS astrometry is present, then
+; convert it to standard WCS astrometry
 
  extast, oldhd, astr, noparams
+ if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
+        gsss_stdast, newhd
+        extast, newhd, astr, noparams
+ endif
+ 
 
  if noparams GE 0 then begin    ;Astrometry parameters exist in header?
    case dirpar of

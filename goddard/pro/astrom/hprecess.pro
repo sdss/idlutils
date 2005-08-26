@@ -70,7 +70,7 @@ PRO HPRECESS, HDR, YEARF
  cd = astr.cd
  crval = astr.crval
 
- coord = strmid(astr.ctype,0,4)    ;Test if RA and Dec reveresed in 'CTYPE*'
+ coord = strmid(astr.ctype,0,4)    ;Test if RA and Dec reversed in 'CTYPE*'
  reverse = ((coord[0] EQ 'DEC-') and (coord[1] EQ 'RA--'))
  if reverse then crval = rotate(crval,2)
  a = crval[0] & d = crval[1]

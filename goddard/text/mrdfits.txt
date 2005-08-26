@@ -1,5 +1,5 @@
-MRDFITS - A multiple format FITS reader. V2.5
-Last updated: December 2001
+MRDFITS - A multiple format FITS reader. V2.9
+Last updated: March 2004
 
 
 The MRDFITS utility is intended to be a general purpose function allowing
@@ -33,7 +33,7 @@ of the FITS data is possible:
           column (default) or into a IDL pointers (with /POINTER_VAR) for 
           maximum efficiency
 
-MRDFITS has been tested to work on IDL Version V4.0 through V5.5, although not
+MRDFITS has been tested to work on IDL Version V5.0 through V6.0, although not
 all of its capabilities are available in earlier IDL Versions.   For example,
 output of unsigned data types requires at least V5.2, and use of the
 /POINTER_VAR keyword requires at least V5.0. 
@@ -50,7 +50,8 @@ parameters are available.
         ALIAS             Specify translation of column names to structure tags
 	/FSCALE and /DSCALE  cause scaling to single and double precision.
 	COLUMNS=  	     allows users to specify the columns desired.
-	RANGE=		     allows users to retrieve only some rows.
+	RANGE=		     allows users to retrieve only a range of rows.
+        ROWS=                allows user to retrieve only specified rows
 	STRUCTYP=	     gives the structure type for the structure
 	TEMPDIR=	     gives the directory for temporary files
 	/SILENT		     suppresses informative messages
@@ -67,14 +68,6 @@ MRDFITS is largely a standalone utility, but does use the parameter
 parsing of FXPAR to find elements in a header.  All I/O is done
 within MRDFITS.  The IEEE_TO_HOST routine is used to convert
 data to the local representation.
-
-In IDL V4.0.1 and earlier, there was a limit of 127 tags to an IDL structure.
-MRDFITS gets around this limit by using substructures.    For example, if
-a binary table has 150 columns, then the first 64 columns will appear as
-separate tags, the next 64 will appear in a substructure with a tag name
-SS1, and the next 22 will appear in a substructure named SS2.    (Although
-the tag number limits were removed in IDL V5.0, there appear to still be 
-limits in the size of a structure definition.) 
 
 Known limitations include:
 	
@@ -95,6 +88,7 @@ the main file MRDFITS.PRO
 	MRD_IMAGE:	Code to handle simple images and group data.
 	MRD_SCALE:	Data scaling.
 	MRD_COLUMNS:	Column selection.
+        MRD_FXPAR:      Fast extract of FITS BINARY table keywords
 
 The following procedures are in separate files (because they are of general
 use outside of MRDFITS.)
@@ -104,8 +98,8 @@ use outside of MRDFITS.)
 
 
 On Unix systems MRDFITS can handle files compressed with either
-the `standard' Unix compress utility or with the Gnu gzip utility.
-It assumes that files ending with .Z, .gz and .GZ are to be
+the `standard' Unix compress utility, Gnu gzip or the Linux bzip2 utility.
+It assumes that files ending with .Z, .gz or .GZ  and .bz2 are to be
 decompressed.  Decompression is done using a sub-process and pipes
 so that no temporary file is created.     Users with IDL V5.3 or later can use
 the gzip facilty on any OS (not just Unix). 

@@ -1,9 +1,9 @@
-/FITS directory                                                  19-Dec-2001
+/FITS directory                                                  19-Oct-2004
 
 FITS (Flexible Image Transport Sytem) is a standardized data format which is
 widely used in astronomy.   Information on the FITS format can be obtained 
-from the NRAO FITS archive at http://fits.cv.nrao.edu or from the HEASARC FITS
-page at http://heasarc.gsfc.nasa.gov/docs/heasarc/fits.html.   I  note here
+from the NRAO FITS archive at http://fits.cv.nrao.edu or from the FITS support
+office at http://fits.gsfc.nasa.gov/.   I  note here
 only that FITS is a binary format, and so the binary option should  be used
 when copying FITS files with FTP.
 
@@ -50,7 +50,7 @@ ASCII tables.    Further information on these procedures is available in the
 LaTeX file fits_bintable.tex in the /text directory.
 
   (4) The five procedures FITS_CLOSE, FITS_HELP, FITS_OPEN, FITS_READ, and
-FITS_WRITE were written by D. Lindler (Sigma Research/Goddard) and are used by
+FITS_WRITE were written by D. Lindler (NASA/Goddard) and are used by
 the STIS/NICMOS instrument teams on the Hubble Space Telescope (HST).     These
 procedures are especially efficient for FITS files with many extensions, and
 they also recognize conventions used in HST FITS files that are not part of the
@@ -87,7 +87,7 @@ The available FITS I/O routines can be summarized as follows:
       READFITS() will read a disk FITS file into IDL data and header arrays. It
       can handle REAL*4 and REAL*8 data and extensions but not random group
       FITS.     READFITS() also has STARTROW and NUMROW keywords to read
-      selected rows from a primary image or extension.   Under Unix or IDL V5.3,
+      selected rows from a primary image or extension.  
       READFITS() can  directly read a gzip or Unix compress file.   ASCII and 
       binary tables require further processing with the FT* and TB* procedures 
       in the /fits_bintable directory.     In particular, FTAB_EXT can be used 

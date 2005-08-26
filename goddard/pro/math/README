@@ -1,4 +1,4 @@
-Math and Statistics pro/math                             March 2002
+Math and Statistics pro/math                             July 2004
 _________
 
       This directory contains IDL mathematics and statistics procedures
@@ -38,6 +38,8 @@ GAUSSIAN() - Evaluate a 1-d Gaussian, and optionally its derivative
 HERMITE() - Interpolate a tabulated function using a Hermite spline
 KSONE - Compute the one-sided Kolmogorov statistic (NR)
 KSTWO - Compute the two-sided Kolmogorov statistic (NR)
+KUIPERONE - Compute the one-sided Kuiper statistic (NR)
+KUIPERTWO - Compute the two-sided Kuiper statistic (NR)
 LINTERP - Linearly interpolate X,Y vectors onto a new X gri
 MEANCLIP - Compute an iteratively sigma-clipped mean on a data set
 MINF_BRACKET - Find 3 points which bracket a function minimum  (MNBRAK in NR)
@@ -57,6 +59,7 @@ POLYLEG() - Evaluate a Legendre polynomial with specified coefficients
 POLY_SMOOTH() - Apply a least-squares (Savitzky-Golay) polynomial smoothing 
 	filter (SAVGOL in NR; also see SAVGOL introduced in IDL V5.4 )
 PROB_KS - Return the significance of the K-S statistic (PROBKS in NR)
+PROB_KUIPER - Return the significance of the Kuiper statistic 
 RANDOMP - Create a vector of random numbers distributed as a power law
 QSIMP - Integrate using Simpson's rule to specified accuracy (NR)
 QTRAP - Integrate using trapezoidal rule to specified accuracy (NR)  
@@ -67,12 +70,10 @@ TABINV - Find the effective index of a function value.
 TRAPZD - Compute Nth iteration of trapezoidal rule. Called by QSIMP, QTRAP (NR)
 TSC - Triangular Shaped Cloud interpolation of irregularly gridded data onto a regular grid
 TSUM() - Trapezoidal integration of the area under a curve
-VALUE_LOCATE() - find effective index of a function value (NR, locate)
-       This emulates the intrinsic function available since V5.3
 ZBRENT() - Find the root of a function known to lie between X1 and X2 (NR)
 ----------------------
 
-Intrinsic "Numerical Recipes"  procedures available in IDL V5.5
+Intrinsic "Numerical Recipes"  procedures available since IDL V5.5
 
 AMOEBA - Multidimensional minimization of a function via downhill simplex method
 BETA   - beta function

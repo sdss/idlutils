@@ -1,4 +1,4 @@
-pro rdfits_struct, filename, struct,SILENT = silent 
+pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only 
 ;+
 ; NAME:
 ;      RDFITS_STRUCT
@@ -9,13 +9,15 @@ pro rdfits_struct, filename, struct,SILENT = silent
 ;      tag.
 ;
 ; CALLING SEQUENCE:
-;      RDFITS_STRUCT, filename, struct, /SILENT ]
+;      RDFITS_STRUCT, filename, struct, /SILENT, /HEADER_ONLY ]
 ;
 ; INPUT:
-;      FILENAME = Scalar string giving the name of the FITS file.   Since V5.3
-;                 one can also specify a gzip (.gz) compressed file 
+;      FILENAME = Scalar string giving the name of the FITS file.  
+;                 One can also specify a gzip (.gz) compressed file 
 ;
 ; OPTIONAL KEYWORD: 
+;      /HEADER_ONLY - If set, then only the FITS headers (and not the data)
+;                are read into the structure.
 ;      /SILENT - Set this keyword to suppress informational displays at the
 ;               terminal.
 ; OUTPUT:
@@ -25,6 +27,9 @@ pro rdfits_struct, filename, struct,SILENT = silent
 ;             (if it is a binary or ASCII table) or IMi (if it is an image
 ;             extension)
 ;
+;             If /HEADER_ONLY is set, then struct will contain tags HDR0, HDR1
+;             ....HDRn containing all the headers of a FITS file with n 
+;             extensions
 ; PROCEDURES USED:
 ;       FITS_OPEN, FITS_READ, FITS_CLOSE
 ;
@@ -50,10 +55,14 @@ pro rdfits_struct, filename, struct,SILENT = silent
 ;       Converted to IDL V5.0, W. Landsman, April 1998
 ;       OS-independent deletion of temporary file  W. Landsman  Jan 1999
 ;       Major rewrite to use FITS_OPEN and CREATE_STRUCT() W. Landsman Sep 2002
+;       Added /HEADER_ONLY keyword   W. Landsman  October 2003
+;       Do not copy primary header into extension headers W. Landsman Dec 2004
+;       Do not modify NAXIS when using /HEADER_ONLY W. Landsman Jan 2005
 ;-
 
+ compile_opt idl2
  if N_Params() LT 2 then begin 
-        print,'Syntax - RDFITS_STRUCT, file, struct, [ /SILENT ]'
+        print,'Syntax - RDFITS_STRUCT, file, struct, [ /SILENT, /HEADER_ONLY ]'
         return
  endif
 
@@ -61,8 +70,9 @@ pro rdfits_struct, filename, struct,SILENT = silent
  if not keyword_set(silent) then $
       message,/inf,'Now reading file ' + filename + ' with ' + $
       strtrim(fcb.nextend,2) + ' extensions'
- 
- if fcb.naxis[0] EQ 0 then begin
+
+ h_only = keyword_set(header_only)  
+ if h_only then begin
      fits_read,fcb,0,h,/header_only,exten_no=0
      struct = {hdr0:h}
  endif else begin
@@ -75,12 +85,12 @@ pro rdfits_struct, filename, struct,SILENT = silent
       return
  endif
  for i=1,fcb.nextend do begin
-     if fcb.naxis[i] EQ 0 then begin
-     fits_read,fcb,0,h,/header_only
+     if h_only then begin
+     fits_read,fcb,0,h,/header_only,/no_pdu
      struct = create_struct(temporary(struct), 'hdr' + strtrim(i,2), $
               temporary(h))
      endif else begin
-     fits_read,fcb,d,h
+     fits_read,fcb,d,h,/no_pdu
      if fcb.xtension[i] EQ 'IMAGE' then tag = 'im' + strtrim(i,2) $
                                 else tag = 'tab' + strtrim(i,2)
      struct = create_struct(temporary(struct), 'hdr' + strtrim(i,2), $

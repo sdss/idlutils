@@ -24,12 +24,11 @@
 ;                than OPENU will be used to open the FITS file.
 ;     COMPRESS - If this keyword is set and non-zero, then then treat
 ;                the file as compressed.  If 1 assume a gzipped file.
-;                Where possible use IDLs internal decompression
-;                facilities (i.e., v5.3 or greater) or on Unix systems
-;                spawn off a process to decompress and use its output
-;                as the FITS stream.  If the keyword is not 1, then
-;                use its value as a string giving the command needed for
-;                decompression.
+;                and use IDLs internal decompression facility.    For Unix 
+;                compressed or bzip2 compressed files spawn off a process to 
+;                decompress and use its output as the FITS stream.  If the 
+;                keyword is not 1, then use its value as a string giving the 
+;                command needed for decompression.
 ;     /SILENT    If set, then suppress any messages about invalid characters
 ;                in the FITS file.
 ;
@@ -60,10 +59,14 @@
 ;       W. Landsman/D.Zarro 04-Jul-2000    Added test for !VERSION.OS EQ 'Win32' (WinNT)
 ;       W. Landsman    12-Dec-2000 Added /SILENT keyword
 ;       W. Landsman April 2002     Use FILE_SEARCH for V5.5 or later
+;       W. Landsman Feb 2004       Assume since V5.3 (OPENR,/COMPRESS available)
+;       W. Landsman,W. Thompson, 2-Mar-2004, Add support for BZIP2 
+;       W. Landsman                Don't leave open file if an error occurs
+;       W. Landsman  Sep 2004      Treat FTZ extension as gzip compressed
 ;-
 ;
         ON_ERROR,2
-        FORWARD_FUNCTION FILE_SEARCH       ;For pre-V5.5 compatibility
+        compile_opt idl2   ;For pre-V5.5 compatibility
 ;
 ;  Check the number of parameters.
 ;
@@ -103,22 +106,22 @@
 	ENDIF ELSE BEGIN
         
             LEN = STRLEN(FILE)
-            IF LEN GT 3 THEN BEGIN
-	        TAIL = STRMID(FILE, LEN-3, 3)
-	    ENDIF ELSE BEGIN
-		TAIL = ' '
-	    ENDELSE
+            IF LEN GT 3 THEN $
+	        TAIL = STRLOWCASE(STRMID(FILE, LEN-3, 3))  $
+	    ELSE TAIL = ' '
 	    
-            IF STRMID(TAIL,1,2) EQ '.z' OR STRMID(TAIL,1,2) EQ '.Z' THEN BEGIN
-                UCMPRS = 'uncompress'
-	    ENDIF ELSE IF TAIL EQ '.gz'  OR TAIL EQ '.GZ' THEN BEGIN
-	        UCMPRS = 'gunzip'
-	    ENDIF
+            IF STRMID(TAIL,1,2) EQ '.z'  THEN $
+                UCMPRS = 'uncompress'   $
+	    ELSE IF TAIL EQ '.gz' or tail EQ 'ftz' THEN $
+	        UCMPRS = 'gunzip'       $
+	    ELSE IF TAIL EQ 'bz2' THEN $
+	        UCMPRS = 'bunzip2'
 	    
 	ENDELSE
                 
 ;  Handle compressed files.
-	IF UCMPRS EQ 'gunzip' AND !version.release GE 5.3 THEN BEGIN
+
+	IF UCMPRS EQ 'gunzip' THEN BEGIN
 	        
                 IF KEYWORD_SET(READONLY) THEN BEGIN
                     OPENR, UNIT, FILE, /COMPRESS, /GET_LUN, /BLOCK, /BINARY, ERROR = ERROR
@@ -146,14 +149,14 @@
                         OPENU, UNIT, FILE, /GET_LUN, /BLOCK, /BINARY, ERROR = ERROR
                 ENDELSE
                 IF ERROR NE 0 THEN BEGIN
-                        PRINT,!ERR_STRING
+                        PRINT,!ERROR_STATE.MSG
                         RETURN,-1
                 ENDIF
         ENDELSE
-
         IF EXT_NO LE 0 THEN RETURN, UNIT
 	STAT = FXMOVE(UNIT, EXT_NO, SILENT = Silent)
 	IF STAT LT 0 THEN BEGIN
+            FREE_LUN, UNIT
 	    RETURN, STAT
 	ENDIF ELSE BEGIN
 	    RETURN, UNIT

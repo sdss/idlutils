@@ -5,8 +5,9 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ; NAME:
 ;     FITSDIR 
 ; PURPOSE:
-;     Display selected FITS keywords from the headers of FITS files.  
+;     Display selected FITS keywords from the headers of FITS files.   
 ; EXPLANATION:
+;
 ;     The values of either user-specified or default FITS keywords are 
 ;     displayed in either the primary header and/or the first extension header.
 ;     Unless the /NOSIZE keyword is set, the data size is also displayed.
@@ -20,7 +21,7 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;                  INSTRUME             EXPTIM       ;Third Alternative
 ;
 ;      FITSDIR will also recognize gzip compressed files (must have a .gz 
-;      extension).
+;      or FTZ extension).
 ; CALLING SEQUENCE:
 ;     FITSDIR , [ directory, TEXTOUT =, /FLAT, KEYWORDS=, /NOSIZE, /NoTELESCOPE
 ;                            ALT1_KEYWORDS= ,ALT2_KEYWORDS = ,ALT3_KEYWORDS =  
@@ -56,8 +57,8 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;               textout=5       user must open file
 ;               textout=7       Append to existing <program>.prt file
 ;               textout = filename (default extension of .prt)
-;       /EXTEN - If set, then the first FITS extension is also checked for the
-;                desired keywords.    
+;       EXTEN - Specifies an extension number (/EXTEN works for first extension)
+;               which is  checked for the  desired keywords.    
 ;       /NOTELESCOPE - If set, then if the default keywords are used, then the
 ;                TELESCOPE (or TELNAME, OBSERVAT, INSTRUME) keywords are omitted
 ;                to give more room for display other keywords.   The /NOTELESCOP
@@ -78,8 +79,8 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;        return & end
 ;
 ;   (3)  Write info on all *.fits files in the Unix directory /usr2/smith, to a 
-;        file 'smith.txt' using the default keywords, but do not display the 
-;        value of the TELESCOPE keyword
+;       file 'smith.txt' using the default keywords, but don't display the value
+;        of the TELESCOPE keyword
 ;
 ;       IDL> fitsdir ,'/usr2/smith/*.fits',t='smith.txt', /NoTel 
 ;
@@ -110,11 +111,15 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;       Don't assume floating pt. exposure time W. Landsman   September 2001
 ;       Major rewrite, KEYWORD & ALT*_KEYWORDS keywords, no truncation, 
 ;             /NOSIZE keyword     W. Landsman,  SSAI   August 2002
+;       Assume V5.3 or later W. Landsman November 2002
+;       Fix case where no keywords supplied  W. Landsman January 2003
 ;       NAXIS* values must be integers W. Landsman SSAI  June 2003
+;       Trim spaces off of input KEYWORD values W. Landsman March 2004
+;       Treat .FTZ extension as gzip compressed  W. Landsman September 2004
 ;-
  On_error,2
 
- FORWARD_FUNCTION FILE_SEARCH, STRSPLIT      ;For pre-V5.5, V5.3 compatibility
+ compile_opt idl2      ;For pre-V5.5 compatibility
  if N_elements(directory) EQ 0 then directory = '*.fits'
  if N_elements(exten) EQ 0 then exten = 0 
 
@@ -146,36 +151,28 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
       endif
  endif
  if N_elements(keywords) EQ 1 then $
-        if !VERSION.RELEASE GE '5.3' then $
-        keys = strupcase(strsplit(keywords,',',/EXTRACT)) else $
-        keys = strupcase(str_sep(strtrim( strcompress(keywords),2),',')) else $
-  keys = strupcase(keywords)
-  Nkey = N_elements(keys)
+   keys = strtrim(strupcase(strsplit(keywords,',',/EXTRACT)),2) else $
+   keys = strupcase(keywords)
+   Nkey = N_elements(keys)
 
   case N_elements(alt1_keywords) of
   0: alt1_set = bytarr(Nkey)
-  1: if !VERSION.RELEASE GE '5.3' then $
-      alt1_keys = strupcase(strsplit(alt1_keywords[0],',',/EXTRACT)) else $
-    alt1_keys = strupcase(str_sep(strtrim(strcompress(alt1_keywords[0]),2),','))
+  1: alt1_keys = strtrim(strupcase(strsplit(alt1_keywords[0],',',/EXTRACT)),2) 
   else: alt1_keys = strupcase(alt1_keywords) 
   endcase
   if N_elements(alt1_set) EQ 0 then alt1_set = strlen(strtrim(alt1_keys,2)) GT 0
 
   case N_elements(alt2_keywords) of
   0: alt2_set = bytarr(Nkey)
-  1: if !VERSION.RELEASE GE '5.3' then $
-      alt2_keys = strupcase(strsplit(alt2_keywords,',',/EXTRACT)) else $
-    alt2_keys = strupcase(str_sep(strtrim(strcompress(alt2_keywords[0]),2),','))
-   else: alt2_keys = strupcase(alt2_keywords) 
+  1: alt2_keys = strtrim(strupcase(strsplit(alt2_keywords,',',/EXTRACT)),2) 
+  else: alt2_keys = strupcase(alt2_keywords) 
   endcase
  if N_elements(alt2_set) EQ 0 then alt2_set = strlen(strtrim(alt2_keys,2)) GT 0
 
   case N_elements(alt3_keywords) of
   0: alt3_set = bytarr(Nkey)
-  1: if !VERSION.RELEASE GE '5.3' then $
-      alt3_keys = strupcase(strsplit(alt3_keywords,',',/EXTRACT)) else $
-    alt3_keys = strupcase(str_sep(strtrim(strcompress(alt3_keywords[0]),2),','))    
-  else: alt3_keys = strupcase(alt3_keywords) 
+  1: alt3_keys = strtrim(strupcase(strsplit(alt3_keywords,',',/EXTRACT)),2) 
+   else: alt3_keys = strupcase(alt3_keywords) 
   endcase
   if N_elements(alt3_set) EQ 0 then alt3_set = strlen(strtrim(alt3_keys,2)) GT 0
   
@@ -216,10 +213,8 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
  namelen = max(strlen(fname))
 
  for i = 0,n-1 do begin                           ;Loop over each FITS file
-    if (ext EQ 'gz') then compress = 1 else compress = 0
-    if !VERSION.RELEASE GE '5.3' then $
-    openr, unit, files[i], /block, /binary, error = error, compress = compress $
-    else openr, unit, files[i], /block, /binary, error = error
+     compress = (ext EQ 'gz') or (strupcase(ext) EQ 'FTZ') 
+     openr, unit, files[i], /block, /binary, error = error, compress = compress 
     if error LT 0 then goto, BADHD
     mrd_hread, unit, h, status, /silent
    if status LT 0 then goto, BADHD
@@ -240,6 +235,7 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
  if not keyword_set(nosize) then begin
  l= where(keyword EQ 'NAXIS',Nfound)            ;Must have NAXIS keyword
     if Nfound GT 0 then naxis  = long( lvalue[ l[0] ] ) else goto, BADHD
+
  if naxis EQ 0 then naxisi = '0' else begin
 
  l = where( keyword EQ 'NAXIS1', Nfound)         ;Must have NAXIS1 keyword
@@ -323,6 +319,7 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
    xx = xx + (vallen[k]>keylen[k]) +1
  endfor
  fmt = fmt + ')'
+
  for i=0,n-1 do printf, f= fmt, $
       !TEXTUNIT,fname[i],bignaxis[i], keyvalue[i,*]
     

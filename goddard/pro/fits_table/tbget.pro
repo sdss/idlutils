@@ -90,8 +90,6 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
     return, -1
  endif
 
- !ERR = 0                       ;no error yet
-
 ; get size of table
 
  ndimen = size(tab,/n_dimen)

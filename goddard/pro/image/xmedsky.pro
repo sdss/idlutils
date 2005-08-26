@@ -18,25 +18,22 @@ PRO XMEDSKY, Image, Bkg, CLIP=clip, Nsig = nsig
 ;
 ; INPUTS:
 ;       Image:  Input image for which sky vector is to be computed.
-;	
+;       
 ; INPUT KEYWORD PARAMETERS:
 ;       CLIP:   [x0, x1, y0, y1]: region of image to be used for all
 ;               statistical computations.    Default is to use the entire
 ;               image.   For STIS 1024 x 512 slitless spectra, the suggested
 ;               value is CLIP = [32,1023,12,499]
-;       NSIG:   Postive scalar giving the number of sigma a pixel must be above
+;       NSIG:   Positive scalar giving the number of sigma a pixel must be above
 ;               the global median to be reject.   Default is 3 sigma.
 ; OUTPUT PARAMETER:
 ;       Bkg:    Vector of sky values.
-;
-; PROCEDURE CALLS:
-;	STDEV() - In /obsolete directory of standard IDL distribution
-;       If since V5.1 then the STDDEV function is used instead.
-;
+;;
 ; MODIFICATION HISTORY:
-; 	Written by:	R. S. Hill, Hughes STX, 20 Oct. 1997
+;       Written by:     R. S. Hill, Hughes STX, 20 Oct. 1997
 ;       Converted to V5.0, use STDDEV()   W. Landsman   June 1998
 ;       Check for valid WHERE, added NSIG keyword  W. Landsman   December 2000 
+;       Assume since V5.1 so always use STDDEV  W. Landsman Feb 2004   
 ;-
  if N_params() LT 2 then begin
         print,'Syntax - Xmedsky, Image, Bkg, [CLIP = ]'
@@ -57,9 +54,7 @@ PRO XMEDSKY, Image, Bkg, CLIP=clip, Nsig = nsig
 ; Now get the global median and standard deviation
 
  totmed = median(tmpimg[clip[0]:clip[1],clip[2]:clip[3]])
- if !VERSION.RELEASE GE '5.1' then $
-         totsdv = stddev(tmpimg[clip[0]:clip[1],clip[2]:clip[3]]) $
-    else totsdv = stdev(tmpimg[clip[0]:clip[1],clip[2]:clip[3]])
+ totsdv = stddev(tmpimg[clip[0]:clip[1],clip[2]:clip[3]]) 
 
 ; Create a mask array showing where pixels are more than 3 (or Nsig) sigma
 ; from the global median.
@@ -72,7 +67,7 @@ PRO XMEDSKY, Image, Bkg, CLIP=clip, Nsig = nsig
 ; clipped region.
 
  FOR i=0,nbkg-1 DO BEGIN
-   wmi = where(mask(i,clip[2]:clip[3]), cwmi)
+   wmi = where(mask[i,clip[2]:clip[3]], cwmi)
    if cwmi GT 0 THEN $
        bkg[i]=median( image[i,clip[2] + wmi ] )
  ENDFOR

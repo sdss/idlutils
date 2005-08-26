@@ -1,6 +1,6 @@
 pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
                     CTYPE = ctype, LATPOLE = LATPOLE, LONGPOLE = longpole, $ 
-                    PROJP1 = projp1, PROJP2 = projp2
+                    PV2 = pv2
 ;+
 ; NAME:
 ;       MAKE_ASTR
@@ -12,7 +12,7 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
 ;
 ; CALLING SEQUENCE:
 ;       MAKE_ASTR, astr, CD = , DELT =, CRPIX =, CRVAL =, CTYPE =,
-;               LATPOLE = , LONGPOLE =, PROJP1 =, PROJP2 =    
+;               LATPOLE = , LONGPOLE =, PV2_1 = PV2_2 = , PV2_3 =  
 ;
 ; OUTPUT PARAMETER:
 ;       ASTR - Anonymous structure containing astrometry info.  See the 
@@ -37,10 +37,11 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
 ;                Note that the default value of 180 is valid only for zenithal
 ;               projections; it should be set to PV2_1 for conic projections,
 ;               and zero for other projections.
-;       PROJP1 - Scalar parameter needed in some projections, usually 
-;                corresponding to FITS keyword PV2_1, default = 0.0
-;       PROJP2 - Scalar parameter needed in some projections, usually 
-;                corresponding to FITS keyword PV2_2, default = 0.0
+;       PV2 - Vector of projection parameters.   Not required for some 
+;             projections (e.g. TAN) and optional for others (e.g. SIN).
+;             Usually a 2 element vector, but may contain up to 21 elements
+;             for the Zenithal Polynomial (ZPN) projection.   Corresponds to 
+;             the keywords PV2_1, PV2_2...  Defaults to 0.0
 ;
 ; NOTES:
 ;       (1) An anonymous structure is created to avoid structure definition
@@ -56,12 +57,13 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
 ;       Written by   W. Landsman              Mar. 1994
 ;       Converted to IDL V5.0                 Jun  1998
 ;       Added LATPOLE, all angles double precision  W. Landsman July 2003
+;       Use PV2 keyword rather than PROJP1, PROJP2 W. Landsman May 2004
 ;-
  On_error,2
 
  if ( N_params() LT 1 ) then begin
 	print,'Syntax - MAKE_ASTR, astr, CD = , DELT =, CRPIX =, CRVAL =, '
-        print,'	            CTYPE =, LATPOLE= , LONGPOLE =, PROJP1= , PROJP2= ]'
+        print,'	       CTYPE =, LATPOLE= , LONGPOLE =, PV2=]'
 	return
  endif
 
@@ -81,15 +83,12 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
  if N_elements(longpole) EQ 0 then longpole = 180.0D
  if N_elements(latpole) EQ 0 then latpole = 0.0D
 
- if N_elements(projp1) EQ 0 then projp1 = 0.0
-
- if N_elements(projp2) EQ 0 then projp2 = 0.0
-
+ if N_elements(pv2) EQ 0 then pv2 = 0.0D
+ 
  ASTR = {CD: double(cd), CDELT: double(cdelt), $
 		CRPIX: float(crpix), CRVAL:double(crval), $
 		CTYPE: string(ctype), LONGPOLE: double( longpole[0]),  $
-		LATPOLE: double( latpole[0]), PROJP1: double(projp1[0]), $
-                PROJP2: double(projp2[0])}
+		LATPOLE: double( latpole[0]), PV2: pv2}  
 
   return
   end

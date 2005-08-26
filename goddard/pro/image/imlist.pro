@@ -79,6 +79,7 @@ pro imlist, image, xc, yc, DX=dx, DY = DY, WIDTH=width, TEXTOUT = textout, $
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Recognize new integer types, added OFFSET keyword  W. Landsman Jan. 2000
 ;       Replace DATATYPE() with size(/TNAME)  W. Landsman Nov. 2001
+;       Handle NAN values in output display W. Landsman June 2004
 ;-
  On_error,2                                   ;Return to caller
 
@@ -170,7 +171,7 @@ REDO:
    (type EQ 4) or (type EQ 3) or (type EQ 5) or (type GE 13):  begin      ;Long, Real or Double
 
       temp = image[ xmin:xmax,ymin:ymax ]
-      minval = min( temp, MAX = maxval)
+      minval = min( temp, MAX = maxval, /nan)
       if (type EQ 3) or (type GE 13) then  begin
 
                 if (maxval LT 999.) and (minval GT -99.) then begin

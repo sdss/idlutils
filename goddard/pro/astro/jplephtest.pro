@@ -55,7 +55,7 @@
 ;
 ; REFERENCES:
 ;
-;   JPL Export Ephmeris FTP Site
+;   JPL Export Ephemeris FTP Site
 ;      ftp://navigator.jpl.nasa.gov/pub/ephem/export/
 ;      (see test-data/ for test data sets)
 ;   
@@ -70,7 +70,7 @@
 ;   Written and Documented, CM, Jun 2001
 ;   Removed TRANSREAD, improved output, improved docs, CM, 9 Jul 2001
 ;
-;  $Id: jplephtest.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $
+;  $Id: jplephtest.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $
 ;
 ;-
 ; Copyright (C) 2001, Craig Markwardt

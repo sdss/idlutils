@@ -112,7 +112,7 @@ PRO EULER,AI,BI,AO,BO,SELECT, FK4 = FK4, SELECT = select1
           if N_elements(select1) EQ 1 then select=select1
  if N_elements(select) EQ 0 then begin
         print,' '
-        print,' 1 RA-DEC ' + equinox + ' to Galactic
+        print,' 1 RA-DEC ' + equinox + ' to Galactic'
         print,' 2 Galactic       to RA-DEC' + equinox
         print,' 3 RA-DEC ' + equinox + ' to Ecliptic'
         print,' 4 Ecliptic       to RA-DEC' + equinox

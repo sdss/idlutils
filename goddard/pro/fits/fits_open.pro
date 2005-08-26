@@ -16,8 +16,7 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;*INPUTS:
 ;       filename : name of the FITS file to open, scalar string
 ;                  FITS_OPEN can also open gzip compressed (.gz) file *for 
-;                  reading only*, in IDL V5.3 or later, although there is a 
-;                  performance penalty 
+;                  reading only*, although there is a performance penalty 
 ;*OUTPUTS:
 ;       fcb : (FITS Control Block) a IDL structure containing information
 ;               concerning the file.  It is an input to FITS_READ, FITS_WRITE
@@ -113,10 +112,12 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;             positions within the file to allow support for very large
 ;             files 
 ;       Work with gzip compressed files W. Landsman    January 2003
+;       Fix gzip compress for V5.4 and earlier  W.Landsman/M.Fitzgerald Dec 2003 
+;       Assume since V5.3 (STRSPLIT, OPENR,/COMPRESS) W. Landsman Feb 2004
+;       Treat FTZ extension as gzip compressed W. Landsman Sep 2004
 ;-
 ;--------------------------------------------------------------------
-
-       FORWARD_FUNCTION strsplit                  ;Pre-V53 compatibility
+      compile_opt idl2
 ; if no parameters supplied, print calling sequence
 ;
        if N_params() LT 1 then begin
@@ -160,13 +161,12 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ; open file
 ;
         docompress = 0
-        if !VERSION.RELEASE GT '5.3' then begin
            if open_for_read and (not open_for_overwrite) then begin
            len = strlen(filename)
-           if strmid(filename, len-3, 3) EQ '.gz' then docompress= 1 
+           ext = strlowcase(strmid(filename, len-3, 3))
+           docompress = (ext EQ '.gz') or (ext EQ 'ftz') 
         endif
-        endif
-;
+ ;
 ; open file
 ;
         get_lun,unit
@@ -192,7 +192,7 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
              spawn,'gzip -l ' + filename, output
 	     output = strtrim(output,2)
 	     g = where(strmid(output,0,8) EQ 'compress')
-             nbytes_in_file = long64((strsplit(output[g+1],/extract))[1])
+             nbytes_in_file = long64((strsplit(output[g[0]+1],/extract))[1])
         endif else nbytes_in_file = file.size
 ;
 ; create vectors needed to store header information for each extension
@@ -389,18 +389,18 @@ done_headers:
                         random_groups:random_groups, $
                         nbytes: nbytes_in_file }
         end
-        !err = 1
+        !err = 1            ;For obsolete users still using !err
         return
 ;
 ; error exit
 ;
 ioerror: 
-        message = !err_string
+        message = !ERROR_STATE.msg
 error_exit:
         free_lun,unit
         !err = -1
         if keyword_set(no_abort) then return
-        print,'FITS_OPEN ERROR: '+message
+        message,' ERROR: '+message,/CON
         retall
 end
 

@@ -19,10 +19,8 @@ pro fits_close,fcb,no_abort=no_abort,message=message
 ;       /NO_ABORT: Set to return to calling program instead of a RETALL
 ;               when an I/O error is encountered.  If set, the routine will
 ;               return  a non-null string (containing the error message) in the
-;               keyword MESSAGE.    (For backward compatibility, the obsolete 
-;               system variable !ERR is also set to -1 in case of an error.)   
-;               If /NO_ABORT not set, then FITS_CLOSE will print the message and
-;               issue a RETALL
+;               keyword MESSAGE.   If /NO_ABORT not set, then FITS_CLOSE will 
+;               print the message and issue a RETALL
 ;       MESSAGE = value: Output error message
 ;       
 ;*EXAMPLES:
@@ -56,15 +54,13 @@ pro fits_close,fcb,no_abort=no_abort,message=message
 
         sz_fcb = size(fcb)             ;Valid structure?
         if sz_fcb[2] EQ 8 then free_lun,fcb.unit
-        !err = 1
         return
 ;
 ; error exit (probably should never occur)
 ;
 ioerror:
-        message = !err_string
-        !err = -1
-        if keyword_set(no_abort) then return
-        print,'FITS_CLOSE ERROR: '+message
+        message = !error_state.msg
+         if keyword_set(no_abort) then return
+        message,' ERROR: '+message,/CON
         retall
 end

@@ -16,7 +16,7 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours
 ;   different epochs allows the computation of both colors and proper motions. 
 ;   These data are in an object-oriented database at 
 ;   http://www-gsss.stsci.edu/support/data_access.htm.  The final version 
-;   (GSC 2.3),  expected to be released in 2003, will also contain proper 
+;   (GSC 2.3),  expected to be released in 2004, will also contain proper 
 ;   motions.   
 ;
 ; CALLING SEQUENCE: 
@@ -77,6 +77,8 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours
 ; PROCEDURES USED:
 ;          QUERYSIMBAD, RADEC, WEBGET()
 ;
+; MINIMUM IDL VERSION
+;         V5.4  (uses SOCKET)
 ; MODIFICATION HISTORY: 
 ;         Written by W. Landsman  SSAI  August 2002
 ;         Fixed parsing of RA and Dec  W. Landsman September 2002

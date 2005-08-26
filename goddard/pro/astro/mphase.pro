@@ -22,7 +22,7 @@ pro mphase,jd, k
 ;       IDL> plot, indgen(31),k               ;Plot phase vs. July day number
 ;
 ; METHOD:
-;       Algorithm from Chapter 46 of "Astronomical Algorithms" by Jean Meuus
+;       Algorithm from Chapter 46 of "Astronomical Algorithms" by Jean Meeus
 ;       (Willmann-Bell, Richmond) 1991.   SUNPOS and MOONPOS are used to get
 ;       positions of the Sun and the Moon (and the Moon distance).   The
 ;       selenocentric elongation of the Earth from the Sun (phase angle)

@@ -1,11 +1,14 @@
-/astrom                                                  July 2003
+/astrom                                                  June 2005
 
 This directory contain IDL procedures for manipulating FITS images which
 include header keywords specifying the coordinate system.   The FITS header
 must follow the specification in the paper "Representations of
 Celestial Coordinates in FITS"  by Eric Greisen and Mark Calabretta (2002, A&A,
 395, 1061).   This paper may be obtained from   
-http://www.aoc.nrao.edu/~egreisen/ or http://www.atnf.csiro.au/~mcalabre/ .   
+http://www.aoc.nrao.edu/~egreisen/ or http://www.atnf.csiro.au/~mcalabre/ .
+All projections in that paper are implemented as of May 2004     
+The IDL code has been  validated using the test images on   
+http://www.atnf.csiro.au/people/mcalabre/WCS/sample_data/index.html 
 
 Users should be aware that FITS defines the center of the first pixel in the
 array to have coordinates (1,1).    This differs from the IDL convention where
@@ -27,8 +30,10 @@ the following tags:
 	 ['RA---TAN','DEC--TAN']
   .LONGPOLE - scalar longitude of north pole (default = 180)
   .LATPOLE - scalar giving native latitude of the celestial pole default=0)
-  .PROJP1 - Scalar parameter needed in some projections, FITS keyword PV2_1
-  .PROJP2 - Scalar parameter needed in some projections, FITS keyword PV2_2
+  .PV2 - Vector of parameters (PV2_1, PV2_2...) need in some projections 
+  .DISTORT - Optional substructure giving distortion parameters.   Currently
+         only implemented for the Spitzer simple imaging polynomial (SIP) see
+         http://ssc.spitzer.caltech.edu/postbcd/doc/shupeADASS.pdf
 
 The procedures EXTAST and PUTAST can be used, respectively, to extract
 astrometry information from a FITS header and place it into an astrometry

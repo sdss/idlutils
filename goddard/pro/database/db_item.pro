@@ -57,13 +57,10 @@ pro db_item,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes,errmsg=errmsg
 ;                       Added keyword ERRMSG
 ;       Converted to IDL V5.0   W. Landsman   October 1997
 ;       Use STRSPLIT instead of GETTOK to parse form 1, W. Landsman July 2002
-;	Fixed bug in pre-5.3 support, William Thompson, 22 May 2003
 ;-
 ;
 ;------------------------------------------------------------------------
  On_error,2
- FORWARD_FUNCTION strsplit            ;Pre V5.3 compatilibility
-
  if N_params() LT 2 then begin
     print,'Syntax - DB_ITEM,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes'
     return
@@ -128,7 +125,7 @@ vector=1                                        ;vector output flag
 s=size(items,/str)
 ndim = s.n_dimensions
 if s.type_name eq 'STRING' then begin                     ;string(s)
-        if s.n_dimensions eq 0 then begin                         ;string scalar?
+        if ndim eq 0 then begin                         ;string scalar?
             if strtrim(items) eq '' then form=5 else $  ;null string   - form 5
             if strmid(items,0,1) eq '$' then form=3  $  ;filename      - form 3
                 else form=1                             ;scalar list   - form 1
@@ -193,21 +190,17 @@ end
 ;
 ; form 1 ----------------- scalar string list  'item1,item2,item3...'
 ;
- if form eq 1 then begin 
-   if !VERSION.RELEASE GE '5.3' then  $
-             item_names = strsplit(items,',',/EXTRACT) else begin
-	item_names = str_sep(strtrim(items,2),',')
-	item_names = item_names(where(item_names ne ''))
-   endelse
-   nitems = N_elements(item_names)                     
+ if form eq 1 then begin
+     item_names = strsplit(items,',',/EXTRACT) 
+     nitems = N_elements(item_names)                     
  endif
 ;
 ; form 2 -------------------------- string array
 ;
 if form eq 2 then begin
         item_names=items
-        nitems=n_elements(items)
-end
+        nitems = N_elements(items)
+endif
 ;
 ; form 5 -------------------------- null string (interactive input)
 ;
@@ -281,7 +274,6 @@ end
             endif
 itnum[i] =j[0] +i1                              ;save item number
 endfor;i loop on items
-
 if nitems eq 1 then goto,scalar                 ;speedy method
 ;
 ;---------------------------------------------------------------------------

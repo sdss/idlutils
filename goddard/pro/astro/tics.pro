@@ -1,4 +1,4 @@
-pro tics,min,max,numx,ticsize,incr,RA=ra
+pro tics,radec_min,radec_max,numx,ticsize,incr,RA=ra
 ;+
 ; NAME:
 ;       TICS
@@ -30,6 +30,7 @@ pro tics,min,max,numx,ticsize,incr,RA=ra
 ;       written by B. Pfarr, 4/14/87
 ;       Added some more tick precision (i.e. 1 & 2 seconds in case:) EWD May92
 ;       Added sub arcsecond tick precision   W. Landsman   May 2000
+;       Plate scale off by 1 pixel  W. Landsman July 2004
 ;-
   On_error,2
 
@@ -39,8 +40,8 @@ pro tics,min,max,numx,ticsize,incr,RA=ra
 ;     minutes of time for r.a.
 
   if keyword_set(RA) then mul = 4.0 else mul = 60.
-  mins = abs(min-max)*mul                  ;total distance in minutes
-  rapix = numx/mins                        ;pixels per minute
+  mins = abs(radec_min-radec_max)*mul       ;total distance in minutes
+  rapix = (numx-1)/mins                        ;pixels per minute
   incr = mins/numtics                      ;minutes per tic
 
 ;                                        determine increment
@@ -69,7 +70,7 @@ pro tics,min,max,numx,ticsize,incr,RA=ra
   endcase
 
    ticsize = rapix*incr                 ;determine ticsize
-   if ( min GT max ) then incr = -incr 
+   if ( radec_min GT radec_max ) then incr = -incr 
 
    return 
   end

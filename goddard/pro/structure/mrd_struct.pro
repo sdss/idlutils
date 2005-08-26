@@ -16,6 +16,11 @@
 ;       is detected.
 ;
 ; OPTIONAL KEYWORD PARAMETERS:
+;       /NO_EXECUTE - If set then the use of the EXECUTE() statement is avoided.
+;                  By default, the NO_EXECUTE pathway is used if IDL is 
+;                  running under the Virtual Machine.    Note if  /NO_EXECUTE
+;                  is set, then the user cannot supply arbitary values, but
+;                  all possible values used by MRDFITS will be allowed.
 ;       STRUCTYP = The structure type.  Since IDL does not allow the
 ;                  redefinition of a named structure it is an error
 ;                  to call MRD_STRUCT with different parameters but
@@ -49,6 +54,8 @@
 ;               ; fields.
 ; PROCEDURE CALLS:
 ;       GETTOK() - needed for virtual machine mode only
+; MINIMUM IDL VERSION:
+;       V5.3 (uses STRSPLIT)
 ; MODIFICATION HISTORY:
 ;       Created by T. McGlynn October, 1994.
 ;       Modified by T. McGlynn September, 1995.
@@ -65,18 +72,21 @@
 ;       very large structures.
 ;       Removed TEMPDIR and OLD_STRUCT keywords  W. Landsman October 2003   
 ;       Alternate pathway without EXECUTE for V6.0 virtual machine, D. Lindler
-;       Removed limit on EXECUTE statement.  W. Landsman  October 203
+;       Removed limit on EXECUTE statement.  W. Landsman  October 2003
+;       Restore EXECUTE limit (sigh...), added NO_EXECUTE keyword
+;                         W. Landsman July 2004
+;       Fix use of STRUCTYP with /NO_EXECUTE  W. Landsman June 2005
 ;-
 
 ; Check that the number of names is the same as the number of values.
 
-function mrd_struct, names, values, nrow, $
+function mrd_struct, names, values, nrow, no_execute = no_execute,  $
     structyp=structyp,  tempdir=tempdir, silent=silent, old_struct=old_struct
 
 ; Keywords TEMPDIR, SILENT and OLD_STRUCT no longer do anything but are kept
 ; for backward compatibility.
 
-noexecute = 0b
+noexecute = keyword_set(no_execute)
 if !VERSION.RELEASE GE '6.0' then if lmgr(/vm) then noexecute = 1b
 
 if noexecute then begin
@@ -96,6 +106,7 @@ if noexecute then begin
 	    '0LL' : v = 0LL
 	    '0.': v = 0.0
 	    '0.d0': v = 0.0d0
+             '" "': v = " "          ;Added July 2004
 	    'complex(0.,0.)': v = complex(0.,0.)
 	    'dcomplex(0.d0,0.d0)': v = dcomplex(0.d0,0.d0)
 ;
@@ -128,45 +139,67 @@ if noexecute then begin
 		endcase
 	    end
 	endcase     	
-	if i eq 0 then struct = create_struct(name=structyp,names[i],v) $
+	if i eq 0 then struct = create_struct(names[i],v) $
 		  else struct = create_struct(temporary(struct),names[i],v)
     end; for i    
 
 endif else begin
 
+; Build up the structure use a combination of execute and
+; create_struct calls.  Basically we build as many rows as
+; will fit in an execute call and create that structure.  Then
+; we append that structure to whatever we've done before using
+; create_struct
 
-; Check that the number of names is the same as the number of values.
+nel = N_elements(names)
+strng = "a={"
 
-nel = n_elements(names)
-if nel ne n_elements(values) then return, 0
-
-; Start formatting the string.
-strng = "struct={ " + names[0] + ':' + values[0]
-
-    comma = ","
-
-if nel GE 1 then for i=1,nel-1 do  begin
+comma = ' '
+for i=0,nel-1 do  begin
   
     ; Now for each element put in a name/value pair.
-    strng = strng + comma+names[i] + ':' + values[i]
+    tstrng = strng + comma+names[i] + ':' + values[i]
+    
+    ; The nominal max length of the execute is 131
+    ; We need one chacacter for the "}"
+    if strlen(tstrng) gt 130 then begin
+        strng = strng + "}"
+        res = execute(strng)
+	if  res eq 0 then return, 0
+	if n_elements(struct) eq 0 then begin
+	    struct = a
+	endif else begin
+	    struct = create_struct(temporary(struct), a)
+	endelse
+	strng = "a={" + names[i] + ":" + values[i]
+	
+    endif else begin
+        strng = tstrng
+    endelse
+    comma = ","
 	 
 endfor
+
 
 if strlen(strng) gt 3 then begin
     strng = strng + "}"
     res = execute(strng)
     if  res eq 0 then return, 0
-endif
-
-if keyword_set(structyp) then begin
-     struct = create_struct(temporary(struct), name=structyp)
-endif
-
+    if n_elements(struct) eq 0 then begin
+	struct = a
+    endif else begin
+	struct = create_struct(temporary(struct), a)
+    endelse
   
-if nrow le 1 then return, struct
-
+endif
+ 
 endelse
-return, replicate(struct, nrow)
+if keyword_set(structyp) then $
+     struct = create_struct(temporary(struct), name=structyp)
+
+
+if nrow le 1 then return, struct $
+             else return, replicate(struct, nrow)
 
 end
 

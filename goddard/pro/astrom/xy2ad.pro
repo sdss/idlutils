@@ -7,10 +7,13 @@ pro xy2ad, x, y, astr, a, d
 ;     Compute R.A. and Dec from X and Y and a FITS astrometry structure
 ; EXPLANATION:
 ;     The astrometry structure must first be extracted by EXTAST from a FITS
-;     header.   The procedure WCSXY2SPH is used to compute native coordinates,
-;     and the CD matrix is then used to compute RA and Dec (or longitude and
-;     latitude).   Angles are returned in 
-;     degrees.   XY2AD is meant to be used internal to other procedures.  
+;     header.   The offset from the reference pixel is computed and the CD 
+;     matrix is applied.     Of distortion is present then this is corrected.
+;     If a WCS projection (Calabretta & Greisen 2002, A&A, 395, 1077) is 
+;     present, then the procedure WCSXY2SPH is used to compute astronomical
+;     coordinates.    Angles are returned in  degrees.
+;   
+;     XY2AD is meant to be used internal to other procedures.  
 ;     For interactive purposes use XYAD.
 ;
 ; CALLING SEQUENCE:
@@ -31,10 +34,12 @@ pro xy2ad, x, y, astr, a, d
 ;               in DEGREES
 ;        .CTYPE - 2 element vector giving projection types 
 ;        .LONGPOLE - scalar longitude of north pole
-;        .LATPOLE - scalar giving native latitude of the celestial pole  
-;        .PROJP1 - Scalar parameter needed in some projections, FITS keyword
-;                  PV2_1
-;        .PROJP2 - Scalar parameter needed in some projections, FITS keyword
+;        .LATPOLE - scalar giving native latitude of the celestial pole
+;        .PV2 - Vector of projection parameter associated with latitude axis
+;             PV2 will have up to 21 elements for the ZPN projection, up to 3
+;             for the SIN projection and no more than 2 for any other
+;             projection
+;        .DISTORT - Optional substructure specifying distortion parameters
 ;                  
 ;
 ; OUTPUT:
@@ -45,9 +50,13 @@ pro xy2ad, x, y, astr, a, d
 ;       Note that all angles are in degrees, including CD and CRVAL
 ;       Also note that the CRPIX keyword assumes an FORTRAN type
 ;       array beginning at (1,1), while X and Y give the IDL position
-;       beginning at (0,0).
-;       No parameter checking is performed.
+;       beginning at (0,0).   No parameter checking is performed.
 ;
+; NOTES:
+;      AD2XY tests for presence of WCS coordinates by the presence of a dash 
+;      in the 5th character position in the value of CTYPE (e.g 'DEC--SIN').       
+; PROCEDURES USED:
+;       TAG_EXIST(), WCSXY2SPH
 ; REVISION HISTORY:
 ;       Written by R. Cornett, SASC Tech., 4/7/86
 ;       Converted to IDL by B. Boothman, SASC Tech., 4/21/86
@@ -56,7 +65,9 @@ pro xy2ad, x, y, astr, a, d
 ;       Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
 ;       Consistent conversion between CROTA and CD matrix W. Landsman Oct. 2000
 ;       No special case for tangent projection W. Landsman June 2003
-;-
+;       Work for non-WCS coordinate transformations W. Landsman Oct 2004
+;- 
+ compile_opt idl2
  if N_params() LT 4 then begin
         print,'Syntax -- XY2AD, x, y, astr, a, d'
         return
@@ -74,6 +85,29 @@ pro xy2ad, x, y, astr, a, d
 
  xdif = x - (crpix[0]-1)            
  ydif = y - (crpix[1]-1)
+ 
+ if tag_exist(astr,'DISTORT') then begin
+      if astr.distort.name EQ 'SIP' then begin
+           distort  = astr.distort
+           a = distort.a
+           b = distort.b
+           na = ((size(a,/dimen))[0])
+           xdif1 = xdif
+           ydif1 = ydif
+           
+           for i=0,na-1 do begin
+               for j=0,na-1 do begin
+                  if a[i,j] NE 0.0 then xdif1 = xdif1 + xdif^i*ydif^j*a[i,j]            
+                  if b[i,j] NE 0.0 then ydif1 = ydif1 + xdif^i*ydif^j*b[i,j]
+           endfor
+           endfor
+
+           xdif = xdif1
+           ydif = ydif1
+           
+      endif
+ endif
+
  xsi = cd[0,0]*xdif + cd[0,1]*ydif   ;Can't use matrix notation, in
  eta = cd[1,0]*xdif + cd[1,1]*ydif   ;case X and Y are vectors
 
@@ -89,9 +123,11 @@ pro xy2ad, x, y, astr, a, d
      temp = xsi & xsi = eta & eta = temp
  endif
 
- WCSXY2SPH, xsi, eta, a, d, CTYPE = ctype[0:1], PROJP1 = astr.projp1, $
-        PROJP2 = astr.projp2, LONGPOLE = astr.longpole, CRVAL = crval, $
-        LATPOLE = astr.latpole
-
+ if strmid(ctype[0],4,1) EQ '-' then begin
+ WCSXY2SPH, xsi, eta, a, d, CTYPE = ctype[0:1], PV2 = astr.pv2, $
+        LONGPOLE = astr.longpole, CRVAL = crval, LATPOLE = astr.latpole
+ endif else begin
+         a = xsi & d = eta
+ endelse
  return
  end

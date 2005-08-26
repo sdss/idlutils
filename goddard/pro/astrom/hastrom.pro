@@ -38,8 +38,8 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;               supplied imput image.  If not supplied, then linear 
 ;               extrapolation is used.   See the IDL manual on POLY_2D.
 ;               ***NOTE: A bug was introduced into the POLY_2D function in IDL 
-;               V5.5 (still present in V5.6) such that the MISSING keyword
-;               may not work properly.***
+;               V5.5 (fixed in V6.1) such that the MISSING keyword
+;               may not work properly with floating point data***
 ;       INTERP - Scalar, one of 0, 1, or 2 determining type of interpolation
 ;               0 nearest neighbor, 1 (default) bilinear interpolation, 
 ;               2 cubic interpolation.
@@ -49,13 +49,17 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;               than zero is equivalent to setting CUBIC = -1. 
 ;       NGRID -  Integer scalar specifying the number of equally spaced grid 
 ;               points on each axis to use to specify the transformation.   
-;               Default is NGRID = 3 (9 total grid points).     The value of
-;               NGRID must always be greater than DEGREE + 1
+;               The value of NGRID must always be greater than DEGREE + 1.
+;               The default is DEGREE + 2 which equals 3 (9 total points) for
+;               DEGREE=1 (linear warping).
 ;       DEGREE - Integer scalar specifying the degree of the transformation.
-;               See the routine POLYWARP for more info.   Default = 1
-;              (linear transformation).
+;               See the routine POLYWARP for more info.   Default = 
+;               1 (linear transformation) unless polynomial ('SIP') distortion 
+;               parameters are present in either the input or reference FITS
+;               header.    In that case, the default degree is equal to the
+;               degree of the distortion polynomial.
 ; OPTIONAL OUTPUT KEYWORD:
-;       ERRMSG - If this keyword is supplied, then any error mesasges will be
+;       ERRMSG - If this keyword is supplied, then any error messages will be
 ;               returned to the user in this parameter rather than depending on
 ;               on the MESSAGE routine in IDL.   If no errors are encountered
 ;               then a null string is returned.               
@@ -91,8 +95,11 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;       Remove calls to obsolete !ERR system variable   March 2000
 ;       Added ERRMSG output keyword  W. Landsman    April 2000
 ;       Need to re-extract astrometry after precession  W. Landsman Nov. 2000
+;       Check for distortion parameters in headers, add more FITS HISTORY
+;       information    W. Landsman   February 2005
 ;       
 ;-
+ compile_opt idl2
  On_error,2                              ;Return to caller
  npar = N_params()
 
@@ -130,19 +137,28 @@ save_err = arg_present(errmsg)     ;Does user want error msgs returned?
 
  xsize_ref = sxpar( refhd, 'NAXIS1' )                ;Get output image size
  ysize_ref = sxpar( refhd, 'NAXIS2' ) 
- if (xsize_ref LT 1) or (ysize_ref LT 1) then message, $
-        'ERROR - Reference header must be for a 2-dimensional image'
-
+ if (xsize_ref LT 1) or (ysize_ref LT 1) then begin 
+       errmsg = 'ERROR - Reference header must be for a 2-dimensional image'
+       if not save_err then message,'ERROR - ' + errmsg,/CON
+       return
+ endif
+     
 
 ; Extract CD, CRPIX and CRVAL value from image header and reference header
 
  newhd = oldhd
  extast, newhd, astr_old, par_old    
- if ( par_old LT 0 ) then $  
-        message,'ERROR - Input FITS Header does not contain astrometry'
+ if ( par_old LT 0 ) then begin   
+       errmsg = 'ERROR - Input FITS Header does not contain astrometry'
+       if not save_err then message,'ERROR - ' + errmsg,/CON
+       return
+ endif
  extast, refhd, astr_ref, par_ref    
- if ( par_old LT 0 ) or ( par_ref LT 0 ) then $  
-        message,'ERROR -Reference FITS Header does not contain astrometry'
+ if ( par_old LT 0 ) or ( par_ref LT 0 ) then begin  
+       errmsg = 'ERROR -Reference FITS Header does not contain astrometry'
+       if not save_err then message,'ERROR - ' + errmsg,/CON
+       return
+ endif
 
 
 ;   Precess the header if necessary
@@ -162,7 +178,23 @@ save_err = arg_present(errmsg)     ;Does user want error msgs returned?
 ; Make a grid of points in the reference image to be used for the transformation
 
  if not keyword_set( DEGREE ) then degree = 1
- if not keyword_set(NGRID) then ngrid = 3 
+    if tag_exist(astr_old,'DISTORT') then begin
+       distort = astr_old.distort
+       if distort.name EQ 'SIP' then begin
+          na = ((size(distort.ap,/dimen))[0])
+          degree = degree > (na -1 )     
+        endif
+     endif
+
+    if tag_exist(astr_ref,'DISTORT') then begin
+       distort = astr_ref.distort
+       if distort.name EQ 'SIP' then begin
+          na = ((size(distort.a,/dimen))[0])
+          degree = degree > (na -1 )     
+        endif
+     endif
+      
+ if not keyword_set(NGRID) then ngrid = (degree + 2)
  if not keyword_set(CUBIC) then begin 
         cubic = 0
         if N_elements(INTERP) EQ 0 then Interp = 1
@@ -230,9 +262,17 @@ save_err = arg_present(errmsg)     ;Does user want error msgs returned?
  label = 'HASTROM: ' + strmid(systime(),4,20)
  image = sxpar( refhd, 'IMAGE', Count = N_image)
  if N_image EQ 1 THEN sxaddhist,label+' Reference Image - ' + image,newhd
- sxaddhist,label+' Original Image Size X: ' + strtrim(xsize_old,2) + $
-                                     ' Y: '  + strtrim(ysize_old,2), newhd
-; Update BSCALE and BZERO factors in header if necessary
+ sxaddhist,label+ ' Original Image Size X: ' + strtrim(xsize_old,2) + $
+                   ' Y: '  + strtrim(ysize_old,2), newhd
+ sxaddhist,'HASTROM: Polynomial Degree used for image warping: ' + $
+            strtrim(degree,2), newhd
+ if cubic NE 0 then sterp = 'CUBIC = ' + strtrim(cubic,2) else $
+     sterp = (['Nearest Neighbor','Linear','Cubic'])[interp]
+ sxaddhist,'HASTROM: ' + sterp + ' interpolation',newhd
+ sxaddhist,'HASTROM: Number of grid points ' + strtrim(ngrid*ngrid,2), newhd
+
+; Update BSCALE and BZERO factors in header if necessary.   This is only an
+; approximate correction for nonlinear warping.
 
  bscale = sxpar( newhd, 'BSCALE', Count = N_Bscale)
  if (N_bscale GT 0 ) and ( bscale NE 1. ) then begin

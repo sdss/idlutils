@@ -94,7 +94,19 @@
 ;   The precision routine has been verified using JPLEPHTEST, which is
 ;   similar to the original JPL program EPHTEST.  For years 1950 to
 ;   2050, JPLEPHINTERP reproduces the original JPL ephemeris to within
-;   1.5 centimeters.
+;   1 centimeter.
+;
+; Custom Ephemerides
+;
+;   It is possible to make custom ephemerides using JPLEPHMAKE, or to
+;   augmented an existing ephemeris with additional data.  In the
+;   former case JPLEPHINTERP should automatically choose the correct
+;   object from the table and interpolate it appropriately.
+;
+;   For augmented ephemerides, the object can be specified by name,
+;   which works as expected, or by number, which has a special
+;   behavior.  For augmented files only, the new objects begin at
+;   number 100.
 ;
 ;
 ; PARAMETERS: 
@@ -136,6 +148,14 @@
 ;                   6 - 'SATURN'     14 - 'NUTATIONS' (see above)
 ;                   7 - 'URANUS'     15 - 'LIBRATIONS' (see above)
 ;                   8 - 'NEPTUNE' 
+;
+;                For custom ephemerides, the user should specify the
+;                object name or number.
+;
+;                For augmented ephemerides, the user should specify
+;                the name.  If the number is specified, then numbers
+;                1-15 have the above meanings, and new objects are
+;                numbered starting at 100.
 ;
 ;   CENTER - a scalar string or integer, specifies the origin of
 ;            coordinates.  See OBJECTNAME for allowed values.
@@ -197,17 +217,21 @@
 ;      & Astrophysics, vol. 233, pp. 252-271.    
 ;
 ; SEE ALSO
-;   JPLEPHREAD, JPLEPHINTERP, JPLEPHTEST, TDB2TDT
+;   JPLEPHREAD, JPLEPHINTERP, JPLEPHTEST, TDB2TDT, JPLEPHMAKE
 ;   
 ; MODIFICATION HISTORY:
 ;   Written and Documented, CM, Jun 2001
 ;   Corrected bug in name conversion of NUTATIONS and LIBRATIONS, 18
 ;     Oct 2001, CM
+;   Added code to handle custom-built ephemerides, 04 Mar 2002, CM
+;   Fix bug in evaluation of velocity (only appears in highest order
+;     polynomial term); JPLEPHTEST verification tests still pass;
+;     change is of order < 0.5 cm in position, 22 Nov 2004, CM
 ;
-;  $Id: jplephinterp.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $
+;  $Id: jplephinterp.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $
 ;
 ;-
-; Copyright (C) 2001, Craig Markwardt
+; Copyright (C) 2001, 2002, 2004, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy and distribute unmodified copies for
 ; non-commercial purposes, and to modify and use for personal or
@@ -217,7 +241,7 @@
 pro jplephinterp_calc, info, raw, obj, t, x, y, z, vx, vy, vz, $
                        velocity=vel, tbase=tbase
 
-  ; '$Id: jplephinterp.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $'
+  ; '$Id: jplephinterp.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $'
 
   if n_elements(tbase) EQ 0 then tbase = 0D
   ;; Number of coefficients (x3), number of subintervals, num of rows
@@ -259,7 +283,7 @@ pro jplephinterp_calc, info, raw, obj, t, x, y, z, vx, vy, vz, $
       ieph = ieph[0]
       nseg = nseg[0]
   endif
-  
+
   ;; Initialize the first two Chebyshev polynomials, which are P_0 = 1
   ;; and P_1(x) = x
   p0 = 1D
@@ -277,7 +301,10 @@ pro jplephinterp_calc, info, raw, obj, t, x, y, z, vx, vy, vz, $
 
   ;; Compute Chebyshev functions two at a time for efficiency
   for i = 0, nc-1, 2 do begin
-      if i EQ nc-1 then p1 = 0
+      if i EQ nc-1 then begin
+          p1 = 0
+          v1 = 0
+      endif
       ii = i0 + i
       jj = i0 + ((i+1) < (nc-1))
       
@@ -413,6 +440,31 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
   ;; This numbering scheme is 1-relative, to be consistent with the
   ;; Fortran version.
 
+  ;; Handle case of custom ephemerides
+  if info.format EQ 'JPLEPHMAKE' then begin
+      if n_elements(obj0) GT 0 then begin
+          sz = size(obj0)
+          if sz[sz[0]+1] EQ 7 then begin
+              obj = strupcase(strtrim(obj0[0],2))
+              wh = where(info.objname EQ obj, ct)
+              if ct EQ 0 then $
+                message, 'ERROR: '+obj+' is an unknown object'
+              obj = wh[0] + 1
+          endif else begin
+              obj = floor(obj0[0])
+              if obj LT 1 OR obj GT n_elements(info.objname) then $
+                message, 'ERROR: Numerical OBJNAME is out of bounds'
+          endelse
+
+          ;; Interpolate the ephemeris here
+          jplephinterp_calc, info, raw, obj-1, t, velocity=vel, $
+            tbase=tbase, x, y, z, vx, vy, vz
+
+          goto, COMPUTE_CENTER
+      endif
+      message, 'ERROR: Must specify OBJNAME for custom ephemerides'
+  endif
+
 
   ;; ----------------------------------------------------------
   ;; Determine which body or system we will compute
@@ -432,6 +484,7 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
                   if ct EQ 0 then $
                     message, 'ERROR: '+obj+' is an unknown object'
                   obj = wh[0] + 1
+                  if obj GT 11 then obj = obj + 100 - 14
               end
           endcase
       endif else begin
@@ -545,10 +598,19 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
       else: begin
           ;; Default objects are derived from the index OBJNUM
           if obj GE 1 AND obj LE 11 then begin
+              RESTART_OBJ:
               jplephinterp_calc, info, raw, obj-1, t, velocity=vel, $
                 tbase=tbase, $
                 x, y, z, vx, vy, vz
           endif else begin
+              if info.edited AND obj GT 11 then begin
+                  ;; Handle case of edited JPL ephemerides - they
+                  ;; start at a value of 100, so shift them to the end
+                  ;; of the JPL ephemeris columns
+                  obj = obj - 100 + 14
+                  if obj LE n_elements(info.objname) then $
+                    goto, RESTART_OBJ
+              endif
               message, 'ERROR: body '+strtrim(obj,2)+' is not supported'
           endelse
       end
@@ -556,6 +618,7 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
 
   ;; -------------------------------------------------------
   ;; Compute ephemeris of center, and compute displacement vector
+  COMPUTE_CENTER:
   if n_elements(cent) GT 0 then begin
       jplephinterp, info, raw, t, x0, y0, z0, vx0, vy0, vz0, tbase=tbase, $
         objectname=cent, velocity=vel, posunits='KM', velunits='KM/DAY'

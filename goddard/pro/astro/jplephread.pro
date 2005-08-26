@@ -109,7 +109,7 @@
 ;   HORIZONS, JPL Web-based ephermis calculator (Ephemeris DE406)
 ;      http://ssd.jpl.nasa.gov/horizons.html
 ;   
-;   JPL Export Ephmeris FTP Site
+;   JPL Export Ephemeris FTP Site
 ;      ftp://navigator.jpl.nasa.gov/pub/ephem/export/
 ;      (ephemeris files are available here, however, they must be
 ;      converted to FITS format using the "bin2eph" utility found in
@@ -135,7 +135,7 @@
 ;   Written and Documented, CM, Jun 2001
 ;   Use GETTOK() instead of STR_SEP()  W. Landsman  July 2002
 ;
-;  $Id: jplephread.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $
+;  $Id: jplephread.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $
 ;
 ;-
 ; Copyright (C) 2001, Craig Markwardt
@@ -147,9 +147,9 @@
 
 
 function jplephpar, header, parname, default=default, fatal=fatal
-  forward_function fxpar
+compile_opt idl2
 
-  ; '$Id: jplephread.pro,v 1.2 2003-03-27 16:02:59 dfink Exp $'
+  ; '$Id: jplephread.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $'
 
   value = fxpar(header, parname, Count = N_value)
   if N_value EQ 0 then begin
@@ -173,7 +173,6 @@ end
 pro jplephread, filename, info, raw, jdlimits, $
                 status=status, errmsg=errmsg
 
-  FORWARD_FUNCTION gettok
   status = 0
   printerror = 1 - arg_present(errmsg)
   errmsg = ''
@@ -319,9 +318,7 @@ pro jplephread, filename, info, raw, jdlimits, $
       endif
 
       ;; Trim each object name to first word only
-      for i = 0, n_elements(ephobj)-1 do begin
-          ephobj[i] = strupcase(gettok(ephobj[i], ' '))
-      endfor
+          ephobj = strupcase(gettok(ephobj, ' '))
       
       ;; ---------------------------------------------
       ;; Third extension contains Chebyshev coefficients

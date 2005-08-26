@@ -9,6 +9,10 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;     Applies to primary header and all extensions.    Information can be 
 ;     printed at the terminal and/or stored in a common block
 ;
+;     This routine is mostly obsolete, and better results can be usually be
+;     performed with FITS_HELP (for display) or FITS_OPEN (to read FITS 
+;     information into a structure)
+;
 ; CALLING SEQUENCE:
 ;     FITS_INFO, Filename, [ /SILENT , TEXTOUT = , N_ext = ]
 ;
@@ -16,7 +20,7 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;     Filename - Scalar string giving the name of the FITS file(s)
 ;               Can include wildcards such as '*.fits'.   In IDL V5.5 one can
 ;               use the regular expressions allowed by the FILE_SEARCH()
-;               function.     Since V5.3 one can also search gzip compressed 
+;               function.     One can also search gzip compressed 
 ;               FITS files.
 ; OPTIONAL INPUT KEYWORDS:
 ;     /SILENT - If set, then the display of the file description on the 
@@ -40,9 +44,16 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;       DESCRIPTOR =  File descriptor string of the form N_hdrrec Naxis IDL_type
 ;               Naxis1 Naxis2 ... Naxisn [N_hdrrec table_type Naxis
 ;               IDL_type Naxis1 ... Naxisn] (repeated for each extension) 
-;               See the procedure RDFITS_STRUCT for an example of the
-;               use of this common block
+;               For example, the following descriptor 
+;                    167 2 4 3839 4 55 BINTABLE 2 1 89 5
+; 
+;               indicates that the  primary header containing 167 lines, and 
+;               the primary (2D) floating point image (IDL type 4) 
+;               is of size 3839 x 4.    The first extension header contains
+;               55 lines, and the  byte (IDL type 1) table array is of size
+;               89 x 5.
 ;
+;               The DESCRIPTOR is *only* computed if /SILENT is set.
 ; EXAMPLE:
 ;       Display info about all FITS files of the form '*.fit' in the current
 ;               directory
@@ -74,10 +85,14 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;       Correctly skip past extensions with no data   WBL   April 1998
 ;       Converted to IDL V5.0, W. Landsman, April 1998
 ;       No need for !TEXTOUT if /SILENT D.Finkbeiner   February 2002
-;	Define !TEXTOUT if needed.  R. Sterner, 2002 Aug 27
+;       Define !TEXTOUT if needed.  R. Sterner, 2002 Aug 27
 ;       Work on gzip compressed files for V5.3 or later  W. Landsman 2003 Jan
 ;       Improve speed by only reading first 36 lines of header 
 ;       Count headers with more than 32767 lines         W. Landsman Feb. 2003
+;       Assume since V5.3 (OPENR,/COMPRESS)   W. Landsman Feb 2004
+;       EXTNAME keyword can be anywhere in extension header again 
+;                         WBL/S. Bansal Dec 2004
+;       Read more than 200 extensions  WBL   March 2005
 ;-
  COMMON descriptor,fdescript
  FORWARD_FUNCTION FILE_SEARCH       ;For pre-V5.5 compatibility
@@ -105,17 +120,14 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 
     file = fil[nf]
 
-    if !VERSION.RELEASE GE '5.3' then begin 
-               openr, lun1, file, /GET_LUN, /BLOCK,/compress 
-               if !VERSION.RELEASE GE '5.4' then $
-                      compress = (fstat(lun1)).compress else compress = 1   
-    endif else begin
-               openr, lun1, file, /GET_LUN, /BLOCK
-               compress = 0
-   endelse
+   openr, lun1, file, /GET_LUN, /BLOCK,/compress 
+
+   if !VERSION.RELEASE GE '5.4' then $
+          compress = (fstat(lun1)).compress else compress = 1   
    N_ext = -1
     fdescript = ''
-    extname = ['']
+    nmax = 100
+    extname = strarr(nmax)
 
    ptr = 0l
    START:  
@@ -186,25 +198,35 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 
   end_rec = where( strtrim(strmid(hd,0,8),2) EQ  'END')
 
+  exname = sxpar(hd, 'extname', Count = N_extname)
+  if N_extname GT 0 then extname[N_ext+1] = exname
+  get_extname =  (N_ext GE 0) and (N_extname EQ 0) and not keyword_set(SILENT)  
+
+
 ;  Read header records, till end of header is reached
-      
- hdr = bytarr(80, 36, /NOZERO)
- while (end_rec[0] EQ -1) and (not eof(lun1) ) do begin
+
+  hdr = bytarr(80, 36, /NOZERO)
+  while (end_rec[0] EQ -1) and (not eof(lun1) ) do begin
        readu,lun1,hdr
        ptr = ptr + 2880L
        hd1 = string( hdr > 32b)
        end_rec = where( strtrim(strmid(hd1,0,8),2) EQ  'END')
        n_hdrblock = n_hdrblock + 1
- endwhile
+       if get_extname then begin
+           exname = sxpar(hd1, 'extname', Count = N_extname)
+           if N_extname GT 0 then begin
+               if extname GT nmax then begin
+                   extname = [extname,strarr(nmax)]
+                   nmax = nmax*2
+               endif
+               extname[N_ext+1] = exname
+               get_extname = 0
+           endif
+       endif 
+  endwhile
 
 
-   isel = where( strpos(hd,'EXTNAME =') GE 0, N_extname)  ;find extension name
-   if ( N_extname GE 1 ) then begin
-            hdd = hd[ isel[0] ]
-            dum = gettok( hdd, '=' )
-            extname = [ extname, strtrim(hdd,2) ]
-   endif else extname = [ extname, '' ]
-
+ 
  n_hdrec = 36L*(n_hdrblock-1) + end_rec[0] + 1L         ; size of header
  descript = strn( n_hdrec ) + descript
 
@@ -238,7 +260,8 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
     if not eof(lun1) then goto, START
 ;
  END_OF_FILE:  
- extname = extname[1:*]            ;strip off bogus first value
+
+ extname = extname[0:N_ext]           ;strip off bogus first value
                                   ;otherwise will end up with '' at end
 
  if not (SILENT) then begin

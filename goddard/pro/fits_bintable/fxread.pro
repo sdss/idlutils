@@ -1,15 +1,15 @@
-
 	PRO FXREAD, FILENAME, DATA, HEADER, P1, P2, P3, P4, P5,     $
 		NANVALUE=NANVALUE, PROMPT=PROMPT, AVERAGE=AVERAGE,	$
 		YSTEP=Y_STEP, NOSCALE=NOSCALE, NOUPDATE=NOUPDATE,	$
-		ERRMSG=ERRMSG, NODATA=NODATA
+		ERRMSG=ERRMSG, NODATA=NODATA, COMPRESS = COMPRESS,      $
+		EXTENSION=EXTENSION0
 ;+
 ; NAME: 
 ;	FXREAD
 ; Purpose     : 
 ;	Read basic FITS files.
 ; Explanation : 
-;	Read the primary array from a disk FITS file.  Optionally allows the
+;	Read an image array from a disk FITS file.  Optionally allows the
 ;	user to read in only a subarray and/or every Nth pixel.
 ; Use         : 
 ;	FXREAD, FILENAME, DATA  [, HEADER  [, I1, I2  [, J1, J2 ]]  [, STEP]]
@@ -30,9 +30,17 @@
 ; Opt. Outputs: 
 ;	HEADER	 = String array containing the header for the FITS file.
 ; Keywords    : 
+;       /COMPRESS - If this keyword is set and non-zero, then then treat
+;                the file as gzip compressed.    By default FXREAD assumes
+;                the file is gzip compressed if it ends in ".gz"
 ;	NANVALUE = Value signalling data dropout.  All points corresponding to
 ;		   IEEE NaN (not-a-number) are set to this value.  Ignored
 ;		   unless DATA is of type float or double-precision.
+;       EXTENSION = FITS extension.  It can be a scalar integer,
+;                indicating the extension number (extension number 0
+;                is the primary HDU).  It can also be a scalar string,
+;                indicating the extension name (EXTNAME keyword).
+;                Default: 0 (primary HDU)
 ;	PROMPT	 = If set, then the optional parameters are prompted for at the
 ;		   keyboard.
 ;	AVERAGE	 = If set, then the array size is reduced by averaging pixels
@@ -109,6 +117,8 @@
 ;			       keywords.
 ;	W. Thompson, Aug 1992, changed to call FXHREAD, and to add history
 ;			       records for BZERO, BSCALE.
+; Minimium IDL Version:
+;       V5.3 (uses COMPRESS keyword to OPEN) 
 ; Written     : 
 ;	William Thompson, GSFC, May 1992.
 ; Modified    : 
@@ -130,7 +140,13 @@
 ;       Version 7 C. Markwardt 22 Sep 2003
 ;               If the image is empty (NAXIS EQ 0), or NODATA is set, then
 ;               return only the header.  
-;
+;       Version 8 W. Landsman  29 June 2004
+;               Added COMPRESS keyword, check for .gz extension  
+;       Version 9, William Thompson, 19-Aug-2004
+;               Make sure COMPRESS is treated as a scalar
+;       Version 10, Craig Markwardt, 01 Mar 2004
+;               Add EXTENSION keyword and ability to read different
+;               extensions than the primary one.
 ;-
 ;
 	ON_ERROR, 2
@@ -159,10 +175,28 @@
 			END ELSE MESSAGE, MESSAGE
 			END
 	ENDCASE
+
+	;; Extension number	
+	IF N_ELEMENTS(EXTENSION0) EQ 0 THEN EXTENSION = 0L $
+	ELSE EXTENSION = EXTENSION0[0]
+
+	SZ = SIZE(EXTENSION)
+	ETYPE = SZ[SZ[0]+1]
+	IF ETYPE EQ 8 THEN BEGIN
+		MESSAGE = 'EXTENSION must not be a structure'
+		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+			ERRMSG = MESSAGE
+			RETURN
+		END ELSE MESSAGE, MESSAGE
+	ENDIF
+
+
 ;
-;  Get the UNIT number, and open the file.
+;  Determine if file is compressed, get the UNIT number, and open the file.
 ;
-	OPENR, UNIT, FILENAME, /BLOCK, /GET_LUN, ERROR=ERROR
+        IF NOT KEYWORD_SET(COMPRESS) THEN $
+         COMPRESS = STRLOWCASE( STRMID(FILENAME, STRLEN(FILENAME)-3,3)) EQ '.gz'
+	OPENR, UNIT, FILENAME, /BLOCK, /GET_LUN, ERROR=ERROR,COMPRESS=COMPRESS[0]
         IF ERROR NE 0 THEN BEGIN
 	    MESSAGE='Error opening '+FILENAME
 	    IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
@@ -173,21 +207,85 @@
 ;
 ;  Read in the FITS header.
 ;
-	FXHREAD,UNIT,HEADER,STATUS
-	IF STATUS NE 0 THEN BEGIN
-		FREE_LUN,UNIT
-		MESSAGE = 'Unable to read FITS header'
-		IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
-			ERRMSG = MESSAGE
-			RETURN
-		END ELSE MESSAGE, MESSAGE
-	ENDIF
+
+	;; Starting extension number is zero
+	I_EXT = 0L
+	FOUND_EXT = 0
+
+        WHILE NOT FOUND_EXT DO BEGIN
+            FXHREAD,UNIT,HEADER,STATUS
+            IF STATUS NE 0 THEN BEGIN
+               FREE_LUN,UNIT
+                MESSAGE = 'Unable to read requested FITS header extension'
+                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                    ERRMSG = MESSAGE
+                    RETURN
+                END ELSE MESSAGE, MESSAGE
+            ENDIF
 ;
 ;  Extract the keywords BITPIX, NAXIS, NAXIS1, ...
 ;
-	BITPIX = FXPAR(HEADER,'BITPIX')
-	NAXIS = FXPAR(HEADER,'NAXIS')
+            START = 0L
+            BITPIX = FXPAR(HEADER,'BITPIX', START=START)
+            NAXIS = FXPAR(HEADER,'NAXIS', START=START)
+            GCOUNT = FXPAR(HEADER,'GCOUNT', START=START)
+            IF GCOUNT EQ 0 THEN GCOUNT = 1
+            PCOUNT = FXPAR(HEADER,'PCOUNT', START=START)
+            IF NAXIS GT 0 THEN BEGIN 
+                DIMS = FXPAR(HEADER,'NAXIS*') ;Read dimensions
+                NDATA = DIMS[0]
+                IF NAXIS GT 1 THEN FOR I=2,NAXIS DO NDATA = NDATA*DIMS[I-1]
+            ENDIF ELSE NDATA = 0
+            NBYTES = (ABS(BITPIX) / 8) * GCOUNT * (PCOUNT + NDATA)
+            NREC = LONG((NBYTES + 2879) / 2880)
+            
+            IF ETYPE EQ 7 THEN BEGIN
+                EXTNAME = STRTRIM(STRUPCASE(FXPAR(HEADER,'EXTNAME', $
+                                                  START=START)),2)
+                IF EXTNAME EQ EXTENSION THEN FOUND_EXT = 1
+            END ELSE IF I_EXT EQ EXTENSION THEN FOUND_EXT = 1
 
+            IF NOT FOUND_EXT THEN BEGIN
+                ;; Check to be sure there are extensions
+                IF I_EXT EQ 0 THEN BEGIN
+                    IF NOT FXPAR(HEADER,'EXTEND', START=START) THEN BEGIN
+		        FREE_LUN,UNIT
+                        MESSAGE = 'Requested extension not found, and file ' + $
+                          FILENAME + ' does not contain extensions'
+                        IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                            ERRMSG = MESSAGE
+                            RETURN
+                        END ELSE MESSAGE, MESSAGE
+                    ENDIF
+                ENDIF
+
+	        POINT_LUN, -UNIT, POINTLUN		;Current position
+                MHEAD0 = POINTLUN + NREC*2880L
+	        POINT_LUN, UNIT, MHEAD0			;Next FITS extension
+
+                I_EXT = I_EXT + 1
+            ENDIF
+        ENDWHILE
+
+        ;;
+        ;; If we got here, then we have arrived at the requested
+        ;; extension.  We still need to be sure that it is an image
+        ;; and not a table (for extensions beyond the primary one,
+        ;; that is).
+        ;;
+        IF I_EXT GT 0 THEN BEGIN
+            XTENSION = STRTRIM(STRUPCASE(FXPAR(HEADER,'XTENSION', START=START)),2)
+            IF (XTENSION NE 'IMAGE') THEN BEGIN
+		FREE_LUN,UNIT
+                MESSAGE = 'Extension ' + STRTRIM(EXTENSION,2) +		$
+                  ' is not an image'
+                IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                    ERRMSG = MESSAGE
+                    RETURN
+                END ELSE MESSAGE, MESSAGE
+            ENDIF
+        ENDIF
+            
         ;; Handle case of empty image, or no data requested
         IF NAXIS EQ 0 OR KEYWORD_SET(NODATA) THEN BEGIN
             ;; Make DATA an undefined variable, reflecting no data
@@ -484,4 +582,3 @@ QUIT:   ON_IOERROR,NULL
 	IF N_ELEMENTS(ERRMSG) NE 0 THEN ERRMSG = ''
 	RETURN
 	END
-

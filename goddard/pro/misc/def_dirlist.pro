@@ -41,7 +41,6 @@
 ;-
 ;
 	ON_ERROR, 2
-        FORWARD_FUNCTION strsplit             ;Pre V5.3 Compatibility
 ;
 	IF N_PARAMS() NE 2 THEN MESSAGE, 'Syntax:  DEF_DIRLIST, EVAR, VALUE'
 ;
@@ -55,9 +54,7 @@
 ;  the value.
 ;
 	IF !VERSION.OS_FAMILY EQ 'vms' AND STRLEN(DIR) GE 256 THEN BEGIN
-                IF !VERSION.RELEASE GE '5.3' THEN $
-                   DIR = STRSPLIT(DIR,SEP,/EXTRACT) ELSE $
-		   DIR = STR_SEP(DIR, SEP)
+                   DIR = STRSPLIT(DIR,SEP,/EXTRACT) 
 		SETLOG, EVAR, DIR
 ;
 ;  Otherwise, use SETENV

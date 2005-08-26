@@ -1,4 +1,5 @@
-function minmax,array,NAN=nan, DIMEN=dimen
+function minmax,array,NAN=nan, DIMEN=dimen, $
+	SUBSCRIPT_MAX = subscript_max, SUBSCRIPT_MIN = subscript_min
 ;+
 ; NAME:
 ;      MINMAX
@@ -21,7 +22,7 @@ function minmax,array,NAN=nan, DIMEN=dimen
 ;            array where N is the number of elements in the specified
 ;            dimension
 ;              
-; OPTIONAL INPUT KEYWORD:
+; OPTIONAL INPUT KEYWORDS:
 ;      /NAN   - Set this keyword to cause the routine to check for occurrences
 ;            of the IEEE floating-point value NaN in the input data.  Elements 
 ;            with the value NaN are treated as missing data.
@@ -30,6 +31,11 @@ function minmax,array,NAN=nan, DIMEN=dimen
 ;            dimension of a 2-d array to  take the minimum and maximum.   Note
 ;            that DIMEN is only valid for a 2-d array, larger dimensions are 
 ;            not supported.
+;
+; OPTIONAL OUTPUT KEYWORDS:
+;      SUBSCRIPT_MAX and SUBSCRIPT_MIN  Set either of these keywords to 
+;            named variables to return the subscripts of the MIN and MAX
+;	     values (V5.5 or later).
 ; EXAMPLE:
 ;     (1)  Print the minimum and maximum of an image array, im
 ; 
@@ -48,13 +54,22 @@ function minmax,array,NAN=nan, DIMEN=dimen
 ;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Added NaN keyword.      M. Buie       June 1998
 ;      Added DIMENSION keyword    W. Landsman  January 2002
+;      Added SUBSCRIPT_MIN and SUBSCRIPT_MAX  BT Jan 2005
+;      Check for IDL 5.5 or later, W. Thompson, 24-Feb-2005
 ;-
  On_error,2
- if N_elements(DIMEN) GT 0 then begin
-      amin = min(array, MAX = amax, NAN = nan, DIMEN = dimen) 
+ if !version.release ge '5.5' then begin
+   if N_elements(DIMEN) GT 0 then begin
+      amin = min(array, subscript_min, $
+      	MAX = amax, NAN = nan, DIMEN = dimen, SUBSCRIPT_MAX = subscript_max) 
       return, transpose( [[amin], [amax] ])
- endif else  begin 
-     amin = min( array, MAX = amax, NAN=nan)
+   endif else  begin 
+     amin = min( array, subscript_min, $
+     	MAX = amax, NAN=nan, SUBSCRIPT_MAX = subscript_max)
      return, [ amin, amax ]
+   endelse
+ end else begin
+   amin = min( array, MAX = amax, NAN=nan)
+   return, [ amin, amax ]
  endelse
  end

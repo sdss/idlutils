@@ -43,7 +43,7 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
 ;       FORMAT - Scalar format string as in the PRINT procedure.  The use
 ;               of outer parenthesis is optional.   Ex. - format="(F10.3,I7)"
 ;               This program will automatically remove a leading "$" from
-;               incoming format statments. Ex. - "$(I4)" would become "(I4)".
+;               incoming format statements. Ex. - "$(I4)" would become "(I4)".
 ;               If omitted, then IDL default formats are used.
 ;       /NOCOMMENT  - Set this keyword if you don't want any comment line
 ;               line written as the first line in a harcopy output file.
@@ -89,8 +89,10 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
 ;       Fix skipping of first line bug introduced Aug 2001  W. Landsman Nov2001
 ;       Added /NOCOMMENT keyword, the SILENT keyword now controls only 
 ;       the display of informational messages.  W. Landsman June 2002
+;       Skip PRINTF if IDL in demo mode  W. Landsman  October 2004
 ;-            
   On_error,2                               ;Return to caller
+  compile_opt idl2
 
   npar = N_params()
   if npar EQ 0 then begin
@@ -140,6 +142,9 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
        for i = istart, npar do str = str + ',v' + strtrim(i,2) + '[i]'
 
 ; Use default output dev.
+   demo = lmgr(/demo)
+   if not demo then begin 
+
    if not keyword_set( TEXTOUT ) then textout = !TEXTOUT 
    if size( textout,/TNAME) EQ 'STRING' then text_out = 6  $      ;make numeric
                                   else text_out = textout
@@ -160,10 +165,14 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
         stdout = fstat(-1)
         more_term =  stdout.isatty and (not stdout.isagui)
    endif
+   endif
  
    if fmt EQ "F" then begin            ;Use default formats
 
-   if more_term then begin      
+   if demo then begin
+         test =  execute('for i=startline-1,npts-1 do print,' + str)
+        
+   endif else if more_term then begin      
       for i = startline-1, npts-1 do begin 
 
           test = execute('printf,!TEXTUNIT,' + str) 
@@ -175,8 +184,11 @@ pro forprint, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, $
           execute('for i=startline-1,npts-1 do printf,!TEXTUNIT,' + str)
 
    endif else begin                    ;User specified format
+
+   if demo then begin
+         test =  execute('for i=startline-1,npts-1 do print,FORMAT=frmt,' + str)
  
-     if more_term then begin
+   endif else  if more_term then begin
 
       for i = startline-1, npts-1 do begin 
 
