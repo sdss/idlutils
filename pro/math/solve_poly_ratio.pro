@@ -8,7 +8,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   solve_poly_ratio( xvector, aflux, bflux, aivar, [ bivar, npoly=, nback=, $
-;    inparams=, yfit=, ymult=, yadd=, acoeff=, totchi2=, _EXTRA= ] )
+;    inparams=, yfit=, ymult=, yadd=, acoeff=, totchi2=, status=, perror ] )
 ;
 ; INPUTS:
 ;   xvector    - X axis from which to construct polynomial terms; this vector
@@ -25,9 +25,10 @@
 ;                be a positive integer; default to 1
 ;   nback      - Number of polynomial terms to add to AFLUX
 ;   inparams   - Starting guess for polynomial + additive terms if the
-;                second method is used (specifying AIVAR,BIVAR) [NPOLY+NBACK]
-;   _EXTRA     - Other inputs for MPFIT if using the 2nd method,
-;                such as STATUS,PERROR.
+;                second method is used (specifying AIVAR,BIVAR) [NPOLY+NBACK];
+;                this keyword is required in that case
+;   status     - Return value from MPFIT if using the 2nd fit method
+;   perror     - Return value from MPFIT if using the 2nd fit method
 ;
 ; OUTPUTS:
 ;   yfit       - Rescaled AFLUX with additive, background terms:
@@ -134,9 +135,9 @@ function solve_poly_vectors, xvector, npoly
 end
 ;------------------------------------------------------------------------------
 pro solve_poly_ratio2, xvector1, allflux1, allflux2, allivar1, allivar2, $
- npoly=npoly1, nback=nback1, inparams=inparams, $
- yfit=yfit, ymult=ymult, yadd=yadd, $
- acoeff=acoeff, totchi2=totchi2, _REF_EXTRA=EXTRA
+ npoly=npoly1, nback=nback1, yfit=yfit, ymult=ymult, yadd=yadd, $
+ acoeff=acoeff, totchi2=totchi2, $
+ inparams=inparams, status=status, perror=perror
 
    common com_fcorr_chi, npoly, nback, xvector, aflux, bflux, $
     aivar, bivar, aarr, barr
@@ -196,7 +197,7 @@ pro solve_poly_ratio2, xvector1, allflux1, allflux2, allivar1, allivar2, $
 
    acoeff = mpfit('solve_poly_chi_fn', parinfo=parinfo, perror=perror, $
     maxiter=maxiter, ftol=ftol, gtol=gtol, xtol=xtol, $
-    niter=niter, _REF_EXTRA=EXTRA, /quiet)
+    niter=niter, status=status, /quiet)
 
    if (arg_present(totchi2)) then $
     totchi2 = total( (solve_poly_chi_fn(acoeff))^2 )
@@ -211,7 +212,7 @@ end
 ; The errors are the simple quadrature sum from AIVAR and BIVAR.
 pro solve_poly_ratio1, xvector, aflux, bflux, aivar, $
  npoly=npoly1, nback=nback1, yfit=yfit, ymult=ymult, yadd=yadd, acoeff=acoeff, $
- totchi2=totchi2, _REF_EXTRA=EXTRA
+ totchi2=totchi2
 
    if (keyword_set(npoly1)) then npoly = npoly1[0] $
     else npoly = 1
@@ -289,14 +290,21 @@ pro solve_poly_ratio1, xvector, aflux, bflux, aivar, $
 end
 ;------------------------------------------------------------------------------
 pro solve_poly_ratio, xvector, aflux, bflux, aivar, bivar, $
- _REF_EXTRA=EXTRA
+ npoly=npoly, nback=nback, yfit=yfit, ymult=ymult, yadd=yadd, $
+ acoeff=acoeff, totchi2=totchi2, $
+ inparams=inparams, status=status, perror=perror
 
    if (n_params() EQ 4) then begin
       solve_poly_ratio1, xvector, aflux, bflux, aivar, $
-       _REF_EXTRA=EXTRA
+       npoly=npoly, nback=nback, yfit=yfit, ymult=ymult, yadd=yadd, $
+       acoeff=acoeff, totchi2=totchi2
    endif else if (n_params() EQ 5) then begin
+      if (NOT keyword_set(inparams)) then $
+       message, 'INPARAMS must be set!
       solve_poly_ratio2, xvector, aflux, bflux, aivar, bivar, $
-       _REF_EXTRA=EXTRA
+       npoly=npoly, nback=nback, yfit=yfit, ymult=ymult, yadd=yadd, $
+       acoeff=acoeff, totchi2=totchi2, $
+       inparams=inparams, status=status, perror=perror
    endif else begin
       message, 'Invalid inputs!'
    endelse
