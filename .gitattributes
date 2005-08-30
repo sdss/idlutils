@@ -926,6 +926,7 @@ pro/math/nnls.pro -text
 pro/math/nonneg_mult_update.pro -text
 pro/math/nonneg_mult_update_solve.pro -text
 pro/math/poly_iter.pro -text
+pro/math/solve_poly_ratio.pro -text
 pro/math/sshift.pro -text
 pro/math/sshift2d.pro -text
 pro/math/sshiftrotate.pro -text
