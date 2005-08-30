@@ -1,4 +1,9 @@
 
+SOLVE_POLY_RATIO: This is a generalized version of SPFLUXCORR_SOLVE
+               and SPFLUXCORR_SOLVE2 that was found in the idlspec2d
+               routine SPFLUXCORR_V5.  It solves for the multiplicative
+               and additive polynomial terms between two spectra (vectors).
+
 -------------------------------------------------------------------------------
 v5_0_5 (August 23, 2005) running on IDL 5.4 - 6.2
 Tagged for photoop v1_7_8
