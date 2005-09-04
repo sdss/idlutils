@@ -25,7 +25,9 @@ xx= double(temporary(xx)) ; just in case
 yy= double(temporary(yy)) ; just in case
 xy2ad, xx,yy,astr,aaaa,dddd
 maxdist= max(djs_diff_angle(aa,dd,aaaa,dddd))
-splog, 'get maximum angular error of',maxdist,' (tol',tol,')'
+kk= 0
+splog, 'iteration',kk, $
+  ': get maximum angular error of',maxdist,' (tol',tol,')'
 while (maxdist GT tol) do begin
     splog, 'taking derivatives'
     xy2ad, xx+1D0,yy,astr,dadx,dddx
@@ -45,7 +47,9 @@ while (maxdist GT tol) do begin
     yy= temporary(yy)+(aa-aaaa)*dyda+(dd-dddd)*dydd
     xy2ad, xx,yy,astr,aaaa,dddd
     maxdist= max(djs_diff_angle(aa,dd,aaaa,dddd))
-    splog, 'get maximum angular error of',maxdist,' (tol',tol,')'
+    kk= kk+1
+    splog, 'iteration',kk, $
+      ': get maximum angular error of',maxdist,' (tol',tol,')'
 endwhile
 return
 end
