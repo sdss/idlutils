@@ -23,7 +23,7 @@
 ;   orthographic  - Make orthographic "-SIN" header instead of
 ;                   gnomonic "-TAN" header.
 ; OUTPUTS:
-;   astr     - Astrometry structure with NAXIS1,NAXIS2 keywords added
+;   astr     - Astrometry structure with NAXIS keyword added
 ; OPTIONAL OUTPUTS:
 ;   pixscale  - Set, if not input
 ; COMMENTS:
@@ -63,7 +63,7 @@ function hogg_make_astr, racen,deccen,dra1,ddec1,pixscale=pixscale, $
      CRVAL    = double([racen,deccen]), $
      CTYPE    = ctype, $
      LONGPOLE = 1.8D2
-   bigast = struct_addtags(bigast1, {naxis1: naxis1,  naxis2:naxis2})
+   bigast= struct_addtags(bigast1,{naxis: [naxis1,naxis2]})
    return, bigast
 end
 ;------------------------------------------------------------------------------
