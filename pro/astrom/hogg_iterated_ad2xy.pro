@@ -4,7 +4,9 @@
 ; PURPOSE:
 ;   Same as ad2xy, but assuming that xy2ad is perfect.
 ; COMMENTS:
-;   Uses ad2xy to make a first guess, then iterates by Newton's method.
+;   Starts with a first guess that everything is at (x,y)=(0,0) and
+;     then uses Newton's method to iterate to the correct (x,y)
+;     values.
 ; INPUTS:
 ;   a,d    - vectors of RA,Dec
 ;   astr   - astrometric structure
@@ -20,9 +22,8 @@
 pro hogg_iterated_ad2xy, aa,dd,astr,xx,yy,tol=tol
 if (NOT keyword_set(tol)) then tol= 0.01/3600.0
 splog, 'making first guess'
-ad2xy, aa,dd,astr,xx,yy
-xx= double(temporary(xx)) ; just in case
-yy= double(temporary(yy)) ; just in case
+xx= dblarr(n_elements(aa))
+yy= xx
 xy2ad, xx,yy,astr,aaaa,dddd
 maxdist= max(djs_diff_angle(aa,dd,aaaa,dddd))
 kk= 0

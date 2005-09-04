@@ -6,7 +6,8 @@
 ; PURPOSE:
 ;   Compute the angular distance between two points on a sphere.
 ;
-;   Note that either (ra1,dec1) or (rap,decp) must be scalars.
+;   Note that either (ra1,dec1) or (rap,decp) must be scalars, or
+;     else they must both be the same length.
 ;
 ; CALLING SEQUENCE:
 ;   adist = djs_diff_angle( ra, dec, ra0, dec0, [ units=units ] )
