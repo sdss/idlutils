@@ -29,9 +29,12 @@
 ;      Distortion in FITS Image Headers"
 ;    by Shupe et al. 2005.
 ;
+;  BUGS:
+;    Doesn't do the tangent-plane projection correctly; i.e., this
+;      assumes that tan(theta)=theta.
+;
 ;  REVISION HISTORY
 ;    Implemented by S. Burles during the lost year of 05. 
-;   
 ;
 ;-
 
