@@ -26,7 +26,8 @@
 ;   nback      - Number of polynomial terms to add to AFLUX
 ;   inparams   - Starting guess for polynomial + additive terms if the
 ;                second method is used (specifying AIVAR,BIVAR) [NPOLY+NBACK];
-;                this keyword is required in that case
+;                if not set, then a fit is first performed without
+;                allowing the errors AIVAR to be rescaled with the flux
 ;   status     - Return value from MPFIT if using the 2nd fit method
 ;   perror     - Return value from MPFIT if using the 2nd fit method
 ;
@@ -292,15 +293,25 @@ end
 pro solve_poly_ratio, xvector, aflux, bflux, aivar, bivar, $
  npoly=npoly, nback=nback, yfit=yfit, ymult=ymult, yadd=yadd, $
  acoeff=acoeff, totchi2=totchi2, $
- inparams=inparams, status=status, perror=perror
+ inparams=inparams1, status=status, perror=perror
 
    if (n_params() EQ 4) then begin
       solve_poly_ratio1, xvector, aflux, bflux, aivar, $
        npoly=npoly, nback=nback, yfit=yfit, ymult=ymult, yadd=yadd, $
        acoeff=acoeff, totchi2=totchi2
    endif else if (n_params() EQ 5) then begin
-      if (NOT keyword_set(inparams)) then $
-       message, 'INPARAMS must be set!
+      if (keyword_set(inparams1)) then begin
+         inparams = inparams1
+      endif else begin
+         ; Do a 1st pass re-fitting without scaling the errors
+         ; in order to get the initial guess for the nonlinear fitting
+         thisivar = 0 * aivar
+         indx = where(aivar GT 0 AND bivar GT 0, ct)
+         if (ct GT 0) then $
+          thisivar[indx] = 1. / (1./aivar[indx] + 1./bivar[indx])
+         solve_poly_ratio, xvector, aflux, bflux, thisivar, $
+          npoly=npoly, nback=nback, acoeff=inparams
+      endelse
       solve_poly_ratio2, xvector, aflux, bflux, aivar, bivar, $
        npoly=npoly, nback=nback, yfit=yfit, ymult=ymult, yadd=yadd, $
        acoeff=acoeff, totchi2=totchi2, $
