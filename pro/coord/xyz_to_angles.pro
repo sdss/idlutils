@@ -7,7 +7,7 @@
 ;    0 <= phi < 360
 ;    0 <= theta <= 180
 ;  where theta=0 corresponds to the N pole, and theta=180 is the S pole.
-;  Note that RA=phi and DEC=theta-90.
+;  Note that RA=phi and DEC=90-theta.
 ;-
 pro xyz_to_angles,x,y,z,r,phi,theta
    DRADEG = 180.d0/!dpi
