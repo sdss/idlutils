@@ -22,6 +22,8 @@
 ;   probability [N,M] array of probabilities of point i in gaussian j
 ;   exponent    [N,M] array of exponents for point i in gaussian j
 ; BUGS:
+;   Hogg is pretty sure that the "probability" calculation in the
+;   middle of the iteration is WRONG -- see in-code comments.
 ;   Entropy calculation could be wrong; see in-code comments.
 ;   Stopping condition is hard-wired.
 ; DEPENDENCIES:
@@ -96,7 +98,7 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
       for i=0L,ndata-1 do begin
         delta= point[*,i]-mean[*,j]
         exponent[i,j]= delta#invvar#delta
-      endfor
+    endfor
       probability[*,j]= normamp*exp(-0.5*exponent[*,j])
     endfor
 
@@ -109,6 +111,8 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
     splog, iteration,': entropy S =',entropy,' bits'
 
 ; normalize probabilities
+; Hogg is pretty sure that the WEIGHT needs to be multiplied into the
+; probability before this normalization step -- or maybe it doesn't matter?
     probability= probability/(total(probability,2,/double)#(dblarr(ngauss)+1))
 
 ; compute new quantities

@@ -7,7 +7,6 @@
 ;  nw_ad_grid,rain,decin,hdr,[dra=,ddec=,name=,linethick=,color=,/nolabels]
 ;INPUTS:
 ;  hdr         - header of the FITS image to be overlayed
-;  
 ;OPTIONAL INPUTS:
 ;  dra,ddec    - spacing of grid lines
 ;  linethick   - thickness of line in unrebinned pixels -- assuming the PS file
@@ -17,16 +16,11 @@
 ;  nolabels    - don't label grid lines
 ;  gsss        - use gsss not usual WCS
 ;OPTIONAL OUTPUTS:
-;  
-;EXAMPLE:
-;  
 ;OUTPUTS:
-;  PS file
+;  [adds to current plotting device]
 ;DEPENDENCIES:
-;  
 ;BUGS:
 ;  Requires PS file to have xsize=7.5in!
-;
 ;REVISION HISTORY:
 ;  7/8/04 written - wherry
 ;-
