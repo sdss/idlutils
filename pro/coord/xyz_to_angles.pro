@@ -1,11 +1,14 @@
-;-----------------------------------------------------------------------
+;+
+; NAME:
+;  xyz_to_angles
+; PURPOSE:
 ;  Convert Cartesian coordinates (x,y,z) to spherical coordinates
 ;  (r,phi,theta).  The returned angles are in the following ranges:
 ;    0 <= phi < 360
 ;    0 <= theta <= 180
 ;  where theta=0 corresponds to the N pole, and theta=180 is the S pole.
 ;  Note that RA=phi and DEC=theta-90.
-
+;-
 pro xyz_to_angles,x,y,z,r,phi,theta
    DRADEG = 180.d0/!dpi
 
