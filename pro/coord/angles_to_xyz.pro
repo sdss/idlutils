@@ -9,15 +9,14 @@
 ;  where theta=0 corresponds to the N pole, and theta=180 is the S pole.
 ;  If you want to convert from RA and DEC, pass the following
 ;  arguments (in degrees):  RA, 90-DEC
+; REVISION HISTORY:
+;  2005-09-10  tweaked - Hogg (NYU)
 ;-
 pro angles_to_xyz,r,phi,theta,x,y,z
-   DRADEG = 180.d0/!dpi
- 
-   stheta = sin(theta / DRADEG)
-   x = r * cos(phi / DRADEG) * stheta
-   y = r * sin(phi / DRADEG) * stheta
-   z = r * cos(theta / DRADEG)
- 
-   return
+DRADEG = 180.d0/!dpi
+stheta = sin(theta / DRADEG)
+x = r * cos(phi / DRADEG) * stheta
+y = r * sin(phi / DRADEG) * stheta
+z = r * cos(theta / DRADEG)
+return
 end
-;-----------------------------------------------------------------------
