@@ -61,7 +61,7 @@ COMPILE_OPT idl2
 ON_ERROR, 2
 ;  Set up keyword params
 
-if n_elements(thick) eq 0 then thick = 1.
+if n_elements(thick) eq 0 then thick = !P.thick > 1.0
 if n_elements(hthick) eq 0 then hthick = thick
 
 				;Head size in device units

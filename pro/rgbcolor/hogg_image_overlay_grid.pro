@@ -1,4 +1,6 @@
 pro hogg_image_overlay_grid, hdr,overlay,factor=factor, $
+                             ra_arrow=ra_arrow,dec_arrow=dec_arrow, $
+                             name_arrow=name_arrow,length_arrow=length_arrow, $
                              _EXTRA=KeywordsForGrid
 prefix= 'tmp_hogg_image_overlay_grid'
 naxis1= round(sxpar(hdr,'NAXIS1'))
@@ -7,10 +9,10 @@ bangp= !P
 bangx= !X
 bangy= !Y
 set_plot, 'PS'
-dpi= floor((naxis1/7.5) < (naxis2/10.0))
-xsize= double(naxis1)/double(dpi)
-ysize= double(naxis2)/double(dpi)
-device, filename=prefix+'.ps',xsize=xsize,ysize=ysize,/inches
+xsize= 7.5
+ysize= xsize*float(naxis2)/float(naxis1)
+device, file=prefix+'.ps',/inches,xsize=xsize,ysize=ysize, $
+  xoffset=(8.5-xsize)/2.0,yoffset=(11.0-ysize)/2.0,/color, bits=8
 !P.MULTI= [0,1,1]
 !P.POSITION= [0.,0.,1.,1.]
 !X.MARGIN= [0,0]
@@ -24,6 +26,10 @@ plot, [0],[0],/nodata, $
   xstyle=xstyle,xrange=xrange, $
   ystyle=ystyle,yrange=yrange
 nw_ad_grid, hdr,_EXTRA=KeywordsForGrid
+if (keyword_set(ra_arrow)) then begin
+    hogg_directions, sxpar(hdr,'CRVAL1'),sxpar(hdr,'CRVAL2'), $
+      ra_arrow,dec_arrow,name_arrow,hdr,length=length_arrow
+endif
 device, /close
 !P= bangp
 !X= bangx

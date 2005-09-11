@@ -9,18 +9,19 @@
 ;  hdr         - header of the FITS image to be overlayed
 ;OPTIONAL INPUTS:
 ;  dra,ddec    - spacing of grid lines
-;  linethick   - thickness of line in unrebinned pixels -- assuming the PS file
-;                has xsize=7.5in!
-;  color       - 
+;  linethick   - thickness of line in unrebinned pixels -- assuming
+;                the PS file has xsize=7.5in!
+;  color       - dur
 ;OPTIONAL KEYWORDS:
 ;  nolabels    - don't label grid lines
 ;  gsss        - use gsss not usual WCS
 ;OPTIONAL OUTPUTS:
 ;OUTPUTS:
-;  [adds to current plotting device]
+;  [adds to currently open plot]
 ;DEPENDENCIES:
 ;BUGS:
-;  Requires PS file to have xsize=7.5in!
+;  - Requires PS file to have xsize=7.5in!  Can this be read from a
+;    "bang" variable?
 ;REVISION HISTORY:
 ;  7/8/04 written - wherry
 ;-
