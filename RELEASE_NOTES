@@ -1,6 +1,19 @@
 
+ACSSIP_AD2XY,ACSSIP_XY2AD: Bug fixes.
+ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
+               This *should* do what ACSSIP_AD2XY already does internally,
+               so not sure why there is this routine too.
+ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
+               and angles.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
+HOGG_ARROW: Slightly-changed version of the IDL proc arrow, but allowing
+               one to set the angle of the arrow head.
+HOGG_DIRECTIONS,HOGG_IMAGE_OVERLAY,NW_AD_GRID: New plotting procs from Hogg.
+HOGG_ITERATED_AD2XY: Wrapper to AD2XY for inverse transforms, but not sure
+               why one would not use XY2AD which should work.
+HOGG_MAKE_ASTR: New function for making trivial astrometry structures.
+HOGG_NAME2RADEC: New proc to convert IAU names to cooordinates.
 SOLVE_POLY_RATIO: This is a generalized version of SPFLUXCORR_SOLVE
                and SPFLUXCORR_SOLVE2 that was found in the idlspec2d
                routine SPFLUXCORR_V5.  It solves for the multiplicative
