@@ -112,7 +112,7 @@ function usno_read, racen, deccen, rad, path=path, catname=catname
 ; -------- add field epoch information
      if 1 then begin 
         epochfile = path+'/USNO-B-epochs.fit'
-        ep = mrdfits(epochfile, 1)
+        ep = mrdfits(epochfile, 1, /silent)
         hash = fltarr(10000)
         hash[ep.field] = ep.epoch
         usnostruct.fldepoch = hash[usnostruct.fldid]
