@@ -1,11 +1,11 @@
-DEC2HMS:       Vectorized, comments added
-HMS2DEC:       Vectorized, comments added
+
 ACSSIP_AD2XY,ACSSIP_XY2AD: Bug fixes.
 ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
                This *should* do what ACSSIP_AD2XY already does internally,
                so not sure why there is this routine too.
 ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
                and angles.
+DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
 HOGG_ARROW: Slightly-changed version of the IDL proc arrow, but allowing
