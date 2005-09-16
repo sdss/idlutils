@@ -1,9 +1,52 @@
-
-; Written by Douglas Finkbeiner in ancient times
-; 29 Nov 2000 - double keyword added
-; pass type double, or suffer 0.003 arcsec error
+;+
+; NAME:
+;   dec2hms
+;
+; PURPOSE:
+;   convert decimal number to HH:MM:SS (base sixty)
+;
+; CALLING SEQUENCE:
+;   result = dec2hms(angle_in, double=double)
+;
+; INPUTS:
+;   angle_in  - angle [hours for RA, degrees for declination]
+;
+; KEYWORDS:
+;   double    - double precision math
+;
+; OUTPUTS:
+;   result    - string containing HH:MM:SS or DD:MM:SS
+;
+; EXAMPLES:
+;   ra_string  = dec2hms(ra_degree/15)
+;   dec_string = dec2hms(dec_degree)
+;
+; COMMENTS:
+;   This function does not convert from hours to degrees!
+;   Pass type double, or suffer 0.003 arcsec error
+;   There is some tom-foolery to prevent roundoff problems
+;     (like 1 -> '00 59 60.0') but if you aren't using /double
+;     you have no right to expect high precision anyway. 
+;
+; REVISION HISTORY:
+;   Written by Douglas Finkbeiner in ancient times
+;   2000-Nov-29 - double keyword added            - DPF
+;   2005-Sep-16 - call self recursively for array - DPF
+;
+;----------------------------------------------------------------------
 function dec2hms,angle_in, double=double  
 
+; -------- if angle_in is an array, call self recursively
+  n_angle = n_elements(angle_in) 
+  if n_angle GT 1 then begin 
+     hmsarr = strarr(n_angle)
+     for i=0L, n_angle-1 do begin 
+        hmsarr[i] = dec2hms(angle_in[i], double=double)
+     endfor 
+     return, hmsarr
+  endif
+
+; -------- if there is only one angle, carry on with old routine
   eps = (machar(double=double)).eps ; machine precision
 
   angle = double(angle_in)
@@ -25,5 +68,5 @@ function dec2hms,angle_in, double=double
   if (strmid(hms,7,1) eq ' ') then strput,hms,'0',7
   if neg then strput,hms,'-',0
 
-return,hms
+  return, hms
 end
