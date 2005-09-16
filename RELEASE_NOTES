@@ -1,4 +1,5 @@
-
+DEC2HMS:       Vectorized, comments added
+HMS2DEC:       Vectorized, comments added
 ACSSIP_AD2XY,ACSSIP_XY2AD: Bug fixes.
 ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
                This *should* do what ACSSIP_AD2XY already does internally,
