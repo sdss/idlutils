@@ -1,8 +1,4 @@
-Fix linking problems (on FC3/64-bit, at least):
-src/idlmangle/Makefile 		- added $(X_CFLAGS) to CFLAGS
-src/mangle1.4/src/makefile	- added -fPIC to FFLAGS
 
-USNO_READ:     Read epoch file silently.
 ACSSIP_AD2XY,ACSSIP_XY2AD: Bug fixes.
 ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
                This *should* do what ACSSIP_AD2XY already does internally,
@@ -23,6 +19,12 @@ SOLVE_POLY_RATIO: This is a generalized version of SPFLUXCORR_SOLVE
                and SPFLUXCORR_SOLVE2 that was found in the idlspec2d
                routine SPFLUXCORR_V5.  It solves for the multiplicative
                and additive polynomial terms between two spectra (vectors).
+USNO_READ:     Read epoch file silently.
+
+src/idlmangle/Makefile: Added $(X_CFLAGS) to CFLAGS to fix linking problems
+               on FC3/64-bit platform.
+src/mangle1.4/src/makefile:  Added -fPIC to FFLAGS to fix linking problems
+               on FC3/64-bit platform.
 
 -------------------------------------------------------------------------------
 v5_0_5 (August 23, 2005) running on IDL 5.4 - 6.2
