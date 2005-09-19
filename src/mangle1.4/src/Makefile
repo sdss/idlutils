@@ -20,7 +20,7 @@ CFLAGS = $(X_CFLAGS) -D$(UNAME)
 # gnu g77 (which assumes no SAVE)
 #F77 = g77
 #FFLAGS = -Wimplicit -fbounds-check -g -O3 -DG77
-FFLAGS = $(X_FFLAGS) -DF2C
+FFLAGS = $(X_FFLAGS) -DF2C -fPIC
 
 #MAKE=gmake
 

@@ -1,3 +1,7 @@
+Fix linking problems (on FC3/64-bit, at least):
+src/idlmangle/Makefile 		- added $(X_CFLAGS) to CFLAGS
+src/mangle1.4/src/makefile	- added -fPIC to FFLAGS
+
 USNO_READ:     Read epoch file silently.
 ACSSIP_AD2XY,ACSSIP_XY2AD: Bug fixes.
 ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
