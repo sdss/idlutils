@@ -69,7 +69,7 @@ nhalf = nhalf > 2 ; ??? We need this to not crash further down - DJS
    bestsig = (maxval-mean(smimg))/stddev(smimg)
 
    ; If prob1/prob2 is not really small then return
-   IF (prob1/prob2) GT 1E-5 THEN BEGIN 
+   IF prob1 GT 1E-5 * prob2 THEN BEGIN 
       errflag = 1B
       splog, 'Maxval is only', bestsig, ' sigma above mean'
       splog, 'Odds of ', prob1/prob2, ' are not good enough'
