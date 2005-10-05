@@ -8,6 +8,7 @@ ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
 DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
+GROUP_ON_MATCHES: given a set of matches between indices, group those indices
 HOGG_ARROW: Slightly-changed version of the IDL proc arrow, but allowing
                one to set the angle of the arrow head.
 HOGG_DIRECTIONS,HOGG_IMAGE_OVERLAY,NW_AD_GRID: New plotting procs from Hogg.
