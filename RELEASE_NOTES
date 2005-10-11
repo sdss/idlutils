@@ -1,3 +1,5 @@
+v4_10_4_1, tagged for backward compatibility tests for photoop v1_0
+   Adjusted src/idlmangle and src/mangle1.2 Makefiles
 
 MWRFITS_CHUNKS- Added /APPEND option.
 

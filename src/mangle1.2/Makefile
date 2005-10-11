@@ -13,7 +13,7 @@ CFLAGS = $(X_CFLAGS) -D$(UNAME)
 # f2c
 #F77 = f77
 #FFLAGS = -u -a -C -g -DF2C
-FFLAGS = $(X_FFLAGS) -DF2C
+FFLAGS = $(X_FFLAGS) $(X_CFLAGS) -DF2C
 #FFLAGS = -u -O -DSUN
 
 ## gnu g77 (which assumes no SAVE)
