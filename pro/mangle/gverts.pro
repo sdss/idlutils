@@ -7,7 +7,6 @@
 ;   verts=gverts(polygon)
 ; INPUTS:
 ;   polygon - spherical polygon specification
-; OPTIONAL INPUTS:
 ; OUTPUTS:
 ;   verts - [3,N] locations of vertices
 ; OPTIONAL INPUT/OUTPUTS:

@@ -1,3 +1,31 @@
+;+
+; NAME:
+;   plot_poly
+; PURPOSE:
+;   plots a mangle polygon (or passes back what you need to plot it)
+; CALLING SEQUENCE:
+;   plot_poly, poly [, offset=, xrange=, yrange=, filename=, /fill, $
+;      /nooutline, xsize=, ysize=, /over, color=, minside=, dangle=, $
+;      outline_thick=, splot=, /aitoff ]
+; INPUTS:
+;   poly - mangle polygon (e.g. one created by construct_polygon())
+; OPTIONAL INPUTS:
+;   offset - offset to apply to ra
+;   xrange, yrange - ranges to pass to plot
+;   filename, xsize, ysize - PS file to output to (and its sizes)
+;   minsize, dangle - pass to gverts
+; OPTIONAL KEYWORDS:
+;   /fill - fill
+;   /over - over plot on current device
+;   /nooutine - do not outline
+; COMMENTS:
+; EXAMPLES:
+; BUGS:
+; PROCEDURES CALLED:
+; REVISION HISTORY:
+;   01-Oct-2002  Written by MRB (NYU)
+;-
+;------------------------------------------------------------------------------
 pro plot_poly,poly,offset=offset,xrange=xrange,yrange=yrange, $
               filename=filename,fill=fill,nooutline=nooutline, $
               xsize=xsize, ysize=ysize, over=over, color=color, $
