@@ -912,6 +912,7 @@ pro/math/ex_max_probability.pro -text
 pro/math/gauss_kernel.pro -text
 pro/math/gauss_overlap.pro -text
 pro/math/gausspix1d.pro -text
+pro/math/gridnd.pro -text
 pro/math/group_on_matches.pro -text
 pro/math/hogg_iter_linfit.pro -text
 pro/math/hogg_snap_integer.pro -text
@@ -923,6 +924,7 @@ pro/math/lle_sm_full.pro -text
 pro/math/lle_sm_mult.pro -text
 pro/math/lle_sm_transpose.pro -text
 pro/math/logsum.pro -text
+pro/math/matchnd.pro -text
 pro/math/memshift.pro -text
 pro/math/mmeval.pro -text
 pro/math/mmsparse.pro -text

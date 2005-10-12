@@ -118,7 +118,7 @@ while(iters le maxiters and abs(err-eold)/err gt tol) do begin
     err=total((datahat.val-data.val)^2*data_ivar.val,/double)
     splog, 'error at iter '+strtrim(string(iters),2)+' = '+ $
       strtrim(string(sqrt(err/float(n_elements(datahat.val)))),2)
-    iters=iters+1
+    iters=iters+1L
 endwhile
 
 end
