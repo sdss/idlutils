@@ -14,9 +14,8 @@
 ;-
 pro angles_to_xyz,r,phi,theta,x,y,z
 DRADEG = 180.d0/!dpi
-stheta = sin(theta / DRADEG)
-x = r * cos(phi / DRADEG) * stheta
-y = r * sin(phi / DRADEG) * stheta
+x = r * cos(phi / DRADEG) * sin(theta / DRADEG)
+y = r * sin(phi / DRADEG) * sin(theta / DRADEG)
 z = r * cos(theta / DRADEG)
 return
 end
