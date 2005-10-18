@@ -109,4 +109,14 @@ endfor
 
 in=mapgroup[in]
 
+npoints=n_elements(matches)
+mult=lonarr(ngroups)
+next=lonarr(npoints)-1L
+first=lonarr(npoints)-1L
+for i = 0l, npoints-1l do mult[in[i]]=mult[in[i]]+1l
+for i = npoints-1l, 0l, -1l do begin 
+    next[i]=first[in[i]]
+    first[in[i]]=i
+end
+
 end
