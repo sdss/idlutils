@@ -12,7 +12,7 @@ void parse_args(int argc, char *argv[])
 {
   char null = '\0';
   char in, opt, out;
-  int iscan;
+  int iscan, tmpint;
 
   /* turn off getopt complaints */
   opterr = 0;
@@ -213,24 +213,26 @@ void parse_args(int argc, char *argv[])
 			printf("%s\n",fmt.parents);
 	    break;
     case 's':		/* skip 1st skip characters of lines of data */
-	    iscan = sscanf(optarg, "%d", &fmt.skip);
+	    iscan = sscanf(optarg, "%d", &tmpint);
+      fmt.skip=(size_t) tmpint;
 	    if (iscan != 1) {
         fprintf(stderr, "-%c%s: expecting integer argument\n", opt, optarg);
         exit(1);
 	    }
 	    if (fmt.skip < 0) {
-        fprintf(stderr, "-%c%s: number of characters %d to skip must be >= 0\n", opt, optarg, fmt.skip);
+        fprintf(stderr, "-%c%s: number of characters %d to skip must be >= 0\n", opt, optarg, (int) fmt.skip);
         exit(1);
 	    }
 	    break;
     case 'e':		/* read only up to end'th character of line */
-	    iscan = sscanf(optarg, "%d", &fmt.end);
+	    iscan = sscanf(optarg, "%d", &tmpint);
+      fmt.end=(size_t) tmpint;
 	    if (iscan != 1) {
         fprintf(stderr, "-%c%s: expecting integer argument\n", opt, optarg);
         exit(1);
 	    }
 	    if (fmt.end < 0) {
-        fprintf(stderr, "-%c%s: last character number %d to read to must be >= 0\n", opt, optarg, fmt.end);
+        fprintf(stderr, "-%c%s: last character number %d to read to must be >= 0\n", opt, optarg, (int) fmt.end);
         exit(1);
 	    }
 	    break;
