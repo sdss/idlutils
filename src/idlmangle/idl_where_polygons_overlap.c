@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <manglefn.h>
 #include <stdlib.h>
 #include <polygon.h>
 #include "export.h"
@@ -115,7 +116,7 @@ IDL_LONG idl_where_polygons_overlap
 	
 	IDL_LONG i,j,k;
 	IDL_LONG retval=1;
-	double    tol,area;
+	double    tol;
 	IDL_LONG  verbose;
 
   tol=0.;
