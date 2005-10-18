@@ -4,23 +4,16 @@
 ; PURPOSE:
 ;   Creates a structure containing a cap expressing a limit in ra
 ; CALLING SEQUENCE:
-;   cap=make_ra_cap(ralimit, [,sign=, node=,]) 
+;   cap=make_ra_cap(ralimit, [,sign= ])
 ; INPUTS:
 ;   ralimit - limit on ra 
 ; OPTIONAL INPUTS:
 ;   sign - sign of the cap (default 1.)
-;   node - node of GC (default 95.)
-; OUTPUTS:
-; OPTIONAL INPUT/OUTPUTS:
-; COMMENTS:
-; EXAMPLES:
-; BUGS:
-; PROCEDURES CALLED:
 ; REVISION HISTORY:
 ;   01-Oct-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-function make_ra_cap,ralimit,sign=sign,node=node
+function make_ra_cap,ralimit,sign=sign
 
 if(n_params() NE 1 ) then $
   message, 'Usage: cap=make_ra_cap(ralimit [,sign=, node=,]) '
