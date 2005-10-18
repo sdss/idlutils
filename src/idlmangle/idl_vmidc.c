@@ -82,7 +82,6 @@ IDL_LONG idl_vmidc
 #endif
   retval=vmidc(poly, nv, nve, (vec *) ve_p, (int *) ipv_p, (int *) ev_p, 
               (int *) &nvm, (vec **) &vm_p);
-  printf("%d\n", vm_p);
   
 #if 0
   printf("%d\n",retval);
