@@ -8,8 +8,9 @@ ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
 DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
-GROUP_ON_MATCHES: given a set of matches between indices, group those indices
-GRIDND: beta code for assigning points to grid points in N dimensions
+GRIDND: New (beta) code for assigning points to grid points in N dimensions
+GROUP_ON_MATCHES: New procedure for taking lists of objects and their
+               matches (presumably from SPHEREMATCH), and find groups.
 HOGG_ARROW: Slightly-changed version of the IDL proc arrow, but allowing
                one to set the angle of the arrow head.
 HOGG_DIRECTIONS,HOGG_IMAGE_OVERLAY,NW_AD_GRID: New plotting procs from Hogg.
@@ -17,7 +18,8 @@ HOGG_ITERATED_AD2XY: Wrapper to AD2XY for inverse transforms, but not sure
                why one would not use XY2AD which should work.
 HOGG_MAKE_ASTR: New function for making trivial astrometry structures.
 HOGG_NAME2RADEC: New proc to convert IAU names to cooordinates.
-MATCHND: beta code for matching 2 sets of points in N dimensions
+MATCHND: New (beta) code for matching 2 sets of points in N dimensions.
+               This was written to be the Cartesian equivalent of SPHEREMATCH.
 OFFSET_FROM_PAIRS: Fix "div by zero" exception problem.
 SOLVE_POLY_RATIO: This is a generalized version of SPFLUXCORR_SOLVE
                and SPFLUXCORR_SOLVE2 that was found in the idlspec2d
