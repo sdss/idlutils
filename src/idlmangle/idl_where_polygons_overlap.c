@@ -5,7 +5,6 @@
 #include <polygon.h>
 #include "export.h"
 
-IDL_LONG garea(polygon *poly, double *tol, IDL_LONG verb, double *area); 
 polygon *new_poly(int npmax);
 
 /*---------------------------------------------------------------------------
