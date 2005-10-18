@@ -30,7 +30,7 @@ IDL_LONG idl_garea
 
 	/* 0. allocate pointers from IDL */
 	i=0;
-	poly->rp = (double *)argv[i]; i++;
+	poly->rp = (vec *)argv[i]; i++;
 	poly->cm = (double *)argv[i]; i++;
 	poly->np = *((IDL_LONG *)argv[i]); i++;
 	poly->npmax = poly->np;
