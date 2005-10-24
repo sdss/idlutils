@@ -12,7 +12,7 @@
   It's supposed to be a feature, not a bug.
   If you are making zillions of polygons, chances are it's a silly mistake.
 */
-#define NPOLYSMAX	10000000
+#define NPOLYSMAX	100000000
 
 /* number of extra caps to allocate to polygon, to allow for later splitting */
 #define DNP		4
