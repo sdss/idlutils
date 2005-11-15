@@ -8,7 +8,7 @@
 ;   see MRDFITS
 ; KEYWORDS:
 ;   see MRDFITS
-;   nrowchunk  - Number of rows to read at a time; default to 1000
+;   nrowchunk  - Number of rows to read at a time; default to 2880
 ; COMMENTS:
 ;   Useful when "columns" is set, so you can get a couple
 ;   of columns without holding the whole file in memory
@@ -28,7 +28,7 @@ function hogg_mrdfits, file, extension, header, silent=silent, $
     range= [0LL,naxis2-1LL]
   endif
 
-  if not keyword_set(nrowchunk) then nrowchunk= 1000LL
+  if not keyword_set(nrowchunk) then nrowchunk= 2880L
 
   chunkrange= [range[0],((range[0]+nrowchunk-1LL) < range[1])]
   while (chunkrange[1] GE chunkrange[0]) do begin
