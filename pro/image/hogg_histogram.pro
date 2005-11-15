@@ -30,9 +30,7 @@ function hogg_histogram, data,range,nbin,weight=weight,err=err
 ; check and count inputs
 dd= n_elements(nbin)
 mm= n_elements(data)/dd
-if not keyword_set(weight) then weight= dblarr(mm)+1.0
-if ((n_elements(range) NE (dd*2)) OR $
-    (n_elements(weight) NE mm) ) then begin
+if (n_elements(range) NE (dd*2)) then begin
     splog, 'ERROR: input dimensions do not match'
     return, -1
 endif
@@ -60,8 +58,9 @@ err= hist
 ; populate the array -- this step is slow
 for kk=0L,ngood-1L do begin
     ii= good[kk]
-    hist[onedbin[ii]]= hist[onedbin[ii]]+weight[ii]
-    err[onedbin[ii]] = err[onedbin[ii]] +(weight[ii])^2
+    if keyword_set(weight) then ww= weight[ii] else ww= 1D0
+    hist[onedbin[ii]]= hist[onedbin[ii]]+ww
+    err[onedbin[ii]] = err[onedbin[ii]]+ww^2
 endfor
 err= sqrt(err)
 
