@@ -6,7 +6,7 @@
 ;   Append more array elements to a structure.
 ;
 ; CALLING SEQUENCE:
-;   outstruct = struct_append( struct1, struct2 )
+;   outstruct = struct_append( struct1, struct2, [ /force ] )
 ;
 ; INPUTS:
 ;   struct1    - First structure; the output structure will match the tags
@@ -14,6 +14,8 @@
 ;   struct2    - Second structure to append to the first.
 ;
 ; OPTIONAL INPUTS:
+;   force      - If set, then append these two structures, even if one or
+;                both are arrays of zeros rather than actual structures.
 ;
 ; OUTPUTS:
 ;
@@ -39,15 +41,20 @@
 ;   26-Jun-2000  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-function struct_append, struct1, struct2
-
-   if (NOT keyword_set(struct1) AND NOT keyword_set(struct2)) then $
-    return, 0
-   if (NOT keyword_set(struct1)) then return, struct2
-   if (NOT keyword_set(struct2)) then return, struct1
+function struct_append, struct1, struct2, force=force
 
    num1 = n_elements(struct1)
    num2 = n_elements(struct2)
+   if (num1 EQ 0 AND num2 EQ 0) then return, 0
+   if (num1 EQ 0) then return, struct2
+   if (num2 EQ 0) then return, struct1
+
+   if (NOT keyword_set(force)) then begin
+      if (keyword_set(struct1) EQ 0 AND keyword_set(struct2) EQ 0) then $
+       return, 0
+      if (keyword_set(struct1) EQ 0) then return, struct2
+      if (keyword_set(struct2) EQ 0) then return, struct1
+   endif
 
    ; In the event that STRUCT1 is not a structure, but STRUCT2 is,
    ; then use STRUCT2 as the template for the output structure.
