@@ -26,6 +26,7 @@ SOLVE_POLY_RATIO: This is a generalized version of SPFLUXCORR_SOLVE
                and SPFLUXCORR_SOLVE2 that was found in the idlspec2d
                routine SPFLUXCORR_V5.  It solves for the multiplicative
                and additive polynomial terms between two spectra (vectors).
+STRUCT_APPEND: Add /FORCE option to be used by READSPEC in idlspec2d.
 SXADDPAR: Change by Landsman to handle input array of single empty string
                (which was supported previously, but then broken).
 USNO_READ:     Read epoch file silently.
