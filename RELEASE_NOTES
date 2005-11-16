@@ -18,6 +18,7 @@ HOGG_ITERATED_AD2XY: Wrapper to AD2XY for inverse transforms, but not sure
                why one would not use XY2AD which should work.
 HOGG_MAKE_ASTR: New function for making trivial astrometry structures.
 HOGG_NAME2RADEC: New proc to convert IAU names to cooordinates.
+HOGG_MRDFITS: Change default NROWCHUNK from 1000 to 2880.
 MAKE_RA_CAP: Add NODE keyword.
 MATCHND: New (beta) code for matching 2 sets of points in N dimensions.
                This was written to be the Cartesian equivalent of SPHEREMATCH.
