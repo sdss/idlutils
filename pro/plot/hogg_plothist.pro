@@ -18,6 +18,7 @@
 ;   meanweight  - plot the mean of the weights in each bin rather than
 ;                 the total of the weights; don't divide by binwidth
 ;   totalweight - plot the total weight; don't divide by binwidth
+;   dontplot    - just calculate, do not plot anything
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [npix] vector of x values of grid pixel centers
 ;   hist        - the histogram itself (ie, the total weight in each
@@ -39,7 +40,7 @@ pro hogg_plothist, x,weight=weight, $
                    xvec=xvec,hist=hist,err=err, $
                    overplot=overplot,ploterr=ploterr,log=log, $
                    meanweight=meanweight,totalweight=totalweight, $
-                   _EXTRA=KeywordsForPlot
+                   dontplot=dontplot, _EXTRA=KeywordsForPlot
 
 ; set defaults
 ndata= n_elements(x)
@@ -91,13 +92,15 @@ endif else begin
 endelse
 
 ; plot
-if NOT keyword_set(overplot) then begin
-    plot, xrange,0.0*xrange,psym=0, $
-      xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
-      _EXTRA=KeywordsForPlot,thick=1
+if (NOT keyword_set(dontplot)) then begin
+    if NOT keyword_set(overplot) then begin
+        plot, xrange,0.0*xrange,psym=0, $
+          xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+          _EXTRA=KeywordsForPlot,thick=1
+    endif
+    oplot, xvec,hist,psym=10
+    if keyword_set(ploterr) then $
+      djs_oploterr, xvec,hist,yerr=err,psym=0
 endif
-oplot, xvec,hist,psym=10
-if keyword_set(ploterr) then $
-  djs_oploterr, xvec,hist,yerr=err,psym=0
 
 end

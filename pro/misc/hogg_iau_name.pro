@@ -26,7 +26,7 @@ rah= floor(ra/15.0)
 ram= floor(((ra/15.0)-double(rah))*60.0)
 ras= (((ra/15.0)-double(rah))*60.0-double(ram))*60.0
 ras= floor(ras*10.0^(precision+1))/10.0^(precision+1)
-rasformat= '(F'+strtrim(string(precision+4),2)+ $
+rasformat= '(F0'+strtrim(string(precision+4),2)+ $
   '.'+strtrim(string(precision+1),2)+')'
 
 desgn= replicate('+',n_elements(dec))
@@ -37,7 +37,7 @@ ded= floor(adec)
 dem= floor((adec-double(ded))*60.0)
 des= ((adec-double(ded))*60.0-double(dem))*60.0
 des= floor(des*10.0^precision)/10.0^precision
-desformat= '(F'+strtrim(string(precision+3),2)+ $
+desformat= '(F0'+strtrim(string(precision+3),2)+ $
   '.'+strtrim(string(precision),2)+')'
 if (precision EQ 0) then desformat= '(I2.2)'
 
