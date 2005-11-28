@@ -14,11 +14,14 @@ GROUP_ON_MATCHES: New procedure for taking lists of objects and their
 HOGG_ARROW: Slightly-changed version of the IDL proc arrow, but allowing
                one to set the angle of the arrow head.
 HOGG_DIRECTIONS,HOGG_IMAGE_OVERLAY,NW_AD_GRID: New plotting procs from Hogg.
+HOGG_IAU_NAME,IAU_TO_RADEC,RADEC2STRING,STRING2RADEC: More new routines
+               from Hogg for dealing with sexigesimal formats.
 HOGG_ITERATED_AD2XY: Wrapper to AD2XY for inverse transforms, but not sure
                why one would not use XY2AD which should work.
 HOGG_MAKE_ASTR: New function for making trivial astrometry structures.
 HOGG_NAME2RADEC: New proc to convert IAU names to cooordinates.
 HOGG_MRDFITS: Change default NROWCHUNK from 1000 to 2880.
+HOGG_PLOTHIST: Histogram plotter that uses weights (from Hogg).
 MAKE_RA_CAP: Add NODE keyword.
 MATCHND: New (beta) code for matching 2 sets of points in N dimensions.
                This was written to be the Cartesian equivalent of SPHEREMATCH.
