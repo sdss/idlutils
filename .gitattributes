@@ -838,6 +838,7 @@ pro/healpix/map_nest2ring.pro -text
 pro/healpix/map_ring2nest.pro -text
 pro/healpix/mqladvance.pro -text
 pro/healpix/ringwt.pro -text
+pro/image/acs_peaks.pro -text
 pro/image/djs_maskinterp.pro -text
 pro/image/djs_sfit.pro -text
 pro/image/dpf_reject_cr.pro -text

@@ -34,7 +34,7 @@
 ;   2005-11-30  Written - Burles
 ;-
 pro find_sb, sub, wt, x=x, y=y, flux=flux, sigma=sigma, $
-             pa_degrees=pa_degrees, ab=ab, $
+             pa_degrees=pa_degrees, ab=ab, fwhm=fwhm, $
              hpix=hpix, hmin=hmin, curvr=curvr
 
  
@@ -123,6 +123,7 @@ pro find_sb, sub, wt, x=x, y=y, flux=flux, sigma=sigma, $
   flux = flux[s_f] 
   pa_degrees = 90. - 180*pa[keep[s_f]]/!Pi
   ab = (l1[keep]/l2[keep])[s_f]
+  fwhm = 2.3548/2./sqrt(-r1[keep[s_f]])
   
   return
 end
