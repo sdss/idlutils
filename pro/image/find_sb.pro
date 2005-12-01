@@ -10,49 +10,66 @@
 ;   sub         - skysubtracted image 
 ;   wt          - inverse variance weight (0 or 1 for CR mask is OK)
 ; OPTIONAL INPUTS:
-;   sigma       - sigma of gaussian filter in pixels
+;   sigma       - sigma of gaussian filter in pixels  (1.0 is default)
 ;   hpix        - half-pixel width of convolution filter  (2 is default)
-;   hmin        - minimum flux threshold
+;   hmin        - minimum flux threshold  
+;   curvr       - the maximum allowed log ratio of curvature along the 
+;                     major/minor axes  (basically checking for roundness).
+;                   default is 2.
 ; KEYWORDS:
 ; OUTPUTS:
-;   x           - column pixel position of flux peak (sorted be decreasing flux)
-;   y           - row pixel position                  "
-;   flux        - gaussian filtered flux estimate
+;   x          - column pixel positions of flux peak (sorted be decreasing flux)
+;   y          - row pixel position                  "
+;   flux       - gaussian filtered flux estimate
+;   pa_degrees - a guess at the PA of the object from the x-axis
+;   ab         - a guess at the minor/major axis ratio
 ; COMMENTS:
 ; DEPENDENCIES:
 ;   idlutils
 ; BUGS:
 ;   No checks on neighboring peaks
 ;   Not tested yet with real inverse variance weighting
+;   Not sure that I have PA calculated correctly
 ; REVISION HISTORY:
 ;   2005-11-30  Written - Burles
 ;-
-pro find_sb, sub, wt, x=x, y=y, flux=flux, sigma=sigma, hpix=hpix, hmin=hmin
+pro find_sb, sub, wt, x=x, y=y, flux=flux, sigma=sigma, $
+             pa_degrees=pa_degrees, ab=ab, $
+             hpix=hpix, hmin=hmin, curvr=curvr
+
  
   if NOT keyword_set(sigma) then sigma = 1.0
   if NOT keyword_set(hpix ) then hpix = 2L
+  if NOT keyword_set(curvr ) then curvr = 2.0
 
   npix = 2*hpix + 1L
   k = gauss_kernel(sigma, hpix=2) 
   k2 = k # k
 
-  denom = convol(wt, k2^2)
-  f = convol(sub*wt, k2) / (denom + (denom EQ 0))
+  denom_opt = convol(wt, k2^2)
+  denom_ap  = convol(wt, k2)
+  numer = convol(sub*wt, k2) 
+  f_opt = numer / (denom_opt + (denom_opt EQ 0))
+  f     = numer / (denom_ap + (denom_ap EQ 0)) 
+  frac = convol(1.0*(wt GT 0),k2)
 
-  mask = smooth(1.0*(wt LE 0),3) EQ 0   ; grow the wt EQ 0 mask
-
-  h = f*mask
-  if max(h) LE 0 then return
+;  mask = smooth(1.0*(wt LE 0),3) EQ 0   ; grow the wt EQ 0 mask
+;  h = f*mask
+;  if max(h) LE 0 then return
 
   if NOT keyword_set(hmin) then $
-     hmin = 20. * mean(abs(h - median(h)))
+     hmin = 20. * median(abs(f - median(f)))
 
-  index = where(h GE hmin, nfound)
+  index = where(f * frac GE hmin, nfound)
   
   n_x = (size(sub))[1]
-  r = sqrt((findgen(npix)-hpix)^2 # replicate(1,npix) + $
-      (findgen(npix)-hpix)^2 ## replicate(1,npix))
-  good = where(r LE 1.5*sigma AND r GT 0, npixels)
+  x = ((lindgen(npix^2) mod npix) - hpix)
+  y = ((lindgen(npix^2) / npix) - hpix)
+  off = long(x + y*n_x)
+  r = sqrt(x^2 + y^2)
+
+  lim = (2.0*sigma) > 2
+  good = where(r LE lim AND r GT 0, npixels)
   offset = (good mod npix) - hpix + ((good /npix) - hpix) * n_x
 
   for i=0, n_elements(offset)-1L do begin & $
@@ -63,33 +80,49 @@ pro find_sb, sub, wt, x=x, y=y, flux=flux, sigma=sigma, hpix=hpix, hmin=hmin
 
   print, 'Checking ', nfound, ' peaks'
 
-  xcurv = 1.0 - 0.5*(f[index-1] + f[index+1])/f[index] 
-  ycurv = 1.0 - 0.5*(f[index-n_x] + f[index+n_x])/f[index] 
+  spots = index ## replicate(1,npix^2) + off # replicate(1,nfound)
+  im = f[spots]
+  wt_im = wt[spots]
 
-  keep = where( xcurv LT 0.4 AND ycurv LT 0.4 AND xcurv GT 0 AND ycurv GT 0 $
-                  AND abs(xcurv-ycurv) LT 0.2, nkeep)
+  para = fit_para2d(x,y,im,wt_im, model=model)
+  pt = transpose(para)
+  sq = sqrt((pt[*,3] -pt[*,5])^2 + pt[*,4]^2)
+  l1 = pt[*,3]  + pt[*,5] + sq
+  l2 = pt[*,3]  + pt[*,5] - sq
+  det = l1*l2
+  r1 = l1/(pt[*,0] + (pt[*,0] EQ 0))
+  r2 = l2/(pt[*,0] + (pt[*,0] EQ 0))
+  b = -1.0*para[1:2,*]
+  xs = total(b * [[2*para[5,*], -para[4,*]]],1) / (det + (det EQ 0))
+  ys = total(b * [[-para[4,*], 2*para[3,*]]],1) / (det + (det EQ 0))
+  pa = atan(pt[*,4], pt[*,5]-pt[*,3])/2.      ; in radians
 
-  if nkeep EQ 0 then return
+  keep = where(pt[*,0] GT hmin AND $
+               (r1 GT -0.4)  AND $
+               (r2 GT -0.4)  AND $
+               l1*l2 GT 0.01*hmin^2 AND $
+               abs(r1 -r2) LT 0.1 AND $
+               alog(abs((l2+(l2 EQ 0))/(l1 + (l1 EQ 0)))) LT curvr AND $
+               sqrt(xs^2 + ys^2) LT 0.71, nkeep)
 
-  really_keep = where(abs(alog(xcurv[keep]/ycurv[keep])) LT 1.0, nkeep)
-  if nkeep EQ 0 then return
-  keep = keep[really_keep]
 
   print, 'Keeping ', nkeep, ' peaks'
 
   ik = index[keep]
-
-  xs = (f[ik+1] - f[ik-1]) / xcurv[keep] / f[ik] / 4.
-  ys = (f[ik+n_x] - f[ik-n_x]) / ycurv[keep] / f[ik] / 4.
   x = (ik mod n_x) + xs
   y = (ik / n_x) + ys
-  flux = f[ik] * ( 1.0 + xcurv[keep] * xs^2 + ycurv[keep] * ys^2 )
+  flux = f[ik] * ( 1.0 - (para[3,keep] * xs[keep]^2 + $
+                          para[4,keep] * xs[keep] * ys[keep] + $
+                          para[5,keep] * ys[keep]^2 )/para[0,keep])
 
+  flux = flux / max(k2) *2. * !Pi * sigma^2
   s_f = reverse(sort(flux))
 
   x = x[s_f]
   y = y[s_f]
-  flux = flux[s_f]
-
+  flux = flux[s_f] 
+  pa_degrees = 90. - 180*pa[keep[s_f]]/!Pi
+  ab = (l1[keep]/l2[keep])[s_f]
+  
   return
 end
