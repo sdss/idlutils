@@ -120,11 +120,14 @@ function func_fit, x, y, ncoeff, invvar=invvar, function_name=function_name, $
       ncfit = ncoeff < ngood
 
       if (function_name EQ 'poly') then legarr = fpoly(x, ncfit)
-
-      if (function_name EQ 'flegendre') then $
+      if (function_name EQ 'legendre' OR function_name EQ 'flegendre') then $
        legarr = flegendre(x, ncfit)
-      if (function_name EQ 'fchebyshev') then $
+      if (function_name EQ 'chebyshev' OR function_name EQ 'fchebyshev') then $
        legarr = fchebyshev(x, ncfit)
+;      if (function_name EQ 'flegendre') then $
+;       legarr = flegendre(x, ncfit)
+;      if (function_name EQ 'fchebyshev') then $
+;       legarr = fchebyshev(x, ncfit)
       if (function_name EQ 'fchebyshev_split') then $
        legarr = fchebyshev_split(x, ncfit)
 
