@@ -8,6 +8,8 @@ ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
 DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
+FUNC_FIT: Allow the use of the names 'legendre' and 'chebyshev' as
+               well as 'flegendre' and 'fchebyshev'.
 GRIDND: New (beta) code for assigning points to grid points in N dimensions
 GROUP_ON_MATCHES: New procedure for taking lists of objects and their
                matches (presumably from SPHEREMATCH), and find groups.
