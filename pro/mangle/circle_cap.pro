@@ -21,7 +21,7 @@ function circle_cap, ra=ra, dec=dec, xyz=xyz , radius
 
 d2r=!DPI/180.D
 
-if(keyword_set(ra)) then $
+if(n_elements(ra) gt 0) then $
   usexyz=angles_to_x(ra,(90.D)-dec) $
 else $
   usexyz=xyz
