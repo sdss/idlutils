@@ -5,6 +5,7 @@ ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
                so not sure why there is this routine too.
 ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
                and angles.
+BALKAN_PLOT: new procedure to plot balkans of a set of polygons
 DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
@@ -35,6 +36,7 @@ SOLVE_POLY_RATIO: This is a generalized version of SPFLUXCORR_SOLVE
 STRUCT_APPEND: Add /FORCE option to be used by READSPEC in idlspec2d.
 SXADDPAR: Change by Landsman to handle input array of single empty string
                (which was supported previously, but then broken).
+UNIQTAG: new proc (from vagc) to find unique values of a given tag in a struct array
 USNO_READ:     Read epoch file silently.
 
 src/idlmangle/Makefile: Added $(X_CFLAGS) to CFLAGS to fix linking problems
