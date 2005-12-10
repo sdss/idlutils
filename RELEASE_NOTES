@@ -6,6 +6,8 @@ ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
 ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
                and angles.
 BALKAN_PLOT: new procedure to plot balkans of a set of polygons
+BEATDRIVE:     Test new disk by filling with SDSS idR-sized files (5.3MB)
+BEATDRIVE_CHECK: Verify outputs from beatdrive
 DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
