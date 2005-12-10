@@ -947,6 +947,7 @@ pro/mcmc/hogg_mcmc.pro -text
 pro/mcmc/hogg_mcmc_step.pro -text
 pro/mcmc/hogg_mcmc_test.pro -text
 pro/misc/beatdrive.pro -text
+pro/misc/beatdrive_check.pro -text
 pro/misc/blackbody.pro -text
 pro/misc/catfits.pro -text
 pro/misc/count_freelun.pro -text
