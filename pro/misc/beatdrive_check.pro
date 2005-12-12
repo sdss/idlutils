@@ -29,7 +29,7 @@
 ;----------------------------------------------------------------------
 pro beatdrive_check, path, fits=fits, nocompare=nocompare
 
-  t1 = systime(1)
+  tbegin = systime(1)
 
   a = indgen(2048, 1361)
   ref = fix(randomu(1, 2048, 1361)*10000)
@@ -68,7 +68,7 @@ pro beatdrive_check, path, fits=fits, nocompare=nocompare
   endfor 
   print, 'Ndir: ', strcompress(ndir)
   print, systime()
-  Telapse = systime(1)-t1
+  Telapse = systime(1)-tbegin
   print, 'Elapsed time', Telapse, ' seconds'
   print, 'Elapsed time', Telapse/3600, ' hours'
   print, 'Finished.'
