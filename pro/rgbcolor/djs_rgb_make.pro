@@ -187,11 +187,29 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
       endelse
       for iobj=0L, nobj-1 do begin
          indx = isat[i1[iobj]:i2[iobj]]
-         rimg[indx] = mean(rimg[indx])
-         gimg[indx] = mean(gimg[indx])
-         bimg[indx] = mean(bimg[indx])
+
+; -------- DPF - get neighbors and compute fill value from them
+         ix = indx mod dims[0]
+         iy = indx  /  dims[0]
+         
+         ix0 = (ix-1) > 0
+         ix1 = (ix+1) < (dims[0]-1)
+         iy0 = (iy-1) > 0
+         iy1 = (iy+1) < (dims[1]-1)
+         jx = [ix, ix, ix0, ix1, ix] ; non-diagonal neighbors
+         jy = [iy0, iy1, iy, iy, iy]
+         indj = jx+jy*dims[0]
+         indregion = indj[uniq(indj, sort(indj))]
+         
+         n_neighbor = n_elements(indregion)-n_elements(indx) 
+
+         rimg[indx] = (total(rimg[indregion])-total(rimg[indx]))/n_neighbor
+         gimg[indx] = (total(gimg[indregion])-total(gimg[indx]))/n_neighbor
+         bimg[indx] = (total(bimg[indregion])-total(bimg[indx]))/n_neighbor
+; -------- DPF - end change
       endfor
    endif
+
    objmask = 0 ; clear memory
    isat = 0
    i1 = 0
