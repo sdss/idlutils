@@ -1,16 +1,21 @@
 
+ACS_PEAKS: Wrapper for FIND_SB for peak-finding on 2D images.
 ACSSIP_AD2XY,ACSSIP_XY2AD: Bug fixes.
 ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
                This *should* do what ACSSIP_AD2XY already does internally,
                so not sure why there is this routine too.
 ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
                and angles.
-BALKAN_PLOT: new procedure to plot balkans of a set of polygons
+BALKAN_PLOT: New procedure to plot balkans of a set of polygons
 BEATDRIVE:     Test new disk by filling with SDSS idR-sized files (5.3MB)
 BEATDRIVE_CHECK: Verify outputs from beatdrive
+CIRCLE_CAP: Bug fix for RA=0.
 DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
                alternative to scalar inputs.
+DJS_RGB_MAKE: Compute fill values for saturated pixels from neighboring pixels.
+FIND_SB: New proc to find peaks on a 2D image using a Gaussian filter (Burles)
+FIT_PARA2D: New function called by FIND_SB for peak-finding.
 FUNC_FIT: Allow the use of the names 'legendre' and 'chebyshev' as
                well as 'flegendre' and 'fchebyshev'.
 GRIDND: New (beta) code for assigning points to grid points in N dimensions
