@@ -59,7 +59,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
- x2=x2, npoly=npoly, nord=nord, yfit=yfit
+ x2=x2, npoly=npoly, nord=nord, yfit=yfit, check=check
 
    if NOT keyword_set(nord) then nord = 4L
 
@@ -135,9 +135,16 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
    min_influence = 1.0e-10 * total(invvar) / nfull
 
    ; This call to cholesky_band operates on alpha and changes contents
-
+ 
+ a = alpha
    errb = cholesky_band(alpha, mininf=min_influence) 
 
+   if errb[0] EQ -1 AND keyword_set(check) then begin
+      ;  Check to see if any bkpts are poorly constrained...
+      coeff_ivar = (alpha[0,lindgen(nn)*npoly])[*]
+      dec = min(coeff_ivar/smooth(coeff_ivar,2*nord+1),pl)
+      if dec LT 0.5 then errb[0] = pl
+   endif
 
    if (errb[0] NE -1) then begin 
       if (arg_present(yfit)) then $
