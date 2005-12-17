@@ -30,7 +30,7 @@
 ;                set to 0 to disable rejection.
 ;   upper      - Upper rejection threshhold; default to 5 sigma.
 ;   lower      - Lower rejection threshhold; default to 5 sigma.
-;   _EXTRA     - Keywords for BSPLINE_BKPTS() and/or DJS_REJECT().
+;   _EXTRA     - Keywords for BSPLINE_BKPTS(), BSPLINE_FIT and/or DJS_REJECT().
 ;
 ; OUTPUTS:
 ;   sset       - Structure describing spline fit.

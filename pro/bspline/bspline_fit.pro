@@ -11,7 +11,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   error_code = bspline_fit(x, y, invvar, sset, $
-;    fullbkpt=, nord=, x2=, npoly=, yfit=)
+;    fullbkpt=, nord=, x2=, npoly=, yfit=, /check)
 ;
 ; INPUTS:
 ;   x          - Independent variable
@@ -27,6 +27,7 @@
 ;   x2         - Orthogonal dependent variable
 ;   npoly      - Order of x2 polynomial fit; default to the value in the
 ;                SSET structure, or to 1.
+;   check      - If set, then test if any break points are poorly constrained
 ;
 ; OUTPUTS:
 ;   error_code - Non-negative numbers indicate ill-conditioned bkpts
