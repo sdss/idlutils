@@ -9,6 +9,9 @@ ANGLES_TO_XYZ,XYZ_TO_ANGLES: New proc to convert between x,y,z coordiates
 BALKAN_PLOT: New procedure to plot balkans of a set of polygons
 BEATDRIVE:     Test new disk by filling with SDSS idR-sized files (5.3MB)
 BEATDRIVE_CHECK: Verify outputs from beatdrive
+BSPLINE_FIT: Add /CHECK option, to test (and mask) any poorly constrained
+               break points.
+BSPLINE_ITERFIT: Pass EXTRA keywords to BSPLINE_FIT.
 CIRCLE_CAP: Bug fix for RA=0.
 DEC2HMS,HMS2DEC: Vectorized, comments added.
 DJS_DIFF_ANGLE: Clean up the code, and allow 1-element arrays as an
