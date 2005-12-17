@@ -142,9 +142,13 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
 
    if errb[0] EQ -1 AND keyword_set(check) then begin
       ;  Check to see if any bkpts are poorly constrained...
-      coeff_ivar = (alpha[0,lindgen(nn)*npoly])[*]
-      dec = min(coeff_ivar/smooth(coeff_ivar,2*nord+1),pl)
-      if dec LT 0.5 then errb[0] = pl
+      coeff_ivar = reform(alpha[0,lindgen(nn)*npoly])
+      ksz = 2 * nord + 1
+      if (n_elements(coeff_ivar) GT ksz) then $
+       dec = min(coeff_ivar/smooth(coeff_ivar,2*nord+1),pl) $
+      else $
+       dec = min(coeff_ivar,pl) / mean(coeff_ivar)
+      if dec LT 0.25 then errb[0] = pl
    endif
 
    if (errb[0] NE -1) then begin 
