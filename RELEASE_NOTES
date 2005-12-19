@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v5_1_0 (December 19, 2005) running on IDL 5.4 - 6.2
+Tagged for idlspec2d v5_1_0; fix double-precision on OSX and Linux64.
+
 ACS_PEAKS: Wrapper for FIND_SB for peak-finding on 2D images.
 ACSSIP_AD2XY,ACSSIP_XY2AD: Bug fixes.
 ACSSIP_INVERT: Another implementation of inverting HST ACS distortions.
