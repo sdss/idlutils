@@ -21,7 +21,7 @@ all :;
 #	/bin/cp memtrack $(IDLUTILS_DIR)/bin
 #	/bin/cp pstogif $(IDLUTILS_DIR)/bin
 
-EXECS1 = Makefile build_links evilmake eviltarball memtrack pstogif 
+EXECS1 = Makefile build_links evilmake eviltarball memtrack pstogif install_ups_table
 EXECS2 = balkanize drangle harmonize map poly2poly polyid ransack snap unify
 EXECS3 = mrb_balkanize mrb_snap mrb_unify weight
 
