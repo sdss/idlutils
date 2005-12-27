@@ -119,4 +119,7 @@ for i = npoints-1l, 0l, -1l do begin
     first[in[i]]=i
 end
 
+for i=0L, npoints-1L do $
+  ptr_free, matches[i]
+
 end
