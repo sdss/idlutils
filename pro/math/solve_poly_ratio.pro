@@ -36,8 +36,8 @@
 ;                AFLUX * SUM{i=0,NPOLY-1} XVECTOR^i + SUM{j=0,NBACK-1} XVECTOR^j
 ;
 ; OPTIONAL OUTPUTS:
-;   ymult      - Coefficients for multiplicative terms [NMULT]
-;   yadd       - Coefficients for addditive terms [NBACK]
+;   ymult      - Final multiplicative polynomial [NPIX]
+;   yadd       - Final addditive polynomial [NPIX]
 ;   acoeff     - All coefficicents, starting with the multiplicative
 ;                [NMULT+NBACK]
 ;   totchi2    - Total chi^2
@@ -46,6 +46,9 @@
 ;   Fit for the polynomial vector multiplying one vector to agree
 ;   with another such that
 ;     BFLUX = polynomial * AFLUX + background
+;
+;   The polynomials are defined such that:
+;      YFIT = YMULT * AFLUX + YADD
 ;
 ;   There are two modes of operation for this routine.
 ;   The simpler algorithm is if AIVAR is specified but not BIVAR.
