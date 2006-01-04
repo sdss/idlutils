@@ -1,4 +1,10 @@
 
+BSPLINE_ITERFIT: Locate where there are two break points in a row with no good
+               data points in between, and drop one of those break points.
+HST_GUIDETEST: Clean up memory usage.
+
+bin/Makefile: Copy the somehow left-out install_ups_table.
+
 -------------------------------------------------------------------------------
 v5_1_0 (December 19, 2005) running on IDL 5.4 - 6.2
 Tagged for idlspec2d v5_1_0; fix double-precision on OSX and Linux64.
