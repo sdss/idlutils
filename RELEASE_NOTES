@@ -1,7 +1,9 @@
 
 BSPLINE_ITERFIT: Locate where there are two break points in a row with no good
                data points in between, and drop one of those break points.
+               This is an attempt to address PR #6774.
 HST_GUIDETEST: Clean up memory usage.
+SOLVE_POLY_RATIO: Fix documentation.
 
 bin/Makefile: Copy the somehow left-out install_ups_table.
 
