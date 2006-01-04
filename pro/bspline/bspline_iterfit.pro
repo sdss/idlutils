@@ -197,6 +197,22 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
          sset.coeff = 0
          iiter = maxiter + 1; End iterations
       endif else begin
+
+      ; Locate where there are two break points in a row with no good
+      ; data points in between, and drop (mask) one of those break points.
+      ; The first break point is kept.
+      goodbk = where(sset.bkmask NE 0, nbkpt)
+      igood = where(invwork*maskwork GT 0, ngdata)
+      if (nbkpt GT 0 AND ngdata GT 0) then begin
+         isort = sort([sset.fullbkpt[goodbk], xwork[igood]])
+igood = 0 ; Free memory
+         ibad = where(isort LT nbkpt AND shift(isort,1) LT nbkpt, nbad)
+         if (nbad GT 0) then $
+          ibad = ibad[where(ibad GT nord AND ibad LT nbkpt-nord, nbad) > 0]
+         if (nbad GT 0) then sset.bkmask[goodbk[isort[ibad]]] = 0
+isort = 0 ; Free memory
+      endif
+
         ; Do the fit.  Return values for ERROR are as follows:
         ;    0 if fit is good
         ;   -1 if all break points are masked
