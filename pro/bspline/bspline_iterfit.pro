@@ -118,7 +118,8 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    if (n_elements(invvar) EQ 1) then outmask = 1B $
     else outmask = make_array(size=size(invvar), /byte) + 1B
 
-   maskwork = outmask * (invvar GT 0)
+   xsort = sort(xdata)
+   maskwork = (outmask * (invvar GT 0))[xsort]
    these = where(maskwork, nthese)
  
    ;----------
@@ -141,7 +142,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
       endif
 
       if NOT keyword_set(fullbkpt) then $
-       fullbkpt = bspline_bkpts(xdata[these], nord=nord, bkpt=bkpt, $
+       fullbkpt = bspline_bkpts(xdata[xsort[these]], nord=nord, bkpt=bkpt, $
         _EXTRA=EXTRA)
 
       sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
@@ -174,7 +175,6 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    ;----------
    ; Sort the data so that X is in ascending order.
 
-   xsort = sort(xdata)
    xwork = xdata[xsort]
    ywork = ydata[xsort]
    invwork = invvar[xsort]
