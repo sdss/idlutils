@@ -30,6 +30,7 @@
 ;                set to 0 to disable rejection.
 ;   upper      - Upper rejection threshhold; default to 5 sigma.
 ;   lower      - Lower rejection threshhold; default to 5 sigma.
+;   requiren   - force at at least (requiren) data points between each set of bkpts.
 ;   _EXTRA     - Keywords for BSPLINE_BKPTS(), BSPLINE_FIT and/or DJS_REJECT().
 ;
 ; OUTPUTS:
@@ -77,6 +78,7 @@
 function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
  x2=x2, npoly=npoly, xmin=xmin, xmax=xmax, yfit=yfit, $
  bkpt=bkpt, oldset=oldset, maxiter=maxiter, upper=upper, lower=lower, $
+ requiren=requiren, $
  outmask=outmask, fullbkpt=fullbkpt, funcname=funcname, _EXTRA=EXTRA
 
    if (n_params() LT 2) then begin
@@ -143,7 +145,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
       if NOT keyword_set(fullbkpt) then $
        fullbkpt = bspline_bkpts(xdata[xsort[these]], nord=nord, bkpt=bkpt, $
-        _EXTRA=EXTRA)
+                                 _EXTRA=EXTRA)
 
       sset = create_bsplineset(fullbkpt, nord, npoly=npoly) 
 
@@ -168,6 +170,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
    endelse
 
+
    ;----------
    ; It's okay now if the data fall outside breakpoint regions, the
    ; fit is just set to zero outside.
@@ -180,38 +183,45 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
    invwork = invvar[xsort]
    if (keyword_set(x2)) then x2work = x2[xsort]
 
+
    ;----------
    ; Iterate spline fit
 
    iiter = 0
    error = 0
-   maskwork = maskwork[xsort]
+;   maskwork = maskwork[xsort]
 
    while (((error[0] NE 0) OR (keyword_set(qdone) EQ 0)) $
     AND iiter LE maxiter) do begin
 
       ngood = total(maskwork)
-      goodbk = where(sset.bkmask NE 0)
+      goodbk = where(sset.bkmask NE 0, ngb)
 
       if (ngood LE 1 OR goodbk[0] EQ -1) then begin
          sset.coeff = 0
          iiter = maxiter + 1; End iterations
       endif else begin
 
-      ; Locate where there are two break points in a row with no good
-      ; data points in between, and drop (mask) one of those break points.
-      ; The first break point is kept.
-      goodbk = where(sset.bkmask NE 0, nbkpt)
-      igood = where(invwork*maskwork GT 0, ngdata)
-      if (nbkpt GT 0 AND ngdata GT 0) then begin
-         isort = sort([sset.fullbkpt[goodbk], xwork[igood]])
-igood = 0 ; Free memory
-         ibad = where(isort LT nbkpt AND shift(isort,1) LT nbkpt, nbad)
-         if (nbad GT 0) then $
-          ibad = ibad[where(ibad GT nord AND ibad LT nbkpt-nord, nbad) > 0]
-         if (nbad GT 0) then sset.bkmask[goodbk[isort[ibad]]] = 0
-isort = 0 ; Free memory
-      endif
+        if keyword_set(requiren) then begin
+
+          ; Locate where there are two break points in a row with no good
+          ; data points in between, and drop (mask) one of those break points.
+          ; The first break point is kept.
+           i = 0L
+           while(xwork[i] LT sset.fullbkpt[goodbk[nord]] AND i LT nx) do i = i+ 1
+
+
+           ct = 0
+           for ileft=nord, ngb-nord do begin
+             while(xwork[i] GE sset.fullbkpt[goodbk[ileft]] AND $
+                   xwork[i] LT sset.fullbkpt[goodbk[ileft+1]] AND i LT nx-1) do begin
+                ct = ct + (invwork[i] * maskwork[i] GT 0)
+                i=i+1
+             endwhile
+             if ct GE requiren then ct = 0 else sset.bkmask[goodbk[ileft]] = 0
+           endfor
+
+         endif
 
         ; Do the fit.  Return values for ERROR are as follows:
         ;    0 if fit is good

@@ -11,7 +11,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   error_code = bspline_fit(x, y, invvar, sset, $
-;    fullbkpt=, nord=, x2=, npoly=, yfit=, /check)
+;    fullbkpt=, nord=, x2=, npoly=, yfit=)
 ;
 ; INPUTS:
 ;   x          - Independent variable
@@ -27,7 +27,6 @@
 ;   x2         - Orthogonal dependent variable
 ;   npoly      - Order of x2 polynomial fit; default to the value in the
 ;                SSET structure, or to 1.
-;   check      - If set, then test if any break points are poorly constrained
 ;
 ; OUTPUTS:
 ;   error_code - Non-negative numbers indicate ill-conditioned bkpts
@@ -60,7 +59,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
- x2=x2, npoly=npoly, nord=nord, yfit=yfit, check=check
+ x2=x2, npoly=npoly, nord=nord, yfit=yfit
 
    if NOT keyword_set(nord) then nord = 4L
 
@@ -139,17 +138,6 @@ function bspline_fit, xdata, ydata, invvar, sset, fullbkpt=fullbkpt, $
  
  a = alpha
    errb = cholesky_band(alpha, mininf=min_influence) 
-
-   if errb[0] EQ -1 AND keyword_set(check) then begin
-      ;  Check to see if any bkpts are poorly constrained...
-      coeff_ivar = reform(alpha[0,lindgen(nn)*npoly])
-      ksz = 2 * nord + 1
-      if (n_elements(coeff_ivar) GT ksz) then $
-       dec = min(coeff_ivar/smooth(coeff_ivar,2*nord+1),pl) $
-      else $
-       dec = min(coeff_ivar,pl) / mean(coeff_ivar)
-      if dec LT 0.25 then errb[0] = pl
-   endif
 
    if (errb[0] NE -1) then begin 
       if (arg_present(yfit)) then $
