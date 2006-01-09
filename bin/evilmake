@@ -61,7 +61,6 @@ case $UNAME in
 # The following two lines should be equivalent to the above line
 #		LD=libtool
 #		X_LD_FLAGS="-dynamic -L/usr/lib -lc -lcc_dynamic"
-		X_CFLAGS="-g -Wall -dynamic"
 		SDSS_CFLAGS=-O3
 	;;
 	"Linux" )

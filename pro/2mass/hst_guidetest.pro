@@ -62,6 +62,12 @@
 ; BUGS:
 ;
 ; PROCEDURES CALLED:
+;   djs_diff_angle()
+;   struct_addtags()
+;   struct_print
+;   struct_selecttags()
+;   tmass_read()
+;   ucac_read()
 ;
 ; REVISION HISTORY:
 ;   09-Jul-2005  Written by D. Schlegel, LBL
