@@ -189,7 +189,6 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
 
    iiter = 0
    error = 0
-;   maskwork = maskwork[xsort]
 
    while (((error[0] NE 0) OR (keyword_set(qdone) EQ 0)) $
     AND iiter LE maxiter) do begin
@@ -211,14 +210,14 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
            while(xwork[i] LT sset.fullbkpt[goodbk[nord]] AND i LT nx) do i = i+ 1
 
 
-           ct = 0
+           ct = 0L
            for ileft=nord, ngb-nord do begin
              while(xwork[i] GE sset.fullbkpt[goodbk[ileft]] AND $
                    xwork[i] LT sset.fullbkpt[goodbk[ileft+1]] AND i LT nx-1) do begin
                 ct = ct + (invwork[i] * maskwork[i] GT 0)
                 i=i+1
              endwhile
-             if ct GE requiren then ct = 0 else sset.bkmask[goodbk[ileft]] = 0
+             if ct GE requiren then ct = 0L else sset.bkmask[goodbk[ileft]] = 0
            endfor
 
          endif

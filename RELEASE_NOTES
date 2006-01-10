@@ -1,8 +1,9 @@
 
-BSPLINE_ITERFIT: Locate where there are two break points in a row with no good
-               data points in between, and drop one of those break points.
+BSPLINE_FIT: Remove /CHECK option introduced in last version.
+BSPLINE_ITERFIT: Add REQUIREN optional keyword, to require at least
+               some minimum number of data points between break points,
+               masking break points where necessary.
                This is an attempt to address PR #6774.
-               Needed a sort before call to BSPLINE_BKPTS.
 HST_GUIDETEST: Clean up memory usage.
 SOLVE_POLY_RATIO: Fix documentation.
 
