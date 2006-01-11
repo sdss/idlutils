@@ -207,8 +207,7 @@ function bspline_iterfit, xdata, ydata, invvar=invvar, nord=nord, $
           ; data points in between, and drop (mask) one of those break points.
           ; The first break point is kept.
            i = 0L
-           while(xwork[i] LT sset.fullbkpt[goodbk[nord]] AND i LT nx) do i = i+ 1
-
+           while(xwork[i] LT sset.fullbkpt[goodbk[nord]] AND i LT nx-1) do i = i+ 1
 
            ct = 0L
            for ileft=nord, ngb-nord do begin
