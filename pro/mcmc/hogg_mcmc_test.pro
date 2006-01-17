@@ -10,7 +10,7 @@ function hogg_mcmc_test_like, pars
 common hogg_mcmc_test_block, xx,yy,yy_ivar
 mean= pars[0]
 chisq= total((yy-mean)*yy_ivar*(yy-mean),/double)
-like= exp(-0.5*(chisq-n_elements(yy)))
+like= -0.5*(chisq-n_elements(yy))
 return, like
 end
 
@@ -36,7 +36,7 @@ function hogg_mcmc_test_like_2d, pars
 common hogg_mcmc_test_block, xx,yy,yy_ivar
 model= pars[0]+pars[1]*xx
 chisq= total((yy-model)*yy_ivar*(yy-model),/double)
-like= exp(-0.5*(chisq-n_elements(yy)))
+like= -0.5*(chisq-n_elements(yy))
 return, like
 end
 
@@ -62,7 +62,8 @@ nstep= 10000
 seed= -1L
 hogg_mcmc_test_setup
 pars= yy[0]
-hogg_mcmc, seed,'hogg_mcmc_test_step','hogg_mcmc_test_like',nstep,pars,like
+hogg_mcmc, seed,'hogg_mcmc_test_step','hogg_mcmc_test_like',nstep,pars,like, $
+  /log
 
 !P.TITLE= '1d test'
 yyrange= 10.0+3.0*[-1,1]
@@ -73,9 +74,9 @@ plot, dindgen(nyy),yy,psym=6, $
 djs_oploterr, dindgen(nyy),yy,yerr=1.0/sqrt(yy_ivar),psym=6
 xxfit= [-nyy,2*nyy]
 oplot, xxfit,pars[0]+0.0*xxfit,psym=0
-plot, pars,like,psym=1,symsize=0.01, $
+plot, pars,exp(like),psym=1,symsize=0.01, $
   xrange=yyrange, $
-  yrange=[-0.1,1.1]*max(like)
+  yrange=[-0.1,1.1]*max(exp(like))
 oplot, xxfit,0.0*xxfit,psym=0
 hogg_plothist, pars,xrange=yyrange,npix=100
 
@@ -85,7 +86,8 @@ hogg_mcmc_test_setup_2d
 pars= dblarr(2)
 pars[1]= (yy[0]-yy[1])/(xx[0]-xx[1])
 pars[0]= yy[0]-xx[0]*pars[1]
-hogg_mcmc, seed,'hogg_mcmc_test_step','hogg_mcmc_test_like_2d',nstep,pars,like
+hogg_mcmc, seed,'hogg_mcmc_test_step','hogg_mcmc_test_like_2d',nstep,pars, $
+  like,/log
 
 !P.TITLE= '2d test'
 xxrange= [0,5]
