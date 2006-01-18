@@ -4,11 +4,14 @@ BSPLINE_ITERFIT: Add REQUIREN optional keyword, to require at least
                some minimum number of data points between break points,
                masking break points where necessary.
                This is an attempt to address PR #6774.
+HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Add Hogg's Markov Chain Monte Carlo
+               code.
 HST_GUIDETEST: Clean up memory usage.
 SOLVE_POLY_RATIO: Fix documentation.
 
 bin/evilmake: Fix X_LD_FLAGS for Darwin 8 and later (Blanton).
 bin/Makefile: Copy the somehow left-out install_ups_table.
+pro/Makefile: Add mcmc directory.
 
 -------------------------------------------------------------------------------
 v5_1_0 (December 19, 2005) running on IDL 5.4 - 6.2
