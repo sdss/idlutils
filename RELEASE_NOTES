@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v5_1_1 (Feb 2, 2006) running on IDL 5.4 - 6.2
+Tagged for idlspec2d v5_1_1; robustness of B-spline routines
+
 BSPLINE_FIT: Remove /CHECK option introduced in last version.
 BSPLINE_ITERFIT: Add REQUIREN optional keyword, to require at least
                some minimum number of data points between break points,
