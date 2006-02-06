@@ -1013,6 +1013,7 @@ pro/mpfit/mpfitpeak.pro -text
 pro/mpfit/mpfittut.html -text
 pro/mpfit/setfitparm.pro -text
 pro/mpfit/tnmin.pro -text
+pro/physics/sigma_pbar_p.pro -text
 pro/plot/atv.pro -text
 pro/plot/atv_joe_writeps.pro -text
 pro/plot/blanton_oned_meanplot.pro -text
