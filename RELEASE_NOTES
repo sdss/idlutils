@@ -1,4 +1,7 @@
 
+added new physics directory for general physics routines. 
+SIGMA_PBAR_P   Annihilation cross section of pbar on p 
+
 -------------------------------------------------------------------------------
 v5_1_2 (Feb 2, 2006) running on IDL 5.4 - 6.2
 Tagged for idlspec2d v5_1_1; robustness of B-spline routines
