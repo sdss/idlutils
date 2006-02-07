@@ -81,7 +81,7 @@
 ;
 ;   Y - Optional vector of y positions for a single column of Z.
 ;
-;          Y(j) should provide the j position of Z(*,j)
+;          Y(j) should provide the y position of Z(*,j)
 ;
 ;       Default: Y values are integer increments from 0 to NY-1
 ;
@@ -101,6 +101,19 @@
 ;              here.  Please see the documentation for MPFIT for the
 ;              description of these advanced options.
 ;
+;   CHISQ - the value of the summed squared residuals for the
+;           returned parameter values.
+;
+;   CIRCULAR - if set, then the peak profile is assumed to be
+;              azimuthally symmetric.  When set, the parameters A(2)
+;              and A(3) will be identical and the TILT keyword will
+;              have no effect.
+;
+;   DOF - number of degrees of freedom, computed as
+;             DOF = N_ELEMENTS(DEVIATES) - NFREE
+;         Note that this doesn't account for pegged parameters (see
+;         NPEGGED).
+;
 ;   ERROR - upon input, the measured 1-sigma uncertainties in the "Z"
 ;           values.  If no ERROR or WEIGHTS are given, then the fit is
 ;           unweighted.
@@ -113,11 +126,18 @@
 ;   LORENTZIAN - if set, fit a lorentzian model function.
 ;   MOFFAT - if set, fit a Moffat model function.
 ;
+;   MEASURE_ERRORS - synonym for ERRORS, for consistency with built-in
+;                    IDL fitting routines.
+;
 ;   NEGATIVE - if set, and ESTIMATES is not provided, then MPFIT2DPEAK
 ;              will assume that a negative peak is present -- a
 ;              valley.  Specifying this keyword is not normally
 ;              required, since MPFIT2DPEAK can determine this
 ;              automatically.
+;
+;   NFREE - the number of free parameters in the fit.  This includes
+;           parameters which are not FIXED and not TIED, but it does
+;           include parameters which are pegged at LIMITS.
 ;
 ;   PERROR - upon return, the 1-sigma uncertainties of the parameter
 ;            values A.  These values are only meaningful if the ERRORS
@@ -140,10 +160,9 @@
 ;   QUIET - if set then diagnostic fitting messages are suppressed.
 ;           Default: QUIET=1 (i.e., no diagnostics)
 ;
-;   CIRCULAR - if set, then the peak profile is assumed to be
-;              azimuthally symmetric.  When set, the parameters A(2)
-;              and A(3) will be identical and the TILT keyword will
-;              have no effect.
+;   SIGMA - synonym for PERROR (1-sigma parameter uncertainties), for
+;           compatibility with GAUSSFIT.  Do not confuse this with the
+;           Gaussian "sigma" width parameter.
 ;
 ;   TILT - if set, then the major and minor axes of the peak profile
 ;          are allowed to rotate with respect to the image axes.
@@ -203,10 +222,15 @@
 ;   Added SYMMETRIC keyword, documentation for TILT, and an example,
 ;     24 Nov 2000, CM
 ;   Changed SYMMETRIC to CIRCULAR, 17 Dec 2000, CM
+;   Really change SYMMETRIC to CIRCULAR!, 13 Sep 2002, CM
+;   Add error messages for SYMMETRIC and CIRCLE, 08 Nov 2002, CM
+;   Make more consistent with comparable IDL routines, 30 Jun 2003, CM
+;   Defend against users supplying strangely dimensioned X and Y, 29
+;     Jun 2005, CM
 ;
-;  $Id: mpfit2dpeak.pro,v 1.1 2001-08-22 22:23:05 schlegel Exp $
+;  $Id: mpfit2dpeak.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1997-2000, Craig Markwardt
+; Copyright (C) 1997-2000, 2002, 2003, 2005, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy, modify, and distribute modified or
 ; unmodified copies is granted, provided this copyright and disclaimer
@@ -256,10 +280,14 @@ end
 
 function mpfit2dpeak, z, a, x, y, estimates=est, tilt=tilt, $
                       gaussian=gauss, lorentzian=lorentz, moffat=moffat, $
-                      parinfo=parinfo, perror=perror, errmsg=errmsg,$
-                      error=zerror, weights=weights, symmetric=sym, $
-                      niter=iter, nfev=nfev, bestnorm=bestnorm, $
-                      status=status, query=query, quiet=quiet, _extra=extra
+                      perror=perror, sigma=sigma, zerror=zerror, $
+                      chisq=chisq, bestnorm=bestnorm, niter=iter, nfev=nfev, $
+                      error=dz, weights=weights, measure_errors=dzm, $
+                      nfree=nfree, dof=dof, $
+                      negative=neg, parinfo=parinfo, $
+                      circular=sym, circle=badcircle1, symmetric=badcircle2, $
+                      errmsg=errmsg, status=status, $
+                      query=query, quiet=quiet, _extra=extra
 
   status = 0L
   errmsg = ''
@@ -277,6 +305,10 @@ function mpfit2dpeak, z, a, x, y, estimates=est, tilt=tilt, $
   if mpfit2dfun(/query) NE 1 then goto, MPFIT_NOTFOUND
   catch, /cancel
   if keyword_set(query) then return, 1
+
+  if keyword_set(badcircle1) OR keyword_set(badcircle2) then $
+    message, 'ERROR: do not use the CIRCLE or SYMMETRIC keywords.  ' +$
+    'Use CIRCULAR instead.'
 
   ;; Reject too few data
   if n_elements(z) LT 8 then begin
@@ -306,16 +338,21 @@ function mpfit2dpeak, z, a, x, y, estimates=est, tilt=tilt, $
   endif
 
   ;; Make 2D arrays of X and Y values -- if the user hasn't done it
-  if n_elements(x) NE n_elements(z) then   xx = x # (y*0 + 1)   else xx = x
-  if n_elements(y) NE n_elements(z) then   yy = (x*0 + 1) # y   else yy = y
+  if n_elements(x) NE n_elements(z) then   xx = x(*) # (y(*)*0 + 1)   else xx = x
+  if n_elements(y) NE n_elements(z) then   yy = (x(*)*0 + 1) # y(*)   else yy = y
 
   ;; Compute the weighting factors to use
-  if n_elements(zerror) EQ 0 AND n_elements(weights) EQ 0 then begin
+  if (n_elements(dz) EQ 0 AND n_elements(weights) EQ 0 AND $
+      n_elements(dzm) EQ 0) then begin
       weights = z*0+1        ;; Unweighted by default
-  endif else if n_elements(zerror) GT 0 then begin
-      weights = zerror * 0   ;; Avoid division by zero
-      wh = where(zerror NE 0, ct)
-      if ct GT 0 then weights(wh) = 1./zerror(wh)^2
+  endif else if n_elements(dz) GT 0 then begin
+      weights = dz * 0   ;; Avoid division by zero
+      wh = where(dz NE 0, ct)
+      if ct GT 0 then weights(wh) = 1./dz(wh)^2
+  endif else if n_elements(dzm) GT 0 then begin
+      weights = dzm * 0   ;; Avoid division by zero
+      wh = where(dzm NE 0, ct)
+      if ct GT 0 then weights(wh) = 1./dzm(wh)^2
   endif
 
   if n_elements(est) EQ 0 then begin
@@ -399,7 +436,7 @@ function mpfit2dpeak, z, a, x, y, estimates=est, tilt=tilt, $
   a = mpfit2dfun(fun, xx, yy, z, 0, p0(0:np-1), weights=weights, $
                  bestnorm=bestnorm, nfev=nfev, status=status, $
                  parinfo=parinfo, perror=perror, niter=iter, yfit=yfit, $
-                 quiet=quiet, errmsg=errmsg, $
+                 quiet=quiet, errmsg=errmsg, nfree=nfree, dof=dof, $
                  functargs=fargs, _EXTRA=extra)
 
   ;; Print error message if there is one.
@@ -416,8 +453,19 @@ function mpfit2dpeak, z, a, x, y, estimates=est, tilt=tilt, $
       a(6) = ((a(6) MOD !dpi) + 2*!dpi) MOD !dpi
       a = a(0:np-1)
 
-      if n_elements(yfit) EQ nx*ny then $
-        return, reform(yfit, nx, ny, /overwrite)
+      if n_elements(perror)   GT 0 then sigma = perror
+      if n_elements(bestnorm) GT 0 then chisq = bestnorm
+
+      if n_elements(yfit) EQ nx*ny then begin
+          yfit = reform(yfit, nx, ny, /overwrite)
+      endif
+
+      zerror = a(0)*0
+      if n_elements(dof) GT 0 AND dof(0) GT 0 then begin
+          zerror(0) = sqrt( total( (z-yfit)^2 ) / dof(0) )
+      endif
+
+      return, yfit
   endif
 
   return, !values.d_nan

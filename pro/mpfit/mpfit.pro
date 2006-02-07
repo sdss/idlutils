@@ -200,6 +200,14 @@
 ;     .STEP - the step size to be used in calculating the numerical
 ;             derivatives.  If set to zero, then the step size is
 ;             computed automatically.  Ignored when AUTODERIVATIVE=0.
+;             This value is superceded by the RELSTEP value.
+;
+;     .RELSTEP - the *relative* step size to be used in calculating
+;                the numerical derivatives.  This number is the
+;                fractional size of the step, compared to the
+;                parameter value.  This value supercedes the STEP
+;                setting.  If the parameter is zero, then a default
+;                step size is chosen.
 ;
 ;     .MPSIDE - the sidedness of the finite difference when computing
 ;               numerical derivatives.  This field can take four
@@ -226,13 +234,25 @@
 ;                  A value of 0 indicates no maximum.  Default: 0.
 ;  
 ;     .TIED - a string expression which "ties" the parameter to other
-;             free or fixed parameters.  Any expression involving
-;             constants and the parameter array P are permitted.
+;             free or fixed parameters as an equality constraint.  Any
+;             expression involving constants and the parameter array P
+;             are permitted.
 ;             Example: if parameter 2 is always to be twice parameter
 ;             1 then use the following: parinfo(2).tied = '2 * P(1)'.
 ;             Since they are totally constrained, tied parameters are
 ;             considered to be fixed; no errors are computed for them.
 ;             [ NOTE: the PARNAME can't be used in expressions. ]
+;
+;     .MPPRINT - if set to 1, then the default ITERPROC will print the
+;                parameter value.  If set to 0, the parameter value
+;                will not be printed.  This tag can be used to
+;                selectively print only a few parameter values out of
+;                many.  Default: 1 (all parameters printed)
+;
+;     .MPFORMAT - IDL format string to print the parameter within
+;                 ITERPROC.  Default: '(G20.6)' An empty string will
+;                 also use the default.
+;
 ;  
 ;  Future modifications to the PARINFO structure, if any, will involve
 ;  adding structure tags beginning with the two letters "MP".
@@ -253,11 +273,50 @@
 ;  is fixed at a value of 5.7, and the last parameter is
 ;  constrained to be above 50.
 ;
+;
+; HARD-TO-COMPUTE FUNCTIONS: "EXTERNAL" EVALUATION
+;
+;  The normal mode of operation for MPFIT is for the user to pass a
+;  function name, and MPFIT will call the user function multiple times
+;  as it iterates toward a solution.
+;
+;  Some user functions are particularly hard to compute using the
+;  standard model of MPFIT.  Usually these are functions that depend
+;  on a large amount of external data, and so it is not feasible, or
+;  at least highly impractical, to have MPFIT call it.  In those cases
+;  it may be possible to use the "(EXTERNAL)" evaluation option.
+;
+;  In this case the user is responsible for making all function *and
+;  derivative* evaluations.  The function and Jacobian data are passed
+;  in through the EXTERNAL_FVEC and EXTERNAL_FJAC keywords,
+;  respectively.  The user indicates the selection of this option by
+;  specifying a function name (MYFUNCT) of "(EXTERNAL)".  No
+;  user-function calls are made when EXTERNAL evaluation is being
+;  used.
+;
+;  At the end of each iteration, control returns to the user, who must
+;  reevaluate the function at its new parameter values.  Users should
+;  check the return value of the STATUS keyword, where a value of 9
+;  indicates the user should supply more data for the next iteration,
+;  and re-call MPFIT.  The user may refrain from calling MPFIT
+;  further; as usual, STATUS will indicate when the solution has
+;  converged and no more iterations are required.
+;
+;  Because MPFIT must maintain its own data structures between calls,
+;  the user must also pass a named variable to the EXTERNAL_STATE
+;  keyword.  This variable must be maintained by the user, but not
+;  changed, throughout the fitting process.  When no more iterations
+;  are desired, the named variable may be discarded.
+;
+;
 ; INPUTS:
 ;   MYFUNCT - a string variable containing the name of the function to
 ;             be minimized.  The function should return the weighted
 ;             deviations between the model and the data, as described
 ;             above.
+;
+;             For EXTERNAL evaluation of functions, this parameter
+;             should be set to a value of "(EXTERNAL)".
 ;
 ;   START_PARAMS - An array of starting values for each of the
 ;                  parameters of the model.  The number of parameters
@@ -288,8 +347,8 @@
 ;                    NOTE: to supply your own analytical derivatives,
 ;                      explicitly pass AUTODERIVATIVE=0
 ;
-;   BESTNORM - the value of the summed squared residuals for the
-;              returned parameter values.
+;   BESTNORM - the value of the summed squared weighted residuals for
+;              the returned parameter values, i.e. TOTAL(DEVIATES^2).
 ;
 ;   COVAR - the covariance matrix for the set of parameters returned
 ;           by MPFIT.  The matrix is NxN where N is the number of
@@ -306,7 +365,29 @@
 ;           If NOCOVAR is set or MPFIT terminated abnormally, then
 ;           COVAR is set to a scalar with value !VALUES.D_NAN.
 ;
+;   DOF - number of degrees of freedom, computed as
+;             DOF = N_ELEMENTS(DEVIATES) - NFREE
+;         Note that this doesn't account for pegged parameters (see
+;         NPEGGED).
+;
 ;   ERRMSG - a string error or warning message is returned.
+;
+;   EXTERNAL_FVEC - upon input, the function values, evaluated at
+;                   START_PARAMS.  This should be an M-vector, where M
+;                   is the number of data points.
+;
+;   EXTERNAL_FJAC - upon input, the Jacobian array of partial
+;                   derivative values.  This should be a M x N array,
+;                   where M is the number of data points and N is the
+;                   number of parameters.  NOTE: that all FIXED or
+;                   TIED parameters must *not* be included in this
+;                   array.
+;
+;   EXTERNAL_STATE - a named variable to store MPFIT-related state
+;                    information between iterations (used in input and
+;                    output to MPFIT).  The user must not manipulate
+;                    or discard this data until the final iteration is
+;                    performed.
 ;
 ;   FASTNORM - set this keyword to select a faster algorithm to
 ;              compute sum-of-square values internally.  For systems
@@ -355,12 +436,24 @@
 ;              similar in operation to FUNCTARGS.
 ;              Default: no arguments are passed.
 ;
+;   ITERPRINT - The name of an IDL procedure, equivalent to PRINT,
+;               that ITERPROC will use to render output.  ITERPRINT
+;               should be able to accept at least four positional
+;               arguments.  In addition, it should be able to accept
+;               the standard FORMAT keyword for output formatting; and
+;               the UNIT keyword, to redirect output to a logical file
+;               unit (default should be UNIT=1, standard output).
+;               These keywords are passed using the ITERARGS keyword
+;               above.  The ITERPRINT procedure must accept the _EXTRA
+;               keyword.
+;
 ;   ITERPROC - The name of a procedure to be called upon each NPRINT
-;              iteration of the MPFIT routine.  It should be declared
+;              iteration of the MPFIT routine.  ITERPROC is always
+;              called in the final iteration.  It should be declared
 ;              in the following way:
 ;
 ;              PRO ITERPROC, MYFUNCT, p, iter, fnorm, FUNCTARGS=fcnargs, $
-;                PARINFO=parinfo, QUIET=quiet, ...
+;                PARINFO=parinfo, QUIET=quiet, DOF=dof, ...
 ;                ; perform custom iteration update
 ;              END
 ;         
@@ -371,10 +464,11 @@
 ;              MYFUNCT is the user-supplied function to be minimized,
 ;              P is the current set of model parameters, ITER is the
 ;              iteration number, and FUNCTARGS are the arguments to be
-;              passed to MYFUNCT.  FNORM should be the
-;              chi-squared value.  QUIET is set when no textual output
-;              should be printed.  See below for documentation of
-;              PARINFO.
+;              passed to MYFUNCT.  FNORM should be the chi-squared
+;              value.  QUIET is set when no textual output should be
+;              printed.  DOF is the number of degrees of freedom,
+;              normally the number of points less the number of free
+;              parameters.  See below for documentation of PARINFO.
 ;
 ;              In implementation, ITERPROC can perform updates to the
 ;              terminal or graphical user interface, to provide
@@ -391,8 +485,20 @@
 ;                       parameter values.
 ;
 ;   ITERSTOP - Set this keyword if you wish to be able to stop the
-;              fitting by hitting Control-G on the keyboard.  This
-;              only works if you use the default ITERPROC.
+;              fitting by hitting the predefined ITERKEYSTOP key on
+;              the keyboard.  This only works if you use the default
+;              ITERPROC.
+;
+;   ITERKEYSTOP - A keyboard key which will halt the fit (and if
+;                 ITERSTOP is set and the default ITERPROC is used).
+;                 ITERSTOPKEY may either be a one-character string
+;                 with the desired key, or a scalar integer giving the
+;                 ASCII code of the desired key.  
+;                 Default: 7b (control-g)
+;
+;                 NOTE: the default value of ASCI 7 (control-G) cannot
+;                 be read in some windowing environments, so you must
+;                 change to a printable character like 'q'.
 ;
 ;   MAXITER - The maximum number of iterations to perform.  If the
 ;             number is exceeded, then the STATUS value is set to 5
@@ -401,16 +507,25 @@
 ;
 ;   NFEV - the number of MYFUNCT function evaluations performed.
 ;
+;   NFREE - the number of free parameters in the fit.  This includes
+;           parameters which are not FIXED and not TIED, but it does
+;           include parameters which are pegged at LIMITS.
+;
 ;   NITER - the number of iterations completed.
 ;
 ;   NOCOVAR - set this keyword to prevent the calculation of the
 ;             covariance matrix before returning (see COVAR)
 ;
+;   NPEGGED - the number of free parameters which are pegged at a
+;             LIMIT.
+;
 ;   NPRINT - The frequency with which ITERPROC is called.  A value of
 ;            1 indicates that ITERPROC is called with every iteration,
-;            while 2 indicates every other iteration, etc.  Note that
-;            several Levenberg-Marquardt attempts can be made in a
-;            single iteration.
+;            while 2 indicates every other iteration, etc.  Be aware
+;            that several Levenberg-Marquardt attempts can be made in
+;            a single iteration.  Also, the ITERPROC is *always*
+;            called for the final iteration, regardless of the
+;            iteration number.
 ;            Default value: 1
 ;
 ;   PARINFO - Provides a mechanism for more sophisticated constraints
@@ -499,6 +614,11 @@
 ;         
 ;	   8  GTOL is too small. fvec is orthogonal to the
 ;	      columns of the jacobian to machine precision.
+;
+;          9  A successful single iteration has been completed, and
+;             the user must supply another "EXTERNAL" evaluation of
+;             the function and its derivatives.  This status indicator
+;             is neither an error nor a convergence indicator.
 ;
 ;   XTOL - a nonnegative input variable. Termination occurs when the
 ;          relative error between two consecutive iterates is at most
@@ -619,7 +739,7 @@
 ;   direction.
 ;
 ;   The method of solution employed by MINPACK is to form the Q . R
-;   factorization of h, where Q is an orthogonal matrix such that QT .
+;   factorization of h', where Q is an orthogonal matrix such that QT .
 ;   Q = I, and R is upper right triangular.  Using h' = Q . R and the
 ;   ortogonality of Q, eqn (5) becomes
 ;
@@ -725,10 +845,53 @@
 ;   Added more error checking of float vs. double, CM, 07 Apr 2001
 ;   Fixed bug in handling of parameter lower limits; moved overflow
 ;     checking to end of loop, CM, 20 Apr 2001
+;   Failure using GOTO, TERMINATE more graceful if FNORM1 not defined,
+;     CM, 13 Aug 2001
+;   Add MPPRINT tag to PARINFO, CM, 19 Nov 2001
+;   Add DOF keyword to DEFITER procedure, and print degrees of
+;     freedom, CM, 28 Nov 2001
+;   Add check to be sure MYFUNCT is a scalar string, CM, 14 Jan 2002
+;   Addition of EXTERNAL_FJAC, EXTERNAL_FVEC keywords; ability to save
+;     fitter's state from one call to the next; allow '(EXTERNAL)'
+;     function name, which implies that user will supply function and
+;     Jacobian at each iteration, CM, 10 Mar 2002
+;   Documented EXTERNAL evaluation code, CM, 10 Mar 2002
+;   Corrected signficant bug in the way that the STEP parameter, and
+;     FIXED parameters interacted (Thanks Andrew Steffl), CM, 02 Apr
+;     2002
+;   Allow COVAR and PERROR keywords to be computed, even in case of
+;     '(EXTERNAL)' function, 26 May 2002
+;   Add NFREE and NPEGGED keywords; compute NPEGGED; compute DOF using
+;     NFREE instead of n_elements(X), thanks to Kristian Kjaer, CM 11
+;     Sep 2002
+;   Hopefully PERROR is all positive now, CM 13 Sep 2002
+;   Documented RELSTEP field of PARINFO (!!), CM, 25 Oct 2002
+;   Error checking to detect missing start pars, CM 12 Apr 2003
+;   Add DOF keyword to return degrees of freedom, CM, 30 June 2003
+;   Always call ITERPROC in the final iteration; add ITERKEYSTOP
+;     keyword, CM, 30 June 2003
+;   Correct bug in MPFIT_LMPAR of singularity handling, which might
+;     likely be fatal for one-parameter fits, CM, 21 Nov 2003
+;     (with thanks to Peter Tuthill for the proper test case)
+;   Minor documentation adjustment, 03 Feb 2004, CM
+;   Correct small error in QR factorization when pivoting; document
+;     the return values of QRFAC when pivoting, 21 May 2004, CM
+;   Add MPFORMAT field to PARINFO, and correct behavior of interaction
+;     between MPPRINT and PARNAME in MPFIT_DEFITERPROC (thanks to Tim
+;     Robishaw), 23 May 2004, CM
+;   Add the ITERPRINT keyword to allow redirecting output, 26 Sep
+;     2004, CM
+;   Correct MAXSTEP behavior in case of a negative parameter, 26 Sep
+;     2004, CM
+;   Fix bug in the parsing of MINSTEP/MAXSTEP, 10 Apr 2005, CM
+;   Fix bug in the handling of upper/lower limits when the limit was
+;     negative (the fitting code would never "stick" to the lower
+;     limit), 29 Jun 2005, CM
+;   Small documentation update for the TIED field, 05 Sep 2005, CM
 ;
-;  $Id: mpfit.pro,v 1.1 2001-08-22 22:23:05 schlegel Exp $
+;  $Id: mpfit.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1997-2001, Craig Markwardt
+; Copyright (C) 1997-2003, 2004, 2005, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy, modify, and distribute modified or
 ; unmodified copies is granted, provided this copyright and disclaimer
@@ -901,14 +1064,16 @@ function mpfit_fdjac2, fcn, x, fvec, step, ulimited, ulimit, dside, $
 
   ;; if STEP is given, use that
   if n_elements(step) GT 0 then begin
-      wh = where(step GT 0, ct)
-      if ct GT 0 then h(wh) = step(wh)
+      stepi = step(ifree)
+      wh = where(stepi GT 0, ct)
+      if ct GT 0 then h(wh) = stepi(wh)
   endif
 
   ;; if relative step is given, use that
   if n_elements(dstep) GT 0 then begin
-      wh = where(dstep GT 0, ct)
-      if ct GT 0 then h(wh) = abs(dstep(wh)*x(wh))
+      dstepi = dstep(ifree)
+      wh = where(dstepi GT 0, ct)
+      if ct GT 0 then h(wh) = abs(dstepi(wh)*x(wh))
   endif
 
   ;; In case any of the step values are zero
@@ -1071,7 +1236,16 @@ end
 ;     burton s. garbow, kenneth e. hillstrom, jorge j. more
 ;
 ;     **********
-
+;
+; PIVOTING / PERMUTING:
+;
+; Upon return, A(*,*) is in standard parameter order, A(*,IPVT) is in
+; permuted order.
+;
+; RDIAG is in permuted order.
+;
+; ACNORM is in standard parameter order.
+;
 ; NOTE: in IDL the factors appear slightly differently than described
 ; above.  The matrix A is still m x n where m >= n.  
 ;
@@ -1167,7 +1341,7 @@ pro mpfit_qrfac, a, ipvt, rdiag, acnorm, pivot=pivot
       ajj    = a(j:*,lj)
       ajnorm = mpfit_enorm(ajj)
       if ajnorm EQ 0 then goto, NEXT_ROW
-      if a(j,j) LT 0 then ajnorm = -ajnorm
+      if a(j,lj) LT 0 then ajnorm = -ajnorm
       
       ajj     = ajj / ajnorm
       ajj(0)  = ajj(0) + 1
@@ -1494,7 +1668,7 @@ function mpfit_lmpar, r, ipvt, diag, qtb, delta, x, sdiag, par=par
       wa1(wh(0):*) = 0
   endif
 
-  if nsing GT 1 then begin
+  if nsing GE 1 then begin
       ;; *** Reverse loop ***
       for j=nsing-1,0,-1 do begin  
           wa1(j) = wa1(j)/r(j,j)
@@ -1612,44 +1786,87 @@ pro mpfit_tie, p, _ptied
   endfor
 end
 
+;; Default print procedure
+pro mpfit_defprint, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, $
+                    p11, p12, p13, p14, p15, p16, p17, p18, $
+                    format=format, unit=unit0, _EXTRA=extra
+
+  if n_elements(unit0) EQ 0 then unit = -1 else unit = round(unit0(0))
+  if n_params() EQ 0 then printf, unit, '' $
+  else if n_params() EQ 1 then printf, unit, p1, format=format $
+  else if n_params() EQ 2 then printf, unit, p1, p2, format=format $
+  else if n_params() EQ 3 then printf, unit, p1, p2, p3, format=format $
+  else if n_params() EQ 4 then printf, unit, p1, p2, p4, format=format 
+
+  return
+end
+
+
 ;; Default procedure to be called every iteration.  It simply prints
 ;; the parameter values.
 pro mpfit_defiter, fcn, x, iter, fnorm, FUNCTARGS=fcnargs, $
-                   quiet=quiet, iterstop=iterstop, parinfo=parinfo, $
-                   format=fmt, pformat=pformat, _EXTRA=iterargs
+                   quiet=quiet, iterstop=iterstop, iterkeybyte=iterkeybyte, $
+                   parinfo=parinfo, iterprint=iterprint0, $
+                   format=fmt, pformat=pformat, dof=dof0, _EXTRA=iterargs
 
   common mpfit_error, mperr
   mperr = 0
-  if keyword_set(quiet) then return
+  if keyword_set(quiet) then goto, DO_ITERSTOP
   if n_params() EQ 3 then begin
       fvec = mpfit_call(fcn, x, _EXTRA=fcnargs)
       fnorm = mpfit_enorm(fvec)^2
   endif
 
-  print, iter, fnorm, $
-    format='("Iter ",I6,"   CHI-SQUARE = ",G20.8)'
+  ;; Determine which parameters to print
+  nprint = n_elements(x)
+  iprint = lindgen(nprint)
+
+  if n_elements(iterprint0) EQ 0 then iterprint = 'MPFIT_DEFPRINT' $
+  else iterprint = strtrim(iterprint0(0),2)
+
+  if n_elements(dof0) EQ 0 then dof = 1L else dof = floor(dof0(0))
+  call_procedure, iterprint, iter, fnorm, dof, $
+    format='("Iter ",I6,"   CHI-SQUARE = ",G15.8,"          DOF = ",I0)', $
+    _EXTRA=iterargs
   if n_elements(fmt) GT 0 then begin
-      print, x, format=fmt
+      call_procedure, iterprint, x, format=fmt, _EXTRA=iterargs
   endif else begin
+      if n_elements(pformat) EQ 0 then pformat = '(G20.6)'
+      parname = 'P('+strtrim(iprint,2)+')'
+      pformats = strarr(nprint) + pformat
+
       if n_elements(parinfo) GT 0 then begin
           parinfo_tags = tag_names(parinfo)
           wh = where(parinfo_tags EQ 'PARNAME', ct)
           if ct EQ 1 then begin
-              plen = max(strlen(parinfo.parname)) < 25
-              plen = strtrim(plen,2)
-              p = string(parinfo.parname, format='("    ",A'+plen+'," = ")')
+              wh = where(parinfo.parname NE '', ct)
+              if ct GT 0 then $
+                parname(wh) = strmid(parinfo(wh).parname,0,25)
+          endif
+          wh = where(parinfo_tags EQ 'MPPRINT', ct)
+          if ct EQ 1 then begin
+              iprint = where(parinfo.mpprint EQ 1, nprint)
+              if nprint EQ 0 then goto, DO_ITERSTOP
+          endif
+          wh = where(parinfo_tags EQ 'MPFORMAT', ct)
+          if ct EQ 1 then begin
+              wh = where(parinfo.mpformat NE '', ct)
+              if ct GT 0 then pformats(wh) = parinfo(wh).mpformat
           endif
       endif
-      if n_elements(p) EQ 0 then $
-        p = '    P('+strtrim(lindgen(n_elements(x)),2)+') = '
-      if n_elements(pformat) EQ 0 then pformat = '(G20.6)'
-      p = p + string(x,format=string(pformat(0))) + '  '
-      print, p, format='(A)'
+
+      for i = 0, nprint-1 do begin
+          call_procedure, iterprint, parname(iprint(i)), x(iprint(i)), $
+            format='("    ",A0," = ",'+pformats(iprint(i))+')', $
+            _EXTRA=iterargs
+      endfor
   endelse
 
+  DO_ITERSTOP:
+  if n_elements(iterkeybyte) EQ 0 then iterkeybyte = 7b
   if keyword_set(iterstop) then begin
       k = get_kbrd(0)
-      if k EQ string(byte(7)) then begin
+      if k EQ string(iterkeybyte(0)) then begin
           message, 'WARNING: minimization not complete', /info
           print, 'Do you want to terminate this procedure? (y/n)', $
             format='(A,$)'
@@ -1781,7 +1998,7 @@ function mpfit_covar, rr, ipvt, tol=tol
   r = rr
   r = reform(rr, n, n, /overwrite)
   
-  ;; For the inverse of r in the full upper triangle of r
+  ;; Form the inverse of r in the full upper triangle of r
   l = -1L
   if n_elements(tol) EQ 0 then tol = one*1.E-14
   tolr = tol * abs(r(0,0))
@@ -1809,8 +2026,8 @@ function mpfit_covar, rr, ipvt, tol=tol
       r(0,k) = temp * r(0:k,k)
   endfor
 
-  ;; For the full lower triangle of the covariance matrix
-  ;; in the strict lower triangle or and in wa
+  ;; Form the full lower triangle of the covariance matrix
+  ;; in the strict lower triangle of r and in wa
   wa = replicate(r(0,0), n)
   for j = 0L, n-1 do begin
       jj = ipvt(j)
@@ -2017,11 +2234,15 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
                 ftol=ftol, xtol=xtol, gtol=gtol, epsfcn=epsfcn, resdamp=damp, $
                 nfev=nfev, maxiter=maxiter, errmsg=errmsg, $
                 factor=factor, nprint=nprint, STATUS=info, $
-                iterproc=iterproc, iterargs=iterargs, niter=iter, iterstop=ss,$
+                iterproc=iterproc, iterargs=iterargs, iterstop=ss,$
+                iterkeystop=iterkeystop, $
+                niter=iter, nfree=nfree, npegged=npegged, dof=dof, $
                 diag=diag, rescale=rescale, autoderivative=autoderiv, $
                 perror=perror, covar=covar, nocovar=nocovar, bestnorm=fnorm, $
                 parinfo=parinfo, quiet=quiet, nocatch=nocatch, $
-                fastnorm=fastnorm, proc=proc, query=query
+                fastnorm=fastnorm, proc=proc, query=query, $
+                external_state=state, external_init=extinit, $
+                external_fvec=efvec, external_fjac=efjac
 
   if keyword_set(query) then return, 1
 
@@ -2039,8 +2260,6 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   if n_elements(nprint) EQ 0 then nprint = 1
   if n_elements(iterproc) EQ 0 then iterproc = 'MPFIT_DEFITER'
   if n_elements(autoderiv) EQ 0 then autoderiv = 1
-  if strupcase(iterproc) EQ 'MPFIT_DEFITER' AND n_elements(iterargs) EQ 0 $
-    AND keyword_set(ss) then iterargs = {iterstop:1}
   if n_elements(fastnorm) EQ 0 then fastnorm = 0
   if n_elements(damp) EQ 0 then damp = 0 else damp = damp(0)
 
@@ -2053,11 +2272,15 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   ;;  PTIED - array of strings, one for each parameter
   common mpfit_config, mpconfig
   mpconfig = {fastnorm: keyword_set(fastnorm), proc: 0, nfev: 0L, damp: damp}
+  common mpfit_machar, machvals
 
   info = 0L
   iflag = 0L
   errmsg = ''
   catch_msg = 'in MPFIT'
+  nfree = 0L
+  npegged = 0L
+  dof = 0L
 
   ;; Parameter damping doesn't work when user is providing their own
   ;; gradients.
@@ -2065,6 +2288,32 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
       errmsg = 'ERROR: keywords DAMP and AUTODERIV are mutually exclusive'
       goto, TERMINATE
   endif      
+  
+  ;; Process the ITERSTOP and ITERKEYSTOP keywords, and turn this into
+  ;; a set of keywords to pass to MPFIT_DEFITER.
+  if strupcase(iterproc) EQ 'MPFIT_DEFITER' AND n_elements(iterargs) EQ 0 $
+    AND keyword_set(ss) then begin
+      if n_elements(iterkeystop) GT 0 then begin
+          sz = size(iterkeystop)
+          tp = sz(sz(0)+1)
+          if tp EQ 7 then begin
+              ;; String - convert first char to byte
+              iterkeybyte = (byte(iterkeystop(0)))(0)
+          endif
+          if (tp GE 1 AND tp LE 3) OR (tp GE 12 AND tp LE 15) then begin
+              ;; Integer - convert to byte
+              iterkeybyte = byte(iterkeystop(0))
+          endif
+          if n_elements(iterkeybyte) EQ 0 then begin
+              errmsg = 'ERROR: ITERKEYSTOP must be either a BYTE or STRING'
+              goto, TERMINATE
+          endif
+
+          iterargs = {iterstop: 1, iterkeybyte: iterkeybyte}
+      endif else begin
+          iterargs = {iterstop: 1, iterkeybyte: 7b}
+      endelse
+  endif
 
 
   ;; Handle error conditions gracefully
@@ -2077,6 +2326,32 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
           message, 'Error condition detected. Returning to MAIN level.', /info
           return, !values.d_nan
       endif
+  endif
+
+  ;; Parse FCN function name - be sure it is a scalar string
+  sz = size(fcn)
+  if sz(0) NE 0 then begin
+      FCN_NAME:
+      errmsg = 'ERROR: MYFUNCT must be a scalar string'
+      goto, TERMINATE
+  endif
+  if sz(sz(0)+1) NE 7 then goto, FCN_NAME
+
+  isext = 0
+  if fcn EQ '(EXTERNAL)' then begin
+      if n_elements(efvec) EQ 0 OR n_elements(efjac) EQ 0 then begin
+          errmsg = 'ERROR: when using EXTERNAL function, EXTERNAL_FVEC '+$
+            'and EXTERNAL_FJAC must be defined'
+          goto, TERMINATE
+      endif
+      nv = n_elements(efvec)
+      nj = n_elements(efjac)
+      if (nj MOD nv) NE 0 then begin
+          errmsg = 'ERROR: the number of values in EXTERNAL_FJAC must be '+ $
+            'a multiple of the number of values in EXTERNAL_FVEC'
+          goto, TERMINATE
+      endif
+      isext = 1
   endif
 
   ;; Parinfo:
@@ -2141,9 +2416,9 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   ;; FIXED parameters ?
   mpfit_parinfo, parinfo, tagnames, 'FIXED', pfixed, default=0, n=npar
   pfixed = pfixed EQ 1
-  pfixed = pfixed OR (ptied NE '')   ;; Tied parameters are also effectively fixed
+  pfixed = pfixed OR (ptied NE '');; Tied parameters are also effectively fixed
   
-  ;; Finite differencing step, absolute and relative, and sidedness of derivative
+  ;; Finite differencing step, absolute and relative, and sidedness of deriv.
   mpfit_parinfo, parinfo, tagnames, 'STEP',     step, default=zero, n=npar
   mpfit_parinfo, parinfo, tagnames, 'RELSTEP', dstep, default=zero, n=npar
   mpfit_parinfo, parinfo, tagnames, 'MPSIDE',  dside, default=0,    n=npar
@@ -2158,16 +2433,27 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
       errmsg = 'ERROR: MPMINSTEP is greater than MPMAXSTEP'
       goto, TERMINATE
   endif
-  wh = where(qmin AND qmax, ct)
+  wh = where(qmin OR qmax, ct)
   qminmax = ct GT 0
 
   ;; Finish up the free parameters
-  ifree = where(pfixed NE 1, ct)
-  if ct EQ 0 then begin
+  ifree = where(pfixed NE 1, nfree)
+  if nfree EQ 0 then begin
       errmsg = 'ERROR: no free parameters'
       goto, TERMINATE
   endif
-  
+
+  ;; An external Jacobian must be checked against the number of
+  ;; parameters
+  if isext then begin
+      if (nj/nv) NE nfree then begin
+          errmsg = string(nv, nfree, nfree, $
+           format=('("ERROR: EXTERNAL_FJAC must be a ",I0," x ",I0,' + $
+                   '" array, where ",I0," is the number of free parameters")'))
+          goto, TERMINATE
+      endif
+  endif
+
   ;; Compose only VARYING parameters
   xnew = xall      ;; xnew is the set of parameters to be returned
   x = xnew(ifree)  ;; x is the set of free parameters
@@ -2184,7 +2470,8 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
           errmsg = 'ERROR: parameters are not within PARINFO limits'
           goto, TERMINATE
       endif
-      wh = where(limited(0,*) AND limited(1,*) AND limits(0,*) GE limits(1,*) AND $
+      wh = where(limited(0,*) AND limited(1,*) AND $
+                 limits(0,*) GE limits(1,*) AND $
                  pfixed EQ 0, ct)
       if ct GT 0 then begin
           errmsg = 'ERROR: PARINFO parameter limits are not consistent'
@@ -2204,13 +2491,16 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   endif else begin
 
       ;; Fill in local variables with dummy values
-      qulim = lonarr(n_elements(ifree))
+      qulim = lonarr(nfree)
       ulim  = x * 0.
       qllim = qulim
       llim  = x * 0.
       qanylim = 0
 
   endelse
+
+  ;; Initialize the number of parameters pegged at a hard limit value
+  wh = where((qulim AND (x EQ ulim)) OR (qllim AND (x EQ llim)), npegged)
 
   n = n_elements(x)
   if n_elements(maxiter) EQ 0 then maxiter = 200L
@@ -2230,22 +2520,51 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
       errmsg = ''
   endif
 
+  if n_elements(state) NE 0 AND NOT keyword_set(extinit) then begin
+      szst = size(state)
+      if szst(szst(0)+1) NE 8  then begin
+          errmsg = 'EXTERNAL_STATE keyword was not preserved'
+          status = 0
+          goto, TERMINATE
+      endif
+      if nfree NE n_elements(state.ifree) then begin
+          BAD_IFREE:
+          errmsg = 'Number of free parameters must not change from one '+$
+            'external iteration to the next'
+          status = 0
+          goto, TERMINATE
+      endif
+      wh = where(ifree NE state.ifree, ct)
+      if ct GT 0 then goto, BAD_IFREE
+
+      tnames = tag_names(state)
+      for i = 0, n_elements(tnames)-1 do begin
+          dummy = execute(tnames(i)+' = state.'+tnames(i))
+      endfor
+      wa4 = reform(efvec, n_elements(efvec))
+
+      goto, RESUME_FIT
+  endif
+
   common mpfit_error, mperr
 
-  mperr = 0
-  catch_msg = 'calling '+fcn
-  fvec = mpfit_call(fcn, xnew, _EXTRA=fcnargs)
-  iflag = mperr
-  if iflag LT 0 then begin
-      errmsg = 'ERROR: first call to "'+fcn+'" failed'
-      goto, TERMINATE
-  endif
+  if NOT isext then begin
+      mperr = 0
+      catch_msg = 'calling '+fcn
+      fvec = mpfit_call(fcn, xnew, _EXTRA=fcnargs)
+      iflag = mperr
+      if iflag LT 0 then begin
+          errmsg = 'ERROR: first call to "'+fcn+'" failed'
+          goto, TERMINATE
+      endif
+  endif else begin
+      fvec = reform(efvec, n_elements(efvec))
+  endelse
 
   catch_msg = 'calling MPFIT_SETMACHAR'
   sz = size(fvec(0))
   isdouble = (sz(sz(0)+1) EQ 5)
   
-  common mpfit_machar, machvals
   mpfit_setmachar, double=isdouble
 
   common mpfit_profile, profvals
@@ -2298,6 +2617,7 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   ;; If requested, call fcn to enable printing of iterates
   xnew(ifree) = x
   if qanytied then mpfit_tie, xnew, ptied
+  dof = (n_elements(fvec) - nfree) > 1L
 
   if nprint GT 0 AND iterproc NE '' then begin
       catch_msg = 'calling '+iterproc
@@ -2307,7 +2627,8 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
           xnew0 = xnew
 
           call_procedure, iterproc, fcn, xnew, iter, fnorm^2, $
-            FUNCTARGS=fcnargs, parinfo=parinfo, quiet=quiet, _EXTRA=iterargs
+            FUNCTARGS=fcnargs, parinfo=parinfo, quiet=quiet, $
+            dof=dof, _EXTRA=iterargs
           iflag = mperr
 
           ;; Check for user termination
@@ -2327,15 +2648,19 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
 
   ;; Calculate the jacobian matrix
   iflag = 2
-  catch_msg = 'calling MPFIT_FDJAC2'
-  fjac = mpfit_fdjac2(fcn, x, fvec, step, qulim, ulim, dside, $
-                      iflag=iflag, epsfcn=epsfcn, $
-                      autoderiv=autoderiv, dstep=dstep, $
-                      FUNCTARGS=fcnargs, ifree=ifree, xall=xnew)
-  if iflag LT 0 then begin
-      errmsg = 'WARNING: premature termination by FDJAC2'
-      goto, TERMINATE
-  endif
+  if NOT isext then begin
+      catch_msg = 'calling MPFIT_FDJAC2'
+      fjac = mpfit_fdjac2(fcn, x, fvec, step, qulim, ulim, dside, $
+                          iflag=iflag, epsfcn=epsfcn, $
+                          autoderiv=autoderiv, dstep=dstep, $
+                          FUNCTARGS=fcnargs, ifree=ifree, xall=xnew)
+      if iflag LT 0 then begin
+          errmsg = 'WARNING: premature termination by FDJAC2'
+          goto, TERMINATE
+      endif
+  endif else begin
+      fjac = reform(efjac,n_elements(fvec),npar, /overwrite)
+  endelse
 
   ;; Rescale the residuals and gradient, for use with "alternative"
   ;; statistics such as the Cash statistic.
@@ -2345,10 +2670,12 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   endif
 
   ;; Determine if any of the parameters are pegged at the limits
+  npegged = 0L
   if qanylim then begin
       catch_msg = 'zeroing derivatives of pegged parameters'
       whlpeg = where(qllim AND (x EQ llim), nlpeg)
       whupeg = where(qulim AND (x EQ ulim), nupeg)
+      npegged = nlpeg + nupeg
       
       ;; See if any "pegged" values should keep their derivatives
       if (nlpeg GT 0) then begin
@@ -2409,7 +2736,7 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   ;; triangle of R, is needed.
   fjac = fjac(0:n-1, 0:n-1)
   fjac = reform(fjac, n, n, /overwrite)
-  fjac = fjac(*, ipvt)
+  fjac = fjac(*, ipvt)                    ;; Convert to permuted order
   fjac = reform(fjac, n, n, /overwrite)
 
   ;; Check for overflow.  This should be a cheap test here since FJAC
@@ -2482,7 +2809,7 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
           nwa1 = wa1 * alpha
           whmax = where(qmax AND maxstep GT 0, ct)
           if ct GT 0 then begin
-              mrat = max(nwa1(whmax)/maxstep(whmax))
+              mrat = max(abs(nwa1(whmax))/abs(maxstep(whmax)))
               if mrat GT 1 then alpha = alpha / mrat
           endif
       endif          
@@ -2493,10 +2820,12 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
 
       ;; Adjust the final output values.  If the step put us exactly
       ;; on a boundary, make sure it is exact.
-      wh = where(qulim AND wa2 GE ulim*(1-MACHEP0), ct)
+      sgnu = (ulim GE 0)*2d - 1d
+      sgnl = (llim GE 0)*2d - 1d
+      wh = where(qulim AND wa2 GE ulim*(1-sgnu*MACHEP0), ct)
       if ct GT 0 then wa2(wh) = ulim(wh)
 
-      wh = where(qllim AND wa2 LE llim*(1+MACHEP0), ct)
+      wh = where(qllim AND wa2 LE llim*(1+sgnl*MACHEP0), ct)
       if ct GT 0 then wa2(wh) = llim(wh)
   endelse
 
@@ -2505,10 +2834,12 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
 
   ;; On the first iteration, adjust the initial step bound
   if iter EQ 1 then delta = min([delta,pnorm])
-  
+
+  xnew(ifree) = wa2
+  if isext then goto, SAVE_STATE
+
   ;; Evaluate the function at x+p and calculate its norm
   mperr = 0
-  xnew(ifree) = wa2
   catch_msg = 'calling '+fcn
   wa4 = mpfit_call(fcn, xnew, _EXTRA=fcnargs)
   iflag = mperr
@@ -2516,6 +2847,7 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
       errmsg = 'WARNING: premature termination by "'+fcn+'"'
       goto, TERMINATE
   endif
+  RESUME_FIT:
   fnorm1 = mpfit_enorm(wa4)
   
   ;; Compute the scaled actual reduction
@@ -2605,25 +2937,62 @@ function mpfit, fcn, xall, FUNCTARGS=fcnargs, SCALE_FCN=scalfcn, $
   goto, OUTER_LOOP
 
 TERMINATE:
-;  catch_msg = 'in the termination phase'
+  catch_msg = 'in the termination phase'
   ;; Termination, either normal or user imposed.
   if iflag LT 0 then info = iflag
   iflag = 0
-  if n_elements(ifree) EQ 0 then xnew = xall else xnew(ifree) = x
-  if nprint GT 0 AND info GT 0 then begin
+  if n_elements(xnew) EQ 0 then goto, FINAL_RETURN
+  if nfree EQ 0 then xnew = xall else xnew(ifree) = x
+  dof = n_elements(fvec) - nfree
+
+
+  ;; Call the ITERPROC at the end of the fit, if the fit status is
+  ;; okay.  Don't call it if the fit failed for some reason.
+  if info GT 0 then begin
+      
+      mperr = 0
+      xnew0 = xnew
+      
+      call_procedure, iterproc, fcn, xnew, iter, fnorm^2, $
+        FUNCTARGS=fcnargs, parinfo=parinfo, quiet=quiet, $
+        dof=dof, _EXTRA=iterargs
+      iflag = mperr
+
+      if iflag LT 0 then begin  
+          errmsg = 'WARNING: premature termination by "'+iterproc+'"'
+      endif else begin
+          ;; If parameters were changed (grrr..) then re-tie
+          if max(abs(xnew0-xnew)) GT 0 then begin
+              if qanytied then mpfit_tie, xnew, ptied
+              x = xnew(ifree)
+          endif
+      endelse
+
+  endif
+
+  ;; Initialize the number of parameters pegged at a hard limit value
+  npegged = 0L
+  if n_elements(qanylim) GT 0 then if qanylim then begin
+      wh = where((qulim AND (x EQ ulim)) OR $
+                 (qllim AND (x EQ llim)), npegged)
+  endif
+
+  if fcn NE '(EXTERNAL)' AND nprint GT 0 AND info GT 0 then begin
       catch_msg = 'calling '+fcn
       fvec = mpfit_call(fcn, xnew, _EXTRA=fcnargs)
       catch_msg = 'in the termination phase'
       fnorm = mpfit_enorm(fvec)
   endif
 
-  fnorm = max([fnorm, fnorm1])
-  fnorm = fnorm^2.
+  if n_elements(fnorm) GT 0 AND n_elements(fnorm1) GT 0 then begin
+      fnorm = max([fnorm, fnorm1])
+      fnorm = fnorm^2.
+  endif
 
   covar = !values.d_nan
   ;; (very carefully) set the covariance matrix COVAR
   if info GT 0 AND NOT keyword_set(nocovar) $
-    AND n_elements(n) GT 0 AND n_elements(fvec) GT 0 $
+    AND n_elements(n) GT 0 $
     AND n_elements(fjac) GT 0 AND n_elements(ipvt) GT 0 then begin
       sz = size(fjac)
       if n GT 0 AND sz(0) GT 1 AND sz(1) GE n AND sz(2) GE n $
@@ -2646,7 +3015,7 @@ TERMINATE:
           ;; Compute errors in parameters
           catch_msg = 'computing parameter errors'
           i = lindgen(nn)
-          perror = replicate(covar(0)*0., nn)
+          perror = replicate(abs(covar(0))*0., nn)
           wh = where(covar(i,i) GE 0, ct)
           if ct GT 0 then $
             perror(wh) = sqrt(covar(wh, wh))
@@ -2655,7 +3024,50 @@ TERMINATE:
 ;  catch_msg = 'returning the result'
 ;  profvals.mpfit = profvals.mpfit + (systime(1) - prof_start)
 
+  FINAL_RETURN:
   nfev = mpconfig.nfev
+  if n_elements(xnew) EQ 0 then return, !values.d_nan
   return, xnew
+
+  
+  ;; ------------------------------------------------------------------
+  ;; Alternate ending if the user supplies the function and gradients
+  ;; externally
+  ;; ------------------------------------------------------------------
+
+  SAVE_STATE:
+
+  catch_msg = 'saving MPFIT state'
+
+  ;; Names of variables to save
+  varlist = ['alpha', 'delta', 'diag', 'dwarf', 'factor', 'fnorm', $
+             'fjac', 'gnorm', 'nfree', 'ifree', 'ipvt', 'iter', $
+             'm', 'n', 'machvals', 'machep0', 'npegged', $
+             'whlpeg', 'whupeg', 'nlpeg', 'nupeg', $
+             'mpconfig', 'par', 'pnorm', 'qtf', $
+             'wa1', 'wa2', 'wa3', 'xnorm', 'x', 'xnew']
+  cmd = ''
+
+  ;; Construct an expression that will save them
+  for i = 0, n_elements(varlist)-1 do begin
+      ival = 0
+      dummy = execute('ival = n_elements('+varlist(i)+')')
+      if ival GT 0 then begin
+          cmd = cmd + ',' + varlist(i)+':'+varlist(i)
+      endif
+  endfor
+  cmd = 'state = create_struct({'+strmid(cmd,1)+'})'
+  state = 0
+
+  if execute(cmd) NE 1 then $
+    message, 'ERROR: could not save MPFIT state'
+
+  ;; Set STATUS keyword to prepare for next iteration, and reset init
+  ;; so we do not init the next time
+  info = 9
+  extinit = 0
+
+  return, xnew
+
 end
 

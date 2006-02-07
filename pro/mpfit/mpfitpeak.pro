@@ -37,7 +37,7 @@
 ;
 ;                 GAUSSIAN#          Lorentzian#         Moffat#
 ;
-;   Model     A(0)*exp(-0.5*u)     A(0)/(u + 1)      A(0)/(u + 1)^A(3)
+;   Model     A(0)*exp(-0.5*u^2)   A(0)/(u^2 + 1)   A(0)/(u^2 + 1)^A(3)
 ;
 ;   A(0)         Peak Value          Peak Value        Peak Value
 ;   A(1)        Peak Centroid       Peak Centroid     Peak Centroid
@@ -46,7 +46,7 @@
 ;   A(4)         + A(4)*x  *          + A(4)*x *         + A(4)   *
 ;   A(5)                                                 + A(5)*x *
 ;
-;   Notes: # u = ((x - A(1))/A(2))^2
+;   Notes: # u = (x - A(1))/A(2)
 ;          % Half-width at half maximum
 ;          * Optional depending on NTERMS
 ;
@@ -99,6 +99,14 @@
 ;              here.  Please see the documentation for MPFIT for the
 ;              description of these advanced options.
 ;
+;   CHISQ - the value of the summed squared residuals for the
+;           returned parameter values.
+;
+;   DOF - number of degrees of freedom, computed as
+;             DOF = N_ELEMENTS(DEVIATES) - NFREE
+;         Note that this doesn't account for pegged parameters (see
+;         NPEGGED).
+;
 ;   ERROR - upon input, the measured 1-sigma uncertainties in the "Y"
 ;           values.  If no ERROR or WEIGHTS are given, then the fit is
 ;           unweighted.
@@ -113,10 +121,17 @@
 ;   LORENTZIAN - if set, fit a lorentzian model function.
 ;   MOFFAT - if set, fit a Moffat model function.
 ;
+;   MEASURE_ERRORS - synonym for ERRORS, for consistency with built-in
+;                    IDL fitting routines.
+;
 ;   NEGATIVE / POSITIVE - if set, and ESTIMATES is not provided, then
 ;                         MPFITPEAK will assume that a
 ;                         negative/positive peak is present.
 ;                         Default: determined automatically
+;
+;   NFREE - the number of free parameters in the fit.  This includes
+;           parameters which are not FIXED and not TIED, but it does
+;           include parameters which are pegged at LIMITS.
 ;
 ;   NTERMS - An integer describing the number of fitting terms.
 ;            NTERMS must have a minimum value, but can optionally be
@@ -151,9 +166,13 @@
 ;   QUIET - if set then diagnostic fitting messages are suppressed.
 ;           Default: QUIET=1 (i.e., no diagnostics)
 ;
+;   SIGMA - synonym for PERROR (1-sigma parameter uncertainties), for
+;           compatibility with GAUSSFIT.  Do not confuse this with the
+;           Gaussian "sigma" width parameter.
+;
 ;   WEIGHTS - Array of weights to be used in calculating the
-;             chi-squared value.  If WEIGHTS is specified then the ERR
-;             parameter is ignored.  The chi-squared value is computed
+;             chi-squared value.  If WEIGHTS is specified then the ERROR
+;             keyword is ignored.  The chi-squared value is computed
 ;             as follows:
 ;
 ;                CHISQ = TOTAL( (Y-MYFUNCT(X,P))^2 * ABS(WEIGHTS) )
@@ -167,6 +186,9 @@
 ;             The ERROR keyword takes precedence over any WEIGHTS
 ;             keyword values.  If no ERROR or WEIGHTS are given, then
 ;             the fit is unweighted.
+;
+;   YERROR - upon return, the root-mean-square variance of the
+;            residuals.
 ;
 ;
 ; EXAMPLE:
@@ -206,10 +228,14 @@
 ;   Added POSITIVE and NEGATIVE keywords, 17 Nov 2000, CM
 ;   Added reference to Moffat paper, 10 Jan 2001, CM
 ;   Added usage message, 26 Jul 2001, CM
+;   Documentation clarification, 05 Sep 2001, CM
+;   Make more consistent with comparable IDL routines, 30 Jun 2003, CM
+;   Assumption of sorted data was removed, CM, 06 Sep 2003, CM
+;   Add some defensive code against divide by zero, 30 Nov 2005, CM
 ;
-;  $Id: mpfitpeak.pro,v 1.1 2001-08-22 22:23:06 schlegel Exp $
+;  $Id: mpfitpeak.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1997-2001, Craig Markwardt
+; Copyright (C) 1997-2001, 2003, 2005, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy, modify, and distribute modified or
 ; unmodified copies is granted, provided this copyright and disclaimer
@@ -255,11 +281,13 @@ end
 
 function mpfitpeak, x, y, a, estimates=est, nterms=nterms, $
                     gaussian=gauss, lorentzian=lorentz, moffat=moffat, $
-                    parinfo=parinfo, perror=perror, errmsg=errmsg,$
-                    error=yerror, weights=weights, $
-                    negative=neg, positive=pos, $
-                    niter=iter, nfev=nfev, bestnorm=bestnorm, $
-                    status=status, query=query, quiet=quiet, _extra=extra
+                    perror=perror, sigma=sigma, yerror=yerror, $
+                    chisq=chisq, bestnorm=bestnorm, niter=iter, nfev=nfev, $
+                    error=dy, weights=weights, measure_errors=dym, $
+                    nfree=nfree, dof=dof, $
+                    negative=neg, positive=pos, parinfo=parinfo, $
+                    errmsg=errmsg, status=status, $
+                    query=query, quiet=quiet, _extra=extra
 
   status = 0L
   errmsg = ''
@@ -294,23 +322,31 @@ function mpfitpeak, x, y, a, estimates=est, nterms=nterms, $
   endif
 
   ;; Compute the weighting factors to use
-  if n_elements(yerror) EQ 0 AND n_elements(weights) EQ 0 then begin
+  if (n_elements(dy) EQ 0 AND n_elements(weights) EQ 0 AND $
+      n_elements(dym) EQ 0) then begin
       weights = x*0+1        ;; Unweighted by default
-  endif else if n_elements(yerror) GT 0 then begin
-      weights = yerror * 0   ;; Avoid division by zero
-      wh = where(yerror NE 0, ct)
-      if ct GT 0 then weights(wh) = 1./yerror(wh)^2
-  endif
+  endif else if n_elements(dy) GT 0 then begin
+      weights = dy * 0   ;; Avoid division by zero
+      wh = where(dy NE 0, ct)
+      if ct GT 0 then weights(wh) = 1./dy(wh)^2
+  endif else if n_elements(dym) GT 0 then begin
+      weights = dym * 0   ;; Avoid division by zero
+      wh = where(dym NE 0, ct)
+      if ct GT 0 then weights(wh) = 1./dym(wh)^2
+  endif 
 
   if n_elements(est) EQ 0 then begin
       ;; Here is the secret - the width is estimated based on the area
       ;; above/below the average.  Thus, as the signal becomes more
       ;; noisy the width automatically broadens as it should.
 
-      maxx = max(x, min=minx) & maxy = max(y, min=miny)
       nx = n_elements(x)
-      dx = 0.5 * [x(1)-x(0), x(2:*) - x, x(nx-1) - x(nx-2)]
-      totarea = total(dx*y)       ;; Total area under curve
+
+      is = sort(x)
+      xs = x(is) & ys = y(is)
+      maxx = max(xs, min=minx) & maxy = max(ys, min=miny)
+      dx = 0.5 * [xs(1)-xs(0), xs(2:*) - xs, xs(nx-1) - xs(nx-2)]
+      totarea = total(dx*ys)       ;; Total area under curve
       av = totarea/(maxx - minx)  ;; Average height
 
       ;; Compute the spread in values above and below average... we
@@ -333,8 +369,10 @@ function mpfitpeak, x, y, a, estimates=est, nterms=nterms, $
           cent  = x(where(y EQ miny)) & cent = cent(0)
           peak  = miny - av
       endelse
-      peakarea = totarea - total(dx*(y<av))
+      peakarea = totarea - total(dx*(ys<av))
+      if peak EQ 0 then peak = 0.5*peakarea
       width = peakarea / (2*abs(peak))
+      if width EQ 0 OR finite(width) EQ 0 then width = median(dx)
 
       est = [peak, cent, width, av]
       guess = 1
@@ -366,6 +404,7 @@ function mpfitpeak, x, y, a, estimates=est, nterms=nterms, $
   ;; Function call
   a = mpfitfun(fun, x, y, 0, p0(0:nterms(0)-1), weights=weights, $
                bestnorm=bestnorm, nfev=nfev, status=status, $
+               nfree=nfree, dof=dof, $
                parinfo=parinfo, perror=perror, niter=iter, yfit=yfit, $
                quiet=quiet, errmsg=errmsg, _EXTRA=extra)
 
@@ -376,6 +415,15 @@ function mpfitpeak, x, y, a, estimates=est, nterms=nterms, $
   if status NE 0 then begin
       ;; Make sure the width is positive
       a(2) = abs(a(2))
+
+      ;; For compatibility with GAUSSFIT
+      if n_elements(perror)   GT 0 then sigma = perror
+      if n_elements(bestnorm) GT 0 then chisq = bestnorm
+
+      yerror = a(0)*0
+      if n_elements(dof) GT 0 AND dof(0) GT 0 then begin
+          yerror(0) = sqrt( total( (y-yfit)^2 ) / dof(0) )
+      endif
 
       return, yfit
   endif

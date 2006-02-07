@@ -5,7 +5,7 @@
 ; AUTHOR:
 ;   Craig B. Markwardt, NASA/GSFC Code 662, Greenbelt, MD 20770
 ;   craigm@lheamail.gsfc.nasa.gov
-;   UPDATED VERSIONs can be found on my WEB PAGE: 
+;   UPDATED VERSIONs can be found on my WEB PAGE:
 ;      http://cow.physics.wisc.edu/~craigm/idl/idl.html
 ;
 ; PURPOSE:
@@ -17,7 +17,7 @@
 ; CALLING SEQUENCE:
 ;   parms = TNMIN(MYFUNCT, X, FUNCTARGS=fcnargs, NFEV=nfev,
 ;                 MAXITER=maxiter, ERRMSG=errmsg, NPRINT=nprint,
-;                 QUIET=quiet, XTOL=xtol, STATUS=status, 
+;                 QUIET=quiet, XTOL=xtol, STATUS=status,
 ;                 FGUESS=fguess, PARINFO=parinfo, BESTMIN=bestmin,
 ;                 ITERPROC=iterproc, ITERARGS=iterargs, niter=niter)
 ;
@@ -73,7 +73,7 @@
 ;
 ;  By default, the user must compute gradient components analytically
 ;  using AUTODERIVATIVE=0.  As explained below, numerical derivatives
-;  can also be calculated using AUTODERIVATIVE=1.  
+;  can also be calculated using AUTODERIVATIVE=1.
 ;
 ;  For analytic derivatives, the user should call TNMIN using the
 ;  default keyword value AUTODERIVATIVE=0.  [ This is different
@@ -81,7 +81,7 @@
 ;  IDL user routine should compute the gradient of the function as a
 ;  one-dimensional array of values, one for each of the parameters.
 ;  They are passed back to TNMIN via "dp" as shown above.
-;             
+;
 ;  The derivatives with respect to fixed parameters are ignored; zero
 ;  is an appropriate value to insert for those derivatives.  Upon
 ;  input to the user function, DP is set to a vector with the same
@@ -119,30 +119,30 @@
 ;  Each parameter is associated with one element of the array, in
 ;  numerical order.  The structure can have the following entries
 ;  (none are required):
-;  
+;
 ;     .VALUE - the starting parameter value (but see the START_PARAMS
 ;              parameter for more information).
-;  
+;
 ;     .FIXED - a boolean value, whether the parameter is to be held
 ;              fixed or not.  Fixed parameters are not varied by
 ;              TNMIN, but are passed on to MYFUNCT for evaluation.
-;  
+;
 ;     .LIMITED - a two-element boolean array.  If the first/second
 ;                element is set, then the parameter is bounded on the
 ;                lower/upper side.  A parameter can be bounded on both
 ;                sides.  Both LIMITED and LIMITS must be given
 ;                together.
-;  
+;
 ;     .LIMITS - a two-element float or double array.  Gives the
 ;               parameter limits on the lower and upper sides,
 ;               respectively.  Zero, one or two of these values can be
 ;               set, depending on the values of LIMITED.  Both LIMITED
 ;               and LIMITS must be given together.
-;  
+;
 ;     .PARNAME - a string, giving the name of the parameter.  The
 ;                fitting code of TNMIN does not use this tag in any
 ;                way.
-;  
+;
 ;     .STEP - the step size to be used in calculating the numerical
 ;             derivatives.  If set to zero, then the step size is
 ;             computed automatically.  Ignored when AUTODERIVATIVE=0.
@@ -172,14 +172,14 @@
 ;             Since they are totally constrained, tied parameters are
 ;             considered to be fixed; no errors are computed for them.
 ;             [ NOTE: the PARNAME can't be used in expressions. ]
-;  
+;
 ;  Future modifications to the PARINFO structure, if any, will involve
 ;  adding structure tags beginning with the two letters "MP" or "TN".
 ;  Therefore programmers are urged to avoid using tags starting with
 ;  these two combinations of letters; otherwise they are free to
 ;  include their own fields within the PARINFO structure, and they
 ;  will be ignored.
-;  
+;
 ;  PARINFO Example:
 ;  parinfo = replicate({value:0.D, fixed:0, limited:[0,0], $
 ;                       limits:[0.D,0]}, 5)
@@ -187,7 +187,7 @@
 ;  parinfo(4).limited(0) = 1
 ;  parinfo(4).limits(0)  = 50.D
 ;  parinfo(*).value = [5.7D, 2.2, 500., 1.5, 2000.]
-;  
+;
 ;  A total of 5 parameters, with starting values of 5.7,
 ;  2.2, 500, 1.5, and 2000 are given.  The first parameter
 ;  is fixed at a value of 5.7, and the last parameter is
@@ -209,7 +209,7 @@
 ;       constrain individual parameters.  If both X and PARINFO are
 ;       passed, then the starting *value* is taken from X, but the
 ;       *constraints* are taken from PARINFO.
-; 
+;
 ;
 ; RETURNS:
 ;
@@ -284,10 +284,10 @@
 ;                PARINFO=parinfo, QUIET=quiet, _EXTRA=extra
 ;                ; perform custom iteration update
 ;              END
-;         
+;
 ;              ITERPROC must accept the _EXTRA keyword, in case of
 ;              future changes to the calling procedure.
-;          
+;
 ;              MYFUNCT is the user-supplied function to be minimized,
 ;              P is the current set of model parameters, ITER is the
 ;              iteration number, and FUNCTARGS are the arguments to be
@@ -330,7 +330,7 @@
 ;
 ;   NPRINT - The frequency with which ITERPROC is called.  A value of
 ;            1 indicates that ITERPROC is called with every iteration,
-;            while 2 indicates every other iteration, etc.  
+;            while 2 indicates every other iteration, etc.
 ;            Default value: 1
 ;
 ;   PARINFO - Provides a mechanism for more sophisticated constraints
@@ -362,7 +362,7 @@
 ;             numerical overflow in the user's function, which must be
 ;             avoided.
 ;
-;        -15 to -1 
+;        -15 to -1
 ;             these are error codes that either MYFUNCT or ITERPROC
 ;             may return to terminate the fitting process (see
 ;             description of MPFIT_ERROR common below).  If either
@@ -372,15 +372,15 @@
 ;             clash with MPFIT.
 ;
 ;	   0  improper input parameters.
-;         
+;
 ;	   1  convergence was reached.
 ;
 ;          2-4 (RESERVED)
-;         
+;
 ;	   5  the maximum number of iterations has been reached
 ;
 ;          6-8 (RESERVED)
-;         
+;
 ;
 ; EXAMPLE:
 ;
@@ -416,6 +416,11 @@
 ;   TRUNCATED-NEWTON METHOD, TN.F
 ;      Stephen G. Nash, Operations Research and Applied Statistics
 ;      Department
+;      http://www.netlib.org/opt/tn
+;
+;   Nash, S. G. 1984, "Newton-Type Minimization via the Lanczos
+;      Method," SIAM J. Numerical Analysis, 21, p. 770-778
+;
 ;
 ; MODIFICATION HISTORY:
 ;   Derived from TN.F by Stephen Nash with many changes and additions,
@@ -451,14 +456,18 @@
 ;     2001
 ;   Continued code cleanups; documentation; the STATUS keyword
 ;     actually means something, CM, 10 Apr 2001
+;   Added reference to Nash paper, CM, 08 Feb 2002
+;   Fixed 16-bit loop indices, D. Schelgel, 22 Apr 2003
+;   Changed parens to square brackets because of conflicts with
+;     limits function.  K. Tolbert, 23 Feb 2005
 ;
 ; TODO
 ;  - scale derivatives semi-automatically;
 ;  - ability to scale and offset parameters;
-;  
-;  $Id: tnmin.pro,v 1.2 2003-04-22 23:22:58 schlegel Exp $
+;
+;  $Id: tnmin.pro,v 1.3 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1998-2001, Craig Markwardt
+; Copyright (C) 1998-2001,2002,2003, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy and distribute unmodified copies for
 ; non-commercial purposes, and to modify and use for personal or
@@ -567,7 +576,7 @@ pro tnmin_tie, p, _ptied
 end
 
 function tnmin_autoder, fcn, x, dx, dside=dside
-  
+
   common tnmin_machar, machvals
   common tnmin_config, tnconfig
 
@@ -581,7 +590,7 @@ function tnmin_autoder, fcn, x, dx, dside=dside
   ;; if STEP is given, use that
   wh = where(tnconfig.step GT 0, ct)
   if ct GT 0 then h(wh) = tnconfig.step(wh)
-  
+
   ;; if relative step is given, use that
   wh = where(tnconfig.dstep GT 0, ct)
   if ct GT 0 then h(wh) = abs(tnconfig.dstep(wh)*x(wh))
@@ -645,7 +654,7 @@ function tnmin_call, fcn, x1, dx, fullparam_=xall
   endif else begin
       x = x1
   endelse
-    
+
   ;; Decide whether we are calling a procedure or function
   if tnconfig.proc then proc = 1 else proc = 0
   tnconfig.nfev = tnconfig.nfev + 1
@@ -709,7 +718,7 @@ pro tnmin_initpc, diagb, emat, n, upd1, yksk, gsk, yrsr, lreset
   ;; indicated in all caps are not used or renamed here.
 ; common tnmin_work, lsk, lyk, ldiagb, lsr, lyr
   common tnmin_work,  sk,  yk, LDIAGB,  sr,  yr
-;                    I    I            I    I            
+;                    I    I            I    I
 
   ;; From INITP3
   if keyword_set(upd1) then begin
@@ -756,7 +765,7 @@ pro tnmin_msolve, g, y, n, upd1, yksk, gsk, yrsr, lreset, first, $
   ;; Rename common variables as they appear in MSLV
 ; common tnmin_work, lsk, lyk, ldiagb, lsr, lyr
   common tnmin_work,  sk,  yk,  diagb,  sr,  yr
-;                    I    I      I     I    I  
+;                    I    I      I     I    I
 
   ;; From MSLV
   if keyword_set(UPD1) then begin
@@ -764,7 +773,7 @@ pro tnmin_msolve, g, y, n, upd1, yksk, gsk, yrsr, lreset, first, $
       RETURN
   endif
 
-  ONE = G(0)*0 + 1.  
+  ONE = G(0)*0 + 1.
   GSK = TOTAL(G*SK)
 
   if keyword_set(lreset) then begin
@@ -886,7 +895,7 @@ pro tnmin_modlnp, zsol, gv, r, v, diagb, emat, $
   R = -G
   V = G*0.
   ZSOL = V
-  
+
 ;
 ; ************************************************************
 ; MAIN ITERATION
@@ -894,7 +903,7 @@ pro tnmin_modlnp, zsol, gv, r, v, diagb, emat, $
 ;
   FOR K = 1L, MAXIT DO BEGIN
       NLINCG = NLINCG + 1
-      
+
 ;
 ; CG ITERATION TO SOLVE SYSTEM OF EQUATIONS
 ;
@@ -1070,7 +1079,7 @@ pro tnmin_getptc, big, small, rtsmll, reltol, abstol, tnytol, $
 ;
       IENTRY = 2
       goto, GETPTC_210
-  endif 
+  endif
 
 ;
 ; IENTRY = 2
@@ -1287,7 +1296,7 @@ GETPTC_180:
 ;
 ; THE FUNCTION MUST NOT BE EVALUTATED TOO CLOSE TO A OR B.
 ;
-      if NOT (step - a GE twotol AND b - step GE twotol) then begin 
+      if NOT (step - a GE twotol AND b - step GE twotol) then begin
           ;; else clause = 210 (OK)
           IF (XMIDPT LE ZERO) THEN STEP = -TOL ELSE STEP = TOL
       endif ;; flow to 210 (OK)
@@ -1308,14 +1317,14 @@ GETPTC_210:
 ;
       SCXBND = SCXBND - (RELTOL*ABS(XBND)+ABSTOL)/(ONE + RELTOL)
   endif
-  ;; GETPTC_220:  
+  ;; GETPTC_220:
   U = STEP
   IF (ABS(STEP) LT TOL AND STEP LT ZERO) THEN U = -TOL
   IF (ABS(STEP) LT TOL AND STEP GE ZERO) THEN U = TOL
   ITEST = 1
   RETURN
 end
-      
+
 ;
 ;      LINE SEARCH ALGORITHMS OF GILL AND MURRAY
 ;
@@ -1354,7 +1363,9 @@ LINDER_10:
   ITCNT = ITCNT + 1
   IF (ITCNT GT 30) THEN BEGIN
       ;; deviation from Nash: allow optimization to continue in outer
-      ;; loop even if we fail to converge.
+      ;; loop even if we fail to converge, if IFLAG EQ 0.  A value of
+      ;; 1 indicates failure.  I believe that I tried IFLAG=0 once and
+      ;; there was some problem, but I forget what it was.
       IFLAG = 1
       F = FMIN
       ALPHA = XMIN
@@ -1383,6 +1394,7 @@ LINDER_10:
 ;
       IF (FU LE FMIN AND FU LE OLDF-UALPHA*GTEST1) THEN $
         G = LG
+;      print, 'fu = ', fu
       GOTO, LINDER_10
   ENDIF
 ;
@@ -1394,6 +1406,7 @@ LINDER_10:
 ;
 ;      IF ITEST=0 A SUCCESSFUL SEARCH HAS BEEN MADE
 ;
+;  print, 'itcnt = ', itcnt
   IFLAG = 0
   F = FMIN
   ALPHA = XMIN
@@ -1432,7 +1445,7 @@ pro tnmin_defiter, fcn, x, iter, fnorm, fmt=fmt, FUNCTARGS=fcnargs, $
       endif
       print, p, format='(A)'
   endelse
-  
+
   return
 end
 
@@ -1617,7 +1630,7 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
   ;; TIED parameters?
   tnmin_parinfo, parinfo, tagnames, 'TIED', ptied, default='', n=npar
   ptied = strtrim(ptied, 2)
-  wh = where(ptied NE '', qanytied) 
+  wh = where(ptied NE '', qanytied)
   qanytied = qanytied GT 0
   tnconfig = create_struct(tnconfig, 'QANYTIED', qanytied, 'PTIED', ptied)
 
@@ -1625,7 +1638,7 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
   tnmin_parinfo, parinfo, tagnames, 'FIXED', pfixed, default=0, n=npar
   pfixed = pfixed EQ 1
   pfixed = pfixed OR (ptied NE '')   ;; Tied parameters are also effectively fixed
-  
+
   ;; Finite differencing step, absolute and relative, and sidedness of derivative
   tnmin_parinfo, parinfo, tagnames, 'STEP',     step, default=zero, n=npar
   tnmin_parinfo, parinfo, tagnames, 'RELSTEP', dstep, default=zero, n=npar
@@ -1650,7 +1663,7 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
       errmsg = 'ERROR: no free parameters'
       goto, TERMINATE
   endif
-  
+
   ;; Compose only VARYING parameters
   xnew = xall      ;; xnew is the set of parameters to be returned
   x = xnew(ifree)  ;; x is the set of free parameters
@@ -1661,25 +1674,25 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
   if st1 EQ 1 AND st2 EQ 1 then begin
 
       ;; Error checking on limits in parinfo
-      wh = where((limited(0,*) AND xall LT limits(0,*)) OR $
-                 (limited(1,*) AND xall GT limits(1,*)), ct)
+      wh = where((limited[0,*] AND xall LT limits[0,*]) OR $
+                 (limited[1,*] AND xall GT limits[1,*]), ct)
       if ct GT 0 then begin
           errmsg = 'ERROR: parameters are not within PARINFO limits'
           goto, TERMINATE
       endif
-      wh = where(limited(0,*) AND limited(1,*) AND $
-                 limits(0,*) GE limits(1,*) AND pfixed EQ 0, ct)
+      wh = where(limited[0,*] AND limited[1,*] AND $
+                 limits[0,*] GE limits[1,*] AND pfixed EQ 0, ct)
       if ct GT 0 then begin
           errmsg = 'ERROR: PARINFO parameter limits are not consistent'
           goto, TERMINATE
       endif
-      
+
 
       ;; Transfer structure values to local variables
-      qulim = limited(1, ifree)
-      ulim  = limits (1, ifree)
-      qllim = limited(0, ifree)
-      llim  = limits (0, ifree)
+      qulim = limited[1, ifree]
+      ulim  = limits [1, ifree]
+      qllim = limited[0, ifree]
+      llim  = limits [0, ifree]
 
       wh = where(qulim OR qllim, ct)
       if ct GT 0 then qanylim = 1 else qanylim = 0
@@ -1760,7 +1773,7 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
   if maximize then f = -fguess else f = fguess
   conv = 0 & lreset = 0 & upd1 = 0 & newcon = 0
   gsk = zero & yksk = zero & gtp = zero & gtpnew = zero & yrsr = zero
-  
+
   upd1 = 1
   ireset = 0L
   nmodif = 0L
@@ -1769,7 +1782,7 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
   conv   = 0
   nm1    = n - 1
 
-;; From CHKUCP  
+;; From CHKUCP
 ;
 ; CHECKS PARAMETERS AND SETS CONSTANTS WHICH ARE COMMON TO BOTH
 ; DERIVATIVE AND NON-DERIVATIVE ALGORITHMS
@@ -1877,7 +1890,7 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
   whupeg = where(umask, nupeg)
   tnmin_fix, whlpeg, whupeg, g
   GTG = TOTAL(G*G)
-  
+
 ;
 ; CHECK IF THE INITIAL POINT IS A LOCAL MINIMUM.
 ;
@@ -1892,12 +1905,12 @@ function tnmin, fcn, xall, fguess=fguess, functargs=fcnargs, parinfo=parinfo, $
   DIFNEW = ZERO
   EPSRED = HALF/TEN
   FKEEP  = FNEW
-      
+
 ;
 ; SET THE DIAGONAL OF THE APPROXIMATE HESSIAN TO UNITY.
 ;
   LDIAGB = replicate(one, n)
-  
+
 
 ;
 ; ..................START OF MAIN ITERATIVE LOOP..........
@@ -1927,7 +1940,7 @@ ITER_LOOP:
 ;
   RELTOL = RTEPS*(XNORM + ONE)/PE
   ABSTOL = - EPSMCH*FTEST/(OLDGTP - EPSMCH)
-  
+
 ;
 ; COMPUTE THE SMALLEST ALLOWABLE SPACING BETWEEN POINTS IN
 ; THE LINEAR SEARCH
@@ -1990,7 +2003,7 @@ ITER_LOOP:
 
   FOLD = FNEW
   NITER = NITER + 1
-  
+
 ;
 ; IF REQUIRED, PRINT THE DETAILS OF THIS ITERATION
 ;
@@ -2046,7 +2059,7 @@ ITER_LOOP:
 ;
   DIFOLD = DIFNEW
   DIFNEW = OLDF - FNEW
-  
+
 ;
 ; IF THIS IS THE FIRST ITERATION OF A NEW CYCLE, COMPUTE THE
 ; PERCENTAGE REDUCTION FACTOR FOR THE RESETTING TEST.
@@ -2073,7 +2086,7 @@ ITER_LOOP:
           FLAST = FNEW
           goto, CNVTST_DONE
       endif
-  endif 
+  endif
   ;; Gill Murray and Wright tests are listed to the right.
   ;; Modifications due to absolute function value test are done here.
 
@@ -2090,11 +2103,12 @@ ITER_LOOP:
   endelse
   IF ((PCONV AND FCONV AND GCONV) $               ;; U1 + U2 + U3
       OR (GTG LT GTOL2*FTEST*FTEST)) THEN BEGIN   ;; U4
-      ;; Convergence failed
       CONV = 1
   ENDIF ELSE BEGIN
+      ;; Convergence failed
       CONV = 0
   ENDELSE
+
 ;
 ; FOR DETAILS, SEE GILL, MURRAY, AND WRIGHT (1981, P. 308) AND
 ; FLETCHER (1981, P. 116).  THE MULTIPLIER TESTS (HERE, TESTING
@@ -2132,7 +2146,7 @@ CNVTST_DONE:
 ;
 ;      COMPUTE THE NEW SEARCH DIRECTION
 ;
-  ;; TNMIN_90:  
+  ;; TNMIN_90:
   catch_msg = 'calling TNMIN_MODLNP'
 
   tnmin_modlnp, lpk, lgv, lz1, lv, ldiagb, lemat, $
@@ -2152,7 +2166,7 @@ CNVTST_DONE:
       ICYCLE = ICYCLE + 1
       goto, ITER_LOOP
   ENDIF
-  
+
 ;
 ; RESET
 ;
@@ -2175,7 +2189,7 @@ CNVTST_DONE:
   nfev = tnconfig.nfev
   tnfcnargs = 0
   catch, /cancel
-  case NWHY of 
+  case NWHY of
       -3: begin
           ;; INDEFINITE VALUE
           status = -16L
@@ -2226,8 +2240,8 @@ CNVTST_DONE:
           ;; ABNORMAL TERMINATION BY USER ROUTINE
           status = iflag
       end
-  endcase      
-          
+  endcase
+
 
   ;; Successful return
   F = FNEW

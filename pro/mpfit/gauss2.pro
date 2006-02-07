@@ -58,7 +58,7 @@
 ;   Written, 02 Oct 1999, CM
 ;   Added copyright notice, 25 Mar 2001, CM
 ;
-;  $Id: gauss2.pro,v 1.1 2001-08-22 22:23:05 schlegel Exp $
+;  $Id: gauss2.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;
 ;-
 ; Copyright (C) 1999,2001, Craig Markwardt

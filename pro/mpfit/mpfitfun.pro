@@ -117,6 +117,14 @@
 ;     .STEP - the step size to be used in calculating the numerical
 ;             derivatives.  If set to zero, then the step size is
 ;             computed automatically.  Ignored when AUTODERIVATIVE=0.
+;             This value is superceded by the RELSTEP value.
+;
+;     .RELSTEP - the *relative* step size to be used in calculating
+;                the numerical derivatives.  This number is the
+;                fractional size of the step, compared to the
+;                parameter value.  This value supercedes the STEP
+;                setting.  If the parameter is zero, then a default
+;                step size is chosen.
 ;
 ;     .MPSIDE - the sidedness of the finite difference when computing
 ;               numerical derivatives.  This field can take four
@@ -239,11 +247,16 @@
 ;           If NOCOVAR is set or MPFIT terminated abnormally, then
 ;           COVAR is set to a scalar with value !VALUES.D_NAN.
 ;
-;   ERRMSG - a string error or warning message is returned.
-;
 ;   CASH - when set, the fit statistic is changed to a derivative of
 ;          the CASH statistic.  The model function must be strictly
 ;          positive.
+;
+;   DOF - number of degrees of freedom, computed as
+;             DOF = N_ELEMENTS(DEVIATES) - NFREE
+;         Note that this doesn't account for pegged parameters (see
+;         NPEGGED).
+;
+;   ERRMSG - a string error or warning message is returned.
 ;
 ;   FTOL - a nonnegative input variable. Termination occurs when both
 ;          the actual and predicted relative reductions in the sum of
@@ -313,10 +326,17 @@
 ;
 ;   NFEV - the number of MYFUNCT function evaluations performed.
 ;
+;   NFREE - the number of free parameters in the fit.  This includes
+;           parameters which are not FIXED and not TIED, but it does
+;           include parameters which are pegged at LIMITS.
+;
 ;   NITER - the number of iterations completed.
 ;
 ;   NOCOVAR - set this keyword to prevent the calculation of the
 ;             covariance matrix before returning (see COVAR)
+;
+;   NPEGGED - the number of free parameters which are pegged at a
+;             LIMIT.
 ;
 ;   NPRINT - The frequency with which ITERPROC is called.  A value of
 ;            1 indicates that ITERPROC is called with every iteration,
@@ -475,10 +495,13 @@
 ;   Copying permission terms have been liberalized, 26 Mar 2000, CM
 ;   Propagated improvements from MPFIT, 17 Dec 2000, CM
 ;   Added CASH statistic, 10 Jan 2001
+;   Added NFREE and NPEGGED keywords, 11 Sep 2002, CM
+;   Documented RELSTEP field of PARINFO (!!), CM, 25 Oct 2002
+;   Add DOF keyword to return degrees of freedom, CM, 23 June 2003
 ;
-;  $Id: mpfitfun.pro,v 1.1 2001-08-22 22:23:06 schlegel Exp $
+;  $Id: mpfitfun.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1997-2000, Craig Markwardt
+; Copyright (C) 1997-2002, 2003, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy, modify, and distribute modified or
 ; unmodified copies is granted, provided this copyright and disclaimer
@@ -549,7 +572,8 @@ end
 function mpfitfun, fcn, x, y, err, p, WEIGHTS=wts, FUNCTARGS=fa, $
                    BESTNORM=bestnorm, nfev=nfev, STATUS=status, $
                    parinfo=parinfo, query=query, CASH=cash, $
-                   covar=covar, perror=perror, niter=iter, yfit=yfit, $
+                   covar=covar, perror=perror, yfit=yfit, $
+                   niter=niter, nfree=nfree, npegged=npegged, dof=dof, $
                    quiet=quiet, ERRMSG=errmsg, _EXTRA=extra
 
   status = 0L
@@ -608,7 +632,8 @@ function mpfitfun, fcn, x, y, err, p, WEIGHTS=wts, FUNCTARGS=fa, $
 
   result = mpfit('mpfitfun_eval', p, SCALE_FCN=scalfcn, $
                  parinfo=parinfo, STATUS=status, nfev=nfev, BESTNORM=bestnorm,$
-                 covar=covar, perror=perror, niter=iter, $
+                 covar=covar, perror=perror, $
+                 niter=niter, nfree=nfree, npegged=npegged, dof=dof, $
                  ERRMSG=errmsg, quiet=quiet, _EXTRA=extra)
 
   ;; Retrieve the fit value

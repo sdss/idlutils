@@ -154,6 +154,14 @@
 ;     .STEP - the step size to be used in calculating the numerical
 ;             derivatives.  If set to zero, then the step size is
 ;             computed automatically.  Ignored when AUTODERIVATIVE=0.
+;             This value is superceded by the RELSTEP value.
+;
+;     .RELSTEP - the *relative* step size to be used in calculating
+;                the numerical derivatives.  This number is the
+;                fractional size of the step, compared to the
+;                parameter value.  This value supercedes the STEP
+;                setting.  If the parameter is zero, then a default
+;                step size is chosen.
 ;
 ;     .MPSIDE - the sidedness of the finite difference when computing
 ;               numerical derivatives.  This field can take four
@@ -261,8 +269,8 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
-;   BESTNORM - the value of the summed squared residuals for the
-;              returned parameter values.
+;   BESTNORM - the value of the summed, squared, weighted residuals
+;              for the returned parameter values, i.e. the chi-square value.
 ;
 ;   COVAR - the covariance matrix for the set of parameters returned
 ;           by MPFIT.  The matrix is NxN where N is the number of
@@ -278,6 +286,11 @@
 ;
 ;           If NOCOVAR is set or MPFIT terminated abnormally, then
 ;           COVAR is set to a scalar with value !VALUES.D_NAN.
+;
+;   DOF - number of degrees of freedom, computed as
+;             DOF = N_ELEMENTS(DEVIATES) - NFREE
+;         Note that this doesn't account for pegged parameters (see
+;         NPEGGED).
 ;
 ;   ERRMSG - a string error or warning message is returned.
 ;
@@ -447,7 +460,7 @@
 ;   x  = (dindgen(200)*0.1 - 10.) # (dblarr(200) + 1)
 ;   y  = (dblarr(200) + 1) # (dindgen(200)*0.1 - 10.)
 ;   zi = gauss2(x, y, p)
-;   sz = sqrt(zi)
+;   sz = sqrt(zi>1)
 ;   z  = zi + randomn(seed, 200, 200) * sz
 ;
 ;   p0 = [0D, 0D, 1D, 10D]
@@ -498,10 +511,16 @@
 ;   Changed to ERROR_CODE for error condition, 28 Jan 2000, CM
 ;   Copying permission terms have been liberalized, 26 Mar 2000, CM
 ;   Propagated improvements from MPFIT, 17 Dec 2000, CM
+;   Documented RELSTEP field of PARINFO (!!), CM, 25 Oct 2002
+;   Add DOF keyword to return degrees of freedom, CM, 23 June 2003
+;   Minor documentation adjustment, 03 Feb 2004, CM
+;   Fix the example to prevent zero errorbars, 28 Mar 2005, CM
+;   Defend against users supplying strangely dimensioned X and Y, 29
+;     Jun 2005, CM
 ;
-;  $Id: mpfit2dfun.pro,v 1.1 2001-08-22 22:23:05 schlegel Exp $
+;  $Id: mpfit2dfun.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1997-2000, Craig Markwardt
+; Copyright (C) 1997-2000, 2002, 2003, 2004, 2005, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy, modify, and distribute modified or
 ; unmodified copies is granted, provided this copyright and disclaimer
@@ -547,6 +566,7 @@ end
 function mpfit2dfun, fcn, x, y, z, err, p, WEIGHTS=wts, FUNCTARGS=fa, $
                    BESTNORM=bestnorm, nfev=nfev, STATUS=status, $
                    parinfo=parinfo, query=query, $
+                   npegged=npegged, nfree=nfree, dof=dof, $
                    covar=covar, perror=perror, niter=iter, yfit=yfit, $
                    quiet=quiet, ERRMSG=errmsg, _EXTRA=extra
 
@@ -599,6 +619,7 @@ function mpfit2dfun, fcn, x, y, z, err, p, WEIGHTS=wts, FUNCTARGS=fa, $
   result = mpfit('mpfit2dfun_eval', p, $
                  parinfo=parinfo, STATUS=status, nfev=nfev, BESTNORM=bestnorm,$
                  covar=covar, perror=perror, niter=iter, $
+                 nfree=nfree, npegged=npegged, dof=dof, $
                  ERRMSG=errmsg, quiet=quiet, _EXTRA=extra)
 
   ;; Retrieve the fit value

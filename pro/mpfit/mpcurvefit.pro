@@ -16,12 +16,14 @@
 ;
 ; CALLING SEQUENCE:
 ;   YFIT = MPCURVEFIT(X, Y, WEIGHTS, P, [SIGMA,] FUNCTION_NAME=FUNC, 
-;                     FUNCTARGS=functargs, ITMAX=itmax, PARINFO=parinfo,
-;                     FTOL=ftol, XTOL=xtol, GTOL=gtol, 
+;                     ITER=iter, ITMAX=itmax, 
+;                     CHISQ=chisq, NFREE=nfree, DOF=dof, 
+;                     NFEV=nfev, COVAR=covar, [/NOCOVAR, ] [/NODERIVATIVE, ]
+;                     FUNCTARGS=functargs, PARINFO=parinfo,
+;                     FTOL=ftol, XTOL=xtol, GTOL=gtol, TOL=tol,
 ;                     ITERPROC=iterproc, ITERARGS=iterargs,
-;                     NPRINT=nprint, QUIET=quiet, NOCOVAR=nocovar, 
-;                     NFEV=nfev, ITER=iter, ERRMSG=errmsg,
-;                     CHISQ=chisq, COVAR=covar, STATUS=status)
+;                     NPRINT=nprint, QUIET=quiet, 
+;                     ERRMSG=errmsg, STATUS=status)
 ;
 ; DESCRIPTION:
 ;
@@ -124,6 +126,14 @@
 ;     .STEP - the step size to be used in calculating the numerical
 ;             derivatives.  If set to zero, then the step size is
 ;             computed automatically.  Ignored when AUTODERIVATIVE=0.
+;             This value is superceded by the RELSTEP value.
+;
+;     .RELSTEP - the *relative* step size to be used in calculating
+;                the numerical derivatives.  This number is the
+;                fractional size of the step, compared to the
+;                parameter value.  This value supercedes the STEP
+;                setting.  If the parameter is zero, then a default
+;                step size is chosen.
 ;
 ;     .MPSIDE - the sidedness of the finite difference when computing
 ;               numerical derivatives.  This field can take four
@@ -142,24 +152,10 @@
 ;              principle more precise, but requires twice as many
 ;              function evaluations.  Default: 0.
 ;
-;     .MPMINSTEP - the minimum change to be made in the parameter
-;                  value.  During the fitting process, the parameter
-;                  will be changed by multiples of this value.  The
-;                  actual step is computed as:
-;
-;                     DELTA1 = MPMINSTEP*ROUND(DELTA0/MPMINSTEP)
-;
-;                  where DELTA0 and DELTA1 are the estimated parameter
-;                  changes before and after this constraint is
-;                  applied.  Note that this constraint should be used
-;                  with care since it may cause non-converging,
-;                  oscillating solutions.
-;
-;                  A value of 0 indicates no minimum.  Default: 0.
-;
 ;     .MPMAXSTEP - the maximum change to be made in the parameter
 ;                  value.  During the fitting process, the parameter
-;                  will never be changed by more than this value.
+;                  will never be changed by more than this value in
+;                  one iteration.
 ;
 ;                  A value of 0 indicates no maximum.  Default: 0.
 ;  
@@ -171,6 +167,13 @@
 ;             Since they are totally constrained, tied parameters are
 ;             considered to be fixed; no errors are computed for them.
 ;             [ NOTE: the PARNAME can't be used in expressions. ]
+;
+;     .MPPRINT - if set to 1, then the default ITERPROC will print the
+;                parameter value.  If set to 0, the parameter value
+;                will not be printed.  This tag can be used to
+;                selectively print only a few parameter values out of
+;                many.  Default: 1 (all parameters printed)
+;
 ;  
 ;  Future modifications to the PARINFO structure, if any, will involve
 ;  adding structure tags beginning with the two letters "MP".
@@ -192,10 +195,6 @@
 ;  constrained to be above 50.
 ;
 ; INPUTS:
-;   FUNCT - a string variable containing the name of an IDL function.
-;             This function computes the "model" Y values given the
-;             X values and model parameters, as described above.
-;
 ;   X - Array of independent variable values.
 ;
 ;   Y - Array of "measured" dependent variable values.  Y should have
@@ -251,8 +250,8 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
-;   CHISQ - the value of the summed squared residuals for the
-;           returned parameter values.
+;   CHISQ - the value of the summed, squared, weighted residuals for
+;           the returned parameter values, i.e. the chi-square value.
 ;
 ;   COVAR - the covariance matrix for the set of parameters returned
 ;           by MPFIT.  The matrix is NxN where N is the number of
@@ -269,6 +268,11 @@
 ;           If NOCOVAR is set or MPFIT terminated abnormally, then
 ;           COVAR is set to a scalar with value !VALUES.D_NAN.
 ;
+;   DOF - number of degrees of freedom, computed as
+;             DOF = N_ELEMENTS(DEVIATES) - NFREE
+;         Note that this doesn't account for pegged parameters (see
+;         NPEGGED).
+;
 ;   ERRMSG - a string error or warning message is returned.
 ;
 ;   FTOL - a nonnegative input variable. Termination occurs when both
@@ -276,6 +280,10 @@
 ;          squares are at most FTOL (and STATUS is accordingly set to
 ;          1 or 3).  Therefore, FTOL measures the relative error
 ;          desired in the sum of squares.  Default: 1D-10
+;
+;   FUNCTION_NAME - a scalar string containing the name of an IDL
+;                   procedure to compute the user model values, as
+;                   described above in the "USER MODEL" section.
 ;
 ;   FUNCTARGS - A structure which contains the parameters to be passed
 ;               to the user-supplied function specified by FUNCT via
@@ -341,8 +349,18 @@
 ;
 ;   NFEV - the number of FUNCT function evaluations performed.
 ;
+;   NFREE - the number of free parameters in the fit.  This includes
+;           parameters which are not FIXED and not TIED, but it does
+;           include parameters which are pegged at LIMITS.
+;
 ;   NOCOVAR - set this keyword to prevent the calculation of the
 ;             covariance matrix before returning (see COVAR)
+;
+;   NODERIVATIVE - if set, then the user function will not be queried
+;                  for analytical derivatives, and instead the
+;                  derivatives will be computed by finite differences
+;                  (and according to the PARINFO derivative settings;
+;                  see above for a description).
 ;
 ;   NPRINT - The frequency with which ITERPROC is called.  A value of
 ;            1 indicates that ITERPROC is called with every iteration,
@@ -393,11 +411,16 @@
 ;	   8  GTOL is too small. fvec is orthogonal to the
 ;	      columns of the jacobian to machine precision.
 ;
+;   TOL - synonym for FTOL.  Use FTOL instead.
+;
 ;   XTOL - a nonnegative input variable. Termination occurs when the
 ;          relative error between two consecutive iterates is at most
 ;          XTOL (and STATUS is accordingly set to 2 or 3).  Therefore,
 ;          XTOL measures the relative error desired in the approximate
 ;          solution.  Default: 1D-10
+;
+;   YERROR - upon return, the root-mean-square variance of the
+;            residuals.
 ;
 ;
 ; EXAMPLE:
@@ -411,8 +434,8 @@
 ;
 ;   ; Now fit a Gaussian to see how well we can recover
 ;   p0 = [1.D, 1., 1000.]                           ; Initial guess
-;   yfit = mpcurvefit(x, y, 1/sy^2, p0, $
-;                   FUNCTION_NAME='GAUSS1P')        ; Fit a function
+;   yfit = mpcurvefit(x, y, 1/sy^2, p0, $           ; Fit a function
+;                     FUNCTION_NAME='GAUSS1P',/autoderivative)
 ;   print, p
 ;
 ;   Generates a synthetic data set with a Gaussian peak, and Poisson
@@ -452,10 +475,15 @@
 ;   Changed to ERROR_CODE for error condition, 28 Jan 2000, CM
 ;   Copying permission terms have been liberalized, 26 Mar 2000, CM
 ;   Propagated improvements from MPFIT, 17 Dec 2000, CM
+;   Corrected behavior of NODERIVATIVE, 13 May 2002, CM
+;   Documented RELSTEP field of PARINFO (!!), CM, 25 Oct 2002
+;   Make more consistent with comparable IDL routines, 30 Jun 2003, CM
+;   Minor documentation adjustment, 03 Feb 2004, CM
+;   Fix error in documentation, 26 Aug 2005, CM
 ;
-;  $Id: mpcurvefit.pro,v 1.1 2001-08-22 22:23:05 schlegel Exp $
+;  $Id: mpcurvefit.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1997-2000, Craig Markwardt
+; Copyright (C) 1997-2000, 2002, 2003, 2004, 2005, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy, modify, and distribute modified or
 ; unmodified copies is granted, provided this copyright and disclaimer
@@ -492,12 +520,14 @@ function mpcurvefit_eval, p, dp, _EXTRA=extra
   
 end
 
-function mpcurvefit, x, y, wts, p, perror, FUNCTARGS=fa, $
-                     STATUS=status, QUIET=quiet, query=query, $
-                     chisq=bestnorm, function_name=fcn, $
-                     iter=iter, itmax=maxiter, parinfo=parinfo, $
-                     noderivative=noderivative, tol=tol, $
-                     covar=covar, errmsg=errmsg, _EXTRA=extra
+function mpcurvefit, x, y, wts, p, perror, function_name=fcn, $
+                     iter=iter, itmax=maxiter, $
+                     chisq=bestnorm, nfree=nfree, dof=dof, $
+                     nfev=nfev, covar=covar, nocovar=nocovar, yerror=yerror, $
+                     noderivative=noderivative, tol=tol, ftol=ftol, $
+                     FUNCTARGS=fa, parinfo=parinfo, $
+                     errmsg=errmsg, STATUS=status, QUIET=quiet, $
+                     query=query, _EXTRA=extra
 
   status = 0L
   errmsg = ''
@@ -530,10 +560,12 @@ function mpcurvefit, x, y, wts, p, perror, FUNCTARGS=fa, $
   ac = 0 & dummy = size(temporary(ac))
   if n_elements(fa) GT 0 then ac = fa
 
+  if n_elements(tol) GT 0 then ftol = tol
+
   result = mpfit('mpcurvefit_eval', p, maxiter=maxiter, $
-                 autoderivative=(1-noderivative), $
+                 autoderivative=noderivative, ftol=ftol, $
                  parinfo=parinfo, STATUS=status, nfev=nfev, BESTNORM=bestnorm,$
-                 covar=covar, perror=perror, niter=iter, $
+                 covar=covar, perror=perror, niter=iter, nfree=nfree, dof=dof,$
                  ERRMSG=errmsg, quiet=quiet, _EXTRA=extra)
 
   ;; Retrieve the fit value
@@ -545,6 +577,11 @@ function mpcurvefit, x, y, wts, p, perror, FUNCTARGS=fa, $
     message, errmsg, /info $
   else $
     p = result
+
+  yerror = p(0)*0
+  if n_elements(dof) GT 0 AND dof(0) GT 0 then begin
+      yerror(0) = sqrt( total( (y-yfit)^2 ) / dof(0) )
+  endif
 
   return, yfit
 end

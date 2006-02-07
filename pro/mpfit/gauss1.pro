@@ -36,6 +36,9 @@
 ;
 ;   SKEW - You may specify a skew value.  Default is no skew.
 ;
+;   PEAK - if set then AREA is interpreted as the peak value rather
+;          than the area under the peak.
+;
 ; RETURNS:
 ;
 ;   Returns the array of Y-values.
@@ -57,8 +60,9 @@
 ;   Correct bug in normalization, CM, 01 Nov 1999
 ;   Optimized for speed, CM, 02 Nov 1999
 ;   Added copyright notice, 25 Mar 2001, CM
+;   Added PEAK keyword, 30 Sep 2001, CM
 ;
-;  $Id: gauss1.pro,v 1.1 2001-08-22 22:23:05 schlegel Exp $
+;  $Id: gauss1.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;
 ;-
 ; Copyright (C) 1998,1999,2001, Craig Markwardt
@@ -68,7 +72,7 @@
 ; are included unchanged.
 ;-
 
-function gauss1, x, p, skew=skew, _EXTRA=extra
+function gauss1, x, p, skew=skew, peak=peak, _EXTRA=extra
 
   sz = size(x)
   if sz(sz(0)+1) EQ 5 then smax = 26D else smax = 13.
@@ -77,7 +81,8 @@ function gauss1, x, p, skew=skew, _EXTRA=extra
 
   u = ((x-p(0))/(abs(p(1)) > 1e-20))^2
   mask = u LT (smax^2)
-  f = norm * mask * exp(-0.5*temporary(u) * mask) / (sqrt(2.D * !dpi)*p(1))
+  if NOT keyword_set(peak) then norm = norm / (sqrt(2.D * !dpi)*p(1))
+  f = norm * mask * exp(-0.5*temporary(u) * mask)
   mask = 0
 
   if n_elements(skew) GT 0 then $

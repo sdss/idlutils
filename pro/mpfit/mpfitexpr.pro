@@ -77,6 +77,21 @@
 ;  returned array YMOD contains the expression MYFUNCT evaluated at
 ;  each point in XVAL.
 ;
+; PASSING PRIVATE DATA TO AN EXPRESSION
+;
+;  The most complicated optimization problems typically involve other
+;  external parameters, in addition to the fitted parameters.  While
+;  it is extremely easy to rewrite an expression dynamically, in case
+;  one of the external parameters changes, the other possibility is to
+;  use the PRIVATE data structure.
+;
+;  The user merely passes a structure to the FUNCTARGS keyword.  The
+;  user expression receives this value as the variable PRIVATE.
+;  MPFITEXPR nevers accesses this variable so it can contain any
+;  desired values.  Usually it would be an IDL structure so that any
+;  named external parameters can be passed to the expression.
+;
+;
 ; CONSTRAINING PARAMETER VALUES WITH THE PARINFO KEYWORD
 ;
 ;  The behavior of MPFIT can be modified with respect to each
@@ -120,6 +135,14 @@
 ;     .STEP - the step size to be used in calculating the numerical
 ;             derivatives.  If set to zero, then the step size is
 ;             computed automatically.  Ignored when AUTODERIVATIVE=0.
+;             This value is superceded by the RELSTEP value.
+;
+;     .RELSTEP - the *relative* step size to be used in calculating
+;                the numerical derivatives.  This number is the
+;                fractional size of the step, compared to the
+;                parameter value.  This value supercedes the STEP
+;                setting.  If the parameter is zero, then a default
+;                step size is chosen.
 ;
 ;     .MPSIDE - the sidedness of the finite difference when computing
 ;               numerical derivatives.  This field can take four
@@ -242,8 +265,8 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
-;   BESTNORM - the value of the summed squared residuals for the
-;              returned parameter values.
+;   BESTNORM - the value of the summed, squared, weighted residuals
+;              for the returned parameter values, i.e. the chi-square value.
 ;
 ;   COVAR - the covariance matrix for the set of parameters returned
 ;           by MPFIT.  The matrix is NxN where N is the number of
@@ -260,6 +283,11 @@
 ;           If NOCOVAR is set or MPFIT terminated abnormally, then
 ;           COVAR is set to a scalar with value !VALUES.D_NAN.
 ;
+;   DOF - number of degrees of freedom, computed as
+;             DOF = N_ELEMENTS(DEVIATES) - NFREE
+;         Note that this doesn't account for pegged parameters (see
+;         NPEGGED).
+;
 ;   ERRMSG - a string error or warning message is returned.
 ;
 ;   FTOL - a nonnegative input variable. Termination occurs when both
@@ -267,6 +295,11 @@
 ;          squares are at most FTOL (and STATUS is accordingly set to
 ;          1 or 3).  Therefore, FTOL measures the relative error
 ;          desired in the sum of squares.  Default: 1D-10
+;
+;   FUNCTARGS - passed directly to the expression as the variable
+;               PRIVATE.  Any user-private data can be communicated to
+;               the user expression using this keyword.
+;               Default: PRIVATE is undefined in user expression
 ;
 ;   GTOL - a nonnegative input variable. Termination occurs when the
 ;          cosine of the angle between fvec and any column of the
@@ -321,10 +354,17 @@
 ;
 ;   NFEV - the number of MYFUNCT function evaluations performed.
 ;
+;   NFREE - the number of free parameters in the fit.  This includes
+;           parameters which are not FIXED and not TIED, but it does
+;           include parameters which are pegged at LIMITS.
+;
 ;   NITER - the number of iterations completed.
 ;
 ;   NOCOVAR - set this keyword to prevent the calculation of the
 ;             covariance matrix before returning (see COVAR)
+;
+;   NPEGGED - the number of free parameters which are pegged at a
+;             LIMIT.
 ;
 ;   NPRINT - The frequency with which ITERPROC is called.  A value of
 ;            1 indicates that ITERPROC is called with every iteration,
@@ -487,10 +527,18 @@
 ;   Propagated improvements from MPFIT, 17 Dec 2000, CM
 ;   Correct reference to _WTS in MPFITEXPR_EVAL, 25 May 2001, CM
 ;      (thanks to Mark Fardal)
+;   Added useful FUNCTARGS behavior (as yet undocumented), 04 Jul
+;      2002, CM
+;   Documented FUNCTARGS/PRIVATE behavior, 22 Jul 2002, CM
+;   Added NFREE and NPEGGED keywords, 13 Sep 2002, CM
+;   Documented RELSTEP field of PARINFO (!!), CM, 25 Oct 2002
+;   Add DOF keyword, CM, 31 Jul 2003
+;   Add FUNCTARGS keyword to MPEVALEXPR, CM 08 Aug 2003
+;   Minor documentation adjustment, 03 Feb 2004, CM
 ;
-;  $Id: mpfitexpr.pro,v 1.1 2001-08-22 22:23:06 schlegel Exp $
+;  $Id: mpfitexpr.pro,v 1.2 2006-02-07 22:38:32 schlegel Exp $
 ;-
-; Copyright (C) 1997-2001, Craig Markwardt
+; Copyright (C) 1997-2001, 2002, 2003, 2004, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy, modify, and distribute modified or
 ; unmodified copies is granted, provided this copyright and disclaimer
@@ -501,7 +549,7 @@ FORWARD_FUNCTION mpevalexpr, mpfitexpr_eval, mpfitexpr, mpfit
 
 ; Utility function which simply returns the value of the expression,
 ; evaluated at each point in x, using the parameters p.
-function mpevalexpr, _expr, x, p
+function mpevalexpr, _expr, x, p, functargs=private
 
   _cmd = '_f = '+_expr
   _err = execute(_cmd)
@@ -510,7 +558,7 @@ end
 
 ; This is the call-back function for MPFIT.  It evaluates the
 ; expression, subtracts the data, and returns the residuals.
-function mpfitexpr_eval, p, _EXTRA=fcnargs
+function mpfitexpr_eval, p, _EXTRA=private
 
   common mpfitexpr_common, _expr, x, y, err, _wts, _f
 
@@ -537,8 +585,9 @@ end
 ;; This is the main entry point for this module
 function mpfitexpr, expr, x, y, err, p, WEIGHTS=wts, $
                     BESTNORM=bestnorm, STATUS=status, nfev=nfev, $
-                    parinfo=parinfo, query=query, $
-                    covar=covar, perror=perror, niter=iter, yfit=yfit, $
+                    parinfo=parinfo, query=query, functargs=fcnargs, $
+                    covar=covar, perror=perror, yfit=yfit, $
+                    niter=niter, nfree=nfree, npegged=npegged, dof=dof, $
                     quiet=quiet, _EXTRA=extra, errmsg=errmsg
 
   status = 0L
@@ -674,7 +723,7 @@ function mpfitexpr, expr, x, y, err, p, WEIGHTS=wts, $
   ;; FCNARGS are passed by MPFIT directly to MPFITEXPR_EVAL.  These
   ;; actually contain the data, the expression, and a slot to return
   ;; the model function.
-  fvec = call_function(fcn, p)
+  fvec = call_function(fcn, p, _EXTRA=fcnargs)
   if n_elements(fvec) EQ 1 then $
     if NOT finite(fvec(0)) then goto, CATCH_ERROR
   ;; No errors caught if reached this stage
@@ -683,7 +732,8 @@ function mpfitexpr, expr, x, y, err, p, WEIGHTS=wts, $
   ;; Call MPFIT
   result = mpfit(fcn, p, $
                  parinfo=parinfo, STATUS=status, nfev=nfev, BESTNORM=bestnorm,$
-                 covar=covar, perror=perror, niter=iter, $
+                 covar=covar, perror=perror, functargs=fcnargs, $
+                 niter=niter, nfree=nfree, npegged=npegged, dof=dof, $
                  ERRMSG=errmsg, quiet=quiet, _EXTRA=extra)
 
   ;; Retrieve the fit value
