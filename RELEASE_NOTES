@@ -1,6 +1,13 @@
 
-added new physics directory for general physics routines. 
-SIGMA_PBAR_P   Annihilation cross section of pbar on p 
+GAUSS1,GAUSS1P,GAUSS2,MPCURVEFIT,MPFIT,MPFIT2DFUN,MPFIT2DPEAK,MPFITEXPR,
+               MPFITFUN,MPFITPEAK,MPFFITTUT,TNMIN: This entire pro/mpfit
+               directory had been updated from Craig Markwardt's web site
+               on 7 Feb 2006.  Included are the following new routines:
+               MPCHILIM,MPCHITEST,MPFITELLIPSE,MPFTEST,MPNORMLIM,MPNORMTEST.
+SIGMA_PBAR_P: Annihilation cross section of pbar on p 
+
+pro/Makefile: Added physics directory.
+pro/physics: Added this new physics directory for general physics routines.
 
 -------------------------------------------------------------------------------
 v5_1_2 (Feb 2, 2006) running on IDL 5.4 - 6.2
