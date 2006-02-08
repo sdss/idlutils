@@ -1,4 +1,5 @@
 
+WCSXY2SPH:     Add healCart projection so atv works on healpix.
 GAUSS1,GAUSS1P,GAUSS2,MPCURVEFIT,MPFIT,MPFIT2DFUN,MPFIT2DPEAK,MPFITEXPR,
                MPFITFUN,MPFITPEAK,MPFFITTUT,TNMIN: This entire pro/mpfit
                directory had been updated from Craig Markwardt's web site
