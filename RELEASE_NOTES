@@ -7,6 +7,10 @@ GAUSS1,GAUSS1P,GAUSS2,MPCURVEFIT,MPFIT,MPFIT2DFUN,MPFIT2DPEAK,MPFITEXPR,
                MPCHILIM,MPCHITEST,MPFITELLIPSE,MPFTEST,MPNORMLIM,MPNORMTEST.
 SIGMA_PBAR_P: Annihilation cross section of pbar on p 
 
+data/filters/PS1.dat: Filter curves for Pan-STARRS, downloaded from
+               their web site at
+               http://pan-starrs.ifa.hawaii.edu/project/people/siegmund/Telescope/20030523_Filters/
+               where the file was "q2003-150data.txt".
 pro/Makefile: Added physics directory.
 pro/physics: Added this new physics directory for general physics routines.
 
