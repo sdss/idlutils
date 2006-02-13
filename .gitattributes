@@ -10,6 +10,7 @@ bin/install_ups_table -text
 bin/memtrack -text
 bin/pstogif -text
 data/Makefile -text
+data/filters/PS1.dat -text
 data/filters/README -text
 data/filters/ctio_B.dat -text
 data/filters/ctio_I.dat -text
