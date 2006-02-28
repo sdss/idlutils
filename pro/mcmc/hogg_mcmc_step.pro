@@ -16,22 +16,22 @@
 ;   newpars    - new parameters
 ;   newlike    - new likelihood
 ; BUGS:
-;   - I made up the algorithm based on things I sort-of remember.
 ; REVISION HISTORY:
 ;   2005-03-31  started - Hogg
+;   2006-02-28  HUGE bug fixed - Masjedi
 ;-
 pro hogg_mcmc_step, seed,pars,like,step_func,like_func,newpars,newlike,log=log
 if (NOT keyword_set(like)) then like= call_function(like_func,pars)
-repeat begin
-    newpars= call_function(step_func,seed,pars)
-    newlike= call_function(like_func,newpars)
-    if keyword_set(log) then $
-      likeratio= newlike-logsum([newlike,like]) $
-    else $
-      likeratio= newlike/(newlike+like)
-    randomnumber= randomu(seed)
-    if keyword_set(log) then randomnumber= alog(randomnumber)
-endrep until ((newlike GT like) OR $
-              randomnumber LT likeratio)
+newpars= call_function(step_func,seed,pars)
+newlike= call_function(like_func,newpars)
+if keyword_set(log) then likeratio= newlike-like $
+else likeratio= newlike/like
+randomnumber= randomu(seed)
+if keyword_set(log) then randomnumber= alog(randomnumber)
+if NOT ((newlike GT like) OR $
+        (randomnumber LT likeratio)) then begin
+    newpars= pars
+    newlike= like
+endif
 return
 end

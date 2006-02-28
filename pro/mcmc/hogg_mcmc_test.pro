@@ -23,7 +23,7 @@ end
 
 pro hogg_mcmc_test_setup
 common hogg_mcmc_test_block, xx,yy,yy_ivar
-ndata= 20
+ndata= 1
 mean= 10.0
 sigma= fltarr(ndata)+1.0
 seed= -10
@@ -58,7 +58,7 @@ common hogg_mcmc_test_block, xx,yy,yy_ivar
 set_plot, 'PS'
 hogg_plot_defaults
 
-nstep= 10000
+nstep= 100000
 seed= -1L
 hogg_mcmc_test_setup
 pars= yy[0]

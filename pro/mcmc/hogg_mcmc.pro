@@ -15,6 +15,7 @@
 ; OUTPUTS:
 ;   pars       - array of parameters, sorted from most to least likely
 ;   like       - array of likelihoods for the pars
+; BUGS:
 ; REVISION HISTORY:
 ;   2005-03-31  started - Hogg
 ;-
