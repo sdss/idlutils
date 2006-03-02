@@ -60,10 +60,10 @@ nhalf = nhalf > 2 ; ??? We need this to not crash further down - DJS
    prob1 = gauss_pdf(-double(nsig1))
    prob2 = gauss_pdf(-double(nsig2))
    if (keyword_set(verbose)) then begin
-      splog, 'nsig1, nsig2, prob1, prob2, prob1/prob2'
-      splog, nsig1, nsig2, prob1, prob2, prob1/prob2
+      splog, 'nsig1, nsig2, prob1, prob2'
+      splog, nsig1, nsig2, prob1, prob2
    endif
-   
+
    smimg = smooth(img, 3, /edge)
    maxval = max(smimg, imax)
    bestsig = (maxval-mean(smimg))/stddev(smimg)
