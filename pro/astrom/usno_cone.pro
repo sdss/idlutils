@@ -99,11 +99,12 @@ PRO usno_cone, catpath, racen, deccen, rad, result, cattype=cattype
 ; strip extra dec (works for both USNO-A and B)
   deccat = transpose(data[1, *]) /3.6d5 - 90.
   good = where((deccat GE dec0) AND (deccat LE dec1), ct)
+  deccat = 0 ; memory
 
   IF ct GT 0 THEN BEGIN 
-     dtrim = data[*, good]
+     dtrim = (temporary(data))[*, temporary(good)]
   ENDIF ELSE BEGIN 
-     dtrim = data  ; keep padding
+     dtrim = temporary(data)  ; keep padding
   ENDELSE 
   
 ; Now use dot products to strip extras
@@ -111,13 +112,13 @@ PRO usno_cone, catpath, racen, deccen, rad, result, cattype=cattype
   deccat = transpose(dtrim[1, *]) /3.6d5 - 90.
   uvobj = ll2uv(double([[racat], [deccat]])) ; (n,3) array
   uvcen = ll2uv(double([[racen], [deccen]])) ; (1,3) array
-  dot   = uvobj#transpose(uvcen)
-  good = where(dot GE cos(rad*!dpi/180.d), ct)
+  dot   = temporary(uvobj)#transpose(temporary(uvcen))
+  good = where(temporary(dot) GE cos(rad*!dpi/180.d), ct)
 
   IF ct GT 0 THEN BEGIN 
-     result = dtrim[*, good]
+     result = (temporary(dtrim))[*, good]
   ENDIF ELSE BEGIN 
-     result = dtrim  ; keep padding
+     result = temporary(dtrim)  ; keep padding
   ENDELSE 
 
   return
