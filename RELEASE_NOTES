@@ -1,4 +1,13 @@
-SPHEREMATCH:   speed and memory management of both C and IDL codes improved.
+
+HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
+OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
+SPHEREMATCH: Speed and memory management of both C and IDL codes improved
+               by adding ESTNMATCH keyword.
+USNO_CONE: Improve memory management (Hogg).
+
+src/spheregroup/spherematch.c: Memory improvements by Finkbeiner:
+               transform list1 to XYZ on the fly, remove large if else
+               in matching section, check that we do not overflow maxmatch.
 
 -------------------------------------------------------------------------------
 v5_1_3 (Feb 14, 2006) running on IDL 5.4 - 6.2
