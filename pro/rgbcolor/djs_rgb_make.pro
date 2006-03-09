@@ -3,7 +3,7 @@
 ;  djs_rgb_make
 ;
 ; PURPOSE:
-;   Creates JPEG from three images or FITS files
+;   Creates JPEG (or TIFF) from three images or FITS files
 ;
 ; CALLING SEQUENCE:
 ;   djs_rgb_make, rimage, gimage, bimage, [ name=, origin=, scales=, $
@@ -31,6 +31,8 @@
 ;   overlay     - Optional overlay image, which must be dimensionsed as
 ;                 [NX/REBINFACTOR,NY/REBINFACTOR,3]
 ;   quality     - Quality for WRITE_JPEG; default to 75 per cent
+;   tiff        - set to make tiff instead of jpeg
+;   dpitiff     - set TIFF "dots per inch" resolution (only if /tiff set)
 ;
 ; OUTPUTS:
 ;
@@ -63,11 +65,13 @@
 ; REVISION HISTORY:
 ;   10-May-2004 - Written by D. Schlegel, Princeton;
 ;                 based upon Nick Wherry's code NW_RGB_MAKE
+;   12-Dec-2005 - Change saturated pixel code; add TIFF option - DPF
 ;-
 ;------------------------------------------------------------------------------
 pro djs_rgb_make, rimage, gimage, bimage, name=name, $
  origin=origin1, scales=scales1, nonlinearity=nonlinearity1, $
- satvalue=satvalue1, rebinfactor=rebinfactor1, overlay=overlay, quality=quality
+ satvalue=satvalue1, rebinfactor=rebinfactor1, overlay=overlay, $
+ quality=quality, tiff=tiff, dpitiff=dpitiff
 
    t0 = systime(1)
    thismem = float(ulong(memory()))
@@ -75,7 +79,18 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    ;----------
    ; Set defaults
 
-   if (NOT keyword_set(name)) THEN name = 'test.jpg'
+   if keyword_set(dpitiff) then tiff = 1B ; assume tiff if dpitiff set
+   suffix = keyword_set(tiff) ? '.tif' : '.jpg'
+   if (NOT keyword_set(name)) THEN name = 'test'
+; -------- force name suffix to agree with file type
+   if (strpos(name, '.jpg') EQ -1) and (strpos(name, '.tif') EQ -1) then begin 
+      name = name+suffix
+   endif else begin 
+      extensions = ['.tiff', '.TIFF', '.tif', '.TIF', '.jpeg', '.jpg', '.JPEG', '.JPG']
+      for iext=0L, n_elements(extensions)-1 do $
+        name = repstr(name, extensions[iext], suffix)
+   endelse
+   
    if (n_elements(origin1) EQ 0) THEN origin = [0,0,0] $
     else origin = float(origin1)
    if (n_elements(scales1) EQ 0) THEN scales = [1,1,1] $
@@ -267,9 +282,18 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    byteimg[*,*,2] = byte((floor(temporary(bimg) * 256) > 0) < 255)
 
    ;----------
-   ; Generate the JPEG image
+   ; Generate the JPEG (or TIFF) image
 
-   write_jpeg, name, byteimg, true=3, quality=quality
+   IF keyword_set(tiff) THEN BEGIN
+      colors = reverse(temporary(byteimg),2)
+      splog, 'writing tiff file: ', name
+      write_tiff, name, planarconfig=2, red=colors[*,*,0], $
+        green=colors[*,*,1], blue=colors[*,*,2], xresol=dpitiff, yresol=dpitiff
+   ENDIF ELSE BEGIN
+      splog, 'writing jpeg file: ', name
+      write_jpeg, name, byteimg, true=3, quality=quality
+   ENDELSE
+
 
    thismem = float(ulong(memory()))
    splog, 'Max memory usage = ', thismem[3]/1.d6, ' MB'
