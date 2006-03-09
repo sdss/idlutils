@@ -1,4 +1,4 @@
-
+DJS_RGB_MAKE:  add /TIFF keyword. 
 HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
 OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
 SPHEREMATCH: Speed and memory management of both C and IDL codes improved
