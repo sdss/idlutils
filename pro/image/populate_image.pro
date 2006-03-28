@@ -67,10 +67,10 @@ pro populate_image, image, x, y, weights=weights, assign=assign
       if (NOT keyword_set(weights)) then weights = fltarr(npts) + 1.0
    endelse
 
-   qlong1 = size(x,/tname) EQ 'INT' OR size(x,/tname) EQ 'LONG' $
-    OR size(x,/tname) EQ 'LONG64'
-   qlong2 = size(y,/tname) EQ 'INT' OR size(y,/tname) EQ 'LONG' $
-    OR size(y,/tname) EQ 'LONG64'
+   qlong1 = size(x,/tname) EQ 'BYTE' OR size(x,/tname) EQ 'INT' $
+    OR size(x,/tname) EQ 'LONG' OR size(x,/tname) EQ 'LONG64'
+   qlong2 = size(y,/tname) EQ 'BYTE' OR size(y,/tname) EQ 'INT' $
+    OR size(y,/tname) EQ 'LONG' OR size(y,/tname) EQ 'LONG64'
    qlong = qlong1 AND qlong2
 
    soname = filepath('libimage.'+idlutils_so_ext(), $
