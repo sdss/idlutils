@@ -58,24 +58,43 @@ pro populate_image, image, x, y, weights=weights, assign=assign
    if (ndim EQ 1) then ny = 1L $
     else ny = dims[1]
 
-   if (NOT keyword_set(y)) then y = fltarr(npts) + 0
-   if (NOT keyword_set(weights)) then weights = fltarr(npts) + 1.0
+   qdouble = size(image,/tname) EQ 'DOUBLE' $
+    OR size(weights,/tname) EQ 'DOUBLE' $
+    OR n_elements(image) GT 2d0^24
+
+   if (qdouble) then begin
+      if (NOT keyword_set(y)) then y = dblarr(npts) + 0
+      if (NOT keyword_set(weights)) then weights = dblarr(npts) + 1.0
+   endif else begin
+      if (NOT keyword_set(y)) then y = fltarr(npts) + 0
+      if (NOT keyword_set(weights)) then weights = fltarr(npts) + 1.0
+   endelse
 
    soname = filepath('libimage.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 
-   if size(image, /tname) EQ 'FLOAT' then begin 
-      retval = call_external(soname, 'pop_image', $
-        npts, float(x), float(y), float(weights), nx, ny, image, iassign)
-   endif else if size(image, /tname) EQ 'DOUBLE' then begin 
-      retval = call_external(soname, 'pop_image_double', $
-        npts, double(x), double(y), double(weights), nx, ny, image, iassign)
-   endif else begin  
-      fimage = float(image)
-      retval = call_external(soname, 'pop_image', $
-        npts, float(x), float(y), float(weights), nx, ny, fimage, iassign)
-      image[*] = fimage[*]
-   endelse 
+   if (qdouble) then begin
+      if (size(image,/tname) EQ 'DOUBLE') then begin
+         retval = call_external(soname, 'pop_image_double', $
+          npts, double(x), double(y), double(weights), nx, ny, image, iassign)
+      endif else begin
+         dimage = double(image)
+         retval = call_external(soname, 'pop_image_double', $
+          npts, double(x), double(y), double(weights), nx, ny, dimage, iassign)
+         image[*] = dimage[*]
+      endelse
+   endif else begin
+      if (size(image,/tname) EQ 'FLOAT') then begin
+         retval = call_external(soname, 'pop_image', $
+          npts, float(x), float(y), float(weights), nx, ny, image, iassign)
+      endif else begin
+         fimage = float(image)
+         retval = call_external(soname, 'pop_image', $
+          npts, float(x), float(y), float(weights), nx, ny, fimage, iassign)
+         image[*] = fimage[*]
+      endelse
+   endelse
 
+   return
 end
 ;------------------------------------------------------------------------------
