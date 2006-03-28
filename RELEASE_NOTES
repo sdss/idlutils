@@ -1,6 +1,10 @@
+
 DJS_RGB_MAKE:  add /TIFF keyword. 
 HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
 OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
+POPULATE_IMAGE: Trigger the call to the double-precision code in the
+               case of there being more than 2^24 elements in the image.
+               This is in response to PR #6946 from Finkbeiner.
 SPHEREMATCH: Speed and memory management of both C and IDL codes improved
                by adding ESTNMATCH keyword.
 USNO_CONE: Improve memory management (Hogg).
