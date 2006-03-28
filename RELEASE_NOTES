@@ -2,13 +2,18 @@
 DJS_RGB_MAKE:  add /TIFF keyword. 
 HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
 OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
-POPULATE_IMAGE: Trigger the call to the double-precision code in the
-               case of there being more than 2^24 elements in the image.
-               This is in response to PR #6946 from Finkbeiner.
+POPULATE_IMAGE: Changes in support to the C code, in response to PR #6946
+               from Finkbeiner.
 SPHEREMATCH: Speed and memory management of both C and IDL codes improved
                by adding ESTNMATCH keyword.
 USNO_CONE: Improve memory management (Hogg).
 
+src/image/pop_image.c: Add two more possible C calls for POPULATE_IMAGE
+               to pass X,Y as integer values rather than floats.  This fixes
+               a problem whereby if the image had more than about 2^24
+               elements, one could populate that incorrectly due to
+               round-off errors in the conversion of X,Y from ints to floats.
+               This is in response to PR #6946 from Finkbeiner.
 src/spheregroup/spherematch.c: Memory improvements by Finkbeiner:
                transform list1 to XYZ on the fly, remove large if else
                in matching section, check that we do not overflow maxmatch.
