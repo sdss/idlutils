@@ -8,6 +8,7 @@ SPHEREMATCH: Speed and memory management of both C and IDL codes improved
                by adding ESTNMATCH keyword.
 USNO_CONE: Improve memory management (Hogg).
 
+lib/Makefile: Copy *.SO_EXT not just *.so when installing.
 src/image/pop_image.c: Add two more possible C calls for POPULATE_IMAGE
                to pass X,Y as integer values rather than floats.  This fixes
                a problem whereby if the image had more than about 2^24
