@@ -13,7 +13,7 @@ all :;
 # Install things in their proper places in $(IDLUTILS_DIR)
 #
 install :
-	- cp *.so $(IDLUTILS_DIR)/lib
+	- cp *.(SO_EXT) $(IDLUTILS_DIR)/lib
 	- cp *.a $(IDLUTILS_DIR)/lib
 	- cp Makefile $(IDLUTILS_DIR)/lib
 
