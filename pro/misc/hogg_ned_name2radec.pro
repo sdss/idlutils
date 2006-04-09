@@ -29,7 +29,7 @@ urlname= strjoin(strsplit(urlname,'+',/extract),'%2B')
 urlname= strjoin(strsplit(urlname,' ',/extract),'+')
 url= 'http://nedwww.ipac.caltech.edu/cgi-bin/nph-objsearch?objname=' $
   +urlname+'&extend=no'
-cmd= 'wget -O - "'+url+'" | grep "Equatorial" | grep "J2000.0"'
+cmd= 'wget -O - "'+url+'" | grep "Equatorial (J2000.0)"'
 splog, cmd
 spawn, cmd,output,stderr
 splog, output
