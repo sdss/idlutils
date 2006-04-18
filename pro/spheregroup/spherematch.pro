@@ -27,9 +27,6 @@
 ;                 most. Defaults to maxmatch=1 (only the closest
 ;                 match for each object). maxmatch=0 returns all
 ;                 matches.
-;   estnmatch   - Estimate of the TOTAL number of matches.  If this is 
-;                 absent or wrong, the C code is called twice,
-;                 doubling execution time!
 ;
 ; OUTPUTS:
 ;   match1     - List of indices of matches in list 1; -1 if no matches
@@ -46,16 +43,6 @@
 ;
 ;   The matches are returned sorted by distance.
 ;
-;   If you have a big list and a small list, call with the 
-;   BIG LIST FIRST!!!
-;   i.e.
-;   
-;   spherematch, BIGra, BIGdec, SMALLra, SMALLdec, matchlength, $
-;                      matchBIG, matchSMALL, distance12
-;
-;   This method is inherently asymmetric.  Calling in this order will 
-;   exploit the asymmetry to reduce memory usage and execution time. 
-;
 ; EXAMPLES:
 ;
 ; BUGS:
@@ -66,16 +53,10 @@
 ;
 ; REVISION HISTORY:
 ;   20-Jul-2001  Written by Mike Blanton, Fermiland
-;   01-Mar-2006  estnmatch keyword added - D. Finkbeiner, Princeton
-;          estnmatch allows the caller to estimate the number of 
-;          matches, so the wrapper can allocate memory for results before
-;          calling the C code.  If the estimate is absent or wrong,
-;          the code is called a second time (as before). 
 ;-
 ;------------------------------------------------------------------------------
 pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
-                 distance12, maxmatch=maxmatch, chunksize=chunksize, $
-                 estnmatch=estnmatch
+                 distance12, maxmatch=maxmatch, chunksize=chunksize
 
    ; Need at least 3 parameters
    if (N_params() LT 7) then begin
@@ -124,45 +105,35 @@ pro spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
        return
    endif
 
+
+   ; Call matching software, to get lengths
    soname = filepath('libspheregroup.'+idlutils_so_ext(), $
     root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-   onmatch = keyword_set(estnmatch) ? long(estnmatch) : 0L
-
-; -------- First pass on matching C code. 
-   omatch1     = lonarr(onmatch > 1)
-   omatch2     = lonarr(onmatch > 1)
-   odistance12 = dblarr(onmatch > 1)
-   retval = call_external(soname, 'spherematch', $
-                          long(npoints1), double(ra1), double(dec1), $
-                          long(npoints2), double(ra2), double(dec2), $
-                          double(matchlength), double(chunksize), $
-                          long(omatch1),long(omatch2), $
+   onmatch=0l
+   omatch1=lonarr(1)
+   omatch2=lonarr(1)
+   odistance12=dblarr(1)
+   retval = call_external(soname, 'spherematch', long(npoints1), double(ra1), $
+                          double(dec1), long(npoints2), double(ra2), $
+                          double(dec2), double(matchlength), $
+                          double(chunksize), long(omatch1),long(omatch2), $
                           double(odistance12), long(onmatch))
 
-   if onmatch EQ 0 then begin 
-      return
-   endif
-
-; -------- Second pass, if we did not allocate enough space before
-   if onmatch GT n_elements(omatch1) then begin
-
-      omatch1=lonarr(onmatch)
-      omatch2=lonarr(onmatch)
-      odistance12=dblarr(onmatch)
-      retval = call_external(soname, 'spherematch', $
-                             long(npoints1), double(ra1), double(dec1), $
-                             long(npoints2), double(ra2), double(dec2), $
-                             double(matchlength), double(chunksize), $
-                             long(omatch1),long(omatch2), $
-                             double(odistance12), long(onmatch))
-   endif
-
-; -------- trim padding in output arrays
-   if onmatch lt n_elements(omatch1) then begin 
-      omatch1 = omatch1[0:onmatch-1]
-      omatch2 = omatch2[0:onmatch-1]
-      odistance12 = odistance12[0:onmatch-1]
-   endif 
+   ; Call matching software for real
+   if (onmatch gt 0l) then begin
+       omatch1=lonarr(onmatch)
+       omatch2=lonarr(onmatch)
+       odistance12=dblarr(onmatch)
+       retval = call_external(soname, 'spherematch', long(npoints1), $
+                              double(ra1), double(dec1), long(npoints2), $
+                              double(ra2), double(dec2), $
+                              double(matchlength), double(chunksize), $
+                              long(omatch1),long(omatch2), $
+                              double(odistance12), long(onmatch))
+   endif else begin
+;       print, 'no matches'
+       return
+   endelse
 
    ; Retain only desired matches
    sorted=sort(odistance12)
