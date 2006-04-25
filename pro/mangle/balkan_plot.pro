@@ -68,23 +68,23 @@ for i=0L, n_elements(balkans)-1L do begin
     endfor
 endfor
 
-verts=replicate({nverts:0L, $
-                 ra:ptr_new(), $
-                 dec:ptr_new()}, n_elements(balkans))
-for i=0L, n_elements(balkans)-1L do begin
-    if(garea(balkans[i]) gt 0.) then begin
-        gverts,balkans[i],angle=angle, verts=verts1, edges=edges, ends=ends, $
-          dangle=dangle,minside=minside,/plot
-        x_to_angles,verts1,ra,theta
-        dec=90.-theta
-        verts[i].nverts=n_elements(dec)
-        verts[i].ra=ptr_new(reform(ra, n_elements(dec)))
-        verts[i].dec=ptr_new(reform(dec, n_elements(dec)))
-    endif
-endfor
-    
-shading=230-byte(bweight/max(bweight)*220.)
 if(NOT keyword_set(noplot)) then begin
+    verts=replicate({nverts:0L, $
+                     ra:ptr_new(), $
+                     dec:ptr_new()}, n_elements(balkans))
+    for i=0L, n_elements(balkans)-1L do begin
+        if(garea(balkans[i]) gt 0.) then begin
+            gverts,balkans[i],angle=angle, verts=verts1, edges=edges, ends=ends, $
+              dangle=dangle,minside=minside,/plot
+            x_to_angles,verts1,ra,theta
+            dec=90.-theta
+            verts[i].nverts=n_elements(dec)
+            verts[i].ra=ptr_new(reform(ra, n_elements(dec)))
+            verts[i].dec=ptr_new(reform(dec, n_elements(dec)))
+        endif
+    endfor
+    
+    shading=230-byte(bweight/max(bweight)*220.)
     minra=361.
     maxra=-1.
     mindec=91.
