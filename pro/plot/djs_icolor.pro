@@ -43,9 +43,9 @@ function djs_icolor, color
       red   = long(255.0*(indgen(27) mod 3)/2.0)
       green = long(255.0*(fix(findgen(27)/3) mod 3)/2.0)
       blue  = long(255.0*fix(findgen(27)/9)/2.0)
-      red = [red, 70]
-      green = [green, 70]
-      blue = [blue, 70]
+      red = [red, 70, 200]
+      green = [green, 70, 200]
+      blue = [blue, 70, 200]
 
 ;for ii=0,26 do print, ii,red[ii],green[ii],blue[ii]
 
@@ -84,6 +84,9 @@ function djs_icolor, color
              + 25 * (color EQ 'light cyan') $
              + 26 * (color EQ 'white') $
              + 27 * (color EQ 'dark gray') $
+             + 27 * (color EQ 'dark grey') $
+             + 28 * (color EQ 'light gray') $
+             + 28 * (color EQ 'light gray') $
              + defcolor * (color EQ 'default')
 
       if (!d.N_colors EQ 16777216) then begin
