@@ -29,11 +29,31 @@
 ;   18-Nov-2003  Michael Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-pro string2radec, rahour, ramin, rasec, decdeg, decmin, decsec, ra, dec
+pro string2radec, rahour, ramin, rasec, decdeg, decmin, decsec, ra, dec, $
+                  rastr=rastr, decstr=decstr
 
 if(n_params() lt 6) then begin
     print, 'Syntax - string2radec, rahour, ramin, rasec, decdeg, decmin, decsec, ra, dec'
     return
+endif
+
+if(keyword_set(rastr)) then begin
+    rahour=strarr(n_elements(rastr))
+    ramin=strarr(n_elements(rastr))
+    rasec=strarr(n_elements(rastr))
+    decdeg=strarr(n_elements(rastr))
+    decmin=strarr(n_elements(rastr))
+    decsec=strarr(n_elements(rastr))
+    for i=0L, n_elements(rastr)-1L do begin
+        words=strsplit(rastr[i], ':', /extr)
+        rahour[i]=words[0]
+        ramin[i]=words[1]
+        rasec[i]=words[2]
+        words=strsplit(decstr[i], ':', /extr)
+        decdeg[i]=words[0]
+        decmin[i]=words[1]
+        decsec[i]=words[2]
+    endfor
 endif
 
 ra=(double(rahour)+double(ramin)/60.+double(rasec)/3600.)*360./24
