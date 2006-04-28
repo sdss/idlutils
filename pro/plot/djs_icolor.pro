@@ -83,9 +83,9 @@ function djs_icolor, color
              + 24 * (color EQ 'cyan') $
              + 25 * (color EQ 'light cyan') $
              + 26 * (color EQ 'white') $
-             + 27 * (color EQ 'dark gray') $
              + 27 * (color EQ 'dark grey') $
-             + 28 * (color EQ 'light gray') $
+             + 27 * (color EQ 'dark gray') $
+             + 28 * (color EQ 'light grey') $
              + 28 * (color EQ 'light gray') $
              + defcolor * (color EQ 'default')
 
