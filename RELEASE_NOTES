@@ -1,5 +1,5 @@
 
-DJS_RGB_MAKE:  add /TIFF keyword. 
+DJS_RGB_MAKE:  add /TIFF keyword and 16,32 bit per channel support.
 HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
 OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
 POPULATE_IMAGE: Changes in support to the C code, in response to PR #6946
