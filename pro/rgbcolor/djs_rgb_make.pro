@@ -287,7 +287,7 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
          byteimg[*,*,0] = byte((floor(temporary(rimg) * 256) > 0) < 255)
          byteimg[*,*,1] = byte((floor(temporary(gimg) * 256) > 0) < 255)
          byteimg[*,*,2] = byte((floor(temporary(bimg) * 256) > 0) < 255)
-      endif 
+      endcase
       16: begin ; Hollywood likes this.
          byteimg = uintarr(dims[0], dims[1], 3)
          byteimg[*,*,0] = uint((floor(temporary(rimg) * 65536.0) > 0) < 65535)
