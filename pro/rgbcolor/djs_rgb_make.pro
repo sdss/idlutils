@@ -66,12 +66,14 @@
 ;   10-May-2004 - Written by D. Schlegel, Princeton;
 ;                 based upon Nick Wherry's code NW_RGB_MAKE
 ;   12-Dec-2005 - Change saturated pixel code; add TIFF option - DPF
+;   28-Apr-2006 - bits_per_channel keyword added for Warner Bros - DPF
 ;-
 ;------------------------------------------------------------------------------
 pro djs_rgb_make, rimage, gimage, bimage, name=name, $
  origin=origin1, scales=scales1, nonlinearity=nonlinearity1, $
  satvalue=satvalue1, rebinfactor=rebinfactor1, overlay=overlay, $
- quality=quality, tiff=tiff, dpitiff=dpitiff
+ quality=quality, tiff=tiff, dpitiff=dpitiff, $
+ bits_per_channel=bits_per_channel
 
    t0 = systime(1)
    thismem = float(ulong(memory()))
@@ -80,6 +82,9 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    ; Set defaults
 
    if keyword_set(dpitiff) then tiff = 1B ; assume tiff if dpitiff set
+   if NOT keyword_set(bits_per_channel) then bits_per_channel = 8
+   if bits_per_channel NE 8 and (~tiff) then message, 'bits_per_channel must be 8 for jpegs'
+
    suffix = keyword_set(tiff) ? '.tif' : '.jpg'
    if (NOT keyword_set(name)) THEN name = 'test'
 ; -------- force name suffix to agree with file type
@@ -276,11 +281,29 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    ;----------
    ; Convert from a floating-point to byte-scaled image
 
-   byteimg = bytarr(dims[0], dims[1], 3)
-   byteimg[*,*,0] = byte((floor(temporary(rimg) * 256) > 0) < 255)
-   byteimg[*,*,1] = byte((floor(temporary(gimg) * 256) > 0) < 255)
-   byteimg[*,*,2] = byte((floor(temporary(bimg) * 256) > 0) < 255)
-
+   case bits_per_channel of 
+      8: begin ; Good enough for mortals.
+         byteimg = bytarr(dims[0], dims[1], 3)
+         byteimg[*,*,0] = byte((floor(temporary(rimg) * 256) > 0) < 255)
+         byteimg[*,*,1] = byte((floor(temporary(gimg) * 256) > 0) < 255)
+         byteimg[*,*,2] = byte((floor(temporary(bimg) * 256) > 0) < 255)
+      endif 
+      16: begin ; Hollywood likes this.
+         byteimg = uintarr(dims[0], dims[1], 3)
+         byteimg[*,*,0] = uint((floor(temporary(rimg) * 65536.0) > 0) < 65535)
+         byteimg[*,*,1] = uint((floor(temporary(gimg) * 65536.0) > 0) < 65535)
+         byteimg[*,*,2] = uint((floor(temporary(bimg) * 65536.0) > 0) < 65535)
+         qshort = 1B
+      endcase
+      32: begin ; You would have to be insane...
+         byteimg = ulonarr(dims[0], dims[1], 3)
+         byteimg[*,*,0] = ulong((floor(temporary(rimg) * 4294967296.0) > 0) < 4294967295)
+         byteimg[*,*,1] = ulong((floor(temporary(gimg) * 4294967296.0) > 0) < 4294967295)
+         byteimg[*,*,2] = ulong((floor(temporary(bimg) * 4294967296.0) > 0) < 4294967295)
+         qlong = 1B
+      endcase
+      else: message, 'value of bits_per_channel not supported!'
+   endcase         
    ;----------
    ; Generate the JPEG (or TIFF) image
 
@@ -288,7 +311,8 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
       colors = reverse(temporary(byteimg),2)
       splog, 'writing tiff file: ', name
       write_tiff, name, planarconfig=2, red=colors[*,*,0], $
-        green=colors[*,*,1], blue=colors[*,*,2], xresol=dpitiff, yresol=dpitiff
+        green=colors[*,*,1], blue=colors[*,*,2], xresol=dpitiff, yresol=dpitiff, $
+        short=qshort, long=qlong
    ENDIF ELSE BEGIN
       splog, 'writing jpeg file: ', name
       write_jpeg, name, byteimg, true=3, quality=quality
