@@ -6,7 +6,8 @@
 ;   Convert hours, min, sec + deg, min, sec to ra dec in floating degrees
 ;
 ; CALLING SEQUENCE:
-;   string2radec, rahour, ramin, rasec, decdeg, decmin, decsec, ra, dec 
+;   string2radec, rahour, ramin, rasec, decdeg, decmin, decsec, ra, dec, $
+;    [ rastr=, decstr= ]
 ; INPUTS:
 ;   rahour - hours in ra (string)
 ;   ramin - minutes in ra (string)
@@ -14,6 +15,11 @@
 ;   decdeg - degrees in dec (string) 
 ;   decmin - arcminutes in dec (string)
 ;   decsec - arcseconds in dec (string)
+; OPTIONAL KEYWORDS:
+;   rastr - If set, then override RAHOUR,RAMIN,RASEC with a single string
+;           with those values separated by colons
+;   decstr- If set, then override DECDEG,DECMIN,DECSEC with a single string
+;           with those values separated by colons
 ; OUTPUTS:
 ;   ra - ra in degrees
 ;   dec - dec in degrees
@@ -30,7 +36,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro string2radec, rahour, ramin, rasec, decdeg, decmin, decsec, ra, dec, $
-                  rastr=rastr, decstr=decstr
+ rastr=rastr, decstr=decstr
 
 if(n_params() lt 6) then begin
     print, 'Syntax - string2radec, rahour, ramin, rasec, decdeg, decmin, decsec, ra, dec'
