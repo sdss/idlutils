@@ -7,14 +7,16 @@
 ;
 ; CALLING SEQUENCE:
 ;   djs_rgb_make, rimage, gimage, bimage, [ name=, origin=, scales=, $
-;    nonlinearity=, satvalue=, rebinfactor=, overlay=, quality= ]
+;    nonlinearity=, satvalue=, rebinfactor=, overlay=, quality=, $
+;    /tiff, dpitiff=, bits_per_channel ]
 ;
 ; INPUTS:
 ;   rimage,gimage,bimage - Input 2-dimensional images or names of FITS files;
 ;                 the dimensions of all images must agree
 ;
 ; OPTIONAL KEYWORDS:
-;   name        - Name of the output JPEG file; default to 'test.jpg'
+;   name        - Name of the output JPEG file; default to 'test.jpg',
+;                 or to 'test.tiff' if /TIFF is set
 ;   origin      - Subtract these zero-point values from the input images
 ;                 before any other scalings; default to [0,0,0]
 ;   scales      - Multiplicative scaling for each image; default to [1,1,1]
@@ -31,8 +33,9 @@
 ;   overlay     - Optional overlay image, which must be dimensionsed as
 ;                 [NX/REBINFACTOR,NY/REBINFACTOR,3]
 ;   quality     - Quality for WRITE_JPEG; default to 75 per cent
-;   tiff        - set to make tiff instead of jpeg
-;   dpitiff     - set TIFF "dots per inch" resolution (only if /tiff set)
+;   tiff        - Set to make TIFF instead of JPEG if either this keyword
+;                 or DPITIFF is set
+;   dpitiff     - Set TIFF "dots per inch" resolution, and force /TIFF option
 ;
 ; OUTPUTS:
 ;
@@ -72,7 +75,7 @@
 pro djs_rgb_make, rimage, gimage, bimage, name=name, $
  origin=origin1, scales=scales1, nonlinearity=nonlinearity1, $
  satvalue=satvalue1, rebinfactor=rebinfactor1, overlay=overlay, $
- quality=quality, tiff=tiff, dpitiff=dpitiff, $
+ quality=quality, tiff=tiff1, dpitiff=dpitiff, $
  bits_per_channel=bits_per_channel
 
    t0 = systime(1)
@@ -81,9 +84,11 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    ;----------
    ; Set defaults
 
-   if keyword_set(dpitiff) then tiff = 1B ; assume tiff if dpitiff set
-   if NOT keyword_set(bits_per_channel) then bits_per_channel = 8
-   if bits_per_channel NE 8 and (~tiff) then message, 'bits_per_channel must be 8 for jpegs'
+   tiff = keyword_set(tiff1)
+   if (keyword_set(dpitiff)) then tiff = 1B ; assume tiff if dpitiff set
+   if (NOT keyword_set(bits_per_channel)) then bits_per_channel = 8
+   if (bits_per_channel NE 8 AND keyword_set(tiff) EQ 0) then $
+    message, 'BITS_PER_CHANNEL must be 8 for JPEGs'
 
    suffix = keyword_set(tiff) ? '.tif' : '.jpg'
    if (NOT keyword_set(name)) THEN name = 'test'
