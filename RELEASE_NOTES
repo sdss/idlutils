@@ -1,12 +1,14 @@
 
-DJS_RGB_MAKE:  add /TIFF keyword and 16,32 bit per channel support.
+BALKAN_PLOT: Add /NOPLOT option (Blanton).
+DJS_RGB_MAKE: Add /TIFF keyword and 16,32 bit per channel support.
+DJS_ICOLOR: Add another entry to the simple color tables (Blanton).
 HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
 OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
 POPULATE_IMAGE: Changes in support to the C code, in response to PR #6946
                from Finkbeiner.
 SPHEREMATCH: Speed and memory management of both C and IDL codes improved
-               by adding ESTNMATCH keyword (Finkbeiner).  Then udo this
-               to fix bugs (Blanton).
+               by adding ESTNMATCH keyword (Finkbeiner).
+STRING2RADEC: Add optional RASTR,DECSTR keywords (Blanton).
 USNO_CONE: Improve memory management (Hogg).
 
 lib/Makefile: Copy *.SO_EXT not just *.so when installing.
@@ -19,7 +21,6 @@ src/image/pop_image.c: Add two more possible C calls for POPULATE_IMAGE
 src/spheregroup/spherematch.c: Memory improvements by Finkbeiner:
                transform list1 to XYZ on the fly, remove large if else
                in matching section, check that we do not overflow maxmatch.
-               Then undo this to fix bugs (Blanton).
 
 -------------------------------------------------------------------------------
 v5_1_3 (Feb 14, 2006) running on IDL 5.4 - 6.2
