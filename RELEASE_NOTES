@@ -11,6 +11,8 @@ SPHEREMATCH: Speed and memory management of both C and IDL codes improved
 STRING2RADEC: Add optional RASTR,DECSTR keywords (Blanton).
 USNO_CONE: Improve memory management (Hogg).
 
+data/sdss/sdssMaskfits.par: Change the bitmask values for CALIB_STATUS,
+               according to our definitions in sdss-photoop/1719.
 lib/Makefile: Copy *.SO_EXT not just *.so when installing.
 src/image/pop_image.c: Add two more possible C calls for POPULATE_IMAGE
                to pass X,Y as integer values rather than floats.  This fixes
