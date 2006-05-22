@@ -28,9 +28,14 @@ function fit_para2d, x, y, im, wt, model=model, chi2=chi2
        alpha = transpose(a) # a
        beta = transpose(action) # (im[*,i] * wt[*,i])
 
-       la_choldc, alpha, /double, status=status
-       if status EQ 0 then  $
-       res[*,i] = la_cholsol(alpha, beta)
+       if !version.release GE '5.6' then begin
+         la_choldc, alpha, /double, status=status
+         if status EQ 0 then  $
+         res[*,i] = la_cholsol(alpha, beta, /double)
+       endif else begin
+         choldc, alpha, p, /double
+         res[*,i] = cholsol(alpha, p, beta, /double)
+       endelse
      endfor
      model = action # res
      chi2 = (im - model)^2 * wt  
