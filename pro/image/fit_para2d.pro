@@ -1,4 +1,9 @@
 
+; Do a linear least squares fit of a 2-d parabola (6 free parameters)
+; to an image with weights.
+; model = a0 + a1 *x + a2*y + a3*x^2 + a4 * x * y + a5 * y^2
+;
+
 function fit_para2d, x, y, im, wt, model=model, chi2=chi2
 
      xbasis = fpoly(x,3)
@@ -17,7 +22,7 @@ function fit_para2d, x, y, im, wt, model=model, chi2=chi2
      res = fltarr(6, n_im)
      model = im*0.
 
-     for i=0, n_im-1 do begin
+     for i=0L, n_im-1 do begin
      
        a = action * (sqrt(wt[*,i]) # replicate(1,6))
        alpha = transpose(a) # a
