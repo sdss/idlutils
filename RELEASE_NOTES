@@ -1,9 +1,11 @@
 
+ANG2PIX_RING: Healpix routine that we forgot to check in.
 BALKAN_PLOT: Add /NOPLOT option (Blanton).
 DJS_RGB_MAKE: Add /TIFF keyword and 16,32 bit per channel support.
 DJS_ICOLOR: Add another entry to the simple color tables (Blanton).
 HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
 OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
+PFIT_PARA2: Need to check for version of LA_CHOLDC.
 POPULATE_IMAGE: Changes in support to the C code, in response to PR #6946
                from Finkbeiner.
 SPHEREMATCH: Speed and memory management of both C and IDL codes improved
