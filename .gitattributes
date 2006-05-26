@@ -1068,6 +1068,7 @@ pro/psconfig/fsc_inputfield.pro -text
 pro/psconfig/fsc_plotwindow.pro -text
 pro/psconfig/fsc_psconfig__define.pro -text
 pro/psconfig/psconfig.pro -text
+pro/psf/get_psfvals.pro -text
 pro/rgbcolor/djs_mosaic_rgb.pro -text
 pro/rgbcolor/djs_rgb_make.pro -text
 pro/rgbcolor/hogg_bwify.pro -text
