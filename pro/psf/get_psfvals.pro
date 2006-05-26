@@ -1,4 +1,4 @@
-pro get_psfvals, image, ivar, clean, xstar, ystar, satmask=satmask, badpixels=badpixels
+pro get_psfvals, image, ivar, clean, xstar, ystar, par, satmask=satmask, badpixels=badpixels
 
   if NOT keyword_set(nsigma) then nsigma = 40
   if NOT keyword_set(satmask) then message, 'you really should set satmask'
@@ -30,9 +30,19 @@ pro get_psfvals, image, ivar, clean, xstar, ystar, satmask=satmask, badpixels=ba
   maxnb = im[ixm, iy] > im[ixp, iy] > im[ix, iym] > im[ix, iyp] > $
     im[ixm, iyp] > im[ixp, iyp] > im[ixp, iym] > im[ixm, iym]
 
+  bd = (ivar EQ 0) OR badpixels
+  badnb = bd[ixm, iy] OR bd[ixp, iy] OR bd[ix, iym] OR bd[ix, iyp] OR $
+    bd[ixm, iyp] OR bd[ixp, iyp] OR bd[ixp, iym] OR bd[ixm, iym]
+
   isig = sqrt(ivar[ind])
-  peak = im[ind]*isig GT (maxnb*isig + 1)
+;  I don't remember why we did this...
+;  peak = im[ind]*isig GT (maxnb*isig + 1)
+
+; instead, demand that the peak is larger than the neighbor
+  peak = (im[ind] GT (maxnb*1.00001)) AND (badnb EQ 0)
   peak = peak AND ((satmask OR badpixels)[ind] EQ 0)
+  peak = peak AND ((iy GT par.boxrad) AND (iy LT (sz[1]-par.boxrad-1)) AND $
+    (ix GT par.boxrad) AND (ix LT (sz[0]-par.boxrad-1)))
 
 ; -------- real peaks (mostly) - still need to worry about
 ;          diff. spikes, badcols
@@ -59,12 +69,19 @@ pro get_psfvals, image, ivar, clean, xstar, ystar, satmask=satmask, badpixels=ba
   back = (back1+back2)/2.
   diag = (im00+im02+im20+im22)/4.
 
-; -------- get psfvals  (or hardwire them like a wimp!)
-  psfvals = [.46, .21]  ; assuming 1.88 pixel FWHM or bigger
+; -------- compute psfvals
+  psfvals = [median(back/im11), median(diag/im11)]
+
+  psfvals0 = [.46, .21]         ; assuming 1.88 pixel FWHM or bigger
                                 ; if the PSF is smaller, you are
                                 ; BADLY sampled!
-
-  print, 'PSFVALs:', psfvals
+  
+; -------- fall back to marginal sampling psf if something has gone
+;          wrong!
+;  if (psfvals[0] LT psfvals0[0]) OR (psfvals[1] LT psfvals0[1]) then begin
+  splog, 'median psfvals: ', psfvals
+  psfvals=psfvals0
+  splog, 'Using psfvals = ', psfvals
 
   rat = (((back) > 0) )/im11
   rat2 = ((diag > 0))/im11
@@ -334,6 +351,46 @@ pro psfplot, sub, x, coeff=coeff, bin=bin
 end
 
 
+function psf_eval, x, y, coeff, par, dx=dx, dy=dy
+
+  psfsize = (size(coeff, /dimen))[0]
+  ncoeff = (size(coeff, /dimen))[2]
+  npsf = n_elements(x) 
+  ndeg = long(sqrt(ncoeff*2))-1
+  if (ndeg+1)*(ndeg+2)/2 NE ncoeff then stop
+  
+; -------- compute A matrix
+  A = dblarr(ncoeff, npsf)
+  col = 0
+  xd = double(x)
+  yd = double(y)
+  for ord=0L, ndeg do begin
+     for ypow=0, ord do begin 
+        xpow = (ord-ypow)
+        A[col, *] = xd^xpow * yd^ypow
+        col = col+1
+     endfor
+  endfor
+
+  psfs = fltarr(psfsize, psfsize, npsf)
+  for i=0L, psfsize-1 do begin 
+     for j=0L, psfsize-1 do begin 
+        psfs[i, j, *] = reform(coeff[i, j, *])#A
+     endfor
+  endfor
+
+  if keyword_set(dx) AND keyword_set(dy) then begin 
+     for i=0L, npsf-1 do begin 
+        psfs[*, *, i] = sshift2d(psfs[*, *, i], [dx[i], dy[i]])
+        psfs[*, *, i] = psfs[*, *, i]/psf_norm(psfs[*, *, i], par.cenrad)
+     endfor
+  endif
+
+  return, psfs
+end
+
+
+
 ; make sure the outliers are rejected on a star by star basis. 
 ; /reject rejects whole stars
 function psf_fit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject
@@ -392,46 +449,6 @@ end
 
 
   
-function psf_eval, x, y, coeff, par, dx=dx, dy=dy
-
-  psfsize = (size(coeff, /dimen))[0]
-  ncoeff = (size(coeff, /dimen))[2]
-  npsf = n_elements(x) 
-  ndeg = long(sqrt(ncoeff*2))-1
-  if (ndeg+1)*(ndeg+2)/2 NE ncoeff then stop
-  
-; -------- compute A matrix
-  A = dblarr(ncoeff, npsf)
-  col = 0
-  xd = double(x)
-  yd = double(y)
-  for ord=0L, ndeg do begin
-     for ypow=0, ord do begin 
-        xpow = (ord-ypow)
-        A[col, *] = xd^xpow * yd^ypow
-        col = col+1
-     endfor
-  endfor
-
-  psfs = fltarr(psfsize, psfsize, npsf)
-  for i=0L, psfsize-1 do begin 
-     for j=0L, psfsize-1 do begin 
-        psfs[i, j, *] = reform(coeff[i, j, *])#A
-     endfor
-  endfor
-
-  if keyword_set(dx) AND keyword_set(dy) then begin 
-     for i=0L, npsf-1 do begin 
-        psfs[*, *, i] = sshift2d(psfs[*, *, i], [dx[i], dy[i]])
-        psfs[*, *, i] = psfs[*, *, i]/psf_norm(psfs[*, *, i], par.cenrad)
-     endfor
-  endif
-
-  return, psfs
-end
-
-
-
 function median_stack, stack
 
   if size(stack, /n_dim) NE 3 then message, 'stack should be a 3D array'
@@ -681,19 +698,26 @@ pro multi_psf, stamps, stampivar, psfs, par, sub, faint, nfaint=nfaint
 end
 
 
-function psf_chisq, stamps, stampivar, par
+function psf_chisq, stamps, stampivar, par, dx=dx, dy=dy
 
   nstamp = (size(stamps, /dimen))[2]
+  if ~(keyword_set(dx) && keyword_set(dy)) then begin
+     dx = fltarr(nstamp)
+     dy = fltarr(nstamp)
+  endif 
+
+  if n_elements(dx) NE nstamp then message, 'index bug!'
+
   npix = (size(stamps, /dimen))[0]
   npad = par.boxrad-par.fitrad
   mask = bytarr(npix, npix)
   mask[npad:npix-npad-1, npad:npix-npad-1] = 1B
-  w = where(mask, nmask)
   chisq = fltarr(nstamp)
 
-  w = where(mask)
   for i=0L, nstamp-1 do begin 
-     chisq[i] = total((stamps[*, *, i])[w]^2 * (stampivar[*, *, i])[w])/nmask
+     w = where(mask AND (stampivar[*, *, i] NE 0), nmask)
+     shiftstamp =  sshift2d(stamps[*, *, i], [dx[i], dy[i]])
+     chisq[i] = total(shiftstamp[w]^2 * (stampivar[*, *, i])[w])/nmask
   endfor
 
   return, chisq
@@ -741,6 +765,23 @@ pro psf_zero, stamps, stampivar, sub, psf, par, faint, chisq
 end
 
 
+pro chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs, arr
+  
+; -------- keep stars with chisq LT 1 but keep at least half of them.
+  chisqval = median(chisq) > 1
+  w = where(chisq LT chisqval)
+  chisq     = chisq[w]
+  x         = x[w]
+  y         = y[w]        
+  dx        = dx[w]       
+  dy        = dy[w]       
+  stamps    = stamps[*, *, w]
+  stampivar = stampivar[*, *, w]
+  psfs      = psfs[*, *, w]     
+  arr       = arr[*, *, w]      
+
+  return
+end
 
 
 
@@ -757,7 +798,10 @@ pro callit
 
   fname = sdss_name('idR', run, camcol, field, filter='i')
   sdss_readimage, fname, image, ivar, satmask=satmask
-  badpixels = smooth(float(ivar EQ 0), 19, /edge) NE 0
+
+  badboxrad = 9
+  badpixels = smooth(float(ivar EQ 0), badboxrad*2+1, /edge) GT $
+    ((1./badboxrad)^2/10)
 
 ;  image     =     image[*, 100:249]
 ;  ivar      =      ivar[*, 100:249]
@@ -765,7 +809,7 @@ pro callit
 ;  badpixels = badpixels[*, 100:249]
 
   par = psf_par()
-  get_psfvals, image, ivar, clean, x, y, satmask=satmask, badpixels=badpixels
+  get_psfvals, image, ivar, clean, x, y, par, satmask=satmask, badpixels=badpixels
 
 
   stamps = stamps(clean, ivar, x, y, par, /shift, dx=dx, dy=dy, stampivar=stampivar)
@@ -791,9 +835,20 @@ pro callit
   multi_psf, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
 
 
-  stamps2pca, psfs1, comp=comp, coeff=coeff, recon=recon
+;  stamps2pca, psfs1, comp=comp, coeff=coeff, recon=recon
 
-  chisq = psf_chisq(sub2, stampivar, par)
+  chisq = psf_chisq(sub2, stampivar, par, dx=dx, dy=dy)
+
+  sub3 = sub2
+
+  chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs1, sub3
+  recon = sub3+psfs1
+  cf = psf_fit(recon, stampivar, x, y, par, ndeg=3, /reject)
+  psfs2 = psf_eval(x, y, cf, par)
+
+
+  sind = sort(chisq)
+  atv, spread_stack(sub2[*, *, sind], 3)
 
 
 ; center up
