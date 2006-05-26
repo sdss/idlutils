@@ -1,8 +1,9 @@
-pro/psf       add directory for PSF fitting code
+
 ANG2PIX_RING: Healpix routine that we forgot to check in.
 BALKAN_PLOT: Add /NOPLOT option (Blanton).
 DJS_RGB_MAKE: Add /TIFF keyword and 16,32 bit per channel support.
 DJS_ICOLOR: Add another entry to the simple color tables (Blanton).
+GET_PSFVALS: Test code for PSF fitting (Finkbeiner)
 HOGG_MCMC,HOGG_MCMC_STEP,HOGG_MCMC_TEST: Bug fixes ("masjedi bug").
 OFFSET_FROM_PAIRS: Remove divide-by-zero in print statement.
 PFIT_PARA2: Need to check for version of LA_CHOLDC.
@@ -16,6 +17,7 @@ USNO_CONE: Improve memory management (Hogg).
 data/sdss/sdssMaskfits.par: Change the bitmask values for CALIB_STATUS,
                according to our definitions in sdss-photoop/1719.
 lib/Makefile: Copy *.SO_EXT not just *.so when installing.
+pro/Makefile: Add psf directory
 src/image/pop_image.c: Add two more possible C calls for POPULATE_IMAGE
                to pass X,Y as integer values rather than floats.  This fixes
                a problem whereby if the image had more than about 2^24
