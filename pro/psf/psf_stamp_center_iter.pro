@@ -19,6 +19,7 @@
 ;
 ; OUTPUTS:
 ;   d{x,y}      - sub-pixel offsets. 
+;   status      - status code (0=bad zero, 1=good, 2=near edge)
 ;
 ; EXAMPLES:
 ;   see psf_stamps.pro
@@ -36,7 +37,7 @@
 ;
 ;----------------------------------------------------------------------
 function psf_stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
-              center=center
+              center=center, status=status
 
 ; -------- defaults
   if NOT keyword_set(rad) then message, 'must set rad'
@@ -56,6 +57,7 @@ function psf_stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
 ; -------- check center not too close to edge
   if min(center) LT 2 or max(center) GT (sz[0]-3) then begin 
      print, 'center near edge of box'
+     status = 2B
      return, image
   endif 
 
@@ -67,13 +69,23 @@ function psf_stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
   for i=1L, maxiter do begin 
      subimg = shifted_image[center[0]-rad:center[0]+rad, center[1]-rad:center[1]+rad]
      subtot = total(subimg)
+
+     if subtot LT (shifted_image[center[0], center[1]] > 0) then begin
+        splog, 'Bad zero level in shifted image' 
+        status = 0B
+        dx = 0
+        dy = 0
+        return, image
+     endif
+
      dx0 = (xwt # total(subimg,2) / subtot)[0]*1.1
      dy0 = (xwt # total(subimg,1) / subtot)[0]*1.1
-     dx = dx+dx0
-     dy = dy+dy0
-;     print, i, dx, dy, dx0, dy0
+     dx = dx+((dx0 < 0.5) > (-0.5))
+     dy = dy+((dy0 < 0.5) > (-0.5))
+
      if (abs(dx) > abs(dy)) lt 1 then shifted_image = sshift2d(image, -[dx, dy])
   endfor 
 
+  status = 1B
   return, shifted_image
 end
