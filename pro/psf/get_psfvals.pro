@@ -131,22 +131,6 @@ function psf_par
 end
 
 
-function psf_norm, image, rad
-
-  if NOT keyword_set(rad) then message, 'must set rad'
-  sz = size(image, /dimen)
-  cen = (sz-1)/2
-
-  if rad GT min(cen) then message, 'rad too big'
-
-  subimg = image[cen[0]-rad:cen[0]+rad, cen[1]-rad:cen[1]+rad]
-  subtot = total(subimg)
-  return, subtot
-
-end
-
-
-
 
 pro stamp_renorm, stamp, sivar, par
 
@@ -158,71 +142,6 @@ pro stamp_renorm, stamp, sivar, par
   endfor 
 
   return
-end
-
-
-function stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
-                 stampivar=stampivar
-
-  rad = par.cenrad              ; box rad. used for center and norm
-  sz = size(image, /dim)
-  boxrad = par.boxrad           ; postage stamp size is boxrad*2+1
-  box = boxrad*2+1
-  np = n_elements(px)           ; number of stars
-  
-  arr = fltarr(box, box, np)
-  stampivar = fltarr(box, box, np)
-
-  x0 = (px-boxrad) > 0
-  x1 = (px+boxrad) < (sz[0]-1)
-  y0 = (py-boxrad) > 0
-  y1 = (py+boxrad) < (sz[1]-1)
-  
-  sx0 = x0-px+boxrad
-  sx1 = x1-px+boxrad
-  sy0 = y0-py+boxrad
-  sy1 = y1-py+boxrad
-
-  dx = fltarr(np)               ; sub-pixel offsets
-  dy = fltarr(np)
-
-  for i=0L, np-1 do begin 
-     stamp = fltarr(box, box)
-     sivar = fltarr(box, box)
-     stamp[sx0[i]:sx1[i], sy0[i]:sy1[i]] = image[x0[i]:x1[i], y0[i]:y1[i]]
-     sivar[sx0[i]:sx1[i], sy0[i]:sy1[i]] = ivar[x0[i]:x1[i], y0[i]:y1[i]]
-
-     if keyword_set(shift) then begin 
-        stampcen = stamp_center_iter(stamp, rad, maxiter=10, $
-                                  dx=dx0, dy=dy0)
-        subtot = psf_norm(stampcen, par.cenrad)
-        dx[i]=dx0 & dy[i]=dy0
-        stamp = temporary(stampcen)
-
-     endif else begin 
-        subtot = psf_norm(stamp, par.cenrad)
-     endelse
-
-     arr[*, *, i] = stamp/subtot
-     stampivar[*, *, i] = sivar*subtot^2
-
-  endfor
-
-; -------- reject those where central pixel is not the highest.
-
-  cenbrt = bytarr(np)
-  for i=0L, np-1 do cenbrt[i] = max(arr[*, *, i]) EQ arr[boxrad, boxrad, i]
-  wbrt = where(cenbrt, nbrt)
-
-  if nbrt EQ 0 then message, 'no stars are bright - this is impossible'
-  arr = arr[*, *, wbrt]
-  stampivar = stampivar[*, *, wbrt]
-  px = px[wbrt]
-  py = py[wbrt]
-  dx = dx[wbrt]
-  dy = dy[wbrt]
-
-  return, arr
 end
 
 
@@ -694,23 +613,22 @@ pro callit
   field = 258
 
 
+  par = psf_par()
+
   fname = sdss_name('idR', run, camcol, field, filter='i')
   sdss_readimage, fname, image, ivar, satmask=satmask
 
-  badboxrad = 9
-  badpixels = smooth(float(ivar EQ 0), badboxrad*2+1, /edge) GT $
-    ((1./badboxrad)^2/10)
 
-;  image     =     image[*, 100:249]
-;  ivar      =      ivar[*, 100:249]
-;  satmask   =   satmask[*, 100:249]
-;  badpixels = badpixels[*, 100:249]
+  badpixels = smooth(float(ivar EQ 0), par.fitrad*2+1, /edge) GT $
+    ((1./par.fitrad)^2/10)
 
-  par = psf_par()
-  psf_findstars, image, ivar, par.boxrad, clean, x, y, satmask=satmask, badpixels=badpixels
+; -------- find some stars (not a complete list)
+  psf_findstars, image, ivar, par.boxrad, clean, x, y, $
+    satmask=satmask, badpixels=badpixels
 
-
-  stamps = stamps(clean, ivar, x, y, par, /shift, dx=dx, dy=dy, stampivar=stampivar)
+; -------- cut out postage stamps around them
+  stamps = psf_stamps(clean, ivar, x, y, par, /shift, dx=dx, dy=dy, $
+                      stampivar=stampivar)
   nstamp = n_elements(dx) 
 
 ; -------- get median psf
