@@ -72,18 +72,16 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
      sivar[sx0[i]:sx1[i], sy0[i]:sy1[i]] = ivar[x0[i]:x1[i], y0[i]:y1[i]]
 
      if keyword_set(shift) then begin 
-        stampcen = stamp_center_iter(stamp, rad, maxiter=10, $
+        stampcen = psf_stamp_center_iter(stamp, rad, maxiter=10, $
                                   dx=dx0, dy=dy0)
-        subtot = psf_norm(stampcen, par.cenrad)
         dx[i]=dx0 & dy[i]=dy0
         stamp = temporary(stampcen)
+     endif
 
-     endif else begin 
-        subtot = psf_norm(stamp, par.cenrad)
-     endelse
-
-     arr[*, *, i] = stamp/subtot
-     stampivar[*, *, i] = sivar*subtot^2
+; -------- normalize stamp with psf_norm
+     norm = psf_norm(stamp, par.cenrad)
+     arr[*, *, i] = stamp/norm
+     stampivar[*, *, i] = sivar*norm^2
 
   endfor
 
