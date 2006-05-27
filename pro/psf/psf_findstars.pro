@@ -59,7 +59,7 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
   if NOT keyword_set(nsigma)    then nsigma = 40
   if NOT keyword_set(satmask)   then message, 'you really should set satmask'
   if NOT keyword_set(badpixels) then message, 'works better if you set badpixels'
-; -------- statistics
+; -------- statistics (squash image for speed)
   sz = size(image, /dim)
   row = lindgen((sz[1]-1)/16+1)*16
   squash = image[*, row]
@@ -90,13 +90,11 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
   badnb = bd[ixm, iy] OR bd[ixp, iy] OR bd[ix, iym] OR bd[ix, iyp] OR $
     bd[ixm, iyp] OR bd[ixp, iyp] OR bd[ixp, iym] OR bd[ixm, iym]
 
-;  isig = sqrt(ivar[ind])
-;  I don't remember why we did this...
-;  peak = im[ind]*isig GT (maxnb*isig + 1)
-
-; instead, demand that the peak is larger than the neighbor
+; -------- demand that the peak is larger than the neighbor
   peak = (im[ind] GT (maxnb*1.00001)) AND (badnb EQ 0)
   peak = peak AND ((satmask OR badpixels)[ind] EQ 0)
+
+; -------- and not near the edge of the image...
   peak = peak AND ((iy GT npad) AND (iy LT (sz[1]-npad-1)) AND $
     (ix GT npad) AND (ix LT (sz[0]-npad-1)))
 
@@ -104,6 +102,8 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
 ;          diff. spikes, badcols
   w = where(peak, npeak)
 
+; -------- we compute these ratios and then do not use them -- but
+;           might want to in the future. 
 ; 02 12 22
 ; 01 11 21
 ; 00 10 20 
@@ -142,7 +142,7 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
   rat = (((back) > 0) )/im11
   rat2 = ((diag > 0))/im11
 
-  wstar = where(rat GT psfvals[0] and rat2 GT psfvals[1])
+  wstar = where(rat GT psfvals[0] and rat2 GT psfvals[1], nstar)
 
 ; -------- Find ALL CRs with psf_reject_cr
   cr = psf_reject_cr(image-mean, ivar, psfvals, satmask=satmask)
@@ -151,6 +151,9 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
 ; -------- return only the good stars
   xstar = ix[w[wstar]]
   ystar = iy[w[wstar]]
+
+; -------- report number of stars used
+  splog, nstar, ' stars found'
 
   return
 end
