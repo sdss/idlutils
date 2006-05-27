@@ -27,66 +27,6 @@ pro stamps2pca, psfs, comp=comp, coeff=coeff, recon=recon
 end
 
 
-
-
-function stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
-              center=center
-
-; -------- defaults
-  if NOT keyword_set(rad) then message, 'must set rad'
-  if NOT keyword_set(maxiter) then maxiter = 5
-
-; -------- check inputs
-  sz = size(image, /dimen)
-  if NOT keyword_set(center) then begin 
-     cen = (sz-1)/2
-     if array_equal(cen, (sz-1)/2.) eq 0 then message, 'pass arrays of odd dimension'
-     if rad GT min(cen) then message, 'rad too big'
-     center = cen
-  endif
-
-  dx = 0
-  dy = 0
-; -------- check center not too close to edge
-  if min(center) LT 2 or max(center) GT (sz[0]-3) then begin 
-     print, 'center near edge of box'
-     return, image
-  endif 
-
-
-  shifted_image = image
-
-; -------- find flux-weighted center, sinc shift, iterate
-  xwt = transpose(findgen(2*rad+1)-rad) ; column vector
-
-  for i=1L, maxiter do begin 
-     subimg = shifted_image[center[0]-rad:center[0]+rad, center[1]-rad:center[1]+rad]
-     subtot = total(subimg)
-     dx0 = (xwt # total(subimg,2) / subtot)[0]*1.1
-     dy0 = (xwt # total(subimg,1) / subtot)[0]*1.1
-     dx = dx+dx0
-     dy = dy+dy0
-;     print, i, dx, dy, dx0, dy0
-     if (abs(dx) > abs(dy)) lt 1 then shifted_image = sshift2d(image, -[dx, dy])
-  endfor 
-
-  return, shifted_image
-end
-
-
-
-function histgap, x, gapsize=gapsize
-
-  sind = sort(x)
-  xs = x[sind]
-  diff = xs-shift(xs, 1)
-
-  gapsize = max(diff, maxind)
-
-  return, xs[maxind]
-end
-
-
 function spread_stack, stack, npad
 
   sz = size(stack, /dim)
@@ -265,41 +205,6 @@ function psf_fit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject
 end
 
 
-  
-function median_stack, stack
-
-  if size(stack, /n_dim) NE 3 then message, 'stack should be a 3D array'
-  sz = size(stack, /dim)
-
-  med = fltarr(sz[0], sz[1])
-
-  for i=0L, sz[0]-1 do begin 
-     for j=0L, sz[1]-1 do begin 
-        med[i, j] = median(stack[i, j, *])
-     endfor
-  endfor
-
-  return, med
-end
-
-
-
-function sinc_binup2, data
-  sz = size(data, /dim)
-  image = fltarr(sz[0]*2, sz[1]*2)*data[0]
-
-  xbox = djs_laxisnum(sz, iaxis = 0)
-  ybox = djs_laxisnum(sz, iaxis = 1)
-
-  image[xbox*2  , ybox*2] = data
-  image[xbox*2+1, ybox*2] = sshift2d(data, [-0.5, 0])
-  image[xbox*2  , ybox*2+1] = sshift2d(data, [0, -0.5])
-  image[xbox*2+1, ybox*2+1] = sshift2d(data, [-0.5, -0.5])
-
-  return, image
-end
-
-
 
 function mockimage, psf
 
@@ -326,69 +231,6 @@ function mockimage, psf
   return, image
 end
 
-
-
-function fit_extra_power, res, dx, dy
-
-  npix = 19
-  ndeg = 4
-  brad = (npix-1)/2
-  nstamp = (size(res, /dimen))[2]
-  ff = dcomplexarr(npix, npix, nstamp)
-  for i=0L, nstamp-1 do ff[*, *, i] = fft(res[*, *, i])
-
-  fnew = ff*0
-  for i=0L, brad-2 do begin 
-     poly_iter, dx, imaginary(ff[brad, i, *]), ndeg, 3, yfit
-     fnew[brad, i, *] = complex(0, yfit)
-     fnew[brad, npix-i-1, *] = complex(0, -yfit)
-
-     poly_iter, dx, imaginary(ff[brad-1, i, *]), ndeg, 3, yfit
-     fnew[brad-1, i, *] = complex(0, yfit)
-     fnew[brad+1, npix-i-1, *] = complex(0, -yfit)
-
-     poly_iter, dx, imaginary(ff[brad+1, i, *]), ndeg, 3, yfit
-     fnew[brad+1, i, *] = complex(0, yfit)
-     fnew[brad-1, npix-i-1, *] = complex(0, -yfit)
-
-     poly_iter, dy, imaginary(ff[i, brad, *]), ndeg, 3, yfit
-     fnew[i, brad, *] = complex(0, yfit)
-     fnew[npix-i-1, brad, *] = complex(0, -yfit)
-
-     poly_iter, dy, imaginary(ff[i, brad-1, *]), ndeg, 3, yfit
-     fnew[i, brad-1, *] = complex(0, yfit)
-     fnew[npix-i-1, brad+1, *] = complex(0, -yfit)
-
-     poly_iter, dy, imaginary(ff[i, brad+1, *]), ndeg, 3, yfit
-     fnew[i, brad+1, *] = complex(0, yfit)
-     fnew[npix-i-1, brad-1, *] = complex(0, -yfit)
-
-  endfor
-
-  for i=0L, brad-3 do begin 
-     poly_iter, dx, imaginary(ff[brad-2, i, *]), ndeg, 3, yfit
-     fnew[brad-2, i, *] = complex(0, yfit)
-     fnew[brad+2, npix-i-1, *] = complex(0, -yfit)
-
-     poly_iter, dx, imaginary(ff[brad+2, i, *]), ndeg, 3, yfit
-     fnew[brad+2, i, *] = complex(0, yfit)
-     fnew[brad-2, npix-i-1, *] = complex(0, -yfit)
-
-     poly_iter, dy, imaginary(ff[i, brad-2, *]), ndeg, 3, yfit
-     fnew[i, brad-2, *] = complex(0, yfit)
-     fnew[npix-i-1, brad+2, *] = complex(0, -yfit)
-
-     poly_iter, dy, imaginary(ff[i, brad+2, *]), ndeg, 3, yfit
-     fnew[i, brad+2, *] = complex(0, yfit)
-     fnew[npix-i-1, brad-2, *] = complex(0, -yfit)
-
-  endfor
-
-  rnew = res*0
-  for i=0, nstamp-1 do rnew[*, *, i] = float(fft(fnew[*, *, i], /inv))
-
-  return, rnew
-end
 
 
 ; subtract PSF stars from image and see how well we did!
@@ -426,94 +268,6 @@ function image_psf_sub, image_in, psfs, px, py, dx, dy
 end
 
 
-function faint_struc, N
-
-  nmax = 5
-  str = {npsf:0, $
-         px:fltarr(nmax), $
-         py:fltarr(nmax), $
-         peak:fltarr(nmax)}
-  
-  if keyword_set(N) then begin
-     str = replicate(str, N)
-  endif 
-
-  return, str
-end
-
-
-
-pro multi_psf, stamps, stampivar, psfs, par, sub, faint, nfaint=nfaint
-
-  sub = stamps                        ; copy of array for output
-  nstamp = (size(stamps, /dimen))[2]
-  npix = (size(stamps, /dimen))[0]
-  nsigma = 5
-  faint = faint_struc(nstamp)
-  if NOT keyword_set(nfaint) then nfaint = 3
-  if nfaint GT n_elements(faint[0].peak) then message, 'nfaint too large'
-  rad = 3
-
-  xbox = djs_laxisnum([npix, npix], iaxis = 0)
-  ybox = djs_laxisnum([npix, npix], iaxis = 1)
-
-  mask = bytarr(npix, npix)
-  npad = par.boxrad-par.fitrad
-  mask[npad:npix-npad-1, npad:npix-npad-1] = 1B
-
-  xcen = (npix-1)/2
-  ycen = (npix-1)/2
-  mask = mask AND (((xbox-xcen)^2+(ybox-ycen)^2) GT rad^2)
-
-; -------- loop over stamps
-  for i=0L, nstamp-1 do begin 
-
-     fmask = mask
-
-     psf = psfs[*, *, i]
-     im = stamps[*, *, i]-psf
-     iv = stampivar[*, *, i]
-     
-     for j=0, nfaint-1 do begin 
-; -------- look for another peak
-        maxval = max(im*fmask, maxind)
-        if maxval*sqrt(iv[maxind]) GT nsigma then begin 
-
-           ix = maxind mod npix
-           iy = maxind  /  npix
-        
-; -------- get sub-pixel center
-
-           junk = stamp_center_iter(im, 1, dx=dx0, dy=dy0, center=[ix, iy], maxiter=2)
-           if (dx0 > dy0) GE 2 then begin 
-              print, 'Centering error on stamp', i, dx0, dy0
-           endif else begin 
-              px = ix+dx0
-              py = iy+dy0
-              
-; -------- subtract shifted PSF form im
-              spsf = sshift2d(psf, [px, py]-(npix-1)/2)
-              norm = maxval/max(spsf)
-              im = im-spsf*norm
-              
-; -------- store results
-              faint[i].npsf = faint[i].npsf+1
-              faint[i].px[j] = px
-              faint[i].py[j] = py
-              faint[i].peak = norm
-
-              fmask = fmask AND ((xbox-px)^2+ $
-                                 (ybox-py)^2) GT rad^2
-
-           endelse
-        endif
-     endfor
-
-     sub[*, *, i] = im
-  endfor
-  return
-end
-
 
 function psf_chisq, stamps, stampivar, par, dx=dx, dy=dy
 
@@ -539,8 +293,6 @@ function psf_chisq, stamps, stampivar, par, dx=dx, dy=dy
 
   return, chisq
 end
-
-
 
 
 ; doesn't use psf to get radius -- maybe should!
@@ -632,15 +384,15 @@ pro callit
   nstamp = n_elements(dx) 
 
 ; -------- get median psf
-  psf = median_stack(stamps)
+  median_psf = djs_median(stamps, 3)
   psfs0 = stamps
-  for i=0L, nstamp-1 do psfs0[*, *, i] = psf
+  for i=0L, nstamp-1 do psfs0[*, *, i] = median_psf
 
-  multi_psf, stamps, stampivar, psfs0, par, sub, faint, nfaint=3
-  psf_zero, stamps, stampivar, sub, psf, par, faint, chisq
+  psf_multi_fit, stamps, stampivar, psfs0, par, sub, faint, nfaint=3
+  psf_zero, stamps, stampivar, sub, median_psf, par, faint, chisq
   stamp_renorm, stamps, stampivar, par
 
-  multi_psf, stamps, stampivar, psfs0, par, sub1, faint, nfaint=3
+  psf_multi_fit, stamps, stampivar, psfs0, par, sub1, faint, nfaint=3
 ; maybe recenter here
   recon = sub1+psfs0
 
@@ -648,7 +400,7 @@ pro callit
   cf = psf_fit(recon, stampivar, x, y, par, ndeg=3, /reject)
   psfs1 = psf_eval(x, y, cf, par)
 
-  multi_psf, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
+  psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
 
 
 ;  stamps2pca, psfs1, comp=comp, coeff=coeff, recon=recon
@@ -679,33 +431,6 @@ pro callit
 ; get new zero  (with tilt?)
 ; fit psf2
 ; toss anything that doesn't fit well within fitrad. 
-
-
-
-; =======================================
-;  this is all junk
-
-; -------- subtract stupid psf from stamps
-  sub = stamps
-  for i=0L, (size(sub, /dimen))[2]-1 do sub[*, *, i] = sub[*, *, i]-psf
-  sind = sort(sqrt(dy*dy+dx*dx))
-  foo = spread_stack(sub[*, *, sind])
-  sigs = fltarr(nstamp)
-  for i=0L, nstamp-1 do sigs[i] = stdev(sub[7:11, 7:11, i])
-
-
-; -------- residual
-  res = stamps-psfs
-  bar = spread_stack(res)
-  
-  bar = spread_stack(res[*, *, sind])
-  bsigs = fltarr(nstamp)
-  for i=0L, nstamp-1 do bsigs[i] = stdev(res[7:11, 7:11, i])
-
-
-  blank = image_psf_sub(clean, psfs0, x, y, dx, dy)
-
-
 
   return
 end
