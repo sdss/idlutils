@@ -108,7 +108,7 @@ pro psfplot, sub, x, coeff=coeff, bin=bin
 end
 
 
-function psf_eval, x, y, coeff, par, dx=dx, dy=dy
+function psf_eval, x, y, coeff, cenrad, dx=dx, dy=dy
 
   psfsize = (size(coeff, /dimen))[0]
   ncoeff = (size(coeff, /dimen))[2]
@@ -139,7 +139,7 @@ function psf_eval, x, y, coeff, par, dx=dx, dy=dy
   if keyword_set(dx) AND keyword_set(dy) then begin 
      for i=0L, npsf-1 do begin 
         psfs[*, *, i] = sshift2d(psfs[*, *, i], [dx[i], dy[i]])
-        psfs[*, *, i] = psfs[*, *, i]/psf_norm(psfs[*, *, i], par.cenrad)
+        psfs[*, *, i] = psfs[*, *, i]/psf_norm(psfs[*, *, i], cenrad)
      endfor
   endif
 
@@ -191,7 +191,7 @@ function psf_fit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject
 ; -------- reject
   if keyword_set(reject) then begin 
      nsigma = 3
-     model = psf_eval(x, y, cf, par)
+     model = psf_eval(x, y, cf, par.cenrad)
      bad = (model-stack)^2*ivar GT nsigma^2
      nbad = total(total(bad[x0:x1, x0:x1, *], 1), 1)
      good = where(nbad LE 5, ngood)
@@ -358,10 +358,18 @@ end
 ; input image information, fit paramters
 ; output PSf fit coeeficients and structure array of star positions used.
 
-function psf_fit_coeffs, image, ivar, satmask, par
+function psf_fit_coeffs, image, ivar, satmask, par, status=status
 
 ; -------- timer
   t1 = systime(1)
+  status = 0L
+
+; -------- look for negative pixels
+  wneg = where(image LE 0, nneg)
+  if nneg GT 0 then begin 
+     status = status OR 1
+     ivar[wneg] = 0
+  endif
 
 ; -------- determine badpixels mask (pixels not to use for stamps)
   badpixels = smooth(float(ivar EQ 0), par.fitrad*2+1, /edge) GT $
@@ -391,7 +399,7 @@ function psf_fit_coeffs, image, ivar, satmask, par
 
 ; -------- do spatial PSF fit
   cf = psf_fit(recon, stampivar, x, y, par, ndeg=3, /reject)
-  psfs1 = psf_eval(x, y, cf, par)
+  psfs1 = psf_eval(x, y, cf, par.cenrad)
 
   psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
 
@@ -405,9 +413,10 @@ function psf_fit_coeffs, image, ivar, satmask, par
 
   recon = sub3+psfs1
   cf = psf_fit(recon, stampivar, x, y, par, ndeg=3, /reject)
-  psfs2 = psf_eval(x, y, cf, par)
+  psfs2 = psf_eval(x, y, cf, par.cenrad)
 
 ; -------- maybe make room for some QA stuff in here...
+  delvarx, result
   result = {nstar: n_elements(x), $
             x: x+dx, $
             y: y+dy, $
@@ -415,7 +424,8 @@ function psf_fit_coeffs, image, ivar, satmask, par
             coeff: cf, $
             boxrad: par.boxrad, $
             fitrad: par.fitrad, $
-            cenrad: par.cenrad}
+            cenrad: par.cenrad, $
+            status: status}
 
   splog, 'Time: ', systime(1)-t1
   
@@ -440,7 +450,7 @@ pro callit
 
 ; -------- read image
   fname = sdss_name('idR', run, camcol, field, filter='i')
-  sdss_readimage, fname, image, ivar, satmask=satmask
+  sdss_readimage, fname, image, ivar, satmask=satmask, /silent
 
 ; -------- do the fit
   pstr = psf_fit_coeffs(image, ivar, satmask, par)
@@ -467,10 +477,57 @@ pro callit
 end
 
 
+
+pro psf_validate, pstr
+
+  psfs = psf_eval(pstr.x, pstr.y, pstr.coeff, pstr.cenrad)
+
+  npix = (size(psfs, /dimen))[0]
+  midind = (npix*npix-1)/2
+
+  mask = bytarr(npix, npix)
+  mask[pstr.boxrad-pstr.fitrad:pstr.boxrad+pstr.fitrad, $
+       pstr.boxrad-pstr.fitrad:pstr.boxrad+pstr.fitrad] = 1B
+  mask[pstr.boxrad-pstr.fitrad+1:pstr.boxrad+pstr.fitrad-1, $
+       pstr.boxrad-pstr.fitrad+1:pstr.boxrad+pstr.fitrad-1] = 0B
+  ringind = where(mask)
+
+  for i=0L, pstr.nstar-1 do begin 
+
+; -------- check central pixel is highest
+     psf = psfs[*, *, i]
+     junk = max(psf, maxind)
+     if maxind NE midind then splog, 'center pixel not highest!'
+     noise = stdev(psf[ringind])/psf[midind]
+     if noise GT .02 then print, i, noise
+
+  endfor
+
+  return
+end
+
+
+
+pro validate_all
+  
+  flist = file_search('psC*fit')
+  for i=0L, n_elements(flist)-1 do begin
+     print, i, '   ', flist[i]
+     pstr = mrdfits(flist[i], 1, /silent)
+     psf_validate, pstr
+  endfor
+
+  return
+end
+
+
+
+
 ; loop over some SDSS fields, see if we crash...
 pro tryit
 
   run = 273
+  filtname = 'i'
   fstart = sdss_fieldrange(run, fend=fend)
 
 ; -------- get parameters
@@ -481,14 +538,19 @@ pro tryit
         print, run, camcol, field
 
 ; -------- read image
-        fname = sdss_name('idR', run, camcol, field, filter='i')
-        sdss_readimage, fname, image, ivar, satmask=satmask
+        fname = sdss_name('idR', run, camcol, field, filter=filtname)
+        sdss_readimage, fname, image, ivar, satmask=satmask, /silent
 
 ; -------- do the fit
         pstr = psf_fit_coeffs(image, ivar, satmask, par)
 
 ; -------- write outputs
-        
+        outname = string('psCoeff-', run, '-'+filtname, camcol, '-', $
+                         field, '.fit', $
+                         format='(A,I6.6,A,I1,A,I4.4,A)')
+        splog, 'Writing ', outname
+        mwrfits, pstr, outname, /create
+
      endfor
   endfor
 
