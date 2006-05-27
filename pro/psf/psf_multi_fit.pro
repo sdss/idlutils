@@ -86,13 +86,14 @@ pro psf_multi_fit, stamps, stampivar, psfs, par, sub, faint, nfaint=nfaint
         
 ; -------- get sub-pixel center
 
-           junk = psf_stamp_center_iter(im, 1, dx=dx0, dy=dy0, center=[ix, iy], maxiter=2)
-           if (dx0 > dy0) GE 2 then begin 
+           junk = psf_stamp_center_iter(im, 1, dx=dx0, dy=dy0, center=[ix, iy], maxiter=2, status=status)
+
+           if ((abs(dx0) > abs(dy0)) GE 2) or (status NE 1B) then begin 
               print, 'Centering error on stamp', i, dx0, dy0
            endif else begin 
               px = ix+dx0
               py = iy+dy0
-              
+
 ; -------- subtract shifted PSF form im
               spsf = sshift2d(psf, [px, py]-(npix-1)/2)
               norm = maxval/max(spsf)
