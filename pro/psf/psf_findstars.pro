@@ -56,7 +56,7 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
   if NOT keyword_set(image)     then message, 'must set image'
   if NOT keyword_set(ivar)      then message, 'must set ivar'
   if NOT keyword_set(npad)      then npad = 2
-  if NOT keyword_set(nsigma)    then nsigma = 40
+  if NOT keyword_set(nsigma)    then nsigma = 20
   if NOT keyword_set(satmask)   then message, 'you really should set satmask'
   if NOT keyword_set(badpixels) then message, 'works better if you set badpixels'
 ; -------- statistics (squash image for speed)
