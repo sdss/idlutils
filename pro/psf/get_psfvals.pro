@@ -195,7 +195,7 @@ function psf_fit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject
      bad = (model-stack)^2*ivar GT nsigma^2
      nbad = total(total(bad[x0:x1, x0:x1, *], 1), 1)
      good = where(nbad LE 5, ngood)
-     print, 'keeping ', ngood, ' stars.'
+     splog, 'keeping ', ngood, ' stars.'
      cf = psf_fit(stack[*, *, good], ivar[*, *, good], x[good], y[good], $
                   par, ndeg=ndeg)
 
@@ -338,7 +338,10 @@ pro chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs, arr
   
 ; -------- keep stars with chisq LT 1 but keep at least half of them.
   chisqval = median(chisq) > 1
-  w = where(chisq LT chisqval)
+  w = where(chisq LT chisqval, nstar)
+
+  splog, 'Cutting to', nstar, ' stars.'
+
   chisq     = chisq[w]
   x         = x[w]
   y         = y[w]        
@@ -352,25 +355,15 @@ pro chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs, arr
   return
 end
 
+; input image information, fit paramters
+; output PSf fit coeeficients and structure array of star positions used.
 
+function psf_fit_coeffs, image, ivar, satmask, par
 
-pro callit
+; -------- timer
+  t1 = systime(1)
 
-  run = 273
-  camcol = 3
-  field = 500
-
-  run = 4828
-  camcol = 3
-  field = 258
-
-
-  par = psf_par()
-
-  fname = sdss_name('idR', run, camcol, field, filter='i')
-  sdss_readimage, fname, image, ivar, satmask=satmask
-
-
+; -------- determine badpixels mask (pixels not to use for stamps)
   badpixels = smooth(float(ivar EQ 0), par.fitrad*2+1, /edge) GT $
     ((1./par.fitrad)^2/10)
 
@@ -402,7 +395,6 @@ pro callit
 
   psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
 
-
 ;  stamps2pca, psfs1, comp=comp, coeff=coeff, recon=recon
 
   chisq = psf_chisq(sub2, stampivar, par, dx=dx, dy=dy)
@@ -410,11 +402,50 @@ pro callit
   sub3 = sub2
 
   chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs1, sub3
+
   recon = sub3+psfs1
   cf = psf_fit(recon, stampivar, x, y, par, ndeg=3, /reject)
   psfs2 = psf_eval(x, y, cf, par)
 
+; -------- maybe make room for some QA stuff in here...
+  result = {nstar: n_elements(x), $
+            x: x+dx, $
+            y: y+dy, $
+            chisq: chisq, $
+            coeff: cf, $
+            boxrad: par.boxrad, $
+            fitrad: par.fitrad, $
+            cenrad: par.cenrad}
 
+  splog, 'Time: ', systime(1)-t1
+  
+  return, result
+end
+
+
+
+pro callit
+
+  run = 273
+  camcol = 3
+  field = 500
+
+  run = 4828
+  camcol = 3
+  field = 258
+
+
+; -------- get parameters
+  par = psf_par()
+
+; -------- read image
+  fname = sdss_name('idR', run, camcol, field, filter='i')
+  sdss_readimage, fname, image, ivar, satmask=satmask
+
+; -------- do the fit
+  pstr = psf_fit_coeffs(image, ivar, satmask, par)
+
+; -------- see how we did
   chisq = psf_chisq(sub2, stampivar, par, dx=dx, dy=dy)
 
   sind = sort(chisq)
@@ -431,6 +462,36 @@ pro callit
 ; get new zero  (with tilt?)
 ; fit psf2
 ; toss anything that doesn't fit well within fitrad. 
+
+  return
+end
+
+
+; loop over some SDSS fields, see if we crash...
+pro tryit
+
+  run = 273
+  fstart = sdss_fieldrange(run, fend=fend)
+
+; -------- get parameters
+  par = psf_par()
+
+  for camcol=1, 6 do begin 
+     for field=fstart, fend do begin 
+        print, run, camcol, field
+
+; -------- read image
+        fname = sdss_name('idR', run, camcol, field, filter='i')
+        sdss_readimage, fname, image, ivar, satmask=satmask
+
+; -------- do the fit
+        pstr = psf_fit_coeffs(image, ivar, satmask, par)
+
+; -------- write outputs
+        
+     endfor
+  endfor
+
 
   return
 end
