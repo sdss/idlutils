@@ -1072,6 +1072,7 @@ pro/psf/get_psfvals.pro -text
 pro/psf/psf_findstars.pro -text
 pro/psf/psf_multi_fit.pro -text
 pro/psf/psf_norm.pro -text
+pro/psf/psf_polyfit.pro -text
 pro/psf/psf_stamp_center_iter.pro -text
 pro/psf/psf_stamps.pro -text
 pro/rgbcolor/djs_mosaic_rgb.pro -text
