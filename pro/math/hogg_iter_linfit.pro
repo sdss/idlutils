@@ -156,9 +156,12 @@ pro hogg_iter_linfit, aa,yy,ww,xx,covar=covar,nsigma=nsigma,maxiter=maxiter, $
    endelse
 
 ; condition number of matrix
-   if arg_present(condition) then $
-     condition = cond(aatwwaainv, /double, lnorm=2)
-
+   if arg_present(condition) then begin
+      if mm GT 1 then $
+        condition = cond(aatwwaainv, /double, lnorm=2) $
+      else condition = 1.0
+   endif
+   
 ; catch ugliness
    if (iteration GT 1) AND ((nn-nbad) LE mm) then begin
      printf,-2, 'hogg_iter_linfit: ERROR: sigma-clipped away too much data'
