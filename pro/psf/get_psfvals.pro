@@ -263,6 +263,9 @@ end
 
 function psf_fit_coeffs, image, ivar, satmask, par, status=status
 
+; -------- highest order fit to attempt
+  ndeg = 3
+
 ; -------- timer
   t1 = systime(1)
   status = 0L
@@ -301,7 +304,17 @@ function psf_fit_coeffs, image, ivar, satmask, par, status=status
   recon = sub1+psfs0
 
 ; -------- do spatial PSF fit
-  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=3, /reject, cond=cond)
+  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
+
+; -------- if condition number is bad try again
+  while max(cond) GT 1000 do begin 
+     ndeg--
+     splog, 'Condition Number:', max(cond), '  Falling back to ndeg =', ndeg
+     if ndeg EQ -1 then stop
+     cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
+  endwhile
+     
+
   psfs1 = psf_eval(x, y, cf, par.cenrad)
 
   psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
@@ -315,7 +328,7 @@ function psf_fit_coeffs, image, ivar, satmask, par, status=status
   chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs1, sub3
 
   recon = sub3+psfs1
-  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=3, /reject, cond=cond)
+  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
   psfs2 = psf_eval(x, y, cf, par.cenrad)
 
 print, '--------> CONDITION NUMBER ', max(cond)
@@ -326,6 +339,7 @@ print, '--------> CONDITION NUMBER ', max(cond)
             x: x+dx, $
             y: y+dy, $
             chisq: chisq, $
+            ndeg: ndeg, $
             coeff: cf, $
             boxrad: par.boxrad, $
             fitrad: par.fitrad, $
@@ -433,13 +447,15 @@ end
 pro tryit
 
   run = 273
-  filtname = 'i'
+  camcol = 1
   fstart = sdss_fieldrange(run, fend=fend)
 ;fstart = 22
 ; -------- get parameters
   par = psf_par()
 
-  for camcol=1, 6 do begin 
+  for ifilt=0, 4 do begin 
+     filtname = filtername(ifilt)
+     
      for field=fstart, fend do begin 
         print, run, camcol, field
 
