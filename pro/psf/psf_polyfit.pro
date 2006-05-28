@@ -58,7 +58,7 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
 
   nstamp = (size(stack, /dimen))[2]
   ncoeff = (ndeg+1)*(ndeg+2)/2
-  if NOT keyword_set(ndeg) then ndeg = 1
+  if n_elements(ndeg) EQ 0 then ndeg = 1
 
 ; -------- check that ndeg isn't too high
   if ncoeff GE nstamp then begin 
@@ -89,7 +89,7 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
 ;  W = dblarr(nstamp)+1
   for i=x0, x1 do begin 
      for j=x0, x1 do begin 
-        W = reform(ivar[i, j, *])        ; should use ivar here!
+        W = reform(ivar[i, j, *])        ; should have noise floor here!
         data = reform(stack[i, j, *])
         hogg_iter_linfit, A, data, W, coeff, nsigma=3, /median, $
           /truesigma, condition=condition
