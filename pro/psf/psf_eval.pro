@@ -30,7 +30,9 @@
 function psf_eval, x, y, coeff, cenrad, dx=dx, dy=dy, scale=scale
 
   psfsize = (size(coeff, /dimen))[0]
-  ncoeff = (size(coeff, /dimen))[2]
+  if size(coeff, /n_dimen) EQ 3 then begin
+     ncoeff = (size(coeff, /dimen))[2]
+  endif else ncoeff = 1
   npsf = n_elements(x) 
   ndeg = long(sqrt(ncoeff*2))-1
   if (ndeg+1)*(ndeg+2)/2 NE ncoeff then stop
