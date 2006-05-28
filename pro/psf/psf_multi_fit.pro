@@ -75,11 +75,12 @@ pro psf_multi_fit, stamps, stampivar, psfs, par, sub, faint, nfaint=nfaint
      psf = psfs[*, *, i]
      im = stamps[*, *, i]-psf
      iv = stampivar[*, *, i]
-     
+     status = 1B
+
      for j=0, nfaint-1 do begin 
 ; -------- look for another peak
         maxval = max(im*fmask, maxind)
-        if maxval*sqrt(iv[maxind]) GT nsigma then begin 
+        if (maxval*sqrt(iv[maxind]) GT nsigma) and (status EQ 1B) then begin 
 
            ix = maxind mod npix
            iy = maxind  /  npix
