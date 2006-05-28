@@ -48,13 +48,20 @@
 function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
             cond=cond, scale=scale
 
-  x0 = par.boxrad-par.fitrad
-  x1 = par.boxrad+par.fitrad
-
+; -------- check inputs
   psfsize = (size(stack, /dimen))[0]
   if psfsize NE (2*par.boxrad+1) then message, 'parameter mismatch'
   if NOT keyword_set(scale) then scale = double([2048, 1361])
   if n_elements(scale) NE 2 then message, 'scale should have 2 elements'
+  if size(stack, /n_dimen) EQ 2 then begin
+     cf = stack
+     ndeg = 0
+     cond = cf*0+1.0
+     return, cf
+  endif
+
+  x0 = par.boxrad-par.fitrad
+  x1 = par.boxrad+par.fitrad
 
   nstamp = (size(stack, /dimen))[2]
   ncoeff = (ndeg+1)*(ndeg+2)/2
