@@ -51,7 +51,7 @@
 ;------------------------------------------------------------------------------
 pro hogg_iter_linfit, aa,yy,ww,xx,covar=covar,nsigma=nsigma,maxiter=maxiter, $
                       median=median,verbose=verbose,sacred=sacred, $
-                      truesigma=truesigma
+                      truesigma=truesigma, condition=condition
 
 ; make everything double
    aa= double(aa)
@@ -154,6 +154,10 @@ pro hogg_iter_linfit, aa,yy,ww,xx,covar=covar,nsigma=nsigma,maxiter=maxiter, $
    endif else begin
      covar= aatwwaainv*ms*ngood/ndof
    endelse
+
+; condition number of matrix
+   if arg_present(condition) then $
+     condition = cond(aatwwaainv, /double, lnorm=2)
 
 ; catch ugliness
    if (iteration GT 1) AND ((nn-nbad) LE mm) then begin
