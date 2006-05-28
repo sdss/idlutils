@@ -90,9 +90,12 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
   for i=x0, x1 do begin 
      for j=x0, x1 do begin 
         W = reform(ivar[i, j, *])        ; should have noise floor here!
+
+        W = W < (min(W)*100)
         data = reform(stack[i, j, *])
-        hogg_iter_linfit, A, data, W, coeff, nsigma=3, /median, $
+        hogg_iter_linfit, A, data, W, coeff, nsigma=5, /median, $
           /truesigma, condition=condition
+
         cf[i, j, *] = coeff
         cond[i, j] = condition
      endfor
@@ -100,11 +103,13 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
 
 ; -------- reject
   if keyword_set(reject) then begin 
-     nsigma = 3
+     nsigma = 4
      model = psf_eval(x, y, cf, par.cenrad)
      bad = (model-stack)^2*ivar GT nsigma^2
      nbad = total(total(bad[x0:x1, x0:x1, *], 1), 1)
      good = where(nbad LE 5, ngood)
+     if ngood LT 1 then message, 'Bad news - we rejected all the stars!'
+
      splog, 'keeping ', ngood, ' stars.'
      cf = psf_polyfit(stack[*, *, good], ivar[*, *, good], x[good], y[good], $
                   par, ndeg=ndeg, cond=cond, scale=scale)
