@@ -63,8 +63,8 @@ function psf_par
          
 ; nsigma ?
 ; nfaint?
-; use ivar in psf_fit
-; check condition of matrix in psf_fit
+; use ivar in psf_polyfit
+; check condition of matrix in psf_polyfit
 
 
   return, par
@@ -105,103 +105,6 @@ pro psfplot, sub, x, coeff=coeff, bin=bin
   endfor 
 
   return
-end
-
-
-function psf_eval, x, y, coeff, cenrad, dx=dx, dy=dy
-
-  psfsize = (size(coeff, /dimen))[0]
-  ncoeff = (size(coeff, /dimen))[2]
-  npsf = n_elements(x) 
-  ndeg = long(sqrt(ncoeff*2))-1
-  if (ndeg+1)*(ndeg+2)/2 NE ncoeff then stop
-  
-; -------- compute A matrix
-  A = dblarr(ncoeff, npsf)
-  col = 0
-  xd = double(x)
-  yd = double(y)
-  for ord=0L, ndeg do begin
-     for ypow=0, ord do begin 
-        xpow = (ord-ypow)
-        A[col, *] = xd^xpow * yd^ypow
-        col = col+1
-     endfor
-  endfor
-
-  psfs = fltarr(psfsize, psfsize, npsf)
-  for i=0L, psfsize-1 do begin 
-     for j=0L, psfsize-1 do begin 
-        psfs[i, j, *] = reform(coeff[i, j, *])#A
-     endfor
-  endfor
-
-  if keyword_set(dx) AND keyword_set(dy) then begin 
-     for i=0L, npsf-1 do begin 
-        psfs[*, *, i] = sshift2d(psfs[*, *, i], [dx[i], dy[i]])
-        psfs[*, *, i] = psfs[*, *, i]/psf_norm(psfs[*, *, i], cenrad)
-     endfor
-  endif
-
-  return, psfs
-end
-
-
-
-; make sure the outliers are rejected on a star by star basis. 
-; /reject rejects whole stars
-function psf_fit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject
-
-  x0 = par.boxrad-par.fitrad
-  x1 = par.boxrad+par.fitrad
-
-  psfsize = (size(stack, /dimen))[0]
-  if psfsize NE (2*par.boxrad+1) then message, 'parameter mismatch'
-
-  nstamp = (size(stack, /dimen))[2]
-  ncoeff = (ndeg+1)*(ndeg+2)/2
-  if NOT keyword_set(ndeg) then ndeg = 1
-
-  cf = fltarr(psfsize, psfsize, ncoeff)
-
-; -------- construct A matrix
-  A = dblarr(ncoeff, nstamp)
-  col = 0
-  xd = double(x)
-  yd = double(y)
-  for ord=0L, ndeg do begin
-     for ypow=0, ord do begin 
-        xpow = (ord-ypow)
-        A[col, *] = xd^xpow * yd^ypow
-        col = col+1
-     endfor
-  endfor
-
-; -------- do fit
-;  W = dblarr(nstamp)+1
-  for i=x0, x1 do begin 
-     for j=x0, x1 do begin 
-        W = reform(ivar[i, j, *])        ; should use ivar here!
-        data = reform(stack[i, j, *])
-        hogg_iter_linfit, A, data, W, coeff, nsigma=3, /median, /truesigma
-        cf[i, j, *] = coeff
-     endfor
-  endfor
-
-; -------- reject
-  if keyword_set(reject) then begin 
-     nsigma = 3
-     model = psf_eval(x, y, cf, par.cenrad)
-     bad = (model-stack)^2*ivar GT nsigma^2
-     nbad = total(total(bad[x0:x1, x0:x1, *], 1), 1)
-     good = where(nbad LE 5, ngood)
-     splog, 'keeping ', ngood, ' stars.'
-     cf = psf_fit(stack[*, *, good], ivar[*, *, good], x[good], y[good], $
-                  par, ndeg=ndeg)
-
-  endif
-
-  return, cf
 end
 
 
@@ -398,7 +301,7 @@ function psf_fit_coeffs, image, ivar, satmask, par, status=status
   recon = sub1+psfs0
 
 ; -------- do spatial PSF fit
-  cf = psf_fit(recon, stampivar, x, y, par, ndeg=3, /reject)
+  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=3, /reject, cond=cond)
   psfs1 = psf_eval(x, y, cf, par.cenrad)
 
   psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
@@ -412,8 +315,10 @@ function psf_fit_coeffs, image, ivar, satmask, par, status=status
   chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs1, sub3
 
   recon = sub3+psfs1
-  cf = psf_fit(recon, stampivar, x, y, par, ndeg=3, /reject)
+  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=3, /reject, cond=cond)
   psfs2 = psf_eval(x, y, cf, par.cenrad)
+
+print, '--------> CONDITION NUMBER ', max(cond)
 
 ; -------- maybe make room for some QA stuff in here...
   delvarx, result
@@ -425,6 +330,7 @@ function psf_fit_coeffs, image, ivar, satmask, par, status=status
             boxrad: par.boxrad, $
             fitrad: par.fitrad, $
             cenrad: par.cenrad, $
+            condition: max(cond), $
             status: status}
 
   splog, 'Time: ', systime(1)-t1
@@ -529,7 +435,7 @@ pro tryit
   run = 273
   filtname = 'i'
   fstart = sdss_fieldrange(run, fend=fend)
-
+;fstart = 22
 ; -------- get parameters
   par = psf_par()
 
