@@ -1,4 +1,4 @@
-
+HOGG_ITER_LINFIT: Add condition keyword to return condition number.
 ANG2PIX_RING: Healpix routine that we forgot to check in.
 BALKAN_PLOT: Add /NOPLOT option (Blanton).
 DJS_RGB_MAKE: Add /TIFF keyword and 16,32 bit per channel support.
