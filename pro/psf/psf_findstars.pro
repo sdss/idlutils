@@ -157,4 +157,3 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
 
   return
 end
-
