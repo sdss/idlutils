@@ -64,6 +64,7 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
 
   dx = fltarr(nstar)            ; sub-pixel offsets
   dy = fltarr(nstar)
+  status = fltarr(nstar)
 
   for i=0L, nstar-1 do begin 
      stamp = fltarr(box, box)
@@ -73,8 +74,8 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
 
      if keyword_set(shift) then begin 
         stampcen = psf_stamp_center_iter(stamp, rad, maxiter=10, $
-                                  dx=dx0, dy=dy0)
-        dx[i]=dx0 & dy[i]=dy0
+                                  dx=dx0, dy=dy0, status=status0)
+        dx[i]=dx0 & dy[i]=dy0 & status[i]=status0
         stamp = temporary(stampcen)
      endif
 
@@ -85,11 +86,25 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
 
   endfor
 
-; -------- reject those where central pixel is not the highest.
+; -------- reject those where central pixel is not consistent with
+;          being the highest.
 
   cenbrt = bytarr(nstar)
-  for i=0L, nstar-1 do cenbrt[i] = max(arr[*, *, i]) EQ arr[boxrad, boxrad, i]
-  wbrt = where(cenbrt, nbrt)
+  c0 = boxrad-par.cenrad
+  c1 = boxrad+par.cenrad
+  for i=0L, nstar-1 do begin
+     maxpix = max(arr[*, *, i]*(stampivar[*, *, i] NE 0), maxind)
+     maxpixivar = (stampivar[*, *, i])[maxind]
+     cen       = arr[boxrad, boxrad, i]
+     cenivar   = stampivar[boxrad, boxrad, i]
+     cenmax = max(arr[c0:c1, c0:c1, i]*(stampivar[c0:c1, c0:c1, i] NE 0))
+
+; -------- either center pixel is brightest OR is not significantly
+;          LESS than the brightest AND brightest is nearby. 
+     cenbrt[i] = ((maxpix-arr[boxrad, boxrad, i])*sqrt(maxpixivar*cenivar) $
+       LT (2*sqrt(maxpixivar + cenivar))) AND (maxpix EQ cenmax)
+  endfor
+  wbrt = where(cenbrt and (status EQ 1), nbrt)
 
   if nbrt EQ 0 then message, 'no stars are bright - this is BAD.'
   arr = arr[*, *, wbrt]
