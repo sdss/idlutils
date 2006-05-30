@@ -291,45 +291,60 @@ function psf_fit_coeffs, image, ivar, satmask, par, status=status
   nstamp = n_elements(dx) 
 
 ; -------- get median psf
-  median_psf = djs_median(stamps, 3)
-  psfs0 = stamps
-  for i=0L, nstamp-1 do psfs0[*, *, i] = median_psf
-
-  psf_multi_fit, stamps, stampivar, psfs0, par, sub, faint, nfaint=3
-  psf_zero, stamps, stampivar, sub, median_psf, par, faint, chisq
-  stamp_renorm, stamps, stampivar, par
-
-  psf_multi_fit, stamps, stampivar, psfs0, par, sub1, faint, nfaint=3
-; maybe recenter here
-  recon = sub1+psfs0
-
-; -------- do spatial PSF fit
-  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
-
-; -------- if condition number is bad try again
-  while max(cond) GT 1000 do begin 
-     ndeg--
-     splog, 'Condition Number:', max(cond), '  Falling back to ndeg =', ndeg
-     if ndeg EQ -1 then stop
-     cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
-  endwhile
+  if nstamp GT 1 then begin
+     median_psf = djs_median(stamps, 3)
      
 
-  psfs1 = psf_eval(x, y, cf, par.cenrad)
+     psfs0 = stamps
+     for i=0L, nstamp-1 do psfs0[*, *, i] = median_psf
 
-  psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
+     psf_multi_fit, stamps, stampivar, psfs0, par, sub, faint, nfaint=3
+     psf_zero, stamps, stampivar, sub, median_psf, par, faint, chisq
+     stamp_renorm, stamps, stampivar, par
 
+; -------- first chisq cut.  Some garbage (diffraction spikes, etc.)
+;          may have leaked in - let's get it before we go on. 
+; or not     
+;     chisq = psf_chisq(stamps-psfs0, stampivar, par, dx=dx, dy=dy)
+     
+     psf_multi_fit, stamps, stampivar, psfs0, par, sub1, faint, nfaint=3
+; maybe recenter here
+     recon = sub1+psfs0
+     
+; -------- do spatial PSF fit
+     cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
+     
+; -------- if condition number is bad try again
+     while max(cond) GT 1000 do begin 
+        ndeg--
+        splog, 'Condition Number:', max(cond), '  Falling back to ndeg =', ndeg
+        if ndeg EQ -1 then stop
+        cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
+     endwhile
+     
+     
+     psfs1 = psf_eval(x, y, cf, par.cenrad)
+     
+     psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
+     
 ;  stamps2pca, psfs1, comp=comp, coeff=coeff, recon=recon
-
-  chisq = psf_chisq(sub2, stampivar, par, dx=dx, dy=dy)
-
-  sub3 = sub2
-
-  chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs1, sub3
-
-  recon = sub3+psfs1
-  cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
-  psfs2 = psf_eval(x, y, cf, par.cenrad)
+     
+     chisq = psf_chisq(sub2, stampivar, par, dx=dx, dy=dy)
+     
+     sub3 = sub2
+     
+     chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs1, sub3
+     
+     recon = sub3+psfs1
+     cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
+     psfs2 = psf_eval(x, y, cf, par.cenrad)
+  endif else begin 
+     cond = 1.0
+     cf = stamps
+     ndeg = 0
+     chisq = 0.0
+     status = status OR 2
+  endelse
 
 print, '--------> CONDITION NUMBER ', max(cond)
 
@@ -449,7 +464,7 @@ pro tryit
   run = 273
   camcol = 1
   fstart = sdss_fieldrange(run, fend=fend)
-;fstart = 22
+
 ; -------- get parameters
   par = psf_par()
 
