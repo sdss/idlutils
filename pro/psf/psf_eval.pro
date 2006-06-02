@@ -29,7 +29,8 @@
 ;----------------------------------------------------------------------
 function psf_eval, x, y, coeff, cenrad, dx=dx, dy=dy, scale=scale
 
-  psfsize = (size(coeff, /dimen))[0]
+  psfsizex = (size(coeff, /dimen))[0]
+  psfsizey = (size(coeff, /dimen))[1]
   if size(coeff, /n_dimen) EQ 3 then begin
      ncoeff = (size(coeff, /dimen))[2]
   endif else ncoeff = 1
@@ -53,9 +54,9 @@ function psf_eval, x, y, coeff, cenrad, dx=dx, dy=dy, scale=scale
      endfor
   endfor
 
-  psfs = fltarr(psfsize, psfsize, npsf)
-  for i=0L, psfsize-1 do begin 
-     for j=0L, psfsize-1 do begin 
+  psfs = fltarr(psfsizex, psfsizey, npsf)
+  for i=0L, psfsizex-1 do begin 
+     for j=0L, psfsizey-1 do begin 
         psfs[i, j, *] = reform(coeff[i, j, *])#A
      endfor
   endfor
