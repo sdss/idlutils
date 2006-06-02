@@ -16,14 +16,17 @@
 ;   satmask   - saturated pixel mask (1=saturated)
 ;   min_sigma - minimum value (in sigma) for condition 2
 ;   c3fac     - consistency factor [in sigma] for condition 3
-;   psfvals   - values of psf at 1 pix and sqrt(2) pixels from center
-;   ind0      - index list of pixels to investigate
+;   psfvals   - values of psf at 1 pix and sqrt(2) pixels from center, as
+;               either a 2-element array or a [2,M] array for the M possible
+;               cosmics as defined in IND0
+;   ind0      - index list of pixels to investigate [M]
 ;
 ; OUTPUTS:
-;   result    - byte array of results, same length as ind0 (1=CR)
+;   result    - byte array of results, same length as ind0 [M] (1=CR)
 ;
 ; OPTIONAL OUTPUTS:
-;   neighbor  - index list of neighbors of just-found CRs
+;   neighbor  - index list of neighbors of just-found CRs, which is useful
+;               if this routine is called iteratively to find neighboring CRs
 ;
 ; EXAMPLES:
 ;   always called by psf_reject_cr

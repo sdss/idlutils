@@ -6,25 +6,27 @@
 ;   Find pixels contaminated by cosmic rays (CRs) using PSF criteria
 ;
 ; CALLING SEQUENCE:
-;   cr = psf_reject_cr(image, ivar, psfvals, satmask=, $
-;            nsigma=, cfac=, niter=, c2fudge=)
+;   crmask = psf_reject_cr(image, ivar, [ psfvals, ] satmask=, $
+;    [ pstr=, nsigma=, cfac=, niter=, c2fudge= ] )
 ;
 ; INPUTS:
 ;   image     - image to test
 ;   ivar      - inverse variance of image
 ;   psfvals   - values of psf at 1 pix and sqrt(2) pixels from center
+;               [2-element array]; must be set if PSTR is not
 ;   satmask   - saturated pixel mask (1=saturated)
+;
+; OPTIONAL KEYORDS:
+;   pstr      - ???
 ;   nsigma    - minimum value (in sigma) for condition 2 [default 6]
-;   cfac      - consistency factor [in sigma] for condition 3 [def 3]
-;   niter     - max number of iterations [def 6]
-;               c2fudge   - fudge factor to multiply psfvals by on
-;                           first pass [def 0.8] 
+;   cfac      - consistency factor [in sigma] for condition 3 [default 3]
+;   niter     - max number of iterations [default 6]
+;   c2fudge   - fudge factor to multiply psfvals by on first pass [default 0.8] 
 ;
 ; OUTPUTS:
-;   cr        - byte array, same size as image (1=CR)
+;   crmask    - byte array, same size as image (1=CR)
 ;
 ; EXAMPLES:
-;   
 ;
 ; COMMENTS:
 ;   Algorithms designed by R Lupton and J. Gunn, implemented in C by Lupton,
@@ -32,7 +34,7 @@
 ;    Now completely rewritten by D. Finkbeiner as psf_reject_cr.
 ;    see Lupton's CR.c in photo product for more. 
 ;
-;   do NOT need to call with zeroed image
+;   Do NOT need to call with zeroed image.
 ;   Lupton's screed is at: http://www.astro.princeton.edu/~rhl/photomisc/
 ;
 ; REVISION HISTORY:
@@ -40,12 +42,13 @@
 ;
 ;----------------------------------------------------------------------
 function psf_reject_cr, image, ivar, psfvals, satmask=satmask, $
-            nsigma=nsigma, cfac=cfac, niter=niter, c2fudge=c2fudge, pstr=pstr
+ nsigma=nsigma, cfac=cfac, niter=niter, c2fudge=c2fudge, pstr=pstr
 
 ; -------- check inputs
   if NOT keyword_set(image) then message, 'must set image'
   if NOT keyword_set(ivar) then message, 'must set ivar'
-  if NOT (keyword_set(psfvals) OR keyword_set(pstr)) then message, 'must set psfvals'
+  if NOT (keyword_set(psfvals) OR keyword_set(pstr)) then $
+   message, 'Must set PSFVALS or PSTR'
   if NOT keyword_set(nsigma) then nsigma = 6.0
   if NOT keyword_set(cfac) then cfac = 3.0
   if NOT keyword_set(niter)  then niter = 6
