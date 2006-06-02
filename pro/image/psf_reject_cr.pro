@@ -40,12 +40,12 @@
 ;
 ;----------------------------------------------------------------------
 function psf_reject_cr, image, ivar, psfvals, satmask=satmask, $
-            nsigma=nsigma, cfac=cfac, niter=niter, c2fudge=c2fudge
+            nsigma=nsigma, cfac=cfac, niter=niter, c2fudge=c2fudge, pstr=pstr
 
 ; -------- check inputs
   if NOT keyword_set(image) then message, 'must set image'
   if NOT keyword_set(ivar) then message, 'must set ivar'
-  if NOT keyword_set(psfvals) then message, 'must set psfvals'
+  if NOT (keyword_set(psfvals) OR keyword_set(pstr)) then message, 'must set psfvals'
   if NOT keyword_set(nsigma) then nsigma = 6.0
   if NOT keyword_set(cfac) then cfac = 3.0
   if NOT keyword_set(niter)  then niter = 6
@@ -83,10 +83,26 @@ function psf_reject_cr, image, ivar, psfvals, satmask=satmask, $
                                 ; cr_find investigates suspects,
                                 ; returns mpeak of same lenght (1=CR, 0=OK)
 
+; -------- if pstr set then get psfvals for each "suspect"
+     if keyword_set(pstr) then begin 
+        x0 = suspects mod sz[0]
+        y0 = suspects / sz[0]
+        cf = pstr.coeff
+        cen = pstr.boxrad
+        psfcore = psf_eval(x0, y0, cf[cen-1:cen+1, cen-1:cen+1, *])
+        peak = reform(psfcore[1, 1, *])
+        psfval1 = reform((psfcore[0, 1, *]+psfcore[2, 1, *])/2)/peak
+        psfval2 = reform((psfcore[1, 2, *]+psfcore[1, 0, *])/2)/peak
+        psfval3 = reform((psfcore[0, 2, *]+psfcore[2, 0, *])/2)/peak
+        psfval4 = reform((psfcore[0, 0, *]+psfcore[2, 2, *])/2)/peak
+        psfvals_use = transpose([[(psfval1+psfval2)/2.], [(psfval3+psfval4)/2.]])
+     endif else psfvals_use = psfvals
+
+
      c3fac = iiter EQ 0 ? cfac : 0.0
      thisc2 = iiter EQ 0 ? c2fudge[0] : 1.0
      mpeak = psf_reject_cr_single(im, gd, ivar, satmask, nsigma, $
-                                  c3fac, psfvals*thisc2, $
+                                  c3fac, psfvals_use*thisc2, $
                                   suspects, neighbor=neighbor)
      wrej  = where(mpeak, nrej)
 
