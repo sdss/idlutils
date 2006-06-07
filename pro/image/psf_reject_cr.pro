@@ -114,6 +114,7 @@ function psf_reject_cr, image, ivar, psfvals, satmask=satmask, $
   
 ; -------- otherwise examine neighbors
      cr[suspects[wrej]] = 1B
+     gd[suspects[wrej]] = 0B
      suspects = neighbor
 
   endfor
