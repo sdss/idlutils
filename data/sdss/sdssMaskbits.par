@@ -131,10 +131,11 @@ maskbits IMAGE_STATUS  9 NOISY_CCD   # Unphotometric score
 maskbits CALIB_STATUS  0 DEFAULT
 maskbits CALIB_STATUS  1 PT_CLOUDY
 maskbits CALIB_STATUS  2 PT_CLEAR
-maskbits CALIB_STATUS  3 UBER_EXTRAP_MJD
-maskbits CALIB_STATUS  4 UBER_EXTRAP_RUN
-maskbits CALIB_STATUS  5 UBER_OVERLAP
-maskbits CALIB_STATUS  6 UBER_PHOT
+maskbits CALIB_STATUS  3 UBER_UNPHOT
+maskbits CALIB_STATUS  4 UBER_EXTRAP_CLOUDY
+maskbits CALIB_STATUS  5 UBER_EXTRAP
+maskbits CALIB_STATUS  6 UBER_OVERLAP
+maskbits CALIB_STATUS  7 UBER_PHOT
 
 #------------------------------------------------------------------------------
 
