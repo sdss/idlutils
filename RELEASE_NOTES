@@ -1,3 +1,4 @@
+bin/evilmake: try supporting Darwin/x86 as long as IDL is PPC.
 
 DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
