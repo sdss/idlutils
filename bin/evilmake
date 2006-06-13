@@ -51,22 +51,26 @@ case $UNAME in
 		SDSS_CFLAGS=-O3 
 	;;
 	"Darwin" )
-           LDF77=ld
            SO_EXT=dylib
-           X_CFLAGS=-dynamic
-           SDSS_CFLAGS=-O2
+           X_CFLAGS="-dynamic -arch ppc"
            if [ `uname -m` == 'i386' ]; then
-		F77=gfortran
+               echo "Darwin/i386"
+		F77=g77
+                LDF77=gcc
 
-		LD=libtool
-		X_LD_FLAGS="-dynamic -undefined dynamic_lookup "
+		LD=gcc
                 export MACOSX_DEPLOYMENT_TARGET=10.4
+		X_LD_FLAGS="-dynamiclib -undefined dynamic_lookup -arch ppc -force_cpusubtype_ANY -single_module"
+                SDSS_CFLAGS=-O2
            else
+               echo "Darwin/ppc"
+               LDF77=ld
                F77=g77
                X_LD_FLAGS="-bundle /usr/lib/bundle1.o -L/usr/lib  -L/usr/lib/gcc/powerpc-apple-darwin8/4.0.0 -lc -lgcc -flat_namespace -undefined suppress"
                if [ `uname -r | cut -c 1` \< 8 ]; then
                        X_LD_FLAGS="-bundle /usr/lib/bundle1.o -L/usr/lib -lc -lcc_dynamic -flat_namespace -undefined suppress"
                fi
+               SDSS_CFLAGS=-O2
            fi
 	;;
 	"Linux" )
