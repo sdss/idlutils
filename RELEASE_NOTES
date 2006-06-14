@@ -1,4 +1,3 @@
-bin/evilmake: try supporting Darwin/x86 as long as IDL is PPC.
 
 DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
@@ -6,6 +5,23 @@ HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
 PSF_EVAL: Allow non-square PSF.
 PSF_REJECT_CR: Calculate PSFVALS for each location in image if PSTR is passed.
 PSF_REJECT_CR_SINGLE: Allow an array of PSFVALS, one for each suspect cosmic.
+
+bin/evilmake: Try supporting Darwin/x86 as long as IDL is PPC.
+              Notes from Craig Loomis:
+              - IDL 6.3 and under are PPC only, so all dylibs must also be ppc
+              - g77 v3.4 is the last/latest PPC compiler. You can install an
+                x86 gfortran if you need both.
+              - Various hideous problems are papered over by using
+                "gcc -dynamiclib" as the driver, instead of trying to figure
+                out the magic of the instant to feed ld or libtool.
+                [e.g. where is saveFP?]
+              - The PPC flags should be untouched and should work as well
+                or poorly as they ever did.
+              - This was tested with OS 10.4.5, and the latest gcc 4.0.1 XCode
+                (2.0.1).
+              - "-undefined dynamic_lookup" seems better than the older
+                "-undefined suppress ", but it requires
+                MACOSX_DEPLOYMENT_TARGET=10.4 for cross-compilers.
 
 -------------------------------------------------------------------------------
 v5_1_4 (May 31, 2006) running on IDL 5.4 - 6.2
