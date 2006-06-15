@@ -1,5 +1,6 @@
 
 DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
+GET_PSFVALS,PSF_VALIDATE: Move the latter bit of code out of the former.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
                than the NROWCHUNK keyword.
 PSF_EVAL: Allow non-square PSF.
@@ -22,6 +23,8 @@ bin/evilmake: Try supporting Darwin/x86 as long as IDL is PPC.
               - "-undefined dynamic_lookup" seems better than the older
                 "-undefined suppress ", but it requires
                 MACOSX_DEPLOYMENT_TARGET=10.4 for cross-compilers.
+data/sdss/sdssMaskbits.par: Change to CALIB_STATUS mask bits.
+src/Makefile: Stop building the slatec directory, which is no longer used.
 
 -------------------------------------------------------------------------------
 v5_1_4 (May 31, 2006) running on IDL 5.4 - 6.2
