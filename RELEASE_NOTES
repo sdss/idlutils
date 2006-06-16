@@ -24,6 +24,7 @@ bin/evilmake: Try supporting Darwin/x86 as long as IDL is PPC.
                 "-undefined suppress ", but it requires
                 MACOSX_DEPLOYMENT_TARGET=10.4 for cross-compilers.
 data/sdss/sdssMaskbits.par: Change to CALIB_STATUS mask bits.
+lib/Makefile: Fix (recent) bug copying to install directory.
 src/Makefile: Stop building the slatec directory, which is no longer used.
 
 -------------------------------------------------------------------------------
