@@ -32,6 +32,7 @@
 ;   labelcont       - label contours with numbers
 ;   internal_weight - use only the points in the image to determine
 ;                     contours
+;   nocontours      - don't plot the contours
 ;   nogreyscale     - don't plot the greyscale
 ;   adqgreyscale    - do greyscale in the "ADQ" style (only works when
 ;                     conditional is set)
@@ -75,7 +76,8 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       internal_weight=internal_weight, $
                       conditional=conditional, $
                       labelcont=labelcont, $
-                      nogreyscale=nogreyscale,adqgreyscale=adqgreyscale, $
+                      nocontours=nocontours,nogreyscale=nogreyscale, $
+                      adqgreyscale=adqgreyscale, $
                       xvec=xvec,yvec=yvec,grid=grid, $
                       cumimage=cumimage,outquantiles=outquantiles, $
                       outliers=outliers, outpsym=outliers_psym, $
@@ -220,8 +222,10 @@ if keyword_set(conditional) then begin
 ; otherwise overplot contours
 endif else begin
     if NOT keyword_set(labelcont) then labelcont=0
-    contour, cumimage,xvec,yvec,levels=levels,/overplot, $
-      c_labels=lonarr(n_elements(levels))+labelcont,c_thick=cthick
+    if (NOT keyword_set(nocontours)) then begin
+        contour, cumimage,xvec,yvec,levels=levels,/overplot, $
+          c_labels=lonarr(n_elements(levels))+labelcont,c_thick=cthick
+    endif
 endelse
 
 if keyword_set(outliers) then begin

@@ -9,8 +9,8 @@
 ;   data       the image
 ;   filename   name for the output PostScript file
 ; OPTIONAL INPUTS:
-;   pixscale   units per pixel, eg arcmin/pixel
-;   scalename  units, eg "arcmin"
+;   pixscale   units per pixel, eg arcmin/pixel; default 1.0
+;   scalename  units, eg "arcmin"; default "pixels"
 ;   lo,hi      levels to appear totally black (lo) and totally white (hi)
 ;              (these are in terms of sigma if sigma keyword is set); if
 ;              hi<lo, the image is made negative
@@ -19,7 +19,6 @@
 ;                psym and !P.SYMSIZE
 ;   psym       plotting symbol (may be vector)
 ; OUTPUTS:
-;              a PostScript file called filename
 ; KEYWORDS:
 ;   sigma      when set, take lo and hi to be in terms of the sigma in the
 ;              center part of the image from djs_iterstat, and relative to the
@@ -44,7 +43,7 @@ pro hogg_greyscale_plot, data,filename, $
 
 ; set defaults
 if NOT keyword_set(pixscale) then pixscale= 1.0
-if NOT keyword_set(scalename) then scalename= 'pix'
+if NOT keyword_set(scalename) then scalename= 'pixels'
 if NOT keyword_set(lo) then begin
     lo= -5.0
     hi= 5.0
@@ -60,11 +59,14 @@ if y1 LT 0 then y1= 0 & if y2 GE ny then y2= ny-1
 
 ; scale image
 mean= 0.0 & rms= 1.0
-if keyword_set(sigma) then $
-  djs_iterstat, data(x1:x2,y1:y2),mean=mean,sigma=rms
+if keyword_set(sigma) then begin
+    djs_iterstat, data[x1:x2,y1:y2],mean=mean,sigma=rms,sigrej=10.0
+    splog, 'find mean',mean
+    splog, 'find rms',rms
+endif
 if lo LT hi then image= (float(data)-(lo*rms+mean))/(hi*rms-lo*rms) $
 else image= ((lo*rms+mean)-float(data))/(lo*rms-hi*rms)
-image= (floor(image*255.99) > 0) < 255
+image= (floor(image*256.0) > 0) < 255
 
 ; "size" is width or height in inches
 size= 6.0
