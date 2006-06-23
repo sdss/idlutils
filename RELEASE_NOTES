@@ -3,6 +3,7 @@ DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
 GET_PSFVALS,PSF_VALIDATE: Move the latter bit of code out of the former.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
                than the NROWCHUNK keyword.
+HOGG_SCATTERPLOT: Add /NOCONTOURS option.
 PSF_EVAL: Allow non-square PSF.
 PSF_REJECT_CR: Calculate PSFVALS for each location in image if PSTR is passed.
 PSF_REJECT_CR_SINGLE: Allow an array of PSFVALS, one for each suspect cosmic.
