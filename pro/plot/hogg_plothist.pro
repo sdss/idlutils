@@ -96,12 +96,12 @@ endelse
 if (NOT keyword_set(dontplot)) then begin
     if NOT keyword_set(overplot) then begin
         plot, xrange,0.0*xrange,psym=0, $
-          xrange=xrange,yrange=yrange,/xstyle,/ystyle,linestyle=linestyle, $
+          xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
           _EXTRA=KeywordsForPlot,thick=1
     endif
-    oplot, xvec,hist,psym=10
+    oplot, xvec,hist,psym=10,linestyle=linestyle
     if keyword_set(ploterr) then $
-      djs_oploterr, xvec,hist,yerr=err,psym=0,linestyle=linestyle
+      djs_oploterr, xvec,hist,yerr=err,psym=0
 endif
 
 end

@@ -9,6 +9,8 @@
 ;   x1 - [M,N1] positions in M-dimensions
 ;   x2 - [M,N2] positions in M-dimensions
 ;   distance - match distance
+; OPTIONAL INPUTS:
+;   maxmatch - MRB: please explain!
 ; OUTPUTS:
 ;   m1 - [nmatch] matches to x1
 ;   m2 - [nmatch] matches to x2
