@@ -37,6 +37,7 @@
 ;-
 pro hogg_plothist, x,weight=weight, $
                    xrange=xrange,yrange=yrange,npix=npix, $
+                   linestyle=linestyle, $
                    xvec=xvec,hist=hist,err=err, $
                    overplot=overplot,ploterr=ploterr,log=log, $
                    meanweight=meanweight,totalweight=totalweight, $
@@ -95,12 +96,12 @@ endelse
 if (NOT keyword_set(dontplot)) then begin
     if NOT keyword_set(overplot) then begin
         plot, xrange,0.0*xrange,psym=0, $
-          xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+          xrange=xrange,yrange=yrange,/xstyle,/ystyle,linestyle=linestyle, $
           _EXTRA=KeywordsForPlot,thick=1
     endif
     oplot, xvec,hist,psym=10
     if keyword_set(ploterr) then $
-      djs_oploterr, xvec,hist,yerr=err,psym=0
+      djs_oploterr, xvec,hist,yerr=err,psym=0,linestyle=linestyle
 endif
 
 end
