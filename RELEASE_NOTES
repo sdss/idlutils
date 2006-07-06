@@ -1,4 +1,5 @@
 
+ASTR2GSSS: Moved from hoggpt product.
 DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
 GET_PSFVALS,PSF_VALIDATE: Move the latter bit of code out of the former.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
