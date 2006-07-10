@@ -24,14 +24,20 @@
 ;-
 ;------------------------------------------------------------------------------
 pro gridnd, x, ix=ix, binsize=binsize, grid=grid, ngrid=ngrid, $
-            xminmax=xminmax, nx=nx, igrid=igrid
+            xminmax=xminmax, nx=nx, igrid=igrid, nd=nd
 
 if(NOT keyword_set(binsize)) then binsize=1.
 
 if((size(x))[0] eq 1) then begin
-    mm=1
-    nn=n_elements(x)
-    x=reform(x, 1, nn)
+    if(NOT keyword_set(nd)) then begin
+        mm=1
+        nn=n_elements(x)
+        x1=reform(x, 1, nn)
+    endif else begin
+        mm=nd
+        nn=n_elements(x)/mm
+        x=reform(x, mm, nn)
+    endelse 
 endif else begin
     mm=(size(x,/dim))[0]
     nn=(size(x,/dim))[1]

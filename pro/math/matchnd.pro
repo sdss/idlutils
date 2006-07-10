@@ -23,14 +23,20 @@
 ;-
 ;------------------------------------------------------------------------------
 pro matchnd, x1, x2, distance, m1=m1, m2=m2, d12=d12, nmatch=nmatch, $
-             maxmatch=maxmatch
+             maxmatch=maxmatch, nd=nd
 
 if(n_elements(maxmatch) eq 0) then maxmatch=1
 
-if((size(x))[0] eq 1) then begin
-    mm=1
-    nn=n_elements(x1)
-    x1=reform(x1, 1, nn)
+if((size(x1))[0] eq 1) then begin
+    if(NOT keyword_set(nd)) then begin
+        mm=1
+        nn=n_elements(x1)
+        x1=reform(x1, 1, nn)
+    endif else begin
+        mm=nd
+        nn=n_elements(x1)/mm
+        x1=reform(x1, mm, nn)
+    endelse 
 endif else begin
     mm=(size(x1,/dim))[0]
     nn=(size(x1,/dim))[1]
@@ -49,9 +55,9 @@ splog, binsize
 distance2=distance^2
 
 gridnd, x1, ix=ix1, binsize=binsize, grid=grid1, ngrid=ngrid1, nx=nx, $
-  igrid=igrid1, xminmax=xminmax
+  igrid=igrid1, xminmax=xminmax, nd=nd
 gridnd, x2, ix=ix2, binsize=binsize, grid=grid2, ngrid=ngrid2, nx=nx, $
-  igrid=igrid2, xminmax=xminmax
+  igrid=igrid2, xminmax=xminmax, nd=nd
 
 ifilled=where(ngrid1 gt 0, nfilled)
 nmatch=0L
