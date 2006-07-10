@@ -276,3 +276,18 @@ maskbits T_EYEBALL 24 DUST_ASYMMETRY
 maskbits T_EYEBALL 25 NEAR_NEIGHBORS
 maskbits T_EYEBALL 26 MERGER
 maskbits T_EYEBALL 27 OUTFLOW
+
+#------------------------------------------------------------------------------
+
+maskbits M_EYEBALL 0 DONE
+maskbits M_EYEBALL 1 NOT_MERGER
+maskbits M_EYEBALL 2 QUESTIONABLE
+maskbits M_EYEBALL 3 DRY
+maskbits M_EYEBALL 4 TIDAL_TAILS
+maskbits M_EYEBALL 5 SHELLS
+maskbits M_EYEBALL 6 RING
+maskbits M_EYEBALL 7 MAJOR
+maskbits M_EYEBALL 8 MULTIPLE
+maskbits M_EYEBALL 9 ALL_RED
+maskbits M_EYEBALL 10 ALL_BLUE
+maskbits M_EYEBALL 11 MIXED_REDBLUE
