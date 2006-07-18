@@ -26,6 +26,7 @@
 ;   outliers_psym    - NEEDS DOCUMENTATION
 ;   outliers_color   - NEEDS DOCUMENTATION
 ;   outliers_symsize - NEEDS DOCUMENTATION
+;   grid        - input grid for running with "/usegrid"
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
 ;   conditional     - normalize each column separately
@@ -40,6 +41,9 @@
 ;   meanweight      - plot the mean of the weight values that land in
 ;                     that pixel, rather than the total; don't use
 ;                     with /conditional!
+;   usegrid         - use input grid rather than compute from x,y;
+;                     over-rules x,y inputs; needs matched
+;                     xnpix,ynpix; brittle
 ; OPTIONAL OUTPUTS:
 ;   xvec        - [xnpix] vector of x values of grid pixel centers
 ;   yvec        - [ynpix] vector of y values of grid pixel centers
@@ -84,6 +88,7 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       outcolor=outliers_color, outsymsize=outliers_symsize, $
                       ioutliers=ioutliers, $
                       meanweight=meanweight, $
+                      usegrid=usegrid, $
                       _EXTRA=KeywordsForPlot
 
 if(n_params() lt 2) then begin
@@ -140,13 +145,16 @@ if keyword_set(conditional) then begin
 endif
 
 ; make and fill 2-d grid
-; (this puts the grid in units of the weights, not per unitx per unity)
-grid= hogg_histogram(transpose([[x],[y]]),[[xrange],[yrange]],[xnpix,ynpix], $
-                     weight=weight)
-if keyword_set(meanweight) then begin
-    dgrid= hogg_histogram(transpose([[x],[y]]), $
-                          [[xrange],[yrange]],[xnpix,ynpix])
-    grid= grid/(dgrid+(dgrid EQ 0.0))
+; (this puts the grid in units of the weights, not per unitx per
+; unity)
+if (not keyword_set(usegrid)) then begin
+    grid= hogg_histogram(transpose([[x],[y]]),[[xrange],[yrange]], $
+                         [xnpix,ynpix],weight=weight)
+    if keyword_set(meanweight) then begin
+        dgrid= hogg_histogram(transpose([[x],[y]]), $
+                              [[xrange],[yrange]],[xnpix,ynpix])
+        grid= grid/(dgrid+(dgrid EQ 0.0))
+    endif
 endif
 
 ; renormalize columns, if necessary
