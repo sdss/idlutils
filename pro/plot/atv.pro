@@ -83,6 +83,7 @@ pro atv_initcommon
 ; that other IDL programs can access the atv internal data easily.
 
 common atv_state, state
+common atv_point, markcoord
 common atv_color, r_vector, g_vector, b_vector
 common atv_pdata, nplot, maxplot, plot_ptr
 common atv_images, $
@@ -193,7 +194,7 @@ state = {                   $
           statycenter_id: 0L, $          ; widget id for stat box y center
           statbox_min_id: 0L, $          ; widget id for stat min box
           statbox_max_id: 0L, $          ; widget id for stat max box
-          statbox_mean_id: 0L, $         ; widget id for stat mean box
+          statbox_mean_id: 0L, $         ; widget id for stat mean box, /block
           statbox_median_id: 0L, $       ; widget id for stat median box
           statbox_stdev_id: 0L, $        ; widget id for stat stdev box
           statzoom_size: 300, $          ; size of statzoom window
@@ -960,6 +961,8 @@ case eventchar of
     'c': atv_colplot
     'C': atv_colplot, /overplot
     's': atv_surfplot
+    'm': atv_markpoint
+    'k': atv_killpoint
     't': atv_contourplot
     'p': atv_apphot
     'i': atv_showstats
@@ -3713,6 +3716,61 @@ end
 
 ;--------------------------------------------------------------------
 
+pro atv_markpoint
+
+common atv_state
+common atv_point
+
+coord = state.coord
+
+nmarks=n_elements(markcoord)/2L
+
+newmarkcoord=fltarr(2, nmarks+1L)
+if(nmarks gt 0) then $
+  newmarkcoord[*,0:nmarks-1]=markcoord
+newmarkcoord[*, nmarks]=coord
+markcoord=newmarkcoord
+
+atverase
+atvplot, markcoord[0,*], markcoord[1,*], psym=4
+
+end
+
+;
+
+pro atv_killpoint
+
+common atv_state
+common atv_point
+
+coord = state.coord
+
+nmarks=n_elements(markcoord)/2L
+
+if(nmarks eq 0) then return
+
+dist2=(markcoord[0,*]-coord[0])^2+(markcoord[1,*]-coord[1])^2
+mindist2=min(dist2, imindist2)
+if(mindist2 gt 100.) then return
+
+if(nmarks eq 1) then begin
+    dum=temporary(markcoord)
+    atverase
+    return
+endif
+
+keep=bytarr(nmarks)+1
+keep[imindist2]=0
+ikeep=where(keep)
+markcoord=markcoord[*,ikeep]
+
+atverase
+atvplot, markcoord[0,*], markcoord[1,*], psym=4
+
+end
+
+;--------------------------------------------------------------------
+
 pro atv_contourplot
 
 common atv_state
@@ -5185,6 +5243,10 @@ pro atv, image, $
 
 common atv_state
 common atv_images
+common atv_point
+
+if(n_elements(markcoord) gt 0) then $
+  dum=temporary(markcoord)
 
 if (not(keyword_set(block))) then block = 0 else block = 1
 
