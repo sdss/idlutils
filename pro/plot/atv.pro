@@ -962,6 +962,7 @@ case eventchar of
     'C': atv_colplot, /overplot
     's': atv_surfplot
     'm': atv_markpoint
+    'd': atv_displaypoint
     'k': atv_killpoint
     't': atv_contourplot
     'p': atv_apphot
@@ -1132,7 +1133,7 @@ end
 ;      main atv routines for scaling, displaying, cursor tracking...
 ;-----------------------------------------------------------------------
 
-pro atv_displayall
+pro atv_displayall, first=first
 
 ; Call the routines to scale the image, make the pan image, and
 ; re-display everything.  Use this if the scaling changes (log/
@@ -3736,6 +3737,24 @@ atvplot, markcoord[0,*], markcoord[1,*], psym=4
 
 end
 
+;--------------------------------------------------------------------
+
+pro atv_displaypoint
+
+common atv_state
+common atv_point
+
+coord = state.coord
+
+nmarks=n_elements(markcoord)/2L
+
+if(nmarks gt 0) then begin
+    atverase
+    atvplot, markcoord[0,*], markcoord[1,*], psym=4
+endif
+
+end
+
 ;
 
 pro atv_killpoint
@@ -5239,7 +5258,8 @@ pro atv, image, $
          align = align, $
          stretch = stretch, $
          nest = nest, $
-         header = header
+         header = header, $
+         mark = mark
 
 common atv_state
 common atv_images
@@ -5247,6 +5267,10 @@ common atv_point
 
 if(n_elements(markcoord) gt 0) then $
   dum=temporary(markcoord)
+
+if(keyword_set(mark)) then begin
+    markcoord= mark
+endif
 
 if (not(keyword_set(block))) then block = 0 else block = 1
 
@@ -5384,6 +5408,7 @@ if (newimage EQ 1) then begin
     atv_displayall
     
     atv_resetwindow
+
 endif
 
 ; Register the widget with xmanager if it's not already registered
@@ -5396,7 +5421,12 @@ if (not(xregistered('atv', /noshow))) then begin
     ; the procedure continues below.  If blocking, then the state
     ; structure doesn't exist any more so don't set active window.
     if (block EQ 0) then state.active_window_id = userwindow
+
+
+    if(n_elements(markcoord) gt 0) then $
+      mark= markcoord
 endif
+
 
 end
 
