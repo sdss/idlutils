@@ -2,7 +2,9 @@
 ASTR2GSSS: Moved from hoggpt product.
 ATV: New "m" and "k" keys mark and delete points 
 DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
+EMBED_STAMP: Fix to make efficient for large stamps.
 GET_PSFVALS,PSF_VALIDATE: Move the latter bit of code out of the former.
+GRIDND,MATCHND: Fix single-element bug.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
                than the NROWCHUNK keyword.
 HOGG_SCATTERPLOT: Add /NOCONTOURS option.
@@ -27,6 +29,7 @@ bin/evilmake: Try supporting Darwin/x86 as long as IDL is PPC.
                 "-undefined suppress ", but it requires
                 MACOSX_DEPLOYMENT_TARGET=10.4 for cross-compilers.
 data/sdss/sdssMaskbits.par: Change to CALIB_STATUS mask bits.
+               Add M_EYEBALL mask bits (Blanton).
 lib/Makefile: Fix (recent) bug copying to install directory.
 src/Makefile: Stop building the slatec directory, which is no longer used.
 
