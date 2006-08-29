@@ -96,6 +96,10 @@ endif else begin
                            double(tol), long(vcirc), long(nv), long(nve), $
                            double(ve_p), double(angle_p), long(ipv_p), $
                            long(gp_p), long(nev), long(nev0), long(ev_p))
+    if(nv eq 0) then begin
+        splog, 'Cannot determine vertices!!'
+        return
+    endif
     if(keyword_set(dangle)) then begin
         maxangle=max(angle_p[0L:nv-1L])
         nve=ceil(maxangle/(dangle*!DPI/180.)) > minside
