@@ -52,15 +52,22 @@ case $UNAME in
 	;;
 	"Darwin" )
            SO_EXT=dylib
-           X_CFLAGS="-dynamic -arch ppc"
+           X_CFLAGS="-dynamic"
            if [ `uname -m` == 'i386' ]; then
-               echo "Darwin/i386"
-		F77=g77
+                echo "Darwin/i386; requires a native (x86) IDL and gfortran"
+                idlver=`echo 'print, !VERSION.OS, " ", !VERSION.arch' | idl`
+                if [ "$idlver" != "darwin i386" ]; then
+                    echo idlutils now requires a native IDL on x86 machines >&2
+                    exit 1
+                fi
+
+	        F77=gfortran
                 LDF77=gcc
 
 		LD=gcc
-                export MACOSX_DEPLOYMENT_TARGET=10.4
-		X_LD_FLAGS="-dynamiclib -undefined dynamic_lookup -arch ppc -force_cpusubtype_ANY -single_module"
+                export MACOSX_DEPLOYMENT_TARGET=10.4 # This, of course, will bite us come 10.5, etc.
+                                                     # It changes how undefined lookups happen.
+		X_LD_FLAGS="-dynamiclib -undefined dynamic_lookup -single_module"
                 SDSS_CFLAGS=-O2
            else
                echo "Darwin/ppc"

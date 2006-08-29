@@ -1,3 +1,8 @@
+bin/evilmake: Try supporting Darwin/x86 with the x86-native IDL (6.3+).
+              - I don't think it's worth keeping the IDL/ppc on x86 evilmake 
+                stuff, and am overwriting it.
+              - evilmake now expects IDL/x86 and gfortran. See the 
+                http://hpc.sourceforge.net/ pages for links to gfortran.
 
 ASTR2GSSS: Moved from hoggpt product.
 ATV: New "m" and "k" keys mark and delete points 
