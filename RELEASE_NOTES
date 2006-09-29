@@ -1,18 +1,14 @@
-bin/evilmake: Try supporting Darwin/x86 with the x86-native IDL (6.3+).
-              - I don't think it's worth keeping the IDL/ppc on x86 evilmake 
-                stuff, and am overwriting it.
-              - evilmake now expects IDL/x86 and gfortran. See the 
-                http://hpc.sourceforge.net/ pages for links to gfortran.
-
 ASTR2GSSS: Moved from hoggpt product.
 ATV: New "m" and "k" keys mark and delete points 
 DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
 EMBED_STAMP: Fix to make efficient for large stamps.
 GET_PSFVALS,PSF_VALIDATE: Move the latter bit of code out of the former.
 GRIDND,MATCHND: Fix single-element bug.
+GVERTS: Add error message.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
                than the NROWCHUNK keyword.
 HOGG_SCATTERPLOT: Add /NOCONTOURS option.
+PLOT_POLY: Add SOPLOT option, and other changes by Blanton.
 PSF_EVAL: Allow non-square PSF.
 PSF_REJECT_CR: Calculate PSFVALS for each location in image if PSTR is passed.
 PSF_REJECT_CR_SINGLE: Allow an array of PSFVALS, one for each suspect cosmic.
@@ -33,6 +29,12 @@ bin/evilmake: Try supporting Darwin/x86 as long as IDL is PPC.
               - "-undefined dynamic_lookup" seems better than the older
                 "-undefined suppress ", but it requires
                 MACOSX_DEPLOYMENT_TARGET=10.4 for cross-compilers.
+              Try supporting Darwin/x86 with the x86-native IDL (6.3+).
+              - I don't think it's worth keeping the IDL/ppc on x86 evilmake 
+                stuff, and am overwriting it.
+              - evilmake now expects IDL/x86 and gfortran. See the 
+                http://hpc.sourceforge.net/ pages for links to gfortran.
+
 data/sdss/sdssMaskbits.par: Change to CALIB_STATUS mask bits.
                Add M_EYEBALL mask bits (Blanton).
 lib/Makefile: Fix (recent) bug copying to install directory.
