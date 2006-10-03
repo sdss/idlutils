@@ -26,4 +26,7 @@ decsec=strmid(numbers[2,*], 5)
 
 string2radec, rahr, ramin, rasec, decdeg, decmin, decsec, ra, dec
 
+ra=reform(ra, n_elements(ra))
+dec=reform(dec, n_elements(dec))
+
 end
