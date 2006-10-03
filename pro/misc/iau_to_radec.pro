@@ -16,13 +16,13 @@ pro iau_to_radec, name, ra, dec
 
 numbers=(stregex(name, '.*J([0-9|\.]*)([+|-][0-9|\.]*).*', /extr, /sub))
 
-rahr=strmid(numbers[1], 0, 2)
-ramin=strmid(numbers[1], 2, 2)
-rasec=strmid(numbers[1], 4)
+rahr=strmid(numbers[1,*], 0, 2)
+ramin=strmid(numbers[1,*], 2, 2)
+rasec=strmid(numbers[1,*], 4)
 
-decdeg=strmid(numbers[2], 0, 3)
-decmin=strmid(numbers[2], 3, 2)
-decsec=strmid(numbers[2], 5)
+decdeg=strmid(numbers[2,*], 0, 3)
+decmin=strmid(numbers[2,*], 3, 2)
+decsec=strmid(numbers[2,*], 5)
 
 string2radec, rahr, ramin, rasec, decdeg, decmin, decsec, ra, dec
 
