@@ -8,6 +8,7 @@ GVERTS: Add error message.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
                than the NROWCHUNK keyword.
 HOGG_SCATTERPLOT: Add /NOCONTOURS option.
+IAU_TO_RADEC: Vectorize.
 PLOT_POLY: Add SOPLOT option, and other changes by Blanton.
 PSF_EVAL: Allow non-square PSF.
 PSF_REJECT_CR: Calculate PSFVALS for each location in image if PSTR is passed.
