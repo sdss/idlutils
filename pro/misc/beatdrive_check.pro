@@ -30,6 +30,7 @@
 pro beatdrive_check, path, fits=fits, nocompare=nocompare
 
   tbegin = systime(1)
+  filesperchunk=1000
 
   a = indgen(2048, 1361)
   ref = fix(randomu(1, 2048, 1361)*10000)
@@ -46,22 +47,24 @@ pro beatdrive_check, path, fits=fits, nocompare=nocompare
      t1 = systime(1) 
      st = t1
 
-     for i=0, fct-1 do begin 
+     nchunk=long(fct/filesperchunk)
+     for ichunk=0, nchunk-1 do begin 
         t2 = st
-        fname = flist[i]
-        openr, rlun, fname, /get_lun
-        readu, rlun, a
-        free_lun, rlun
-        if NOT keyword_set(nocompare) then begin 
-           if array_equal(a, ref) eq 0 then begin 
-              print, 'In file ', fname
-              message, 'Array not equal to expected reference array.'
-           endif
-        endif 
+        for i=ichunk*filesperchunk,(ichunk+1)*filesperchunk-1 do begin 
+            fname = flist[i]
+            openr, rlun, fname, /get_lun
+            readu, rlun, a
+            free_lun, rlun
+            if NOT keyword_set(nocompare) then begin 
+                if array_equal(a, ref) eq 0 then begin 
+                    print, 'In file ', fname
+                    message, 'Array not equal to expected reference array.'
+                endif
+            endif
+        endfor
         st = systime(1)
         av = (st-t1)/(i+1.d)
-        if (i mod 10) eq 0 then $
-          print, i, '  avg.', nmeg/(st-t2), av, st-t2
+        print, i, '  avg.', nmeg*filesperchunk/(st-t2), av, (st-t2)/filesperchunk
      endfor 
      print, 'files read:', fct
      print, 'In directory: ', dir
