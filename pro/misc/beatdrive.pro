@@ -38,7 +38,7 @@ pro beatdrive, path, fits=fits, size=size
   close, /all
 
 ; -------- see if we can make "path"
-  spawn, ['mkdir', '-p', path], res, /noshell
+  file_mkdir, path
   if file_test(path, /dir) EQ 0 then begin 
      print, 'You do not have permission to create ', path
      return
@@ -76,10 +76,9 @@ pro beatdrive, path, fits=fits, size=size
   for i=0L, nfile-1 do begin 
      t2 = st
      if (i mod nperdir) eq 0 then begin 
-        cmd = concat_dir('mkdir -p '+path, string(i/nperdir, format='(I3.3)'))
-        print & print, 'Making new directory with'
-        print, cmd
-        spawn, cmd
+        newdir = concat_dir(path, string(i/nperdir, format='(I3.3)'))
+        file_mkdir, newdir
+        print & print, 'Making new directory: ', newdir
      endif 
      fname = string(i/nperdir, '/idR-00junk-c9-', i mod nperdir, '.fits', $
                     format='(I3.3,A,I5.5,A)')
@@ -92,7 +91,7 @@ pro beatdrive, path, fits=fits, size=size
      endelse 
      st = systime(1)
      av = (st-t1)/(i+1.d)
-     print, i, '  avg.', nmeg/(st-t2), av, st-t2
+     if (i mod 10) eq 0 then print, i, '  avg.', nmeg/(st-t2), av, st-t2
      dt[i] = (st-t2)
   endfor 
 
