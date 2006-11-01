@@ -1,14 +1,15 @@
+
 -------------------------------------------------------------------------------
 v5_1_5 (October 16, 2006) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
 Tagged to fix Makefile bug in v5_1_4
 
 ASTR2GSSS: Moved from hoggpt product.
-ATV: New "m" and "k" keys mark and delete points 
-BEATDRIVE: use native file_mkdir, cosmetic changes
+ATV: New "m" and "k" keys mark and delete points .
+BEATDRIVE,BEATDRIVE_CHECK: Use native FILE_MKDIR; cosmetic changes.
 DJS_ITERSTAT: Add optional INVVAR input, and NEWIVAR output.
 EMBED_STAMP: Fix to make efficient for large stamps.
 GET_PSFVALS,PSF_VALIDATE: Move the latter bit of code out of the former.
-GAUNTFF: Gaunt factor for free-free emission
+GAUNTFF: New function for Gaunt factor for free-free emission.
 GRIDND,MATCHND: Fix single-element bug.
 GVERTS: Add error message.
 HOGG_MRDFITS: Add optional NCHUNK keyword, which is more convenient
