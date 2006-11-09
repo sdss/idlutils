@@ -1,4 +1,7 @@
 
+RESAMPLE_SPECTRUM: New function for a simple resampling of 1-D spectra
+               (modified from REBIN_SPECTRUM).
+
 -------------------------------------------------------------------------------
 v5_1_5 (October 16, 2006) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
 Tagged to fix Makefile bug in v5_1_4
