@@ -865,6 +865,7 @@ pro/image/qu_to_baphi.pro -text
 pro/image/qzap.pro -text
 pro/image/rebin_spectrum.pro -text
 pro/image/reject_cr.pro -text
+pro/image/resample_spectrum.pro -text
 pro/mangle/angles_to_x.pro -text
 pro/mangle/balkan_plot.pro -text
 pro/mangle/cap_distance.pro -text
