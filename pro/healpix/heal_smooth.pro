@@ -64,7 +64,7 @@ function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
   bl  = exp(exponent >  (-300))
   if nsmall GT 0 then bl[nsmall] = 0
 
-  plot, l, bl, title='beam transform'
+;  plot, l, bl, title='beam transform'
 
 ; -------- apply smoothing to alm array
   lind = where(bl gt 0.001, nl)
