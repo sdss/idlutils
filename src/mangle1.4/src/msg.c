@@ -5,22 +5,6 @@
 #include "manglefn.h"
 #include <stdarg.h>
 
-#if defined(irix64)
-# include <stdarg.h>
-#endif
-#ifdef GCC
-# include <stdarg.h>
-#endif
-#ifdef Linux
-# include <stdarg.h>
-#endif
-#ifdef Darwin
-# include <stdarg.h>
-#endif
-#ifdef SunOS
-# include <sys/varargs.h>
-#endif
-
 extern int verbose;
 
 /*------------------------------------------------------------------------------
