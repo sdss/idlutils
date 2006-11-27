@@ -8,14 +8,24 @@
 UNAME=`uname`
 echo "OS type detected: "$UNAME
 case $UNAME in
-	"SunOS") if [  -d /proc ]; then
-		LDF77=g77
-			SO_EXT=so
-			X_CFLAGS="-KPIC"
-      X_FFLAGS="-e"
-			X_LD_FLAGS=-G
-		fi
-		SDSS_CFLAGS=-O3
+	"SunOS") 
+	    # Try to use Sun compiler if it exists.
+	    # which doesn't set useful exit value...
+	    haveF77=`which f77 | grep -q -v 'no f77' && echo yes`
+	    if test $haveF77; then
+	        echo "Using Sun f77 compiler (better not be g77 named f77)"
+		X_FFLAGS="-e"
+		X_CFLAGS="-KPIC"
+	        LDF77=f77
+	    else
+	        echo "Using GNU g77 compiler"
+		F77=g77
+		X_CFLAGS="-fPIC"
+	        LDF77=g77
+	    fi
+	    X_LD_FLAGS=-G
+	    SO_EXT=so
+	    SDSS_CFLAGS=-O3
 	;;
 	"HP-UX")
 		LDF77=g77
