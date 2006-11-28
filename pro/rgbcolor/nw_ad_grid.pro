@@ -44,7 +44,7 @@ IF (NOT keyword_set(linethick)) THEN linethick= 2
 lthick= 2000.*linethick/NX ; empirical HACK
 
 IF (NOT keyword_set(charsize)) THEN charsize= lthick/2.0
-charthick= charsize*3.0
+charthick= 2.0*charsize
 
 IF (NOT keyword_set(nra)) THEN nra=20
 IF (NOT keyword_set(ndec)) THEN ndec=20
