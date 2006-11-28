@@ -1083,11 +1083,13 @@ pro/psf/psf_validate.pro -text
 pro/rgbcolor/djs_mosaic_rgb.pro -text
 pro/rgbcolor/djs_rgb_make.pro -text
 pro/rgbcolor/hogg_bwify.pro -text
+pro/rgbcolor/hogg_close_overlay.pro -text
 pro/rgbcolor/hogg_directions.pro -text
 pro/rgbcolor/hogg_image_overlay.pro -text
 pro/rgbcolor/hogg_image_overlay_grid.pro -text
 pro/rgbcolor/hogg_image_overlay_plot.pro -text
 pro/rgbcolor/hogg_make_image_label.pro -text
+pro/rgbcolor/hogg_open_overlay.pro -text
 pro/rgbcolor/hogg_rgb_entropy.pro -text
 pro/rgbcolor/nw_ad_grid.pro -text
 pro/rgbcolor/nw_arcsinh.pro -text
