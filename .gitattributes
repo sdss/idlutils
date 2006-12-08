@@ -922,6 +922,7 @@ pro/math/gauss_overlap.pro -text
 pro/math/gausspix1d.pro -text
 pro/math/gridnd.pro -text
 pro/math/group_on_matches.pro -text
+pro/math/groupnd.pro -text
 pro/math/hogg_iter_linfit.pro -text
 pro/math/hogg_snap_integer.pro -text
 pro/math/legendre_zero.pro -text

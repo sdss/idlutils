@@ -2,7 +2,7 @@
 ; NAME:
 ;   matchnd
 ; PURPOSE:
-;   match two sets of points on a grid
+;   match two sets of points in N dimensions
 ; CALLING SEQUENCE:
 ;   matchnd, x1, x2, distance [, m1=, m2=, d12=, nmatch= ]
 ; INPUTS:
