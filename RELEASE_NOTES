@@ -1,4 +1,7 @@
 
+DJS_BATCH: Change the internal structure with the priority to be
+               a double-precision number rather than type long, since
+               this was then not working for small floating-point values.
 RESAMPLE_SPECTRUM: New function for a simple resampling of 1-D spectra
                (modified from REBIN_SPECTRUM).
 
