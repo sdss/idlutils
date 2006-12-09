@@ -86,7 +86,7 @@ function create_program_list, localfile, outfile, command, $
     'COMMAND', '', $
     'PID', 0L, $
     'UNIT', 0L, $
-    'PRIORITY', 1L, $
+    'PRIORITY', 1.d0, $
     'SELECTHOST', '', $
     'STATUS', 'UNASSIGNED' )
 
