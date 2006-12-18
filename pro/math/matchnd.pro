@@ -11,6 +11,7 @@
 ;   distance - match distance
 ; OPTIONAL INPUTS:
 ;   maxmatch - MRB: please explain!
+;   /silent  - don't splog anything
 ; OUTPUTS:
 ;   m1 - [nmatch] matches to x1
 ;   m2 - [nmatch] matches to x2
@@ -23,7 +24,7 @@
 ;-
 ;------------------------------------------------------------------------------
 pro matchnd, x1, x2, distance, m1=m1, m2=m2, d12=d12, nmatch=nmatch, $
-             maxmatch=maxmatch, nd=nd
+             maxmatch=maxmatch, nd=nd, silent=silent
 
 if(n_elements(maxmatch) eq 0) then maxmatch=1
 
@@ -50,7 +51,7 @@ endfor
 maxn=long((10.*n_elements(x1)+n_elements(x2))^(1./float(mm))) > $
   (long(1000000.^(1./float(mm))))
 binsize=(maxdiff/float(maxn)) > (distance)
-splog, binsize
+if (not keyword_set(silent)) then splog, binsize
 
 distance2=distance^2
 
