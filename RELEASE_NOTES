@@ -1,11 +1,29 @@
-MATCHND:  silent option
-HOGG_OPEN_OVERLAY:   open and close procedures for making overlays for
-HOGG_CLOSE_OVERLAY:  RGB images
+
+-------------------------------------------------------------------------------
+v5_1_6 (December 21, 2006) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
+Tagged for Hogg mosaic and overlay code.
+
 DJS_BATCH: Change the internal structure with the priority to be
                a double-precision number rather than type long, since
                this was then not working for small floating-point values.
+FREEFREE: Calculate free-free spectrum (from Finkbeiner's Halpha repository).
+HEAL_SMOOTH: Comment-out test (plotting) line.
+HOGG_OPEN_OVERLAY, HOGG_CLOSE_OVERLAY: New prodedures to open and close
+               overlays for RGB images.
+HOGG_MAKE_ASTR: Comments.
+MATCHND: All /silent option.
+NW_AD_GRID: Change charthick in plots.
 RESAMPLE_SPECTRUM: New function for a simple resampling of 1-D spectra
                (modified from REBIN_SPECTRUM).
+
+bin/evilmake: Replace one brittle SunOS build stanza with another.
+               - Ditch SunOS 4.x support.
+               - If 'f77' exists, assume it is the SunOS compiler and
+                 assume that the old build stanza worked.
+               - Otherwise run g77, etc. This works on SunOS 5.8 with
+                 the gnu 2.95.2 chain. Which does not have 64-bit support,
+                 so you have to run "idl -32" in any case.
+src/mangle1.4/src/msg.c: Remove hopefully unused pre-POSIX relic (Loomis).
 
 -------------------------------------------------------------------------------
 v5_1_5 (October 16, 2006) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
