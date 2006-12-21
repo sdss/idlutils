@@ -90,7 +90,6 @@ pro ex_max, weight,point,amp,mean,var,maxiterate=maxiterate,qa=qa, $
 
 ; compute (un-normalized) probabilities
     for j=0L,ngauss-1 do begin
-        stop
       invvar= invert(var[*,*,j],/double)
       if dimen GT 1 then $
         normamp= amp[j]*sqrt(determ(invvar,/double))/(2.0*!PI)^(dimen/2) $
