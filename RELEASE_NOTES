@@ -1,4 +1,6 @@
-
+MATCHND:  silent option
+HOGG_OPEN_OVERLAY:   open and close procedures for making overlays for
+HOGG_CLOSE_OVERLAY:  RGB images
 DJS_BATCH: Change the internal structure with the priority to be
                a double-precision number rather than type long, since
                this was then not working for small floating-point values.

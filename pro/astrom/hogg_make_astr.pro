@@ -4,6 +4,8 @@
 ; PURPOSE:
 ;   Generate the astrometric header for a particular pointing and
 ;   orientation.
+; COMMENTS:
+;   Adds NAXIS to the astrom structure.
 ; CALLING SEQUENCE:
 ;   astr= hogg_make_astr(racen,deccen,dra,ddec $
 ;                        [,pixscale=pixscale] [etc])
@@ -26,7 +28,6 @@
 ;   astr     - Astrometry structure with NAXIS keyword added
 ; OPTIONAL OUTPUTS:
 ;   pixscale  - Set, if not input
-; COMMENTS:
 ; EXAMPLES:
 ; BUGS:
 ; REVISION HISTORY:
