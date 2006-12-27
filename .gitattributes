@@ -807,6 +807,7 @@ pro/dust/setlog.pro -text
 pro/dust/wcs_coord2pix.pro -text
 pro/dust/wcs_getval.pro -text
 pro/dust/web_table.pro -text
+pro/fillspan.pro -text
 pro/first/first_coverage.pro -text
 pro/first/first_read.pro -text
 pro/fits/cmp_fits_files.pro -text
