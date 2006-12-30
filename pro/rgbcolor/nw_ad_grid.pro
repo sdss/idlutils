@@ -38,7 +38,10 @@ else $
   xy2ad, double(NX-1)/2D0,double(NY-1)/2D0,astr,rain,decin
 
 IF (NOT keyword_set(dra)) THEN dra= 0.1D0
+dra= abs(dra)
+dra= dra < 30.0                 ; maximum 30 deg
 IF (NOT keyword_set(ddec)) THEN ddec= 0.1D0
+ddec= abs(ddec)
 
 IF (NOT keyword_set(linethick)) THEN linethick= 2
 lthick= 2000.*linethick/NX ; empirical HACK
@@ -47,6 +50,7 @@ IF (NOT keyword_set(charsize)) THEN charsize= lthick/2.0
 charthick= 2.0*charsize
 
 IF (NOT keyword_set(nra)) THEN nra=20
+nra= nra < round(360.0/dra)
 IF (NOT keyword_set(ndec)) THEN ndec=20
 IF (NOT keyword_set(npoints)) THEN npoints=(1L+nra+ndec)*100L
 
@@ -54,6 +58,13 @@ racen = dra*round(rain/dra)
 deccen = ddec*round(decin/ddec)
 
 dec_line= deccen+ndec*ddec*(dindgen(2L*npoints+1L)-npoints)/double(npoints)
+if (min(dec_line) LT (-90.0)) then begin
+    dec_line= [-90.0,dec_line[where(dec_line GT (-90.0))]]
+endif
+if (max(dec_line) GT (90.0)) then begin
+    dec_line= [dec_line[where(dec_line LT (90.0))],90.0]
+endif
+ndec_line= n_elements(dec_line)
 
 temp=0
 FOR i=-nra,nra DO BEGIN
@@ -61,10 +72,10 @@ FOR i=-nra,nra DO BEGIN
     while (thisra GT 3.60D2) do thisra= thisra-3.60D2
     while (thisra LT 0D0) do thisra= thisra+3.60D2
     if keyword_set(gsa) then $
-      gsssadxy, gsa,thisra+dblarr(2L*npoints+1L),dec_line, $
+      gsssadxy, gsa,thisra+dblarr(ndec_line),dec_line, $
       x_dec_line,y_dec_line $
     else $
-      ad2xy, thisra+dblarr(2L*npoints+1L),dec_line,astr,x_dec_line,y_dec_line
+      ad2xy, thisra+dblarr(ndec_line),dec_line,astr,x_dec_line,y_dec_line
     valid = where((x_dec_line ge 0) and (x_dec_line le (NX-1)) and $
                   (y_dec_line ge 0) and (y_dec_line le (NY-1)),nvalid)
     IF (nvalid GT 1) THEN BEGIN
