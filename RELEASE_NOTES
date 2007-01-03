@@ -1,4 +1,11 @@
 
+FILLSPAN: New function for generating an evenly-spaced array (Loomis).
+NW_AD_GRID: Bug fixes for small or large bins.
+UNIXFIND: Faster implementation of the IDL FILE_SEARCH function (Loomis).
+
+data/sdss/sdssMaskbits.par: Added INCREMENT_CALIB bit in CALIB_STATUS flag,
+               for use by PCALIB_INCREMENTAL code.
+
 -------------------------------------------------------------------------------
 v5_1_6 (December 21, 2006) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
 Tagged for Hogg mosaic and overlay code.
