@@ -20,7 +20,7 @@
 ;
 ;       cnt=cnt: how many elements to get. Must be >= 2, to allow the
 ;       endpoints to fit.
-;
+;-
 function fillspan,lo,hi,spacing=spacing,cnt=cnt
     if (keyword_set(spacing) + keyword_set(cnt)) NE 1 then $
        message, 'either one of cnt or spacing must be specified'
