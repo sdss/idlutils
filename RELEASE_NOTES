@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v5_1_7 (January 5, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
+Tagged for Son-of-Spectro.
+
 FILLSPAN: New function for generating an evenly-spaced array (Loomis).
 NW_AD_GRID: Bug fixes for small or large bins.
 UNIXFIND: Faster implementation of the IDL FILE_SEARCH function (Loomis).
