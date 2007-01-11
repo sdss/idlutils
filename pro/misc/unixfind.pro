@@ -65,7 +65,7 @@ function unixfind,root,namematch,$
                   debug=debug
 
     ; Finesse top-level links
-    if (strmid(root, n_elements(root), 1) ne '/') then $
+    if (strmid(root, 1, 1, /rev) ne '/') then $
       root = string(root, "/")
 
     ; Deal with this more intelligently should it come up.
@@ -89,7 +89,7 @@ function unixfind,root,namematch,$
     else if (keyword_set(onlyfiles)) then opts = [opts, "-type f"]
 
     optstring = strjoin(opts, ' ') ; "-a "?
-    cmd = string("find '", root, "'", optstring, " -name '", namematch, "' -print")
+    cmd = "find '" + root, "'" + optstring + " -name '" + namematch + "' -print"
 
     if (keyword_set(debug)) then begin
         if (debug GT 1) then begin 
