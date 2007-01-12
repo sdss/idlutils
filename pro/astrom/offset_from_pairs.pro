@@ -7,8 +7,10 @@
 ; set errflag if best value on edge - DPF 26 Nov 2000
 ;-
 function offset_from_pairs, x1, y1, x2, y2, dmax=dmax, binsz=binsz, $
- minpeak=minpeak, errflag=errflag, bestsig=bestsig, verbose=verbose
+ minpeak=minpeak, errflag=errflag, bestsig=bestsig, verbose=verbose, $
+ minprobratio=minprobratio
 
+   if (not keyword_set(minprobratio)) then minprobratio= 1e-5
    sigcut = 5.0 ; A detection is sigcut sigma above the mean
    errflag = 0B
    if (NOT keyword_set(binsz)) then binsz = 1
@@ -69,7 +71,7 @@ nhalf = nhalf > 2 ; ??? We need this to not crash further down - DJS
    bestsig = (maxval-mean(smimg))/stddev(smimg)
 
    ; If prob1/prob2 is not really small then return
-   IF prob1 GT 1E-5 * prob2 THEN BEGIN 
+   IF prob1 GT minprobratio * prob2 THEN BEGIN 
       errflag = 1B
       splog, 'Maxval is only', bestsig, ' sigma above mean'
       splog, 'Odds of ', prob1/prob2, ' are not good enough'
