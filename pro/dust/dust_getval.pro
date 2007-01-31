@@ -99,6 +99,7 @@
 ;                or at Berkeley.
 ;   18-Mar-1999  DJS - Allow call with GALL=0 or GALB=0.
 ;   31-Mar-1999  DJS - Modified to use wcs_getval() instead of lambert_getval()
+;   30-Jan-2007  DPF - New endian criterion for default bhpath
 ;-
 ;------------------------------------------------------------------------------
 function dust_getval, gall, galb, infile=infile, skipline=skipline, $
@@ -152,19 +153,11 @@ function dust_getval, gall, galb, infile=infile, skipline=skipline, $
    endif
 
    if (map EQ 'BH' AND NOT keyword_set(bhpath)) then begin
-      spawn, '\arch', arch
-      case arch[N_elements(arch)-1] of
-         'sun4': bhpath = dust_dir+'/BHdat.sun4/'
-         'i686': bhpath = dust_dir+'/BHdat.i686/'
-         else:   bhpath = './'
-      endcase
+      bhpath = byte(1, 0) ? dust_dir+'/BHdat.i686/' : dust_dir+'/BHdat.sun4/'
    endif
 
    case strupcase(map) of
    'BH': begin
-;      value = wcs_getval(['bhngp.fits', 'bhsgp.fits'], $
-;               gall, galb, path=bhpath, interp=interp, $
-;               noloop=noloop, verbose=verbose)
       value = bh_rdfort( gall, galb, bhpath=bhpath )
       end
    'I100': begin
