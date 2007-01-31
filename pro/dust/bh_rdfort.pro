@@ -69,12 +69,8 @@ function bh_rdfort, gall, galb, infile=infile, outfile=outfile, $
    if (keyword_set(infile)) then $
     readcol, infile, gall, galb, format='F,F'
 
-   ifme = getenv('USER') EQ 'schlegel'
-   if (NOT keyword_set(bhpath)) then begin
-      if (ifme) then bhpath='/u/schlegel/dhome/dustpub/BHdat.i686/' $
-      else bhpath = ''
-   endif
-
+   if NOT keyword_set(bhpath) then bhpath = ''
+   
    nred = 1200
    nhi = 201
    DDTOR = !dpi / 180
