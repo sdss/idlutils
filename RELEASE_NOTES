@@ -1,3 +1,9 @@
+v5_2_0 (February 1, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
+Tagged for idlspec2d v5_2_0
+
+BH_RDFORT: Remove antique ugliness.
+DUST_GETVAL: Change endian-ness criterion
+UNIXFIND: String concatenation bugfix
 
 -------------------------------------------------------------------------------
 v5_1_7 (January 5, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
