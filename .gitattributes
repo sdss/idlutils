@@ -1026,6 +1026,7 @@ pro/mpfit/mpnormlim.pro -text
 pro/mpfit/mpnormtest.pro -text
 pro/mpfit/setfitparm.pro -text
 pro/mpfit/tnmin.pro -text
+pro/physics/evolve_electron_spectrum.pro -text
 pro/physics/freefree.pro -text
 pro/physics/gauntff.pro -text
 pro/physics/sigma_pbar_p.pro -text
