@@ -88,14 +88,22 @@ function psf_reject_cr_single, im, gd, ivar, satmask, min_sigma, $
   isigp  = sqrt(ivar[ind0])
 
 ; -------- do this with inverse sigmas to avoid special cases
+  if n_elements(PSFvals) EQ 2 then begin 
+     PSFvals0 = PSFvals[0]
+     PSFvals1 = PSFvals[1]
+  endif else begin 
+     PSFvals0 = reform(PSFvals[0, *])
+     PSFvals1 = reform(PSFvals[1, *])
+  endelse
+
   isigab = sqrt(ivar[xl, y0]*ivar[xr, y0])
-  cond31 = (p*isigp - c3fac)*isigab GE isigp*(back1*isigab+c3fac*sqrt(ivar[xl, y0]+ivar[xr, y0])/2)/PSFvals[0, *]
+  cond31 = (p*isigp - c3fac)*isigab GE isigp*(back1*isigab+c3fac*sqrt(ivar[xl, y0]+ivar[xr, y0])/2)/PSFvals0
   isigab = sqrt(ivar[x0, yd]*ivar[x0, yu])
-  cond32 = (p*isigp - c3fac)*isigab GE isigp*(back2*isigab+c3fac*sqrt(ivar[x0, yd]+ivar[x0, yu])/2)/PSFvals[0, *]
+  cond32 = (p*isigp - c3fac)*isigab GE isigp*(back2*isigab+c3fac*sqrt(ivar[x0, yd]+ivar[x0, yu])/2)/PSFvals0
   isigab = sqrt(ivar[xl, yu]*ivar[xr, yd])
-  cond33 = (p*isigp - c3fac)*isigab GE isigp*(back3*isigab+c3fac*sqrt(ivar[xl, yu]+ivar[xr, yd])/2)/PSFvals[1, *]
+  cond33 = (p*isigp - c3fac)*isigab GE isigp*(back3*isigab+c3fac*sqrt(ivar[xl, yu]+ivar[xr, yd])/2)/PSFvals1
   isigab = sqrt(ivar[xr, yu]*ivar[xl, yd])
-  cond34 = (p*isigp - c3fac)*isigab GE isigp*(back4*isigab+c3fac*sqrt(ivar[xr, yu]+ivar[xl, yd])/2)/PSFvals[1, *]
+  cond34 = (p*isigp - c3fac)*isigab GE isigp*(back4*isigab+c3fac*sqrt(ivar[xr, yu]+ivar[xl, yd])/2)/PSFvals1
 
 ; -------- if any if the four background estimates is good and
 ;          violates the PSF, then condition 3 is satisfied.
