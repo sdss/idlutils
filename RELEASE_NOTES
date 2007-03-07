@@ -1,3 +1,5 @@
+PSF_REJECT_CR_SINGLE: Fixed bug with spatially constant psfvals.
+-------------------------------------------------------------------------------
 v5_2_0 (February 1, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
 Tagged for idlspec2d v5_2_0
 
