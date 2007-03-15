@@ -38,7 +38,8 @@
 ;   08-May-2003  Written by J. Hennawi and D. Schlegel, Princeton
 ;-
 ;------------------------------------------------------------------------------
-pro atv_joe_writeps, filename, aspect=aspect, _EXTRA=KeywordsForTV
+pro atv_joe_writeps, filename, aspect=aspect, _EXTRA=KeywordsForTV $
+                     , CLOBBER = CLOBBER
 
    common atv_state
    common atv_images
@@ -101,7 +102,7 @@ pro atv_joe_writeps, filename, aspect=aspect, _EXTRA=KeywordsForTV
    tmp_result = findfile(forminfo.filename, count = nfiles)
 
    result = ''
-   if (nfiles GT 0) then begin
+   if (nfiles GT 0) AND NOT KEYWORD_SET(CLOBBER) then begin
       mesg = strarr(2)
       mesg[0] = 'Overwrite existing file:'
       tmp_string = strmid(forminfo.filename, $
