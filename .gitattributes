@@ -744,6 +744,7 @@ pro/bspline/cholesky_solve.pro -text
 pro/bspline/create_bsplineset.pro -text
 pro/bspline/fill_bspline.pro -text
 pro/bspline/intrv.pro -text
+pro/cooling/read_ds_cooling.pro -text
 pro/coord/angles_to_xyz.pro -text
 pro/coord/crossprod.pro -text
 pro/coord/current_mjd.pro -text
