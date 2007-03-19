@@ -10,6 +10,7 @@ bin/install_ups_table -text
 bin/memtrack -text
 bin/pstogif -text
 data/Makefile -text
+data/cooling/ABOUT.txt -text
 data/cooling/fetchdata.sh -text
 data/cooling/m+05.cie -text
 data/cooling/m-00.cie -text
