@@ -139,6 +139,7 @@ maskbits CALIB_STATUS   7  RESERVED3
 maskbits CALIB_STATUS   8  PT_CLEAR
 maskbits CALIB_STATUS   9  PT_CLOUDY
 maskbits CALIB_STATUS  10  DEFAULT
+maskbits CALIB_STATUS  11  NO_UBERCAL  # For matching to external catalogs.
 
 #------------------------------------------------------------------------------
 
