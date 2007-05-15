@@ -1,3 +1,4 @@
+PIXFONT: pixelize a font for inclusion in a pixelized image
 sdssMaskBits.par: Added explicit NO_UBERCAL CALIB_STATUS flag to give a handy 
                   value when matching to non calibrated areas.
 PSF_REJECT_CR_SINGLE: Fixed bug with spatially constant psfvals.
