@@ -89,8 +89,9 @@ function djs_icolor, color
              + 28 * (color EQ 'light gray') $
              + defcolor * (color EQ 'default')
 
-      if (!d.N_colors EQ 16777216) then begin
-        colors = red + ishft(green,8) + ishft(blue,16)  
+     device, get_decompose=de_compose
+      if((de_compose EQ 1) AND (!d.N_colors EQ 16777216)) then begin
+        colors = red + ishft(green,8) + ishft(blue,16)
         icolor = colors[icolor]
       endif
 
