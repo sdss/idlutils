@@ -90,7 +90,9 @@ function djs_icolor, color
              + defcolor * (color EQ 'default')
 
       if(strupcase(!D.NAME) eq 'X' OR strupcase(!D.NAME) eq 'WIN') then $
-     device, get_decompose=de_compose
+     device, get_decompose=de_compose $
+        else $
+        de_compose=1
       if((de_compose EQ 1) AND (!d.N_colors EQ 16777216)) then begin
         colors = red + ishft(green,8) + ishft(blue,16)
         icolor = colors[icolor]
