@@ -23,9 +23,9 @@
 ;   exponent    - stretch greyscale at exponent power; default 1.0
 ;   satfrac     - fraction of pixels to saturate in greyscale; default 0
 ;   darkest     - darkest shade at saturation; default 127; lower darker
-;   outliers_psym    - NEEDS DOCUMENTATION
-;   outliers_color   - NEEDS DOCUMENTATION
-;   outliers_symsize - NEEDS DOCUMENTATION
+;   outpsym    - NEEDS DOCUMENTATION
+;   outcolor   - NEEDS DOCUMENTATION
+;   outsymsize - NEEDS DOCUMENTATION
 ;   grid        - input grid for running with "/usegrid"
 ;   [etc]       - extras passed to "plot" command
 ; KEYWORDS:
@@ -89,6 +89,7 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       ioutliers=ioutliers, $
                       meanweight=meanweight, $
                       usegrid=usegrid, $
+  overplot=overplot,$
                       _EXTRA=KeywordsForPlot
 
 if(n_params() lt 2) then begin
@@ -130,8 +131,11 @@ x= reform(xxx,ndata)
 y= reform(yyy,ndata)
 
 ; make axes
-plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
-  _EXTRA=KeywordsForPlot,/nodata
+  plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+    _EXTRA=KeywordsForPlot,/nodata, noerase=keyword_set(overplot)
+;if (not keyword_set(overplot)) then $ ; jm07mar
+;  plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+;  _EXTRA=KeywordsForPlot,/nodata
 
 ; snap points to grid
 deltax= (xrange[1]-xrange[0])/double(xnpix)
@@ -204,9 +208,19 @@ if NOT keyword_set(nogreyscale) then begin
     tvgrid= mingrey+(maxgrey-mingrey)*((grid-mingrid)/(maxgrid-mingrid))^exponent
     tvgrid= (tvgrid < mingrey) > maxgrey
 
-; plot greyscale
-    tv, tvgrid,xrange[0],yrange[0],/data, $
-      xsize=(xrange[1]-xrange[0]),ysize=(yrange[1]-yrange[0]) 
+; plot greyscale; re-draw the axes
+    tvimage, tvgrid, overplot=overplot, _EXTRA=KeywordsForPlot
+    if (n_elements(KeywordsForPlot) ne 0L) then begin
+       KeywordsForPlot1 = KeywordsForPlot
+       if tag_exist(KeywordsForPlot1,'XTITLE') then KeywordsForPlot1.xtitle = ''
+       if tag_exist(KeywordsForPlot1,'YTITLE') then KeywordsForPlot1.ytitle = ''
+       if tag_exist(KeywordsForPlot1,'XTICKNAME') then KeywordsForPlot1.xtickname = replicate(' ',10)
+       if tag_exist(KeywordsForPlot1,'YTICKNAME') then KeywordsForPlot1.ytickname = replicate(' ',10)
+    endif
+    plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+      _EXTRA=KeywordsForPlot1,/nodata,/noerase,color=djs_icolor('default')
+;   tv, tvgrid,xrange[0],yrange[0],/data, $
+;     xsize=(xrange[1]-xrange[0]),ysize=(yrange[1]-yrange[0])
 endif
 
 ; plot quantiles, if necessary
@@ -263,9 +277,11 @@ if keyword_set(outliers) then begin
     endif
 endif
 
-; re-plot axes (yes, this is a HACK)
-!P.MULTI[0]= !P.MULTI[0]+1
-plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
-  _EXTRA=KeywordsForPlot,/nodata
+;; re-plot axes (yes, this is a HACK)
+;if (not keyword_set(overplot)) then begin
+;;  !P.MULTI[0]= !P.MULTI[0]+1
+;   plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+;     _EXTRA=KeywordsForPlot,/nodata,/noerase
+;endif
 
 end
