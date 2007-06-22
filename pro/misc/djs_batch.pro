@@ -234,22 +234,25 @@ pro batch_assign_job, ihost, iprog
       ; Create directories on remote machine for input files.
       ; Create all remote directories at once, then copy files into one
       ; directory at a time.
-      allinput = djs_filepath(*proglist[iprog].localfile, $
-       root_dir=hostlist[ihost].remotedir)
-      junk = fileandpath(allinput, path=newdir)
+      if (keyword_set(proglist[iprog].localfile)) then begin
+         allinput = djs_filepath(*proglist[iprog].localfile, $
+          root_dir=hostlist[ihost].remotedir)
+         junk = fileandpath(allinput, path=newdir)
 
-      iuniq = uniq(newdir, sort(newdir))
-      batch_spawn, prothost + 'mkdir -p ' $
-       + string(newdir[iuniq]+' ',format='(99a)')
+         iuniq = uniq(newdir, sort(newdir))
+         batch_spawn, prothost + 'mkdir -p ' $
+          + string(newdir[iuniq]+' ',format='(99a)')
 
-      for i=0, n_elements(iuniq)-1 do begin
-         newdir1 = newdir[iuniq[i]]
-         indx = where(newdir EQ newdir1)
+         for i=0, n_elements(iuniq)-1 do begin
+            newdir1 = newdir[iuniq[i]]
+            indx = where(newdir EQ newdir1)
 
-         tmp1 = string((*proglist[iprog].localfile)[indx]+' ',format='(99a )')
-         batch_spawn, cpstring + ' ' + tmp1 + ' ' $
-          + hostlist[ihost].remotehost + ':' + newdir1
-      endfor
+            tmp1 = string((*proglist[iprog].localfile)[indx]+' ', $
+             format='(99a )')
+            batch_spawn, cpstring + ' ' + tmp1 + ' ' $
+             + hostlist[ihost].remotehost + ':' + newdir1
+         endfor
+      endif
 
       ; Create directories on remote machine for output files
       ; (Not necessary if OUTFILE was not specified, and is a null pointer)
@@ -320,7 +323,8 @@ pro batch_finish_job, ihost, iprog
    cpstring = hostlist[ihost].cpstring
    prothost = hostlist[ihost].protocol + ' ' + hostlist[ihost].remotehost + ' '
 
-   if (keyword_set(cpstring)) then begin
+   if (keyword_set(cpstring) AND keyword_set(proglist[iprog].outfile)) $
+     then begin
 
       alloutput = djs_filepath(*proglist[iprog].outfile, $
        root_dir=hostlist[ihost].remotedir)
