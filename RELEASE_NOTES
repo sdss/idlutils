@@ -1,7 +1,14 @@
-PIXFONT: pixelize a font for inclusion in a pixelized image
-sdssMaskBits.par: Added explicit NO_UBERCAL CALIB_STATUS flag to give a handy 
-                  value when matching to non calibrated areas.
+
+DJS_BATCH: Bug fix to not crash if input file names (LOCALFILE) are
+               not specified.
+DJS_ICOLOR: Set de_compose to 1 for ps file (Blanton).
+HOGG_SCATTERPLOT: Fied multi-panel and IDL window issues (Hogg).
+PIXFONT: New function to pixelize a font for inclusion in a pixelized image.
 PSF_REJECT_CR_SINGLE: Fixed bug with spatially constant psfvals.
+
+data/sdss/sdssMaskBits.par: Added explicit NO_UBERCAL CALIB_STATUS flag
+               to give a handy value when matching to non calibrated areas.
+
 -------------------------------------------------------------------------------
 v5_2_0 (February 1, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
 Tagged for idlspec2d v5_2_0
