@@ -6,19 +6,19 @@
 ;   pixelize a font for inclusion in a pixelized image
 ;
 ; CALLING SEQUENCE:
-;   im = pixfont(str, xsize=, ysize=, charsize=, align=)
+;   im = pixfont(str, [ xsize=, ysize=, charsize=, align= ])
 ;
 ; INPUTS:
-;   str      - string to pixelize.  Can be array. 
+;   str      - String(s) to pixelize; if this is an array
 ;   
 ; KEYWORDS:
-;   xsize    - xsize of pixelized area  (default 1024)
-;   ysize    - ysize of pixelized area  (default 200)
+;   xsize    - xsize of pixelized area; default to 1024 pixels
+;   ysize    - ysize of pixelized area; default to 200 pixels
 ;   charsize - character size (default ysize/10)
-;   align    - (0=left, 0.5=center, 1=right, etc.)
+;   align    - Alignment, 0=left, 0.5=center, 1=right; default to 0 (left)
 ;
 ; OUTPUTS:
-;   im       - pixelized image of str
+;   im       - Byte image of dimensions XSIZE,YSIZE 
 ;
 ; RESTRICTIONS:
 ;   If you make the font too big, it will just run off the edge. 
