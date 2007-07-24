@@ -1081,6 +1081,7 @@ pro/plot/restore_sysvars.pro -text
 pro/plot/splot.pro -text
 pro/plot/splot_plugin_sdss_findimage.pro -text
 pro/plot/sysvars.pro -text
+pro/plot/tvimage.pro -text
 pro/psconfig/error_message.pro -text
 pro/psconfig/fsc_droplist.pro -text
 pro/psconfig/fsc_field.pro -text
