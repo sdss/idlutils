@@ -246,6 +246,8 @@ maskbits Q_EYEBALL 23 DOUBLE_Z
 maskbits Q_EYEBALL 24 PLANETARY_NEBULA
 maskbits Q_EYEBALL 25 BAD_PARENT_CENTER
 maskbits Q_EYEBALL 26 GOOD_Z
+maskbits Q_EYEBALL 27 USE_CHILD_IMAGE
+maskbits Q_EYEBALL 28 USE_CHILD_SPECTRUM
 
 #------------------------------------------------------------------------------
 
