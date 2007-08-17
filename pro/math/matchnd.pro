@@ -62,8 +62,10 @@ gridnd, x2, ix=ix2, binsize=binsize, grid=grid2, ngrid=ngrid2, nx=nx, $
 
 ifilled=where(ngrid1 gt 0, nfilled)
 nmatch=0L
-m1=-1L
-m2=-1L
+nmax=nn*100L
+m1=lonarr(nmax)
+m2=lonarr(nmax)
+d12=dblarr(nmax)
 for i=0L, nfilled-1L do begin
     i1tmp=*(grid1[ifilled[i]])
     ii1=lonarr(mm)
@@ -138,23 +140,39 @@ for i=0L, nfilled-1L do begin
             if(n_elements(icurr) gt maxmatch AND $
                maxmatch gt 0) then $
                 icurr=icurr[0:maxmatch-1L]
-            if(nmatch gt 0) then begin
-                m1=[m1, tmpm1[icurr]]
-                m2=[m2, tmpm2[icurr]]
-                d12=[d12, tmpd12[icurr]]
-            endif else begin
-                m1=[tmpm1[icurr]]
-                m2=[tmpm2[icurr]]
-                d12=[tmpd12[icurr]]
-            endelse
+            if(nmatch+n_elements(icurr) gt nmax) then begin
+                m1new=lonarr(nmax*2L)
+                m2new=lonarr(nmax*2L)
+                d12new=lonarr(nmax*2L)
+                m1new[0:nmatch-1]=m1
+                m2new[0:nmatch-1]=m2
+                d12new[0:nmatch-1]=d12
+                m1=m1new
+                m2=m2new
+                d12=d12new
+                m1new=0
+                m2new=0
+                d12new=0
+                nmax=nmax*2L
+            endif
+            m1[nmatch:nmatch+n_elements(icurr)-1L]=tmpm1[icurr]
+            m2[nmatch:nmatch+n_elements(icurr)-1L]=tmpm2[icurr]
+            d12[nmatch:nmatch+n_elements(icurr)-1L]=tmpd12[icurr]
             nmatch=nmatch+n_elements(icurr)
             istart=iend+1L
         endfor
     endif
 endfor
 
-isort=sort(m1*(max(m2)+1L)+m2)
-m1=m1[isort]
-m2=m2[isort]
+if(nmatch gt 0) then begin
+    m1=m1[0:nmatch-1]
+    m2=m2[0:nmatch-1]
+    d12=d12[0:nmatch-1]
+    
+    isort=sort(m1*(max(m2)+1L)+m2)
+    m1=m1[isort]
+    m2=m2[isort]
+    d12=d12[isort]
+endif
 
 end
