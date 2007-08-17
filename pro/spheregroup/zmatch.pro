@@ -4,8 +4,8 @@
 ; PURPOSE:
 ;   Match objects in ra, dec, and z
 ; CALLING SEQUENCE:
-;   zmatch, z1, ra1, dec1, z2, ra2, dec2, match_angle, match_z, $
-;      match1, match2, dangle, dz
+;   zmatch, z1, ra1, dec1, z2, ra2, dec2, mproj, mz, $
+;      match1, match2, dproj=, dz=, nmatch=, maxmatch=
 ; INPUTS:
 ;   z1          - redshifts 
 ;   ra1         - ra coordinates in degrees (N-dimensional array)
@@ -13,11 +13,17 @@
 ;   z2          - redshifts 
 ;   ra2         - ra coordinates in degrees (N-dimensional array)
 ;   dec2        - dec coordinates in degrees (N-dimensional array)
-;   matchlength - distance which defines a match (redshift units)
+;   mproj       - projected distance which defines a match (redshift units)
+;   mz          - redshift distance which defines a match (redshift units)
+; OPTIONAL INPUTS:
+;   maxmatch    - maximum number of matches per object (default to 1)
+;                 0 means unlimited
 ; OUTPUTS:
+;   dproj      - projected distance for each match
+;   dz         - redshift distance for each match
 ;   match1     - List of indices of matches in list 1; -1 if no matches
 ;   match2     - List of indices of matches in list 2; -1 if no matches
-;   distance12 - 
+;   nmatch     - number of matches
 ; COMMENTS:
 ;   Calls matchnd. 
 ;   Bases "closest" match on projected distance.
