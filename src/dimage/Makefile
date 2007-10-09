@@ -20,6 +20,7 @@ OBJECTS = \
 	dmedsmooth.o \
 	dselip.o \
 	dfind.o \
+	idl_dsmooth.o \
 	dsmooth.o \
 	dsigma.o \
 	idl_dobjects_multi.o \
