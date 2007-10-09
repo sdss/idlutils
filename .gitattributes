@@ -789,6 +789,8 @@ pro/cosmography/dpropmotdisdz.pro -text
 pro/cosmography/lookback.pro -text
 pro/cosmography/lumdis.pro -text
 pro/cosmography/propmotdis.pro -text
+pro/dimage/dmedsmooth.pro -text
+pro/dimage/dobjects_multi.pro -text
 pro/djsphot/djs_neff.pro -text
 pro/djsphot/djs_phot.pro -text
 pro/djsphot/djs_photcen.pro -text
@@ -1153,6 +1155,17 @@ pro/yanny/yanny_read.pro -text
 pro/yanny/yanny_readone.pro -text
 pro/yanny/yanny_write.pro -text
 src/Makefile -text
+src/dimage/Makefile -text
+src/dimage/dfind.c -text
+src/dimage/dimage.h -text
+src/dimage/dmedsmooth.c -text
+src/dimage/dobjects_multi.c -text
+src/dimage/dselip.c -text
+src/dimage/dsigma.c -text
+src/dimage/dsmooth.c -text
+src/dimage/export.h -text
+src/dimage/idl_dmedsmooth.c -text
+src/dimage/idl_dobjects_multi.c -text
 src/idlmangle/Makefile -text
 src/idlmangle/idl_garea.c -text
 src/idlmangle/idl_gverts.c -text
