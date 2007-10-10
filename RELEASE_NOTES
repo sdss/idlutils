@@ -2,12 +2,19 @@
 DJS_BATCH: Bug fix to not crash if input file names (LOCALFILE) are
                not specified.
 DJS_ICOLOR: Set de_compose to 1 for ps file (Blanton).
+DMEDSMOOTH,DOBJECTS_MULTI,DSMOOTH: Add Blanton's smoothing routines.
 HOGG_SCATTERPLOT: Fied multi-panel and IDL window issues (Hogg).
+MATCHND: Fix array expansion error.
 PIXFONT: New function to pixelize a font for inclusion in a pixelized image.
 PSF_REJECT_CR_SINGLE: Fixed bug with spatially constant psfvals.
 
 data/sdss/sdssMaskBits.par: Added explicit NO_UBERCAL CALIB_STATUS flag
                to give a handy value when matching to non calibrated areas.
+               Add USE_CHILD_IMAGE,USE_CHILD_SPECTRUM to Q_EYEBALL flag.
+src/Makefile: Add dimage directory.
+src/dimage/Makefile,dfind.c,dimage.h,dmedsmooth.c,dojects_multi.c,
+               dselip.c,dsigma.c,dsmooth.c,idl_dmedsmooth.c,
+               idl_dobjects_multi.c,idl_dsmooth.c: Add Blanton's smoothing code.
 
 -------------------------------------------------------------------------------
 v5_2_0 (February 1, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
@@ -17,6 +24,7 @@ BH_RDFORT: Remove antique ugliness.
 DUST_GETVAL: Change endian-ness criterion
 UNIXFIND: String concatenation bugfix
 
+>>>>>>> 1.278
 -------------------------------------------------------------------------------
 v5_1_7 (January 5, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
 Tagged for Son-of-Spectro.
