@@ -7,7 +7,7 @@
 ;   the image along one of its dimensions.
 ;
 ; CALLING SEQUENCE:
-;   result = djs_median( array, [ dimension, width=, boundary= ] )
+;   result = djs_median( array, [ dimension, width=, boundary=, /idl ] )
 ;
 ; INPUTS:
 ;   array      - N-dimensional array
@@ -71,7 +71,7 @@
 ;   06-Jul-1999  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-function djs_median, array, dim, width=width, boundary=boundary
+function djs_median, array, dim, width=width, boundary=boundary, idl=idl
 
    ; Need at least 1 parameter
    if (N_params() LT 1) then begin
@@ -190,10 +190,15 @@ function djs_median, array, dim, width=width, boundary=boundary
          newsize = N_elements(array) / dimvec[dim-1]
          medarr = reform(fltarr(newsize), newdimvec)
 
-         soname = filepath('libmath.'+idlutils_so_ext(), $
-          root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-         retval = call_external(soname, 'arrmedian', $
-          ndim, dimvec, float(array), long(dim), medarr)
+         if keyword_set(idl) then begin
+           medarr = median(array, dimension=dim, /even)
+         endif else begin
+           soname = filepath('libmath.'+idlutils_so_ext(), $
+            root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+           retval = call_external(soname, 'arrmedian', $
+            ndim, dimvec, float(array), long(dim), medarr)
+         endelse
+         
       endelse
 
    endif else begin
