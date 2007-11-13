@@ -35,7 +35,7 @@
 ;-
 ;------------------------------------------------------------------------------
 function trace_gweight, fimage, xcen, ycen, sigma=sigma, xerr=xerr, $
- invvar=invvar
+ invvar=invvar, idl=idl
 
    ; Need 3 parameters
    if (N_params() LT 3) then begin
@@ -53,16 +53,50 @@ function trace_gweight, fimage, xcen, ycen, sigma=sigma, xerr=xerr, $
 
    if (NOT keyword_set(invvar)) then invvar = 0.0 * fimage + 1.0
 
-;   result = call_external(getenv('IDLUTILS_DIR')+'/lib/libtrace.so', $
-;    'trace_gweight', $
-;    nx, ny, float(fimage), float(invvar), $
-;    float(sigma), ncen, xnew, long(ycen), xerr)
+   if keyword_set(idl) then begin
 
-   soname = filepath('libtrace.'+idlutils_so_ext(), $
-    root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-   result = call_external(soname, 'trace_gweight', $
-    nx, ny, float(fimage), float(invvar), $
-    float(sigma), ncen, xnew, long(ycen), xerr)
+     lower = xcen - 3.0*sigma
+     upper = xcen + 3.0*sigma
+     x_int = round(xcen)
+     nstep = 2*long(3.0*sigma) - 1
+     i1 = x_int - nstep/2
+     i2 = i1 + nstep - 1
+
+     weight = xcen *0.
+     numer  = xcen *0
+     meanvar = xcen *0
+     bad = lonarr(ncen)
+     xtemp = (findgen(nstep)-nstep/2)/5.  * sigma
+
+     for i=0, nstep-1 do begin
+       xh = x_int - nstep/2 + i
+       xtemp = (xh - xcen - 0.5)/sigma/sqrt(2.0)
+       g_int = (errorf(xtemp+1./sigma/sqrt(2.0)) - errorf(xtemp))/2.
+       xs = (xh > 0) < (nx -1)
+       cur_weight = fimage[xs, ycen] * (invvar[xs, ycen] GT 0) * g_int * $
+                                       (xh GE 0 AND xh LT nx) 
+       weight = weight + cur_weight 
+       numer = numer + cur_weight * xh
+       meanvar = meanvar + cur_weight * cur_weight * (xcen-xh)^2 / $
+                            (invvar[xs, ycen] + (invvar[xs, ycen] EQ 0))
+       bad = bad OR (xh LT 0 OR xh GE nx)
+     endfor
+
+     xerr[*] = 999.0
+     good = where(bad EQ 0 AND weight GT 0)
+     if good[0] NE -1 then begin
+        xnew[good] = numer[good]/weight[good]
+        xerr[good] = sqrt(meanvar[good])/weight[good]
+     endif
+     
+   endif else begin
+
+     soname = filepath('libtrace.'+idlutils_so_ext(), $
+      root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+     result = call_external(soname, 'trace_gweight', $
+      nx, ny, float(fimage), float(invvar), $
+      float(sigma), ncen, xnew, long(ycen), xerr)
+   endelse
 
    return, xnew
 end
