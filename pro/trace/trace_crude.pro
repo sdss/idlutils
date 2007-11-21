@@ -66,7 +66,7 @@
 function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
  radius=radius1, yset=yset, nave=nave1, nmed=nmed1, thresh=thresh, $
  maxerr=maxerr1, maxshifte=maxshift_in, maxshift0=maxshift0_in, xerr=xerr, $
- double=double1
+ double=double1, idl=idl
 
    ; Need 1 parameter
    if (N_params() LT 1) then begin
@@ -183,11 +183,22 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
    xset = fltarr(ny, ntrace)
    xerr = fltarr(ny, ntrace)
 
-   soname = filepath('libtrace.'+idlutils_so_ext(), $
-    root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-   result = call_external(soname, 'trace_crude', $
-    nx, ny, imgtemp, invtemp, float(radius), ntrace, float(xstart), ypass, $
-    xset, xerr, float(maxerr), float(maxshift), float(maxshift0))
+   if keyword_set(idl) then begin
+    ;
+    ;  Need xset and xerr
+    ; 
+
+     trace_crude_idl, imgtemp, invtemp, radius, xstart, ypass, $
+                           xset, xerr, maxerr, maxshift, maxshift0
+
+   endif else begin
+     soname = filepath('libtrace.'+idlutils_so_ext(), $
+      root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
+
+     result = call_external(soname, 'trace_crude', $
+      nx, ny, imgtemp, invtemp, float(radius), ntrace, float(xstart), ypass, $
+      xset, xerr, float(maxerr), float(maxshift), float(maxshift0))
+   endelse
 
    if (keyword_set(double)) then begin
       xset = double(xset)

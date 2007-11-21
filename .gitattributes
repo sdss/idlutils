@@ -1140,6 +1140,7 @@ pro/trace/fchebyshev_split.pro -text
 pro/trace/fpoly.pro -text
 pro/trace/func_fit.pro -text
 pro/trace/trace_crude.pro -text
+pro/trace/trace_crude_idl.pro -text
 pro/trace/trace_fweight.pro -text
 pro/trace/trace_gweight.pro -text
 pro/trace/traceset2pix.pro -text
