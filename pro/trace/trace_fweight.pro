@@ -68,7 +68,8 @@ function trace_fweight, fimage, xcen, ycen, radius=radius, xerr=xerr, $
      sumw = xinit * 0.0
      sumxw = sumw
      sumwt = sumw
-     sumsxsx = sumw
+     sumsx1 = sumw
+     sumsx2 = sumw
      qbad = long(sumxw)
 
      for ii=0,fullpix+3 do begin
@@ -80,8 +81,9 @@ function trace_fweight, fimage, xcen, ycen, radius=radius, xerr=xerr, $
        sumw = sumw + fimage[ih,ycen] * wt
        sumwt = sumwt + wt
        sumxw = sumxw + fimage[ih,ycen] * xdiff * wt
-       sumsxsx = sumsxsx + xdiff^2 * wt^2 / $
-                 (invvar[ih,ycen] + (invvar[ih,ycen] EQ 0))
+       var_term = wt^2 / (invvar[ih,ycen] + (invvar[ih,ycen] EQ 0))
+       sumsx2 = sumsx2 + var_term
+       sumsx1 = sumsx1 + xdiff^2 * var_term
        qbad = qbad OR (invvar[ih,ycen] LE 0)
      endfor
 
@@ -89,8 +91,9 @@ function trace_fweight, fimage, xcen, ycen, radius=radius, xerr=xerr, $
      xerr = xinit*0. + 999.0
      good = where(sumw GT 0 AND qbad EQ 0)
      if good[0] NE -1 then begin
-       xnew[good] = sumxw[good]/sumw[good] + xinit
-       xerr[good] = sqrt(sumsxsx[good])/sumw[good] 
+       delta_x = sumxw[good]/sumw[good]
+       xnew[good] = delta_x + xinit[good]
+       xerr[good] = sqrt(sumsx1[good] + sumsx2[good]*delta_x^2 )/sumw[good] 
      endif 
 
      bad = where(abs(xnew-xinit) GT radius + 0.5 OR $

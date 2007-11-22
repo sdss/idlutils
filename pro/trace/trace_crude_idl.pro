@@ -22,7 +22,8 @@ pro trace_crude_idl, image, invvar, radius, xstart, ypass, $
               (xfiterr LT maxerr)
  
     xset[iy,itrace] = xinit + xshift
-    xerr[iy,itrace] = xfiterr
+    xerr[iy,itrace] = xfiterr * (xfiterr LT maxerr)  + $
+                        999.0 * (xfiterr GE maxerr)
  
 ;    /* LOOP FROM INITIAL (COL,ROW) NUMBER TO LARGER ROW NUMBERS */
     for iy=ypass[itrace]+1, ny-1 do begin
@@ -34,7 +35,8 @@ pro trace_crude_idl, image, invvar, radius, xstart, ypass, $
                 (xfiterr LT maxerr)
 
       xset[iy,itrace] = xinit + xshift
-      xerr[iy,itrace] = xfiterr
+      xerr[iy,itrace] = xfiterr * (xfiterr LT maxerr)  + $
+                        999.0 * (xfiterr GE maxerr)
     endfor
 
 ;      /* LOOP FROM INITIAL (COL,ROW) NUMBER TO SMALLER ROW NUMBERS */
@@ -47,7 +49,8 @@ pro trace_crude_idl, image, invvar, radius, xstart, ypass, $
                 (xfiterr LT maxerr)
 
       xset[iy,itrace] = xinit + xshift
-      xerr[iy,itrace] = xfiterr
+      xerr[iy,itrace] = xfiterr * (xfiterr LT maxerr)  + $
+                        999.0 * (xfiterr GE maxerr)
     endfor
 
   ENDFOR
