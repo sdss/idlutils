@@ -1,4 +1,6 @@
 
+BSPLINE_BKPTS: Add placed= arg to support externally determined breakpoints. (Loomis)
+src/trace_gweight.c: Bug fix to assign errors to uncentroidable (at edge) peaks (Loomis)
 DJS_BATCH: Bug fix to not crash if input file names (LOCALFILE) are
                not specified.
 DJS_ICOLOR: Set de_compose to 1 for ps file (Blanton).
