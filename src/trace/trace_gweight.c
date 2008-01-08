@@ -51,6 +51,7 @@ IDL_LONG trace_gweight
    for (icen=0; icen < ncen; icen ++) {
       xtemp = xcen[icen];
       ytemp = ycen[icen];
+      xerr[icen] = 999.0;	/* error out peaks too close to the edge. */
       lower =  xtemp - 3.0*sigma;
       upper =  (long)(xtemp + 3.0*sigma) + 1;
       if (lower >= 0 && upper < nx) {
