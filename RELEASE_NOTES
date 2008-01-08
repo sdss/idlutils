@@ -1,3 +1,5 @@
+v5_3_0 (January 8, 2008) running on IDL 5.4 - 6.4 (6.3+ for MacIntel)
+Tagged for idlspec2d v5_3_x
 
 BSPLINE_BKPTS: Add placed= arg to support externally determined breakpoints. (Loomis)
 src/trace_gweight.c: Bug fix to assign errors to uncentroidable (at edge) peaks (Loomis)
