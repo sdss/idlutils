@@ -8,7 +8,7 @@
 ; CALLING SEQUENCE:
 ;   
 ;   fullbkpt = bspline_bkpts(x, nord=, bkpt=, $
-;    bkspace=, nbkpts=, everyn=, /silent)
+;    bkspace=, nbkpts=, everyn=, placed=, /silent)
 ;
 ; INPUTS:
 ;   bkpt       - Breakpoint vector returned by efc
@@ -22,6 +22,7 @@
 ;   everyn     - Spacing of breakpoints in good pixels
 ;   nbkpts     - Number of breakpoints to span x range
 ;                 minimum is 2 (the endpoints)
+;   placed     - Precalculated breakpoint positions.
 ;   silent     - Do not produce non-critical messages
 ;
 ; OPTIONAL OUTPUTS:
@@ -40,7 +41,8 @@
 ;-
 ;------------------------------------------------------------------------------
 function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
-             nbkpts=nbkpts, everyn=everyn, silent=silent, bkspread=bkspread
+                        nbkpts=nbkpts, everyn=everyn, silent=silent, $
+                        bkspread=bkspread, placed=placed
 
       nx = n_elements(x)
 
@@ -48,7 +50,16 @@ function bspline_bkpts, x, nord=nord, bkpt=bkpt, bkspace=bkspace,  $
  
          range = (max(x) - min(x))
          startx = min(x)
-         if (keyword_set(bkspace)) then begin
+         if (keyword_set(placed)) then begin
+            w = where(placed ge startx and placed le startx+range, cnt)
+            nbkpts = cnt
+            if (nbkpts LT 2) then begin
+               nbkpts = 2
+               tempbkspace = double(range/(float(nbkpts-1)))
+               bkpt = (findgen(nbkpts))*tempbkspace + startx
+            endif else $
+               bkpt = placed[w]
+         endif else if (keyword_set(bkspace)) then begin
             nbkpts = long(range/float(bkspace)) + 1
             if (nbkpts LT 2) then nbkpts = 2
             tempbkspace = double(range/(float(nbkpts-1)))
