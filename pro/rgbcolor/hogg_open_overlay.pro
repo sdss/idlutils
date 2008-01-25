@@ -20,10 +20,13 @@ resolution= naxis*factor
 device, set_resolution=resolution,z_buffer=0
 hogg_plot_defaults
 !P.THICK= 12.0*naxis[0]/2048.0
+!P.SYMSIZE= !P.THICK
 !P.CHARSIZE= 2.0*!P.THICK
 !P.CHARTHICK= 2.0*!P.THICK
 !X.OMARGIN=[0,0]
 !Y.OMARGIN=[0,0]
+!X.MARGIN=[0,0]
+!Y.MARGIN=[0,0]
 loadct, 0
 !P.BACKGROUND= 255
 !P.COLOR= 0
