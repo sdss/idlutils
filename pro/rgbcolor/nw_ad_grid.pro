@@ -11,13 +11,15 @@
 ;  dra,ddec    - spacing of grid lines
 ;  linethick   - thickness of line in unrebinned pixels -- assuming
 ;                the PS file has xsize=7.5in!
+;  astr        - over-rules "hdr"
 ;  color       - dur
 ;OPTIONAL KEYWORDS:
 ;  nolabels    - don't label grid lines
 ;  gsss        - use gsss not usual WCS
-;OPTIONAL OUTPUTS:
 ;OUTPUTS:
 ;  [adds to currently open plot]
+;OPTIONAL OUTPUTS:
+;  astr        - extracted astr structure if not gsa
 ;DEPENDENCIES:
 ;BUGS:
 ;  - Requires PS file to have xsize=7.5in!  Can this be read from a
@@ -27,11 +29,12 @@
 ;-
 PRO nw_ad_grid, hdr,dra=dra,ddec=ddec,nra=nra,ndec=ndec, $
                 linethick=linethick,color=color,nolabels=nolabels, $
-                charsize=charsize,gsss=gsss
+                charsize=charsize,gsss=gsss,astr=astr
 
 NX= sxpar(hdr,'NAXIS1')
 NY= sxpar(hdr,'NAXIS2')
-if keyword_set(gsss) then gsssextast, hdr,gsa else extast, hdr,astr
+if (NOT keyword_set(astr)) then $
+  if keyword_set(gsss) then gsssextast, hdr,gsa else extast, hdr,astr
 if keyword_set(gsa) then $
   gsssxyad, gsa,double(NX-1)/2D0,double(NY-1)/2D0,rain,decin $
 else $
