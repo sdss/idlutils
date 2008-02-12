@@ -44,9 +44,13 @@
 ;  - If the code congridded before making the initial colors matrix, it
 ;    would use less memory and be faster.
 ;  - If run both /png and /tiff, behavior is undefined.
+;  - I (DWH) don't understand why I didn't have to run reverse()
+;    before making the PNG.
 ;
 ;REVISION HISTORY:
 ; 12/03/03 written - wherry
+; [sometime]  - TIFF support - Hogg
+; 2008-02-12  - PNG support - Hogg
 ;-
 PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
                 nonlinearity,origin=origin,rebinfactor=rebinfactor, $
@@ -98,7 +102,6 @@ colors = nw_float_to_byte(temporary(colors))
 if(keyword_set(invert)) then colors=255-colors
 
 IF keyword_set(png) THEN BEGIN
-    colors = reverse(temporary(colors),2)
     colors = reform(transpose(reform(temporary(colors),NX*NY,3)),3,NX,NY)
     splog, 'writing png'
     WRITE_PNG,name,colors
