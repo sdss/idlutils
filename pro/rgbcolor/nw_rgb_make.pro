@@ -24,10 +24,11 @@
 ;  quality     - quality input for WRITE_JPEG
 ;  overlay     - [nx/rebinfactor,ny/rebinfactor,3] image to overlay on
 ;                the input images
+;  dpitiff     - set TIFF "dots per inch" resolution (only if /tiff set)
 ;OPTIONAL KEYWORDS:
 ;  saturatetowhite  - saturate high-value pixels to white rather than to color
-;  tiff        - make tiff instead of jpeg
-;  dpitiff     - set TIFF "dots per inch" resolution (only if /tiff set)
+;  png         - make png instead of jpeg (and ignore "quality")
+;  tiff        - make tiff instead of jpeg (and ignore "quality")
 ;  invert      - ???
 ;OPTIONAL OUTPUTS:
 ;  
@@ -36,24 +37,27 @@
 ;KEYWORDS:
 ;  none
 ;OUTPUTS:
-;  JPEG (or TIFF)
+;  JPEG (or TIFF or PNG)
 ;DEPENDENCIES:
 ;  
 ;BUGS:
-;  If the code congridded before making the initial colors matrix, it
-;  would use less memory and be faster.
-;  
+;  - If the code congridded before making the initial colors matrix, it
+;    would use less memory and be faster.
+;  - If run both /png and /tiff, behavior is undefined.
+;
 ;REVISION HISTORY:
 ; 12/03/03 written - wherry
 ;-
 PRO nw_rgb_make,Rim,Gim,Bim,name=name,scales=scales,nonlinearity= $
                 nonlinearity,origin=origin,rebinfactor=rebinfactor, $
                 saturatetowhite=saturatetowhite,quality=quality, $
-                overlay=overlay,colors=colors,tiff=tiff,invert=invert, $
-                underlay=underlay, dpitiff=dpitiff
+                overlay=overlay,colors=colors,png=png,tiff=tiff, $
+                invert=invert,underlay=underlay,dpitiff=dpitiff
 
 ;set defaults
-IF (keyword_set(tiff)) THEN suffix='tif' ELSE suffix='jpg'
+suffix='jpg'
+IF keyword_set(tiff) THEN suffix='tif'
+IF keyword_set(png) THEN suffix='png'
 IF (NOT keyword_set(name)) THEN name = 'nw_rgb_make.'+suffix
 IF (NOT keyword_set(quality)) THEN quality = 100
 
@@ -93,7 +97,12 @@ splog, 'nw_float_to_byte'
 colors = nw_float_to_byte(temporary(colors))
 if(keyword_set(invert)) then colors=255-colors
 
-IF keyword_set(tiff) THEN BEGIN
+IF keyword_set(png) THEN BEGIN
+    colors = reverse(temporary(colors),2)
+    colors = reform(transpose(reform(temporary(colors),NX*NY,3)),3,NX,NY)
+    splog, 'writing png'
+    WRITE_PNG,name,colors
+ENDIF ELSE IF keyword_set(tiff) THEN BEGIN
     colors = reverse(temporary(colors),2)
     splog, 'writing tiff'
     WRITE_TIFF,name,planarconfig=2,red=colors[*,*,0],$
