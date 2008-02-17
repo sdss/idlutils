@@ -131,11 +131,9 @@ x= reform(xxx,ndata)
 y= reform(yyy,ndata)
 
 ; make axes
+if (not keyword_set(overplot)) then $
   plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
-    _EXTRA=KeywordsForPlot,/nodata, noerase=keyword_set(overplot)
-;if (not keyword_set(overplot)) then $ ; jm07mar
-;  plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
-;  _EXTRA=KeywordsForPlot,/nodata
+  _EXTRA=KeywordsForPlot,/nodata
 
 ; snap points to grid
 deltax= (xrange[1]-xrange[0])/double(xnpix)
@@ -209,18 +207,17 @@ if NOT keyword_set(nogreyscale) then begin
     tvgrid= (tvgrid < mingrey) > maxgrey
 
 ; plot greyscale; re-draw the axes
-    tvimage, tvgrid, overplot=overplot, _EXTRA=KeywordsForPlot
+    tvimage, tvgrid,/overplot,_EXTRA=KeywordsForPlot
     if (n_elements(KeywordsForPlot) ne 0L) then begin
-       KeywordsForPlot1 = KeywordsForPlot
-       if tag_exist(KeywordsForPlot1,'XTITLE') then KeywordsForPlot1.xtitle = ''
-       if tag_exist(KeywordsForPlot1,'YTITLE') then KeywordsForPlot1.ytitle = ''
-       if tag_exist(KeywordsForPlot1,'XTICKNAME') then KeywordsForPlot1.xtickname = replicate(' ',10)
-       if tag_exist(KeywordsForPlot1,'YTICKNAME') then KeywordsForPlot1.ytickname = replicate(' ',10)
+        KeywordsForPlot1 = KeywordsForPlot
+        if tag_exist(KeywordsForPlot1,'XTITLE') then KeywordsForPlot1.xtitle = ''
+        if tag_exist(KeywordsForPlot1,'YTITLE') then KeywordsForPlot1.ytitle = ''
+        if tag_exist(KeywordsForPlot1,'XTICKNAME') then KeywordsForPlot1.xtickname = replicate(' ',10)
+        if tag_exist(KeywordsForPlot1,'YTICKNAME') then KeywordsForPlot1.ytickname = replicate(' ',10)
     endif
+    !P.MULTI[0]= !P.MULTI[0]+1 ; HACK!
     plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
-      _EXTRA=KeywordsForPlot1,/nodata,/noerase,color=djs_icolor('default')
-;   tv, tvgrid,xrange[0],yrange[0],/data, $
-;     xsize=(xrange[1]-xrange[0]),ysize=(yrange[1]-yrange[0])
+      _EXTRA=KeywordsForPlot1,/nodata,color=djs_icolor('default')
 endif
 
 ; plot quantiles, if necessary
@@ -284,4 +281,5 @@ endif
 ;     _EXTRA=KeywordsForPlot,/nodata,/noerase
 ;endif
 
+return
 end
