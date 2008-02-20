@@ -43,16 +43,16 @@ nb= reform([round(nbin)],dd)
 ; compute binning function -- this step is a memory hog
 minarray= transpose(range[0,*])#(dblarr(mm)+1.0)
 maxarray= transpose(range[1,*])#(dblarr(mm)+1.0)
-nbinarray= nbin#(dblarr(mm)+1L)
+nbinarray= nb#(dblarr(mm)+1L)
 bin= djs_floor(nbinarray*(xx-minarray)/(maxarray-minarray))
 good= where(total((bin LT 0) OR (bin GE nbinarray),1) EQ 0,ngood) 
 
 ; get binning into one-dimensional form -- this step is an IDL-specific hack
 onedbin= lonarr(mm)+bin[dd-1,*]
-for jj=dd-2L,0L,-1L do onedbin= onedbin*nbin[jj]+bin[jj,*]
+for jj=dd-2L,0L,-1L do onedbin= onedbin*nb[jj]+bin[jj,*]
 
-; make output array -- check out this IDL hack
-hist= reform(dblarr(round(exp(total(alog(nbin),/double)))),nbin)
+; make output array
+hist= dblarr(nb)
 err= hist
 
 ; populate the array -- this step is slow
