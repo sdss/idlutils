@@ -828,6 +828,8 @@ pro/fits/djs_modfits.pro -text
 pro/fits/djs_readmany.pro -text
 pro/fits/fits_purge_nans.pro -text
 pro/fits/fits_wait.pro -text
+pro/fits/gz_headfits.pro -text
+pro/fits/gz_mrdfits.pro -text
 pro/fits/hdr2struct.pro -text
 pro/fits/hogg_mrdfits.pro -text
 pro/fits/modfitscard.pro -text
