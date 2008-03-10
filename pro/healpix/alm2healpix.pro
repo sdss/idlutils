@@ -93,9 +93,11 @@ function alm2healpix, nside, alm, lmax=lmax
   lfac = sqrt((2*dindgen(lmax+1)+1)/(4*!dpi))
   revind = reverse(lindgen(nside*2-1))
   mlqind = [lindgen(nside*2), revind]
+
   for m=0, mmax do begin 
      tt = systime(1)
      mqladvance, xqhalf, m, Mql_1, Mql, lmax=lmax
+  junk = check_math()    ; clear floating-point exception flags
 
      Mlq = transpose(Mql) ; 5 sec just for transpose!! Can we do this better?
 
