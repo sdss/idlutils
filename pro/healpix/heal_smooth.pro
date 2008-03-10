@@ -62,7 +62,7 @@ function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
   exponent = -0.5d * l*(l+1) * sigma^2
   smallexp = where(exponent LT -300, nsmall)
   bl  = exp(exponent >  (-300))
-  if nsmall GT 0 then bl[nsmall] = 0
+  if nsmall GT 0 then bl[smallexp] = 0
 
 ;  plot, l, bl, title='beam transform'
 
