@@ -100,7 +100,7 @@ int dmedsmooth(float *image,
           }
         }
       if(nb>1) {
-        nm=nb/2;
+        nm=2*(nb/4)+1;
         grid[i+j*nxgrid]=dselip(nm,nb,arr);
       } else {
         grid[i+j*nxgrid]=image[(long) xlo[i]+((long) ylo[j])*nx];
