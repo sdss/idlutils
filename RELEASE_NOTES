@@ -1,3 +1,4 @@
+DJS_PLOT, DJS_OPLOT Add bin keyword to reduce number of points plotted
 HEAL_SMOOTH    Fixed potentially serious bug in code that avoided IEEE
                   exceptions. 
 GZ_MRDFITS, GZ_HEADFITS: On FITS read failures, try compressed versions
