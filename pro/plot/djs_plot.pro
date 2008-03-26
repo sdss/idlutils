@@ -24,10 +24,12 @@
 ;
 ; REVISION HISTORY:
 ;   Written by D. Schlegel, 27 September 1997, Durham
+;   bin keyword added, 26 March 2008 - D. Finkbeiner
 ;-
 ;-----------------------------------------------------------------------
 pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
- color=color, psym=psym, symsize=symsize, nodata=nodata, _EXTRA=KeywordsForPlot
+ color=color, psym=psym, symsize=symsize, nodata=nodata, $
+ bin=bin, _EXTRA=KeywordsForPlot
 
    ; If X values don't exist, then create them as PLOT or OPLOT would do
    npt = N_elements(x)
@@ -50,7 +52,7 @@ pro djs_plot, x, y, xtitle=xtitle, ytitle=ytitle, title=title, $
 
    if (NOT keyword_set(nodata)) then $
     djs_oplot, xtmp, ytmp, color=color,psym=psym, symsize=symsize, $
-     _EXTRA=KeywordsForPlot
+     bin=bin, _EXTRA=KeywordsForPlot
 
    return
 end 
