@@ -25,10 +25,11 @@
 ;
 ; REVISION HISTORY:
 ;   Written by D. Schlegel, 27 September 1997, Durham
+;   bin keyword added, 26 March 2008 - D. Finkbeiner
 ;-
 ;-----------------------------------------------------------------------
 pro djs_oplot, x, y, $
- color=color, psym=psym, symsize=symsize, _EXTRA=KeywordsForPlot
+ color=color, psym=psym, symsize=symsize, bin=bin, _EXTRA=KeywordsForPlot
 
    if (NOT keyword_set(color)) then color = !p.color
    if (NOT keyword_set(psym)) then psym = !p.psym
@@ -48,6 +49,16 @@ pro djs_oplot, x, y, $
       xtmp = lindgen(npt)
       ytmp = x
    endelse
+
+   ; if bin keyword is set, bin down arrays
+   if keyword_set(bin) then begin 
+      nbin = (bin EQ 1) ? 100 : bin ; set default
+      if nbin LT npt then begin 
+         inds = round(findgen(nbin)/(nbin-1)*(npt-1))
+         xtmp = xtmp[inds]
+         ytmp = ytmp[inds]
+      endif 
+   endif 
 
    if (ncolor LE 1 AND npsym LE 1 AND nsize LE 1) then begin
       oplot, xtmp, ytmp, $
