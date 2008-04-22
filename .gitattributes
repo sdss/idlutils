@@ -844,6 +844,7 @@ pro/healpix/dpf_pix2ang_nest.pro -text
 pro/healpix/dpf_pix2ang_ring.pro -text
 pro/healpix/heal_rebin.pro -text
 pro/healpix/heal_smooth.pro -text
+pro/healpix/healcart_bindown.pro -text
 pro/healpix/healcart_header.pro -text
 pro/healpix/healcart_ind.pro -text
 pro/healpix/healgen.pro -text
