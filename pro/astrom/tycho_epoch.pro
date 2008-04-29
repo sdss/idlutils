@@ -36,7 +36,8 @@ pro tycho_epoch, epoch, tycdat
 
    nyear = epoch - 2000.d0
    tycdat.RAmdeg = $
-    tycdat.RAmdeg + nyear * tycdat.pmRA / (1000.D * 3600.D * cos(tycdat.DEmdeg))
+    tycdat.RAmdeg + nyear * tycdat.pmRA / $
+    (1000.D * 3600.D * cos(tycdat.DEmdeg*!DPI/180.))
    tycdat.DEmdeg = $
     tycdat.DEmdeg + nyear * tycdat.pmDE / (1000.D * 3600.D)
 
