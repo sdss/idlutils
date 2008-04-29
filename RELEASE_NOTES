@@ -4,6 +4,7 @@ DJS_PLOT, DJS_OPLOT Add bin keyword to reduce number of points plotted
 HEAL_SMOOTH    Fixed potentially serious bug in code that avoided IEEE
                   exceptions. 
 GZ_MRDFITS, GZ_HEADFITS: On FITS read failures, try compressed versions
+TYCHO_READ, TYCHO_EPOCH Fixed cos(dec) error in proper motion application
 
 v5_3_0 (January 8, 2008) running on IDL 5.4 - 6.4 (6.3+ for MacIntel)
 Tagged for idlspec2d v5_3_x
