@@ -99,9 +99,11 @@ if (NOT keyword_set(dontplot)) then begin
           xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
           _EXTRA=KeywordsForPlot,thick=1
     endif
-    oplot, xvec,hist,psym=10,linestyle=linestyle
+    oplot, xvec,hist,psym=10,linestyle=linestyle, $
+      _EXTRA=KeywordsForPlot
     if keyword_set(ploterr) then $
-      djs_oploterr, xvec,hist,yerr=err,psym=0
+      djs_oploterr, xvec,hist,yerr=err,psym=0, $
+      _EXTRA=KeywordsForPlot
 endif
 
 end
