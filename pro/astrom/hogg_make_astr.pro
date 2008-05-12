@@ -2,7 +2,7 @@
 ; NAME:
 ;   hogg_make_astr
 ; PURPOSE:
-;   Generate the astrometric header for a particular pointing and
+;   Generate the astrometric WCS for a particular pointing and
 ;   orientation.
 ; COMMENTS:
 ;   Adds NAXIS to the astrom structure.
@@ -22,8 +22,8 @@
 ;   npixround   - round array dimensions (naxis1 and naxis2) to nearest
 ;                 factor of npixround; default to 8.
 ; KEYWORDS:
-;   orthographic  - Make orthographic "-SIN" header instead of
-;                   gnomonic "-TAN" header.
+;   orthographic  - Make orthographic "-SIN" not gnomonic "-TAN" WCS
+;   mercator      - Make mercator "-MER" not gnomonic "-TAN" WCS
 ; OUTPUTS:
 ;   astr     - Astrometry structure with NAXIS keyword added
 ; OPTIONAL OUTPUTS:
@@ -34,11 +34,13 @@
 ;   2003-Nov-21   Written by D. Schlegel (Princeton) & D. Hogg (NYU)
 ;   2003-Dec-02   Modified to produce simpler headers - Hogg
 ;   2004-Apr-18   Use make_astr to define astrom structure - DPF
-;   2004-Jun-17   Modified to make "orthographic" headers on request - Hogg
+;   2004-Jun-17   Make "orthographic" headers - Hogg
 ;   2005-Aug-31   Changed name and put into idlutils - Hogg
+;   2007-Feb-22   Make mercator headers - Hogg
 ;------------------------------------------------------------------------------
 function hogg_make_astr, racen,deccen,dra1,ddec1,pixscale=pixscale, $
-                         orientation=orientation,orthographic=orthographic, $
+                         orientation=orientation, $
+                         orthographic=orthographic,mercator=mercator, $
                          npixround=npixround
    if (n_params() LT 2) then begin
       print, 'Must specify RACEN, DECCEN'
@@ -50,8 +52,9 @@ function hogg_make_astr, racen,deccen,dra1,ddec1,pixscale=pixscale, $
    if (NOT keyword_set(npixround)) then npixround = 8
    naxis1= round(dra/pixscale/float(npixround))*npixround
    naxis2= round(ddec/pixscale/float(npixround))*npixround
-   if keyword_set(orthographic) then ctype= ['RA---SIN','DEC--SIN'] else $
-     ctype= ['RA---TAN','DEC--TAN']
+   ctype= ['RA---TAN','DEC--TAN']
+   if keyword_set(orthographic) then ctype= ['RA---SIN','DEC--SIN']
+   if keyword_set(mercator) then ctype= ['RA---MER','DEC--MER']
    if (NOT keyword_set(orientation)) then orientation=0D0
    theta= orientation*!DPI/180D0
    ct= cos(theta)
