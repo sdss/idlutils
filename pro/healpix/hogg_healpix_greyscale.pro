@@ -5,10 +5,8 @@
 ;  make a greyscale plot from a healpix array
 ; BUGS:
 ;  - Assumes "ring" ordering.
-;  - Doesn't work at all!
-;  - Stretches map dumbly.
 ;-
-pro hogg_healpix_greyscale, map,filename
+pro hogg_healpix_greyscale, map,filename,histeq=histeq
 npix= n_elements(map)
 nside= round(sqrt(npix/12.0))
 if (npix NE (12L*nside*nside)) then begin
@@ -17,7 +15,12 @@ if (npix NE (12L*nside*nside)) then begin
     stop
 endif
 
-mapcolor= floor(255.999*(map-min(map))/(max(map)-min(map)))
+if keyword_set(histeq) then begin
+    mapcolor= bytarr(npix)
+    mapcolor[sort(map)]= floor(255.999*findgen(npix)/float(npix))
+endif else begin
+    mapcolor= floor(255.999*(map-min(map))/(max(map)-min(map)))
+endelse
 
 set_plot, 'ps'
 xsize= 7.5 & ysize= xsize/2.0
