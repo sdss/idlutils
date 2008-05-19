@@ -68,6 +68,7 @@ if(nmatch eq 0) then begin
     return
 endif
 
+
 ;; then check if they pass both criteria
 splog, 'sorting out projections ...'
 isort=sort(m1)
@@ -96,13 +97,11 @@ for i=0L, n_elements(iuniq)-1L do begin
     diffperp=diff-diffpar
     diffproj[icurr]=sqrt(total(diffperp^2,1))
 
-    closerank[icurr[sort(diffproj[icurr])]]=lindgen(n_elements(icurr))
-    
     istart=iend+1L
 endfor
 
-imatch=where(abs(diffz) lt mz AND abs(diffproj) lt mproj AND $
-             (closerank lt maxmatch OR maxmatch eq 0), nmatch)
+imatch=where(abs(diffz) lt mz AND abs(diffproj) lt mproj, nmatch)
+
 if(nmatch eq 0) then begin
     match1=-1L
     match2=-1L
@@ -111,10 +110,44 @@ if(nmatch eq 0) then begin
     return
 endif 
 
-match1=m1[imatch]
-match2=m2[imatch]
-dproj=diffproj[imatch]
-dz=abs(diffz[imatch])
+m1=m1[imatch]
+m2=m2[imatch]
+diffproj=diffproj[imatch]
+diffz =diffz[imatch]
+
+sorted=sort(diffproj)
+if(maxmatch gt 0L) then begin
+    gotten1=lonarr(n_elements(ra1))
+    gotten2=lonarr(n_elements(ra2))
+    match1=lonarr(n_elements(m1))
+    match2=lonarr(n_elements(m2))
+    dproj=fltarr(n_elements(m2))
+    dz=fltarr(n_elements(m2))
+    nmatch_final=0L
+    for i=0L, nmatch-1L do begin
+        if((gotten1[m1[sorted[i]]] lt maxmatch) AND $
+           (gotten2[m2[sorted[i]]] lt maxmatch)) then begin
+            gotten1[m1[sorted[i]]]=gotten1[m1[sorted[i]]]+1L
+            gotten2[m2[sorted[i]]]=gotten2[m2[sorted[i]]]+1L
+            match1[nmatch_final]=m1[sorted[i]]
+            match2[nmatch_final]=m2[sorted[i]]
+            dproj[nmatch_final]= diffproj[sorted[i]]
+            dz[nmatch_final]= diffz[sorted[i]]
+            nmatch_final=nmatch_final+1L
+        endif
+    endfor
+    nmatch=nmatch_final
+    match1=match1[0:nmatch-1]
+    match2=match2[0:nmatch-1]
+    dz=dz[0:nmatch-1]
+    dproj=dproj[0:nmatch-1]
+endif else begin
+    match1=m1
+    match2=m2
+    dz=diffz
+    dproj=diffproj
+endelse
+
 
 return
 end

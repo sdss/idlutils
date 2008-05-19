@@ -43,6 +43,8 @@ endif else begin
     nn=(size(x1,/dim))[1]
 endelse
 
+x2=reform(x2, 2L, n_elements(x2)/2L)
+
 maxdiff=-1.
 for i=0L, mm-1L do begin
     if(max(x1[i,*])-min(x1[i,*]) gt maxdiff) then $

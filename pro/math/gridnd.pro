@@ -32,7 +32,7 @@ if((size(x))[0] eq 1) then begin
     if(NOT keyword_set(nd)) then begin
         mm=1
         nn=n_elements(x)
-        x1=reform(x, 1, nn)
+        x=reform(x, 1, nn)
     endif else begin
         mm=nd
         nn=n_elements(x)/mm
