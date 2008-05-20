@@ -4,14 +4,11 @@
 ; PURPOSE:
 ;   Create a Regions format ascii file of spherical polygons
 ; CALLING SEQUENCE:
-;   write_regions_polygons, outfile, polygons [, id, weight, str, unit=]
+;   write_regions_polygons, outfile, polygons [, unit=]
 ; INPUTS:
 ;   outfile - output file name
 ;   polygons - arrays of structures (eg those made by construct_field_polygon) 
 ; OPTIONAL INPUTS:
-;   id - array of id's for polygons (should be unique)
-;   weight - arrays of weights for each polygon
-;   str - area of each polygon?
 ;   unit - if present, use this unit instead of opening another
 ; COMMENTS:
 ;   The format is lossy --- it only outputs "used" caps, and it throws 
@@ -21,7 +18,7 @@
 ;   19-May-2008  Rewritten for Regions format
 ;-
 ;------------------------------------------------------------------------------
-pro write_regions_polygons, outfile, polygons, id, unit=unit
+pro write_regions_polygons, outfile, polygons, unit=unit
 
 if(n_params() lt 2 or n_params() gt 3) then begin
     print,'Syntax - write_regions_polygons, outfile, polygons [, id]'
