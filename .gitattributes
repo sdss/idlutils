@@ -914,6 +914,7 @@ pro/mangle/where_polygons_overlap.pro -text
 pro/mangle/window_image.pro -text
 pro/mangle/write_fits_polygons.pro -text
 pro/mangle/write_mangle_polygons.pro -text
+pro/mangle/write_regions_polygons.pro -text
 pro/mangle/x_to_angles.pro -text
 pro/math/adjust_error.pro -text
 pro/math/asinh2.pro -text
