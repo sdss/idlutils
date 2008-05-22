@@ -1,3 +1,5 @@
+POSITRONIUM_SPECTRUM: Compute the Ore and Powell ortho-positronium
+                       annihilation spectrum (3-photon).
 HEALCART_BINDOWN: Bin down a healcart projection properly.  Useful for
 making figures smaller.
 DJS_PLOT, DJS_OPLOT Add bin keyword to reduce number of points plotted
