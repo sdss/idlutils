@@ -1050,6 +1050,7 @@ pro/physics/evolve_electron_spectrum.pro -text
 pro/physics/evolve_powerlaw_electrons.pro -text
 pro/physics/freefree.pro -text
 pro/physics/gauntff.pro -text
+pro/physics/positronium_spectrum.pro -text
 pro/physics/sigma_pbar_p.pro -text
 pro/plot/atv.pro -text
 pro/plot/atv_joe_writeps.pro -text
