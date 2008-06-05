@@ -31,19 +31,20 @@ if(n_elements(maxmatch) eq 0) then maxmatch=1
 if((size(x1))[0] eq 1) then begin
     if(NOT keyword_set(nd)) then begin
         mm=1
-        nn=n_elements(x1)
-        x1=reform(x1, 1, nn)
+        nn1=n_elements(x1)
+        x1=reform(x1, 1, nn1)
     endif else begin
         mm=nd
-        nn=n_elements(x1)/mm
-        x1=reform(x1, mm, nn)
+        nn1=n_elements(x1)/mm
+        x1=reform(x1, mm, nn1)
     endelse 
 endif else begin
     mm=(size(x1,/dim))[0]
-    nn=(size(x1,/dim))[1]
+    nn1=(size(x1,/dim))[1]
 endelse
 
-x2=reform(x2, 2L, n_elements(x2)/2L)
+nn2=n_elements(x2)/mm
+x2=reform(x2, mm, nn2)
 
 maxdiff=-1.
 for i=0L, mm-1L do begin
@@ -63,12 +64,14 @@ gridnd, x2, ix=ix2, binsize=binsize, grid=grid2, ngrid=ngrid2, nx=nx, $
   igrid=igrid2, xminmax=xminmax, nd=nd
 
 ifilled=where(ngrid1 gt 0, nfilled)
-nmatch=0L
-nmax=nn*100L
-m1=lonarr(nmax)
-m2=lonarr(nmax)
-d12=dblarr(nmax)
+
+tmpnmatch=0L
+tmpm1=-1L
+tmpm2=-1L
+tmpd12=-1.
 for i=0L, nfilled-1L do begin
+
+    ;; get ii1, the index in each dimension of this cell
     i1tmp=*(grid1[ifilled[i]])
     ii1=lonarr(mm)
     itmp=ifilled[i]
@@ -76,18 +79,24 @@ for i=0L, nfilled-1L do begin
         ii1[j]=itmp mod nx[j]
         itmp=itmp/nx[j]
     endfor
+
+    ;; now loop over adjacent cells in this dimension
+
+    ;;   what are ranges in each dim?
     iist=(ii1-1L) > 0L
     iind=(ii1+1L) < (nx-1L)
-    ii=lonarr(mm)
+
+    ;;   how many are there?
     nii=1L
     for j=0L, mm-1L do $
       nii=(iind[j]-iist[j]+1L)*nii
+
+    ;; now actually loop
+    ii=lonarr(mm)
     ii2=lonarr(mm)
-    tmpnmatch=0L
-    tmpm1=-1L
-    tmpm2=-1L
-    tmpd12=-1.
     for j=0L, nii-1L do begin
+
+        ;; find the grid number for the adjacent cell
         igrid2=0L
         ibase=1L
         for k=0L, mm-1L do begin
@@ -95,6 +104,7 @@ for i=0L, nfilled-1L do begin
             ibase=ibase*nx[k]
         endfor
         
+        ;; now collect the actual matches 
         if(ngrid2[igrid2] gt 0) then begin 
             i2tmp=*(grid2[igrid2])
             for k=0L, ngrid2[igrid2]-1L do begin
@@ -118,6 +128,7 @@ for i=0L, nfilled-1L do begin
             endfor
         endif
 
+        ;; now update to next cell
         iidim=0L
         nnx=iind-iist+1L
         ii2[iidim]=(ii2[iidim]+1L) mod nnx[iidim]
@@ -126,55 +137,53 @@ for i=0L, nfilled-1L do begin
             ii2[iidim]=(ii2[iidim]+1L) mod nnx[iidim]
         endwhile
     endfor
-
-    if(tmpnmatch gt 0) then begin
-        isort=sort(tmpm1)
-        tmpd12=tmpd12[isort]
-        tmpm1=tmpm1[isort]
-        tmpm2=tmpm2[isort]
-        iuniq=uniq(tmpm1)
-        istart=0L
-        for j=0L, n_elements(iuniq)-1L do begin
-            iend=iuniq[j]
-            icurr=istart+lindgen(iend-istart+1L)
-            isort=sort(tmpd12[icurr])
-            icurr=icurr[isort]
-            if(n_elements(icurr) gt maxmatch AND $
-               maxmatch gt 0) then $
-                icurr=icurr[0:maxmatch-1L]
-            if(nmatch+n_elements(icurr) gt nmax) then begin
-                m1new=lonarr(nmax*2L)
-                m2new=lonarr(nmax*2L)
-                d12new=lonarr(nmax*2L)
-                m1new[0:nmatch-1]=m1[0:nmatch-1]
-                m2new[0:nmatch-1]=m2[0:nmatch-1]
-                d12new[0:nmatch-1]=d12[0:nmatch-1]
-                m1=m1new
-                m2=m2new
-                d12=d12new
-                m1new=0
-                m2new=0
-                d12new=0
-                nmax=nmax*2L
-            endif
-            m1[nmatch:nmatch+n_elements(icurr)-1L]=tmpm1[icurr]
-            m2[nmatch:nmatch+n_elements(icurr)-1L]=tmpm2[icurr]
-            d12[nmatch:nmatch+n_elements(icurr)-1L]=tmpd12[icurr]
-            nmatch=nmatch+n_elements(icurr)
-            istart=iend+1L
-        endfor
-    endif
 endfor
 
-if(nmatch gt 0) then begin
-    m1=m1[0:nmatch-1]
-    m2=m2[0:nmatch-1]
-    d12=d12[0:nmatch-1]
-    
-    isort=sort(m1*(max(m2)+1L)+m2)
-    m1=m1[isort]
-    m2=m2[isort]
-    d12=d12[isort]
-endif
+;; finally, sort by match distance and trim
+if(tmpnmatch gt 0) then begin
+    isort=sort(tmpd12)
+    if(maxmatch gt 0) then begin
+        gotten1=lonarr(nn1)
+        gotten2=lonarr(nn2)
+        nmatch=0L
+        for j=0L, tmpnmatch-1L do begin
+            if((gotten1[tmpm1[isort[j]]] lt maxmatch) AND $
+               (gotten2[tmpm2[isort[j]]] lt maxmatch)) then begin
+                gotten1[tmpm1[isort[j]]]=gotten1[tmpm1[isort[j]]]+1L
+                gotten2[tmpm2[isort[j]]]=gotten2[tmpm2[isort[j]]]+1L
+                nmatch=nmatch+1L
+            endif
+        endfor
+        gotten1=lonarr(nn1)
+        gotten2=lonarr(nn2)
+        m1=lonarr(nmatch)
+        m2=lonarr(nmatch)
+        d12=fltarr(nmatch)
+        nmatch=0L
+        for j=0L, tmpnmatch-1L do begin
+            if((gotten1[tmpm1[isort[j]]] lt maxmatch) AND $
+               (gotten2[tmpm2[isort[j]]] lt maxmatch)) then begin
+                gotten1[tmpm1[isort[j]]]=gotten1[tmpm1[isort[j]]]+1L
+                gotten2[tmpm2[isort[j]]]=gotten2[tmpm2[isort[j]]]+1L
+                m1[nmatch]=tmpm1[isort[j]]
+                m2[nmatch]=tmpm2[isort[j]]
+                d12[nmatch]=tmpd12[isort[j]]
+                nmatch=nmatch+1L
+            endif
+        endfor
+    endif else begin
+        m1=tmpm1[isort]
+        tmpm1=0
+        m2=tmpm2[isort]
+        tmpm2=0
+        if(arg_present(d12)) then d12=tmpd12[isort]
+        tmpd12=0
+    endelse
+endif else begin
+    m1=-1
+    m2=-1
+    d12=0.
+    nmatch=0
+endelse
 
 end
