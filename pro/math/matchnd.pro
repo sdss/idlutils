@@ -172,6 +172,7 @@ if(tmpnmatch gt 0) then begin
             endif
         endfor
     endif else begin
+        nmatch=n_elements(tmpm1)
         m1=tmpm1[isort]
         tmpm1=0
         m2=tmpm2[isort]
