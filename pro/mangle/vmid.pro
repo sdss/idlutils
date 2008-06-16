@@ -4,7 +4,7 @@
 ; PURPOSE:
 ;   Return vector within a given polygon
 ; CALLING SEQUENCE:
-;   vec=vmid(polygon)
+;   vec=vmid(polygon [, /allcaps, ra=, dec=])
 ; INPUTS:
 ;   polygon - spherical polygon specification
 ; OPTIONAL INPUTS:
@@ -12,16 +12,13 @@
 ;              caps are used
 ; OUTPUTS:
 ;   vec - [3] location of vector inside
-; OPTIONAL INPUT/OUTPUTS:
-; COMMENTS:
-; EXAMPLES:
-; BUGS:
-; PROCEDURES CALLED:
+; OPTIONAL OUTPUTS:
+;   ra, dec - RA, Dec coords
 ; REVISION HISTORY:
 ;   16-Sep-2002  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-function vmid, polygons, allcaps=allcaps
+function vmid, polygons, allcaps=allcaps, ra=ra, dec=dec
 
 if(n_elements(polygons) eq 0) then begin
     print, 'Syntax - vec= vmid(polygons [, /allcaps])'
@@ -61,6 +58,12 @@ for i=0L, n_elements(polygons)-1L do begin
                            double(tmp_vec))
     vec[*,i]=tmp_vec
 endfor
+
+x_to_angles, vec, ra, th
+dec=(90.D)-th
+
+ra=reform(ra, n_elements(ra))
+dec=reform(dec, n_elements(ra))
 
 return,vec
 end
