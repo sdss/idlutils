@@ -48,7 +48,7 @@ for i=0L, n_elements(polygons)-1L do begin
     for j=0L, polygons[i].ncaps-1L do begin
         if(is_cap_used(polygons[i].use_caps,j)) then $
            printf,unit, $
-           format='(%"%20.16f %20.16f %20.16f %20.16f")', $
+           format='(%"%24.20f %24.20f %24.20f %24.20f")', $
            (*polygons[i].caps)[j].x[0], $
            (*polygons[i].caps)[j].x[1], $
            (*polygons[i].caps)[j].x[2], $
