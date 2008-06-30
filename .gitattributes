@@ -1132,6 +1132,7 @@ pro/sdss/findopfile.pro -text
 pro/sdss/sdss_flagname.pro -text
 pro/sdss/sdss_flagval.pro -text
 pro/sdss/sdss_sweep_circle.pro -text
+pro/sdss/vagc_read.pro -text
 pro/slatec/bvalu2d.pro -text
 pro/slatec/efc2d.pro -text
 pro/slatec/efcmn.pro -text
