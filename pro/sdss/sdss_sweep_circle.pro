@@ -13,6 +13,7 @@
 ;          [default 'star']
 ; OPTIONAL KEYWORDS:
 ;   /all - keep all objects, not just SURVEY_PRIMARY
+;   /silent - suppress mrdfits verbosity
 ; COMMENTS:
 ;   Assumes that a datasweep directory is located at $PHOTO_SWEEP,
 ;   and that index files have been created
@@ -20,7 +21,8 @@
 ;   12-Jun-2008 MRB, NYU
 ;-
 ;------------------------------------------------------------------------------
-function sdss_sweep_circle, ra, dec, radius, type=type, all=all
+function sdss_sweep_circle, ra, dec, radius, type=type, all=all, $
+                            silent=silent
 
 common com_sdss_sweep_circle, index_stars, index_gal, index_sky
 
@@ -36,7 +38,7 @@ endif
 if(type eq 'star') then begin
     if(n_tags(index_stars) eq 0) then begin
         index_stars= mrdfits(getenv('PHOTO_SWEEP')+ $
-                             '/datasweep-index-star.fits', 1)
+                             '/datasweep-index-star.fits', 1, silent=silent)
     endif
     index=ptr_new(index_stars)
 endif
@@ -44,7 +46,7 @@ endif
 if(type eq 'gal') then begin
     if(n_tags(index_gal) eq 0) then begin
         index_gal= mrdfits(getenv('PHOTO_SWEEP')+ $
-                             '/datasweep-index-gal.fits', 1)
+                             '/datasweep-index-gal.fits', 1, silent=silent)
     endif
     index=ptr_new(index_gal)
 endif
@@ -52,7 +54,7 @@ endif
 if(type eq 'sky') then begin
     if(n_tags(index_sky) eq 0) then begin
         index_sky= mrdfits(getenv('PHOTO_SWEEP')+ $
-                             '/datasweep-index-sky.fits', 1)
+                             '/datasweep-index-sky.fits', 1, silent=silent)
     endif
     index=ptr_new(index_sky)
 endif
@@ -100,7 +102,7 @@ for i=0L, n_elements(iuniq)-1L do begin
         swfile= getenv('PHOTO_SWEEP')+'/'+rerun+'/calibObj-'+ $
           string(run, f='(i6.6)')+'-'+strtrim(string(camcol),2)+'-'+ $
           type+'.fits.gz'
-        tmp_objs= mrdfits(swfile,1,range=[ist, ind])
+        tmp_objs= mrdfits(swfile,1,range=[ist, ind], silent=silent)
         
         if(n_tags(tmp_objs) gt 0) then begin
 
