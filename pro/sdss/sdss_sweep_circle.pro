@@ -141,7 +141,10 @@ for i=0L, n_elements(iuniq)-1L do begin
 endfor
 ptr_free, index
 
-objs= objs[0:nobjs-1L]
+if(keyword_set(nobjs)) then $
+  objs= objs[0:nobjs-1L] $
+else $
+  objs=0
 
 return, objs
 
