@@ -17,6 +17,7 @@ double separation(double xx1, double yy1, double zz1, double xx2, double yy2,
 									double zz2);
 
 #define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
+
 static void free_memory()
 {
 	IDL_Deltmp(vxx2); xx2=NULL;
@@ -51,7 +52,7 @@ IDL_LONG spherematch
    double    *  distance12;
 	 IDL_LONG *nmatch;
 
-         double myx1,myy1,myz1;
+	 double myx1,myy1,myz1;
 	 IDL_LONG maxmatch, jmax;
 	 double currra,sep;
 	 IDL_LONG i,j,k,rachunk,decchunk;
@@ -74,10 +75,10 @@ IDL_LONG spherematch
 	 /* 1. define chunks */
 	 setchunks(ra1,dec1,npoints1,minchunksize,&rabounds,
 						 &decbounds,&nra,&ndec,&raoffset);
-
+	 
 	 /* 2. assign targets to chunks, with minFibreSpacing of leeway */
 	 assignchunks(ra2,dec2,npoints2,raoffset,matchlength,minchunksize,&nchunk2,
-		      &chunklist2,rabounds,decbounds,nra,ndec);
+								&chunklist2,rabounds,decbounds,nra,ndec);
 
 	 /* 3. make x, y, z coords -- compute (x,y,z)1 on the fly - DPF */
 	 xx2=(double *) IDL_GetScratch(&vxx2,npoints2,sizeof(double));
@@ -104,12 +105,12 @@ IDL_LONG spherematch
 	       k=chunklist2[decchunk][rachunk][j];
 	       sep=separation(myx1,myy1,myz1,xx2[k],yy2[k],zz2[k]);
 	       if(sep<matchlength) {
-		 if(maxmatch>(*nmatch)) {
-		   match1[(*nmatch)]=i;
-		   match2[(*nmatch)]=k;
-		   distance12[(*nmatch)]=sep;
-		 }
-		 (*nmatch)++;
+					 if(maxmatch>(*nmatch)) {
+						 match1[(*nmatch)]=i;
+						 match2[(*nmatch)]=k;
+						 distance12[(*nmatch)]=sep;
+					 } /* end if */
+					 (*nmatch)++;
 	       } /* end if */
 	     } /* end for j */
 	   } /* end if jmax>0 */
@@ -118,7 +119,7 @@ IDL_LONG spherematch
 	 /* 4. clean up after chunks */
 	 unassignchunks(&nchunk2,&chunklist2,nra,ndec);
 	 unsetchunks(&rabounds,&decbounds,&nra,&ndec);
-
+	 
 	 /* 6. free memory */
 	 free_memory();
 
