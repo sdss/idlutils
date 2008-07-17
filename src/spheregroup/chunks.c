@@ -5,6 +5,11 @@
 #include "export.h"
 #include "chunks.h"
 
+#define CHUNKDONE
+#define RAWHILE 
+#define DECWHILE  
+#define CONSERVATIVE 0
+
 /*
  * This file contains routines to break up a sample into chunks in the
  * ra and dec directions. I allow you to set a minimize size (minSize)
@@ -169,12 +174,13 @@ setchunks(double ra[],         /* degrees */
 		if(raRangeTmp>=360. 
 			 || raMinTmp<=minSize/cosDecMin
 			 || raMaxTmp>=360.-minSize/cosDecMin
-			 || (*decBounds)[i]==-90. || (*decBounds)[i]==90.) {
+			 || (*decBounds)[i]==-90.
+			 || (*decBounds)[i]==90.) {
 			raMinTmp=0.;
 			raMaxTmp=360.;
 			raRangeTmp=360.;
 		} /* end if */
-		if((*decBounds)[i]==-90. || (*decBounds)[i]==90.) 
+		if((*decBounds)[i]==-90. || (*decBounds)[i+1]==90.) 
 			(*nRa)[i]=1;
 		(*raBounds)[i]=(double *) malloc(((*nRa)[i]+1)*sizeof(double));
 		for(j=0;j<=(*nRa)[i];j++)
@@ -243,6 +249,9 @@ assignchunks(double ra[],        /* degrees */
 	double currRa;
 	IDL_LONG decChunk,raChunk,currRaChunk;
 	IDL_LONG *raChunkMin, *raChunkMax, decChunkMin, decChunkMax;
+#ifdef CHUNKDONE
+	IDL_LONG **chunkDone;
+#endif
 	IDL_LONG i,j;
 
 	/* initialize pointers */
@@ -278,6 +287,18 @@ assignchunks(double ra[],        /* degrees */
 	for(i=0;i<nDec;i++)
 		for(j=0;j<nRa[i];j++)
 			(*nChunk)[i][j]=0;
+
+	/* Allocate memory for whether chunk is checked for each point */
+#ifdef CHUNKDONE
+	chunkDone=(IDL_LONG **) malloc(nDec*sizeof(IDL_LONG *));
+	for(i=0;i<nDec;i++) 
+		chunkDone[i]=(IDL_LONG *) malloc(nRa[i]*sizeof(IDL_LONG));
+	
+	/* Reset chunkDone */
+	for(i=0;i<nDec;i++)
+		for(j=0;j<nRa[i];j++)
+			chunkDone[i][j]=0;
+#endif
 
 	/* Find number in each chunk */
 	for(i=0;i<nPoints;i++) {
@@ -321,6 +342,24 @@ assignchunks(double ra[],        /* degrees */
 				raChunkMin=raChunkMax=NULL;
 				return(CH_ERROR);
 			} /* end if */
+	
+#ifdef CHUNKDONE 
+			/* Reset chunkDone */
+			for(decChunk=decChunkMin;decChunk<=decChunkMax;decChunk++)
+				for(raChunk=raChunkMin[decChunk-decChunkMin]-1;
+						raChunk<=raChunkMax[decChunk-decChunkMin]+1; 
+						raChunk++) {
+					if(raChunk<0) {
+						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
+					} else if (raChunk>nRa[decChunk]-1) {
+						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
+					} else {
+						currRaChunk=raChunk;
+					} /* end if */
+					if(currRaChunk>=0 && currRaChunk<=nRa[decChunk]-1) 
+						chunkDone[decChunk][currRaChunk]=0;
+				} /* end for raChunk decChunk */
+#endif
 			
 			/* go through each declination slice */
 			for(decChunk=decChunkMin;decChunk<=decChunkMax;decChunk++) {
@@ -350,14 +389,20 @@ assignchunks(double ra[],        /* degrees */
 					 * supposed to decide if raChunk can be -1 or nra[decChunk] */
 					if(raChunk<0) {
 						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
-						if(currRaChunk>=0) 
-							(*nChunk)[decChunk][currRaChunk]++;
 					} else if (raChunk>nRa[decChunk]-1) {
 						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
-						if(currRaChunk<=nRa[decChunk]-1)
-							(*nChunk)[decChunk][currRaChunk]++;
 					} else {
-						(*nChunk)[decChunk][raChunk]++;
+						currRaChunk=raChunk;
+					} /* end if */
+					if(currRaChunk>=0 && currRaChunk<=nRa[decChunk]-1) {
+#ifdef CHUNKDONE
+						if(chunkDone[decChunk][currRaChunk]==0) {
+#endif
+							(*nChunk)[decChunk][currRaChunk]++;
+#ifdef CHUNKDONE
+							chunkDone[decChunk][currRaChunk]=1;
+						} /* end if */
+#endif
 					} /* end if */
 				} /* end for raChunk */
 			} /* end for decChunk */
@@ -391,6 +436,13 @@ assignchunks(double ra[],        /* degrees */
 	for(i=0;i<nDec;i++)
 		for(j=0;j<nRa[i];j++)
 			(*nChunk)[i][j]=0;
+	
+	/* Reset chunkDone */
+#ifdef CHUNKDONE
+	for(i=0;i<nDec;i++)
+		for(j=0;j<nRa[i];j++)
+			chunkDone[i][j]=0;
+#endif
 
 	/* Construct chunkList */
 	for(i=0;i<nPoints;i++) {
@@ -433,6 +485,24 @@ assignchunks(double ra[],        /* degrees */
 				raChunkMin=raChunkMax=NULL;
 				return(CH_ERROR);
 			} /* end if */
+
+			/* Reset chunkDone */
+#ifdef CHUNKDONE
+			for(decChunk=decChunkMin;decChunk<=decChunkMax;decChunk++)
+				for(raChunk=raChunkMin[decChunk-decChunkMin]-1;
+						raChunk<=raChunkMax[decChunk-decChunkMin]+1; 
+						raChunk++) {
+					if(raChunk<0) {
+						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
+					} else if (raChunk>nRa[decChunk]-1) {
+						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
+					} else {
+						currRaChunk=raChunk;
+					} /* end if */
+					if(currRaChunk>=0 && currRaChunk<=nRa[decChunk]-1) 
+						chunkDone[decChunk][currRaChunk]=0;
+				} /* end for raChunk decChunk */
+#endif
 			
 			/* go through each declination slice */
 			for(decChunk=decChunkMin;decChunk<=decChunkMax;decChunk++) {
@@ -454,25 +524,30 @@ assignchunks(double ra[],        /* degrees */
 				} /* end if */
 				
 				/* go through each chunk in slice */
-				for(raChunk=raChunkMin[decChunk-decChunkMin];
-						raChunk<=raChunkMax[decChunk-decChunkMin];
+				for(raChunk=raChunkMin[decChunk-decChunkMin]-CONSERVATIVE;
+						raChunk<=raChunkMax[decChunk-decChunkMin]+CONSERVATIVE;
 						raChunk++) {
 					
 					/* handle edge cases if necessary; setchunkbounds is
 					 * supposed to decide if raChunk can be -1 or nra[decChunk] */
 					if(raChunk<0) {
 						currRaChunk=(raChunk+nRa[decChunk])%nRa[decChunk];
-						(*chunkList)[decChunk][currRaChunk]
-							[(*nChunk)[decChunk][currRaChunk]]=i;
-						(*nChunk)[decChunk][currRaChunk]++;
 					} else if (raChunk>nRa[decChunk]-1) {
 						currRaChunk=(raChunk-nRa[decChunk])%nRa[decChunk];
-						(*chunkList)[decChunk][currRaChunk]
-							[(*nChunk)[decChunk][currRaChunk]]=i;
-						(*nChunk)[decChunk][currRaChunk]++;
 					} else {
-						(*chunkList)[decChunk][raChunk][(*nChunk)[decChunk][raChunk]]=i;
-						(*nChunk)[decChunk][raChunk]++;
+						currRaChunk=raChunk;
+					} /* end if */
+					if(currRaChunk>=0 && currRaChunk<=nRa[decChunk]-1) {
+#ifdef CHUNKDONE
+						if(chunkDone[decChunk][currRaChunk]==0) {
+#endif
+							(*chunkList)[decChunk][currRaChunk]
+								[(*nChunk)[decChunk][currRaChunk]]=i;
+							(*nChunk)[decChunk][currRaChunk]++;
+#ifdef CHUNKDONE
+							chunkDone[decChunk][currRaChunk]=1;
+						} /* end if */
+#endif
 					} /* end if */
 				} /* end for raChunk */
 			} /* end for decChunk */
@@ -488,6 +563,14 @@ assignchunks(double ra[],        /* degrees */
 	if(raChunkMin!=NULL) free((char *) raChunkMin);
 	if(raChunkMax!=NULL) free((char *) raChunkMax);
 	raChunkMin=raChunkMax=NULL;
+#ifdef CHUNKDONE
+	for(i=0;i<nDec;i++) {
+		if(chunkDone[i]!=NULL) free((char *) chunkDone[i]);
+		chunkDone[i]=NULL;
+	}
+	if(chunkDone!=NULL) free((char *) chunkDone);
+	chunkDone=NULL;
+#endif
 
 	return(CH_OK);
 } /* end assign_chunks */
@@ -548,8 +631,8 @@ getchunkbounds(double ra,
 							 IDL_LONG nDec)
 {
 	double cosDecMin;
-	IDL_LONG i;
-
+	IDL_LONG i, keepGoing, raCheck;
+	
 	/* Check that setchunks has been called */
 	if(raBounds==NULL || decBounds==NULL ||
 		 nRa==NULL || nDec==0) {
@@ -565,13 +648,21 @@ getchunkbounds(double ra,
 	if((*decChunkMin)<0 || (*decChunkMin)>nDec-1) 
 		return(CH_OUTOFRANGE);
 	
-	/* set minimum and maximum bounds of dec; in fact, this 
-	 * step depends on minSize>marginSize, since it only looks 
-	 * at the nearest neighbor chunks  */
+	/* set minimum and maximum bounds of dec; I have removed the
+	 * dependency on on minSize>marginSize, since it now looks at more
+	 * than the nearest neighbor chunks; */
+#ifdef DECWHILE
+	while(dec-decBounds[(*decChunkMin)]<marginSize && (*decChunkMin)>0) 
+		(*decChunkMin)--;
+	while(decBounds[(*decChunkMax)+1]-dec<marginSize && (*decChunkMax)<nDec-1)
+		(*decChunkMax)++;
+#else 
 	if(dec-decBounds[(*decChunkMin)]<marginSize && (*decChunkMin)>0) 
 		(*decChunkMin)--;
 	if(decBounds[(*decChunkMax)+1]-dec<marginSize && (*decChunkMax)<nDec-1)
 		(*decChunkMax)++;
+#endif
+
 
 	/* find ra chunk bounds for each dec chunk */
 	(*raChunkMin)=
@@ -596,14 +687,55 @@ getchunkbounds(double ra,
 			return(CH_OUTOFRANGE);
 		} /* end if */
 
-		/* set minimum and maximum bounds of ra; in fact, this 
-		 * step depends on minSize>marginSize, since it only looks 
-		 * at the nearest neighbor chunks  */
-		if((ra-raBounds[i][(*raChunkMin)[i-(*decChunkMin)]])*cosDecMin<marginSize)
+		/* set minimum and maximum bounds of ra; I have removed the
+		 * dependency on on minSize>marginSize, since it now looks at more
+		 * than the nearest neighbor chunks; */
+#ifdef OLDWHILE
+		while((ra-raBounds[i][(*raChunkMin)[i-(*decChunkMin)]])*cosDecMin 
+					<marginSize && (*raChunkMin)[i-(*decChunkMin)]>-1)
 			(*raChunkMin)[i-(*decChunkMin)]--;
-		if((raBounds[i][(*raChunkMax)[i-(*decChunkMin)]+1]-ra)*cosDecMin
-			 <marginSize)
+		while((raBounds[i][(*raChunkMax)[i-(*decChunkMin)]+1]-ra)*cosDecMin
+					<marginSize && (*raChunkMax)[i-(*decChunkMin)]<nRa[i])
 			(*raChunkMax)[i-(*decChunkMin)]++;
+#else
+		raCheck=(*raChunkMin)[i-(*decChunkMin)];
+#ifndef RAWHILE
+		if(raCheck>-1) {
+			if((ra-raBounds[i][raCheck])*cosDecMin<marginSize) 
+				raCheck--;
+		} 
+#else 
+		keepGoing=1;
+		while(keepGoing>0 && raCheck>-1) {
+			if(raCheck>=0 && raCheck<nRa[i])
+				keepGoing=(ra-raBounds[i][raCheck])*cosDecMin<marginSize;
+			else 
+				keepGoing=0;
+			if(keepGoing)
+				raCheck--;
+		} 
+#endif
+		(*raChunkMin)[i-(*decChunkMin)]=raCheck;
+		
+		raCheck=(*raChunkMax)[i-(*decChunkMin)];
+#ifndef RAWHILE
+		if(raCheck>-1) {
+			if((raBounds[i][raCheck+1]-ra)*cosDecMin<marginSize) 
+				raCheck++;
+		}
+#else
+		keepGoing=1;
+		while(keepGoing>0 && raCheck<nRa[i]) {
+			if(raCheck>=0 && raCheck<nRa[i])
+				keepGoing=(raBounds[i][raCheck+1]-ra)*cosDecMin<marginSize;
+			else 
+				keepGoing=0;
+			if(keepGoing)
+				raCheck++;
+		} 
+#endif
+		(*raChunkMax)[i-(*decChunkMin)]=raCheck;
+#endif 
 		
 #if 0
 		/* if the ra range is such that objects can link over the 
