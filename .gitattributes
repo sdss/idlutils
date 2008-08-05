@@ -993,6 +993,7 @@ pro/misc/fillspan.pro -text
 pro/misc/floatcompress.pro -text
 pro/misc/group_indx.pro -text
 pro/misc/hogg_iau_name.pro -text
+pro/misc/hogg_iso_date.pro -text
 pro/misc/hogg_name2radec.pro -text
 pro/misc/hogg_ned_name2radec.pro -text
 pro/misc/iau_to_radec.pro -text
