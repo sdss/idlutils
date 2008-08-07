@@ -6,11 +6,12 @@ DJS_PLOT, DJS_OPLOT Add bin keyword to reduce number of points plotted
 HEAL_SMOOTH    Fixed potentially serious bug in code that avoided IEEE
                   exceptions. 
 GZ_MRDFITS, GZ_HEADFITS: On FITS read failures, try compressed versions
-WRITE_REGIONS_POLYGONS: Mangle to Regions conversion
+PIE_PLOT: plot pie diagrams, with circular axes, etc.
 SDSS_SWEEP_CIRCLE: (new) read circular region from datasweeps fast using index
 TYCHO_READ, TYCHO_EPOCH Fixed cos(dec) error in proper motion application
 VAGC_READ: (new) read circular region from VAGC fast using index
 VMID: add RA and Dec as outputs
+WRITE_REGIONS_POLYGONS: Mangle to Regions conversion
 
 v5_3_0 (January 8, 2008) running on IDL 5.4 - 6.4 (6.3+ for MacIntel)
 Tagged for idlspec2d v5_3_x
