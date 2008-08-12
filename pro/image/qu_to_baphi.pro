@@ -24,8 +24,8 @@
 ;------------------------------------------------------------------------------
 pro qu_to_baphi, q, u, ba, phi
 
-tanphi=u/q
-phi=atan(tanphi)*180./!DPI
+tan2phi=u/q
+phi=0.5*atan(u, q)*180./!DPI
 yy=q^2+u^2
 ba=(1.+yy-2.*sqrt(yy))/(1-yy)
 
