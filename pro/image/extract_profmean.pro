@@ -81,9 +81,9 @@ if(n_tags(cache) eq 0) then begin
         *cache1.mxy=xy2/rpix2
         ii=where(rpix2 eq 0.,iicount)
         if(iicount gt 0) then  begin
-            (*cache1.mxx)[ii]=1.
-            (*cache1.myy)[ii]=1.
-            (*cache1.mxy)[ii]=1.
+            (*cache1.mxx)[ii]=0.
+            (*cache1.myy)[ii]=0.
+            (*cache1.mxy)[ii]=0.
         endif
         if(n_tags(cache) eq 0) then $
           cache=cache1 $
@@ -114,9 +114,9 @@ if(n_tags(cache) eq 0) then begin
         *cache1.mxy=xy2/rpix2
         ii=where(rpix2 eq 0.,iicount)
         if(iicount gt 0) then  begin
-            (*cache1.mxx)[ii]=1.
-            (*cache1.myy)[ii]=1.
-            (*cache1.mxy)[ii]=1.
+            (*cache1.mxx)[ii]=0.
+            (*cache1.myy)[ii]=0.
+            (*cache1.mxy)[ii]=0.
         endif
         if(n_tags(cache) eq 0) then $
           cache=cache1 $
@@ -149,21 +149,21 @@ for i=0L, n_elements(cache)-1L do begin
     endif else begin
         pixnum= ypixnum[ikeep]*nx+xpixnum[ikeep]
         fracs= (*cache[i].fracs)[ikeep]
-        mxx= (*cache[i].mxx)[ikeep]
-        myy= (*cache[i].myy)[ikeep]
-        mxy= (*cache[i].mxy)[ikeep]
+        tmp_mxx= (*cache[i].mxx)[ikeep]
+        tmp_myy= (*cache[i].myy)[ikeep]
+        tmp_mxy= (*cache[i].mxy)[ikeep]
         iuse=where(invvar[pixnum] gt 0., nuse)
         if(nuse gt 0) then begin
             area[i+1L]=total(fracs[iuse],/double)
-            profflux[i+1L]=total(fracs*image[pixnum[iuse]],/double)
+            profflux[i+1L]=total(fracs[iuse]*image[pixnum[iuse]],/double)
             if(n_elements(profflux_ivar) gt 0) then $
-              profflux_ivar[i+1L]=1./total(fracs/invvar[pixnum[iuse]],/double)
+              profflux_ivar[i+1L]=1./total(fracs[iuse]/invvar[pixnum[iuse]],/double)
             if(arg_present(ustokes) OR arg_present(qstokes)) then begin
-                mxx=total(fracs*image[pixnum[iuse]]*mxx[iuse], /double)/ $
+                mxx=total(fracs[iuse]*image[pixnum[iuse]]*tmp_mxx[iuse], /double)/ $
                   profflux[i+1L]
-                myy=total(fracs*image[pixnum[iuse]]*myy[iuse], /double)/ $
+                myy=total(fracs[iuse]*image[pixnum[iuse]]*tmp_myy[iuse], /double)/ $
                   profflux[i+1L]
-                mxy=total(fracs*image[pixnum[iuse]]*mxy[iuse], /double)/ $
+                mxy=total(fracs[iuse]*image[pixnum[iuse]]*tmp_mxy[iuse], /double)/ $
                   profflux[i+1L]
                 ustokes[i]=2.*mxy
                 qstokes[i]=mxx-myy
@@ -184,7 +184,6 @@ radii=[0,cache.radius]
 fullarea=!DPI*(radii[1:n_elements(cache)]^2-radii[0:n_elements(cache)-1L]^2)
 inotenough=where(area[1:n_elements(cache)]/fullarea le 0.95, nnotenough)
 ienough=where(area[1:n_elements(cache)]/fullarea gt 0.95, nenough)
-
 
 profmean=fltarr(n_elements(cache))
 if(arg_present(profmean_ivar)) then $
@@ -207,8 +206,10 @@ area=area[1:n_elements(cache)]
 ; check for very negative annuli
 if(n_elements(profmean_ivar) eq 0) then $
   profmean_ivar=fltarr(n_elements(cache))+1.
-ineg=where(profmean[ienough]*sqrt(profmean_ivar[ienough]) lt -100., nneg)
-if(nneg gt 0) then nprof=ineg[0]
+if(nenough gt 0) then begin
+    ineg=where(profmean[ienough]*sqrt(profmean_ivar[ienough]) lt -100., nneg)
+    if(nneg gt 0) then nprof=ineg[0]
+endif
 
 if(NOT arg_present(cache)) then begin
     for i=0, n_elements(cache)-1 do begin
