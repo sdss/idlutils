@@ -172,6 +172,8 @@ if keyword_set(conditional) then begin
     outquantiles= dblarr(xnpix,nquantiles)
     for ii=0L,xnpix-1 do begin
         inii= where(xgrid EQ ii,ninii)
+		    if(keyword_set(internal_weight)) then $
+         inii= where(xgrid EQ ii AND ygrid ge 0L and ygrid le ynpix-1L, ninii)
         if ninii GT 0 then begin
             outquantiles[ii,*]= weighted_quantile(y[inii],weight[inii], $
                                                   quant=quantiles)
