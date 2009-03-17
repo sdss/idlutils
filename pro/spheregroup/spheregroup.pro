@@ -17,7 +17,7 @@
 ; OPTIONAL INPUTS:
 ;   chunksize  - the algorithm breaks the sphere up into a bunch of
 ;                regions with a characteristic size chunksize
-;                (degrees). By default this is max(1.,4*linklength)
+;                (degrees). By default this is max(0.1,4*linklength)
 ;
 ; OUTPUTS:
 ;   ingroup    - group number of each object (N-dimensional array);
@@ -77,7 +77,7 @@ function spheregroup, ra, dec, linklength, chunksize=chunksize, multgroup=multgr
   endif
 
    if (NOT keyword_set(chunksize)) then begin
-       chunksize=max([4.*linklength,1.])
+       chunksize=max([4.*linklength,0.1])
    end else begin
        if (chunksize lt 4.*linklength) then begin
            chunksize=4.*linklength
