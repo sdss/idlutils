@@ -194,10 +194,10 @@ SccsId = '@(#)imgexp.pro 2.2 7/16/93 Fen Tamanaha'
 ;	interpolate beyond the pixel centers, interpolation will cause
 ;	this border region to be set to the background color.
 ;
-    xs_delta = (xs(im_x_width-1) - xs(0)) / Float(im_x_width - 1.0)
-    ys_delta = (ys(im_y_width-1) - ys(0)) / Float(im_y_width - 1.0)
-    x_ran = [xs(0)-xs_delta/2.0,xs(im_x_width-1)+xs_delta/2.0]
-    y_ran = [ys(0)-ys_delta/2.0,ys(im_y_width-1)+ys_delta/2.0]
+    xs_delta = (xs[im_x_width-1] - xs[0]) / Float(im_x_width - 1.0)
+    ys_delta = (ys[im_y_width-1] - ys[0]) / Float(im_y_width - 1.0)
+    x_ran = [xs[0]-xs_delta/2.0,xs[im_x_width-1]+xs_delta/2.0]
+    y_ran = [ys[0]-ys_delta/2.0,ys[im_y_width-1]+ys_delta/2.0]
 
 ;
 ; Use a dummy plot to determine the plot region, establish device variables,
@@ -367,8 +367,8 @@ SccsId = '@(#)imgexp.pro 2.2 7/16/93 Fen Tamanaha'
 ;
 ; Compute the expanded axis scales.
 ;
-    out_xs = xi * xs_delta + xs(0)
-    out_ys = yi * ys_delta + ys(0)
+    out_xs = xi * xs_delta + xs[0]
+    out_ys = yi * ys_delta + ys[0]
 
     Return, im
 End
