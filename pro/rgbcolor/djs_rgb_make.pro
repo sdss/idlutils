@@ -33,6 +33,7 @@
 ;   overlay     - Optional overlay image, which must be dimensionsed as
 ;                 [NX/REBINFACTOR,NY/REBINFACTOR,3]
 ;   quality     - Quality for WRITE_JPEG; default to 75 per cent
+;   png         - make png instead of jpeg (and ignore "quality")
 ;   tiff        - Set to make TIFF instead of JPEG if either this keyword
 ;                 or DPITIFF is set
 ;   dpitiff     - Set TIFF "dots per inch" resolution, and force /TIFF option
@@ -76,7 +77,7 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
  origin=origin1, scales=scales1, nonlinearity=nonlinearity1, $
  satvalue=satvalue1, rebinfactor=rebinfactor1, overlay=overlay, $
  quality=quality, tiff=tiff1, dpitiff=dpitiff, $
- bits_per_channel=bits_per_channel
+ bits_per_channel=bits_per_channel, png=png
 
    t0 = systime(1)
    thismem = float(ulong(memory()))
@@ -91,9 +92,11 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
     message, 'BITS_PER_CHANNEL must be 8 for JPEGs'
 
    suffix = keyword_set(tiff) ? '.tif' : '.jpg'
+   IF keyword_set(png) THEN suffix='png'
+
    if (NOT keyword_set(name)) THEN name = 'test'
 ; -------- force name suffix to agree with file type
-   if (strpos(name, '.jpg') EQ -1) and (strpos(name, '.tif') EQ -1) then begin 
+   if (strpos(name, '.jpg') EQ -1) and (strpos(name, '.tif') EQ -1 and (strpos(name, '.png') eq -1)) then begin 
       name = name+suffix
    endif else begin 
       extensions = ['.tiff', '.TIFF', '.tif', '.TIF', '.jpeg', '.jpg', '.JPEG', '.JPG']
@@ -312,7 +315,11 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    ;----------
    ; Generate the JPEG (or TIFF) image
 
-   IF keyword_set(tiff) THEN BEGIN
+IF keyword_set(png) THEN BEGIN
+    colors = reform(transpose(reform(temporary(byteimg),dims[0]*dims[1],3)),3,dims[0], dims[1])
+    splog, 'writing png'
+    WRITE_PNG,name,colors
+ENDIF ELSE IF keyword_set(tiff) THEN BEGIN
       colors = reverse(temporary(byteimg),2)
       splog, 'writing tiff file: ', name
       write_tiff, name, planarconfig=2, red=colors[*,*,0], $
