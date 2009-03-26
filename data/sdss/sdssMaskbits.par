@@ -302,17 +302,18 @@ maskbits M_EYEBALL 15 AFTER
 ----------- boss target selection flags
 
 # galaxies
-maskbits BOSS_TARGET1 0 LRG_LOZ			# low-z lrgs
-maskbits BOSS_TARGET1 1 GAL_HIZ			# high-z blue/red gals
-maskbits BOSS_TARGET1 2 GAL_CMASS		# Christy's sliding cut
-maskbits BOSS_TARGET1 3 GAL_GRRED		# red in g-r
+maskbits BOSSTARGET1 0 LRG_LOZ			# low-z lrgs
+maskbits BOSSTARGET1 1 GAL_HIZ			# high-z blue/red gals
+maskbits BOSSTARGET1 2 GAL_CMASS		# Christy's sliding cut
+maskbits BOSSTARGET1 3 GAL_GRRED		# red in g-r
 
 #qsos.  Need more descriptive names.
-maskbits BOSS_TARGET1 10 QSO1			# gordon/alex's selection
-maskbits BOSS_TARGET1 11 QSO2			# chi^2 selection based on Joe's code
+maskbits BOSSTARGET1 10 QSO_KDE_FAINT	# kde faint selection
+maskbits BOSSTARGET1 11 QSO_KDE_BRIGHT	# kde bright selection
+maskbits BOSSTARGET1 12 QSO_CHI2		# chi^2 selection based on Joe's code
 
 # standard stars
-maskbits BOSS_TARGET1 15 STD_FSTAR		# standard f-stars
-maskbits BOSS_TARGET1 16 STD_WD			# white dwarfs
-maskbits BOSS_TARGET1 17 STD_QSO		# qso
+maskbits BOSSTARGET1 20 STD_FSTAR		# standard f-stars
+maskbits BOSSTARGET1 21 STD_WD			# white dwarfs
+maskbits BOSSTARGET1 22 STD_QSO			# qso
 
