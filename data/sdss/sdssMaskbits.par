@@ -299,7 +299,14 @@ maskbits M_EYEBALL 13 BEFORE
 maskbits M_EYEBALL 14 DURING
 maskbits M_EYEBALL 15 AFTER
 
------------ boss target selection flags
+maskbits FLUXMATCH_STATUS 0 ORIGINAL_FLUXMATCH
+maskbits FLUXMATCH_STATUS 1 FIBER_FLUXMATCH
+maskbits FLUXMATCH_STATUS 2 NONMATCH_FLUXMATCH
+maskbits FLUXMATCH_STATUS 3 NOPARENT_FLUXMATCH
+maskbits FLUXMATCH_STATUS 4 PARENT_FLUXMATCH
+maskbits FLUXMATCH_STATUS 5 BRIGHTEST_FLUXMATCH
+
+#----------- boss target selection flags
 
 # galaxies
 maskbits BOSSTARGET1 0 LRG_LOZ			# low-z lrgs
@@ -316,4 +323,3 @@ maskbits BOSSTARGET1 12 QSO_CHI2		# chi^2 selection based on Joe's code
 maskbits BOSSTARGET1 20 STD_FSTAR		# standard f-stars
 maskbits BOSSTARGET1 21 STD_WD			# white dwarfs
 maskbits BOSSTARGET1 22 STD_QSO			# qso
-
