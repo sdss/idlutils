@@ -1,3 +1,4 @@
+BITMASK_WIDGET (new): little widget to have user set a bitmask
 POSITRONIUM_SPECTRUM: Compute the Ore and Powell ortho-positronium
                        annihilation spectrum (3-photon).
 HEALCART_BINDOWN: Bin down a healcart projection properly.  Useful for
