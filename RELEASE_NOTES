@@ -1,24 +1,31 @@
-BITMASK_WIDGET (new): little widget to have user set a bitmask
-POSITRONIUM_SPECTRUM: Compute the Ore and Powell ortho-positronium
-                       annihilation spectrum (3-photon).
-HEALCART_BINDOWN: Bin down a healcart projection properly.  Useful for
-making figures smaller.
-DJS_PLOT, DJS_OPLOT Add bin keyword to reduce number of points plotted
-HEAL_SMOOTH    Fixed potentially serious bug in code that avoided IEEE
-                  exceptions. 
+
+BITMASK_WIDGET (new): Little widget to have user set a bitmask (Blanton)
+DJS_PLOT, DJS_OPLOT Add BIN keyword to reduce number of points plotted
+DJS_RGB_MAKE: Added PNG keyword for png support.
 GZ_MRDFITS, GZ_HEADFITS: On FITS read failures, try compressed versions
-PIE_PLOT: plot pie diagrams, with circular axes, etc.
-SDSS_SWEEP_CIRCLE: (new) read circular region from datasweeps fast using index
+HEAL_SMOOTH: Fixed potentially serious bug in code that avoided IEEE exceptions.
+HEALCART_BINDOWN: Bin down a healcart projection properly.  Useful for
+               making figures smaller.
+HOGG_SCATTERPLOT: /INTERNAL_WEIGHT support within /CONDITIONAL.
+IMGEXP: Updated to use square brackets.
+PIE_PLOT: Plot pie diagrams, with circular axes, etc.
+POSITRONIUM_SPECTRUM: Compute the Ore and Powell ortho-positronium
+               annihilation spectrum (3-photon).
+SDSS_SWEEP_CIRCLE: (new) Read circular region from datasweeps fast using index
+SPHEREGROUP: Change default chunksize from 1 to 0.1 deg.
 TYCHO_READ, TYCHO_EPOCH Fixed cos(dec) error in proper motion application
-VAGC_READ: (new) read circular region from VAGC fast using index
-VMID: add RA and Dec as outputs
+VAGC_READ: (new) Read circular region from VAGC fast using index
+VMID: Add RA and Dec as outputs
 WRITE_REGIONS_POLYGONS: Mangle to Regions conversion
 
+data/sdss/sdssMaskbits.par: Add flags FLUXMATCH_STATUS and BOSSTARGET1.
+
+-------------------------------------------------------------------------------
 v5_3_0 (January 8, 2008) running on IDL 5.4 - 6.4 (6.3+ for MacIntel)
 Tagged for idlspec2d v5_3_x
 
-BSPLINE_BKPTS: Add placed= arg to support externally determined breakpoints. (Loomis)
-src/trace_gweight.c: Bug fix to assign errors to uncentroidable (at edge) peaks (Loomis)
+BSPLINE_BKPTS: Add placed= arg to support externally determined breakpoints
+               (Loomis)
 DJS_BATCH: Bug fix to not crash if input file names (LOCALFILE) are
                not specified.
 DJS_ICOLOR: Set de_compose to 1 for ps file (Blanton).
@@ -35,6 +42,8 @@ src/Makefile: Add dimage directory.
 src/dimage/Makefile,dfind.c,dimage.h,dmedsmooth.c,dojects_multi.c,
                dselip.c,dsigma.c,dsmooth.c,idl_dmedsmooth.c,
                idl_dobjects_multi.c,idl_dsmooth.c: Add Blanton's smoothing code.
+src/trace_gweight.c: Bug fix to assign errors to uncentroidable (at edge) peaks
+               (Loomis)
 
 -------------------------------------------------------------------------------
 v5_2_0 (February 1, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
@@ -44,7 +53,6 @@ BH_RDFORT: Remove antique ugliness.
 DUST_GETVAL: Change endian-ness criterion
 UNIXFIND: String concatenation bugfix
 
->>>>>>> 1.278
 -------------------------------------------------------------------------------
 v5_1_7 (January 5, 2007) running on IDL 5.4 - 6.3 (6.3 only on MacIntel)
 Tagged for Son-of-Spectro.
