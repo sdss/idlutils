@@ -7,11 +7,15 @@
 ;   Modified version of OPLOT.
 ;
 ; CALLING SEQUENCE:
-;   djs_oplot, [x,] y
+;   djs_oplot, [x,] y, [bin= ]
 ;
 ; INPUT:
 ;   x:
 ;   y:
+;
+; OPTIONAL KEYWORDS:
+;   bin        - If set, then plot an evenly-spaced subsample of BIN points,
+;                or 100 points if BIN=1
 ;
 ; OUTPUTS:
 ;
