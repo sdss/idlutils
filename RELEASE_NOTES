@@ -6,6 +6,7 @@ GZ_MRDFITS, GZ_HEADFITS: On FITS read failures, try compressed versions
 HEAL_SMOOTH: Fixed potentially serious bug in code that avoided IEEE exceptions.
 HEALCART_BINDOWN: Bin down a healcart projection properly.  Useful for
                making figures smaller.
+HOGG_IAU_NAME: Change loop variables to long integers.
 HOGG_SCATTERPLOT: /INTERNAL_WEIGHT support within /CONDITIONAL.
 IMGEXP: Updated to use square brackets.
 PIE_PLOT: Plot pie diagrams, with circular axes, etc.

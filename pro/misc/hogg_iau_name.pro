@@ -48,8 +48,8 @@ adstr= string(rah,format='(I2.2)') $
   +string(ded,format='(I2.2)') $
   +string(dem,format='(I2.2)') $
   +string(des,format=desformat)
-for jj=0,1 do begin
-    for kk=0,n_elements(adstr)-1 do begin
+for jj=0L,1L do begin
+    for kk=0L,n_elements(adstr)-1L do begin
         tmp= adstr[kk]
         pos= strpos(tmp,' ')
         if (pos GE 0) then strput, tmp,'0',pos
