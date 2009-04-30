@@ -1,3 +1,5 @@
+-----------------------------------------------------------------------
+v5_4_0 (April 30, 2009) tagged for SDSS-3 image processing
 
 BITMASK_WIDGET (new): Little widget to have user set a bitmask (Blanton)
 DJS_PLOT, DJS_OPLOT Add BIN keyword to reduce number of points plotted
