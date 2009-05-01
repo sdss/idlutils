@@ -6,7 +6,7 @@
 ;    0 <= theta <= 180
 ;  where theta=0 corresponds to the N pole, and theta=180 is the S pole.
 ;  If you want to convert from RA and DEC, pass the following
-;  arguments (in degrees):  RA, DEC+90
+;  arguments (in degrees):  RA, 90-DEC
  
 function angles_to_x,phi,theta
    DRADEG = 180.d0/!dpi
