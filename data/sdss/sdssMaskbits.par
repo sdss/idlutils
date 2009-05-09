@@ -323,3 +323,7 @@ maskbits BOSSTARGET1 12 QSO_CHI2		# chi^2 selection based on Joe's code
 maskbits BOSSTARGET1 20 STD_FSTAR		# standard f-stars
 maskbits BOSSTARGET1 21 STD_WD			# white dwarfs
 maskbits BOSSTARGET1 22 STD_QSO			# qso
+
+maskbits BOSSTILE_STATUS 0 TILED   # assigned a fiber
+maskbits BOSSTILE_STATUS 1 DECOLLIDED   # in the decollided set
+maskbits BOSSTILE_STATUS 2 COVERED      # in area covered by fiber
