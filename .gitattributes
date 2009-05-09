@@ -6,6 +6,7 @@ bin/Makefile -text
 bin/build_links -text
 bin/evilmake -text
 bin/eviltarball -text
+bin/idlutils_version -text
 bin/install_ups_table -text
 bin/memtrack -text
 bin/pstogif -text
