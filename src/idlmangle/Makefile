@@ -26,7 +26,7 @@ OBJECTS = \
 all : $(LIB)/libidlmangle.$(SO_EXT) 
 
 $(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle.a
-	$(LDF77) $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
+	$(LD) $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
 		-L$(IDLUTILS_DIR)/lib -lmangle
 
 install :
