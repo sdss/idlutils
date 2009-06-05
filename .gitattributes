@@ -748,6 +748,7 @@ pro/bspline/intrv.pro -text
 pro/cooling/read_ds_cooling.pro -text
 pro/coord/angles_to_xyz.pro -text
 pro/coord/crossprod.pro -text
+pro/coord/csurvey2eq.pro -text
 pro/coord/current_mjd.pro -text
 pro/coord/dec2hms.pro -text
 pro/coord/djs_angle_group.pro -text
@@ -757,6 +758,7 @@ pro/coord/djs_angpos.pro -text
 pro/coord/djs_angsgn.pro -text
 pro/coord/djs_diff_angle.pro -text
 pro/coord/dotproduct_sphere.pro -text
+pro/coord/eq2csurvey.pro -text
 pro/coord/eta_to_stripe.pro -text
 pro/coord/etalambda_to_radec.pro -text
 pro/coord/euler_2000_fast.pro -text
@@ -774,6 +776,7 @@ pro/coord/radec_greatcircle.pro -text
 pro/coord/radec_to_etalambda.pro -text
 pro/coord/radec_to_munu.pro -text
 pro/coord/recenter.pro -text
+pro/coord/sdss_transform__define.pro -text
 pro/coord/sptr1.pro -text
 pro/coord/stripe_to_eta.pro -text
 pro/coord/stripe_to_incl.pro -text
