@@ -323,8 +323,8 @@ maskbits BOSSTARGET1 3 GAL_GRRED		# red in g-r
 # new qso flags
 maskbits BOSSTARGET1 10 QSO_CORE                # restrictive qso selection
 maskbits BOSSTARGET1 11 QSO_BONUS               # permissive qso selection
-maskbits BOSSTARGET1 12 QSO_KNOWN_MID           # known qso 2.2 < z < 3.5
-maskbits BOSSTARGET1 13 QSO_KNOWN_LOHI          # known qso z < 2.2 or z > 3.5
+maskbits BOSSTARGET1 12 QSO_KNOWN_MIDZ          # known qso 2.2 < z < 3.5
+maskbits BOSSTARGET1 13 QSO_KNOWN_LOHIZ         # known qso z < 2.2 or z > 3.5. never target
 
 # standards
 maskbits BOSSTARGET1 20 STD_FSTAR		# standard f-stars
