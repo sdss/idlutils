@@ -320,9 +320,10 @@ maskbits BOSSTARGET1 3 GAL_GRRED		# red in g-r
 #maskbits BOSSTARGET1 11 QSO_KDE_BRIGHT	# kde bright selection
 #maskbits BOSSTARGET1 12 QSO_CHI2		# chi^2 selection based on Joe's code
 
-# Adam Myers' new qso flags
+# new qso flags
 maskbits BOSSTARGET1 10 QSO_CORE                # restrictive qso selection
 maskbits BOSSTARGET1 11 QSO_BONUS               # permissive qso selection
+maskbits BOSSTARGET1 12 QSO_KNOWN               # known qso 2.2 < z < 3.5
 
 # standards
 maskbits BOSSTARGET1 20 STD_FSTAR		# standard f-stars
