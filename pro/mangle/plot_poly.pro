@@ -30,7 +30,7 @@ pro plot_poly,poly,offset=offset,xrange=xrange,yrange=yrange, $
               filename=filename,fill=fill,nooutline=nooutline, $
               xsize=xsize, ysize=ysize, over=over, color=color, $
               minside=minside, dangle=dangle, outline_thick=outline_thick, $
-              splot=splot, soplot=soplot, aitoff=aitoff
+              splot=splot, soplot=soplot, aitoff=aitoff, noplot=noplot
 
 if(not keyword_set(offset)) then offset=0.
 if(not keyword_set(outline_thick)) then outline_thick=0.001
