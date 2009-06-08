@@ -10,6 +10,8 @@ READ_MANGLE_POLYGONS: change to be forward-compatible with mangle v2 files
 
 deleted mangle1.2 directory (obsolete)
 
+doc/www/index.html - new web home
+doc/www/idlutils.css - style sheet for above
 bin/idlutils_version: SVN version reporting
 data/sdss/sdssMaskbits.par: Alterations to BOSSTARGET1
 
