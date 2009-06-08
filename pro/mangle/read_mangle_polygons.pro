@@ -13,11 +13,6 @@
 ; OUTPUTS:
 ;   polygons - arrays of structures (eg those made by construct_field_polygon) 
 ;   id - array of id's for polygons (should be unique)
-; OPTIONAL INPUT/OUTPUTS:
-; COMMENTS:
-; EXAMPLES:
-; BUGS:
-; PROCEDURES CALLED:
 ; REVISION HISTORY:
 ;   30-Nov-2002  Written by MRB (NYU)
 ;-
@@ -38,13 +33,22 @@ tmp_line=''
 id=lon64arr(npoly)
 polygons=replicate(construct_polygon(),npoly)
 for i=0L, npoly-1L do begin
-    readf,unit, tmp_line
-    tmp_words=strsplit(tmp_line,/extract)
+    tmp_words='blah'
+    while(tmp_words[0] ne 'polygon') do begin
+        readf,unit, tmp_line
+        tmp_words=strsplit(tmp_line,/extract)
+    endwhile
     id[i]=long64(tmp_words[1])
     ptr_free,polygons[i].caps
-    polygons[i].weight=double(tmp_words[5])
-    polygons[i].str=double(tmp_words[7])
-    polygons[i].ncaps=long(tmp_words[3])
+    
+    for j=3L, n_elements(tmp_words)-1L, 2L do begin
+        if(strmatch(tmp_words[j+1L], 'caps*')) then $
+          polygons[i].ncaps=long(tmp_words[j])
+        if(strmatch(tmp_words[j+1L], 'weight*')) then $
+          polygons[i].weight=double(tmp_words[j])
+        if(strmatch(tmp_words[j+1L], 'str*')) then $
+          polygons[i].str=double(tmp_words[j])
+    endfor
     polygons[i].caps=ptr_new(replicate(construct_cap(),polygons[i].ncaps))
     for j=0L, polygons[i].ncaps-1L do begin
        readf,unit,tmp_line
