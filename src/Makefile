@@ -12,8 +12,8 @@ SHELL = /bin/sh
 #
 CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
 
-# Note that either mangle1.4/src or mangle1.2 must be built before idlmangle!
-SUBDIRS = image mangle1.4/src idlmangle math spheregroup trace dimage
+# Note that mangle2.2/src must be built before idlmangle!
+SUBDIRS = image mangle2.2/src mangle1.4/src idlmangle math spheregroup trace dimage
 
 all :
 	@ for f in $(SUBDIRS); do \
