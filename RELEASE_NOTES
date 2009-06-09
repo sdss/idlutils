@@ -1,5 +1,12 @@
 -----------------------------------------------------------------------
-v5_4_1 (May 8, 2009) tagged before mangle2.2 upgrade
+v5_4_2 (June 9, 2009) tagged after mangle2.2 upgrade
+
+src/idlmangle - use libmangle14.a 
+src/mangle1.4 - changed to only compile mrb_* commands, write libmangle14.a
+src/mangle2.2 - added pixelize-capable mangle (Molly Swanson)
+
+-----------------------------------------------------------------------
+v5_4_1 (June 8, 2009) tagged before mangle2.2 upgrade
 
 ANGLES_TO_X: fix documentation
 CSURVEY2EQ, CEQ2SURVEY, SDSS_TRANSFORM__DEFINE: Erin Sheldon code
