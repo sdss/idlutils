@@ -67,9 +67,9 @@ SLIB =
 
 DEST=$(IDLUTILS_DIR)/bin/
 ILIB = -L$(IDLUTILS_DIR)/lib/
-LLIB = -lmangle
+LLIB = -lmangle14
 
-PROGS = mrb_balkanize mrb_unify mrb_snap balkanize drangle harmonize map polyid poly2poly ransack snap unify weight
+PROGS = $(DEST)mrb_balkanize $(DEST)mrb_unify $(DEST)mrb_snap 
 #ddcount rotate rrcoeffs
 
 COBJ = add_parent.o advise_fmt.o braktop_.o cmminf.o convert.o copy_format.o copy_poly.o drandom.o drangle_polys.o dranglepolys_.o dump_poly.o findtop_.o garea.o gcmlim.o gphbv.o gphi.o gptin.o gspher.o gsphr.o gvert.o gvlim.o gvphi.o harmonize_polys.o harmonizepolys_.o ikrand.o msg.o new_poly.o new_vert.o partition_poly.o places.o poly_id.o prune_poly.o rdangle.o rdline.o rdmask.o rdmask_.o rdspher.o scale.o search.o snap_poly.o split_poly.o strcmpl.o strdict.o vmid.o weight_fn.o wrangle.o wrho.o wrmask.o wrrrcoeffs.o wrspher.o
@@ -78,73 +78,73 @@ FOBJ = azel.s.o azell.s.o braktop.s.o felp.s.o fframe.s.o findtop.s.o garea.s.o 
 
 # The following line does not work on an SGI, so I'm commenting it out
 # in favor of the simpler assignment for OBJ.
-# objects not already present (will try to extract them from lib/libmangle.a)
+# objects not already present (will try to extract them from lib/libmangle14.a)
 #OBJ := $(strip $(foreach objfile, $(COBJ) $(FOBJ), $(shell if [ ! -r $(objfile) ]; then echo $(objfile); fi)))
 OBJ = $(COBJ) $(FOBJ)
 
 mangle:
-	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.a -a "$(OBJ)" ] ; then \
-		echo "extracting files from $(IDLUTILS_DIR)/lib/libmangle.a" ; \
-		ar xo $(IDLUTILS_DIR)/lib/libmangle.a $(OBJ) &> /dev/null ; \
+	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle14.a -a "$(OBJ)" ] ; then \
+		echo "extracting files from $(IDLUTILS_DIR)/lib/libmangle14.a" ; \
+		ar xo $(IDLUTILS_DIR)/lib/libmangle14.a $(OBJ) &> /dev/null ; \
 		rm -f __.SYMDEF ; \
 	fi
 	@ $(MAKE) mangler
 	@ rm -f $(COBJ) $(FOBJ)
 
 mangler:
-	$(MAKE) $(IDLUTILS_DIR)/lib/libmangle.a $(PROGS)
+	$(MAKE) $(IDLUTILS_DIR)/lib/libmangle14.a $(PROGS)
 
-$(IDLUTILS_DIR)/lib/libmangle.a: $(COBJ) $(FOBJ) Makefile
-	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle.a ] ; then echo "updating $(IDLUTILS_DIR)/lib/libmangle.a" ; else echo "creating $(IDLUTILS_DIR)/lib/libmangle.a" ; fi
-	ar ru $(IDLUTILS_DIR)/lib/libmangle.a $(COBJ) $(FOBJ)
-	ranlib $(IDLUTILS_DIR)/lib/libmangle.a
+$(IDLUTILS_DIR)/lib/libmangle14.a: $(COBJ) $(FOBJ) Makefile
+	@ if [ -r $(IDLUTILS_DIR)/lib/libmangle14.a ] ; then echo "updating $(IDLUTILS_DIR)/lib/libmangle14.a" ; else echo "creating $(IDLUTILS_DIR)/lib/libmangle14.a" ; fi
+	ar ru $(IDLUTILS_DIR)/lib/libmangle14.a $(COBJ) $(FOBJ)
+	ranlib $(IDLUTILS_DIR)/lib/libmangle14.a
 
-mrb_balkanize: mrb_balkanize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+$(DEST)mrb_balkanize: mrb_balkanize.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)mrb_balkanize mrb_balkanize.o $(ILIB) $(LLIB)
 
-balkanize: balkanize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+balkanize: balkanize.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)balkanize balkanize.o $(ILIB) $(LLIB)
 
-ddcount: ddcount.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+ddcount: ddcount.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)ddcount ddcount.o $(ILIB) $(LLIB)
 
-drangle: drangle.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+drangle: drangle.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)drangle drangle.o $(ILIB) $(LLIB)
 
-harmonize: harmonize.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+harmonize: harmonize.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)harmonize harmonize.o $(ILIB) $(LLIB)
 
-map: map.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+map: map.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)map map.o $(ILIB) $(LLIB)
 
-polyid: polyid.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+polyid: polyid.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)polyid polyid.o $(ILIB) $(LLIB)
 
-poly2poly: poly2poly.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+poly2poly: poly2poly.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)poly2poly poly2poly.o $(ILIB) $(LLIB)
 
-ransack: ransack.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+ransack: ransack.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)ransack ransack.o $(ILIB) $(LLIB)
 
-#rotate: rotate.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+#rotate: rotate.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 #$(F77) $(FFLAGS) -o $(DEST)rotate rotate.o $(ILIB) $(LLIB) $(ISLIB) $(SLIB)
 
-rrcoeffs: rrcoeffs.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+rrcoeffs: rrcoeffs.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)rrcoeffs rrcoeffs.o $(ILIB) $(LLIB)
 
-mrb_snap: mrb_snap.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+$(DEST)mrb_snap: mrb_snap.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)mrb_snap mrb_snap.o $(ILIB) $(LLIB)
 
-snap: snap.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+snap: snap.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)snap snap.o $(ILIB) $(LLIB)
 
-unify: unify.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+unify: unify.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)unify unify.o $(ILIB) $(LLIB)
 
-mrb_unify: mrb_unify.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+$(DEST)mrb_unify: mrb_unify.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)mrb_unify mrb_unify.o $(ILIB) $(LLIB)
 
-weight: weight.o $(IDLUTILS_DIR)/lib/libmangle.a Makefile
+weight: weight.o $(IDLUTILS_DIR)/lib/libmangle14.a Makefile
 	$(F77) $(FFLAGS) -o $(DEST)weight weight.o $(ILIB) $(LLIB)
 
 advise_fmt.o: angunit.h manglefn.h advise_fmt.c
@@ -340,12 +340,6 @@ install :
 	-@ cp Makefile $(IDLUTILS_DIR)/src/mangle1.4/src
 
 clean :
-	- /bin/rm -f *~ core *.o so_locations
-
-cleaner:
-	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a
-
-cleanest:
-	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle.a $(PROGS)
+	rm -f *.o core $(IDLUTILS_DIR)/lib/libmangle14.a $(PROGS)
 	if [ -d "$(DEST)" ] ; then cd $(DEST) ; rm -f core $(PROGS) ; fi
 
