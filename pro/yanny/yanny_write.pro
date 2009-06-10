@@ -73,8 +73,8 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    ; Yanny files assume type INT is a 4-byte integer, whereas in IDL
    ; that type is only 2-byte.
 ;   tname = ['char', 'short', 'int', 'long', 'long', 'float', 'double']
-   tname = ['char', 'short', 'int', 'int', 'long', 'float', 'double']
-   idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'LONG64', 'FLOAT', 'DOUBLE']
+   tname = ['char', 'short', 'int', 'int', 'long', 'float', 'double', 'int']
+   idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'LONG64', 'FLOAT', 'DOUBLE', 'ULONG']
 
    get_lun, olun
    openw, olun, filename
