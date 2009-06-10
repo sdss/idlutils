@@ -309,27 +309,27 @@ maskbits FLUXMATCH_STATUS 5 BRIGHTEST_FLUXMATCH
 #----------- boss target selection flags
 
 # galaxies
-maskbits BOSSTARGET1 0 LRG_LOZ			# low-z lrgs
-maskbits BOSSTARGET1 1 GAL_HIZ			# high-z blue/red gals
-maskbits BOSSTARGET1 2 GAL_CMASS		# Christy's sliding cut
-maskbits BOSSTARGET1 3 GAL_GRRED		# red in g-r
+maskbits BOSS_TARGET1 0 LRG_LOZ			# low-z lrgs
+maskbits BOSS_TARGET1 1 GAL_HIZ			# high-z blue/red gals
+maskbits BOSS_TARGET1 2 GAL_CMASS		# Christy's sliding cut
+maskbits BOSS_TARGET1 3 GAL_GRRED		# red in g-r
 
 # qsos
 # old qso flags
-#maskbits BOSSTARGET1 10 QSO_KDE_FAINT	# kde faint selection
-#maskbits BOSSTARGET1 11 QSO_KDE_BRIGHT	# kde bright selection
-#maskbits BOSSTARGET1 12 QSO_CHI2		# chi^2 selection based on Joe's code
+#maskbits BOSS_TARGET1 10 QSO_KDE_FAINT	# kde faint selection
+#maskbits BOSS_TARGET1 11 QSO_KDE_BRIGHT	# kde bright selection
+#maskbits BOSS_TARGET1 12 QSO_CHI2		# chi^2 selection based on Joe's code
 
 # new qso flags
-maskbits BOSSTARGET1 10 QSO_CORE                # restrictive qso selection
-maskbits BOSSTARGET1 11 QSO_BONUS               # permissive qso selection
-maskbits BOSSTARGET1 12 QSO_KNOWN_MIDZ          # known qso 2.2 < z < 3.5
-maskbits BOSSTARGET1 13 QSO_KNOWN_LOHIZ         # known qso z < 2.2 or z > 3.5. never target
+maskbits BOSS_TARGET1 10 QSO_CORE                # restrictive qso selection
+maskbits BOSS_TARGET1 11 QSO_BONUS               # permissive qso selection
+maskbits BOSS_TARGET1 12 QSO_KNOWN_MIDZ          # known qso 2.2 < z < 3.5
+maskbits BOSS_TARGET1 13 QSO_KNOWN_LOHIZ         # known qso z < 2.2 or z > 3.5. never target
 
 # standards
-maskbits BOSSTARGET1 20 STD_FSTAR		# standard f-stars
-maskbits BOSSTARGET1 21 STD_WD			# white dwarfs
-maskbits BOSSTARGET1 22 STD_QSO			# qso
+maskbits BOSS_TARGET1 20 STD_FSTAR		# standard f-stars
+maskbits BOSS_TARGET1 21 STD_WD			# white dwarfs
+maskbits BOSS_TARGET1 22 STD_QSO			# qso
 
 maskbits BOSSTILE_STATUS 0 TILED   # assigned a fiber
 maskbits BOSSTILE_STATUS 1 DECOLLIDED   # in the decollided set
