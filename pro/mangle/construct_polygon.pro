@@ -31,6 +31,7 @@ cap=replicate(cap1,ncaps)
 polygon1={polystr, $
           ncaps:0L, $
           weight:0.D, $
+          pixel:-1L, $
           str:0.D, $
           use_caps:ulong(0), $
           caps:ptr_new()}
