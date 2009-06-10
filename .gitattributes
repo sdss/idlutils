@@ -913,6 +913,7 @@ pro/mangle/read_binary_polygons.pro -text
 pro/mangle/read_fits_polygons.pro -text
 pro/mangle/read_mangle_polygons.pro -text
 pro/mangle/read_mangle_vertices.pro -text
+pro/mangle/read_yanny_polygons.pro -text
 pro/mangle/set_use_caps.pro -text
 pro/mangle/vmid.pro -text
 pro/mangle/vmidc.pro -text
@@ -921,6 +922,7 @@ pro/mangle/window_image.pro -text
 pro/mangle/write_fits_polygons.pro -text
 pro/mangle/write_mangle_polygons.pro -text
 pro/mangle/write_regions_polygons.pro -text
+pro/mangle/write_yanny_polygons.pro -text
 pro/mangle/x_to_angles.pro -text
 pro/math/adjust_error.pro -text
 pro/math/asinh2.pro -text
