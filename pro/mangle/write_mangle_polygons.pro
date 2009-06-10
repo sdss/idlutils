@@ -13,14 +13,10 @@
 ;   weight - arrays of weights for each polygon
 ;   str - area of each polygon?
 ;   unit - if present, use this unit instead of opening another
-; OUTPUTS:
-; OPTIONAL INPUT/OUTPUTS:
 ; COMMENTS:
 ;   The format is lossy --- it only outputs "used" caps, and it throws 
-;   away auxiliary information about each polygon.
-; EXAMPLES:
-; BUGS:
-; PROCEDURES CALLED:
+;     away auxiliary information about each polygon.
+;   It also does NOT write out any pixel information
 ; REVISION HISTORY:
 ;   07-Nov-2002  Written by MRB (NYU)
 ;-
