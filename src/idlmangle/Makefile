@@ -25,9 +25,9 @@ OBJECTS = \
 
 all : $(LIB)/libidlmangle.$(SO_EXT) 
 
-$(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle.a
+$(LIB)/libidlmangle.$(SO_EXT): $(OBJECTS) $(IDLUTILS_DIR)/lib/libmangle14.a
 	$(LD) $(X_LD_FLAGS) -o $(LIB)/libidlmangle.$(SO_EXT) $(OBJECTS) \
-		-L$(IDLUTILS_DIR)/lib -lmangle
+		-L$(IDLUTILS_DIR)/lib -lmangle14
 
 install :
 	-@ cp *.c $(IDLUTILS_DIR)/src/idlmangle
