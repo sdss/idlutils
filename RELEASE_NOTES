@@ -1,5 +1,9 @@
 -----------------------------------------------------------------------
-v5_4_2 (June 9, 2009) tagged after mangle2.2 upgrade
+v5_4_2 (June 10, 2009) tagged after mangle2.2 upgrade
+
+READ_YANNY_POLYGONS, WRITE_YANNY_POLYGONS: write Yanny format polygon files
+READ_FITS_POLYGONS: read in pixel number
+CONSTRUCT_POLYGON: add pixel number to structure
 
 src/idlmangle - use libmangle14.a 
 src/mangle1.4 - changed to only compile mrb_* commands, write libmangle14.a
