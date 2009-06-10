@@ -31,6 +31,7 @@
 ; REVISION HISTORY:
 ;   2003-Mar-14  Written by Douglas Finkbeiner, Princeton
 ;   2004-Aug-16  Avoid floating underflow in beam transform - DPF
+;   2009-Jun-09  Handle multiple maps - EFS
 ;
 ;----------------------------------------------------------------------
 function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
@@ -40,7 +41,8 @@ function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
 
 ; -------- if we pass a map, compute alm transform
   if keyword_set(map) then begin 
-     nside_in = long(sqrt(n_elements(map)/12))
+     nside_in = long(sqrt(n_elements(map[*,0])/12))
+     nmap = size(map, /n_dim) eq 1 ? 1 : (size(map, /dimens))[1]
      if NOT keyword_set(lmax) then lmax = 2*nside_in
      alm = healpix2alm(map, lmax=lmax)
      if NOT keyword_set(nside) then nside = nside_in
@@ -50,6 +52,7 @@ function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
      if NOT keyword_set(lmax) then lmax = (size(alm_in, /dim))[0]
      if NOT keyword_set(nside) then message, 'must set nside when passing alm'
      alm = alm_in
+     nmap = size(alm, /n_dim) eq 2 ? 1 : (size(alm, /dimens))[2]
   endelse
 
   if nside GT 8192 then message, 'routines cannot handle maps this big'
@@ -70,7 +73,9 @@ function heal_smooth, map, fwhm_arcmin, nside=nside, alm=alm_in, lmax=lmax
   lind = where(bl gt 0.001, nl)
   nl = nl < (nside * 4)
   if nl gt 0 then begin 
-     for ll=0, nl-1 do alm[ll, *] = alm[ll, *]*bl[ll]
+      for imap=0, nmap-1 do begin
+          for ll=0, nl-1 do alm[ll,*,imap] = alm[ll,*,imap]*bl[ll]
+      endfor
   endif 
 
   print, 'NL = ', nl
