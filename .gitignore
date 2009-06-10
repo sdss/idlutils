@@ -5,9 +5,12 @@ bin/map
 bin/mrb_balkanize
 bin/mrb_snap
 bin/mrb_unify
+bin/pixelize
+bin/pixelmap
 bin/poly2poly
 bin/polyid
 bin/ransack
+bin/rasterize
 bin/snap
 bin/unify
 bin/weight
