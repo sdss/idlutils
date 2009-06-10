@@ -46,6 +46,8 @@ for i=0L, npoly-1L do begin
           polygons[i].ncaps=long(tmp_words[j])
         if(strmatch(tmp_words[j+1L], 'weight*')) then $
           polygons[i].weight=double(tmp_words[j])
+        if(strmatch(tmp_words[j+1L], 'pixel*')) then $
+          polygons[i].pixel=double(tmp_words[j])
         if(strmatch(tmp_words[j+1L], 'str*')) then $
           polygons[i].str=double(tmp_words[j])
     endfor
