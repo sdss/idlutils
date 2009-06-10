@@ -31,6 +31,7 @@
 ; REVISION HISTORY:
 ;   2003-Mar-14  Written by Douglas Finkbeiner, Princeton
 ;   2003-Nov-12  Can do many maps at once, sped up - DPF & NP
+;   2009-May-13  Fix underflows for nside > 512 - EFS
 ;
 ;----------------------------------------------------------------------
 
@@ -93,13 +94,28 @@ function alm2healpix, nside, alm, lmax=lmax
   lfac = sqrt((2*dindgen(lmax+1)+1)/(4*!dpi))
   revind = reverse(lindgen(nside*2-1))
   mlqind = [lindgen(nside*2), revind]
+  junk = check_math()    ; clear floating-point exception flags
 
   for m=0, mmax do begin 
      tt = systime(1)
-     mqladvance, xqhalf, m, Mql_1, Mql, lmax=lmax
-  junk = check_math()    ; clear floating-point exception flags
+     if lmax gt 1024 then begin
+         mqladvance, xqhalf, m, Mql_1, Mql, norm_1, norm, lmax=lmax
+     endif else begin
+         mqladvance, xqhalf, m, Mql_1, Mql, lmax=lmax
+     endelse
 
-     Mlq = transpose(Mql) ; 5 sec just for transpose!! Can we do this better?
+     cm = check_math()
+     if (cm ne 0) and (lmax gt 1024 || cm ne 32) then begin
+         splog, 'Check math failed.', cm
+         stop
+     endif
+
+     if lmax gt 1024 then begin
+         Mlq = transpose(Mql*.5d^(-norm))
+     endif else begin
+         Mlq = transpose(Mql)
+     endelse
+; 5 sec just for transpose!! Can we do this better?
 
      sign = 1-((indgen(lmax+1)+m) mod 2)*2
 
@@ -110,19 +126,26 @@ function alm2healpix, nside, alm, lmax=lmax
      ; loop over rings and sum on l index
      for iq=0L, nq-1 do begin 
 
-        if check_math() NE 0 then stop
         Ml = Mlq[m:lmax, mlqind[iq]]*lfac[m:lmax]
         if iq GE 2*nside then Ml = Ml*sign[m:lmax]
 
         for imap=0L, nmap-1 do begin 
            Fqn[iq, 0, imap] = total(Ml*aln[*,0,imap])
-           cm = check_math()
-           if (cm NE 32) and (cm NE 0) then stop
         endfor 
      endfor
      ; fill Fqm array
      Fqm[*, m, *] = Fqn
      Mql_1 = temporary(Mql)
+     if lmax gt 1024 then begin
+         norm_1 = temporary(norm)
+     endif
+
+     cm = check_math()
+     if (cm ne 0) and (cm ne 32) then begin
+         splog, 'Check math failed.', cm
+         stop
+     endif
+
      if (m mod 64) eq 0 then splog, m, systime(1)-tt
   endfor 
 

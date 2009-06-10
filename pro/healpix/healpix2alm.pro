@@ -30,6 +30,7 @@
 ; REVISION HISTORY:
 ;   2003-Feb-19  Written by Douglas Finkbeiner, Princeton
 ;   2003-Nov-12  Can call with multiple maps at a time - DPF & NP
+;   2009-May-13  Fix underflows for nside > 512 - EFS
 ;
 ;----------------------------------------------------------------------
 ;
@@ -138,19 +139,50 @@ function healpix2alm, data, lmax=lmax, mmax=mmax
   revind = reverse(lindgen(nside*2-1))
   for m=0, mmax do begin 
      tt = systime(1)
-     mqladvance, xqhalf, m, Mql_1, Mql, lmax=lmax
+     junk = check_math()        ; clear floating-point exception flags
+     if lmax gt 1024 then begin
+         mqladvance, xqhalf, m, Mql_1, Mql, norm_1, norm, lmax=lmax
+     endif else begin
+         mqladvance, xqhalf, m, Mql_1, Mql, lmax=lmax
+     endelse
+
+     cm = check_math()
+     if (cm ne 0) and (lmax gt 1024 || cm ne 32) then begin
+         splog, 'Check math failed.', cm
+         stop
+     endif
+
+     ; we could have chosen to remove the sin(theta)^m normalization in 
+     ; mql_advance to reduce the dynamic range needed in mql_advance
+     ; if we had, we would add it back here, via:
+     ; log2fac = m/2.0*alog(1-xqhalf^2)/alog(2)
      
      Fqn = Fqm[*, m, *]
      for l=m, lmax do begin 
         sign = 1-((l+m) mod 2)*2
-        Mq_thisl = Mql[*, l]
+        if n_elements(norm) ne 0 then begin
+            Mq_thisl = Mql[*,l]*(.5d)^(-norm[*,l]) ;used to throw log2fac here
+        endif else begin
+            Mq_thisl = Mql[*,l]
+        endelse
         Mqlfull = [Mq_thisl, sign*Mq_thisl[revind]]
-
         for imap=0L, nmap-1 do $
           Alm[l, m, imap] = lfac[l]*total(Mqlfull*Fqn[*, 0, imap])
      endfor 
 
      Mql_1 = temporary(Mql)
+     if lmax gt 1024 then begin
+         norm_1 = temporary(norm)
+     endif
+     cm = check_math()
+     if (cm ne 0) and (cm ne 32) then begin
+         splog, 'Check math failed.', cm
+         stop
+     endif 
+     ; the sin(theta) normalization removal may underflow, but there is 
+     ; nothing to be done about this and it shouldn't influence our 
+     ; integration, i.e., cm eq 32 is okay.
+
      if (m mod 64) eq 0 then splog, m, systime(1)-tt
   endfor 
 

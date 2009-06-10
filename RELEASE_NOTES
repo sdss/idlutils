@@ -1,3 +1,4 @@
+HEALPIX2ALM, ALM2HEALPIX, MQLADVANCE: fix underflows above l=1024
 HEAL_SMOOTH: Accept multiple maps at a time.
 
 -----------------------------------------------------------------------
