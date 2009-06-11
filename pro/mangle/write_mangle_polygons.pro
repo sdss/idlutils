@@ -21,7 +21,8 @@
 ;   07-Nov-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-pro write_mangle_polygons, outfile, polygons, id, unit=unit
+pro write_mangle_polygons, outfile, polygons, id, unit=unit, hdr=hdr, $
+  pixels=pixels
 
 if(n_params() lt 2 or n_params() gt 3) then begin
     print,'Syntax - write_mangle_polygons, outfile, polygons [, id]'
@@ -33,14 +34,24 @@ if(n_elements(id) eq 0) then id=lindgen(n_elements(polygons))
 if(NOT keyword_set(unit)) then $
   openw,unit,outfile,/get_lun
 printf,unit,format='(%"%d polygons")',n_elements(polygons)
+for i=0L, n_elements(hdr)-1L do begin
+    printf, unit, hdr[i]
+endfor
 for i=0L, n_elements(polygons)-1L do begin
     nused_caps=0
     for j=0L, polygons[i].ncaps-1L do $
       if(is_cap_used(polygons[i].use_caps,j)) then $
          nused_caps=nused_caps+1
-    printf,unit, $
-      format='(%"polygon %22d ( %d caps, %20.7f weight, %20.16f str):")', $
-      id[i],nused_caps,polygons[i].weight,polygons[i].str
+    if(keyword_set(pixels)) then $
+      printf,unit, $
+             format='(%"polygon %22d ( %d caps, %20.7f weight, '+ $
+             '%d pixel, %20.16f str):")', id[i],nused_caps, $
+             polygons[i].weight, polygons[i].pixel, polygons[i].str $
+    else $
+      printf,unit, $
+             format='(%"polygon %22d ( %d caps, %20.7f weight, '+ $
+             '%20.16f str):")', id[i],nused_caps,polygons[i].weight, $
+             polygons[i].str
     for j=0L, polygons[i].ncaps-1L do begin
         if(is_cap_used(polygons[i].use_caps,j)) then $
            printf,unit, $
