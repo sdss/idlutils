@@ -17,7 +17,7 @@
 ;   30-Nov-2002  Written by MRB (NYU)
 ;-
 ;------------------------------------------------------------------------------
-pro read_mangle_polygons, infile, polygons, id, unit=unit, $
+pro read_mangle_polygons, infile, polygons, id, unit=unit, hdr=hdr, $
                           allow_doubles=allow_doubles
 
 if(n_params() lt 2) then begin
@@ -37,6 +37,12 @@ for i=0L, npoly-1L do begin
     while(tmp_words[0] ne 'polygon') do begin
         readf,unit, tmp_line
         tmp_words=strsplit(tmp_line,/extract)
+        if(tmp_words[0] ne 'polygon' AND i eq 0) then begin
+            if(keyword_set(hdr)) then $
+              hdr=[hdr, tmp_line] $
+            else $
+              hdr=tmp_line
+        endif
     endwhile
     id[i]=long64(tmp_words[1])
     ptr_free,polygons[i].caps
