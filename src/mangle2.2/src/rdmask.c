@@ -140,7 +140,7 @@ int rdmask(char *name, format *fmt, int npolys, polygon *polys[/*npolys*/])
 {
     char *input = "input";
     char *line_rest, *word;
-    int ird;
+    int ird, maxpolys;
     int npoly = 0;
     format in_fmt;
     polygon *poly = 0x0;
@@ -164,13 +164,19 @@ int rdmask(char *name, format *fmt, int npolys, polygon *polys[/*npolys*/])
     file.end = fmt->end;
 
     /* read data until hit EOF */
-    while (1) {
+    maxpolys=npolys+2;
+    while (npoly<maxpolys) {
 	/* read line of data */
 	ird = rdline(&file);
 	/* serious error */
 	if (ird == -1) goto error;
 	/* EOF */
 	if (ird == 0) break;
+
+		/* treat first line specially */
+		if(npoly==0 && maxpolys==npolys+2) {
+			sscanf(file.line,"%d",&maxpolys);
+		} 
 
 	/* look for keyword as first word in line */
 	word = get_keyword(file.line, &line_rest, fmt);
