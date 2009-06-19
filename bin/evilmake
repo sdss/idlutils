@@ -66,7 +66,7 @@ case $UNAME in
            if [ `uname -m` == 'i386' ]; then
                 echo "Darwin/i386; requires a native (x86) IDL and gfortran"
                 idlver=`echo 'print, !VERSION.OS, " ", !VERSION.arch' | idl`
-                if [ "$idlver" != "darwin i386" ]; then
+                if [[ "$idlver" != "darwin i386" && "$idlver" != "darwin x86_64" ]]; then
                     echo idlutils now requires a native IDL on x86 machines >&2
                     exit 1
                 fi
