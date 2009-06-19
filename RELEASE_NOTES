@@ -1,19 +1,24 @@
-HEALPIX2ALM, ALM2HEALPIX, MQLADVANCE: fix underflows above l=1024
-HEAL_SMOOTH: Accept multiple maps at a time.
-READ_MANGLE_POLYGONS: add ability to read the mangle header
 
-src/mangle2.2/src/rdmask.c - add limit to read in only the actual # of polys
+HEALPIX2ALM, ALM2HEALPIX, MQLADVANCE: Fix underflows above l=1024.
+HEAL_SMOOTH: Accept multiple maps at a time.
+READ_MANGLE_POLYGONS: Add ability to read the mangle header.
+
+src/mangle2.2/src/rdmask.c - Add limit to read in only the actual
+               number of polygons.
+www/doc/index.html: Add link to goddard.
 
 -----------------------------------------------------------------------
 v5_4_2 (June 10, 2009) tagged after mangle2.2 upgrade
 
-READ_YANNY_POLYGONS, WRITE_YANNY_POLYGONS: write Yanny format polygon files
-READ_FITS_POLYGONS: read in pixel number
-CONSTRUCT_POLYGON: add pixel number to structure
+CONSTRUCT_POLYGON: Add pixel number to structure
+READ_FITS_POLYGONS: Read in pixel number
+READ_YANNY_POLYGONS, WRITE_YANNY_POLYGONS: Write Yanny format polygon files
+YANNY_WRITE: Add ULONG.
 
 src/idlmangle - use libmangle14.a 
 src/mangle1.4 - changed to only compile mrb_* commands, write libmangle14.a
 src/mangle2.2 - added pixelize-capable mangle (Molly Swanson)
+www/doc/index.html: New documentation
 
 -----------------------------------------------------------------------
 v5_4_1 (June 8, 2009) tagged before mangle2.2 upgrade
@@ -55,6 +60,8 @@ VAGC_READ: (new) Read circular region from VAGC fast using index
 VMID: Add RA and Dec as outputs
 WRITE_REGIONS_POLYGONS: Mangle to Regions conversion
 
+bin/evilmake: Add condition to run with latest 64-bit version of IDL 7.0.6
+               (darwin x86_64)
 data/sdss/sdssMaskbits.par: Add flags FLUXMATCH_STATUS and BOSSTARGET1.
 
 -------------------------------------------------------------------------------
