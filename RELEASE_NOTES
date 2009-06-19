@@ -1,5 +1,8 @@
 HEALPIX2ALM, ALM2HEALPIX, MQLADVANCE: fix underflows above l=1024
 HEAL_SMOOTH: Accept multiple maps at a time.
+READ_MANGLE_POLYGONS: add ability to read the mangle header
+
+src/mangle2.2/src/rdmask.c - add limit to read in only the actual # of polys
 
 -----------------------------------------------------------------------
 v5_4_2 (June 10, 2009) tagged after mangle2.2 upgrade
