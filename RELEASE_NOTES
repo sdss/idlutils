@@ -5,6 +5,7 @@ READ_MANGLE_POLYGONS: Add ability to read the mangle header.
 
 src/mangle2.2/src/rdmask.c - Add limit to read in only the actual
                number of polygons.
+src/dimage/dsmooth.c - faster version using separability of kernel
 www/doc/index.html: Add link to goddard.
 
 -----------------------------------------------------------------------
