@@ -65,20 +65,34 @@ case $UNAME in
            X_CFLAGS="-dynamic"
            if [ `uname -m` == 'i386' ]; then
                 echo "Darwin/i386; requires a native (x86) IDL and gfortran"
-                idlver=`echo 'print, !VERSION.OS, " ", !VERSION.arch' | idl`
-                if [[ "$idlver" != "darwin i386" && "$idlver" != "darwin x86_64" ]]; then
-                    echo idlutils now requires a native IDL on x86 machines >&2
-                    exit 1
-                fi
+
+                # Note that "uname" on (some?) 64-bit capable Macs (10.5, at least), do not indicate
+                # that they are 64-bit. So have idl tell us.
+                idlarch=`echo 'print, !VERSION.arch' | idl`
 
 	        F77=gfortran
                 LDF77=gcc
 
 		LD=gcc
                 export MACOSX_DEPLOYMENT_TARGET=10.4 # This, of course, will bite us come 10.5, etc.
-                                                     # It changes how undefined lookups happen.
-		X_LD_FLAGS="-dynamiclib -undefined dynamic_lookup -single_module"
-                SDSS_CFLAGS=-O2
+                                                     # It changes how undefined lookups happen. 
+                                                     # With recent (3.1?) Xcodes, there is a 
+                                                     # MAC_OS_X_VERSION_MIN_REQUIRED
+                
+                if [ $idlarch = "x86_64" ]; then
+                    BITS_FLAGS=-m64
+                elif [ $idlarch = "i386" ]; then
+                    BITS_FLAGS=-m32
+                else 
+                    echo "unsupported architecture for Darwin/Intel: $idlarch" >&2
+                    exit 1
+                fi
+                echo "   trying for a $BITS_FLAGS build... "
+
+		X_LD_FLAGS="-dynamiclib -undefined dynamic_lookup -single_module $BITS_FLAGS"
+                SDSS_CFLAGS="-O2 $BITS_FLAGS"
+                X_CFLAGS="-O2 $BITS_FLAGS"
+                X_FFLAGS="-O2 $BITS_FLAGS"
            else
                echo "Darwin/ppc"
                LDF77=ld
