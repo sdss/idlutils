@@ -62,6 +62,9 @@
 ;   such that the brightest color hits the JPEG limit (of 255), but the
 ;   colors (ratios between the RGB images) are preserved.
 ;
+;   The rebinning will trim excess pixels if the given inputs are not 
+;   divisible by the rebin factor.
+;
 ; EXAMPLES:
 ;
 ; BUGS:
