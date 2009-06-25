@@ -320,6 +320,7 @@ maskbits BOSS_TARGET1 10 QSO_CORE           # restrictive qso selection
 maskbits BOSS_TARGET1 11 QSO_BONUS          # permissive qso selection
 maskbits BOSS_TARGET1 12 QSO_KNOWN_MIDZ     # known qso 2.2 < z < 3.5
 maskbits BOSS_TARGET1 13 QSO_KNOWN_LOHIZ    # known qso z < 2.2 or z > 3.5. never target
+maskbits BOSS_TARGET1 14 QSO_NN             # Neural Net that match to sweeps/pass cuts
 
 # standards
 maskbits BOSS_TARGET1 20 STD_FSTAR          # standard f-stars
