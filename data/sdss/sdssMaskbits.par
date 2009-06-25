@@ -314,6 +314,7 @@ maskbits BOSS_TARGET1 1 GAL_HIZ             # high-z blue/red gals
 maskbits BOSS_TARGET1 2 GAL_CMASS           # GAL_HIZ && Christy's sliding cut
 maskbits BOSS_TARGET1 3 GAL_GRRED           # red in g-r
 maskbits BOSS_TARGET1 4 GAL_TRIANGLE        # GAL_HIZ && !GAL_CMASS
+maskbits BOSS_TARGET1 5 GAL_LODPERP         # Same as hiz but between dperp00 and dperp0
 
 # qsos
 maskbits BOSS_TARGET1 10 QSO_CORE           # restrictive qso selection
