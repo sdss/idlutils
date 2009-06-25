@@ -149,11 +149,17 @@ pro djs_rgb_make, rimage, gimage, bimage, name=name, $
    ; Optionally rebin the images
 
    if (rebinfactor NE 1) then begin
-      dims = round(dims / rebinfactor)
-      if (rebinfactor EQ round(rebinfactor)) then begin
-         rimg = rebin(rimg, dims[0], dims[1], /sample)
-         gimg = rebin(gimg, dims[0], dims[1], /sample)
-         bimg = rebin(bimg, dims[0], dims[1], /sample)
+      dims = long(dims / rebinfactor)
+      if (rebinfactor EQ long(rebinfactor)) then begin
+         rimg = rebin(rimg[0:dims[0]*rebinfactor-1L, $
+                           0:dims[1]*rebinfactor-1L], dims[0], dims[1], $
+                      /sample)
+         gimg = rebin(gimg[0:dims[0]*rebinfactor-1L, $
+                           0:dims[1]*rebinfactor-1L], dims[0], dims[1], $
+                      /sample)
+         bimg = rebin(bimg[0:dims[0]*rebinfactor-1L, $
+                           0:dims[1]*rebinfactor-1L], dims[0], dims[1], $
+                      /sample)
       endif else begin
          rimg = congrid(rimg, dims[0], dims[1], /interp)
          gimg = congrid(gimg, dims[0], dims[1], /interp)
