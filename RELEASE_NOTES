@@ -1,8 +1,12 @@
 
+DJS_RGB_MAKE: Trim if necessary for rebinning automatrically
 HEALPIX2ALM, ALM2HEALPIX, MQLADVANCE: Fix underflows above l=1024.
 HEAL_SMOOTH: Accept multiple maps at a time.
 READ_MANGLE_POLYGONS: Add ability to read the mangle header.
+WEIGHTED_QUANTILE: Fix crash condition if 1-element array and QUANT not set
 
+bin/evilmake: Push 32-/64- bit args through to all compilers and linkers
+data/sdss/sdssMaskbits.par: Added more target flags
 src/mangle2.2/src/rdmask.c - Add limit to read in only the actual
                number of polygons.
 src/dimage/dsmooth.c - faster version using separability of kernel
