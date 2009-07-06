@@ -1,4 +1,7 @@
 
+-----------------------------------------------------------------------
+v5_4_3 (July 5, 2009) tagged for idlmapper product upgrade
+
 DJS_RGB_MAKE: Trim if necessary for rebinning automatrically
 HEALPIX2ALM, ALM2HEALPIX, MQLADVANCE: Fix underflows above l=1024.
 HEAL_SMOOTH: Accept multiple maps at a time.
