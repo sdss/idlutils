@@ -16,5 +16,5 @@ install :
 	- cp Makefile $(IDLUTILS_DIR)/include
 
 clean :
-	- /bin/rm -f *~ core
+	- /bin/rm -f export.h *~ core
 
