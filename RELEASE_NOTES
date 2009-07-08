@@ -1,3 +1,7 @@
+Makefile, include/export.h: Link in current export.h from idl rather 
+          than use and maintain a copy in this product. 
+          #### Depends on $IDL_DIR being set to the root of the IDL dir. #####
+src/evilmake: a few more changes to push flags down, especially -m32/-m64 for OS X.
 
 -----------------------------------------------------------------------
 v5_4_3 (July 5, 2009) tagged for idlmapper product upgrade
