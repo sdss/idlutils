@@ -85,7 +85,7 @@ function sdss_flagval, flagprefix, inlabel
        message, 'ABORT: Unknown bit label ' + strupcase(alllabel[ilabel]) $
         + ' for flag ' + strupcase(flagprefix)
 
-      flagvalue = flagvalue + 2L^(maskbits[imatch[0]].bit)
+      flagvalue = flagvalue + long64(2)^(maskbits[imatch[0]].bit)
    endfor
 
    return, flagvalue
