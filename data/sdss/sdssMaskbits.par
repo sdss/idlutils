@@ -311,17 +311,17 @@ maskbits FLUXMATCH_STATUS 5 BRIGHTEST_FLUXMATCH
 # galaxies
 maskbits BOSS_TARGET1 0 LRG_LOZ             # low-z lrgs
 maskbits BOSS_TARGET1 1 GAL_HIZ             # high-z blue/red gals
-maskbits BOSS_TARGET1 2 GAL_CMASS           # GAL_HIZ && Christy's sliding cut
+maskbits BOSS_TARGET1 2 GAL_CMASS           # GAL_HIZ and Christy's sliding cut
 maskbits BOSS_TARGET1 3 GAL_GRRED           # red in g-r
-maskbits BOSS_TARGET1 4 GAL_TRIANGLE        # GAL_HIZ && !GAL_CMASS
+maskbits BOSS_TARGET1 4 GAL_TRIANGLE        # GAL_HIZ and !GAL_CMASS
 maskbits BOSS_TARGET1 5 GAL_LODPERP         # Same as hiz but between dperp00 and dperp0
 maskbits BOSS_TARGET1 6 SDSS_GAL_KNOWN      # Matches to existing ZWARNING=0 SDSS galaxy spectra
 
 # qsos
 maskbits BOSS_TARGET1 10 QSO_CORE           # restrictive qso selection
 maskbits BOSS_TARGET1 11 QSO_BONUS          # permissive qso selection
-maskbits BOSS_TARGET1 12 QSO_KNOWN_MIDZ     # known qso 2.2 < z < 3.5
-maskbits BOSS_TARGET1 13 QSO_KNOWN_LOHIZ    # known qso z < 2.2 or z > 3.5. never target
+maskbits BOSS_TARGET1 12 QSO_KNOWN_MIDZ     # known qso between [2.2,9.99]
+maskbits BOSS_TARGET1 13 QSO_KNOWN_LOHIZ    # known qso outside of miz range. never target
 maskbits BOSS_TARGET1 14 QSO_NN             # Neural Net that match to sweeps/pass cuts
 maskbits BOSS_TARGET1 15 QSO_UKIDSS         # UKIDSS stars that match sweeps/pass flag cuts
 
