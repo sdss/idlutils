@@ -55,7 +55,7 @@
 pro csurvey2eq, clambda, ceta, ra, dec
 
 	st = obj_new('sdss_transform')
-    st->csurvey2eq, clambda, ceta, ra, dec
+	st->csurvey2eq, clambda, ceta, ra, dec
 	obj_destroy, st
 
 end
