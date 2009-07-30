@@ -1009,6 +1009,7 @@ pro/misc/idlutils_so_ext.pro -text
 pro/misc/idlutils_version.pro -text
 pro/misc/is_file_readable.pro -text
 pro/misc/labelloc.pro -text
+pro/misc/lines2struct.pro -text
 pro/misc/lookforgzip.pro -text
 pro/misc/make_html_help.pro -text
 pro/misc/radec2string.pro -text
@@ -1019,6 +1020,7 @@ pro/misc/shuffle_indx.pro -text
 pro/misc/sortinplace.pro -text
 pro/misc/splog.pro -text
 pro/misc/string2radec.pro -text
+pro/misc/struct2lines.pro -text
 pro/misc/struct_addtags.pro -text
 pro/misc/struct_append.pro -text
 pro/misc/struct_print.pro -text
