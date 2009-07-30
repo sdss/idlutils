@@ -330,58 +330,69 @@ maskbits BOSS_TARGET1 20 STD_FSTAR          # standard f-stars
 maskbits BOSS_TARGET1 21 STD_WD             # white dwarfs
 maskbits BOSS_TARGET1 22 STD_QSO            # qso
 
+# template stars 
+maskbits BOSS_TARGET1 32 TEMPLATE_GAL_PHOTO     # galaxy templates 
+maskbits BOSS_TARGET1 33 TEMPLATE_QSO_SDSS1     # QSO templates 
+maskbits BOSS_TARGET1 34 TEMPLATE_STAR_PHOTO    # stellar templates 
+maskbits BOSS_TARGET1 35 TEMPLATE_STAR_SPECTRO  # stellar templates (spectroscopically known)
 
 #------------ ancillary target selection flags
 maskbits ANCILLARY_TARGET1  0 AMC             # defined in blake_boss_v2.descr                  
-maskbits ANCILLARY_TARGET1  1 BLAZGVAR        # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1  2 BLAZR           # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1  3 BLAZXR          # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1  4 BLAZXRSAM       # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1  5 BLAZXRVAR       # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1  6 FBQSBAL         # defined in master-BAL-targets.descr              
-maskbits ANCILLARY_TARGET1  7 FLARE1          # defined in blake_boss_v2.descr                  
-maskbits ANCILLARY_TARGET1  8 FLARE2          # defined in blake_boss_v2.descr                  
-maskbits ANCILLARY_TARGET1  9 GALAXY          # defined in bright_gal_v3.descr                   
-maskbits ANCILLARY_TARGET1 10 HPM             # defined in blake_boss_v2.descr                  
-maskbits ANCILLARY_TARGET1 11 LBQSBAL         # defined in master-BAL-targets.descr              
-maskbits ANCILLARY_TARGET1 12 LOW_MET         # defined in blake_boss_v2.descr                  
-maskbits ANCILLARY_TARGET1 13 ODDBAL          # defined in master-BAL-targets.descr              
-maskbits ANCILLARY_TARGET1 14 OTBAL           # defined in master-BAL-targets.descr              
-maskbits ANCILLARY_TARGET1 15 PREVBAL         # defined in master-BAL-targets.descr              
-maskbits ANCILLARY_TARGET1 16 QSO_AAL         # defined in qsoals_v2.descr                       
-maskbits ANCILLARY_TARGET1 17 QSO_AALs        # defined in qsoals_v2.descr                       
-maskbits ANCILLARY_TARGET1 18 QSO_GRI         # defined in sdss3_fan.descr                       
-maskbits ANCILLARY_TARGET1 19 QSO_HIZ         # defined in sdss3_fan.descr                       
-maskbits ANCILLARY_TARGET1 20 QSO_IAL         # defined in qsoals_v2.descr                       
-maskbits ANCILLARY_TARGET1 21 QSO_RADIO       # defined in qsoals_v2.descr                       
-maskbits ANCILLARY_TARGET1 22 QSO_RADIO_AAL   # defined in qsoals_v2.descr                       
-maskbits ANCILLARY_TARGET1 23 QSO_RADIO_IAL   # defined in qsoals_v2.descr                       
-maskbits ANCILLARY_TARGET1 24 QSO_RIZ         # defined in sdss3_fan.descr                       
-maskbits ANCILLARY_TARGET1 25 QSO_noAALs      # defined in qsoals_v2.descr                       
-maskbits ANCILLARY_TARGET1 26 RQSS_SF         # defined in rqss090630.descr                      
-maskbits ANCILLARY_TARGET1 27 RQSS_SFC        # defined in rqss090630.descr                      
-maskbits ANCILLARY_TARGET1 28 RQSS_STM        # defined in rqss090630.descr                      
-maskbits ANCILLARY_TARGET1 29 RQSS_STMC       # defined in rqss090630.descr                      
-maskbits ANCILLARY_TARGET1 30 SN_GAL1         # defined in ancillary_supernova_hosts_v5.descr    
-maskbits ANCILLARY_TARGET1 31 SN_GAL2         # defined in ancillary_supernova_hosts_v5.descr    
-maskbits ANCILLARY_TARGET1 32 SN_GAL3         # defined in ancillary_supernova_hosts_v5.descr    
-maskbits ANCILLARY_TARGET1 33 SN_LOC          # defined in ancillary_supernova_hosts_v5.descr    
-maskbits ANCILLARY_TARGET1 34 SPEC_SN         # defined in ancillary_supernova_hosts_v5.descr    
-maskbits ANCILLARY_TARGET1 35 SPOKE           # defined in BOSS_slowpokes_v2.descr              
-maskbits ANCILLARY_TARGET1 36 VARBAL          # defined in master-BAL-targets.descr              
-maskbits ANCILLARY_TARGET1 37 VARS            # defined in blake_boss_v2.descr                  
-maskbits ANCILLARY_TARGET1 38 WHITEDWARF_NEW  # defined in WDv5_eisenste_fixed.descr             
-maskbits ANCILLARY_TARGET1 39 WHITEDWARF_SDSS # defined in WDv5_eisenste_fixed.descr           
-maskbits ANCILLARY_TARGET1 40 XMMBRIGHT       # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1 41 XMMGRIZ         # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1 42 XMMHR           # defined in brandtxmm-andersonblazar-merged.descr 
-maskbits ANCILLARY_TARGET1 43 XMMRED          # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1  1 FLARE1          # defined in blake_boss_v2.descr                  
+maskbits ANCILLARY_TARGET1  2 FLARE2          # defined in blake_boss_v2.descr                  
+maskbits ANCILLARY_TARGET1  3 HPM             # defined in blake_boss_v2.descr                  
+maskbits ANCILLARY_TARGET1  4 LOW_MET         # defined in blake_boss_v2.descr                  
+maskbits ANCILLARY_TARGET1  5 VARS            # defined in blake_boss_v2.descr                  
+maskbits ANCILLARY_TARGET1  6 BLAZGVAR        # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1  7 BLAZR           # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1  8 BLAZXR          # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1  9 BLAZXRSAM       # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1 10 BLAZXRVAR       # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1 11 XMMBRIGHT       # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1 12 XMMGRIZ         # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1 13 XMMHR           # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1 14 XMMRED          # defined in brandtxmm-andersonblazar-merged.descr 
+maskbits ANCILLARY_TARGET1 15 FBQSBAL         # defined in master-BAL-targets.descr              
+maskbits ANCILLARY_TARGET1 16 LBQSBAL         # defined in master-BAL-targets.descr              
+maskbits ANCILLARY_TARGET1 17 ODDBAL          # defined in master-BAL-targets.descr              
+maskbits ANCILLARY_TARGET1 18 OTBAL           # defined in master-BAL-targets.descr              
+maskbits ANCILLARY_TARGET1 19 PREVBAL         # defined in master-BAL-targets.descr              
+maskbits ANCILLARY_TARGET1 20 VARBAL          # defined in master-BAL-targets.descr              
+maskbits ANCILLARY_TARGET1 21 GALAXY          # defined in bright_gal_v3.descr                   
+maskbits ANCILLARY_TARGET1 22 QSO_AAL         # defined in qsoals_v2.descr                       
+maskbits ANCILLARY_TARGET1 23 QSO_AALS        # defined in qsoals_v2.descr                       
+maskbits ANCILLARY_TARGET1 24 QSO_IAL         # defined in qsoals_v2.descr                       
+maskbits ANCILLARY_TARGET1 25 QSO_RADIO       # defined in qsoals_v2.descr                       
+maskbits ANCILLARY_TARGET1 26 QSO_RADIO_AAL   # defined in qsoals_v2.descr                       
+maskbits ANCILLARY_TARGET1 27 QSO_RADIO_IAL   # defined in qsoals_v2.descr                       
+maskbits ANCILLARY_TARGET1 28 QSO_NOAALS      # defined in qsoals_v2.descr                       
+maskbits ANCILLARY_TARGET1 29 QSO_GRI         # defined in sdss3_fan.descr                       
+maskbits ANCILLARY_TARGET1 30 QSO_HIZ         # defined in sdss3_fan.descr                       
+maskbits ANCILLARY_TARGET1 31 QSO_RIZ         # defined in sdss3_fan.descr                       
+maskbits ANCILLARY_TARGET1 32 RQSS_SF         # defined in rqss090630.descr                      
+maskbits ANCILLARY_TARGET1 33 RQSS_SFC        # defined in rqss090630.descr                      
+maskbits ANCILLARY_TARGET1 34 RQSS_STM        # defined in rqss090630.descr                      
+maskbits ANCILLARY_TARGET1 35 RQSS_STMC       # defined in rqss090630.descr                      
+maskbits ANCILLARY_TARGET1 36 SN_GAL1         # defined in ancillary_supernova_hosts_v5.descr    
+maskbits ANCILLARY_TARGET1 37 SN_GAL2         # defined in ancillary_supernova_hosts_v5.descr    
+maskbits ANCILLARY_TARGET1 38 SN_GAL3         # defined in ancillary_supernova_hosts_v5.descr    
+maskbits ANCILLARY_TARGET1 39 SN_LOC          # defined in ancillary_supernova_hosts_v5.descr    
+maskbits ANCILLARY_TARGET1 40 SPEC_SN         # defined in ancillary_supernova_hosts_v5.descr    
+maskbits ANCILLARY_TARGET1 41 SPOKE           # defined in BOSS_slowpokes_v2.descr              
+maskbits ANCILLARY_TARGET1 42 WHITEDWARF_NEW  # defined in WDv5_eisenste_fixed.descr             
+maskbits ANCILLARY_TARGET1 43 WHITEDWARF_SDSS # defined in WDv5_eisenste_fixed.descr           
 maskbits ANCILLARY_TARGET1 44 BRIGHTERL       # defined in sd3targets_final.descr               
 maskbits ANCILLARY_TARGET1 45 BRIGHTERM       # defined in sd3targets_final.descr               
 maskbits ANCILLARY_TARGET1 46 FAINTERL        # defined in sd3targets_final.descr               
 maskbits ANCILLARY_TARGET1 47 FAINTERM        # defined in sd3targets_final.descr               
 												  
 #-------- bosstile status bits
-maskbits BOSSTILE_STATUS  0 TILED   # assigned a fiber
-maskbits BOSSTILE_STATUS 1 DECOLLIDED   # in the decollided set
-maskbits BOSSTILE_STATUS 2 COVERED      # in area covered by fiber
+maskbits BOSSTILE_STATUS 0 TILED      # assigned a fiber
+maskbits BOSSTILE_STATUS 1 NAKED      # not in area covered by tiles
+maskbits BOSSTILE_STATUS 2 BOSSTARGET # in the high priority set of targets
+maskbits BOSSTILE_STATUS 3 DECOLLIDED # in the decollided set of high priority
+maskbits BOSSTILE_STATUS 4 ANCILLARY  # in the lower priority, ancillary set
+maskbits BOSSTILE_STATUS 5 POSSIBLE_KNOCKOUT  # knocked out of at least one tile by BOSSTARGET
+maskbits BOSSTILE_STATUS 6 IGNORE_PRIORITY # priority exceeds max (ANCILLARY only)
+maskbits BOSSTILE_STATUS 7 TOOBRIGHT  # fibermag too bright 
+maskbits BOSSTILE_STATUS 8 BLUEFIBER  # allocate this object a blue fiber
