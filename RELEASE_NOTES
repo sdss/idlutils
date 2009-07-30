@@ -1,4 +1,5 @@
 SDSS_FLAGVAL: return value as 64-bit integer to handle longer bitmasks
+STRUCT2LINES, LINES2STRUCT: keyword/value pair interpreters, mved from platedesign
 
 Makefile, include/export.h: Link in current export.h from idl rather 
           than use and maintain a copy in this product. 
