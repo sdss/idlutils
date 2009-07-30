@@ -324,6 +324,7 @@ maskbits BOSS_TARGET1 12 QSO_KNOWN_MIDZ     # known qso between [2.2,9.99]
 maskbits BOSS_TARGET1 13 QSO_KNOWN_LOHIZ    # known qso outside of miz range. never target
 maskbits BOSS_TARGET1 14 QSO_NN             # Neural Net that match to sweeps/pass cuts
 maskbits BOSS_TARGET1 15 QSO_UKIDSS         # UKIDSS stars that match sweeps/pass flag cuts
+maskbits BOSS_TARGET1 16 QSO_kde_coadd      # kde targets from the stripe82 coadd 
 
 # standards
 maskbits BOSS_TARGET1 20 STD_FSTAR          # standard f-stars
