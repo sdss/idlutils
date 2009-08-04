@@ -402,3 +402,4 @@ maskbits BOSSTILE_STATUS 7 TOOBRIGHT  # fibermag too bright
 maskbits BOSSTILE_STATUS 8 BLUEFIBER  # allocate this object a blue fiber
 maskbits BOSSTILE_STATUS 9 CENTERPOST  # 92 arcsec collision with center post
 maskbits BOSSTILE_STATUS 10 REPEAT  # included on more than one tile
+maskbits BOSSTILE_STATUS 11 FILLER  # was a filler (not normal repeat)
