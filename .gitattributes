@@ -188,9 +188,7 @@ goddard/pro/astro/xyz.pro -text
 goddard/pro/astro/ydn2md.pro -text
 goddard/pro/astro/zang.pro -text
 goddard/pro/astro/zenpos.pro -text
-goddard/pro/astrom/README -text
 goddard/pro/astrom/aaareadme.txt -text
-goddard/pro/astrom/abscal.pro -text
 goddard/pro/astrom/ad2xy.pro -text
 goddard/pro/astrom/add_distort.pro -text
 goddard/pro/astrom/adxy.pro -text
@@ -301,7 +299,6 @@ goddard/pro/fits/sxaddpar.pro -text
 goddard/pro/fits/sxdelpar.pro -text
 goddard/pro/fits/sxpar.pro -text
 goddard/pro/fits/writefits.pro -text
-goddard/pro/fits_bintable/README -text
 goddard/pro/fits_bintable/aaareadme.txt -text
 goddard/pro/fits_bintable/changes.txt -text
 goddard/pro/fits_bintable/fxaddpar.pro -text
@@ -337,7 +334,6 @@ goddard/pro/fits_bintable/fxpar.pro -text
 goddard/pro/fits_bintable/fxparpos.pro -text
 goddard/pro/fits_bintable/fxread.pro -text
 goddard/pro/fits_bintable/fxwrite.pro -text
-goddard/pro/fits_table/README -text
 goddard/pro/fits_table/aaareadme.txt -text
 goddard/pro/fits_table/ftab_delrow.pro -text
 goddard/pro/fits_table/ftab_ext.pro -text
@@ -527,7 +523,6 @@ goddard/pro/misc/vect.pro -text
 goddard/pro/misc/wherenan.pro -text
 goddard/pro/misc/xdispstr.pro -text
 goddard/pro/misc/zparcheck.pro -text
-goddard/pro/plot/README -text
 goddard/pro/plot/aaareadme.txt -text
 goddard/pro/plot/cleanplot.pro -text
 goddard/pro/plot/legend.pro -text
@@ -542,7 +537,6 @@ goddard/pro/plot/plotsym.pro -text
 goddard/pro/plot/rdplot.pro -text
 goddard/pro/plot/sunsymbol.pro -text
 goddard/pro/plot/vsym.pro -text
-goddard/pro/robust/README -text
 goddard/pro/robust/aaareadme.txt -text
 goddard/pro/robust/autohist.pro -text
 goddard/pro/robust/biweight_mean.pro -text
@@ -593,12 +587,10 @@ goddard/pro/sdas_table/table_help.pro -text
 goddard/pro/sdas_table/table_list.pro -text
 goddard/pro/sdas_table/table_print.pro -text
 goddard/pro/sdas_table/table_sort.pro -text
-goddard/pro/sockets/README -text
 goddard/pro/sockets/aaareadme.txt -text
 goddard/pro/sockets/querydss.pro -text
 goddard/pro/sockets/querygsc.pro -text
 goddard/pro/sockets/querysimbad.pro -text
-goddard/pro/sockets/queryusno.pro -text
 goddard/pro/sockets/queryvizier.pro -text
 goddard/pro/sockets/webget.pro -text
 goddard/pro/structure/aaareadme.txt -text
