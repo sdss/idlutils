@@ -101,6 +101,7 @@ goddard/pro/Makefile -text
 goddard/pro/README -text
 goddard/pro/astro/README -text
 goddard/pro/astro/a_b.pro -text
+goddard/pro/astro/aaareadme.txt -text
 goddard/pro/astro/adstring.pro -text
 goddard/pro/astro/airtovac.pro -text
 goddard/pro/astro/aitoff.pro -text
@@ -190,6 +191,7 @@ goddard/pro/astro/ydn2md.pro -text
 goddard/pro/astro/zang.pro -text
 goddard/pro/astro/zenpos.pro -text
 goddard/pro/astrom/README -text
+goddard/pro/astrom/aaareadme.txt -text
 goddard/pro/astrom/abscal.pro -text
 goddard/pro/astrom/ad2xy.pro -text
 goddard/pro/astrom/adxy.pro -text
@@ -226,6 +228,7 @@ goddard/pro/astrom/xy2ad.pro -text
 goddard/pro/astrom/xyad.pro -text
 goddard/pro/astrom/xyxy.pro -text
 goddard/pro/database/README -text
+goddard/pro/database/aaareadme.txt -text
 goddard/pro/database/db_ent2ext.pro -text
 goddard/pro/database/db_ent2host.pro -text
 goddard/pro/database/db_info.pro -text
@@ -269,6 +272,7 @@ goddard/pro/database/dbxput.pro -text
 goddard/pro/database/dbxval.pro -text
 goddard/pro/database/imdbase.pro -text
 goddard/pro/disk_io/README -text
+goddard/pro/disk_io/aaareadme.txt -text
 goddard/pro/disk_io/irafdir.pro -text
 goddard/pro/disk_io/irafrd.pro -text
 goddard/pro/disk_io/irafwrt.pro -text
@@ -279,6 +283,7 @@ goddard/pro/disk_io/mid_up_image.pro -text
 goddard/pro/disk_io/mid_up_table.pro -text
 goddard/pro/disk_io/wfpc2_read.pro -text
 goddard/pro/fits/README -text
+goddard/pro/fits/aaareadme.txt -text
 goddard/pro/fits/check_fits.pro -text
 goddard/pro/fits/fits_add_checksum.pro -text
 goddard/pro/fits/fits_ascii_encode.pro -text
@@ -308,6 +313,7 @@ goddard/pro/fits/sxdelpar.pro -text
 goddard/pro/fits/sxpar.pro -text
 goddard/pro/fits/writefits.pro -text
 goddard/pro/fits_bintable/README -text
+goddard/pro/fits_bintable/aaareadme.txt -text
 goddard/pro/fits_bintable/changes.txt -text
 goddard/pro/fits_bintable/fxaddpar.pro -text
 goddard/pro/fits_bintable/fxbaddcol.pro -text
@@ -343,6 +349,7 @@ goddard/pro/fits_bintable/fxparpos.pro -text
 goddard/pro/fits_bintable/fxread.pro -text
 goddard/pro/fits_bintable/fxwrite.pro -text
 goddard/pro/fits_table/README -text
+goddard/pro/fits_table/aaareadme.txt -text
 goddard/pro/fits_table/ftab_delrow.pro -text
 goddard/pro/fits_table/ftab_ext.pro -text
 goddard/pro/fits_table/ftab_help.pro -text
@@ -368,6 +375,7 @@ goddard/pro/fits_table/tbinfo.pro -text
 goddard/pro/fits_table/tbprint.pro -text
 goddard/pro/fits_table/tbsize.pro -text
 goddard/pro/idlphot/README -text
+goddard/pro/idlphot/aaareadme.txt -text
 goddard/pro/idlphot/aper.pro -text
 goddard/pro/idlphot/cntrd.pro -text
 goddard/pro/idlphot/dao_value.pro -text
@@ -391,6 +399,7 @@ goddard/pro/idlphot/t_group.pro -text
 goddard/pro/idlphot/t_nstar.pro -text
 goddard/pro/idlphot/t_substar.pro -text
 goddard/pro/image/README -text
+goddard/pro/image/aaareadme.txt -text
 goddard/pro/image/boxave.pro -text
 goddard/pro/image/convolve.pro -text
 goddard/pro/image/correl_images.pro -text
@@ -412,6 +421,7 @@ goddard/pro/image/sigma_filter.pro -text
 goddard/pro/image/skyadj_cube.pro -text
 goddard/pro/image/xmedsky.pro -text
 goddard/pro/jhuapl/README -text
+goddard/pro/jhuapl/aaareadme.txt -text
 goddard/pro/jhuapl/factor.pro -text
 goddard/pro/jhuapl/getwrd.pro -text
 goddard/pro/jhuapl/isarray.pro -text
@@ -423,6 +433,7 @@ goddard/pro/jhuapl/repchr.pro -text
 goddard/pro/jhuapl/sphdist.pro -text
 goddard/pro/jhuapl/ymd2dn.pro -text
 goddard/pro/math/README -text
+goddard/pro/math/aaareadme.txt -text
 goddard/pro/math/asinh.pro -text
 goddard/pro/math/avg.pro -text
 goddard/pro/math/cic.pro -text
@@ -463,6 +474,7 @@ goddard/pro/math/tsum.pro -text
 goddard/pro/math/value_locate.pro -text
 goddard/pro/math/zbrent.pro -text
 goddard/pro/misc/README -text
+goddard/pro/misc/aaareadme.txt -text
 goddard/pro/misc/astrolib.pro -text
 goddard/pro/misc/blkshift.pro -text
 goddard/pro/misc/boost_array.pro -text
@@ -544,6 +556,7 @@ goddard/pro/misc/where_negzero.pro -text
 goddard/pro/misc/wherenan.pro -text
 goddard/pro/misc/zparcheck.pro -text
 goddard/pro/plot/README -text
+goddard/pro/plot/aaareadme.txt -text
 goddard/pro/plot/cleanplot.pro -text
 goddard/pro/plot/legend.pro -text
 goddard/pro/plot/legendtest.pro -text
@@ -558,6 +571,7 @@ goddard/pro/plot/rdplot.pro -text
 goddard/pro/plot/sunsymbol.pro -text
 goddard/pro/plot/vsym.pro -text
 goddard/pro/robust/README -text
+goddard/pro/robust/aaareadme.txt -text
 goddard/pro/robust/autohist.pro -text
 goddard/pro/robust/biweight_mean.pro -text
 goddard/pro/robust/histogauss.pro -text
@@ -568,6 +582,7 @@ goddard/pro/robust/robust_linefit.pro -text
 goddard/pro/robust/robust_poly_fit.pro -text
 goddard/pro/robust/robust_sigma.pro -text
 goddard/pro/sdas/README -text
+goddard/pro/sdas/aaareadme.txt -text
 goddard/pro/sdas/afhread.pro -text
 goddard/pro/sdas/astrmfix.pro -text
 goddard/pro/sdas/conv_stsdas.pro -text
@@ -592,6 +607,7 @@ goddard/pro/sdas/sxread.pro -text
 goddard/pro/sdas/sxwrite.pro -text
 goddard/pro/sdas/wfpcread.pro -text
 goddard/pro/sdas_table/README -text
+goddard/pro/sdas_table/aaareadme.txt -text
 goddard/pro/sdas_table/tab_addcol.pro -text
 goddard/pro/sdas_table/tab_col.pro -text
 goddard/pro/sdas_table/tab_create.pro -text
@@ -619,6 +635,7 @@ goddard/pro/sdas_table/table_list.pro -text
 goddard/pro/sdas_table/table_print.pro -text
 goddard/pro/sdas_table/table_sort.pro -text
 goddard/pro/sockets/README -text
+goddard/pro/sockets/aaareadme.txt -text
 goddard/pro/sockets/querydss.pro -text
 goddard/pro/sockets/querygsc.pro -text
 goddard/pro/sockets/querysimbad.pro -text
@@ -638,6 +655,7 @@ goddard/pro/structure/size_struct.pro -text
 goddard/pro/structure/tag_exist.pro -text
 goddard/pro/structure/where_tag.pro -text
 goddard/pro/tv/README -text
+goddard/pro/tv/aaareadme.txt -text
 goddard/pro/tv/blink.pro -text
 goddard/pro/tv/curs.pro -text
 goddard/pro/tv/curval.pro -text
