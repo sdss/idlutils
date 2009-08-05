@@ -360,7 +360,7 @@ maskbits ANCILLARY_TARGET1 17 ODDBAL   # defined in master-BAL-targets.descr
 maskbits ANCILLARY_TARGET1 18 OTBAL    # defined in master-BAL-targets.descr
 maskbits ANCILLARY_TARGET1 19 PREVBAL  # defined in master-BAL-targets.descr
 maskbits ANCILLARY_TARGET1 20 VARBAL   # defined in master-BAL-targets.descr
-maskbits ANCILLARY_TARGET1 21 GALAXY          # defined in bright_gal_v3.descr
+maskbits ANCILLARY_TARGET1 21 BRIGHTGAL          # defined in bright_gal_v3.descr
 maskbits ANCILLARY_TARGET1 22 QSO_AAL         # defined in qsoals_v2.descr 
 maskbits ANCILLARY_TARGET1 23 QSO_AALS        # defined in qsoals_v2.descr 
 maskbits ANCILLARY_TARGET1 24 QSO_IAL         # defined in qsoals_v2.descr 

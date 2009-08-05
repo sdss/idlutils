@@ -79,20 +79,20 @@ case $UNAME in
                                                      # With recent (3.1?) Xcodes, there is a 
                                                      # MAC_OS_X_VERSION_MIN_REQUIRED
                 
-                if [ $idlarch = "x86_64" ]; then
-                    BITS_FLAGS=-m64
-                elif [ $idlarch = "i386" ]; then
-                    BITS_FLAGS=-m32
-                else 
-                    echo "unsupported architecture for Darwin/Intel: $idlarch" >&2
-                    exit 1
-                fi
+                #if [ $idlarch = "x86_64" ]; then
+                    #BITS_FLAGS=-m64
+                #elif [ $idlarch = "i386" ]; then
+                    #BITS_FLAGS=-m32
+                #else 
+                    #echo "unsupported architecture for Darwin/Intel: $idlarch" >&2
+                    #exit 1
+                #fi
                 echo "   trying for a $BITS_FLAGS build... "
 
-                SDSS_CFLAGS="-O2 -g $BITS_FLAGS"
+                SDSS_CFLAGS="$BITS_FLAGS"
                 X_CFLAGS=$SDSS_CFLAGS
                 X_FFLAGS=$SDSS_CFLAGS
-		X_LD_FLAGS="-dynamiclib -undefined dynamic_lookup -single_module -g $BITS_FLAGS"
+		X_LD_FLAGS="-dynamiclib -undefined dynamic_lookup -single_module $BITS_FLAGS"
            else
                echo "Darwin/ppc"
                LDF77=ld
@@ -110,7 +110,7 @@ case $UNAME in
 	        echo Using the g77 Fortran compiler
 		LDF77=g77
 		SO_EXT=so
-		X_CFLAGS="-fPIC -g"
+		X_CFLAGS="-fPIC "
 		X_FFLAGS="-ffixed-line-length-none"
                 MAKE_FTNLIB="-lg2c"
 #    MAKE_FTNLIB="-lg2c  -L/usr/lib/gcc-lib/i386-redhat-linux/`gcc -dumpversion`"
