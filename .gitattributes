@@ -626,6 +626,7 @@ goddard/pro/sockets/queryusno.pro -text
 goddard/pro/sockets/queryvizier.pro -text
 goddard/pro/sockets/webget.pro -text
 goddard/pro/structure/README -text
+goddard/pro/structure/aaareadme.txt -text
 goddard/pro/structure/compare_struct.pro -text
 goddard/pro/structure/copy_struct.pro -text
 goddard/pro/structure/copy_struct_inx.pro -text
