@@ -282,7 +282,6 @@ goddard/pro/disk_io/mid_rd_table.pro -text
 goddard/pro/disk_io/mid_up_image.pro -text
 goddard/pro/disk_io/mid_up_table.pro -text
 goddard/pro/disk_io/wfpc2_read.pro -text
-goddard/pro/fits/README -text
 goddard/pro/fits/aaareadme.txt -text
 goddard/pro/fits/check_fits.pro -text
 goddard/pro/fits/fits_add_checksum.pro -text
@@ -303,7 +302,6 @@ goddard/pro/fits/mkhdr.pro -text
 goddard/pro/fits/modfits.pro -text
 goddard/pro/fits/mrd_hread.pro -text
 goddard/pro/fits/mrdfits.pro -text
-goddard/pro/fits/mrdfits.txt -text
 goddard/pro/fits/mwrfits.pro -text
 goddard/pro/fits/rdfits_struct.pro -text
 goddard/pro/fits/readfits.pro -text
