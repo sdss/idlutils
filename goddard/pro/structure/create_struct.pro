@@ -23,8 +23,10 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;               Must be unique for each structure created.   Set
 ;               STRNAME = '' to create an anonymous structure
 ;
-;       TAGNAMES -  tag names for structure elements
-;               (string or string array)
+;       TAGNAMES -  tag names for structure elements (string or string array)
+;                Any strings that are not valid IDL tag names (e.g. 'a\2')
+;                will be converted by IDL_VALIDNAME to a valid tagname by 
+;                replacing with underscores as necessary (e.g. 'a_2')
 ;
 ;       TAG_DESCRIPT -  String descriptor for the structure, containing the
 ;               tag type and dimensions.  For example, 'A(2),F(3),I', would
@@ -32,9 +34,10 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;               fltarr(3) and Integer scalar, respectively.
 ;               Allowed types are 'A' for strings, 'B' or 'L' for unsigned byte 
 ;               integers, 'I' for integers, 'J' for longword integers, 
-;               'F' or 'E' for floating point, 'D' for double precision
-;               'C' for complex, and 'M' for double complex
-;               Uninterpretable characters in a format field are ignored.
+;               'K' for 64bit integers, 'F' or 'E' for floating point, 
+;               'D' for double precision  'C' for complex, and 'M' for double 
+;               complex.   Uninterpretable characters in a format field are 
+;               ignored.
 ;
 ;               For vectors, the tag description can also be specified by
 ;               a repeat count.  For example, '16E,2J' would specify a 
@@ -43,11 +46,11 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ; OPTIONAL KEYWORD INPUTS:
 ;       DIMEN -    number of dimensions of structure array (default is 1)
 ;
-;       CHATTER -  If /CHATTER is set, then CREATE_STRUCT will display
+;       CHATTER -  If set, then CREATE_STRUCT() will display
 ;                  the dimensions of the structure to be created, and prompt
 ;                  the user whether to continue.  Default is no prompt.
 ;
-;       NODELETE - If /NODELETE is set, then the temporary file created
+;       /NODELETE - If set, then the temporary file created
 ;                  CREATE_STRUCT will not be deleted upon exiting.   See below
 ;
 ; OUTPUTS:
@@ -93,7 +96,7 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;       recompiled).  ** No error message will be generated  ***
 ;
 ; SUBROUTINES CALLED:
-;       FDECOMP, REPCHR() 
+;       CONCAT_DIR(), FDECOMP, REPCHR() 
 ;
 ; MODIFICATION HISTORY:
 ;       Version 1.0 RAS January 1992
@@ -105,15 +108,21 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;       Accept repeat format for vectors        W. Landsman Feb 93
 ;       Accept complex and double complex (for V4.0)   W. Landsman Jul 95
 ;       Work for long structure definitions  W. Landsman Aug 97
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Write temporary file in HOME directory if necessary  W. Landsman Jul 98
 ;       Use OPENR,/DELETE for OS-independent file removal W. Landsman Jan 99
 ;       Use STRSPLIT() instead of GETTOK() W. Landsman  July 2002
 ;       Assume since V5.3 W. Landsman  Feb 2004
 ;       Added RESOLVE_ROUTINE to ensure recompilation W. Landsman Sep. 2004
+;       Delete temporary with FILE_DELETE   W. Landsman Sep 2006
+;       Assume since V5.5, delete VMS reference  W.Landsman Sep 2006
+;       Added 'K' format for 64 bit integers, IDL_VALIDNAME check on tags
+;                       W. Landsman  Feb 2007
+;       Use vector form of IDL_VALIDNAME() if V6.4 or later W.L. Dec 2007
+;       Suppress compilation mesage of temporary file A. Conley/W.L. May 2009
 ;-
 ;-------------------------------------------------------------------------------
 
+ compile_opt idl2
  if N_params() LT 4 then begin
    print,'Syntax - CREATE_STRUCT, STRUCT, strname, tagnames, tag_descript,' 
    print,'                  [ DIMEN = , /CHATTER, /NODELETE ]'
@@ -132,11 +141,11 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
   anonymous = 0b
   if (strlen( strtrim(strname,2)) EQ 0 ) then anonymous = 1b
 
- good_fmts = [ 'A', 'B', 'I', 'L', 'F', 'E', 'D', 'J','C','M' ]
+ good_fmts = [ 'A', 'B', 'I', 'L', 'F', 'E', 'D', 'J','C','M', 'K' ]
  fmts = ["' '",'0B','0','0B','0.0','0.0','0.0D0','0L','complex(0)', $
-           'dcomplex(0)']
+           'dcomplex(0)', '0LL']
  arrs = [ 'strarr', 'bytarr', 'intarr', 'bytarr', 'fltarr', 'fltarr', $
-          'dblarr', 'lonarr','complexarr','dcomplexarr']
+          'dblarr', 'lonarr','complexarr','dcomplexarr','lon64arr']
  ngoodf = N_elements( good_fmts )
 
 ; If tagname is a scalar string separated by commas, convert to a string array
@@ -147,11 +156,12 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 
  Ntags = N_elements(tagname)
 
-; Replace any illegal characters in the tag names with an underscore
+; Make sure supplied tag names are valid.
 
- bad_chars = [ '\',  '/',  '.']
- for k = 0, N_elements( bad_chars) -1 do $ 
-         tagname = repchr( tagname, bad_chars[k], '_' )
+ if !VERSION.RELEASE GE '6.4' then $ 
+          tagname = idl_validname( tagname, /convert_all ) else $
+ for k = 0, Ntags -1 do $ 
+         tagname[k] = idl_validname( tagname[k], /convert_all )
 
 ;  If user supplied a scalar string descriptor then we want to break it up
 ;  into individual items.    This is somewhat complicated because the string
@@ -267,15 +277,13 @@ FOUND_FORMAT:
  cdhome = 0
 
 TEST_EXIST:
- if !VERSION.OS NE "vms" then begin            ;Don't overwrite file in Unix
 EXIST:  
-    list = findfile( tempfile + '.pro', COUNT = Nfile)
+    list = file_search( tempfile + '.pro', COUNT = Nfile)
      if (Nfile GT 0) then begin
        tempfile = tempfile + 'x'
        goto, EXIST
      endif
-  endif
-
+ 
 ; ---- open temp file and create procedure
 ; ---- If problems writing into the current directory, try the HOME directory
 
@@ -287,6 +295,7 @@ EXIST:
  endif
  fdecomp,tempfile,disk,dir,name
  printf, unit, 'pro ' +  name + ', struct'
+ printf,unit,'compile_opt hidden'
  for j = 0,N_elements(pro_string)-1 do $
         printf, unit, strtrim( pro_string[j] )
  printf, unit, 'return'
@@ -303,12 +312,8 @@ EXIST:
  if keyword_set( NODELETE ) then begin
     message,'Created temporary file ' + tempfile + '.pro',/INF
     return
- endif
-
-; Delete the file in an OS-independent way
- openr, unit, tempfile + '.pro',/delete
- close,unit 
-
+ endif else file_delete, tempfile + '.pro'
+  
   return
   end         ;pro create_struct
 
