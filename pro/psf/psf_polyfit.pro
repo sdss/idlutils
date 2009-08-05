@@ -46,7 +46,7 @@
 ;
 ;----------------------------------------------------------------------
 function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
-            cond=cond, scale=scale
+            cond=cond, scale=scale, chisq=chisq
 
 ; -------- check inputs
   psfsize = (size(stack, /dimen))[0]
@@ -109,10 +109,12 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
   endfor
 
 ; -------- reject
+  model = psf_eval(x, y, cf, par.cenrad)
+  chisq = (model-stack)^2*ivar
+
   if keyword_set(reject) then begin 
      nsigma = 4
-     model = psf_eval(x, y, cf, par.cenrad)
-     bad = (model-stack)^2*ivar GT nsigma^2
+     bad = chisq GT nsigma^2
      nbad = total(total(bad[x0:x1, x0:x1, *], 1), 1)
      good = where(nbad LE 5, ngood)
      if ngood LT 1 then message, 'Bad news - we rejected all the stars!'

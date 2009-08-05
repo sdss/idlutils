@@ -86,6 +86,8 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
 
   endfor
 
+  if ~keyword_set(shift) then return, arr
+
 ; -------- reject those where central pixel is not consistent with
 ;          being the highest.
 

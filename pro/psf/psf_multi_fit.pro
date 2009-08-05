@@ -70,10 +70,14 @@ pro psf_multi_fit, stamps, stampivar, psfs, par, sub, faint, nfaint=nfaint
 ; -------- loop over stamps
   for i=0L, nstamp-1 do begin 
 
-     fmask = mask
+; -------- get max pixel in region
+     st = stamps[*, *, i]
+     maxnb = shift(st, 0, 1) > shift(st, 0, -1) > shift(st, 1, 0) > shift(st, -1, 0)
+
+     fmask = mask and (st GT 1.0001*maxnb)
 
      psf = psfs[*, *, i]
-     im = stamps[*, *, i]-psf
+     im = st-psf
      iv = stampivar[*, *, i]
      status = 1B
 
