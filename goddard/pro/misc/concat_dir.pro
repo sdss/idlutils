@@ -1,6 +1,6 @@
 ;+
 ; NAME:   
-;       CONCAT_DIR
+;       CONCAT_DIR()
 ;               
 ; PURPOSE:     
 ;       To concatenate directory and file names for current OS.
@@ -25,10 +25,10 @@
 ;
 ;       IDL> file = ['f1.dat','f2.dat','f3.dat']
 ;       IDL> dir = '$DIR_NIS_CAL'
-;       IDL> f = concat_dir(dir,file)
+;       IDL> 
+
 ;
 ; RESTRICTIONS: 
-;       Assumes Unix type format if os is not vms, MacOS or Windows.
 ;               
 ;       The version of CONCAT_DIR available at 
 ;       http://sohowww.nascom.nasa.gov/solarsoft/gen/idl/system/concat_dir.pro
@@ -47,6 +47,7 @@
 ;       Changed loops to long integer   W. Landsman   December 1998
 ;       Added Mac support, translate Windows environment variables, 
 ;       & treat case where dirname ends in '/' W. Landsman  Feb. 2000
+;       Assume since V5.5, remove VMS support W. Landsman  Sep. 2006
 ;-            
 ;
 function concat_dir, dirname, filnam
@@ -64,22 +65,12 @@ function concat_dir, dirname, filnam
  dir0 = strtrim(dirname, 2)     
  n_dir = N_Elements(dir0)
 ;
-;  act according to operating system
-;
- if (!version.os eq 'vms') then begin
-    for i = 0l, n_dir-1 do begin
-        last = strmid(dir0[i], strlen(dir0[i])-1, 1)
-        if ((last ne ']') and (last ne ':')) then begin 
-           dir0[i] = dir0[i] + ':'                       ;append an ending ':'
-        endif
-    endfor
-
-;
+;  Act according to operating system
 ;  Under Windows, if the directory starts with a dollar sign, then check to see
 ;  the if it's really an environment variable.  If it is, then substitute the
 ;  the environment variable for the directory name.
 ;
-   ENDIF ELSE IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
+    IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
       FOR i = 0l, n_dir-1 DO BEGIN
          FIRST = STRMID(DIR0[I], 0, 1)
          IF FIRST EQ '$' THEN BEGIN
@@ -98,31 +89,22 @@ function concat_dir, dirname, filnam
          ENDIF
       ENDFOR
 
-; Macintosh version
+; Macintosh/UNIX  section
 
- endif else if (!version.os_family EQ 'MacOS')  then begin
+ endif else  begin
+   psep = path_sep()
     for i = 0l, n_dir-1 do begin
         last = strmid(dir0[i], strlen(dir0[i])-1, 1)
-        if(last ne ':') then begin
-           dir0[i] = dir0[i] + ':'                       ;append an ending ':' 
-        endif
+        if(last ne psep) then dir0[i] = dir0[i] + psep  ;append path separator 
     endfor
+endelse 
 
-
- endif else begin
-    for i=0l, n_dir-1 do begin
-       if (strmid(dir0[i], strlen(dir0[i])-1, 1) ne '/') then begin
-          dir0[i] = dir0[i] + '/'                        ;append an ending '/' 
-       endif
-    endfor
- endelse
 ;
 ;  no '/' needed when using default directory
 ;
- for i = 0l, n_dir-1 do begin
-    if (dirname[i] eq '') then dir0[i] = ''
- endfor
-
+ g  = where(dirname EQ '', Ndef) 
+ if Ndef GT 0 then dir0[g] = '' 
+ 
  return, dir0 + filnam
 
  end

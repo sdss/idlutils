@@ -31,7 +31,7 @@
 ;    Lambda0 - Cosmological constant, normalized to the closure density,
 ;        default is 0.7
 ;    q0 - Deceleration parameter, numeric scalar = -R*(R'')/(R')^2, default
-;        is -0.5
+;        is -0.55
 ;       
 ; OUTPUTS:
 ;    The result of the function is the luminosity distance (in Mpc) for each 
@@ -61,6 +61,7 @@
 ; REVISION HISTORY:
 ;    Written   W. Landsman        Raytheon ITSS       April 2000
 ;    Avoid integer overflow for more than 32767 redshifts  July 2001
+;    Use double precision J. Moustakas/W. Landsman April 2008
 ;-                                   
  function ldist, z, q0 = q0, lambda0 = lambda0
    term1 = (1.+z)^2
@@ -76,7 +77,7 @@
  FUNCTION  lumdist, z, h0=h0, k = k, Lambda0 = lambda0, Omega_m = Omega_m, $
                     q0 = q0, Silent = silent
 
-
+ compile_opt idl2
  if N_params() eq 0 then begin
 	print,'Syntax: result = lumdist(z, H0 = ,k=, Lambda0 = ])'
 	print,'Returns luminosity distance in Mpc'
@@ -87,8 +88,7 @@
  cosmo_param,Omega_m,Lambda0, k, q0 
 
 ; Check keywords 
-
-  c = 2.9979e5                      ;;  speed of light in km/s
+  c = 2.99792458D5                  ;  speed of light in km/s
   if N_elements(H0) EQ 0 then H0 = 70
   if not keyword_set(silent) then $
      print,'LUMDIST: H0:', h0, ' Omega_m:', omega_m, ' Lambda0',lambda0, $

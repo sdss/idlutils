@@ -8,8 +8,7 @@
 ; EXPLANATION: 
 ;     WEBGET() can access http servers - even from behind a firewall - 
 ;     and perform simple downloads. Currently, text and FITS files can be 
-;     accessed.    Requires IDL V5.4 or later on Unix or Windows, V5.6 on
-;     Macintosh
+;     accessed.    
 ;
 ; CALLING SEQUENCE: 
 ;      a=webget(URL)
@@ -17,13 +16,20 @@
 ; INPUTS: 
 ;      URL - scalar string giving a fully qualified url of the form
 ;          'http://server.eso.org/path/file.html'.    WEBGET() can
-;          also use other valid URLs that contain 'GET'-codes.
+;          also use other valid URLs that contain 'GET' or 'POST' codes.
 ;
 ; OPTIONAL INPUT KEYWORD PARAMETERS: 
 ;       COPYFILE - if set to a valid filename (file must have write permission),
 ;            the data contents of the web server's answer is copied to that 
-;            file. 
+;            file.
+;       HTTP10 - If set, then use the HTTP 1.0 
+;       POST - if set to a structure, the structure tags and values
+;              will be used as post variables and POST'ed to the URL.
+;              If POST is not set, the normal HTTP GET is used to
+;              retrieve the URL.
 ;       /SILENT - If set, the information error messages are suppressed
+;       TIMEOUT - Integer scalar giving number of seconds to wait for data to
+;                arrive before giving up and issuing an error.    Default=30 
 ; OUTPUTS: A structure with the following fields:
 ;
 ;            .Header - the HTTP header sent by the server
@@ -78,13 +84,22 @@
 ;          > print,a.ImageHead
 ;
 ;
-; MINIMUM IDL VERSION:
-;     V5.4  (uses SOCKET)
 ; MODIFICATION HISTORY: 
 ;     Written by M. Feldt, Heidelberg, Oct 2001 <mfeldt@mpia.de>
 ;     Use /swap_if_little_endian keyword to SOCKET  W. Landsman August 2002
 ;     Less restrictive search on Content-Type   W. Landsman   April 2003
-;
+;     Modified to work with FIRST image server-  A. Barth, Nov 2006
+;     Better recovery from errors  W. Landsman  April 2007
+;     Add support for POST access               J.D. Smith    June 2007
+;     Recognize "fits" image type used by SKYVIEW   W. Landsman  June 2007
+;     Upgraded, partially, to HTTP 1.1				M. Perrin, July 2007
+;       The HTTP 1.1 support is presently INCOMPLETE: virtual servers are
+;       supported, but chunked transfer encoding is not yet supported, so
+;       technically this is not fully HTTP 1.1 compliant.
+;     Added http10 keyword  W. Landsman   August 2007
+;     Assume since V5.6, sockets always available  W. Landsman Nov 2007
+;     Fix problem when using proxy server   W. Landsman July 2008
+;     Fix problem with /SILENT keyword  W. Landsman  Jan 2009
 ;-
 
 PRO MimeType,  Header, Class, Type, Length
@@ -107,56 +122,77 @@ PRO MimeType,  Header, Class, Type, Length
   return
 END 
 
-FUNCTION webget,  url,  SILENT=silent, COPYFILE=copyfile
+FUNCTION webget,  url,  SILENT=silent, COPYFILE=copyfile, POST=post, $
+   HTTP10=http10, timeout=timeout
+   compile_opt idl2
   ;;
-  ;;
-  ;; sockets supported in unix & windows since V5.4, Macintosh since V5.6
-
-   proc = routine_info(/system)
-   g  = where(proc EQ 'SOCKET', Ng)
-   If Ng EQ 0 THEN BEGIN 
-      IF NOT Keyword_set(silent) THEN $
-        dummy=Dialog_Message('Sorry,  web-access not supported in '+!version, /error)
-      return, ''
-  ENDIF
-  ;;
+   ;;
   ;; define the result fields
   ;;
   Header = strarr(256)
   Data = strarr(256)
   Image = 0
   ImageHeader = ''
+  
+  ;; Setup post variables
+  if n_elements(post) ne 0 then begin 
+     method='POST'
+     t=tag_names(post)
+     post_vars=strarr(n_elements(t))
+     for i=0,n_elements(t)-1 do $
+        post_vars[i]=strlowcase(t[i])+'='+strtrim(post.(i),2)
+     post_vars=strjoin(post_vars,'&')
+     post_data=['Content-Type: application/x-www-form-urlencoded',$
+                'Content-Length: '+strtrim(strlen(post_vars),2), $
+                '', $
+                post_vars]
+  endif else method='GET'
+  
+  
   ;;
   ;; open the connection and request the file
   ;;
+  ProtocolString = keyword_set(http10) ? "HTTP/1.0" : " HTTP/1.1"
+  UserAgentString= "IDL "+!version.release+' on '+!VERSION.OS+'/'+!VERSION.ARCH
   Proxy = getenv('http_proxy')
-  IF Proxy NE '' THEN BEGIN 
-      ;;
-      ;; sort out proxy name
-      ;;
-      LastColon = StrPos(Proxy, ':', /Reverse_Search)
-      ProxyPort = fix(StrMid(Proxy, LastColon+1, StrLen(Proxy)))
-      ProxyServer = StrMid(Proxy, 7, LastColon-7)
-      ;; open the connection and send the 'GET' command
-      ProtocolString = " HTTP/1.0 User-Agent: IDL/"+!version.release
-      socket, unit, ProxyServer,  ProxyPort, /get_lun, /swap_if_little_endian
-      printf, unit, 'GET '+url+ProtocolString
-      printf, unit, ''          ; a second carriage return is needed by proxies
-  ENDIF ELSE BEGIN 
-      ;;
-      ;; same thing easier without proxy
-      ;;
-      slash1 = StrPos(strmid(url, 7, StrLen(url)), '/')
-      Server = StrMid(url, 7, slash1 )
-      purl = strmid(url,slash1+7, StrLen(url))
-      Port = 80
-      socket, unit, Server,  Port, /get_lun,/swap_if_little_endian
-      printf, unit, 'GET '+purl +  ' HTTP/1.0'  
-      printf, unit, 'HTTP/1.0 User-Agent:  IDL ' + !VERSION.RELEASE + ' on ' + $
-                 !VERSION.OS + '/' + !VERSION.ARCH
-      printf, unit, ''
+  slash1 = StrPos(strmid(url, 7), '/')    ;Position of first slash
+  Server = StrMid(url, 7, slash1 )
+  if N_elements(timeout) EQ 0 then timeout=30
 
+  IF Proxy NE '' THEN BEGIN 
+     ;;
+     ;; sort out proxy name
+     ;;
+     LastColon = StrPos(Proxy, ':', /Reverse_Search)
+     ProxyPort = fix(StrMid(Proxy, LastColon+1))
+     ProxyServer = StrMid(Proxy, 7, LastColon-7)
+     ;; open the connection and send the 'GET' command
+     socket, unit, ProxyServer,  ProxyPort, /get_lun, /swap_if_little_endian, $
+             read_timeout=timeout
+     printf, unit, method+' '+url+ProtocolString
+  ENDIF ELSE BEGIN 
+     ;;
+     ;; same thing easier without proxy
+     ;;
+     purl = strmid(url,slash1+7)
+     Port = 80
+     socket, unit, Server,  Port, /get_lun,/swap_if_little_endian, $
+          read_timeout=timeout
+     printf, unit, method+' '+purl + ProtocolString
   ENDELSE 
+  ;; These lines are the same for either with or without proxy.
+  ;; in HTTP 1.1 we MUST include the Host: line to allow requests
+  ;; from co-hosted virtual servers to operate properly.
+  printf, unit, "Host: "+Server
+  printf, unit, 'User-Agent: '+ UserAgentString
+  ;; HTTP 1.1 clients must either support persistent connections, or indicate
+  ;; they do not by stating Connection: close
+  printf, unit, "Connection: close"
+
+  ;; Add the POST data, if requested
+  if n_elements(post) ne 0 then printf,unit,transpose(post_data)
+  ;; Blank line required to terminate HTTP request.
+  printf, unit, ''
 
   LinesRead = 0
   text = 'xxx'
@@ -173,6 +209,11 @@ On_IOERROR, done
   ENDWHILE 
 DONE: On_IOERROR, NULL
   ;;
+  if LinesRead EQ 0 then begin
+      message,'Unable to read HTTP server',/CON
+      free_lun,unit
+      return,{Header:'', Text:'', ImageHeader:ImageHeader,  Image: Image}
+  endif    
   Header = Header[0:LinesRead-1]
   MimeType, Header, Class,  Type, Length; analyze the header
   ;;
@@ -201,14 +242,15 @@ DONE: On_IOERROR, NULL
               IF LinesRead MOD 256 EQ 0 THEN $
                 Data=[Data, StrArr(256)]
           ENDWHILE 
-          Data = Data[0:LinesRead-1]
+          if LinesRead EQ 0 then if not keyword_set(SILENT) then $
+	       message,'ERROR - no lines of text read',/CON
+          Data = Data[0:(LinesRead-1) > 0 ]
       END 
       'image':BEGIN
           CASE Type OF
-              'x-fits':BEGIN ; answer from stsci server
-                  ;;
-                  Image = readfits(unit, ImageHeader)
-              END 
+              'x-fits': Image = readfits(unit, ImageHeader)
+	      'fits': Image = readfits(unit, ImageHeader)
+              else: message,'Unrecognized  image type of ' + type
           ENDCASE 
       END 
       'application':BEGIN 
@@ -217,6 +259,10 @@ DONE: On_IOERROR, NULL
                                    ; answers this way
                   Image = readfits(unit, ImageHeader)
                END 
+               'force-download': BEGIN     ; need this for FIRST survey
+                   image = readfits(unit, imageheader)
+               END
+
           ENDCASE 
       END 
   ENDCASE 
@@ -225,11 +271,3 @@ DONE: On_IOERROR, NULL
   free_lun, unit
   return, {Header:Header, Text:Data, ImageHeader:ImageHeader,  Image: Image}
 END
-
-
-
-
-
-    
-
-

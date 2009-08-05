@@ -16,7 +16,7 @@ pro observatory,obsname,obs_struct, print = print
 ;             observatories for which location or time information is requested.
 ;             If obsname is an empty string, then information is returned for 
 ;             all observatories in the database.     See the NOTES: section
-;             for the list of recognized observatories.   The case of the 
+;             for the list of 41 recognized observatories.   The case of the 
 ;             string does not matter  
 ; OUTPUTS:
 ;       obs_struct - an IDL structure containing information on  the specified
@@ -84,14 +84,19 @@ pro observatory,obsname,obs_struct, print = print
 ;  'lmo': Leander McCormick Observatory
 ;  'fmo': Fan Mountain Observatory
 ;  'whitin': Whitin Observatory, Wellesley College
+;  'mgio': Mount Graham International Observatory
 ;
 ; PROCEDURE CALLS:
 ;    TEN()             
 ; REVISION HISTORY:
 ;    Written   W. Landsman                 July 2000
+;    Corrected sign error for 'holi'   W.L/ Holger Israel    Mar 2008
+;    Correctly terminate when observatory name not recognized 
+;                                              S. Koposov, July 2008
 ;-
 
  On_error,2                                  ;Return to caller
+ compile_opt idl2
 
  if N_params() LT 1 then begin
     print,'Observatory, obsname, obs_struct, [/print]'
@@ -101,7 +106,7 @@ pro observatory,obsname,obs_struct, print = print
 obs=[ 'kpno','ctio','eso','lick','mmto','cfht','lapalma','mso','sso','aao', $
   'mcdonald','lco','mtbigelow','dao','spm','tona','Palomar','mdm','NOV','bmo',$
   'BAO','keck','ekar','apo','lowell','vbo','flwo','oro','lna','saao','casleo', $
-  'bosque','rozhen','irtf','bgsuo','ca','holi','lmo','fmo','whitin' ]
+  'bosque','rozhen','irtf','bgsuo','ca','holi','lmo','fmo','whitin','mgio']
 
  if N_elements(obsname) EQ 1 then if obsname eq '' then obsname = obs
  nobs = N_elements(obsname)
@@ -369,7 +374,7 @@ case strlowcase(obsname[i]) of
         end
  "holi": begin
         name = "Observatorium Hoher List (Universitaet Bonn) - Germany"
-        longitude = 6.85
+        longitude = 353.15     ;Corrected sign error March 2008
         latitude = 50.16276
         altitude = 541
         tz = -1
@@ -395,7 +400,14 @@ case strlowcase(obsname[i]) of
 	altitude = 32
 	tz = 5
         end
- else: message,'Unable to find observatory ' + obs + ' in database'
+ "mgio": begin
+	name = "Mount Graham International Observatory"
+	longitude = [109,53,31.25]
+	latitude = [32,42,04.69]
+	altitude = 3191.0
+	tz = 7
+        end
+ else: message,'Unable to find observatory ' + obsname + ' in database'
  endcase
 
  obs_struct[i].longitude = ten(longitude)

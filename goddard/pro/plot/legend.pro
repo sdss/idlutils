@@ -83,6 +83,7 @@
 ;       clear = flag to clear the box area before drawing the legend
 ;       delimiter = embedded character(s) between symbol and text (D=none)
 ;       colors = array of colors for plot symbols/lines (D=!P.color)
+;       font = scalar font graphics keyword (-1,0 or 1) for text
 ;       textcolors = array of colors for text (D=!P.color)
 ;       margin = margin around text measured in characters and lines
 ;       spacing = line spacing (D=bit more than character height)
@@ -201,6 +202,10 @@
 ;       Make default value of thick = !P.thick  W. Landsman  Jan. 2001
 ;       Don't overwrite existing USERSYM definition  W. Landsman Mar. 2002
 ;	     Added outline_color BT 24 MAY 2004
+;       Pass font keyword to xyouts commands.  M. Fitzgerald, Sep. 2005
+;       Default spacing, pspacing should be relative to charsize. M. Perrin, July 2007
+;       Don't modify position keyword  A. Kimball/ W. Landsman Jul 2007
+;       Small update to Jul 2007 for /NORMAL coords.  W. Landsman Aug 2007
 ;-
 pro legend, items, BOTTOM_LEGEND=bottom, BOX = box, CENTER_LEGEND=center, $
     CHARTHICK=charthick, CHARSIZE = charsize, CLEAR = clear, COLORS = colorsi, $
@@ -210,10 +215,11 @@ pro legend, items, BOTTOM_LEGEND=bottom, BOX = box, CENTER_LEGEND=center, $
     POSITION=position,PSPACING=pspacing, PSYM=psymi, RIGHT_LEGEND=right, $
     SPACING=spacing, SYMSIZE=symsize, TEXTCOLORS=textcolorsi, THICK=thicki, $
     TOP_LEGEND=top, USERSYM=usersym,  VECTORFONT=vectorfonti, VERTICAL=vertical, $
-    OUTLINE_COLOR = outline_color
+    OUTLINE_COLOR = outline_color, FONT = font
 ;
 ;       =====>> HELP
 ;
+compile_opt idl2
 on_error,2
 if keyword_set(help) then begin & doc_library,'legend' & return & endif
 ;
@@ -306,8 +312,8 @@ if n_elements(outline_color) EQ 0 then outline_color = !P.Color
 ;
 ;       =====>> INITIALIZE SPACING
 ;
-if n_elements(spacing) eq 0 then spacing = 1.2
-if n_elements(pspacing) eq 0 then pspacing = 3
+if n_elements(spacing) eq 0 then spacing = 1.2*charsize
+if n_elements(pspacing) eq 0 then pspacing = 3*charsize
 xspacing = !d.x_ch_size/float(!d.x_size) * (spacing > charsize)
 yspacing = !d.y_ch_size/float(!d.y_size) * (spacing > charsize)
 ltor = 1                                        ; flag for left-to-right
@@ -355,28 +361,28 @@ case n_elements(position) of
     if not keyword_set(top) and not keyword_set(bottom) then $
       py = (pos[1] + pos[3])/2. + n*yspacing
     endif
-  position = [px,py] + [xspacing,-yspacing]
+  nposition = [px,py] + [xspacing,-yspacing]
   end
  1: begin       ; interactive
   message,/inform,'Place mouse at upper left corner and click any mouse button.'
   cursor,x,y,/normal
-  position = [x,y]
+  nposition = [x,y]
   end
  2: begin       ; convert upper left corner to normal coordinates
   if keyword_set(data) then $
-    position = convert_coord(position,/to_norm) $
+    nposition = convert_coord(position,/to_norm) $
   else if keyword_set(device) then $
-    position = convert_coord(position,/to_norm,/device) $
+    nposition = convert_coord(position,/to_norm,/device) $
   else if not keyword_set(normal) then $
-    position = convert_coord(position,/to_norm)
+    nposition = convert_coord(position,/to_norm) else nposition= position
   end
  else: message,'Position keyword can have 0, 1, or 2 elements only. Try legend,/help.'
 endcase
 
 yoff = 0.25*yspacing*ysign                      ; VERT. OFFSET FOR SYM/LINE.
 
-x0 = position[0] + (margin)*xspacing            ; INITIAL X & Y POSITIONS
-y0 = position[1] - margin*yspacing + yalign*yspacing    ; WELL, THIS WORKS!
+x0 = nposition[0] + (margin)*xspacing            ; INITIAL X & Y POSITIONS
+y0 = nposition[1] - margin*yspacing + yalign*yspacing    ; WELL, THIS WORKS!
 ;
 ;       =====>> OUTPUT TEXT FOR LEGEND, ITEM BY ITEM.
 ;       =====>> FOR EACH ITEM, PLACE SYM/LINE, THEN DELIMITER,
@@ -412,7 +418,7 @@ for iclr = 0,clear do begin
   if vectorfont[i] ne '' then begin
 ;    if (num eq 1) and vertical then xp = x + xt/2      ; IF 1, CENTERED.
     xyouts,xp,yp,vectorfont[i],width=width,color=colors[i] $
-      ,size=charsize,align=xalign,charthick = charthick,/norm
+      ,size=charsize,align=xalign,charthick = charthick,/norm,font=font
     xt = xt > width
     xp = xp + width/2.
   endif else begin
@@ -426,11 +432,11 @@ for iclr = 0,clear do begin
   TEXT_ONLY:
   if vertical and (vectorfont[i] eq '') and symline and (linestyle[i] eq -99) then x=x0 + xspacing
   xyouts,x,y,delimiter,width=width,/norm,color=textcolors[i], $
-         size=charsize,align=xalign,charthick = charthick
+         size=charsize,align=xalign,charthick = charthick,font=font
   x = x + width*xsign
   if width ne 0 then x = x + 0.5*xspacing
   xyouts,x,y,items[i],width=width,/norm,color=textcolors[i],size=charsize, $
-             align=xalign,charthick=charthick
+             align=xalign,charthick=charthick,font=font
   x = x + width*xsign
   if not vertical and (i lt (n-1)) then x = x+2*xspacing; ADD INTER-ITEM SPACE
   xfinal = (x + xspacing*margin)
@@ -439,8 +445,8 @@ for iclr = 0,clear do begin
 
  if (iclr lt clear ) then begin
 ;       =====>> CLEAR AREA
-        x = position[0]
-        y = position[1]
+        x = nposition[0]
+        y = nposition[1]
         if vertical then bottom = n else bottom = 1
         ywidth = - (2*margin+bottom-0.5)*yspacing
         corners = [x,y+ywidth,xend,y]
@@ -451,8 +457,8 @@ for iclr = 0,clear do begin
 ;
 ;       =====>> OUTPUT BORDER
 ;
-        x = position[0]
-        y = position[1]
+        x = nposition[0]
+        y = nposition[1]
         if vertical then bottom = n else bottom = 1
         ywidth = - (2*margin+bottom-0.5)*yspacing
         corners = [x,y+ywidth,xend,y]

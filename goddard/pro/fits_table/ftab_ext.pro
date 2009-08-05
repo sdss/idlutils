@@ -41,8 +41,6 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;       
 ; PROCEDURES CALLED:
 ;       FITS_READ, FITS_CLOSE, FTINFO, FTGET(), TBINFO, TBGET()
-; MINIMUM IDL VERSION:
-;       V5.3 (uses STRSPLIT)
 ; HISTORY:
 ;       version 1        W.   Landsman         August 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
@@ -51,8 +49,11 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;       Don't call fits_close if fcb supplied W. Landsman May 2001 
 ;       Use STRSPLIT to parse column string  W. Landsman July 2002 
 ;       Cleanup pointers in TBINFO structure  W. Landsman November 2003
+;       Avoid EXECUTE() if V6.1 or later  W. Landsamn   December 2006
+;       Assume since V6.1  W. Landsman   June 2009
 ;-
 ;---------------------------------------------------------------------
+ compile_opt idl2
  if N_params() LT 3 then begin
         print,'Syntax - FTAB_EXT, name, columns, v1, [v2,...,v9, ROWS=, EXTEN=]'
         return
@@ -61,8 +62,8 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
  strng = size(columns,/TNAME) EQ 'STRING'    ;Is columns a string?
 
  if not keyword_set(exten_no) then exten_no = 1
- sz = size(file_or_fcb)
- if sz[sz[0]+1] NE 8 then fits_open,file_or_fcb,fcb else fcb=file_or_fcb
+ dtype = size(file_or_fcb,/TNAME)
+ if dtype NE 'STRUCT' then fits_open,file_or_fcb,fcb else fcb=file_or_fcb
  if fcb.nextend EQ 0 then $
         message,'ERROR - FITS file contains no table extensions'
  if fcb.nextend LT exten_no then $
@@ -81,7 +82,7 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
         fits_read, fcb, tab, htab, exten_no=exten_no,/no_pdu 
         xrow = -1
  endelse
- if sz[sz[0]+1] NE 8 then fits_close,fcb else $
+ if dtype NE 'STRUCT' then fits_close,fcb else $
          file_or_fcb.last_extension = exten_no
  ext_type = fcb.xtension[exten_no]
 
@@ -97,14 +98,15 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
                colnames = columns
  if binary then tbinfo,htab,tb_str else ftinfo,htab,ft_str
 
- for i = 0, N_ext-1 do begin
+
+  vv = 'v' + strtrim( indgen(n_ext)+1,2)
+  for i = 0, N_ext-1 do begin 
+  
          if binary then $
-                v = TBGET( tb_str,tab,colnames[i],xrow,nulls) $
+         (scope_varfetch(vv[i]))  = TBGET( tb_str,tab,colnames[i],xrow,nulls) $
         else $
-                v = FTGET( ft_str,tab,colnames[i],xrow,nulls)
-        command = 'v'+strtrim(i+1,2)+'=v'
-        istat = execute(command)
-        endfor
+          (scope_varfetch(vv[i])) = FTGET( ft_str,tab,colnames[i],xrow,nulls)
+ endfor
  if binary then begin
         ptr_free, tb_str.tscal
         ptr_free, tb_str.tzero

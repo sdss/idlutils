@@ -49,7 +49,7 @@ pro db_item,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes,errmsg=errmsg
 ;                               IF ERRMSG NE '' THEN ...
 ;
 ; PROCEDURE CALLS:
-;       DB_INFO, GETTOK, SCREEN_SELECT, SPEC_DIR
+;       DB_INFO, GETTOK, SELECT_W
 ;
 ; REVISION HISTORY:
 ;       Written:   D. Lindler, GSFC/HRS, October 1987
@@ -57,9 +57,12 @@ pro db_item,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes,errmsg=errmsg
 ;                       Added keyword ERRMSG
 ;       Converted to IDL V5.0   W. Landsman   October 1997
 ;       Use STRSPLIT instead of GETTOK to parse form 1, W. Landsman July 2002
+;       Assume since V5.4 use FILE_EXPAND_PATH() instead of SPEC_DIR()
+;               W. Landsman April 2006
 ;-
 ;
 ;------------------------------------------------------------------------
+ compile_opt idl2
  On_error,2
  if N_params() LT 2 then begin
     print,'Syntax - DB_ITEM,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes'
@@ -173,7 +176,7 @@ if form eq 3 then begin
                                else filename=strtrim(db_info('name',0))+'.items'
         openr,unit,filename,error=err,/get_lun    ;open file
         if err lt 0 then begin
-            message = 'Unable to open file ' + spec_dir(filename) +     $
+            message = 'Unable to open file ' + FILE_EXPAND_PATH(filename) +     $
                     ' with item list'
             goto, handle_error
         endif
@@ -207,8 +210,8 @@ endif
 if form eq 5 then begin
         names=strtrim(qitems[0:19,*],2)
         desc=string(qitems[29:78,*])
-        screen_select,names,itnum,desc,'Select List of Items'
-        if !err le 0 then begin
+        select_w,names,itnum,desc,'Select List of Items',count=count
+        if count le 0 then begin
                 message = 'No items selected'
                 goto, handle_error
         endif

@@ -178,8 +178,9 @@ PRO TVLASER, hdr, Image, BARPOS=BarPos, CARROWS=CArrows, CLABELS=CLabels, $
 ;       Apply func tab to color bar if not colorps.  RSH, 21 Mar 2000
 ;       Fix problem with /NOCLOSE and unequal X,Y sizes  W. Landsman Feb 2001
 ;       Use TVRD(True=3) if /TRUECOLOR set    W. Landsman   November 2001
+;       More synonyms, check for header supplied W. Landsman November 2007
 ;-
-
+ compile_opt idl2
  on_error,2
 
  if keyword_set(Help) then begin
@@ -218,6 +219,8 @@ PRO TVLASER, hdr, Image, BARPOS=BarPos, CARROWS=CArrows, CLABELS=CLabels, $
  
  if N_elements(hdr) EQ 0 then $
 	if N_elements(header) NE 0 then hdr = header
+ if (N_params() GE 1) and (N_elements(hdr) EQ 0) then message,/INF, $
+        'Warning - No valid FITS header supplied'	
  if N_elements(hdr) NE 0 then zparcheck,'TVLASER',hdr,1,7,1,'FITS image header'
 ;;;
 ;   If no image was passed in the IMAGE keyword, then we will be reading the
@@ -517,14 +520,12 @@ if (strtrim(CLabels[0],2) ne '-1') then begin
     endif 
 
 ;IMAGE ID
-    IMNAME = strtrim( sxpar(hdr,'IMAGE', Count = N_image),2)
-    if N_image EQ 0 then begin
-    imname = strtrim( sxpar(hdr,'EXPNAME', Count = N_image),2)
-    if N_image EQ 0 then begin
-	imname = strtrim( sxpar(hdr,'ROOTNAME', Count = N_image),2)
-         if N_image EQ 0 then IMNAME = 'N/A'
-    endif
-    endif
+    imname = 'N/A'
+    imname = sxpar(hdr,'IMAGE', Count = N_image)
+    if N_image EQ 0 then imname = sxpar(hdr,'EXPNAME', Count = N_image)
+    if N_image EQ 0 then imname = sxpar(hdr,'OBS_ID', Count = N_image)
+    if N_image EQ 0 then imname = sxpar(hdr,'ROOTNAME', Count = N_image)
+    imname = strtrim(imname,2)
  
   
     XYOUTS,LabX1s,LabYs,['IMAGE:',IMNAME],/NORMAL
@@ -559,8 +560,9 @@ if (strtrim(CLabels[0],2) ne '-1') then begin
     if NoAstrom GE 0 then XYOUTS,LabX2s,LabYs,['SCALE:',CDELTAS],/NORMAL
     LabYs = LabYs + dY
 
-;EXPOSURE TIME   First try 'EXPTIME' then 'INTEG'
+;EXPOSURE TIME   First try 'EXPTIME' then 'EXPOSURE' then 'INTEG'
     exptime = sxpar(hdr, 'EXPTIME', Count = N_time)
+    if N_time EQ 0 then exptime = sxpar(hdr, 'EXPOSURE', Count = N_time)
     if N_time EQ 0 then exptime = sxpar(hdr, 'INTEG', Count = N_time)
     if N_time EQ 0 then exptime = 'N/A' else $
 	exptime = strmid( strtrim(exptime,2),0,6) + ' seconds'

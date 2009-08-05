@@ -94,7 +94,6 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 ;       William Thompson, GSFC, 3 November 1994
 ;                       Modified to allow ZDBASE to be a path string.
 ;       W. Landsman, GSFC, July, 1997, Use CATCH to catch errors
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Removed STRTRIM in table format output to handle byte values April 1999
 ;       Fixed occasional problem when /NOHEADER is supplied   Sep. 1999
 ;       Only byteswap when necessary for improved performance  Feb. 2000
@@ -105,10 +104,13 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 ;       No initial page eject                  W. Landsman  Jan. 2002
 ;       Added AdjustFormat keyword             W. Landsman  Sep. 2002
 ;       Assume since V5.3 (STRJOIN)            W. Landsman Feb. 2004
+;       Fix display on GUI terminals           W. Landsman March 2006
+;       Remove VMS statements                  W. Landsman Sep 2006
+;       Remove EXECUTE statement               W. Landsman Jan 2007
 ;-
 ;
  On_error,2                                ;Return to caller
-
+ compile_opt idl2
 
  if N_params() EQ 0 then begin
        print,'Syntax - DBPRINT, list, items, '
@@ -131,8 +133,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 
  nentry = db_info( 'ENTRIES', 0)
  if list[0] EQ -1 then list = lindgen(nentry) + 1 
- dbname = db_info( 'NAME', 0 )
- if !VERSION.OS NE 'vms' then dbname = strlowcase(dbname)
+ dbname = strlowcase( db_info( 'NAME', 0 ))
 
  if max(list) GT nentry then message, dbname + $
      ' entry numbers must be between 1 and ' + strtrim( nentry, 2 )
@@ -164,8 +165,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 ; Open output text file
 
  if not keyword_set(TEXTOUT) then textout = !textout  ;use default output dev.
-
- textopen, dbname, TEXTOUT = textout
+textopen, dbname, TEXTOUT = textout, more_set = more_set
  if size(TEXTOUT,/TNAME) EQ 'STRING' then text_out = 5 else text_out = textout
  if (nitems EQ qnumit)  then begin
 
@@ -178,9 +178,10 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 ; display name and value for each entry 
 
       for k = 0, qnumit-1  do begin
-         ;
+         ;.
          ; only print entries of reasonable size... < 5 values in item.
          ;
+
          if ( nvalues[k] LT 5 ) then begin
             somvar =  dbxval(entry,dtype[k],nvalues[k],sbyte[k],nbytes[k]) 
             if dtype[k] EQ 1 then somvar=fix(somvar)
@@ -210,10 +211,9 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
        alen = intarr(Nstring)
        varnames = 'v' + strtrim(indgen(Nstring)+1,2)
        stringitems = strjoin(varnames,',') 
-       result = execute('dbext,list,it[stringvar],' + stringitems)
        for i=0, Nstring-1 do begin
-            result = execute( 'alen[i] = max(strlen(strtrim(temporary(' + $
-                        varnames[i] + '),2)))') 
+            dbext,list,it[stringvar[i]], vv
+            alen[i] = max(strlen(strtrim(temporary(vv),2)))
      endfor
        flen[stringvar] = alen
        formats[stringvar] = 'A' + strtrim(alen,2)
@@ -302,7 +302,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
         endfor
 
         printf, !TEXTUNIT, st                   ;print line
-        if text_out EQ 1 then  $       ;Did user press 'Q' in /MORE ?
+        if more_set then  $       ;Did user press 'Q' in /MORE ?
                 if ( !ERR EQ 1 ) then return
         pcount = pcount+1            ;increment line counter
     end                              ; loop on entries

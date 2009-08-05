@@ -1,5 +1,5 @@
 PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
-              NED=ned, SURVEY = survey, OUTFILE = outfile
+              NED=ned, SURVEY = survey, OUTFILE = outfile, VERBOSE=verbose
 ;+
 ; NAME: 
 ;   QueryDSS
@@ -54,6 +54,8 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;      keyword in the FITS header gives the bandpass 'XP' - Red IIIaF, 
 ;      'XJ' - Blue IIIaJ, 'XF' - Near-IR IVN
 ;
+;      /VERBOSE - If set, then the query sent to the DSS server is displayed
+;
 ; OUTPUTS: 
 ;       Im - The image returned by the server. If there is an error, this 
 ;             contains a single 0.
@@ -90,15 +92,15 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;   
 ; PROCEDURES CALLED:
 ;       QUERYSIMBAD, WEBGET()
-; MINIMUM IDL VERSION:
-;       V5.4  (uses SOCKET)
 ; MODIFICATION HISTORY: 
 ;       Written by M. Feldt, Heidelberg, Oct 2001 <mfeldt@mpia.de>
 ;       Option to supply target name instead of coords  W. Landsman Aug. 2002
 ;       Added OUTFILE, /NED keywords W. Landsman   April 2003
-;       Don't abort on Simbad failure W. landsman/J. Brauher  June 2003
+;       Don't abort on Simbad failure W. Landsman/J. Brauher  June 2003
+;       Added /VERBOSE keyword W. Landsman   Jan 2009
 ;
 ;-
+  compile_opt idl2
   if N_params() LT 1 then begin
       print,'Syntax - QueryDSS, TargetName_or_coords, image, header'
       print,"           [Imsize= ,/ESO, /STScI, Survey = ['1','2b','2r','2i'] "
@@ -170,6 +172,7 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
       Result = webget(QueryURL, copyfile= outfile)
       return
   endif
+  if keyword_set(verbose) then message,/INF, QueryURL
   Result = webget(QueryURL)
   Image = Result.Image
   Header = Result.ImageHeader

@@ -14,7 +14,7 @@ function N_bytes,a
 ;
 ; OUTPUTS:
 ;       total number of bytes in a is returned as the function value
-;       (longword scalar)
+;       (64bit longword scalar)
 ; NOTES:
 ;       (1) Not valid for object or pointer data types
 ;       (2) For a string array, the number of bytes is computed after conversion
@@ -24,6 +24,7 @@ function N_bytes,a
 ; MODIFICATION HISTORY:
 ;       Version 1  By D. Lindler  Oct. 1986
 ;       Include new IDL data types    W. Landsman          June 2001
+;       Now return a 64bit integer    W. Landsman          April 2006
 ;-
 ;-----------------------------------------------------
 ;
@@ -47,5 +48,5 @@ function N_bytes,a
      else: message,'ERROR - Object or Pointer data types not valid'
  endcase
 
- return,nel*nb
+ return,long64(nel)*nb
  end

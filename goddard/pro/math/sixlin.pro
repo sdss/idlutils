@@ -1,4 +1,4 @@
-pro sixlin,xx,yy,a,siga,b,sigb
+pro sixlin,xx,yy,a,siga,b,sigb,weight=weight
 ;+
 ; NAME:
 ;       SIXLIN
@@ -12,7 +12,7 @@ pro sixlin,xx,yy,a,siga,b,sigb
 ;       variable are calculable.
 ;
 ; CALLING SEQUENCE:
-;       SIXLIN, xx, yy, a, siga, b, sigb   
+;       SIXLIN, xx, yy, a, siga, b, sigb, [WEIGHT = ]  
 ;
 ; INPUTS:
 ;       XX - vector of X values
@@ -26,13 +26,18 @@ pro sixlin,xx,yy,a,siga,b,sigb
 ;
 ;       The output variables are computed using linear regression for each of 
 ;       the following 6 cases:
-;               (0) Ordinary Least Squares (OLS) Y vs. X
+;               (0) Ordinary Least Squares (OLS) Y vs. X (c.f. linfit.pro)
 ;               (1) Ordinary Least Squares  X vs. Y
 ;               (2) Ordinary Least Squares Bisector
 ;               (3) Orthogonal Reduced Major Axis
 ;               (4) Reduced Major-Axis 
 ;               (5) Mean ordinary Least Squares
 ;
+; OPTIONAL INPUT KEYWORD:
+;      WEIGHT -  vector of weights, same number of elements as XX and YY
+;                For 1 sigma Gausssian errors, the weights are 1/sigma^2 but
+;                the weight vector can be more general.   Default is no 
+;                weighting. 
 ; NOTES:
 ;       Isobe et al. make the following recommendations
 ;
@@ -49,15 +54,17 @@ pro sixlin,xx,yy,a,siga,b,sigb
 ;       Written   Wayne Landsman          February, 1991         
 ;       Corrected sigma calculations      February, 1992
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Added WEIGHT keyword   J. Moustakas   Februrary 2007
 ;-
+ compile_opt idl2
  On_error, 2                                   ;Return to Caller
 
  if N_params() LT 5 then begin   
-    print,'Syntax - SIXLIN, xx, yy, a, siga, b, sigb'   
+    print,'Syntax - SIXLIN, xx, yy, a, siga, b, sigb, {WEIGHT =]'   
     return
   endif
 
- a = dblarr(6) & b=a & siga = a & sigb =a
+ b = dblarr(6) &  siga = b & sigb =b
  x = double(xx)      ;Keep input X and Y vectors unmodified
  y = double(yy)
  rn = N_elements(x)
@@ -68,15 +75,22 @@ pro sixlin,xx,yy,a,siga,b,sigb
  if rn NE N_elements(y) then $
     message,'Input X and Y vectors must contain equal number of data points'
 
+ if (n_elements(weight) eq 0L) then weight = replicate(1.0,rn) else begin
+    if (rn ne n_elements(weight)) then $
+      message,'Input X and WEIGHT vectors must contain equal number of data points'
+ endelse
+ 
 ; Compute averages and sums
 
- xavg = total(x)/rn
- yavg = total(y)/rn
+ sumw = total(weight) 
+ 
+ xavg = total( weight * x)/sumw
+ yavg = total( weight * y)/sumw
  x = x - xavg
  y = y - yavg
- sxx = total(x^2)
- syy = total(y^2)
- sxy = total(x*y)
+ sxx = total( weight * x^2)
+ syy = total( weight * y^2)
+ sxy = total( weight * x*y)
  if sxy EQ 0. then $
       message,'SXY is zero, SIXLIN is terminated'
  if sxy LT 0. then sign = -1.0 else sign = 1.0
@@ -99,9 +113,9 @@ pro sixlin,xx,yy,a,siga,b,sigb
  gam1 = b[2] / ( (b[0] + b[1]) *   $
          sqrt( (1.D + b[0]^2)*(1.D + b[1]^2)) )
  gam2 = b[3] / (sqrt( 4.D*b[0]^2 + ( b[0]*b[1] - 1.D)^2))
- sum1 = total( ( x*( y - b[0]*x ) )^2)
- sum2 = total( ( y*( y - b[1]*x ) )^2)
- sum3 = total( x * y * ( y - b[0]*x) * (y - b[1]*x ) )
+ sum1 = total( weight * ( x*( y - b[0]*x ) )^2)
+ sum2 = total( weight * ( y*( y - b[1]*x ) )^2)
+ sum3 = total( weight * x * y * ( y - b[0]*x) * (y - b[1]*x ) )
  cov = sum3 / ( b[0]*sxx^2 )
 
 ; Compute variances of the slope coefficients
@@ -118,25 +132,26 @@ pro sixlin,xx,yy,a,siga,b,sigb
 
 ; Compute variances of the intercept coefficients
 
- siga[0] = total( ( ( y - b[0]*x) * (1.D - rn*xavg*x/sxx) )^2 )
- siga[1] = total( ( ( y - b[1]*x) * (1.D - rn*xavg*y/sxy) )^2 ) 
- siga[2] = total( ( (x * (y - b[0]*x) * (1.D + b[1]^2) / sxx + $
+ siga[0] = total( weight * ( ( y - b[0]*x) * (1.D - sumw*xavg*x/sxx) )^2 )
+ siga[1] = total( weight * ( ( y - b[1]*x) * (1.D - sumw*xavg*y/sxy) )^2 ) 
+ siga[2] = total( weight * ( (x * (y - b[0]*x) * (1.D + b[1]^2) / sxx + $
                   y * (y - b[1]*x) * (1.D + b[0]^2) / sxy)*  $
-                  gam1 * xavg * rn - y + b[2] * x) ^ 2)
- siga[3] = total( ( ( x * ( y - b[0]*x) / sxx + $
+                  gam1 * xavg * sumw - y + b[2] * x) ^ 2)
+ siga[3] = total( weight * ( ( x * ( y - b[0]*x) / sxx + $
                    y * ( y - b[1]*x) * b[0]^2/ sxy) * gam2 * $
-                   xavg * rn / sqrt( b[0]^2) - y + b[3]*x) ^ 2 )
- siga[4] = total( ( ( x * ( y - b[0] * x) * sqrt( b[1] / b[0] ) / sxx + $
+                   xavg * sumw / sqrt( b[0]^2) - y + b[3]*x) ^ 2 )
+ siga[4] = total( weight * ( ( x * ( y - b[0] * x) * sqrt( b[1] / b[0] ) / sxx + $
                    y * ( y - b[1] * x) * sqrt( b[0] / b[1] ) / sxy) * $
-                  0.5 * rn * xavg - y + b[4] * x)^2 )
- siga[5] = total( ( (x * ( y - b[0] * x) / sxx +  $
+                  0.5 * sumw * xavg - y + b[4] * x)^2 )
+
+ siga[5] = total( weight * ( (x * ( y - b[0] * x) / sxx +  $
                   y * ( y - b[1] * x) / sxy)*    $
-                  0.5 * rn * xavg - y + b[5]*x )^2 )
+                  0.5 * sumw * xavg - y + b[5]*x )^2 )
 
 ; Convert variances to standard deviation
 
  sigb = sqrt(sigb)
- siga = sqrt(siga)/rn
+ siga = sqrt(siga)/sumw
  
  return
  end

@@ -6,7 +6,7 @@ FUNCTION RINTER, P, X, Y, DFDX, DFDY, INITIALIZE = initialize
 ;      Cubic interpolation of an image at a set of reference points.
 ; EXPLANATION:
 ;      This interpolation program is equivalent to using the intrinsic 
-;      INTERPOLATE() function in IDL V5.0 or later with CUBIC = -0.5.   However,
+;      INTERPOLATE() function with CUBIC = -0.5.   However,
 ;      RINTER() has two advantages: (1) one can optionally obtain the 
 ;      X and Y derivatives at the reference points, and (2) if repeated
 ;      interpolation is to be applied to an array, then some values can

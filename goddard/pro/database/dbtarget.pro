@@ -11,7 +11,6 @@ function dbtarget, target, radius, sublist,SILENT=silent, $
 ;      include items named 'RA' (in hours) and 'DEC' (in degrees) and must 
 ;      have previously been opened with DBOPEN
 ;
-;      Requires IDL V5.4 or later, Unix and Windows only
 ; CALLING SEQUENCE:
 ;     list = DBTARGET(target, [radius, sublist, /SILENT, DIS= ,/TO_B1950 ] )   
 ;

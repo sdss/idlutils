@@ -819,7 +819,7 @@ repeat begin
   print,""
   suffix = strmid(file_name,strlen(file_name)-4,4)
   if (suffix ne ".pro") then file_name = string(file_name,".pro")
-  file_test = findfile(file_name)
+  file_test = file_search(file_name)
   if (file_test[0] ne "") then begin
     print,"The file ",file_name," already exists."
     print,"You can overwrite this file, but if you used this journal name"
@@ -896,8 +896,7 @@ if (option eq 3) then begin
   if ((map le 4) or (map eq 8) or (map eq 9) or (map eq 11) or (map eq 13) $
       or (map eq 16)) then begin
     close,file_unit
-    if !VERSION.OS NE 'vms' then spawn,["rm",file_name],/noshell else $
-                        spawn,'delete ' + file_name
+    file_delete, file_name
     message,"The map type selected is not supported with coordinate rotations."
   endif else begin
     print,$
@@ -940,7 +939,7 @@ case map of
   end
   6:begin
     close,file_unit
-    spawn,["rm",file_name],/noshell
+    file_delete,file_name,/allow
     message,"ZPN: This map projection has not been implemented."
   end
   8:begin

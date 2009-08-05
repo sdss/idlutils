@@ -1,5 +1,5 @@
  pro putast, hdr, astr, crpix, crval, ctype, EQUINOX=equinox, $
-                                CD_TYPE = cd_type, ALT = alt
+                  CD_TYPE = cd_type, ALT = alt, NAXIS = naxis
 ;+
 ; NAME:
 ;    PUTAST
@@ -9,7 +9,7 @@
 ; CALLING SEQUENCE:
 ;     putast, hdr              ;Prompt for all values
 ;               or
-;     putast, hdr, astr, [EQUINOX =, CD_TYPE =, ALT= ]
+;     putast, hdr, astr, [EQUINOX =, CD_TYPE =, ALT= , NAXIS=]
 ;               or
 ;     putast, hdr, cd,[ crpix, crval, ctype], [ EQUINOX =, CD_TYPE =, ALT= ]    
 ;
@@ -45,9 +45,6 @@
 ;              Greisen & Calabretta (2002, A&A, 395, 1061) for information about
 ;              alternate astrometry keywords.
 ;
-;      EQUINOX - numeric scalar giving the year of equinox  of the reference 
-;                coordinates.   Default (if EQUINOX keyword is not already
-;                present in header) is 2000.
 ;
 ;       CD_TYPE - Integer scalar, either 0, 1 or 2 specifying how the CD matrix
 ;                is to be written into the header
@@ -57,12 +54,23 @@
 ;
 ;            All three forms are valid representations according to Greisen &
 ;            Calabretta (2002, A&A, 395, 1061), also available at 
-;            http://www.aoc.nrao.edu/~egreisen/) although form (0) is preferred.
-;            Form (1) is the former AIPS standard and is now  deprecated and
-;            cannot be used if any skew is present.
+;            http://fits.gsfc.nasa.gov/fits_wcs.html ) although form (0) is 
+;            preferred.   Form (1) is the former AIPS standard and is now  
+;            deprecated and cannot be used if any skew is present.
 ;            If CD_TYPE is not supplied, PUTAST will try to determine the 
 ;            type of astrometry already in the header.   If there is no 
 ;            astrometry in the header then the default is CD_TYPE = 2.
+;
+;      EQUINOX - numeric scalar giving the year of equinox  of the reference 
+;                coordinates.   Default (if EQUINOX keyword is not already
+;                present in header) is 2000.
+;
+;      NAXIS - By default, PUTAST does not update the NAXIS keywords in the
+;            FITS header.    If NAXIS is set, and an astrometry structure is
+;            supplied then the NAXIS1 and NAXIS2 keywords in the FITS header 
+;            will be updated with the .NAXIS structure tags values.     If an 
+;            astrometry structure is not supplied, then one can set NAXIS to a 
+;            two element vector to update the NAXIS1, NAXIS2 keywords. 
 ; NOTES:
 ;       The recommended use of this procedure is to supply an astrometry
 ;       structure.    
@@ -103,16 +111,20 @@
 ;       input structure   W. Landsman    May 2004
 ;       Correct interactive computation of image center W. Landsman Feb. 2005
 ;       Don't use CROTA (CD_TYPE=1) if a skew exists W. Landsman  May 2005
+;       Added NAXIS keyword  W. Landsman   January 2007
+;       Update PC matrix, if CD_TYPE=0 and CD matrix supplied W.L. July 2007
 ;-
+
+ compile_opt idl2
  npar = N_params()
 
  if ( npar EQ 0 ) then begin    ;Was header supplied?
-        print,'Syntax: PUTAST, Hdr, astr, [ EQUINOX = , CD_TYPE =, ALT = ]'
+        print,'Syntax: PUTAST, Hdr, astr, [ EQUINOX= , CD_TYPE=, ALT= ,/NAXIS]'
         print,'       or'
         print,'Syntax: PUTAST, Hdr, [ cd, crpix, crval, EQUINOX = , CD_TYPE =]'   
         return
  endif
-
+ 
  RADEG = 180.0d/!DPI
  zparcheck, 'PUTAST', hdr, 1, 7, 1, 'FITS image header'
  if N_elements(alt) EQ 0 then alt = '' else if (alt EQ '1') then alt = 'a'
@@ -158,6 +170,8 @@ RD_CEN:
         crval = astr.crval
         crpix = astr.crpix
         ctype = astr.ctype
+	if keyword_set(naxis)  then if tag_exist(astr,'NAXIS') then $
+	    naxis = astr.naxis
 	longpole = astr.longpole
         if tag_exist(astr,'latpole') then latpole = astr.latpole
         if tag_exist(astr,'pv2') then pv2 = astr.pv2
@@ -166,7 +180,14 @@ RD_CEN:
         zparcheck,'PUTAST', cd, 2, [4,5], 2, 'CD matrix'
    endelse
  endelse
-
+ 
+ 
+ ;Write NAXIS values
+   if N_elements(naxis) EQ 2 then begin 
+	      sxaddpar,hdr,'NAXIS1',naxis[0],/SaveC
+	      sxaddpar,hdr,'NAXIS2',naxis[1],/SaveC
+    endif      
+ 
 ;   Add CTYPE to FITS header
 
  if N_elements( ctype ) GE 2 then begin
@@ -208,10 +229,13 @@ RD_CEN:
   if CD_TYPE EQ 1 then if abs(cd[1,0]) NE abs(cd[0,1]) then begin
          cd_type = 0
 	 sxdelpar,hdr,['CROTA1' + alt,'CROTA2' + alt]
+        message,/INF,'Astrometry incompatible with a CROTA2 representation'
+        message,/INF,'Writing PC matrix instead'
   endif	 
 
 
   degpix  = ' Degrees / Pixel'
+  
   if cd_type EQ 0 then begin
 
 
@@ -220,9 +244,10 @@ RD_CEN:
     sxaddpar, hdr, 'PC1_2'+alt, cd[0,1], degpix, 'HISTORY',/SaveC
     sxaddpar, hdr, 'PC2_2'+alt, cd[1,1], degpix, 'HISTORY',/SaveC
 
+    if N_elements(cdelt) EQ 2 then begin 
     sxaddpar, hdr, 'CDELT1'+alt, cdelt[0], degpix, 'HISTORY',/SaveC
     sxaddpar, hdr, 'CDELT2'+alt, cdelt[1], degpix, 'HISTORY',/SaveC
-
+    endif
 
   endif else if cd_type EQ 2 then begin
 

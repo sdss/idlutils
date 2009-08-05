@@ -35,22 +35,22 @@ pro gal_uvw, u, v, w, distance = distance, LSR = lsr, ra=ra,dec=dec, $
 ;
 ; OPTIONAL INPUT KEYWORD:
 ;      /LSR - If this keyword is set, then the output velocities will be 
-;             corrected for the solar motion (U,V,W)_Sun = (-9,+12,+7)  
-;             (Mihalas & Binney, 1981) to the local standard of rest
+;             corrected for the solar motion (U,V,W)_Sun = (-10.00,+5.25,+7.17)  
+;             (Dehnen & Binney, 1998) to the local standard of rest
 ;  EXAMPLE:
 ;      (1) Compute the U,V,W coordinates for the halo star HD 6755.  
 ;          Use values from Hipparcos catalog, and correct to the LSR
 ;      ra = ten(1,9,42.3)*15.    & dec = ten(61,32,49.5)
-;      pmra = 627.89  &  pmdec = 77.84         ;mas/yr
-;      dis = 144    &  vrad = -321.4
+;      pmra = 628.42  &  pmdec = 76.65         ;mas/yr
+;      dis = 139    &  vrad = -321.4
 ;      gal_uvw,u,v,w,ra=ra,dec=dec,pmra=pmra,pmdec=pmdec,vrad=vrad,dis=dis,/lsr
-;          ===>  u=154  v = -493  w = 97        ;km/s
+;          ===>  u=141.2  v = -491.7  w = 93.9        ;km/s
 ;
 ;      (2) Use the Hipparcos Input and Output Catalog IDL databases (see 
 ;      http://idlastro.gsfc.nasa.gov/ftp/zdbase/) to obtain space velocities
 ;      for all stars within 10 pc with radial velocities > 10 km/s
 ;
-;      dbopen,'hipparcos,hic'      ;Need Hipparcos output and input catalogs
+;      dbopen,'hipp_new,hic'      ;Need Hipparcos output and input catalogs
 ;      list = dbfind('plx>100,vrad>10')      ;Plx > 100 mas, Vrad > 10 km/s
 ;      dbext,list,'pmra,pmdec,vrad,ra,dec,plx',pmra,pmdec,vrad,ra,dec,plx
 ;      ra = ra*15.                 ;Need right ascension in degrees
@@ -63,6 +63,10 @@ pro gal_uvw, u, v, w, distance = distance, LSR = lsr, ra=ra,dec=dec, $
 ;      the introduction to the Hipparcos catalog.   
 ; REVISION HISTORY:
 ;      Written, W. Landsman                       December   2000
+;      fix the bug occuring if the input arrays are longer than 32767
+;        and update the Sun velocity           Sergey Koposov June 2008
+;	   vectorization of the loop -- performance on large arrays 
+;        is now 10 times higher                Sergey Koposov December 2008
 ;-
  if N_Params() EQ 0 then begin
        print,'Syntax - GAL_UVW, U, V, W, [/LSR, RA=, DEC=, PMRA= ,PMDEC=, VRAD='
@@ -74,10 +78,6 @@ pro gal_uvw, u, v, w, distance = distance, LSR = lsr, ra=ra,dec=dec, $
  Nra = N_elements(ra)
  if (nra EQ 0) or (N_elements(dec) EQ 0) then message, $
      'ERROR - The RA, Dec (J2000) position keywords must be supplied (degrees)'
- if (N_elements(vrad) LT Nra) then message, $
-      'ERROR - A Radial Velocity (km/s) must be supplied for each star'
- if (N_elements(pmra) LT Nra) or (N_elements(pmdec) LT Nra) then message, $ 
-      'ERROR - A proper motion must be supplied for each star'
  if N_elements(distance) GT 0 then begin 
        bad = where(distance LE 0, Nbad)
        if Nbad GT 0 then message,'ERROR - All distances must be > 0'
@@ -89,34 +89,36 @@ pro gal_uvw, u, v, w, distance = distance, LSR = lsr, ra=ra,dec=dec, $
        if Nbad GT 0 then message,'ERROR - Parallaxes must be > 0'
  endelse
 
- cosd = cos(dec/!radeg)
- sind = sin(dec/!radeg)
+ cosd = cos(dec/!RADEG)
+ sind = sin(dec/!RADEG)
  cosa = cos(ra/!RADEG)
  sina = sin(ra/!RADEG)
 
- u = fltarr(Nra) & v = u & w = u
-
  k = 4.74047     ;Equivalent of 1 A.U/yr in km/s   
- t = [ [ 0.0548755604, +0.4941094279, -0.8676661490], $ 
-      [ 0.8734370902, -0.4448296300,-0.1980763734], $
-      [ 0.4838350155, 0.7469822445, +0.4559837762] ]
+ A_G = [ [ 0.0548755604, +0.4941094279, -0.8676661490], $ 
+         [ 0.8734370902, -0.4448296300, -0.1980763734], $
+         [ 0.4838350155,  0.7469822445, +0.4559837762] ]
 
- for i = 0,Nra -1 do begin
- a = [ [cosa[i]*cosd[i],sina[i]*cosd[i] ,sind[i] ], [-sina[i], cosa[i], 0],  $
-          [-cosa[i]*sind[i],-sina[i]*sind[i],cosd[i]] ]
- b = t#a
- vec = [vrad[i], k*pmra[i]/plx[i], k*pmdec[i]/plx[i] ]
- starvel = b#vec
- if keyword_set(lsr) then starvel = starvel + [-9,12,7]
- u[i] = starvel[0]
- v[i] = starvel[1]
- w[i] = starvel[2]
- endfor
+ vec1=vrad
+ vec2=k*pmra/plx
+ vec3=k*pmdec/plx
 
- sz = size(ra)
- if sz(0) EQ 0 then begin
-     u = u[0]  & v = v[0]   & w = w[0]
- endif
+ u = ( A_G[0,0]*cosa*cosd+A_G[0,1]*sina*cosd+A_G[0,2]*sind)*vec1+$
+     (-A_G[0,0]*sina     +A_G[0,1]*cosa                   )*vec2+$
+     (-A_G[0,0]*cosa*sind-A_G[0,1]*sina*sind+A_G[0,2]*cosd)*vec3
+ v = ( A_G[1,0]*cosa*cosd+A_G[1,1]*sina*cosd+A_G[1,2]*sind)*vec1+$
+     (-A_G[1,0]*sina     +A_G[1,1]*cosa                   )*vec2+$
+     (-A_G[1,0]*cosa*sind-A_G[1,1]*sina*sind+A_G[1,2]*cosd)*vec3
+ w = ( A_G[2,0]*cosa*cosd+A_G[2,1]*sina*cosd+A_G[2,2]*sind)*vec1+$
+     (-A_G[2,0]*sina     +A_G[2,1]*cosa                   )*vec2+$
+     (-A_G[2,0]*cosa*sind-A_G[2,1]*sina*sind+A_G[2,2]*cosd)*vec3
+
+ lsr_vel=[-10.00,5.25,7.17]
+ if keyword_set(lsr) then begin
+	u=u+lsr_vel[0]
+	v=v+lsr_vel[1]
+ 	w=w+lsr_vel[2]
+ end
 
  return
  end

@@ -37,7 +37,11 @@
 ;       q - chi-sq probability, scalar (0-1) giving the probability that
 ;              a correct model would give a value equal or larger than the
 ;              observed chi squared.   A small value of q indicates a poor
-;              fit, perhaps because the errors are underestimated.
+;              fit, perhaps because the errors are underestimated.   As 
+;              discussed by Tremaine et al. (2002, ApJ, 574, 740) an 
+;              underestimate of the errors (e.g. due to an intrinsic dispersion)
+;              can lead to a bias in the derived slope, and it may be worth
+;              enlarging the error bars to get a reduced chi_sq ~ 1
 ;
 ; COMMON:
 ;       common fitexy, communicates the data for computation of chi-square.
@@ -51,13 +55,23 @@
 ;       From "Numerical Recipes" column by Press and Teukolsky: 
 ;       in "Computer in Physics",  May, 1992 Vol.6 No.3
 ;       Also see the 2nd edition of the book "Numerical Recipes" by Press et al.
+;
+;       In order to avoid  problems with data sets where X and Y are of very 
+;       different order of magnitude the data are normalized before the fitting
+;       process is started.     The following normalization is used:
+;       xx = (x - xm) / xs    and    sigx = x_sigma / xs    
+;                             where xm = MEAN(x) and xs = STDDEV(x)
+;       yy = (y - ym) / ys    and    sigy = y_sigma / ys    
+;                             where ym = MEAN(y) and ys = STDDEV(y)
+;
+;
 ; MODIFICATION HISTORY:
 ;       Written, Frank Varosi NASA/GSFC  September 1992.
 ;       Now returns q rather than 1-q   W. Landsman  December 1992
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use CHISQR_PDF, MOMENT instead of STDEV,CHI_SQR1 W. Landsman April 1998
 ;       Fixed typo for initial guess of slope, this error was nearly
 ;             always insignificant          W. Landsman   March 2000
+;       Normalize X,Y before calculation (from F. Holland) W. Landsman Nov 2006
 ;-
 function chisq_fitexy, B_angle
 ;
@@ -93,6 +107,7 @@ end
 ;-------------------------------------------------------------------------------
 pro fitexy, x, y, A_intercept, B_slope, sigma_A_B, chi_sq, q, TOLERANCE=Tol, $
                                         X_SIGMA=x_sigma, Y_SIGMA=y_sigma
+  compile_opt idl2					
   common fitexy, xx, yy, sigx, sigy, ww, Ai, offs
 
   if N_params() LT 4 then begin
@@ -100,13 +115,17 @@ pro fitexy, x, y, A_intercept, B_slope, sigma_A_B, chi_sq, q, TOLERANCE=Tol, $
      print,'                  [sigma_A_B, chi_sq, q, TOLERANCE = ]'
      return
   endif
-        dummy = moment(x,sdev=stdevx) & dummy = moment(y,sdev=stdevy)
-        scale =  stdevx/stdevy       ;Updated 14-Mar-2000
-        xx = x
-        yy = y * scale
-        sigx = x_sigma
-        sigy = y_sigma * scale
+  
+; Normalize data before running fitexy
 
+  xm = (MOMENT(x, SDEV = xs, /DOUBLE))[0]
+  ym = (MOMENT(y, SDEV = ys, /DOUBLE))[0]
+  xx = (x - xm) / xs
+  yy = (y - ym) / ys
+  sigx = x_sigma / xs
+  sigy = y_sigma / ys
+ 
+   
 ;Compute first guess for B_slope using standard 1-D Linear Least-squares fit,
 ; where the non-linear term involving errors in x are ignored.
 ; (note that Tx is a transform to reduce roundoff errors)
@@ -115,7 +134,7 @@ pro fitexy, x, y, A_intercept, B_slope, sigma_A_B, chi_sq, q, TOLERANCE=Tol, $
         if N_elements( ww ) EQ 1 then sumw = ww * N_elements( xx ) $
                                  else sumw = total( ww )
         Sx = total( xx * ww )
-        Tx = x - Sx/sumw
+        Tx = xx - Sx/sumw
         B = total( ww * yy * Tx ) / total( ww * Tx^2 )
 
 ;Find the minimum chi-sq while including the non-linear term (B * sigx)^2
@@ -125,7 +144,6 @@ pro fitexy, x, y, A_intercept, B_slope, sigma_A_B, chi_sq, q, TOLERANCE=Tol, $
         ang = [ 0, atan( B ), 1.571 ]
         chi = fltarr( 3 )
         for j=0,2 do chi[j] = chisq_fitexy( ang[j] )    ;this is for later...
-
         if N_elements( Tol ) NE 1 then Tol=1.e-3
         a0 = ang[0]
         a1 = ang[1]
@@ -166,13 +184,18 @@ pro fitexy, x, y, A_intercept, B_slope, sigma_A_B, chi_sq, q, TOLERANCE=Tol, $
                                          else r2 = 2/total( ww )
 
                 sigma_A_B = [ Amin^2 + Amax^2 + r2 , Bmin^2 + Bmax^2 ]
-                sigma_A_B = sqrt( sigma_A_B/2 ) / (scale*[1,cos(Bang)^2])
+                sig_A_B = sqrt( sigma_A_B/2 ) / ([1,cos(Bang)^2])
 
-          endif else sigma_A_B = [1.e33,1.e33]
+          endif 
 
 ;Finally, transform parameters back to orignal units.
 
-        A_intercept = A_intercept/scale
-        B_slope = tan( Bang )/scale
+
+        B_slope = tan( Bang ) *ys /xs
+        A_intercept = A_intercept*ys - tan(Bang) * ys / xs *xm + ym
+        if Nc GT 0 then sigma_A_B = [SQRT( (sig_A_B[0] * ys)^2 +  $
+                    (sig_A_B[1] * ys / xs * xm)^2 ), sig_A_B[1] * ys / xs] $
+                else sigma_A_B = [1.e33,1.e33]    
+
 return
 end

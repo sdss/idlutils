@@ -1,6 +1,6 @@
 PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
       ERRSTYLE=est, THICK = thick, NOCLIP=noclip, ERRCOLOR = ecol, Nsum = nsum,$
-      NSKIP=nskip, LOBAR=lobar, HIBAR=hibar, _EXTRA = pkey, ANONYMOUS_ = Dummy_
+      NSKIP=nskip, LOBAR=lobar, HIBAR=hibar,_EXTRA = pkey
 ;+
 ; NAME:
 ;      OPLOTERROR
@@ -88,7 +88,6 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;      Added NSKIP keyword                       W. Landsman, Dec 1996
 ;      Added HIBAR and LOBAR keywords, M. Buie, Lowell Obs., Feb 1998
 ;      Rename to OPLOTERROR    W. Landsman    June 1998
-;      Converted to IDL V5.0   W. Landsman    June 1998
 ;      Ignore !P.PSYM when drawing error bars   W. Landsman   Jan 1999
 ;      Handle NSUM keyword correctly           W. Landsman    Aug 1999
 ;      Check limits for logarithmic axes       W. Landsman    Nov. 1999
@@ -97,10 +96,13 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;      Remove NSUM keyword from PLOTS call    W. Landsman      March 2001
 ;      Only draw error bars with in XRANGE (for speed)  W. Landsman Jan 2002
 ;      Fix Jan 2002 update to work with log plots  W. Landsman Jun 2002
+;      Added STRICT_EXTRA keyword   W. Landsman     July 2005
+;      W. Landsman Fixed case of logarithmic axes reversed Mar 2009
 ;-
 ;                  Check the parameters.
 ;
  On_error, 2
+ compile_opt idl2
  np = N_params()
  IF (np LT 2) THEN BEGIN
       print, "OPLOTERR must be called with at least two parameters."
@@ -200,9 +202,9 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;                  Plot the positions.
 ;
  if n NE 1 then begin
-     oplot, xx, yy, NOCLIP=noclip,THICK = thick,_EXTRA = pkey 
+     oplot, xx, yy, NOCLIP=noclip,THICK = thick,_STRICT_EXTRA = pkey 
  endif else begin 
-     plots, xx, yy, NOCLIP=noclip,THICK = thick,_EXTRA = pkey
+     plots, xx, yy, NOCLIP=noclip,THICK = thick,_STRICT_EXTRA = pkey
  endelse
 ;
 ; Plot the error bars.   Compute the hat length in device coordinates
@@ -214,9 +216,12 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
     x_low = convert_coord(xlo,yy,/TO_DEVICE)
     x_hi = convert_coord(xhi,yy,/TO_DEVICE)
  endif
+ 
  ycrange = !Y.CRANGE   &  xcrange = !X.CRANGE
-    if !Y.type EQ 1 then ylo = ylo > 10^ycrange[0]
-    if (!X.type EQ 1) and (np EQ 4) then xlo = xlo > 10^xcrange[0]
+   if !Y.type EQ 1 then ylo = ylo > 10^min(ycrange)    
+	                    
+    if (!X.type EQ 1) and (np EQ 4) then xlo = xlo > 10^min(xcrange) 
+
  sv_psym = !P.PSYM & !P.PSYM = 0     ;Turn off !P.PSYM for error bars
 ; Only draw error bars for X values within XCRANGE
     if !X.TYPE EQ 1 then xcrange = 10^xcrange

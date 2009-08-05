@@ -1,19 +1,23 @@
-pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL
+pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL, Maxentry=maxentry
 ;+
 ; NAME: 
 ;       DBCREATE
 ; PURPOSE:      
 ;       Create a new data base (.dbf), index (.dbx) or description (.dbh) file
 ; EXPLANATION:
-;       A database definition (.dbd) file must already exist.
-;       The default directory must be a ZDBASE: directory.
+;       A database definition (.dbd) file must already exist in the current
+;       directory or in a ZDBASE directory.    The new .dbf, .dbx and/or .dbh
+;       files will be written to the same directory.   So if the .dbd file is 
+;       in a ZDBASE directory, then the user must have write privilege to that 
+;       directory
 ;
 ; CALLING SEQUENCE:     
-;       dbcreate, name,[ newindex, newdb, maxitems]  [,/EXTERNAL]  
+;       dbcreate, name,[ newindex, newdb, maxitems]  [,/EXTERNAL, MAXENTRY=]  
 ;
 ; INPUTS:       
 ;       name- name of the data base (with no qualifier), scalar string. 
 ;               The description will be read from the file "NAME".dbd 
+;               Maximum length of name is 19 characters.
 ;
 ; OPTIONAL INPUTS:      
 ;       newindex - if non-zero then a new index file is created,
@@ -29,7 +33,7 @@ pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL
 ; OUTPUTS:
 ;       NONE.
 ;
-; OPTIONAL INPUT KEYWORD:       
+; OPTIONAL INPUT KEYWORDS:       
 ;
 ;       external - If set, then the database is written with an external data
 ;               representation.  This allows the database files to be used on
@@ -47,8 +51,13 @@ pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL
 ;               external data representation format, e.g. Sun workstations, to
 ;               be marked external so that other machines can read them.
 ;
+;
+;       MAXENTRY - positive integer giving the maximum number of entries in the
+;               database (needed to adjust the size of the index file).   This
+;               keyword can be used to supercede the  #maxentries line in the 
+;               .dbd file (the larger of the two numbers will be used).
 ; PROCEDURE CALLS:      
-;       GETTOK(), FIND_WITH_DEF(), HOST_TO_IEEE, ZPARCHECK
+;       GETTOK(), FIND_WITH_DEF(), ZPARCHECK
 ;
 ; RESTRICTIONS: 
 ;       If newdb=0 is not specified, the changes to the .dbd file can
@@ -79,15 +88,22 @@ pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL
 ;                       Modified to allow ZDBASE to be a path string.
 ;       8/14/95  JKF/ACC - allow EXTERNAL data for newindex OR newdb modes.
 ;       Make sure all databases closed before starting W. Landsman June 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added new unsigned and 64 bit integer datatypes W. Landsman July 2001
+;       Make sure to use lowercase filenames on Unix W. Landsman May 2006
+;       Added MAXENTRY keyword   W. Landsman July 2006
+;       Assume since V5.5, remove obsolete keywords to OPEN W. Landsman Sep2006
+;       No longer required to be a ZDBASE directory  W. Landsman Feb 2008
+;       Fix May 2008 bug when files are not in current dir (sigh) W. L. May 2008
+;       Remove calls to IEEE_TO_HOST     W. L.  June 2008
 ;-
 ;----------------------------------------------------------
-On_error,2                         ;Return to caller
+ On_error,2                         ;Return to caller
+ compile_opt idl2
 
 if N_Params() LT 1 then begin
       print,'Syntax - dbcreate, name, [ newindex, newdb, maxitems ]'
-      print,'         !PRIV must be 2 or greater to execute this routine'
+      print,'  Input Keywords:         /EXTERNAL, MAXENTRY= '
+      print,'  !PRIV must be 2 or greater to execute this routine'
       return
 endif
 ;
@@ -102,18 +118,37 @@ zparcheck, 'DBCREATE', name, 1, 7, 0, 'Database Name'
 if N_params() LT 2 then newindex = 0
 if N_params() LT 3 then newdb = 0
 if N_params() LT 4 then maxitems = 200
-filename = strtrim(name,2)
+if not keyword_set(maxentry) then maxentry = 1
+filename = strlowcase(strtrim(name,2))
+
 
  dbclose                         ;Close any databases already open
+ ;
+; open .dbd file
+;
+get_lun, unit                   ;get free unit number
+dbdname =  find_with_def(filename+'.dbd', 'ZDBASE')
+if strlen(dbdname) GT 19 then message,/INF, $
+   'Warning - database name must not exceed 19 characters'
+fdecomp,dbdname,disk,dir
+zdir = disk+ dir 
+if zdir EQ '' then cd,current=zdir
+zdir = zdir + path_sep()
+if not file_test(zdir,/write) then message, $
+   'ERROR - must have write privileges to directory ' + zdir
+openr, unit, dbdname,error=err
+if err NE 0 then goto, Bad_IO
+On_ioerror, BAD_IO              ;On I/O errors go to BAD_IO
+
 ;
 ; Decide whether or not external data representation should be used.
 ;   8/14/95  JKF/ACC - allow EXTERNAL data for newindex OR newdb modes.
 ;
 if ((newindex ne 0) or (newdb ne 0)) or $
-                ((findfile(filename+'.dbh'))[0] eq '') then begin
+                ((file_search(zdir+ filename+'.dbh'))[0] eq '') then begin
         extern = keyword_set(external)
 end else begin
-        openr,tempunit,filename+'.dbh',/block,/get_lun
+        openr,tempunit,filename+'.dbh',/get_lun
         point_lun,tempunit,119
         extern = 0b
         readu,tempunit,extern
@@ -123,7 +158,7 @@ endelse
 ; set up data buffers
 ;
 names = strarr(maxitems)                        ;names of items
-numvals = intarr(maxitems)+1                    ;number of values
+numvals = intarr(maxitems)+1S                   ;number of values
 type = intarr(maxitems)                         ;data type
 nbytes = intarr(maxitems)                       ;number of bytes in item
 desc = strarr(maxitems)                         ;descriptions of items
@@ -146,14 +181,9 @@ nbytes[0] = 4           ;four bytes
 desc[0] = 'Entry or Record Number'
 format[0] = 'I8'
 headers[1,0] = 'ENTRY'
-nitems = 1
+nitems = 1S             ;Short integer
 nextbyte = 4            ;next byte position in record
-;
-; open .dbd file
-;
-get_lun, unit                   ;get free unit number
-On_ioerror, BAD_IO              ;On I/O errors go to BAD_IO
-openr, unit, find_with_def(filename+'.dbd', 'ZDBASE')
+
 ;
 ; read and process input data
 ;
@@ -176,7 +206,7 @@ while not eof(unit) do begin            ;loop on records in the file
 
         'TITLE' : title=st
 
-        'MAXENTRIES' : maxentries=long(strtrim(st,2))
+        'MAXENTRIES' : maxentries=long(strtrim(st,2)) > maxentry
 
         'ITEMS' : begin
 ;
@@ -317,8 +347,8 @@ drec = bytarr(120)
 drec[0:79]=32b                      ;blanks
 drec[0] = byte(strupcase(filename))
 drec[19] = byte(title)
-drec[80] = byte(nitems,0,2)
-drec[82] = byte(totbytes,0,2)
+drec[80] = byte(fix(nitems),0,2)
+drec[82] = byte(fix(totbytes),0,2)
 drec[119] = byte(extern)
 ;
 ; create item description records
@@ -366,25 +396,23 @@ end
 ; Make sure user is on ZDBASE and write description file
 ;
  close,unit
- if extern then $
-        openw,unit,filename+'.dbh',/block else  $
-        openw,unit,filename+'.dbh',/segmented
+ openw,unit,zdir + filename+'.dbh'
    
 On_ioerror, NULL 
 if extern then begin
-        tmp = fix(drec,80,1) & host_to_ieee,tmp & drec[80] = byte(tmp,0,2)
-        tmp = fix(drec,82,1) & host_to_ieee,tmp & drec[82] = byte(tmp,0,2)
+        tmp = fix(drec,80,1) & byteorder,tmp,/htons & drec[80] = byte(tmp,0,2)
+        tmp = fix(drec,82,1) & byteorder,tmp,/htons & drec[82] = byte(tmp,0,2)
 ;
         tmp = fix(irec[20:27,*],0,4,nitems)
-        host_to_ieee,tmp
+        byteorder,tmp,/htons 
         irec[20,0] = byte(tmp,0,8,nitems)
 ;
         tmp = fix(irec[98:99,*],0,1,nitems)
-        host_to_ieee,tmp
+        byteorder,tmp,/htons 
         irec[98,0] = byte(tmp,0,2,nitems)
 ;
         tmp = fix(irec[171:178,*],0,4,nitems)
-        host_to_ieee,tmp
+        byteorder,tmp,/htons 
         irec[171,0] = byte(tmp,0,8,nitems)
 endif
 writeu, unit, drec
@@ -395,9 +423,7 @@ writeu, unit, irec
 
 if newdb then begin
     close,unit
-    if !VERSION.OS EQ "vms" then $
-         openw, unit, filename+'.dbf', totbytes, /NONE   $
-    else openw, unit, filename+'.dbf'
+    openw, unit, zdir + filename+'.dbf'
     header = bytarr(totbytes)
     p = assoc(unit,header)
     p[0] = header
@@ -448,24 +474,25 @@ if (nindex GT 0) and (newindex) then begin
         end
         totblocks = nextblock
         close, unit
-        openw, unit, filename+'.dbx', 512, /BLOCK  
+        openw, unit, zdir + filename+'.dbx'
 ;
         p = assoc(unit,lonarr(2))
         tmp = [long(nindex),maxentries]
-        if extern then host_to_ieee, tmp
+        if extern then byteorder, tmp,/htonl
         p[0] = tmp
 ;
         p = assoc(unit,lonarr(7,nindex),8)
         tmp = header
-        if extern then host_to_ieee, tmp
+        if extern then byteorder, tmp,/htonl
         p[0] = tmp
 endif
 free_lun, unit
 return
 ;
 BAD_IO: free_lun,unit
-print, !MSG_PREFIX+!ERR_STRING
-print, !SYSERR_STRING
+print, !ERROR_STATE.MSG_PREFIX + !ERROR_STATE.MSG
+print, !ERROR_STATE.MSG_PREFIX + !ERROR_STATE.SYS_mSG
+
 return
 ;
 end

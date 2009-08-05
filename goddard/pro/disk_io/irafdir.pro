@@ -44,7 +44,7 @@ pro irafdir,directory,TEXTOUT=textout
 ; MODIFICATION HISTORY:
 ;	Written, K. Venkatakrishna, ST Systems Corp, August 1991
 ;	Work for IRAF V2.11 format   W. Landsman   November 1997
-;	Converted to IDL V5.0   W. Landsman  2-Nov-1997
+;	Assume since V5.5 use file_search W. Landsman   Sep 2006
 ;-
 
  On_error,2                          ;Return to caller
@@ -60,9 +60,9 @@ pro irafdir,directory,TEXTOUT=textout
 
  if N_ELEMENTS(dir) eq 0 then cd,current = dir
 
- if !VERSION.OS NE "vms" then dir = dir + "/"
+ dir = dir + path_sep()
 
- fil = findfile( dir + ext, COUNT=nfiles)
+ fil = file_search( dir + ext, COUNT=nfiles)
  if nfiles EQ 0 then begin
     message,'No IRAF (*.imh) files found ',/CON
     return
@@ -98,10 +98,8 @@ pro irafdir,directory,TEXTOUT=textout
 
  if not newformat then begin
    hdr2 = hdr                                         ;Read the first 572 bytes
-   if !VERSION.OS NE "vms" then begin
-      byteorder,hdr,/sswap                               ; Perform byte swaps
-      byteorder,hdr,/lswap 
-   endif
+   byteorder,hdr,/sswap                               ; Perform byte swaps
+   byteorder,hdr,/lswap 
    hdrlen = fix(hdr,12)                               ;Extract header length,
    ndim = fix(hdr,20)                                 ; number of dimensions,
    naxis1 = long(hdr2,24)                             ; dimension vector
@@ -113,7 +111,7 @@ pro irafdir,directory,TEXTOUT=textout
    tmp1 = assoc(lun1,bytarr(hdrlen*4l,/NOZERO))               
    hdr = tmp1[0]                                     ;Read the entire header
    close,lun1
-   if !VERSION.OS NE "vms" then byteorder,hdr,/sswap  ;
+   byteorder,hdr,/sswap  ;
    nfits = (hdrlen*4l-2054)/162                     ; find the number of records
    linelen = 162
    index = 2052l + indgen(80)*2

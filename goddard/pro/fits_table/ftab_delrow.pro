@@ -40,6 +40,7 @@ pro ftab_delrow,filename,rows,EXTEN_NO=exten_no, NEWFILE = newfile
 ;       Written   W. Landsman        STX Co.     August, 1997
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use COPY_LUN if V5.6 or later     W. Landsman   February 2003
+;       Assume since V5.6, COPY_LUN available   W. Landsman   Sep 2006
 ;- 
 ; On_error,2
 
@@ -85,13 +86,8 @@ pro ftab_delrow,filename,rows,EXTEN_NO=exten_no, NEWFILE = newfile
  filestat = fstat(fcb_in.unit)
  hstart = fcb_in.start_header
  point_lun,fcb_in.unit,0               ;Back to the start of the file
- if !VERSION.RELEASE GE '5.6' then $
-          copy_lun, fcb_in.unit, fcb_out.unit,hstart[1] else begin
-          temp = bytarr(hstart[1],/nozero)
-          readu,fcb_in.unit,temp
-          writeu,fcb_out.unit,temp
- endelse
- fcb_out.nextend = fcb_out.nextend+1       ;flag that primary header is written
+          copy_lun, fcb_in.unit, fcb_out.unit,hstart[1] 
+          fcb_out.nextend = fcb_out.nextend+1       ;flag that primary header is written
 
  for i = 1, Nextend  do begin
         if i EQ exten_no then begin
@@ -100,13 +96,8 @@ pro ftab_delrow,filename,rows,EXTEN_NO=exten_no, NEWFILE = newfile
           if i EQ Nextend then nbyte = filestat.size - hstart[i] $
                           else nbyte = hstart[i+1] - hstart[i]
           point_lun,fcb_in.unit,hstart[i]
-          if !VERSION.RELEASE GE '5.6' then $
-                copy_lun, fcb_in.unit, fcb_out.unit,nbyte else begin
-                temp = bytarr(nbyte,/nozero)
-                readu,fcb_in.unit,temp
-                writeu,fcb_out.unit,temp
-          endelse
-        endelse
+          copy_lun, fcb_in.unit, fcb_out.unit,nbyte 
+         endelse
  endfor
  fits_close,fcb_in
  fits_close,fcb_out

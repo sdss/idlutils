@@ -1,4 +1,4 @@
-function sunsymbol
+function sunsymbol, FONT=font
 ;+
 ; NAME:
 ;	SUNSYMBOL
@@ -11,10 +11,16 @@ function sunsymbol
 ;	'!9n', it is not in the standard postscript set.   
 ;
 ; CALLING SEQUENCE:
-;	result = SUNSYMBOL()
+;	result = SUNSYMBOL([FONT= ])
 ;
 ; INPUTS:
 ;	None
+;
+; OPTIONAL INPUT KEYWORDS:
+;       font = scalar font graphics keyword (-1,0 or 1) for text.   Note that
+;              this keyword is useful for printing text with XYOUTS but *not*
+;              e.g. the XTIT keyword to PLOT where the font call to PLOT takes
+;              precedence.
 ;
 ; OUTPUTS:
 ;	result - a scalar string representing the Sun symbol.   A different
@@ -33,15 +39,19 @@ function sunsymbol
 ;		the circle
 ;	(2) SUNSYMBOL() includes subscript output positioning commands in the 
 ;		output string.
-;       (3) True type fonts (!p.font = 1) are not supported
+;       (3) True type fonts (!p.font = 1) are not supported.   If you want
+;           to make a Sun symbol with true type fonts, see the discussion of
+;           installing the Marvosym font at http://tinyurl.com/mst5q 
 ; REVISION HISTORY:
 ;	Written,  W. Landsman,    HSTX          April, 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Allow font keyword to be passed.  T. Robishaw Apr. 2006
 ;-
  On_error,2
 
- if (!P.FONT EQ -1) then return,'!D!9n!N!X' else $
- if (!D.NAME NE 'PS') then return,'!DSun!N' else begin
+ if N_elements(font) eq 0 then font = !p.font
+ if (font EQ -1) then return,'!D!9n!N!X' else $
+ if (!D.NAME NE 'PS')  then return,'!DSun!N' else begin
 
 ;Want to use /AVANTGARDE,/BOOK which is the default font 17, but to make sure
 ;that ISOLATIN encoding is turned off, we'll define our own font.

@@ -3,7 +3,7 @@
 ;      DBEDIT
 ;
 ; PURPOSE:
-;       Interactively edit specified fields in a database. 
+;       Interactively edit specified fields in an IDL database. 
 ; EXPLANATION:
 ;       The value of each field is displayed, and the user has the option
 ;       of changing or keeping the value.  Widgets will be used if they
@@ -20,6 +20,10 @@
 ; OPTIONAL INPUTS:
 ;       items - list of items to be edited.  If omitted, all fields can be 
 ;               edited.      
+;
+; KEYWORDS:
+;       BYTENUM = If set, treat byte variables as numbers instead of
+;                 characters.
 ;
 ; COMMON BLOCKS:
 ;       DB_COM -- contains information about the opened database.
@@ -77,18 +81,10 @@
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Replace DATAYPE() with size(/TNAME)   W. Landsman   November 2001
 ;       Work for entry numbers > 32767     W. Landsman   December 2001
+;       Added /BYTENUM  William Thompson        13-Mar-2006
+;       Use DIALOG_MESSAGE for error messages  W. Landsman  April 2006
+;       Assume since V5.5, remove VMS support  W. Landsman  Sep 2006
 ;-
-
-
-;----------------------------------------------------------------
-
-;event handler for ACKNOWLEDGE BUTTON
-
-pro acknow_event,ev
-widget_control,ev.id,GET_VALUE=value
-if (value EQ 'ACKNOWLEDGED') then $
-        widget_control,/DESTROY,ev.top
-end
 
 ;----------------------------------------------------------------
 
@@ -102,7 +98,7 @@ common db_com,qdb,QITEMS,QDBREC
 common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
         it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
         endbut,nextbut,mid,minlist,maxlist,savebut,bigmid,entry,wid_warn,$
-        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
+        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag,bytenum
 
 CASE event.id OF
 
@@ -143,14 +139,11 @@ CASE event.id OF
               names[i] + ' = ' + string(val))
               newflag[ wereat, i ] = 1b
     BADVAL:     if (not valid) then begin
-                bad_base = widget_base(/column,title='Bad Value')
-                m = 'Item '+ strcompress(names[i],/rem) + $ 
-                        ' must be of type ' + size(oldval[0],/TNAME)
-                w1 = widget_label( bad_base,value=m )
-                w2 = widget_button( bad_base,value='ACKNOWLEDGED' )
-                widget_control,bad_base,/realize
-                xmanager,'acknow',bad_base,/modal
+                result = dialog_message(title='Bad Value',/ERROR, $
+                   'Item '+ strcompress(names[i],/rem) + $ 
+                        ' must be of type ' + size(oldval[0],/TNAME) )
                 str = dbxval(entry,dtype[i],numvals[i],sbyte[i],nbytes[i])
+                if (dtype[i] eq 1) and keyword_set(bytenum) then str=fix(str)
                 str = '    '+string(str[0])
                 widget_control,widtext[i],set_value=str         
                 endif
@@ -183,7 +176,7 @@ common db_com,qdb,QITEMS,QDBREC
 common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
         it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
         endbut,nextbut,mid,minlist,maxlist,savebut,bigmid,entry,wid_warn,$
-        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
+        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag,bytenum
 
 
 ;get entry number
@@ -193,6 +186,7 @@ common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
  widget_control, widtext0, set_value=string(liston)
  for i = 0,nitems-1 do begin
         str = dbxval(entry,dtype[i],numvals[i],sbyte[i],nbytes[i])
+        if (dtype[i] eq 1) and keyword_set(bytenum) then str=fix(str)
         str = '    '+string(str[0])
         widget_control,widtext[i],set_value=str
  endfor
@@ -207,8 +201,9 @@ common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
 ;-------------------------------------------------------------------------
 ;main program
 
-pro dbedit,list,items
+pro dbedit,list,items,bytenum=k_bytenum
 
+ compile_opt idl2
 common db_com,qdb,QITEMS,QDBREC
 
 ;Nitems - Number elements in input list
@@ -225,7 +220,7 @@ common db_com,qdb,QITEMS,QDBREC
 common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
         it,itnum,dtype,numvals,sbyte,nbytes,buts,prevbut,but2,resetbut,$
         endbut,nextbut,mid,minlist,maxlist,savebut,bigmid,entry,wid_warn,$
-        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag
+        holder0,widtext0,widlabel0,thislist,nlist,wereat,newflag,bytenum
                           
  On_error,2
  if N_params() LT 1 then begin
@@ -233,6 +228,9 @@ common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
         return
  endif
         
+;Set the value of bytenum
+bytenum = keyword_set(k_bytenum)
+
 ;make sure widgets are available
  if (!D.FLAGS AND 65536) EQ 0 then begin  
         dbedit_basic, list, items
@@ -240,28 +238,20 @@ common dbw_c,liston,main,holder,widlabel,widtext,middle,nitems,names,$
  endif
 
 ;check to make sure database is open
-w1 = widget_base(/column)
     ;first check to see if there is an open database
     s = size(qdb)
     if (s[0] EQ 0) then begin
-    no_open = widget_base(/column,title='NO DATABASE OPEN')
-        m1 = 'No open database currently exists.'
-        w1 = widget_label(no_open,VALUE=m1)
-        w2 = widget_button(no_open,VALUE='ACKNOWLEDGED')
-        widget_control, no_open, /realize
-        xmanager, 'acknow', no_open, /modal
-        goto, PROEND  
+    
+           result = dialog_message(/ERROR, title='NOT OPEN FOR UPDATE', $
+	        'No database has been opened')
+            goto, PROEND  
     endif
 ;check to make sure the database is opened for update
     dbname = db_info('NAME',0)
     if not db_info('UPDATE') then begin
 
-        no_open = widget_base(/column,title='NOT OPEN FOR UPDATE')       
-        m1 = 'Database ' + dbname + ' must be opened for update.'
-        w1 = widget_label(no_open,VALUE=m1)
-        w2 = widget_button(no_open,VALUE='ACKNOWLEDGED')
-        widget_control,no_open,/realize
-        xmanager,'acknow',no_open,/MODAL
+        result = dialog_message(/ERROR, title='NOT OPEN FOR UPDATE', $
+	        'Database ' + dbname + ' must be opened for update.')
         goto,PROEND
 
     endif
@@ -300,19 +290,14 @@ w1 = widget_base(/column)
         thislist = lindgen(nlist) + 1
     endif
 
-    minlist = min(thislist)
-    maxlist = max(thislist)
+    minlist = min(thislist, max = maxlist)
 
 
     nentry = db_info('ENTRIES',0)
     if (maxlist gt nentry) then begin
-        m = dbname + ' entry numbers must be less than ' + strtrim(nentry+1,2)
-        wrongno = widget_base(/column,title='NOT VALID ENTRY NUMBER')
-        w1 = widget_label( wrongno, VALUE=m)
-        w2 = widget_button( wrongno, VALUE='ACKNOWLEDGED')
-        widget_control, wrongno, /realize
-        xmanager, 'acknow', wrongno, /modal
-        goto, PROEND
+        result = dialog_message(title='INVALID ENTRY NUMBER',/ERROR, $
+           dbname + ' entry numbers must be less than ' + strtrim(nentry+1,2) )
+         goto, PROEND
     endif
 
     nitems = db_info('ITEMS',0) -1
@@ -335,8 +320,7 @@ w1 = widget_base(/column)
     ;create widget and display
     main = widget_base(/COLUMN,title='Widgetized Database Editor')
     w1 = widget_label(main,value='******  '  + dbname + '  ******')
-    if !version.os EQ 'vms' then xsize=420 else xsize=325
-    bigmid = widget_base(main,/column,x_scroll_size=xsize,y_scroll_size=650)
+    bigmid = widget_base(main,/column,x_scroll_size=325,y_scroll_size=650)
 
 
     butbase = widget_base(main,/column,/frame)
@@ -365,20 +349,12 @@ w1 = widget_base(/column)
         ed = 'N'
         str1 = names[i]
 
-        ;add spaces if version is vms to make layout "look better"
-        if (!version.os EQ 'vms') then begin
-                str1 = strcompress(str1,/remove_all)
-                str1len = strlen(str1)
-                b = 20.-str1len
-                n = b*2.
-                for j = 0,n do str1 = str1+' '
-        endif
-
         for j = 0, N_elements(it)-1 do begin
                 if it[j] EQ itnum[i] then ed = 'Y'
         endfor
 
         str = dbxval(entry,dtype[i],numvals[i],sbyte[i],nbytes[i])
+        if (dtype[i] eq 1) and keyword_set(bytenum) then str=fix(str)
         str = '    ' + string(str[0])
         if ed eq 'Y' then  begin
                 holder[i] = widget_base(middle,/row)

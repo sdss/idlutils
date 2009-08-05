@@ -39,12 +39,13 @@ pro ftab_print,filename,columns,rows, TEXTOUT = textout, FMT = fmt, $
 ;       Uses the non-standard system variables !TEXTOUT and !TEXTUNIT
 ;       which must be defined (e.g. with ASTROLIB) prior to compilation.
 ; PROCEDURES USED:
-;       FITS_OPEN, FITS_READ, FTPRINT, TBPRINT
+;       FITS_CLOSE, FITS_OPEN, FITS_READ, FTPRINT, TBPRINT
 ; HISTORY:
 ;       version 1  W. Landsman    August 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Check whether data exists   W. Landsman    Feb 2007
 ;-
 ;----------------------------------------------------------------------
+ compile_opt idl2
  if N_params() LT 1 then begin
         print,'Syntax - ftab_print, filename, columns, rows,' 
         print,'              [EXTEN_NO=, FMT= , TEXTOUT=  ]'
@@ -54,8 +55,14 @@ pro ftab_print,filename,columns,rows, TEXTOUT = textout, FMT = fmt, $
  if not keyword_set(exten_no) then exten_no = 1
 
  fits_open,filename,fcb
+ if fcb.axis[1,exten_no] EQ 0 then begin
+     message,/CON, $
+      'ERROR - Extension ' + strtrim(exten_no,2) + ' contains no data'
+     return
+ endif    
  fits_read,fcb,tab,htab,exten_no=exten_no
  fits_close,fcb
+
  ext_type = fcb.xtension[exten_no]
 
  case ext_type of
@@ -63,7 +70,7 @@ pro ftab_print,filename,columns,rows, TEXTOUT = textout, FMT = fmt, $
  'BINTABLE': binary = 1b
  'TABLE': binary = 0b
  else: message,'ERROR - Extension type of ' + $
-                ext_type + 'is not a FITS table format'
+                ext_type + ' is not a FITS table format'
  endcase
 
  if binary then tbprint,htab,tab,columns,rows, TEXTOUT = textout,fmt=fmt $

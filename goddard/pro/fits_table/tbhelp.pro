@@ -35,11 +35,12 @@ pro tbhelp,h, TEXTOUT = textout
 ;       W. Landsman       February, 1991
 ;       Parsing of a FITS binary header made more robust    May, 1992
 ;       Added TEXTOUT keyword      August 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Define !TEXTOUT if not already present   W. Landsman  November 2002
+;       Slightly more compact display   W. Landsman August 2005
+;       Fix Aug 2005 error omitting TFORM display W. Landsman Sep 2005
 ;-
+ compile_opt idl2
  On_error,2
-
 
  if N_params() LT 1 then begin
      print,'Syntax - tbhelp, hdr, [TEXTOUT= ]'     
@@ -65,19 +66,20 @@ pro tbhelp,h, TEXTOUT = textout
  if N_tfields EQ 0 then message, $
         'ERROR - Required TFIELDS keyword is missing from binary table header'
 
+ tform = sxpar(h,'TFORM*', Count = N_tform)      ;Get required TFORM* values
+ n = n > N_tform
+ 
  if not keyword_set(TEXTOUT) then textout = !TEXTOUT
  textopen,'tbhelp',TEXTOUT=textout
 
- printf,!TEXTUNIT,'FITS Binary Table Header'
- printf,!TEXTUNIT, $
-        'Size of Table Array: ',strtrim(naxis[0],2),' by ',strtrim(naxis[1],2)
- printf,!TEXTUNIT, 'Extension Name:   ',sxpar(h,'EXTNAME')
- printf,!TEXTUNIT,' '
+ printf,!TEXTUNIT,'FITS Binary Table: ' + $
+        'Size ',strtrim(naxis[0],2),' by ',strtrim(naxis[1],2)
+ extname = sxpar(h,'EXTNAME', Count=N_ext)	
+ if N_ext GT 0 then printf,!TEXTUNIT, 'Extension Name:   ',sxpar(h,'EXTNAME')
 
  tnull =  strarr(n)
- tform = strarr(n) & tunit = tform & ttype =tform & tcomm = tform
+ tunit = tnull & ttype =tnull & tcomm = tnull
  key = strmid( h, 0, 5)
-
  for i = 1, N_elements(h)-1 do begin
 
  case key[i] of
@@ -90,12 +92,6 @@ pro tbhelp,h, TEXTOUT = textout
               tcomm[j-1] = strcompress( strmid(h[i], slash+1, 55))
           end
 
- 'TFORM':  begin
-          apos = strpos( h[i], "'") 
-          tform[fix(strtrim(strmid(h[i],5,3),2))-1] = $
-                                  strtrim( strmid( h[i], apos+1, 20), 2)
-          end
-
  'TUNIT':  begin 
           apos = strpos( h[i], "'") 
           tunit[fix(strtrim(strmid(h[i],5,3),2))-1] = strmid(h[i],apos+1,20)
@@ -106,13 +102,13 @@ pro tbhelp,h, TEXTOUT = textout
           end
  'END  ':  goto, DONE 
  ELSE :
- end
+ endcase
  endfor
 
 DONE:
  remchar,ttype,"'" & ttype = strtrim(ttype,2)
  remchar,tunit,"'" & tunit = strtrim(tunit,2)
- remchar,tform,"'" & tform = strtrim(tform,2)
+ tform = strtrim(tform,2)
  remchar,tnull,"'" & tnull = strtrim(tnull,2)
  len_ttype = strtrim( max(strlen(ttype)) > 4,2)
  len_tunit = strtrim( max(strlen(tunit)) > 4,2)
@@ -124,8 +120,7 @@ DONE:
         ',1x,A' + len_tnull +',1x,A)'
 
  printf,!TEXTUNIT,'Field','Name','Unit','Frmt','Null','Comment',f=fmt
- printf,!TEXTUNIT,' '
-
+ 
  field = strtrim(sindgen(n)+1,2)
  for i=0,n-1 do begin 
         printf,!TEXTUNIT,field[i],ttype[i],tunit[i],tform[i],tnull[i],tcomm[i], $

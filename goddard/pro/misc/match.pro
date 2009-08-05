@@ -46,7 +46,7 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
 ;               IDL> match, a, b, suba, subb, COUNT = count
 ;
 ;       will give suba = [1,2,3], subb = [0,2,4],  COUNT = 3
-;       and       suba[a] = subb[b] = [5,7,9]
+;       and       a[suba] = b[subb] = [5,7,9]
 ;
 ; 
 ; METHOD:
@@ -65,9 +65,11 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
 ;       Work again for strings           W. Landsman         April 2000
 ;       Use size(/type)                  W. Landsman         December 2002
 ;       Work for scalar integer input    W. Landsman         June 2003
+;       Assume since V5.4, use COMPLEMENT to WHERE() W. Landsman Apr 2006
 ;-
 ;-------------------------------------------------------------------------
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 3 then begin
      print,'Syntax - match, a, b, suba, subb, [ COUNT = ]'
@@ -128,9 +130,9 @@ pro match, a, b, suba, subb, COUNT = count, SORT = sort
  dup[even+1] = firstdup+1
  ind = ind[dup]                         ;indices of duplicates
  vec = vec[dup]                         ;vector id of duplicates
- suba = ind[ where( vec EQ 0)  ]       ;a subscripts
- subb = ind[ where( vec) ]             ;b subscripts
-
+ subb = ind[ where( vec, complement = vzero) ]             ;b subscripts
+ suba = ind[ vzero] 
+  
  endif else begin             ;Integer calculation using histogram.
 
  minab = min(a, MAX=maxa) > min(b, MAX=maxb) ;Only need intersection of ranges

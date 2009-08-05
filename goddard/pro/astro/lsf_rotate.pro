@@ -2,18 +2,23 @@
 ;+
 ; NAME:
 ;     LSF_ROTATE:
+;
 ; PURPOSE:
 ;     Create a 1-d convolution kernel to broaden a spectrum from a rotating star
+;
 ; EXPLANATION:
 ;     Can be used to derive the broadening effect (line spread function; LSF) 
 ;     due to  rotation on a synthetic stellar spectrum.     Assumes constant 
 ;     limb darkening across the disk.
+;
 ; CALLING SEQUENCE
 ;     lsf = LSF_ROTATE(deltav, vsini, EPSILON=, VELGRID=)
+;
 ; INPUT PARAMETERS:
 ;    deltaV - numeric scalar giving the step increment (in km/s) in the output 
 ;             rotation kernel.  
 ;    Vsini - the rotational velocity projected  along the line of sight (km/s)
+;
 ; OUTPUT PARAMETERS:
 ;    LSF - The convolution kernel vector for the specified rotational velocity.
 ;          The  number of points in LSF will be always be odd (the kernel is
@@ -44,13 +49,15 @@
 ;
 ; NOTES:
 ;    Adapted from rotin3.f in the SYNSPEC software of Hubeny & Lanz 
-;        http://tlusty.gsfc.nasa.gov/index.html.    Also see Eq. 17.12 in 
+;        .http://nova.astro.umd.edu/index.html    Also see Eq. 17.12 in 
 ;    "The Observation and Analysis of Stellar Photospheres" by D. Gray (1992)
 ; REVISION HISTORY:
 ;    Written,   W. Landsman                November 2001
 ;-
+    On_error,2
+    compile_opt idl2
     if N_params() LT 1 then begin
-         print,'Syntax - rkernel = lsf_rotate(npts, vsini)'
+         print,'Syntax - rkernel = lsf_rotate(deltav, vsini)'
          print,'      Input Keyword: Epsilon'
          print,'      Output Keyword: Velgrid'
          return,-1
@@ -70,5 +77,4 @@
     x1 = abs(1.0d - x^2)
     return, float((e1*sqrt(x1) + e2*x1)/e3)
    
-    end
-    
+    end   

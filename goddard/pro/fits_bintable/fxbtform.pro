@@ -2,9 +2,9 @@
 ;+
 ; NAME: 
 ;	FXBTFORM
-; Purpose     : 
+; PURPOSE     : 
 ;	Returns information about FITS binary table columns.
-; Explanation : 
+; EXPLANATION : 
 ;	Procedure to return information about the format of the various columns
 ;	in a FITS binary table.
 ; Use         : 
@@ -60,9 +60,11 @@
 ;		the maximum array size is not in the header.
 ;	Version 5  Wayne Landsman, GSFC, August 1997
 ;		Recognize double complex array type if since IDL version 4.0
-; Version     :
 ;       Version 6
 ;       Optimized FXPAR call, CM 1999 Nov 18
+; Version     :
+;       Version 7: Wayne Landsman, GSFC Feb 2006
+;               Added support for 64bit integer K format
 ;-
 ;
 	ON_ERROR,2
@@ -169,6 +171,8 @@ NEXT_CHAR:
 			'D':  BEGIN & IDLTYPE[I] = 5 & WIDTH[I] = 8 & END
 			'C':  BEGIN & IDLTYPE[I] = 6 & WIDTH[I] = 8 & END
 			'M':  BEGIN & IDLTYPE[I] = 9 & WIDTH[I] =16 & END 
+			'K':  BEGIN & IDLTYPE[I] =14 & WIDTH[I] = 8 & END 
+;
 ;
 ;  Treat bit arrays as byte arrays with 1/8 the number of elements.
 ;

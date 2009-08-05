@@ -1,11 +1,12 @@
-pro tbinfo,h,tb_str
+pro tbinfo,h,tb_str, errmsg = errmsg, NOSCALE= noscale
+;+
 ; NAME:
 ;       TBINFO
 ; PURPOSE:
 ;       Return an informational IDL structure from a FITS binary table header.
 ;
 ; CALLING SEQUENCE:
-;       tbinfo, h, tb_str
+;       tbinfo, h, tb_str, [ERRMSG = ]
 ; INPUTS:
 ;       h - FITS binary table header, e.g. as returned by READFITS()
 ;
@@ -36,10 +37,14 @@ pro tbinfo,h,tb_str
 ;       The .tscal and .tzero values are stored as pointers so as to preserve
 ;       the individual data types (e.g. float or double) which may differ 
 ;       in different columns.   For example, to obtain the value of TSCAL for
-;       the third column use *tab_str.tscal[2]    
-; SIDE EFFECTS:
-;       If there are difficulties interpreting the table then !ERR is set 
-;       to -1
+;       the third column use *tab_str.tscal[2]  
+; OPTIONAL INPUT KEYWORD:
+;       /NOSCALE - if set, then the TSCAL* and TZERO* keywords are not extracted
+;            from the FITS header, and the .tscal and .tzero pointers do not
+;            appear in the output structure.
+; OPTIONAL OUTPUT KEYWORD:
+;        ERRMSG = if present, then error messages are returned in this keyword
+;            rather than displayed using the MESSAGE facility 
 ; PROCEDURES USED:
 ;       SXPAR()
 ; NOTES:
@@ -48,37 +53,41 @@ pro tbinfo,h,tb_str
 ;       idltype = 3, width=4)
 ; HISTORY:
 ;       Major rewrite to return a structure      W. Landsman   August 1997
-;       Release for IDL V5.0   August 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added "unofficial" 64 bit integer "K" format W. Landsamn Feb. 2003
 ;       Store .tscal and .tzero tags as pointers, so as to preserve 
 ;       type information   W. Landsman          April 2003
+;       Treat repeat count for string as specifying string length, not number
+;          of elements, added ERRMSG    W. Landsman        July 2006
+;       Treat logical as character string 'T' or 'F' W. Landsman  October 2006
+;       Added NOSCALE keyword  W. Landsman   March 2007
 ;-
 ;----------------------------------------------------------------------------
  On_error,2
+ compile_opt idl2
  if N_params() LT 2 then begin
-        print,'Syntax - TBINFO, h, tb_str'
+        print,'Syntax - TBINFO, h, tb_str, [ERRMSG=, /NOSCALE]'
         return
  endif
+ save_err = arg_present(errmsg)
 
 ; get number of fields
 
  tfields = sxpar( h, 'TFIELDS', COUNT = N_TFields)
- if N_TFields LT 0 then $
-        message,'Invalid FITS header. keyword TFIELDS is missing'
+ if N_TFields EQ 0 then begin    ;Legal Binary Table Header?
+        errmsg = 'Invalid FITS binary table header. keyword TFIELDS is missing'
+	if not save_err then message,errmsg else return
+   endif	    
 
- if tfields EQ 0 then begin     ;ANY fields in table?
-                !ERR = -1
-                return
- endif
-
+ if tfields EQ 0 then begin     ;Any fields in table?
+        errmsg = 'No Columns in FITS binary table, keyword TFIELDS = 0'
+	if not save_err then message,errmsg else return
+  endif	    
+ 
 ; Create output arrays with default values
 
  idltype = intarr(tfields) & tnull = idltype
  numval = lonarr(tfields) & tbcol = numval & width = numval & maxval = numval
  tunit = replicate('',tfields) & ttype = tunit & tdisp = tunit & tnull = tunit
- tscal = ptrarr(tfields,/all)
- tzero = ptrarr(tfields,/all)
 
  type = sxpar(h,'TTYPE*', COUNT = N_ttype)
  if N_ttype GT 0 then ttype[0] = strtrim(type,2) 
@@ -95,14 +104,17 @@ pro tbinfo,h,tb_str
  null = sxpar(h, 'TNULL*', COUNT = N_tnull)      ;null data value
  if N_tnull GT 0 then tnull[0] = null
 
- index = strtrim(indgen(tfields)+1,2)
- for i=0,tfields-1 do begin
-   scale = sxpar(h,'TSCAL' + index[i], COUNT = N_tscal)     ;Scale factor
-   if N_tscal GT 0 then *tscal[i] = scale else *tscal[i] = 1.0
-   zero = sxpar(h,'TZERO' + index[i], Count = N_tzero)
-   if N_tzero GT 0 then *tzero[i] = zero else *tzero[i] = 0
- endfor
-   
+ if not keyword_set(noscale) then begin
+  tscal = ptrarr(tfields,/all)
+  tzero = ptrarr(tfields,/all)
+  index = strtrim(indgen(tfields)+1,2)
+  for i=0,tfields-1 do begin
+    scale = sxpar(h,'TSCAL' + index[i], COUNT = N_tscal)     ;Scale factor
+    if N_tscal GT 0 then *tscal[i] = scale else *tscal[i] = 1.0
+    zero = sxpar(h,'TZERO' + index[i], Count = N_tzero)
+    if N_tzero GT 0 then *tzero[i] = zero else *tzero[i] = 0
+  endfor
+ endif  
 
  disp = sxpar(h,'TDISP*', COUNT = N_tdisp)       ;Display format string
  if N_tdisp GT 0 then tdisp[0] = disp
@@ -139,12 +151,14 @@ NEXT_CHAR:
 
         case strupcase( tform[i] ) of
 
-        'A' : begin & idltype[i] = 7 &  width[i] = 1 &  end
+        'A' : begin 
+	      idltype[i] = 7 &  width[i] = numval[i] & numval[i]=1 
+	      end
         'I' : begin & idltype[i] = 2 &  width[i] = 2 &  end
         'J' : begin & idltype[i] = 3 &  width[i] = 4 &  end
         'E' : begin & idltype[i] = 4 &  width[i] = 4 &  end
         'D' : begin & idltype[i] = 5 &  width[i] = 8 &  end
-        'L' : begin & idltype[i] = 1 &  width[i] = 1 &  end
+        'L' : begin & idltype[i] = 7 &  width[i] = 1 &  end
         'B' : begin & idltype[i] = 1 &  width[i] = 1 &  end
         'C' : begin & idltype[i] = 6 &  width[i] = 8 &  end
         'M' : begin & idltype[i] = 9 &  width[i] =16 &  end
@@ -165,6 +179,12 @@ NEXT_CHAR:
  if i ge 1 then tbcol[i] = tbcol[i-1] + width[i-1]*numval[i-1]
 
  endfor
+ if keyword_set(noscale) then $ 
+
+  tb_str = {TBCOL:tbcol,WIDTH:width,IDLTYPE:idltype,NUMVAL:numval,TUNIT:tunit,$
+           TNULL:tnull,TFORM:tform,TTYPE:ttype,MAXVAL:maxval, TDISP:tdisp} $
+ else $
+ 
  tb_str = {TBCOL:tbcol,WIDTH:width,IDLTYPE:idltype,NUMVAL:numval,TUNIT:tunit,$
            TNULL:tnull,TFORM:tform,TTYPE:ttype,MAXVAL:maxval, TSCAL:tscal, $
            TZERO:tzero, TDISP:tdisp}

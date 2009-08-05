@@ -1,7 +1,9 @@
 pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
             v16,v17,v18,v19,v20,v21,v22,v23,v24,v25, COMMENT = comment, $
             FORMAT = fmt, DEBUG=debug, SILENT=silent, SKIPLINE = skipline, $
-            NUMLINE = numline, DELIMITER = delimiter
+            NUMLINE = numline, DELIMITER = delimiter, NAN = NaN, $
+            PRESERVE_NULL = preserve_null, COUNT=ngood, NLINES=nlines, $
+	    STRINGSKIP = skipstart
 ;+
 ; NAME:
 ;       READCOL
@@ -9,15 +11,16 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       Read a free-format ASCII file with columns of data into IDL vectors 
 ; EXPLANATION:
 ;       Lines of data not meeting the specified format (e.g. comments) are 
-;       ignored.  Columns may be separated by commas or spaces.
+;       ignored.  By default, columns may be separated by commas or spaces.
 ;
 ;       Use READFMT to read a fixed-format ASCII file.   Use RDFLOAT for
 ;       much faster I/O (but less flexibility).    Use FORPRINT to write 
 ;       columns of data (inverse of READCOL).    
 ;
 ; CALLING SEQUENCE:
-;       READCOL, name, v1, [ v2, v3, v4, v5, ...  v25 , COMMENT=
-;           DELIMITER= ,FORMAT = , /DEBUG ,  /SILENT , SKIPLINE = , NUMLINE = ]
+;       READCOL, name, v1, [ v2, v3, v4, v5, ...  v25 , COMMENT=, /NAN
+;           DELIMITER= ,FORMAT = , /DEBUG ,  /SILENT , SKIPLINE = , NUMLINE = 
+;           COUNT =, STRINGSKIP= 
 ;
 ; INPUTS:
 ;       NAME - Name of ASCII data file, scalar string.  
@@ -45,20 +48,36 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;               suppressed.
 ;       /DEBUG - If this keyword is non-zero, then additional information is
 ;                printed as READCOL attempts to read and interpret the file.
-;       COMMENT - single character specifying comment signal.   Any line 
+;       COMMENT - single character specifying comment character.   Any line 
 ;                beginning with this character will be skipped.   Default is
 ;                no comment lines.
-;       DELIMITER - single character specifying delimiter used to separate 
-;                columns.   Default is either a comma or a blank.
+;       DELIMITER - Character(s) specifying delimiter used to separate 
+;                columns.   Usually a single character but, e.g. delimiter=':,'
+;                specifies that either a colon or comma as a delimiter. 
+;                The default delimiter is either a comma or a blank.                   
+;       /NAN - if set, then an empty field will be read into a floating or 
+;                double numeric variable as NaN; by default an empty field is 
+;                converted to 0.0.
+;       /PRESERVE_NULL - If set, then spaces are considered to be valid fields,
+;                useful if the columns contain missing data.   Note that between
+;                April and December 2006, /PRESERVE_NULL was the default.
 ;       SKIPLINE - Scalar specifying number of lines to skip at the top of file
 ;               before reading.   Default is to start at the first line.
 ;       NUMLINE - Scalar specifying number of lines in the file to read.  
 ;               Default is to read the entire file
+;       STRINGSKIP - will skip all lines that begin with the specified string.
+;               (Unlike COMMENT this can be more than 1 character.) Useful to 
+;               skip over comment lines.
 ;
 ; OUTPUTS:
 ;       V1,V2,V3,...V25 - IDL vectors to contain columns of data.
 ;               Up to 25 columns may be read.  The type of the output vectors
 ;               are as specified by FORMAT.
+;
+; OPTIONAL OUTPUT KEYWORDS:
+;       COUNT - integer giving the number of valid lines actually read
+;       NLINES - integer giving the total number of lines in the file 
+;                (as returned by FILE_LINES)
 ;
 ; EXAMPLES:
 ;       Each row in a file position.dat contains a star name and 6 columns
@@ -92,10 +111,12 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       the value 0.13 read with an 'I' format will be converted to 0.
 ;
 ; PROCEDURES CALLED
-;       GETTOK(), NUMLINES(), STRNUMBER()
-;
-; MINIMUM IDL VERSION:
-;       V5.3 (Uses STRSPLIT)
+;       GETTOK(), STRNUMBER()
+;       The version of STRNUMBER() must be after August 2006.
+; NOTES:
+;       Under V6.1 or later, READCOL uses the SCOPE_VARFETCH function rather 
+;       than EXECUTE().    This is faster and allows readcol.pro to be used
+;       in the IDL Virtual machine.
 ; REVISION HISTORY:
 ;       Written         W. Landsman                 November, 1988
 ;       Modified             J. Bloch                   June, 1991
@@ -111,21 +132,32 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       Accept null strings separated by delimiter ,e.g. ',,,'
 ;       Use SCOPE_VARFETCH instead of EXECUTE() for >V6.1  W.L. Jun 2005
 ;       Added compile_opt idl2   W. L.  July 2005
+;       Added the NaN keyword   W. L      August 2006
+;       Added /PRESERVE_NULL keyword  W.L.  January 2007
+;       Assume since V5.6 (FILE_LINES available ) W.L. Nov 2007
+;       Added COUNT output keyword  W.L.  Aug 2008
+;       Added NLINES output keyword W.L.   Nov 2008
+;       Added SKIPSTART keyword  Stephane Beland January 2008
+;       Renamed SKIPSTART to STRINGSKIP to keep meaning of SKIP W.L. Feb 2008
+;       Assume since V6.1, SCOPE_VARFETCH available W.L. July 2009
 ;-
   On_error,2                           ;Return to caller
   compile_opt idl2
 
   if N_params() lt 2 then begin
-     print,'Syntax - READCOL, name, v1, [ v2, v3,...v25, '
-     print,'        FORMAT= ,/SILENT  ,SKIPLINE =, NUMLINE = , /DEBUG]'
+     print,'Syntax - READCOL, name, v1, [ v2, v3,...v25, /NAN'
+     print,'        FORMAT= ,/SILENT  ,SKIPLINE =, NUMLINE = , /DEBUG, COUNT=]'
      return
   endif
 
-  no_exec = !VERSION.RELEASE GE '6.1'
 ; Get number of lines in file
 
-   nlines = NUMLINES( name )
-   if nlines LT 0 then return
+   nlines = FILE_LINES( name )
+    if nlines LE 0 then begin
+         message,'ERROR - File ' + name+' contains no data',/CON
+       return
+    endif     
+   
 
    if keyword_set(DEBUG) then $
       message,'File ' + name+' contains ' + strtrim(nlines,2) + ' lines',/INF
@@ -133,6 +165,13 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
    if not keyword_set( SKIPLINE ) then skipline = 0
    nlines = nlines - skipline
    if keyword_set( NUMLINE) then nlines = numline < nlines
+
+   if not keyword_set( SKIPSTART ) then begin
+      skipstart_flg=0 
+   endif else begin
+      skipstart_flg=1
+      nskipstart = strlen(skipstart)
+   endelse
 
   ncol = N_params() - 1           ;Number of columns of data expected
   vv = 'v' + strtrim( indgen(ncol)+1, 2)
@@ -193,10 +232,8 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ; Define output arrays
 
       if idltype[i] GT 0 then begin
-          if no_exec then (SCOPE_VARFETCH(vv[k], LEVEL=0))= $
-	        make_array(nlines,TYPE = idltype[i]) else $
-          tst = execute(vv[k] + '= make_array(nlines,TYPE = idltype[i] )' ) 
-           k = k+1
+         (SCOPE_VARFETCH(vv[k], LEVEL=0)) = make_array(nlines,TYPE = idltype[i]) 
+          k = k+1
       endif
 
    endfor
@@ -207,15 +244,21 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
    ngood = 0L
 
    temp = ' '
-   if !VERSION.RELEASE GE '5.6' then skip_lun,lun,skipline, /lines else $
-   if skipline GT 0 then $
-       for i = 0, skipline-1 do readf, lun, temp        ;Skip any lines
+   skip_lun,lun,skipline, /lines
 
    if not keyword_set(delimiter) then delimiter = ' ,'
  
    for j = 0L, nlines-1 do begin
 
       readf, lun, temp
+      if skipstart_flg then begin
+         ; requested to skip lines starting with specifc string
+         if strmid(temp,0,nskipstart) eq skipstart then begin
+            ngood = ngood-1
+            goto, BADLINE
+         endif
+      endif
+
       if strlen(temp) LT ncol then begin    ;Need at least 1 chr per output line
           ngood = ngood-1
           if not keyword_set(SILENT) then $
@@ -231,7 +274,7 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
           goto, BADLINE 
        endif
 
-    var = strsplit(strcompress(temp),delimiter,/extract, /preserve_null) 
+    var = strsplit(strcompress(temp),delimiter,/extract, preserve=preserve_null) 
     if N_elements(var) LT nfmt then begin 
                  if not keyword_set(SILENT) then $ 
                       message,'Skipping Line ' + strtrim(skipline+j+1,2),/INF 
@@ -243,21 +286,18 @@ pro readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
     for i = 0L,ncol-1 do begin
  
            if check_numeric[i] then begin    ;Check for valid numeric data
-             tst = strnumber(var[i],val,hex=hex[i])          ;Valid number?
+             tst = strnumber(var[i],val,hex=hex[i],NAN=nan)          ;Valid number?
              if tst EQ 0 then begin            ;If not, skip this line
                  if not keyword_set(SILENT) then $ 
                       message,'Skipping Line ' + strtrim(skipline+j+1,2),/INF 
                  ngood = ngood-1
                  goto, BADLINE 
              endif
-          if no_exec then $
-	      (SCOPE_VARFETCH(vv[k], LEVEL=0))[ngood] = val else $
-	       tst = execute(vv[k] + '[ngood] = val')
+          
+	      (SCOPE_VARFETCH(vv[k], LEVEL=0))[ngood] = val
 
          endif else $
-         if no_exec then $
-	 (SCOPE_VARFETCH(vv[k], LEVEL=0))[ngood] = var[i] else $
-           tst = execute(vv[k] + '[ngood] = var[i]')
+	 (SCOPE_VARFETCH(vv[k], LEVEL=0))[ngood] = var[i] 
 
       k = k+1
 
@@ -277,14 +317,9 @@ BADLINE:  ngood = ngood+1
         message,strtrim(ngood,2) + ' valid lines read', /INFORM  
 
 ; Compress arrays to match actual number of valid lines
-  if no_exec then begin
-  for i=0,ncol-1 do $
+  if ngood lt Nlines then for i=0,ncol-1 do $
        (SCOPE_VARFETCH(vv[i], LEVEL=0)) = $
             (SCOPE_VARFETCH(vv[i], LEVEL=0))[0:ngood-1]
- endif else begin
-  for i = 0,ncol-1 do $
-      tst = execute(vv[i] + '='+ vv[i]+ '[0:ngood-1]')
- endelse 
-
+ 
   return
   end

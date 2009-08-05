@@ -11,7 +11,8 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;       AITOFF_GRID [,DLONG,DLAT, LABEL=, /NEW, CHARTHICK=, CHARSIZE=, _EXTRA=]
+;       AITOFF_GRID [,DLONG,DLAT, LABEL=, /NEW, CHARTHICK=, CHARSIZE=, 
+;                     FONT=, _EXTRA=]
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -31,6 +32,7 @@
 ;                         of the label characters (passed to XYOUTS)
 ;        CHARTHICK     =  If /LABEL is set, then CHARTHICK specifies the 
 ;                         thickness of the label characters (passed to XYOUTS)
+;       FONT          =   scalar font graphics keyword (-1,0 or 1) for text
 ;       /NEW          =   If this keyword is set, then AITOFF_GRID will create
 ;                         a new plot grid, rather than overlay an existing plot.
 ;
@@ -61,12 +63,14 @@
 ;       Create default plotting coords, if needed   W. Landsman  August 2000
 ;       Added _EXTRA, CHARTHICK, CHARSIZE keywords  W. Landsman  March 2001
 ;       Several tweaks, plot only hours not minutes W. Landsman January 2002
+;       Allow FONT keyword to be passed to XYOUTS.  T. Robishaw Apr. 2006
 ;-
 PRO AITOFF_GRID,DLONG,DLAT,LABEL=LABEL, NEW = new, _EXTRA= E, $
-     CHARSIZE = charsize, CHARTHICK =charthick
+     CHARSIZE = charsize, CHARTHICK =charthick, FONT=font
 
         if  N_elements(dlong) EQ 0 then dlong = 30.0
         if  N_elements(dlat) EQ 0 then dlat = 30.0
+        if  N_elements(font) EQ 0 then font = !p.font
 
 ; If no plotting axis has been defined, then create a default one
 
@@ -105,7 +109,7 @@ PRO AITOFF_GRID,DLONG,DLAT,LABEL=LABEL, NEW = new, _EXTRA= E, $
 ;
 ;       Label equator
 ;
-          if (!d.name eq 'PS') and (!p.font eq 0) then hr = '!Uh!N' else hr='h'
+          if (!d.name eq 'PS') and (font eq 0) then hr = '!Uh!N' else hr='h'
              xoff = 2*dlong/30.
             for i=0,2*lngtot-1 do begin
                 lng =  (180 + (i*dlong)) mod 360
@@ -113,11 +117,11 @@ PRO AITOFF_GRID,DLONG,DLAT,LABEL=LABEL, NEW = new, _EXTRA= E, $
                     aitoff,lng,0.0,x,y
                     if label eq 1 then xyouts,x[0]+xoff,y[0]+1,$
                         strcompress(string(lng,format="(I4)"),/remove_all), $
-                        charsize = charsize, charthick = charthick $
+                        charsize = charsize, charthick = charthick,font=font $
                     else begin
                          tmp = lng/15.
                          xyouts,round(x[0])+xoff,round(y[0])+1,string(tmp[0],$
-                            format='(I2)') + hr, $
+                            format='(I2)') + hr, font=font,$
                             charsize = charsize, charthick = charthick
                     endelse
                 endif
@@ -131,7 +135,7 @@ PRO AITOFF_GRID,DLONG,DLAT,LABEL=LABEL, NEW = new, _EXTRA= E, $
             pos = where(lat GT 0, Npos)
             if Npos GT 0 then slat[pos] = '+' + slat[pos] 
             for i=0,lattot-2 do begin
-                 xyouts,x[i]+2,y[i]+1, slat[i], $
+                 xyouts,x[i]+2,y[i]+1, slat[i], font=font, $
                         charsize = charsize, charthick = charthick
             endfor
         endif

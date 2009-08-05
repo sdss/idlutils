@@ -63,10 +63,10 @@ pro irafwrt, image, hd, filename, PIXDIR = pixdir
 ;       Fix case where a minimal FITS header supplied          August 1995
 ;       Work under Alpha/OSF and Linux                         Dec.   1995
 ;       Make sureheader has 80 char lines, use IS_IEEE_BIG()   May    1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Don't apply strlowcase to .pix name   W. Landsman      April 1999
 ;       Work with double precision            W. Landsman      May 1999
 ;       Minimize use of obsolete !ERR         W. Landsman      Feb. 2000
+;       Assume since V5.5, remove VMS support W. Landsman       Sep. 2006
 ;-     
  On_error,2
 
@@ -91,17 +91,13 @@ pro irafwrt, image, hd, filename, PIXDIR = pixdir
   5: datatype = 7
   else: message,'ERROR - Input data type is currently unsupported'
   endcase
-  if !VERSION.OS EQ 'vms' then begin
-      fdecomp,filename,disk,dir,name
-      fname = strlowcase( disk+dir+ name )
-  endif else fname = filename
+
+  fname = filename
 
   big_endian = is_ieee_big()
 
  header = fname+'.imh'
- if !VERSION.OS EQ 'vms' then $
-       openw, lun1, header, 512, /GET_LUN, /NONE   else $
-       openw, lun1, header, /GET_LUN
+ openw, lun1, header, /GET_LUN
 
  object = sxpar( hd, 'OBJECT',Count = N_object)
  if ( N_object EQ 0 ) or ( object EQ '' ) then object = ' '
@@ -178,15 +174,11 @@ pro irafwrt, image, hd, filename, PIXDIR = pixdir
   hdr[124] = byte(im_min[0],0,4)
   cd,current = dir
 
-  if !VERSION.OS EQ "vms" then host = getenv('NODE') else begin
-    spawn,'hostname',host
-    host = host[0]
-    dir  =  dir + "/"
-  endelse
-
+     host = getenv('HOST')
+    dir  =  dir + path_sep()
+ 
   if keyword_set(pixdir) then dir = pixdir
   pixname = host+'!' + dir + fname + '.pix'
-  if !VERSION.OS EQ "vms" then pixname = strlowcase(pixname)
   len1 = strlen(pixname)
   len2 = strlen(header)
   hdr[ 412 + offset + indgen(len1[0])*2] = byte(pixname)   ; write pixel file location    
@@ -246,9 +238,7 @@ pro irafwrt, image, hd, filename, PIXDIR = pixdir
  node = strpos( pixname, '!')
  pixfile = strmid( pixname, node+1,strlen(pixname)-node+1 )
 
- if !VERSION.OS EQ 'vms' then $
-     openw,lun2, pixfile, 512, /NONE, /GET_LUN else $
-     openw,lun2, pixfile, /GET_LUN
+ openw,lun2, pixfile, /GET_LUN
 
  writeu, lun2, buf
  writeu, lun2, image

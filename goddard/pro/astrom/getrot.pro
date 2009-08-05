@@ -69,6 +69,8 @@ pro getrot, hdr, rot, cdelt, DEBUG = debug, SILENT = silent, ALT=alt      ;GET R
 ;       Check if latitude/longitude reversed in CTYPE  WL  February 2004
 ;       Fix problem in latitude check  M.Lombardi/W.Landsman Sep 2004
 ;       Added ALT keyword W. Landsman May 2005
+;       Account for any rotation of the native system by examining the value
+;        of LONGPOLE       H. Taylor/W. Landsman
 ;-
  Compile_opt IDL2
  On_error,2
@@ -140,7 +142,9 @@ endif else $
   cdelt[1] =   sqrt(cd[1,1]^2 + cd[1,0]^2)
  endelse
 
- rot = float(rot*RADEG)
+ rot = rot*RADEG   
+ if astr.longpole NE 180.0d then rot = rot + ( 180.0d - astr.longpole )
+ rot = float(rot)
  cdelt = float(cdelt*RADEG)
 
  if N_params() EQ 1 or keyword_set(DEBUG) then begin

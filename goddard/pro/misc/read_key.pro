@@ -8,6 +8,9 @@ FUNCTION read_key, wait
 ;	If an ESCAPE sequence was produced and  the sequence is
 ;	recognized (e.g. up arrow), then a code is returned.
 ;
+;       This functionality is mostly made obsolete by the addition of the
+;       ESCAPE and KEY_NAME keywords to GET_KBRD in IDL V6.2
+;
 ; CALLING SEQUENCE:
 ;	key = READ_KEY(Wait)
 ;

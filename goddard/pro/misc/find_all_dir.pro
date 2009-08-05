@@ -62,11 +62,6 @@
 ; RESTRICTIONS:
 ;       PATH must point to a directory that actually exists.
 ;
-;       On VMS computers this routine calls a command file, FIND_ALL_DIR.COM
-;       (available only on VMS distribution) to find the directories.  This
-;       command file must be in one of the directories in IDL's standard search
-;       path, !PATH.
-;;
 ; REVISION HISTORY:
 ;               Version 11, Zarro (SM&A/GSFC), 23-March-00
 ;                       Removed all calls to IS_DIR
@@ -82,7 +77,8 @@
 ;               Version 15, William Thompson, GSFC, 9-Feb-2004
 ;                       Resolve environment variables in Windows.
 ;
-; Version     : Version 15
+; Version     : Version 16 W. Landsman GSFC Sep 2006
+;                        Remove VMS support
 ;-
 ;
         ON_ERROR, 2
@@ -123,29 +119,10 @@
                 GOTO, TEST_FORMAT
         ENDIF
 ;
-;  On VMS machines, spawn a command file to find the directories.  Make sure
-;  that any logical names are completely translated first.  A leading $ may be
-;  part of the name, or it may be a signal that what follows is a logical name.
-;
-        IF !VERSION.OS_FAMILY EQ 'vms' THEN BEGIN
-                REPEAT BEGIN
-                        IF STRMID(DIR,STRLEN(DIR)-1,1) EQ ':' THEN      $
-                                DIR = STRMID(DIR,0,STRLEN(DIR)-1)
-                        TEST = TRNLOG(DIR,VALUE) MOD 2
-                        IF (NOT TEST) AND (STRMID(DIR,0,1) EQ '$') THEN BEGIN
-                                TEMP = STRMID(DIR,1,STRLEN(DIR)-1)
-                                TEST = TRNLOG(TEMP, VALUE) MOD 2
-                        ENDIF
-                        IF TEST THEN DIR = VALUE
-                ENDREP UNTIL NOT TEST
-                COMMAND_FILE = FIND_WITH_DEF('FIND_ALL_DIR.COM',!PATH,'.COM')
-                SPAWN,'@' + COMMAND_FILE + ' ' + COMMAND_FILE + ' ' + DIR, $
-                        DIRECTORIES
-;
 ;  For windows,  use the built-in EXPAND_PATH program.   However, first 
 ;  resolve any environment variables.
 ;
-        END ELSE IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
+        IF !VERSION.OS_FAMILY EQ 'Windows' THEN BEGIN
                 WHILE STRMID(DIR,0,1) EQ '$' DO BEGIN
                     FSLASH = STRPOS(DIR,'/')
                     IF FSLASH LT 1 THEN FSLASH = STRLEN(DIR)
@@ -194,7 +171,6 @@
 TEST_FORMAT:
         DIR = DIRECTORIES[0]
         CASE !VERSION.OS_FAMILY OF
-                'vms':  SEP = ','
                 'Windows':  SEP = ';'
                 'MacOS': Sep = ','
                 ELSE:  SEP = ':'
@@ -213,7 +189,8 @@ TEST_FORMAT:
                         TEST = GETENV(EVAR)
                 ENDIF
                 IF (TEST NE '') AND (TEST NE PATH) AND (DIR NE PATH) THEN $
-                        DEF_DIRLIST, EVAR, DIR
+                        SETENV, STRTRIM(EVAR,2) + '=' + $
+			STRTRIM(STRJOIN(DIR,':'),2)
         ENDIF
 ;
 ;-- restore current directory

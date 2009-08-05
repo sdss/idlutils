@@ -54,12 +54,20 @@ pro heuler,h_or_astr, Galactic = galactic, celestial = celestial, $
 ;       directly using EULER.    The new LONPOLE and LATPOLE values are then
 ;       determined by transforming the pole of the new system to the old, and
 ;       converted to native coordinates using WCS_ROTATE. 
+; EXAMPLE:
+;       A FITS header, hdr, has a standard tangent projection WCS information.
+;       Add an alternate 'G' Galactic projection.    Note that the original
+;       WCS information will be left unchanged 
+;
+;       IDL> heuler, hdr, /Galactic, alt='G'
 ; PROCEDURES USED:
-;       EULER, EXTAST, GSSS_STDAST, WCS_ROTATE
+;       EULER, EXTAST, GSSS_STDAST, PUTAST, SXADDHIST, WCS_ROTATE
 ; REVISION HISTORY:
 ;       Written    W. Landsman                  June 2003
 ;       Use PV2 tag in astrometry structure rather than PROJP1 W. L. May 2004
+;       Use double precision to compute new North pole  W.L. Aug 2005
 ;-
+compile_opt idl2
 if N_params() LT 1 then begin
      print,'Syntax - HEULER, hdr, /GALACTIC, /CELESTIAL, /ECLIPTIC, ALT_IN=,'
      return
@@ -136,7 +144,7 @@ endif else message, $
 
 ;Find new LONPOLE and LATPOLE values
  if select mod 2 eq 0 then iselect = select-1 else iselect = select+1
- EULER,0,90,lon1,lat1,iselect
+ EULER,0.0d,90.0d,lon1,lat1,iselect
  WCS_ROTATE,lon1,lat1,lonpole, latpole, astr.crval,LONGPOLE = astr.longpole, $
              LATPOLE = astr.latpole, THETA0 = theta0
 

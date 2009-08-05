@@ -1,5 +1,6 @@
 function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
-                TO_J2000 = to_J2000, TO_B1950 = to_B1950
+                TO_J2000 = to_J2000, TO_B1950 = to_B1950, GALACTIC= galactic, $
+		COUNT = nfound
 ;+
 ; NAME:
 ;      DBCIRCLE
@@ -11,7 +12,7 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
 ;
 ; CALLING SEQUENCE:
 ;     list = DBCIRCLE( ra_cen, dec_cen, [radius, dis, sublist, /SILENT, 
-;                                          TO_B1950, /TO_J2000 ] )   
+;                                /GALACTIC, TO_B1950, /TO_J2000, COUNT= ] )   
 ;
 ; INPUTS:
 ;       RA_CEN - Right ascension of the search center in decimal HOURS, scalar
@@ -29,13 +30,15 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
 ;     LIST - Vector giving entry numbers in the currently opened catalog
 ;            which have positions within the specified search circle
 ;            LIST is set to -1 if no sources fall within the search circle
-;            !ERR is set to the number sources found.
 ;
 ; OPTIONAL OUTPUT
 ;       DIS -  The distance in arcminutes of each entry specified by LIST
 ;               to the search center (given by RA_CEN and DEC_CEN)
 ;
 ; OPTIONAL KEYWORD INPUT:
+;       /GALACTIC - if set, then the first two parameters are interpreted as
+;                 Galactic coordinates in degrees, and is converted internally
+;                 to J2000 celestial to search the database.   
 ;       /SILENT - If this keyword is set, then DBCIRCLE will not print the 
 ;               number of entries found at the terminal
 ;       /TO_J2000 - If this keyword is set, then the entered coordinates are
@@ -46,12 +49,17 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
 ;               B1950 before searching the database
 ;               NOTE: The user must determine on his own whether the database
 ;               is in B1950 or J2000 coordinates.
-;
+; OPTIONAL KEYWORD OUTPUT:
+;       COUNT - - Integer scalar giving the number of valid matches
 ; METHOD:
 ;       A DBFIND search is first performed on a square area of given radius.
 ;       The list is the restricted to a circular area by using GCIRC to 
 ;       compute the distance of each object to the field center.
 ;
+; RESTRICTIONS;
+;       The database must have items 'RA' (in hours) and 'DEC' (in degrees).
+;       Alternatively, the database could have items RA_OBJ and DEC_OBJ 
+;      (both in degrees)
 ; EXAMPLE:
 ;       Find all Hipparcos stars within 40' of the nucleus of M33
 ;       (at J2000 1h 33m 50.9s 30d 39' 36.7'')
@@ -60,21 +68,23 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
 ;       IDL> list = dbcircle( ten(1,33,50.9), ten(3,39,36.7), 40)
 ;
 ; PROCEDURE CALLS:
-;       BPRECESS, DBFIND(), DBEXT, DB_INFO(), GCIRC, JPRECESS
+;       BPRECESS, DBFIND(), DBEXT, DB_INFO(), GCIRC, GLACTC, JPRECESS
 ; REVISION HISTORY:
 ;      Written W. Landsman     STX           January 1990
 ;      Fixed search when crossing 0h         July 1990
 ;      Spiffed up code a bit     October, 1991
-;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Leave DIS vector unchanged if no entries found W. Landsman July 1999
 ;      Use maximum declination, rather than declination at field center to
 ;      correct RA for latitude effect    W. Landsman   September 1999
+;      Added COUNT, GALACTIC keywords  W. Landsman   December 2008
+;      Fix problem when RA range exceeds 24h  W. Landsman   April 2009
 ;-                   
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 2 then begin
     print,'Syntax - list = DBCIRCLE( ra, dec, radius, [ dis, sublist  '
-    print,'                                 /SILENT, /TO_J2000, /TO_B1950 ] )'
+    print,'               Count=, /GALACTIC, /SILENT, /TO_J2000, /TO_B1950 ] )'
     if N_elements(sublist) GT 0 then return, sublist else return,lonarr(1)-1
  endif
 
@@ -91,6 +101,8 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
  endif else  if keyword_set(TO_B1950) then begin
         bprecess,ra_cen*15.,dec_cen,racen,deccen 
         racen = racen[0]/15.    &       deccen = deccen[0]
+ endif else if keyword_set(galactic) then begin 
+         glactc,racen,deccen,2000,ra_cen*15,dec_cen,2   ;Convert from Galactic		
  endif else begin
         racen = ra_cen[0]    &  deccen = dec_cen[0]
  endelse
@@ -99,6 +111,21 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
  decmin = double(deccen-size) > (-90.)
  decmax = double(deccen+size) < 90.
  bigdec = max(abs([decmin, decmax]))
+ items = strtrim(db_item_info('name'))
+ g = where(items EQ 'RA', Ncount)
+ if Ncount EQ 0 then begin 
+      g = where(items EQ 'RA_OBJ', Ncount)
+      if Ncount EQ 0 then message, $
+               'ERROR - Database must have item named RA or RA_OBJ' else begin
+	       sra = 'RA_OBJ' & sdec = 'DEC_OBJ'
+	       endelse
+ endif else begin 
+      sra = 'RA' & sdec = 'DEC'
+ endelse         	        
+
+ 
+ 
+ 
  if abs(bigdec) EQ 90 then rasize = 24 else $             ;Updated Sep 1999
        rasize = abs(size/(15.*cos(bigdec/!RADEG))) < 24.  ;Correct for latitude effect
 
@@ -108,6 +135,11 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
  endif else begin
  rmin = double(racen-rasize)
  rmax = double(racen+rasize)
+ if sra EQ 'RA_OBJ' then begin      ;Item RA_OBJ assumed to be in degrees
+	       rmin = rmin*15.
+	       rmax = rmax*15.
+ endif 	       
+
 
 ;  If minimum RA is less than 0, or maximum RA is greater than 24
 ;  then we must break up into two searchs
@@ -124,19 +156,20 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
         rmin = 0.
  endif else redo = 0
 
- st = string(rmin) + '<ra<' + string(rmax) +',' + $
-      string(decmin) + '<dec<' + string(decmax) 
+ 
+ st = string(rmin) + '<' + sra + '<' + string(rmax) +',' + $
+      string(decmin) + '<' + sdec + '<' + string(decmax) 
  endelse
 
  if N_params() LT 5 then list = dbfind( st, /SIL ) else $
                          list = dbfind( st, sublist, /SIL )
 
  if redo then begin
-        st = string(newrmin) + '<ra< ' + string(newrmax) + ',' + $
-                string(decmin) + '<dec< ' + string(decmax)
+        st = string(newrmin) + '<' +sra + '<' + string(newrmax) + ',' + $
+                string(decmin) + '<' + sdec + '< ' + string(decmax)
         if N_params() LT 5 then newlist = dbfind(st,/SIL) else $ 
                   newlist = dbfind(st,sublist,/SIL)
-        if !ERR GT 0 then list = [ list, newlist ]
+        if list[0] GT 0 then list = [ list, newlist ]
  endif
 
 ; Use GCIRC to compute angular distance of each source to the field center
@@ -144,10 +177,11 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
  silent = keyword_set(SILENT)
  if not silent then begin
       print,' ' & print,' '
- endif
+  endif     
 
  if max(list) GT 0 then begin                         ;Any entries found?
-        dbext, list, 'RA,DEC', ra_match, dec_match
+        dbext, list, sra + ',' + sdec, ra_match, dec_match
+	if sra EQ 'RA_OBJ' then ra_match = ra_match/15.
         gcirc,1, racen, deccen, ra_match, dec_match, ddis
         good = where( ddis/3600. LT size, Nfound )
         if Nfound GT 0 then begin
@@ -160,6 +194,7 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
 
  if not silent then $
        print,'No entries found by dbcircle in ', db_info( 'NAME',0 )
+ Nfound  = 0      
  return,lonarr(1)-1
  
  end

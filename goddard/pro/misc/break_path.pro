@@ -17,10 +17,8 @@
 ;               regardless of operating system.
 ;
 ;               A leading $ can be used in any path to signal that what follows 
-;               is an environmental variable, but the $ is not necessary.  (In 
-;               VMS the $ can either be part of the path, or can signal logical
-;               names for compatibility with Unix.)  Environmental variables
-;               can themselves contain multiple paths.
+;               is an environmental variable, but the $ is not necessary.    
+;               Environmental variables can themselves contain multiple paths.
 ;
 ; OUTPUT: 
 ;      The result of the function is a string array of directories.
@@ -46,9 +44,9 @@
 ;               Modified to use OS_FAMILY
 ;       Version 4, Zarro, GSFC, 4 August 1997
 ;               Added trim to input
-;       Converted to IDL V5.0   W. Landsman 25-Nov-1997
 ;       Fix directory character on Macintosh system   A. Ferro   February 2000
 ;       Use STRSPLIT instead of STR_SEP()   W. Landsman    July 2002
+;       Remove VMS support    W. Landsman   September 2006
 ;-
 ;
         ON_ERROR, 2
@@ -63,13 +61,8 @@
 ;  are needed to extract everything.  The same is true for Microsoft Windows
 ;  and semi-colons.
 ;
-        CASE !VERSION.OS_FAMILY OF
-                'vms':  SEP = ','
-                'Windows':  SEP = ';'
-                'MacOS': SEP = ','
-                ELSE:  SEP = ':'
-        ENDCASE
-           PATH = ['',STRSPLIT(PATHS,SEP + ',',/EXTRACT)] 
+        sep = path_sep(/SEARCH_PATH) 
+        PATH = ['',STRSPLIT(PATHS,SEP + ',',/EXTRACT)] 
 ;
 ;  For each path, see if it is really an environment variable.  If so, then
 ;  decompose the environmental variable into its constituent paths.
@@ -78,13 +71,12 @@
         WHILE I LT N_ELEMENTS(PATH) DO BEGIN
 ;
 ;  First, try the path by itself.  Remove any trailing "/", "\", or ":"
-;  characters.  In VMS, GETENV requires an uppercase argument.
-;
+;  characters.  
+ 
                 CHAR = STRMID(PATH[I],STRLEN(PATH[I])-1,1)
                 IF (CHAR EQ '/') OR (CHAR EQ '\') OR (CHAR EQ ':') THEN $
                         PATH[I] = STRMID(PATH[I],0,STRLEN(PATH[I])-1)
                 TEMP = PATH[I]
-                IF !VERSION.OS EQ 'vms' THEN TEMP = STRUPCASE(TEMP)
                 TEST = GETENV(TEMP)
 ;
 ;  If that doesn't yield anything, and the path begins with the $ prompt, then
@@ -93,20 +85,8 @@
                 IF TEST EQ '' THEN IF STRMID(PATH[I],0,1) EQ '$' THEN BEGIN
                         FOLLOWING = STRMID(TEMP,1,STRLEN(TEMP)-1)
                         TEST = GETENV(FOLLOWING)
+		ENDIF	
 ;
-;  In VMS, don't decompose logical names, because of the possibility that a
-;  logical name may have more than one translation.  Simply substitute the true
-;  logical name for the one preceeded by the $, if necessary.
-;
-                        IF (TEST NE '') AND (!VERSION.OS EQ 'vms') THEN $
-                                PATH[I] = FOLLOWING
-                ENDIF
-;
-;  On the other hand, if the value of the logical name contains any commas,
-;  then assume that this will itself be a series of paths.
-;
-                IF (!VERSION.OS EQ 'vms') AND (STRPOS(TEST,',') LT 0) THEN $
-                        TEST = ''
 ;
 ;  If something was found, then decompose this into whatever paths it may
 ;  contain.
@@ -126,8 +106,7 @@
                                 PATH = [PATH[0:I-1],PTH,PATH[I+1:*]]
                         ENDELSE
 ;
-;  Otherwise, check whether or not the path ends in the correct character.  In
-;  VMS, if the path does not end in "]" or ":", then append the ":" character.
+;  Otherwise, check whether or not the path ends in the correct character.  
 ;  In Unix, if the path does not end in "/" then append it.  Do the same with
 ;  the "\" character in Microsoft Windows.  This step is only taken once the
 ;  routine has completely decomposed this part of the path list.
@@ -136,8 +115,6 @@
                         IF PATH[I] NE '' THEN BEGIN
                             LAST = STRMID(PATH[I], STRLEN(PATH[I])-1, 1)
                             CASE !VERSION.OS_FAMILY OF
-                                'vms':  IF (LAST NE ']') AND (LAST NE ':') $
-                                                THEN PATH[I] = PATH[I] + ':'
                                 'Windows':  IF LAST NE '\' THEN $
                                                 PATH[I] = PATH[I] + '\'
                                 'MacOS': IF LAST NE ':' THEN $

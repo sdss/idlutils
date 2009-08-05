@@ -7,10 +7,10 @@
 ; EXPLANATION:
 ;       Computes a spherical coordinate rotation between native coordinates 
 ;       and  standard celestial coordinate system (celestial, Galactic, or
-;       ecliptic).   Applies the equations in Appendix A of the paper 
+;       ecliptic).   Applies the equations in Appendix B of the paper 
 ;       "Representation of Celestial Coordinates in FITS" by Calabretta 
 ;       Greisen (2002, A&A, 395, 1077).    Also see 
-;       http://www.aoc.nrao.edu/~egreisen
+;       http://fits.gsfc.nasa.gov/fits_wcs.html
 ;
 ; CATEGORY:
 ;       Mapping and Auxiliary FITS Routine

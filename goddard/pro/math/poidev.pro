@@ -51,24 +51,26 @@ function poidev, xm, SEED = seed
 ; NOTES:
 ;     Negative values in the input array will be returned as zeros.  
 ;
-;     Versions 5.1.1 and 5.2 of IDL have a bug in the RANDOMU function, such
-;     that it is initialized to the same value at the start of each IDL session
-;     rather than being initialized to the system clock.    This bug will affect
-;     POIDEV in a similar manner.
 ;       
 ; REVISION HISTORY:
 ;      Version 1               Wayne Landsman        July  1992
 ;      Added SEED keyword                            September 1992
 ;      Call intrinsic LNGAMMA function               November 1994
 ;      Converted to IDL V5.0   W. Landsman   September 1997
+;      Use COMPLEMENT keyword to WHERE()        W. Landsman August 2008
 ;-
   On_error,2
+  compile_opt idl2
 
  Npts = N_elements( xm)
- if (Npts EQ 0) then message, $
-      'ERROR - Poisson mean vector (first parameter) is undefined'
-
-   index = where( xm LE 20, Nindex)
+ 
+ case NPTS of 
+ 0: message,'ERROR - Poisson mean vector (first parameter) is undefined'
+ 1: output = lonarr(1) 
+ else: output = make_array( SIZE = size(xm), /NOZERO ) 
+ endcase 
+ 
+   index = where( xm LE 20, Nindex, complement=big, Ncomplement=Nbig)
 
    if Nindex GT 0 then begin
 
@@ -90,16 +92,11 @@ function poidev, xm, SEED = seed
            Ngood = Ngood1
            goto, REJECT
    endif
-
+   output[index] = em1
  endif
-     if ( Npts GT 1 ) then $
-           output = make_array( SIZE = size(xm), /NOZERO )  else $
-           output = lonarr(1)                      ;Output array
-     if Nindex GT 0 then output[ index] = em1
      if Nindex EQ Npts then return, output
 ; ***************************************
 
-    big = where(xm GT 20, Nbig)
     xbig = xm[big]
 
     sq = sqrt( 2.*xbig )           ;Sq, Alxm, and g are precomputed

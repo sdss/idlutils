@@ -67,12 +67,13 @@ PRO HELIO, JD, LIST, HRAD, HLONG, HLAT, RADIAN = radian
 ; MODIFICATION HISTORY: 
 ;       R. Sterner.  20 Aug, 1986.
 ;       Code cleaned up a bit      W. Landsman             December 1992
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Major rewrite, use modern orbital elements, vectorize, more accurate
 ;         solution to Kepler's equation          W. Landsman August 2000
 ;       Wasn't working for planet vectors        W. Landsman August 2000
+;       Work for more than 32767 positions       S. Leach Jan 2009
 ;-
  On_error,2
+ compile_opt idl2
 
    if N_params() LT 3 then begin
      print,'Syntax - Helio, jd, list, hrad, hlong, hlat, [/RADIAN]'
@@ -134,7 +135,7 @@ DPD = [  [0.00000066d, 0.00002527, -23.51, -446.30, 573.57, 538101628.29 ], $
 
 ;-----------------  Loop over dates  --------------
  
-        for i =0,ntime-1 do begin
+        for i =0L,ntime-1L do begin         ;SML made longword
  
         pd1 = pd[*,ip] + dpd[*,ip]*T[i]
         

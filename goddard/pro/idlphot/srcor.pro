@@ -1,12 +1,20 @@
 PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
-   spherical=spherical
+   spherical=spherical,silent=silent,count = count
 ;+
 ; NAME:
 ;       SRCOR
 ; PURPOSE:
 ;       Correlate the source positions found on two lists.
+;
+; EXPLANATION:
+;       Source matching is done by finding sources within a specified radius.
+;       If you have position errors available and wish to match by significance
+;       level, then try match_xy.pro in the TARA library 
+;      (http://www.astro.psu.edu/xray/docs/TARA/)
+;
 ; CALLING SEQUENCE:
-;       srcor,x1in,ylin,x2in,y2in,dcr,ind1,ind2
+;       srcor,x1in,ylin,x2in,y2in,dcr,ind1,ind2,
+;                         [MAGNITUDE=,SPHERICAL=,/SILENT]
 ; INPUTS:
 ;       x1in,y1in - First set of x and y coordinates.  The program
 ;                   marches through this list element by element,
@@ -54,37 +62,39 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 ;             *arcseconds*.  Calculations of spherical distances are made
 ;             with the gcirc program.
 ; OUTPUTS:
-;       ind1 - index of matched stars in first list
+;       ind1 - index of matched stars in first list, set to -1 if no matches
+;              found
 ;       ind2 - index of matched stars in second list
-; COMMON BLOCKS:
-;       none
-; SIDE EFFECTS:
-;       none
-; METHOD:
-;       See under keyword LEVEL above.
+; OPTIONAL OUTPUT KEYWORD:
+;       Count - integer giving number of matches returned
+; PROCEDURES USED:
+;       GCIRC, REMOVE
 ; REVISON HISTORY:
 ;       Adapted from UIT procedure  J.Wm.Parker, SwRI 29 July 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Improve speed for spherical searches, added /SILENT keyword  
+;                               W. Landsman  Mar 2009
+;       Avoid error when no matches found with /SPHERICAL  O. Trottier June 2009
+;       Added output Count keyword     W.L   June 2009
 ;       
 ;-
 ;
  ON_Error,2   ; Return if error (incl. non-info message)
-
+ compile_opt idl2
 ;;;
 ;   If not enough parameters, then print out the syntax.
 ;
 IF N_params() lt 7 THEN BEGIN
   print,'SRCOR calling sequence: '
   print,'srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2 [,option={0, 1, or 2}] $'
-  print,'      [,magnitude=mag_list_1, spherical={1 or 2}]'
+  print,'      [,magnitude=mag_list_1, spherical={1 or 2}, /SILENT]'
   RETURN
 ENDIF
+ count = 0
 
 ;;;
 ;   Keywords.
 ;
 IF not keyword_set(option) THEN option=0
-message,/info,'Option code = '+strtrim(option,2)
 IF (option lt 0) or (option gt 2) THEN MESSAGE,'Invalid option code.'
 
 SphereFlag = keyword_set(Spherical)
@@ -93,10 +103,10 @@ SphereFlag = keyword_set(Spherical)
 ;   Store the input variables into internal arrays that we can manipulate and
 ; modify.
 ;
-x1=float(x1in)
-y1=float(y1in)
-x2=float(x2in)
-y2=float(y2in)
+x1 = float(x1in)
+y1 = float(y1in)
+x2 = float(x2in)
+y2 = float(y2in)
 
 ;;;
 ;   If the Spherical keyword is set, then convert the input values (degrees
@@ -106,7 +116,7 @@ y2=float(y2in)
 ;
 if SphereFlag then begin
    dcr2 = dcr
-   if (Spherical eq 1) then XScale = 15.0 else XScale = 1.0 
+   XScale = Spherical EQ 1 ? 15.0 : 1.0
    d2r  = !DPI/180.0d0
    x1 = x1 * (XScale * d2r)
    y1 = y1 * d2r
@@ -119,42 +129,78 @@ endif else dcr2=dcr^2
 ;;;
 ;   Set up some other variables.
 ;
-n1=n_elements(x1) & message,/info,strtrim(n1,2)+' sources in list 1'
-n2=n_elements(x2) & message,/info,strtrim(n2,2)+' sources in list 2'
-nmch=0
-ind1=-1L & ind2=-1L
+ n1 = N_elements(x1)  
+ n2 = N_elements(x2) 
+ if not keyword_set(silent) then begin 
+      message,/info,'Option code = '+strtrim(option,2)
+      message,/info,strtrim(n1,2)+' sources in list 1'
+       message,/info,strtrim(n2,2)+' sources in list 2'
+  endif
 
 ;;;
 ;   The main loop.  Step through each index of list 1, look for matches in 2.
 ;
-FOR i=0L,n1-1 DO BEGIN
-   xx=x1[i] & yy=y1[i] 
-   if SphereFlag then gcirc,0,xx,yy,x2,y2,d2 else d2=(xx-x2)^2+(yy-y2)^2
-   dmch=min(d2,m)
-   IF (option eq 2) or (dmch le dcr2) THEN BEGIN
-      nmch=nmch+1
-      IF nmch eq 1 THEN BEGIN 
-         ind1=long(i) 
-         ind2=long(m)
-      ENDIF ELSE BEGIN
-         ind1=[ind1,i]
-         ind2=[ind2,m]
-      ENDELSE
-   ENDIF
-ENDFOR
-message,/info,strtrim(nmch,2)+' matches found.'
+  nmch = 0L
+ ind1 = lonarr(n1)-1 & ind2 = ind1
+ FOR i=0L,n1-1 DO BEGIN
+   xx = x1[i] & yy = y1[i] 
+   if SphereFlag then begin         
+      if option EQ 2 then begin      ;Closest source, no critical distance
+;For speed we find the minimum value of  1-cos(d) where d is the arc distance
+;This avoids having to calculate the arc cosine.       
+         d2  = 1.0d - abs( sin(y2)*sin(yy) + cos(y2)*cos(yy)*cos(xx-x2))
+         dmch = min(d2,m)                 ;Uncommented 29-May-2009
+	 ind1[nmch] = i
+         ind2[nmch] = m
+         nmch = nmch+1
 
+      endif else begin               ;Closest source within critical distance
+;For speed we first find sources within a square of the size of the critical
+;distance.    Exact distances are then computed for sources within the square.      
+        g = where(( x2 GE (xx-dcr2)) and (x2 LE (xx+dcr2)) and $
+	(yy GE (yy-dcr2)) and  (yy LE (yy + dcr2)), Ng)
+ 
+        if Ng GT 0 then begin 
+          gcirc,0,x2[g],y2[g],xx,yy,d2
+          dmch = min(d2,mg)
+          if dmch LE dcr2 then begin 
+	      ind1[nmch] = i
+	      ind2[nmch] = g[mg]
+	      nmch =nmch+1
+       endif
+       endif 
+       endelse
+    endif else begin 
+       d2=(xx-x2)^2+(yy-y2)^2
+       dmch=min(d2,m)
+      IF (option eq 2) or (dmch le dcr2) THEN BEGIN
+      ind1[nmch] = i
+      ind2[nmch] = m
+      nmch = nmch+1
+   ENDIF   
+   endelse
+ENDFOR
+
+if not keyword_set(silent) then message,/info,strtrim(nmch,2)+' matches found.'
+count = nmch
+if nmch GT 0 then begin 
+   ind1 = ind1[0:nmch-1]
+   ind2 = ind2[0:nmch-1]
+endif
 ;;;
 ;   Modify the matches depending on input options.
 ;
 use_mag = (n_elements(magnitude) ge 1)
 IF (option eq 0) and (not use_mag) THEN RETURN
+if not keyword_set(silent) then begin
 IF use_mag THEN BEGIN
    message,/info,'Cleaning up output list using magnitudes.'
 ENDIF ELSE BEGIN
+   
    IF option eq 1 then message,/info,'Cleaning up output list (option = 1).'
    IF option eq 2 then message,/info,'Cleaning up output list (option = 2).'
 ENDELSE
+endif
 
 FOR i=0L,max(ind2) DO BEGIN
    csave = n_elements(ind2)
@@ -181,8 +227,9 @@ FOR i=0L,max(ind2) DO BEGIN
    ENDIF
 ENDFOR
 
-message,/info,strtrim(n_elements(ind1),2)+' left in list 1'
-message,/info,strtrim(n_elements(ind2),2)+' left in list 2'
+ count = N_elements(ind1)
+ if not keyword_set(silent) then $
+  message,/info,strtrim(n_elements(ind1),2)+' final matches found'
 
 ;
 RETURN

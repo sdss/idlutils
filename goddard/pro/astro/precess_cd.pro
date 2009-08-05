@@ -81,7 +81,7 @@ pro PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new, FK4 = FK4
 
 ; Get RA of old pole in new coordinates
 
-  pole_ra = 0. & pole_dec = 90.d         ;Coordinates of old pole (RA is arbitary)
+  pole_ra = 0. & pole_dec = 90.d       ;Coordinates of old pole (RA is arbitrary)
   precess, pole_ra, pole_dec, epoch1, epoch2, FK4 = FK4    
 
   sind1 = sin( crvalold[1] ) &  sind2 = sin( crvalnew[1] )

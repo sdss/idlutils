@@ -1,6 +1,7 @@
 pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
       YTITLE=ytitle, SUBTITLE = subtitle, XDELTA = xdelta, YDELTA = ydelta, $
-      ANONYMOUS_ = dummy_,_EXTRA = extra, XMID = xmid, YMID = ymid
+      _EXTRA = extra, XMID = xmid, YMID = ymid, OVERLAY = OVERLAY, $
+       NOerase = noerase
 ;+
 ; NAME:
 ;       IMCONTOUR
@@ -47,6 +48,13 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;       XMID, YMID - Scalars giving the X,Y position from which offset distances
 ;               will be measured when TYPE=0.   By default, offset distances 
 ;               are measured from the center of the image.
+;       /OVERLAY - If set, then IMCONTOUR is assumed to overlay an image.
+;               This requires 1 extra pixel be included on the X and Y axis,
+;               to account for edge effects in the image display.    Setting
+;               OVERLAY provide a better match of the contour and underlying
+;               image but is not as aesthetically pleasing because the contours
+;               will not extend to the axes. 
+;               
 ;
 ;       Any keyword accepted by CONTOUR may also be passed through IMCONTOUR
 ;       since IMCONTOUR uses the _EXTRA facility.     IMCONTOUR uses its own
@@ -69,9 +77,10 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;       seven equally spaced contour levels.    The use of a program like
 ;       David Fanning's TVIMAGE  http://www.dfanning.com/programs/tvimage.pro
 ;       is suggested to properly overlay plotting and image coordinates.  The
-;       /Keep_aspect_ratio keyword must be used.
+;       /Keep_aspect_ratio keyword must be used, and the use of the 
+;       half_half keyword keeps the image centered
 ;
-;       IDL> tvimage,im1,/keep_aspect, position = pos
+;       IDL> tvimage,im1,/keep_aspect, position = pos,/half
 ;       IDL> imcontour,im2,h2,nlevels=7,/Noerase,/TYPE,position = pos
 ;
 ; PROCEDURES USED:
@@ -81,7 +90,7 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ; REVISION HISTORY:
 ;       Written   W. Landsman   STX                    May, 1989
 ;       Fixed RA,Dec labeling  W. Landsman             November, 1991
-;       Fix plottting keywords  W.Landsman             July, 1992
+;       Fix plotting keywords  W.Landsman             July, 1992
 ;       Recognize GSSS headers  W. Landsman            July, 1994
 ;       Removed Channel keyword for V4.0 compatibility June, 1995
 ;       Add _EXTRA CONTOUR plotting keywords  W. Landsman  August, 1995
@@ -95,9 +104,14 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 ;       Correct conversion from seconds of RA to arcmin is 4 not 15.
 ;       	M. Perrin					July 2003
 ;       Fix integer truncation which appears with tiny images WL  July 2004
-;       
+;       Changed some keyword_set() to N_elements WL  Sep 2006
+;       Work to 1 pixels level when overlaying an image,added /OVERLAY keyword
+;        Use FORMAT_AXIS_VALUES()  W. Landsman   Jan 2008 
+;       Make /OVERLAY  always optional   W. Landsman  Feb 2008
+;       Check if RA crosses 0 hours  WL  Aug 2008
 ;-
   On_error,2                                 ;Return to caller
+  compile_opt idl2
 
   if N_params() LT 2 then begin             ;Sufficient parameters?
       print,'Syntax - imcontour, im, hdr, [ /TYPE, /PUTINFO, XDELTA=, YDELT= '
@@ -115,12 +129,12 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
   if not keyword_set( TYPE ) then type = 0
   if not keyword_set( XDELTA ) then xdelta = 1
   if not keyword_set( YDELTA ) then ydelta = 1
- 
-  if not keyword_set(XMINOR) then $
-       if !X.MINOR EQ 0 then xminor = 5 else xminor = !X.MINOR
+  
+  if N_Elements(XMINOR) EQ 0 then $
+       xminor = !X.MINOR EQ 0 ? 5 : !X.MINOR
 
-  if not keyword_set(YMINOR) then $
-       if !Y.MINOR EQ 0 then yminor = 5 else yminor = !Y.MINOR
+  if not N_Elements(YMINOR) EQ 0 then $
+       yminor = !Y.MINOR EQ 0 ?  5 : !Y.MINOR
 
   EXTAST, hdr, astr, noparams      ;Extract astrometry from header
   if noparams LT 0 then $                       ;Does astrometry exist?
@@ -138,10 +152,16 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
   xlength = !D.X_VSIZE &  ylength = !D.Y_VSIZE
   xsize = fix( dimen[0] )  &   ysize = fix( dimen[1] )
   xsize1 = xsize-1 & ysize1 = ysize-1
-  xratio = xsize / float(ysize)
+     if keyword_set(OVERLAY) then begin 
+         xran  = [0,xsize]-0.5  & yran = [0,ysize]-0.5
+    endif else begin
+         xran = [0,xsize1] & yran = [0,ysize1]	 
+    endelse
+
+ xratio = xsize / float(ysize)
   yratio = ysize / float(xsize)
-  if N_elements(XMID) EQ 0 then xmid = xsize1/2.
-  if N_elements(YMID) EQ 0 then ymid = ysize1/2.
+  if N_elements(XMID) EQ 0 then xmid = (xran[1] -xran[0]-1)/2.
+  if N_elements(YMID) EQ 0 then ymid = (yran[1] -yran[0]-1)/2.
 
   if ( ylength*xratio LT xlength ) then begin
 
@@ -155,31 +175,37 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
 
   endelse
 
-  if !X.TICKS GT 0 then xtics = abs(!X.TICKS) else xtics = 8
-  if !Y.TICKS GT 0 then ytics = abs(!Y.TICKS) else ytics = 8
-
+  xtics = !X.TICKS GT 0 ? abs(!X.TICKS) : 8
+  ytics = !Y.TICKS GT 0 ? abs(!Y.TICKS) : 8
+ 
   pixx = float(xsize)/xtics            ;Number of X pixels between tic marks
   pixy = float(ysize)/ytics            ;Number of Y pixels between tic marks
 
   getrot,hdr,rot,cdelt               ;Get the rotation and plate scale
 
-  xyad,hdr,xmid,ymid,ra_cen,dec_cen         ;Get coordinates of image center
+  xyad,hdr,xsize1/2.,ysize1/2.,ra_cen,dec_cen         ;Get coordinates of image center
   if sexig then ra_dec = adstring(ra_cen,dec_cen,1)       ;Make a nice string
 
 ; Determine tic positions and labels for the different type of contour plots
 
   if type NE 0 then begin                  ;RA and Dec labeling
 
-     xedge = [ 0, xsize1, 0]          ;X pixel values of the four corners
-     yedge = [ 0, 0, ysize1]          ;Y pixel values of the four corners
+     xedge = [ xran[0], xran[1], xran[0]]          ;X pixel values of the four corners
+     yedge = [ yran[0], yran[0], yran[1] ]          ;Y pixel values of the four corners
 
      xy2ad, xedge, yedge, astr, a, d
  
-     pixx = float(xsize)/xtics          ;Number of X pixels between tic marks
-     pixy = float(ysize)/ytics          ;Number of Y pixels between tic marks
+     pixx = float(xmid*2)/xtics          ;Number of X pixels between tic marks
+     pixy = float(ymid*2)/ytics          ;Number of Y pixels between tic marks
 
-; Find an even increment on each axis
-     tics, a[0], a[1], xsize, pixx, raincr, RA=sexig  ;Find an even increment for RA
+; Find an even increment on each axis, for RA check crossing of 0 hours
+     case 1 of 
+     ( a[1] GT a[0] ) and (cdelt[0] LT 0 ) : $ 
+        tics, a[0], a[1] - 360.0d , xsize, pixx, raincr, RA=sexig 
+     ( a[1] LT a[0] ) and (cdelt[0] GT 0 ) : $ 
+        tics, a[0], 360.0d + a[1], xsize, pixx, raincr, RA=sexig 
+     else: tics, a[0], a[1], xsize, pixx, raincr, RA=sexig 
+     endcase
      tics, d[0], d[2], ysize, pixy, decincr    ;Find an even increment for Dec
 
 ; Find position of first tic on each axis
@@ -208,28 +234,29 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
      endelse                          
 
   endif else begin ; label with distance from center.
-     ticpos, xsize1*cdelt[0], xsize, pixx, incrx, xunits     
-     numx = fix(xmid/pixx)              ;Number of ticks from left edge
-     ticpos, ysize1*cdelt[1], ysize, pixy, incry, yunits
-     numy = fix(ymid/pixy)             ;Number of ticks from bottom to center
-     nx = numx + fix((xsize1-xmid)/pixx)    ;Total number of X ticks 
-     ny = numy + fix((ysize1-ymid)/pixy)    ;Total number of Y ticks  
-     xpos = xmid + (findgen(nx+1)-numx)*pixx
-     ypos = ymid + (findgen(ny+1)-numy)*pixy
-     xlab = string(indgen(nx+1)*incrx - incrx*numx,'(I3)')
-     ylab = string(indgen(ny+1)*incry - incry*numy,'(I3)')
-  
+     ticpos, xsize*cdelt[0], xsize, pixx, incrx, xunits     
+     numx = fix((xmid-xran[0])/pixx)              ;Number of ticks from left edge
+     ticpos, ysize*cdelt[1], ysize, pixy, incry, yunits
+     numy = fix((ymid-yran[0])/pixy)             ;Number of ticks from bottom to center
+     nx = numx + fix((xran[1]-xmid)/pixx)    ;Total number of X ticks 
+     ny = numy + fix((yran[1]-ymid)/pixy)    ;Total number of Y ticks  
+     xpos = xmid  + (findgen(nx+1)-numx)*pixx
+     ypos = ymid   + (findgen(ny+1)-numy)*pixy
+     xlab = format_axis_values( indgen(nx+1)*incrx - incrx*numx)
+     ylab = format_axis_values( indgen(ny+1)*incry - incry*numy)
+    
+     
   endelse
 
 ; Get default values of XTITLE, YTITLE, TITLE and SUBTITLE
 
-  if not keyword_set(PUTINFO) then putinfo = 0
+  putinfo = keyword_set(PUTINFO)
 
   if N_elements(xtitle) EQ 0 then $
-  if !X.TITLE eq '' then xtitle = xunits else xtitle = !X.TITLE
+  xtitle = !X.TITLE eq ''? xunits : !X.TITLE
 
   if N_elements(ytitle) EQ 0 then $
-      if !Y.TITLE eq '' then ytitle = yunits else ytitle = !Y.TITLE
+        ytitle = !Y.TITLE eq ''? yunits : !Y.TITLE
 
   if (not keyword_set( SUBTITLE) ) and (putinfo LT 1) then $
       if sexig then $
@@ -238,13 +265,15 @@ pro imcontour, im, hdr, TYPE=type, PUTINFO=putinfo, XTITLE=xtitle,  $
      subtitle = 'Center:  Longitude '+ strtrim(string(ra_cen,'(f6.2)'),2) + $
                           ' Latitude ' + strtrim(string(dec_cen,'(f6.2)'),2)
 
-  if (not keyword_set( SUBTITLE) ) then subtitle = !P.SUBTITLE
+  if N_elements( SUBTITLE)  EQ 0 then subtitle = !P.SUBTITLE
    
   contour,im, $
          XTICKS = nx, YTICKS = ny, POSITION=pos, XSTYLE=1, YSTYLE=1,$
          XTICKV = xpos, YTICKV = ypos, XTITLE=xtitle, YTITLE=ytitle, $
          XTICKNAME = xlab, YTICKNAME = ylab, SUBTITLE = subtitle, $
-         XMINOR = xminor, YMINOR = yminor, _EXTRA = extra
+         XMINOR = xminor, YMINOR = yminor, _EXTRA = extra, XRAn=xran, $
+	 YRAN = yran,noerase=noerase
+	
 
 ;  Write info about the contour plot if desired
 

@@ -29,7 +29,7 @@
 ;    Lambda0 - Cosmological constant, normalized to the closure density,
 ;        default is 0.7
 ;    q0 - Deceleration parameter, numeric scalar = -R*(R'')/(R')^2, default
-;        is -0.5
+;        is -0.55
 ;       
 ; OUTPUTS:
 ;    age -  age of galaxy in years, will have the same number of elements

@@ -56,7 +56,7 @@
 ; REFERENCES:
 ;
 ;   JPL Export Ephemeris FTP Site
-;      ftp://navigator.jpl.nasa.gov/pub/ephem/export/
+;      ftp://ssd.jpl.nasa.gov/pub/eph/planets/
 ;      (see test-data/ for test data sets)
 ;   
 ;   HORIZONS, JPL Web-based ephermis calculator (Ephemeris DE406)
@@ -70,7 +70,7 @@
 ;   Written and Documented, CM, Jun 2001
 ;   Removed TRANSREAD, improved output, improved docs, CM, 9 Jul 2001
 ;
-;  $Id: jplephtest.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $
+;  $Id: jplephtest.pro,v 1.4 2001/07/20 13:29:53 craigm Exp $
 ;
 ;-
 ; Copyright (C) 2001, Craig Markwardt

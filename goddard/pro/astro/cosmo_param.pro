@@ -9,22 +9,23 @@ pro cosmo_param,Omega_m, Omega_Lambda, Omega_k, q0
 ;     in defining any two of four cosmological density parameters.
 ;
 ;     Given any two of the four input parameters -- (1) the normalized matter 
-;     density Omega_m (2) the normalized cosmolgical constant, Omega_lambda (2) the normalized 
-;     curvature term, Omega_k and (4) the deceleration parameter q0 --  this 
-;     program will derive the remaining two.     Here "normalized" means divided by the closure
-;     density so that Omega_m + Omega_lambda + Omega_k = 1.    For a more
-;     precise definition see Caroll, Press, & Turner (1992, ArAA, 30, 499).     
+;     density Omega_m (2) the normalized cosmological constant, Omega_lambda 
+;     (3) the normalized curvature term, Omega_k and (4) the deceleration 
+;     parameter q0 --  this  program will derive the remaining two.     Here 
+;     "normalized" means divided by the closure density so that 
+;     Omega_m + Omega_lambda + Omega_k = 1.    For a more
+;     precise definition see Carroll, Press, & Turner (1992, ArAA, 30, 499).     
 ;
 ;     If less than two parameters are defined, this procedure sets default 
 ;     values of Omega_k=0 (flat space), Omega_lambda = 0.7, Omega_m = 0.3
-;     and q0 = -0.5
+;     and q0 = -0.55
 ; CALLING SEQUENCE:
 ;       COSMO_PARAM, Omega_m, Omega_lambda, Omega_k, q0
 ;
 ; INPUT-OUTPUTS:
 ;     Omega_M - normalized matter energy density, non-negative numeric scalar
 ;     Omega_Lambda - Normalized cosmological constant, numeric scalar
-;     Omega_k - normalized curvature parmeter, numeric scalar.   This is zero
+;     Omega_k - normalized curvature parameter, numeric scalar.   This is zero
 ;               for a flat universe
 ;     q0 - Deceleration parameter, numeric scalar = -R*(R'')/(R')^2
 ;          = 0.5*Omega_m - Omega_lambda

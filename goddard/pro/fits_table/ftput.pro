@@ -4,7 +4,6 @@ pro ftput,h,tab,field,row,values,nulls
 ;       FTPUT
 ; PURPOSE:
 ;       Procedure to add or update a field in an FITS ASCII table
-;
 ; CALLING SEQUENCE:
 ;       FTPUT, htab, tab, field, row, values, [ nulls ]
 ;
@@ -51,7 +50,7 @@ pro ftput,h,tab,field,row,values,nulls
 ;        FTADDCOL should be called prior to FTPUT for explicit formatting.
 ;
 ; PROCEDURES CALLED
-;       FSTRING(), FTADDCOL, FTINFO, FTSIZE, SXADDPAR, SXPAR()
+;       FTADDCOL, FTINFO, FTSIZE, SXADDPAR, SXPAR()
 ; HISTORY:
 ;       version 1  D. Lindler July, 1987
 ;       Allow E format         W. Landsman          March 1992
@@ -63,8 +62,10 @@ pro ftput,h,tab,field,row,values,nulls
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Updated call to the new FTINFO   W. Landsman   May 2000
 ;       Fix case where header does not have any columns yet W.Landsman Sep 2002
+;       Assume since V5.2, omit fstring() call  W. Landsman April 2006
 ;-
-; On_error,2
+ On_error,2
+ compile_opt idl2
 
  if N_params() LT 5 then begin
     print,'Syntax - FTPUT, htab, tab, field, row, values, [nulls]'
@@ -131,8 +132,6 @@ pro ftput,h,tab,field,row,values,nulls
         if wid-decimal LT 6 then fmt = 'F' + strmid(fmt,1,1000)
  endif
  fmt = '(' + fmt + ')'
- if !VERSION.RELEASE LT '5.4' and (N_elements(v) GT 1024) then $
- data = fstring(v, FORMAT = fmt) else $
  data = string(v, FORMAT = fmt)
 
 ; insert null values

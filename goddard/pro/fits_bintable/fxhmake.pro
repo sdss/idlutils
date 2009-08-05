@@ -1,5 +1,5 @@
 	PRO FXHMAKE, HEADER, DATA, EXTEND=EXTEND, DATE=DATE,	$
-		INITIALIZE=INITIALIZE, ERRMSG=ERRMSG
+		INITIALIZE=INITIALIZE, ERRMSG=ERRMSG, XTENSION=XTENSION
 ;+
 ; NAME: 
 ;	FXHMAKE
@@ -14,9 +14,10 @@
 ; Inputs      : 
 ;	None required.
 ; Opt. Inputs : 
-;	DATA	= IDL data array to be written to file in the primary data unit
-;		  (not in an extension).  This is used to determine the values
-;		  of the BITPIX and NAXIS, etc. keywords.
+;	DATA	= IDL data array to be written to file.    It must be in the 
+;                  primary data unit unless the XTENSION keyword is supplied.
+;		  This array is used to determine the values of the BITPIX and 
+;                 NAXIS, etc. keywords.
 ;
 ;		  If not passed, then BITPIX is set to eight, NAXIS is set to
 ;		  zero, and no NAXISnnn keywords are included in this
@@ -40,7 +41,8 @@
 ;			ERRMSG = ''
 ;			FXHMAKE, ERRMSG=ERRMSG, ...
 ;			IF ERRMSG NE '' THEN ...
-;
+;       XTENSION - If set, then the header is appropriate for an image 
+;                  extension, rather than the primary data unit.
 ; Calls       : 
 ;	GET_DATE, FXADDPAR, FXHCLEAN
 ; Common      : 
@@ -54,7 +56,7 @@
 ; Category    : 
 ;	Data Handling, I/O, FITS, Generic.
 ; Prev. Hist. : 
-;	William Thompson, Jan 1992, from FXHMAKE by D. Lindler and M. Greason.
+;	William Thompson, Jan 1992, from SXHMAKE by D. Lindler and M. Greason.
 ;	Differences include:
 ;
 ;		* Use of FITS standard (negative BITPIX) to signal floating
@@ -78,8 +80,11 @@
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Version 6, William Thompson, GSFC, 22 September 2004
 ;               Recognize unsigned integer types.
+;       Version 6.1, C. Markwardt, GSFC, 19 Jun 2005
+;               Add the XTENSION keyword, which writes an XTENSION
+;               keyword instead of SIMPLE.
 ; Version     :
-;       Version 6, 22 September 2004
+;       Version 6.1, 19 June 2005
 ;-
 ;
 	ON_ERROR,2
@@ -205,7 +210,11 @@
 ;  The first keyword must be "SIMPLE".  Normally, this has the value "T"
 ;  (true).
 ;
-	FXADDPAR,HEADER,'SIMPLE','T','Written by IDL:  '+ SYSTIME()
+        IF KEYWORD_SET(XTENSION) THEN BEGIN
+            FXADDPAR,HEADER,'XTENSION','IMAGE','Written by IDL:  '+ SYSTIME()
+        ENDIF ELSE BEGIN
+            FXADDPAR,HEADER,'SIMPLE','T','Written by IDL:  '+ SYSTIME()
+        ENDELSE
 ;
 ;  The second keyword must be "BITPIX", and the third "NAXIS".
 ;

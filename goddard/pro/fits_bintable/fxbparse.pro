@@ -68,6 +68,8 @@
 ;       Modify DHEAP(ILUN) when opening table now, CM 2000 Feb 22
 ;       Default the TZERO/TSCAL tables to double instead of single
 ;         precision floating point, CM 2003 Nov 23
+;       Make NAXIS1 and NAXIS2 64-bit integers to deal with large files,
+;         E. Hivon Mar 2008
 ;-
 ;
 @fxbintable
@@ -101,8 +103,8 @@
 	STORE_ARRAY,HEAD,HEADER,ILUN
 	NHEADER[ILUN] = NHEAD0
 	START = 0L
-	NAXIS1[ILUN]  = FXPAR(HEADER,'NAXIS1', START=START)
-	NAXIS2[ILUN]  = FXPAR(HEADER,'NAXIS2', START=START)
+	NAXIS1[ILUN]  = long64(FXPAR(HEADER,'NAXIS1', START=START))
+	NAXIS2[ILUN]  = long64(FXPAR(HEADER,'NAXIS2', START=START))
 	TFIELDS[ILUN] = FXPAR(HEADER,'TFIELDS', START=START)
 	PCOUNT        = FXPAR(HEADER,'PCOUNT', START=START)
 ;

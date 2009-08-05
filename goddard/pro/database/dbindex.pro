@@ -3,7 +3,7 @@ pro dbindex,items
 ; NAME:
 ;       DBINDEX
 ; PURPOSE:
-;       Procedure to create index file for data base (V5.2 or later)
+;       Procedure to create index file for data base 
 ;
 ; CALLING SEQUENCE:     
 ;       dbindex, [ items ]
@@ -27,19 +27,23 @@ pro dbindex,items
 ; HISTORY:
 ;       version 2  D. Lindler  Nov 1987 (new db format)
 ;       W. Landsman    added optional items parameter Feb 1989 
-;       M. Greason     converted to IDL version 2.  June 1990.
 ;       William Thompson, GSFC/CDS (ARC), 30 May 1994
 ;               Added support for external (IEEE) data format
 ;       Test if machine is bigendian  W. Landsman     May, 1996
 ;       Change variable name of BYTESWAP to BSWAP  W. Thompson  Mar, 1997
 ;       Increased number of fields to 15   W. Landsman   June, 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Increase number of items to 18     W. Landsman  November 1999
 ;       Allow multiple valued (nonstring) index items W. Landsman November 2000
 ;       Use 64 bit integers for V5.2 or later  W. Landsman February 2001
+;       Do not use EXECUTE() for V6.1 or later, improve efficiency 
+;                W. Landsman   December 2006
+;       Automatically enlarge .dbx file if needed, fix major bug in last
+;             update    W. Landsman Dec 2006
+;       Assume since V6.1    W. Landsman   June 2009
 ;-                                         
 ;*****************************************************************
  On_error,2                ;Return to caller
+ compile_opt idl2
 
 ; Check to see if data base is opened for update
 
@@ -82,8 +86,7 @@ pro dbindex,items
  endif
  unit = db_info('UNIT_DBX',0)                      ;unit number of index file
  external = db_info('EXTERNAL',0)                  ;external format?
- if external then bswap = not IS_IEEE_BIG()  $ ;machine already bigendian?
-             else bswap = 0
+ bswap = external ? not IS_IEEE_BIG() : 0
 
 ; read header info of index file (mapped file)
 
@@ -91,12 +94,18 @@ pro dbindex,items
  h = reclong[0]  ;first two longwords
  if bswap then ieee_to_host,h
  maxentries = h[1]      ;max allowed entries
+; If necessary, enlarge the size of the .dbx file.    All indexed items must
+; then be reindexed.
  if maxentries lt nentries then begin
-        print,'DBINDEX -- maxentries too small'
-        print,' Rerun dbcreate with maxentries in .dbd file at least',nentries
-        return
- end
-
+        message,'Enlarging index (.dbx) file to support ' +  $
+	         strtrim(nentries,2) + ' entries',/INF
+	dbname = db_info('name',0)	 
+        dbcreate,dbname,1,maxentry=nentries,external=db_info('external')
+	dbopen, dbname, 1
+        nitems = db_info('ITEMS',0)
+        itnum = indgen(nitems)   
+ endif
+ 
  nindex2 = h[0] ;number of indexed items
  if nindex2 LT nindex then goto, NOGOOD   
  reclong = assoc(unit,lonarr(7,nindex2),8)
@@ -120,7 +129,7 @@ pro dbindex,items
         ;
         ; place item in variable v
         ;
-        status = execute('v=v'+strtrim(i+1,2))
+        v = (scope_varfetch('v' + strtrim(i+1,2))) 
         pos = where(hitem EQ indexed[i], N_found)
         if N_found LE 0 then goto, NOGOOD    
         pos = pos[0]
@@ -135,9 +144,7 @@ pro dbindex,items
         1: begin                                ;indexed (unsorted)
 
                 datarec = dbindex_blk(unit, sblock[pos], 512, 0, idltype[i])
-                tmp = v
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp
+   		datarec[0] =  bswap ? swap_endian(v,/swap_if_little) : v
            end
 ; 
         2: begin                                ;values are already sorted
@@ -145,14 +152,12 @@ pro dbindex,items
                 nb=(nentries+511L)/512          ;number of 512 value blocks
                 ind=indgen(nb)*512LL             ;position at start of each block
                 sval=v[ind]                     ;value at start of each block
+;
                 datarec = dbindex_blk(unit, hblock[pos], 512, 0, idltype[i])
-                tmp = sval
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp                ;write to file
+                datarec[0] = bswap ? swap_endian(sval,/swap_if_little) : sval
+ ;
                 datarec = dbindex_blk(unit, sblock[pos], 512, 0, idltype[i])
-                tmp = v
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp                ;write data
+   		datarec[0] =  bswap ? swap_endian(v,/swap_if_little) : v
            end
  
         3: begin                                ; sort item before storage
@@ -163,39 +168,29 @@ pro dbindex,items
                 ind=l64indgen(nb)*512LL             ;position at start of each block
                 sval=v[ind]                     ;value at start of each block
                 datarec = dbindex_blk(unit, hblock[pos], 512, 0, idltype[i])
-                tmp = sval
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp                ;write to file
+                datarec[0] = bswap ? swap_endian(sval,/swap_if_little) : sval
+;
                 datarec = dbindex_blk(unit, sblock[pos], 512, 0, idltype[i])
-                tmp = v
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp                ;write data
-                tmp = sub + 1
-                if bswap then host_to_ieee,tmp
-                reclong[0] = tmp                ;indices
+  		datarec[0] =  bswap ? swap_endian(v,/swap_if_little) : v
+                reclong[0] = bswap ? swap_endian(sub+1,/swap_if_little) : sub+1                ;indices
            end
         4: begin                                ; sort item before storage
                 
                 datarec = dbindex_blk(unit, ublock[pos], 512, 0, idltype[i])
-                tmp = v
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp                ;write unsorted values
+ 		datarec[0] =  bswap ? swap_endian(v,/swap_if_little) : v
+
                 sub=bsort(v)                    ;sort values
                 v=v[sub]
                 nb=(nentries+511)/512           ;number of 512 value blocks
                 ind=l64indgen(nb)*512LL             ;position at start of each block
                 sval=v[ind]                     ;value at start of each block
                 datarec = dbindex_blk(unit, hblock[pos], 512, 0, idltype[i])
-                tmp = sval
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp                ;write every 512th value to file
-                datarec = dbindex_blk(unit, sblock[pos], 512, 0, idltype[i])
-                tmp = v
-                if bswap then host_to_ieee,tmp
-                datarec[0] = tmp                ;write data
-                tmp = sub + 1
-                if bswap then host_to_ieee,tmp
-                reclong[0] = tmp                ;indices
+                datarec[0] = bswap ? swap_endian(sval,/swap_if_little) : sval
+ ;
+ 		datarec = dbindex_blk(unit, sblock[pos], 512, 0, idltype[i])
+		datarec[0] =  bswap ? swap_endian(v,/swap_if_little) : v
+;
+                 reclong[0] = bswap ?swap_endian(sub+1,/swap_if_little) : sub+1                ;indices
            end
         endcase
 endfor

@@ -1,4 +1,4 @@
-pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
+pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA=delta, FONT=font
 ;+
 ; NAME:
 ;	TICLABELS
@@ -26,6 +26,7 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 ;	DELTA - Scalar specifying spacing of labels.   The default is 
 ;		DELTA = 2 which means that a label is made for every other tic
 ;		mark.  Set DELTA=1 to create a label for every tic mark.
+;       FONT - scalar font graphics keyword (-1,0 or 1) for text
 ;
 ; PROCEDURES USED:
 ;	RADEC
@@ -43,12 +44,13 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
 ;	Fix when crossing 0 dec or 24h RA
 ;	Fix DELTA keyword so that it behaves according to the documentation
 ;			W. Landsman  Hughes STX,  Nov 95  
-;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Allow sub arcsecond formatting  W. Landsman   May 2000
-;       Better formatting for non-unity DELTA values  W. Landsamn July 2004
-;       
+;       Better formatting for non-unity DELTA values  W. Landsman July 2004
+;       Allow FONT keyword to be passed.  T. Robishaw Apr. 2006
+;       Write 0h rather than 24h  W. L. August 2008
 ;-
  On_error,2
+ compile_opt idl2
 ;                               convert min to hours, minutes, secs
   if N_params() LT 4 then begin
 
@@ -57,6 +59,8 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
      return
 
   endif
+
+  if N_elements(FONT) eq 0 then font = !p.font
 
   ticlabs = replicate(' ',numtics )
 
@@ -75,7 +79,7 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
        radec, firstval, 0, minh, minm, mins, dum1, dum2, dum3 
        sd = '!Ah!N' & sm = '!Am!N'  & ss = '!As!N' 
 
-       if (!d.name eq 'PS') and (!p.font eq 0) then begin    ;Postscript fonts?
+       if (!d.name eq 'PS') and (font eq 0) then begin    ;Postscript fonts?
          sd ='!Uh!N' & sm='!Um!N' & ss='!Us!N' 
          endif
 
@@ -86,7 +90,7 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
        mins = abs(mins)
        sd = "!Ao!N" & sm = "'" &  ss = "''"
 
-       if (!d.name eq 'PS') and (!p.font eq 0) then begin
+       if (!d.name eq 'PS') and (font eq 0) then begin
 
          RtEF = '!X'
          sd = '!9' + string(176b) + RtEF 
@@ -182,6 +186,9 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
          if (minm ge 60) then begin
              minm = minm - 60
              minh = minh + neg
+	     while minh LT 0 do minh = minh + 24
+	    while minh GE 24 do minh = minh - 24
+
              ticlabs[i]= sgn + string(abs(minh),'(i2.2)') + sd + ' ' + $
 			string(minm,'(i2.2)') +sm
 
@@ -211,8 +218,9 @@ pro ticlabels, minval, numtics, incr, ticlabs, RA=ra, DELTA = delta
       for i = delta,numtics-1, delta do begin
           minh = minh + inc
 	  if keyword_set(RA) then begin
+	  
 		while minh LT 0 do minh = minh + 24
-		while minh GT 24 do minh = minh - 24
+		while minh GE 24 do minh = minh - 24
           endif
           ticlabs[i] = strtrim( minh,2) + sd
       endfor      

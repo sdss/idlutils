@@ -17,20 +17,21 @@ pro tbdelcol,h,tab,name
 ;                       or (2) a scalar giving the column number to delete
 ;
 ; EXAMPLE:
-;       Delete the column "FLUX" from FITS binary table
+;       Delete the column "FLUX" from FITS binary table test.fits
 ;
-;       IDL> TBDELCOL, H, TAB, 'FLUX'
+;       IDL> tab = readfits('test.fits',h,/ext)    ;Read table
+;       IDL> tbdelcol, h, tab, 'FLUX'              ;Delete Flux column
+;       IDL> modfits,'test.fits',tab,h,/ext        ;Write back table
 ;
 ; PROCEDURES USED:
 ;       SXADDPAR, TBINFO, TBSIZE
 ; REVISION HISTORY:                                           
 ;       Written   W. Landsman        STX Co.     August, 1988
-;       Adapted for IDL Version 2, J. Isensee, July, 1990
 ;       Use new structure returned by TBINFO,  August, 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use SIZE(/TNAME) instead of DATATYPE()   October 2001
+;       Use /NOSCALE in call to TBINFO, update TDISP   W. Landsman   March 2007
 ;- 
-
+ compile_opt idl2
  On_error, 2
 
  if N_params() LT 3 then begin
@@ -44,7 +45,7 @@ pro tbdelcol,h,tab,name
 
 ; Make sure column exists
 
- tbinfo,h,tb_str
+ tbinfo,h,tb_str,/NOSCALE
 
  case size(name,/TNAME) of
  'STRING': begin
@@ -85,7 +86,7 @@ pro tbdelcol,h,tab,name
 
  key = strupcase(strmid(h[i],0,5))
  if (key eq 'TTYPE') OR (key eq 'TFORM') or (key eq 'TUNIT') or $
-   (key eq 'TNULL')  then begin
+   (key eq 'TNULL') or (key EQ 'TDISP') then begin
         row = h[i]                    
         ifield = fix(strtrim(strmid(row,5,3)))    
         if ifield gt field then begin    ;Subsequent field?

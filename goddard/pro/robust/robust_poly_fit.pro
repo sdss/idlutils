@@ -1,4 +1,4 @@
-FUNCTION ROBUST_POLY_FIT,X,Y,NDEG,YFIT,SIG, NUMIT=THIS_MANY
+FUNCTION ROBUST_POLY_FIT,X,Y,NDEG,YFIT,SIG, NUMIT=THIS_MANY, DOUBLE=DOUBLE
 ;+
 ; NAME:
 ;	ROBUST_POLY_FIT
@@ -7,12 +7,12 @@ FUNCTION ROBUST_POLY_FIT,X,Y,NDEG,YFIT,SIG, NUMIT=THIS_MANY
 ;	An outlier-resistant polynomial fit.
 ;
 ; CALLING SEQUENCE:
-;	COEFF = ROBUST_POLY_FIT(X,Y,NDEGREE  ,[ YFIT,SIG, NUMIT =] )
+;	COEFF = ROBUST_POLY_FIT(X,Y,NDEGREE  ,[ YFIT,SIG, /DOULBE, NUMIT=] )
 ;
 ; INPUTS:
 ;	X = Independent variable vector, floating-point or double-precision
 ;	Y = Dependent variable vector
-;
+;       NDEGREE - integer giving degree of polynomial to fit, maximum = 6
 ; OUTPUTS:
 ;	Function result = coefficient vector, length NDEGREE+1. 
 ;	IF COEFF=0.0, NO FIT! If N_ELEMENTS(COEFF) > degree+1, the fit is poor
@@ -23,6 +23,9 @@ FUNCTION ROBUST_POLY_FIT,X,Y,NDEG,YFIT,SIG, NUMIT=THIS_MANY
 ;	YFIT = Vector of calculated y's
 ;	SIG  = the "standard deviation" of the residuals
 ;
+; OPTIONAL INPUT KEYWORD:
+;       /DOUBLE - If set, then force all computations to double precision.
+;       NUMIT - Maximum number of iterations to perform, default = 25
 ; RESTRICTIONS:
 ;	Large values of NDEGREE should be avoided. This routine works best
 ;	when the number of points >> NDEGREE.
@@ -35,12 +38,17 @@ FUNCTION ROBUST_POLY_FIT,X,Y,NDEG,YFIT,SIG, NUMIT=THIS_MANY
 ;	The fit is repeated iteratively until the robust standard deviation of 
 ;	the residuals changes by less than .03xSQRT(.5/(N-1)).
 ;
+; PROCEDURES CALLED:
+;        POLY(), POLY_FIT()
+;       ROB_CHECKFIT()
 ; REVISION HISTORY
 ;	Written, H. Freudenreich, STX, 8/90. Revised 4/91.
 ;	2/94 -- changed convergence criterion
+;        Added /DOUBLE keyword, remove POLYFITW call  W. Landsman  Jan 2009
 ;-
 
 ON_ERROR,2
+COMPILE_OPT IDL2
 
 EPS   = 1.0E-20
 DEL   = 5.0E-07
@@ -72,7 +80,7 @@ MIN_PTS = NUM_SEG*3
 IF NPTS LT 10000 THEN BEGIN ;MIN_PTS THEN BEGIN
 ;  Settle for least-squares:
    LSQFIT = 1
-   CC = POLY_FIT( U, V, NDEG, YFIT )
+   CC = POLY_FIT( U, V, NDEG, YFIT , DOUBLE=DOUBLE)
 ENDIF ELSE BEGIN
 ;  Break up the data into segments:
    LSQFIT = 0
@@ -93,18 +101,19 @@ ENDIF ELSE BEGIN
      R[I] = MEDIAN( U[I1:I2], /EVEN)      &  S[I] = MEDIAN( V[I1:I2],/EVEN )
    ENDFOR
 ;  Now fit:
-   CC = POLY_FIT( R,S, NDEG )
+   CC = POLY_FIT( R,S, NDEG, DOUBLE=DOUBLE )
    YFIT = POLY(U,CC)  
 ENDELSE
 
-ISTAT=ROB_CHECKFIT(V,YFIT,EPS,DEL,  SIG,FRACDEV,NGOOD,W,S)
+ISTAT = ROB_CHECKFIT(V,YFIT,EPS,DEL,  SIG,FRACDEV,NGOOD,W,S)
+
 IF ISTAT EQ 0 THEN GOTO,AFTERFIT
 
 IF NGOOD LT MINPTS THEN BEGIN
    IF LSQFIT EQ 0 THEN BEGIN
       ;  Try a least-squares:
-      CC = POLY_FIT( U, V, NDEG, YFIT )
-      ISTAT=ROB_CHECKFIT(V,YFIT,EPS,DEL,  SIG,FRACDEV,NGOOD,W,S)
+      CC = POLY_FIT( U, V, NDEG, YFIT, DOUBLE=DOUBLE )
+      ISTAT = ROB_CHECKFIT(V,YFIT,EPS,DEL,  SIG,FRACDEV,NGOOD,W,S)
       IF ISTAT EQ 0 THEN GOTO,AFTERFIT
       NGOOD = NPTS-COUNT
    ENDIF
@@ -125,8 +134,14 @@ WHILE( (DIFF GT CLOSE_ENOUGH) AND (NIT LT ITMAX) ) DO BEGIN
   SIG_1=SIG
 ; We use the "obsolete" POLYFITW routine because it allows us to input weights
 ; rather than measure errors
-  CC= POLYFITW( U, V, W, NDEG, YFIT )
-  ISTAT=ROB_CHECKFIT(V,YFIT,EPS,DEL,  SIG,FRACDEV,NGOOD,W,S)
+  g = where(W gt 0, Ng)
+  if Ng LT N_elements(w) then begin    ;Throw out points with zero weight
+    u = u[g]
+    v = v[g]
+    w = w[g]
+  endif  
+  CC = POLY_FIT( U, V, NDEG, YFIT, MEASURE_ERRORS = 1/W^2, DOUBLE=DOUBLE )
+  ISTAT = ROB_CHECKFIT(V,YFIT,EPS,DEL,  SIG,FRACDEV,NGOOD,W,S)
   IF ISTAT EQ 0 THEN GOTO,AFTERFIT
   IF NGOOD LT MINPTS THEN BEGIN
      PRINT,'ROBUST_POLY_FIT: Questionable Fit!'

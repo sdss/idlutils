@@ -1,4 +1,4 @@
-function psf_gaussian, parameters, NPIXEL=npix, NDIMENSION=ndim, FWHM=fwhm,  $
+function psf_gaussian, parameters, NPIXEL=npixel, NDIMENSION=ndim, FWHM=fwhm,  $
                         DOUBLE = double, CENTROID=cntrd, ST_DEV=st_dev,  $
                         XY_CORREL=xy_corr, NORMALIZE=normalize
 ;+
@@ -75,8 +75,10 @@ function psf_gaussian, parameters, NPIXEL=npix, NDIMENSION=ndim, FWHM=fwhm,  $
 ;       Suppress underflow messages, add DOUBLE keyword. **Modified centroid
 ;       definition so integer position is pixel center** W. Landsman March 2002
 ;       Allow use of the ST_DEV (not STDEV) keyword W. Landsman Nov. 2002
+;       Do not modify NPIXEL input keyword   W. Landsman  
 ;-
         On_error,2
+	compile_opt idl2
 
         if (N_params() LT 1 ) and $
             not (keyword_set( FWHM) or keyword_set(ST_DEV)) then begin
@@ -104,11 +106,13 @@ function psf_gaussian, parameters, NPIXEL=npix, NDIMENSION=ndim, FWHM=fwhm,  $
         if N_elements( ndim ) NE 1 then ndim=2
         ndim = ndim>1
 
-        if N_elements( npix ) LE 0 then begin
+        if N_elements( npixel ) LE 0 then begin
                 message,"must specify size of result with NPIX=",/INFO
                 return,(-1)
-          endif else if N_elements( npix ) LT ndim then $
-                        npix = replicate( npix[0], ndim )
+          endif else begin 
+	      npix = npixel
+	      if N_elements( npix ) LT ndim then npix = replicate( npix[0], ndim )
+         endelse
 
         if (N_elements( cntrd ) LT ndim) AND (N_elements( cntrd ) GT 0) then $
                         cntrd = replicate( cntrd[0], ndim )

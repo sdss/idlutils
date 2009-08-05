@@ -31,8 +31,9 @@ pro trapzd, func, a, b, s, step, _EXTRA = _EXTRA
 ;       _EXTRA facility. 
 ;
 ; NOTES:
-;       (1) TRAPZD will check for math errors when computing the function at the
-;       endpoints, but not on subsequent iterations.
+;       (1) TRAPZD will check for math errors (except for underflow) when 
+;       computing the function at the endpoints, but not on subsequent 
+;       iterations.
 ;
 ;       (2) TRAPZD always uses double precision to sum the function values
 ;       but the call to the user-supplied function is double precision only if 
@@ -40,26 +41,28 @@ pro trapzd, func, a, b, s, step, _EXTRA = _EXTRA
 ; REVISION HISTORY:
 ;       Written         W. Landsman                 August, 1991
 ;       Always use double precision for TOTAL       March, 1996
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Pass keyword to function via _EXTRA facility  W. Landsman July 1999
+;       Don't check for floating underflow  W.Landsman  April 2008
 ;-
  On_error,2
+ compile_opt idl2
 
  kpresent = keyword_set(_EXTRA)
  if N_elements(step) EQ 0 then begin          ;Initialize?
 
 ;If a math error occurs, it is likely to occur at the endpoints
-     junk = check_math(1)                    ;
+     junk = check_math()                    ;
      if kpresent then s1 = CALL_FUNCTION(func,A, _EXTRA= _EXTRA) $
                  else s1 = CALL_FUNCTION(func,A)
-     if check_math() NE 0 then $
+     if check_math(mask=211) NE 0 then $
         message,'ERROR - Illegal lower bound of '+strtrim(A,2)+ $
                 ' to function ' + strupcase(func)
      if kpresent then s2 = CALL_FUNCTION(func,B, _EXTRA = _EXTRA) $
                  else s2 = CALL_FUNCTION(func,B)
-     if check_math() NE 0 then $
+     if check_math(mask=211) NE 0 then $
         message,'ERROR - Illegal upper bound of '+strtrim(B,2) + $
                 ' to function ' + strupcase(func)
+     junk= check_math()		
      s = 0.5d * ( double(B)-A ) * ( s1+s2 )    ;First approx is average of endpoints
      step = 1l
 

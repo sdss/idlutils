@@ -56,9 +56,11 @@ function dbget,item,values,listin,SILENT=silent, FULLSTRING = fullstring, $
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added COUNT keyword, deprecate !ERR        W. Landsman March 2000
 ;       Fix bug introduced March 2000              W. Landsman November 2000
+;       Fix possible bug when sublist supplied    W. Landsman August 2008
 ;-
 ;
  On_error,2                                   ;Return to caller
+ compile_opt idl2
 
  if N_params() LT 2 then begin
    print,'Syntax --  list = ' + $
@@ -87,7 +89,8 @@ function dbget,item,values,listin,SILENT=silent, FULLSTRING = fullstring, $
  endif else begin                                        ;Non-sorted item
     dbext, list, itnum, itvals
     dbsearch, nvals, val, itvals, good, FULLSTRING = fullstring, Count = count
-    if list[0] NE -1 then list = list[good] else list = good+1
+    if count GT 0 then $     ;Updated Aug 2008
+        if list[0] NE -1 then list = list[good] else list = good+1
  endelse
 
  if count LE 0 then begin

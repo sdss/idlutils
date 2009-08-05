@@ -25,7 +25,7 @@
 ;	write, 27 Aug 92, F.K.Knight (knight@ll.mit.edu)
 ;	add test of /left,/right,/top,/bottom keywords, 21 June 93, FKK
 ;	update based on recent changes to legend, 7 Feb 94, FKK
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Fix ambiguous CHAR keyword  W. Landsman Sep 2007
 ;-
 pro legendtest
 if (!d.name eq 'PS') and (!p.font eq 0) then device,/Symbol,font_index=20
@@ -40,17 +40,18 @@ lineitems = ['solid','dotted','DASHED']
 linestyle = [0,1,2]
 citems = 'color '+strtrim(string(indgen(8)),2)
 colors = 15*indgen(8)+50
+usersym,[-1,1,1,-1,-1],[-1,-1,1,1,-1],/fill
 z =	['legend,explanation,charsize=1.5' $
 	,'legend,items,psym=[4,2,6]' $
 	,'plot,findgen(10) & legend,items,psym=[4,2,6] & legend,items,psym=[4,2,6],/bottom,/right' $
 	,'legend,lineitems,linestyle=linestyle,/right,/bottom' $
 	,'legend,items,psym=psym,/horizontal,chars=1.5	; horizontal format' $
 	,'legend,[items,lineitems],psym=[psym,0,0,0],line=[0,0,0,linestyle],/center,box=0		; sans border' $
-	,'legend,items,psym=psym,margin=1,spacing=2,char=2,delimiter="=",/top,/center; delimiter & larger margin' $
-	,'legend,lineitems,line=linestyle,pos=[.3,.5],/norm,char=3,number=4	; position of legend' $
+	,'legend,items,psym=psym,margin=1,spacing=2,chars=2,delimiter="=",/top,/center; delimiter & larger margin' $
+	,'legend,lineitems,line=linestyle,pos=[.3,.5],/norm,chars=3,number=4	; position of legend' $
 	,'legend,items,psym=-psym,number=2,line=linestyle,/right; plot two symbols, not one' $
-	,'legend,citems,/fill,psym=8+intarr(8),colors=colors,char=2; 8 filled squares' $
-	,'legend,[citems[0:4],lineitems],/fill,psym=[8+intarr(5),0*psym],line=[intarr(5),linestyle],colors=colors,char=2,text=colors' $
+	,'legend,citems,/fill,psym=8+intarr(8),colors=colors,chars=2; 8 filled squares' $
+	,'legend,[citems[0:4],lineitems],/fill,psym=[8+intarr(5),0*psym],line=[intarr(5),linestyle],colors=colors,chars=2,text=colors' $
 	,"legend,['Absurd','Sun Lover','Lucky Lady','Fishtail Palm'],vector=['ab!9r!3','!9nu!3','!9Wf!3','!9cN!20K!3'],charsize=2,/pos,psp=3"$
 	]
 prompt = 'Hit return to continue:'

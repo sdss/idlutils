@@ -81,7 +81,10 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
 ;     Better astrometry of PC image in "batwing" configuration, W. Landsman
 ;                August 1999
 ;     Use vector call to SXADDHIST  W. Landsman   March 2003
+;     Don't use EXECUTE() for V6.1 or later W. Landsman Dec 2006
+;     Assume since V6.1  W. Landsman  June 2009
 ;-
+ compile_opt idl2
  if N_params() LT 2 then begin
     print,'Syntax:'
     print,' WFPC2_READ,filename,chip1,hdr1,chip2,hdr2,chip3,hdr3,chip4,hdr4'
@@ -151,8 +154,8 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
                     CHECK_FITS,chip1,header1,/update,/silent,/FITS
             endif 
         endif else begin  
-        tst = execute('chip' + ii + '= temporary(thischp)')
-        tst = execute('header' + ii + '= thishdr')
+	   (scope_varfetch('chip' + ii)) = temporary(thischp)
+	   (scope_varfetch('header' + ii)) = thishdr
 	endelse
         endfor
  
@@ -227,11 +230,10 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
                     CHECK_FITS, chip1, header1, /update, /silent, /FITS
            endif
     endif else begin
- 
-     tst = execute( chp + " = temporary(thischp)")
-     tst = execute( hdr + " = thishdr")
- 
-   endelse
+    
+        (SCOPE_VARFETCH(chp)) = temporary(thischp) 
+        (SCOPE_VARFETCH(hdr)) = temporary(thishdr)
+    endelse
    endif else begin
        header1 = thishdr
        CHECK_FITS, chip1, header1, /fits,/update,/silent  

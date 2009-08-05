@@ -38,6 +38,7 @@ pro st_diskread, infiles, DUMP = dump
 ;                               type codes, add message facility
 ;       05/20/00        W. Landsman, remove obsolete !ERR calls, new calling
 ;                               sequence to FTINFO
+;       09/2006        W. Landsman, remove obsolete keywords to OPEN
 ;
 ;****************************************************************************
 ;       Converted to IDL V5.0   W. Landsman   September 1997
@@ -54,7 +55,7 @@ pro st_diskread, infiles, DUMP = dump
 ;
 ; Search for names of input disk FITS files.
 ;
-   file_list=findfile(infiles,count=count)
+   file_list = file_search(infiles,count=count)
    if count le 0 then $                                              
         message,' No files found: '+ infiles $
    else message,/INF, $
@@ -63,7 +64,7 @@ pro st_diskread, infiles, DUMP = dump
 ; Loop on files
 ;
    for file = 0,count-1 do begin
-        openr,unit,file_list[file],/get_lun,/block
+        openr,unit,file_list[file],/get_lun
 ;
 ; read data header and data
 ;
@@ -336,7 +337,7 @@ fini:
 ; open output data file
 ;
         close,1
-        openw,1,dname,512,/none,/block,init=long(strtrim(nblocks,2))
+        openw,1,dname
 ;
 ; create output assoc variable
 ;

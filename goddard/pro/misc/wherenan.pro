@@ -1,23 +1,25 @@
         FUNCTION WHERENAN, ARRAY, COUNT
 ;+
 ; NAME:
-;      WHERENAN
+;      WHERENAN()
 ; PURPOSE:
-;      Find the indices of all IEEE NaN values in an array.
+;      Find the indices of all big-endian NaN values in an array.  OBSOLETE
 ; EXPLANATION: 
 ;      Find the positions of all values within an array that correspond to the
-;      IEEE NaN (not-a-number) special values.
+;      big-endian NaN (not-a-number) special values.    
 ;
-;      This routine is designed to be used on data which is in external data
-;      representation, not host representation.  Its purpose is to catch all
-;      NaN special values before converting (IEEE_TO_HOST) from external to
-;      host format, e.g. when reading a FITS file.
+;      THIS PROCEDURE ONLY IDENTIFIES BIG_ENDIAN NaN VALUES.  DO NOT USE IT 
+;      TO IDENTIFY NaN VALUES IN GENERAL.   Instead, to identify NaN values on 
+;      the host machine use the FINITE() function 
 ;
-;      To identify IEEE values in the *host* representation, one can use
-;          result = where(array NE array)
-;      If this notation seems too bizarre, then since V5.2 one can use the /NAN
-;      keyword to the FINITE function
-;          result = where( finite(array,/NAN) )
+;      IDL>     result = where( finite(array,/NAN) )
+;       
+;      The main purpose of this routine is to catch  NaN special values 
+;      written in big_endian format (e.g. FITS data) on a little endian 
+;      machine prior to conversion with e.g. IEEE_TO_HOST.    It was needed
+;      many years ago because VMS machines could not handle big-endian 
+;      special values, but this routine is now kept only for backwards 
+;      compatibility.
 ;
 ; CALLING SEQUENCE:
 ;      Result = WHERENAN( ARRAY [, COUNT ] )

@@ -6,8 +6,9 @@
 ; PURPOSE: 
 ;       Returns the header of an open FITS binary table.
 ;
-; Explanation : This procedure returns the FITS extension header of a FITS
-;               binary table opened for read with the command FXBOPEN.
+; EXPLANATION:
+;      This procedure returns the FITS extension header of a FITS
+;         binary table opened for read with the command FXBOPEN.
 ;
 ; Use         : Result = FXBHEADER(UNIT)
 ;

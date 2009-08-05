@@ -1,4 +1,4 @@
-pro imdbase,hdr,catalogue,list,XPOS=xpos,YPOS=ypos, $
+pro imdbase,hdr,catalogue,list,XPOS=xpos,YPOS=ypos, SILENT=silent, $
                 XRANGE=xrange,YRANGE=yrange, SUBLIST = sublist, ALT = alt
 ;+
 ; NAME:
@@ -7,19 +7,19 @@ pro imdbase,hdr,catalogue,list,XPOS=xpos,YPOS=ypos, $
 ;     Find the sources in an IDL database that are located on a given image.
 ;
 ; CALLING SEQUENCE:
-;    imdbase, hdr, catalogue, [list, ALT=, XPOS= ,YPOS=, XRANGE= ,YRANGE= , 
-;                       SUBLIST = ]  
+;    imdbase, hdr, [catalogue, list, ALT=, XPOS= ,YPOS=, XRANGE= ,YRANGE= , 
+;                       SUBLIST =, /SILENT ]  
 ;
 ; INPUTS:
 ;    hdr - FITS image header containing astrometry, and the NAXIS1,
 ;               NAXIS2 keywords giving the image size
-;    catalogue - string giving name of catalogue in database
-;              Database must contain the (preferably indexed)
-;              fields RA (in hours) and DEC.   Type DBHELP for a 
-;              list of the names of available catalogues.
+;    catalogue - string giving name of catalogue in database.   If not supplied
+;              then the currently open database is used.   The database must 
+;              contain the (preferably indexed) fields RA (in hours) and DEC.  
+;              Type DBHELP for a list of the names of available catalogues.
 ;
 ; OPTIONAL OUTPUT PARAMETER:
-;    LIST - A long vector containing the entry numbers of sources found
+;    LIST - A longwprd vector containing the entry numbers of sources found
 ;           within the image.   This vector can then be used with other
 ;           database procedures, e.g. to print specified fields (DBPRINT)
 ;           or subselect with further criteria (DBFIND)
@@ -37,25 +37,26 @@ pro imdbase,hdr,catalogue,list,XPOS=xpos,YPOS=ypos, $
 ;              then this is equivalent to ALT = 'A'.   See Section 3.3 of 
 ;              Greisen & Calabretta (2002, A&A, 395, 1061) for information about
 ;              alternate astrometry keywords.
+;     SILENT - If set, then informational messages are suppressed
+;     SUBLIST - vector giving entries in the database to consider in the
+;               search.  If not supplied, or set equal to -1, then all entries
+;               are considered.
 ;     XRANGE - 2 element vector giving the X range of the image to consider.
 ;              The default is to search for catalogue sources within the entire
 ;             image
 ;     YRANGE - 2 element vector giving the Y range of the image to consider.
-;     SUBLIST - vector giving entries in the database to consider in the
-;               search.  If not supplied, or set equal to -1, then all entries
-;               are considered.
 ;
 ; NOTES:
 ;     If an output list vector is not supplied, then the found objects are
 ;     diplayed at the terminal.
 ;
 ; EXAMPLE:
-;      Find all existing IUE SWP observations within the field of the STSDAS
-;      disk file FUV0435FC.  Subselect those taken with the SWP camera
+;      Find all existing IUE observations within the field of the FITS 
+;      file fuv0435fc.fits.  Subselect those taken with the SWP camera
 ;
-;      SXHREAD,'fuv0435fc',H             ;Read header from disk
+;      H = HEADFITS('fuv0435f.fits')             ;Read FITS header 
 ;      IMDBASE,H,'IUE',list              ;Find IUE obs. within image 
-;      LIST2 = DBFIND('CAM_NO=3',LIST)   ;Subselect on SWP images
+;      list2 = DBFIND('CAM_NO=3',list)   ;Subselect on SWP images
 ;
 ; SIDE EFFECTS:
 ;      The IDL database is left open upon exiting IMDBASE.
@@ -77,22 +78,25 @@ pro imdbase,hdr,catalogue,list,XPOS=xpos,YPOS=ypos, $
 ;      Updated to use ASTROMETRY structures    J.D. Offenberg, HSTX, Jan 1993
 ;      Conversion for precession fixed.   R.Hill, HSTX, 22-Apr-93
 ;      Check RA description for equinox   W. Landsman  Aug 96
-;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Call HPRECESS if header equinox does not match DB  W. Landsman Oct. 1998
 ;      Assume Equinox J2000 if not explicitly B1950 W. Landsman Jan. 2005
 ;      Added ALT keyword W. Landsman  April 2005
+;      Use open database, if no catalogue name given  W.L  April 2008
+;      Added /SILENT keyword W.L. Mar 2009
 ;-
  On_error,2                                  ;Return to caller
+ compile_opt idl2
 
  if N_params() LT 2 then begin               ;Sufficient parameters?
      print,'Syntax - imdbase, hdr, catalogue, [ list, ALT =, SUBLIST = '
-     print,'              XPOS = , YPOS = , XRANGE =, YRANGE =  ]'
+     print,'              XPOS = , YPOS = , XRANGE =, YRANGE =, /SILENT  ]'
      print,'Type DBHELP for available catalogues'
      return
  endif              
 
 ; Check if catalogue has preselected output fields
 
+ if N_elements(catalogue) EQ 0 then catalogue = db_info('name',0)
  catname = strupcase(strtrim(catalogue,2)) 
 
  dbopen,catalogue,unavail=unavail       ;Was database found?
@@ -158,19 +162,20 @@ if not keyword_set(SUBLIST) then sublist = -1
 
  search = strtrim(ramin,2)  + ' < ra < ' + strtrim(ramax,2) + ', ' + $
          strtrim(decmin,2) + ' < dec < ' + strtrim(decmax,2)
+if not keyword_set(SILENT) then begin 
  print,'IMDBASE: Now searching ',catname,' catalogue - be patient'
  print,search
-
+endif
  list = dbfind(search,sublist,/SILENT, Count = nstar)        ;Search for stars in field
  if redo then begin
      search = '0 < ra < ' + strtrim(newmax,2) + ', ' + $
                strtrim(decmin,2) + '< dec <' + strtrim(decmax,2)
-     print,search
+     if not keyword_set(SILENT) then print,search
      newlist = dbfind(search,sublist,/SILENT, Count = count)
      if count GT 0 then list = [list,newlist]
      nstar = nstar + count
  endif
- print,''
+ if not keyword_set(SILENT) then print,''
 
  if nstar GT 0 then begin                     ;Any stars found?
    dbext,list,'ra,dec',ra,dec                ;Extract RA,DEC of stars found
@@ -186,6 +191,7 @@ if not keyword_set(SUBLIST) then sublist = -1
    if ngood GT 0 then begin 
        list = list[good]
        xpos = x[good] & ypos = y[good]
+      if not keyword_set(SILENT) then $
       message,strtrim(ngood,2)+' '+ catname +' sources found within image',/INF
        if ( N_params() LT 3 ) then dbprint,list,textout=1   ;List stars found
    endif else GOTO,NO_MATCH

@@ -78,6 +78,7 @@ pro SXOPEN,unit,fname,header,history,access
 ;       Added /BLOCK when opening new .hhd file
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Recognize unsigned datatype for V5.1 or greater   W. Landsman Jan 2000
+;       Assume since V5.5  W. Landsman Sep 2006
 ;-
 ;------------------------------------------------------------------------------
         On_error,2
@@ -167,11 +168,9 @@ if nfound GT 0 then result[6,unit] = value[L_gcount[0]]
                 'INTEGER*1':            result[8,unit]=1
                 'REAL*4':               result[8,unit]=4
                 'INTEGER*2':            result[8,unit]=2
-                'UNSIGNED*2':           if !VERSION.RELEASE GT '5.1' then $
-                                        result[8,unit]=12 else result[8,unit]=2
+                'UNSIGNED*2':           result[8,unit]=12
                 'INTEGER*4':            result[8,unit]=3
-                'UNSIGNED*4':           if !VERSION.RELEASE GT '5.1' then $
-                                        result[8,unit]=13 else result[8,unit]=3
+                'UNSIGNED*4':           result[8,unit]=13 
                 'REAL*8':               result[8,unit]=5
                 'COMPLEX*8':            result[8,unit]=6
                 ELSE:                   message,'Undefined Datatype value'
@@ -203,12 +202,10 @@ if nfound GT 0 then result[6,unit] = value[L_gcount[0]]
         If result[3,unit] GT 0 then begin      ;NAXIS non-zero?
           close,unit
           if strupcase(access) eq 'R' then $
-                openr,unit,xname,/BLOCK  $
+                openr,unit,xname  $
           else begin
                 nrecs = (result[6,unit]*result[9,unit]+511)/512
-                if !VERSION.OS EQ 'vms' then $      ;Changed Dec 1992
-                     openw, unit, xname, 512, /NONE, /BLOCK, INIT=nrecs else $
-                     openw, unit, xname
+                openw, unit, xname
           endelse
         result[17,unit] = 512           ;Save record length    
         endif else result[17,unit]=0    ;NAXIS = 0

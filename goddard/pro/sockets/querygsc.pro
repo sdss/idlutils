@@ -1,26 +1,30 @@
-function Querygsc, target, dis,magrange = magrange, HOURS = hours
+function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
+   VERBOSE=verbose, BOX = box
 ;+
 ; NAME: 
 ;   QUERYGSC
 ;
 ; PURPOSE: 
-;   Query the Guide Star Catalog (GSC V2.2) at STScI by position
+;   Query the Guide Star Catalog (GSC V2.3.2) at STScI by position
 ; 
 ; EXPLANATION:
-;   Uses the IDL SOCKET command to query the GSC 2.2 database over the Web.    
-;   Requires IDL V5.4 or later.
+;   Uses the IDL SOCKET command to query the GSC 2.3.2 database over the Web.    
+;
+;   Alternatively, the user can query the GSC 2.3.2 catalog using
+;   queryvizier.pro and the VIZIER database, e.g.  
+;     IDL> st = queryvizier('GSC2.3',[23,35],10,/all)
 ; 
-;   The GSC  all-sky catalog will contain an estimated 2 billion objects
-;   and will be complete to a magnitude of at least J=18 and as faint as J=21 at
-;   high galactic latitudes. Using the observations in different bandpasses at 
-;   different epochs allows the computation of both colors and proper motions. 
-;   These data are in an object-oriented database at 
-;   http://www-gsss.stsci.edu/support/data_access.htm.  The final version 
-;   (GSC 2.3),  expected to be released in 2004, will also contain proper 
-;   motions.   
+;   GSC2.3 is an all-sky export of calibrated photographic survey plate 
+;   source parameters from the COMPASS database.  The number of unique
+;   objects is approximately 945,592,683.   All sources are 
+;   from the second-generation plate-processing pipeline with the exception
+;   of Tycho-2 and Skymap sources in the case of very bright objects. The 
+;   Skymap sources are exported when there is no matching GSC or Tycho 
+;   sources.  Each GSC 2.3 entry contains only one position and one 
+;   magnitude per bandpass for each unique sky object
 ;
 ; CALLING SEQUENCE: 
-;     info = QueryGSC(targetname_or_coords, [ dis, Magrange =, /HOURS] )
+;     info = QueryGSC(targetname_or_coords, [ dis, /HOURS, /BOX, /VERBOSE] )
 ;
 ; INPUTS: 
 ;      TARGETNAME_OR_COORDS - Either a scalar string giving a target name, 
@@ -29,64 +33,68 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours
 ;          hours if /HOURS is set) and the target declination in degrees.
 ;
 ; OPTIONAL INPUT:
-;    dis - Search radius in arcminutes to search around specified target
-;          Default is 5 arcminutes
+;    dis - Numeric scalar giving search radius in arcminutes to search around 
+;          specified target    Default is 5 arcminutes
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;
+;    /BOX - if set, then radius gives  a box width in arcminutes
 ;    /HOURS - If set, then the right ascension is both input and output (in
 ;             the info .ra tag) in hours instead of degrees
-;
-;    MAGRANGE - two element vector giving the magnitude range (on either the
-;           F plate or the J plate) to search for  GSC stars.   
-;           Default is [0,30]
-;
+;    /VERBOSE - If set, then the CGI command to the Webserver will be displayed
+;;
 ; OUTPUTS: 
 ;   info - IDL structure containing information on the GSC stars within the 
 ;          specified distance of the specified center.   There are (currently)
 ;          23 tags in this structure  -- for further information see
-;           http://www-gsss.stsci.edu/gsc/gsc2/gsc22_release_notes.htm  
+;          www-gsss.stsci.edu/Catalogs/GSC/GSC2/gsc23/gsc23_release_notes.htm
 ;
-;          .GSCID2 - GSC 2.2 identification number
+;          .HSTID - GSC 2.3 name for HST operations
+;          .GSC1ID - GSC1 name
 ;          .RA,.DEC - Position in degrees (double precision).   RA is given in
 ;                   hours if the /HOURS keyword is set.
 ;          .RAERR, .DECERR - uncertainty (in arcseconds) in the RA and Dec
 ;          .EPOCH - mean epoch of the observation
-;          .RAPM,DECPM - RA and Dec proper motion (mas/year) 
-;          .RAPMERR,DECPMERR - Uncertainty RA and Dec proper motion (mas/year) 
-;          .FMAG, .FMAGERR - magnitude and error in photographic F
-;          .JMAG, .JMAGERR - magnitude and error in photographic J
-;          .VMAG, .VMAGERR - V magnitude and error 
-;          .NMAG, .NMAGERR - magnitude and error
+;          .FPGMAG, .FPGERR - magnitude and error in photographic F
+;          .JPGMAG, .JPGERR - magnitude and error in photographic J
+;          .VPGMAG, .VPGERR - V magnitude and error 
+;          .NPGMAG, .NPGERR - magnitude and error
+;          .UMAG, .UERR - magnitude and error
+;          .BMAG, .BERR - magnitude and error
+;          .VMAG, .VERR - magnitude and error
 ;          .A - semi-major axis in pixels
-;          .E - eccentricity of extended objects
 ;          .PA - Position angle of extended objects in degrees
-;          .C - classification (0-5): 0-star, 1-galaxy, 2-blend, 3-nonstar,
-;                                     4-unclassified, 5-defect
+;          .E - eccentricity of extended objects
+;          .CLASS - classification (0-5): 0-star, 1-galaxy, 2-blend, 
+;                         3-nonstar, 4-unclassified, 5-defect
 ;          .STATUS -10 digit field  used to encode more detailed information 
-;              about the properties of the catalog object.   For more info, see 
-;http://www-gsss.stsci.edu/gsc/gsc2/gsc22_release_notes.htm#SourceStatusFlagCodes
-;
+;              about the properties of the catalog object.   For more info, see
+;http://www-gsss.stsci.edu/Catalogs/GSC/GSC2/gsc23/gsc23_release_notes.htm#ClassificationCodes
+;           .VFLAG, MFLAG - Variability nad multiplicity flags
+;            .FPGBAND, .NPGBAND, .JPGBAND. UBAND, BBAND, .VBAND - flag as 
+;            to wether given bandpass is available
 ; EXAMPLE: 
-;          Plot a histogram of the photographic J magnitudes of all GSC 2.2 
+;          Plot a histogram of the photographic J magnitudes of all GSC 2.3.2 
 ;          stars within 10 arcminutes of the center of the globular cluster M13 
 ;
 ;          IDL> info = querygsc('M13',10)
-;          IDL> plothist,info.jmag,xran=[10,20]
+;          IDL> plothist,info.jpgmag,xran=[10,20]
 ;
 ; PROCEDURES USED:
 ;          QUERYSIMBAD, RADEC, WEBGET()
 ;
-; MINIMUM IDL VERSION
-;         V5.4  (uses SOCKET)
 ; MODIFICATION HISTORY: 
 ;         Written by W. Landsman  SSAI  August 2002
 ;         Fixed parsing of RA and Dec  W. Landsman September 2002
+;         Major rewrite to use new STScI Web server, remove magrange
+;           keyword   W. Landsman Dec 2007
+;         Update server name, added /BOX,/ VERBOSE keywords W.L 19 Dec 2007
 ;
 ;-
+  compile_opt idl2
   if N_params() LT 2 then begin
        print,'Syntax - info = QueryGSC(targetname_or_coord, dis,'
-       print,'                        [/Hours, MagRange=[m1,m2]} )'
+       print,'                        [/Hours, /Box, /VERBOSE} )'
        print,'   RA (degrees), Dec (degrees) -- search coordinates of center)'
        print,'  dis -- search radius in arcminutes'
        if N_elements(info) GT 0 then return,info else return, -1
@@ -100,31 +108,47 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours
        if found EQ 0 then message,'Target name ' + target + $
                  ' could not be translated by SIMBAD'
   endelse  
+  radius = keyword_set(box)? 'Box' : 'Radius'
+  
    radec,ra,dec,hr,mn,sc,deg,dmn,dsc,hours=keyword_set(hours)
+   deg = string(deg,'(i3.2)')
+   dsn = strmid(deg,0,1)
+   deg = strmid(deg,1,2)
+   sc = round(sc)
+   dsc = round(dsc)
+   if dsn EQ ' ' then dsn = '%2B'
   ;;
-  QueryURL = "http://www-gsss.stsci.edu/cgi-bin/gsc22query.exe?ra=" + $
-  string(hr,'(i2.2)') +'%3A' + string(mn,'(i2.2)') + '%3A'  + strtrim(sc,2) + $          
-  '&dec=' + strtrim(string(deg,'(i3.2)'),2) +'%3A' + $
-   string(dmn,'(i2.2)') + '%3A' + strtrim(dsc,2) + '&r2=' + strtrim(dis,2) 
-  if N_elements(magrange) EQ 2 then begin
-  QueryURL = QueryURL + '&m1=' + strtrim(magrange[0],2) + $
-                        '&m2=' + strtrim(magrange[1],2)
-  endif
-  QueryURL = QueryURL + '&submit2=Submit+Request'         
+  QueryURL = "http://gsss.stsci.edu/webservices/GSC2/GSC2DataReturn.aspx?" + $
+   'RAH=' + string(hr,'(i2.2)') + '&RAM=' + string(mn,'(i2.2)') + $
+   '&RAS=' + string(sc,'(i2.2)') + '&DSN=' + dsn + '&DD=' + deg +  $
+   '&DM=' + string(dmn,'(i2.2)') + '&DS=' + string(dsc,'(i2.2)') + $
+    '&EQ=2000&SIZE=' + strtrim(dis,2) + '&SRCH=' + radius + $
+    '&FORMAT=CSV&CAT=GSC23&HSTID=&GSC1ID='
+    
+  if keyword_set(verbose) then print,queryurl
   ;;  
   Result = webget(QueryURL)
-;
+ ;
   t = result.text
 
-  nstar = N_elements(t) -3
+  nstar = N_elements(t) -1
   if strmid(t[0],0,5) NE 'Usage' and nstar GT 0 THEN BEGIN
-  headers = strsplit(t[0],/extract)
-  info = create_struct(Name='gsc',headers, '',0.0d,0.0d,0.0,0.0,0.0, $
-   0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0ULL)
+  headers = strsplit(t[0],',',/extract)
+  
+  info = create_struct(Name='gsc',headers, '','',0.0d,0.0d,0.0,0.0,0.0, $
+   0.0, 0, 0.0, $   ;F
+   0.0, 0, 0.0, $ ;J
+   0.0, 0, 0.0, $   ;N 
+   0.0, 0, 0.0,  $   ;U 
+   0.0, 0, 0.0, $ ;B
+   0.0, 0, 0.0, $ ;V
+   0.0, 0, 0.0, $ ;R
+   0.0, 0, 0.0, $ ;I
+   0, 0ULL, 0.0, 0.0, 0.0,0,0 )
   info = replicate(info,nstar)
   for i=0,nstar-1 do begin
-      temp = strsplit(t[i+2],/extract)
-      for j=0,22 do info[i].(j) = temp[j]
+      temp = strsplit(t[i+1],',',/extract)
+      for j=0,36 do info[i].(j) = temp[j]
   endfor
    ENDIF ELSE BEGIN 
       message, 'No objects returned by server. The server answered:', /info

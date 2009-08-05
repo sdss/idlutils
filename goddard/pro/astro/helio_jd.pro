@@ -8,6 +8,8 @@ function helio_jd,date,ra,dec, B1950 = B1950, TIME_DIFF = time_diff
 ;      This procedure correct for the extra light travel time between the Earth 
 ;      and the Sun.
 ;
+;       An online calculator for this quantity is available at 
+;       http://www.physics.sfasu.edu/astro/javascript/hjd.html
 ; CALLING SEQUENCE:
 ;       jdhelio = HELIO_JD( date, ra, dec, /B1950, /TIME_DIFF)
 ;

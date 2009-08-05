@@ -40,15 +40,16 @@ function gettok,st,char, exact=exact
 ;       V5.3 version, accept vector input   W. Landsman February 2000
 ;       Slightly faster implementation  W. Landsman   February 2001
 ;       Added EXACT keyword  W. Landsman March 2004
-;       Use COMPLEMENT keyword to WHERE W. Landsman   March 2004
+;       Assume since V5.4, Use COMPLEMENT keyword to WHERE W. Landsman Apr 2006
 ;-
 ;----------------------------------------------------------------------
   On_error,2                           ;Return to caller
+  compile_opt idl2
 
-  if N_params() LT 2 then begin
-      print,'Syntax - token = gettok( st, char, [ /EXACT ] )'
-      return,-1
-  endif 
+   if N_params() LT 2 then begin
+       print,'Syntax - token = gettok( st, char, [ /EXACT ] )'
+       return,-1
+   endif
 
 ; if char is a blank treat tabs as blanks
 
@@ -65,11 +66,10 @@ function gettok,st,char, exact=exact
 
   pos = strpos(st,char)
   test = pos EQ -1
-  bad = where(test, Nbad)
+  bad = where(test, Nbad, Complement = good, Ncomplement=Ngood)
   if Nbad GT 0 then st[bad] = ''
  
 ; extract token
- good = where(1b-test, Ngood)
  if Ngood GT 0 then begin
     stg = st[good]
     pos = reform( pos[good], 1, Ngood )

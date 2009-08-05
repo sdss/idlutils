@@ -1,5 +1,6 @@
 pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic, ALT = alt, $
          CELESTIAL = celestial, ECLIPTIC = ecliptic, PRECISION = precision
+;+
 ; NAME:
 ;       XYAD
 ; PURPOSE:
@@ -86,6 +87,9 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic, ALT = alt, $
 ;       Handle display of NaN values W. Landsman May 2004
 ;       Work for non-spherical coordinate transformations W. Landsman Oct 2004
 ;       Fix output display units if ALT keyword used W. Landsman March 2005
+;       More informative error message if no astrometry present W.L Nov 2007
+;       Fix display when no equinox in header W.L. Dec 2007
+;       Fix header display for noncelestial coords W.L. Jan 2008
 ;-
  compile_opt idl2
  On_error,2
@@ -102,8 +106,13 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic, ALT = alt, $
 
   extast, hdr, astr, noparams, ALT = alt       ;Extract astrometry structure
 
-  if ( noparams LT 0 ) then $ 
-        message,'ERROR - No astrometry info in supplied FITS header'
+  if ( noparams LT 0 ) then begin
+        if N_elements(alt) EQ 0 then $
+        message,'ERROR - No astrometry info in supplied FITS header' $
+	else  message, $
+	'ERROR  - No alt=' + alt + ' astrometry info in supplied FITS header'
+  endif	
+
 
   if ( npar lt 3 ) then read,'XYAD: Enter X and Y positions: ',x,y
 
@@ -140,18 +149,33 @@ pro xyad, hdr, x, y, a, d, PRINT = print, GALACTIC = galactic, ALT = alt, $
 
   if (npar lt 5) or keyword_set(PRINT) then begin
         g = where( finite(d) and finite(a), Ng)
-        titname  = repchr(titname,'-',' ')
+	 tit1= titname[0]
+	 t1 = strpos(tit1,'-')
+	 if t1 gt 0 then tit1 = strmid(tit1,0,t1)
+	 tit2= titname[1]
+	 t1 = strpos(tit2,'-')
+	 if t1 gt 0 then tit2 = strmid(tit2,0,t1)
         npts = N_elements(X)
         spherical = strmid(astr.ctype[0],4,1) EQ '-'
         fmt = '(2F8.2,2x,2F9.4,2x,A)'
         if spherical then begin
-        print,'    X       Y         ' + titname[0] + '     ' + titname[1] +$
-	      '       ' + titname[0] + '         ' + titname [1]
+
+        tit = '    X       Y         ' + tit1 + '      ' + tit2 
+	sexig = strmid(titname[0],0,4) EQ 'RA--'
+	if sexig then begin 
+  
+  	eqnx = get_equinox(hdr,code)
+	eqnx = code NE -1 ? '_' + string(eqnx,f='(I4)') :  '    '
+	tit = tit +  $
+	   '        ' + tit1  + eqnx +  '      ' + tit2 + eqnx
         if N_elements(precision) EQ 0 then precision = 1
         str = replicate('    ---          ---    ', Npts)
         if Ng GT 0 then str[g] = adstring(a[g],d[g],precision)
+	endif else str = replicate('', npts)
+	print,tit
         for i=0l, npts-1 do $
-        print,FORMAT=fmt, float(x[i]), float(y[i]), a[i], d[i], str[i]
+        print,FORMAT=fmt, float(x[i]), float(y[i]), a[i], d[i], str[i]	
+	
         endif else begin
             unit1 = strtrim( sxpar( hdr, 'CUNIT1'+alt,count = N_unit1),2)
             if N_unit1 EQ 0 then unit1 = ''

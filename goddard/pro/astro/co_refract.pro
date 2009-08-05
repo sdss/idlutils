@@ -103,6 +103,7 @@
 ;    Update iteration formula,   W. Landsman    June 2002
 ;    Corrected slight bug associated with scalar vs. vector temperature and 
 ;               pressure inputs. 6/10/2002
+;    Fixed problem with vector input when /TO_OBSERVED set W. Landsman Dec 2005
 ;-
 function co_refract_forward, a, P=P, T=T
 
@@ -165,12 +166,12 @@ endif else begin
 	P = pressure + a*0. & T = temperature + a*0.
         for i=0,na-1 do begin
                 ;calculate initial refraction guess
-                dr = co_refract_forward(a[i],P=pressure[i],T=temperature[i])
+                dr = co_refract_forward(a[i],P=P[i],T=T[i])
             cur = a[i] + dr ; guess of observed location
 
                 repeat begin
                   last = cur
-                  dr = co_refract_forward(cur,P=pressure[i],T=temperature[i])
+                  dr = co_refract_forward(cur,P=P[i],T=T[i])
                   cur= a[i] + dr
                 endrep until abs(last-cur)*3600. LT epsilon
                 aout[i] = cur

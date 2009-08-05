@@ -30,9 +30,10 @@ pro fthelp,h,TEXTOUT=textout
 ;       version 1  W. Landsman  Jan. 1988
 ;       Add TEXTOUT option, cleaner format  W. Landsman   September 1991
 ;       TTYPE value can be longer than 8 chars,  W. Landsman  August 1995
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Remove calls to !ERR, some vectorization  W. Landsman  February 2000 
+;       Slightly more compact display  W. Landsman  August 2005
 ;-
+ compile_opt idl2
  On_error,2                                  ;Return to caller
 
  if N_params() EQ 0 then begin
@@ -51,15 +52,17 @@ pro fthelp,h,TEXTOUT=textout
  if not keyword_set(TEXTOUT) then textout = 1
  textopen,'fthelp',TEXTOUT=textout
 
- printf,!TEXTUNIT,'FITS ASCII Table Header: '
- printf,!TEXTUNIT,'Extension Name: ',sxpar(h,'EXTNAME')
+ naxis = sxpar( h, 'NAXIS*')
+ printf,!TEXTUNIT,'FITS ASCII Table: ' +$
+        'Size ',strtrim(naxis[0],2),' by ',strtrim(naxis[1],2)
+
+ extname = sxpar(h,'EXTNAME', Count=N_ext)	
+ if N_ext GT 0 then printf,!TEXTUNIT, 'Extension Name:   ',sxpar(h,'EXTNAME')
  extver = sxpar(h, 'EXTVER', Count = N_extver)
  if N_extver GT 0 then printf,!TEXTUNIT,'Version: ',extver
- printf,!TEXTUNIT,'Number of rows: ',strtrim(sxpar(h,'NAXIS2'),2) 
  printf,!TEXTUNIT,' '                         
  printf,!TEXTUNIT,  $
  'Field      Name               Unit           Format     Column'
- printf,!TEXTUNIT,' '
 
  tbcol = intarr(n)
  tform = strarr(n) & tunit = tform & ttype =tform

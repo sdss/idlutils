@@ -1,8 +1,28 @@
-				    CHANGES         (last update 03-Mar-2002)
+				    CHANGES         (last update 10-Feb-2009)
 
 This file contains a list of changes made to the software in this directory.
 Changes are listed in reverse chronological order, with the latest changes
 first.
+
+Feb 2009: FXBWRITM, FXBADDCOL - Now work with unsigned integers
+
+Jan  2008: FXWRITE - Now has /APPEND keyword to append to existing FITS files
+             FXHMAKE - Now has /XTENSION keyword to specify header is for an
+                       image extension.
+             FXBWRITM - Now allows output table to have TSCAL/TZERO keyword 
+                       values, unless new /NOSCALE keyword is set       
+             FXBREADM - Now recognizes unsigned integer scalings, and scalings
+                       can be either float or double precision.                      
+
+  March 2005    - FXHMODIFY - Fix bug in extending size of primary header
+
+   May 2005     - FXBWRITM - Replace EXECUTE() calls with pointers
+    
+   Apr 2005     - FXBGROW - Fix bug in zeroing the output file
+   
+   Sep 2004      -FXHMAKE, FXWRITE - Recognize unsigned data types
+   
+   Jul 2004     - FXBWRITM - Remove pre-V5.0 HANDLE options
 
 03 Mar 2003     - FXBREADM correctly handle case where TSCAL/TZERO changes type
 
@@ -60,85 +80,3 @@ first.
 5 Sep 1997      - Fixed bug in FXADDPAR when inserting strings with containing 
                   a '/' character
 
-12 Aug 1997     - Recognize the IDL double complex datatype (available since
-                  V4.0)
-
-02 Jul 1996     - Fix bug in FXBREAD in use of the /VIRTUAL keyword
-
-27 May 1996     - Fix possible integer overflow in FXBPARSE and FXBFINDLUN
-
-30 Dec 1994	- Added support for TCUNI to FXBADDCOL and FXHCLEAN.
-
-29 Dec 1994	- Modified FXBREAD to not lose single element dimensions.
-
-26 Oct 1994	- Updated CHECK_FITS and HPRINT from the IDL Astronomy User's
-		  Library
-
-23 Jun 1994	- Modified routines so that ERRMSG not touched if not defined.
-
-21 Jun 1994	- Additionally developed ERRMSG capabilities.
-
-31 May 1994	- Added ERRMSG keyword to a number of routines.
-
- 4 Mar 1994	- Added routine FXBDIMEN.
-
- 3 Mar 1994	- Added routine FXHMODIFY.
-
-17 Nov 1993	- Fixed bug in FXREAD when used with AVERAGE keyword on
-		  non-IEEE compatible machines.  Also fixed bug with
-		  subsampling floating point data on VAX machines.
-
-29 Oct 1993	- Added error messages to FXBREAD and FXBCOLNUM.
-
-21 Jul 1993	- Fixed bug with variable length arrays.  WARNING: Before this
-		  date the software did not handle variable length arrays
-		  correctly.
-
- 2 Jul 1993	- Added function FXBCOLNUM.
-
- 1 Jul 1993	- Added functions FXBHEADER, FXBISOPEN, FXBSTATE.
-
-12 Apr 1993	- Changed documentation headers to be compatible with the CDS
-		  library.
-
-21 Jan 1993	- Renamed procedures to be compatible with DOS filename
-		  limitations.  Now the first eight characters of each filename
-		  is unique.
-
-			Old name		New name
-
-			FXBPARSETDIM		FXBTDIM
-			FXBPARSETFORM		FXBTFORM
-			FXTAPEIO_READ		FXTPIO_READ
-			FXTAPEIO_WRITE		FXTPIO_WRITE
-
-19 Oct 1992	- Fixed bug in WHERENAN.
-
-18 Oct 1992	- Rewrote SXPAR to support nonstandard lines in header, and
-		  renamed to FXPAR.  Changed all routines to use this instead
-		  of SXPAR.
-
-18 Sep 1992	- Added keywords EXTVER and EXTLEVEL to FXBHMAKE.
-
-13 Aug 1992	- Changed FXREAD, FXWRITE to support BSCALE, BZERO better.
-		  Made changes to miscellaneous routines to trap attempts to
-		  read non-FITS files earlier.  Rename fxbintable.cmn to
-		  fxbintable.pro
-
-24 Jun 1992	- Added BSCALE, BZERO support to FXREAD.  Fixed bug in FXBREAD.
-
-19 Jun 1992	- Speeded up the way FXBREAD reads a series of rows.
-
-19 Jun 1992	- Renamed FXWHERENAN to WHERENAN.
-
-29 May 1992	- Added FXREAD routine to read all or part of a FITS primary
-		  array.
-
-12 May 1992	- Added tape writer routines FXTAPEWRITE and FXTAPEIO_WRITE.
-
- 5 May 1992	- Changed FXWRITE and FXTAPEIO_READ to create the file with
-		  2880 byte fixed-length records (VMS).  The software here does
-		  not depend on this file configuration, but other FITS readers
-		  might.
-
- 1 Apr 1992	- Added tape reader routines FXTAPEREAD and FXTAPEIO_READ.

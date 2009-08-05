@@ -81,8 +81,11 @@
 ;     Correct astrometry for integral contraction W. Landsman  April 2002
 ;     Fix output astrometry for non-equal plate scales for PC matrix or
 ;     CROTA2 keyword, added ALT keyword.   W. Landsman May 2005
+;     Update distortion parameters if present  W. Landsman August 2007
+;     Don't update BSCALE/BZERO for unsigned integer W.Landsman Mar 2008
 ;- 
  On_error,2
+ compile_opt idl2
 
  npar = N_params()      ;Check # of parameters
  if (npar EQ 3) or (npar EQ 5) or (npar EQ 0) then begin
@@ -117,7 +120,8 @@
      endif
       xsize = dimen[0]  &  ysize = dimen[1]
  endelse
-
+ tname = size(oldim,/tname)
+ 
  if ( npar LT 6 ) then begin
 
     if ( N_elements(OUTSIZE) NE 2 ) then begin
@@ -162,6 +166,12 @@
  sxaddpar,newhd,'history',label + ' Original Image Size Was '+ $
          strn(xsize) +' by ' +  strn(ysize) 
  if ( npar GT 1 ) then sxaddpar,newhd,'history',label+type
+ 
+ xratio = float(newx) / xsize   ;Expansion or contraction in X
+ yratio = float(newy) / ysize   ;Expansion or contraction in Y
+ lambda = yratio/xratio         ;Measures change in aspect ratio.
+ pix_ratio = xratio*yratio      ;Ratio of pixel areas
+
 
 ; Update astrometry info if it exists
 
@@ -173,10 +183,6 @@
         extast, newhd, astr, noparams
  endif
 
- xratio = float(newx) / xsize   ;Expansion or contraction in X
- yratio = float(newy) / ysize   ;Expansion or contraction in Y
- lambda = yratio/xratio         ;Measures change in aspect ratio.
- pix_ratio = xratio*yratio      ;Ratio of pixel areas
 
 ; Correct the position of the reference pixel.   Note that CRPIX values are
 ; given in FORTRAN (first pixel is (1,1)) convention
@@ -198,6 +204,16 @@
  if N_elements(alt) EQ 0 then alt = ''
  sxaddpar, newhd, 'CRPIX1' + alt, crpix1, FORMAT='(G14.7)'
  sxaddpar, newhd, 'CRPIX2' + alt, crpix2, FORMAT='(G14.7)'
+ 
+  if tag_exist(astr,'DISTORT') then begin
+         distort = astr.distort
+	 message,'Updating SIP distortion parameters',/INF
+         update_distort,distort, [1./xratio,0],[1./yratio,0]
+	 astr.distort= distort
+	 add_distort, newhd, astr
+   endif	 
+
+
 
 ; Scale either the CDELT parameters or the CD1_1 parameters.
 
@@ -231,16 +247,21 @@
  endelse
  endif
 
-; Adjust BZERO and BSCALE for new pixel size
+; Adjust BZERO and BSCALE for new pixel size, unless these values are used
+; to define unsigned integer data types.  
 
  bscale = sxpar( oldhd, 'BSCALE')
+ bzero = sxpar( oldhd, 'BZERO')
+ unsgn = (tname EQ 'UINT') or (tname EQ 'ULONG') 
+
+ if not unsgn then begin 
  if (bscale NE 0) and (bscale NE 1) then $
     sxaddpar, newhd, 'BSCALE', bscale/pix_ratio, 'Calibration Factor'
- bzero = sxpar( oldhd, 'BZERO')
-    if (bzero NE 0) then sxaddpar, newhd, 'BZERO', bzero/pix_ratio, $
+ if (bzero NE 0) then sxaddpar, newhd, 'BZERO', bzero/pix_ratio, $
        ' Additive Constant for Calibration'
-
- pixelsiz = sxpar( oldhd,'PIXELSIZ' , Count = N_pixelsiz)
+ endif 
+ 
+  pixelsiz = sxpar( oldhd,'PIXELSIZ' , Count = N_pixelsiz)
  if N_pixelsiz GT 0 then sxaddpar, newhd, 'PIXELSIZ', pixelsiz/xratio
 
  if npar EQ 2 then oldhd = newhd else $

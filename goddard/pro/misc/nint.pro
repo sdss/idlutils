@@ -10,7 +10,7 @@ function nint, x, LONG = long             ;Nearest Integer Function
 ;	(1) if no absolute value exceeds 32767, then the array is returned as
 ;		as a type INTEGER instead of LONG
 ;	(2) NINT will work on strings, e.g. print,nint(['3.4','-0.9']) will
-;		give [3,-1]  
+;		give [3,-1], whereas ROUND() gives an error message
 ;
 ; CALLING SEQUENCE:
 ;	result = nint( x, [ /LONG] )

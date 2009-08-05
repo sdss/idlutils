@@ -77,7 +77,7 @@ pro readfmt,name,fmt,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;       Octal ('O') and hexadecimal ('Z') formats are read into longwords
 ;
 ; PROCEDURE CALLS:
-;       GETTOK(), NUMLINES(), REMCHAR, ZPARCHECK
+;       GETTOK(), REMCHAR, ZPARCHECK
 ;
 ; REVISION HISTORY:
 ;       Written         W. Landsman                 November, 1988
@@ -99,9 +99,12 @@ pro readfmt,name,fmt,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 
 ; Get number of lines in file 
 
-  nlines = NUMLINES( name )
-  if nlines LT 0 then return
-
+   nlines = FILE_LINES( name )
+   if nlines LE 0 then begin
+        message,'ERROR - File ' + name+' contains no data',/CON
+	return
+   endif     
+ 
   if not keyword_set( SKIPLINE ) then skipline = 0
   if keyword_set( NUMLINE) then nlines = numline < nlines else $
                nlines = nlines - skipline

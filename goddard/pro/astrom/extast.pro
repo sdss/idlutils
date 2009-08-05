@@ -5,9 +5,9 @@ pro extast,hdr,astr,noparams, alt=alt
 ; PURPOSE:
 ;     Extract ASTrometry parameters from a FITS image header.
 ; EXPLANATION:
-;     The astrometry in the header can be in either CD (Coordinate
-;     description) format, or CROTA and CDELT (AIPS-type) format.
-;     However, the output astrometry will always be in CD format.
+;     Extract World Coordinate System information 
+;     ( http://fits.gsfc.nasa.gov/fits_wcs.html ) from a FITS header and 
+;     place it into an IDL structure.
 ;
 ; CALLING SEQUENCE:
 ;     EXTAST, hdr, [ astr, noparams, ALT= ]   
@@ -19,11 +19,13 @@ pro extast,hdr,astr,noparams, alt=alt
 ;     ASTR - Anonymous structure containing astrometry info from the FITS 
 ;             header ASTR always contains the following tags (even though 
 ;             some projections do not require all the parameters)
+;       .NAXIS - 2 element array giving image size
 ;      .CD   -  2 x 2 array containing the astrometry parameters CD1_1 CD1_2
 ;               in DEGREES/PIXEL                                 CD2_1 CD2_2
-;      .CDELT - 2 element vector giving physical increment at reference pixel
-;      .CRPIX - 2 element vector giving X and Y coordinates of reference pixel
-;               (def = NAXIS/2) in FITS convention (first pixel is 1,1)
+;      .CDELT - 2 element double vector giving physical increment at the 
+;                 reference pixel
+;      .CRPIX - 2 element double vector giving X and Y coordinates of reference 
+;               pixel (def = NAXIS/2) in FITS convention (first pixel is 1,1)
 ;      .CRVAL - 2 element double precision vector giving R.A. and DEC of 
 ;             reference pixel in DEGREES
 ;      .CTYPE - 2 element string vector giving projection types, default
@@ -57,12 +59,13 @@ pro extast,hdr,astr,noparams, alt=alt
 ;       EXTAST checks for astrometry parameters in the following order:
 ;
 ;       (1) the CD matrix PC1_1,PC1_2...plus CDELT*, CRPIX and CRVAL
-;       (3) the CD matrix CD1_1,CD1_2... plus CRPIX and CRVAL.   
+;       (2) the CD matrix CD1_1,CD1_2... plus CRPIX and CRVAL.   
 ;       (3) CROTA2 (or CROTA1) and CDELT plus CRPIX and CRVAL.
 ;
 ;       All three forms are valid FITS according to the paper "Representations 
 ;       of World Coordinates in FITS by Greisen and Calabretta (2002, A&A, 395,
-;       1061 http://www.aoc.nrao.edu/~egreisen) although form (1) is preferred/
+;       1061 http://fits.gsfc.nasa.gov/fits_wcs.html ) although form (1) is 
+;       preferred.
 ;
 ; NOTES:
 ;       An anonymous structure is created to avoid structure definition
@@ -77,7 +80,6 @@ pro extast,hdr,astr,noparams, alt=alt
 ;      Accept CD001001 keywords               1-3-88
 ;      Accept CD1_1, CD2_1... keywords    W. Landsman    Nov. 92
 ;      Recognize GSSS FITS header         W. Landsman    June 94
-;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Get correct sign, when converting CDELT* to CD matrix for right-handed
 ;      coordinate system                  W. Landsman   November 1998
 ;      Consistent conversion between CROTA and CD matrix  October 2000
@@ -97,8 +99,13 @@ pro extast,hdr,astr,noparams, alt=alt
 ;      Yet another fix to free-format values   W. Landsman April 2004
 ;      Introduce PV2 tag to replace PROJP1, PROJP2.. etc.  W. Landsman May 2004
 ;      Convert NCP projection to generalized SIN   W. Landsman Aug 2004
+;      Add NAXIS tag to output structure  W. Landsman Jan 2007
+;      .CRPIX tag now Double instead of Float   W. Landsman  Apr 2007
+;      If duplicate keywords use the *last* value W. Landsman Aug 2008
+;      Fix typo for AZP projection, nonzero longpole N. Cunningham Feb 2009
 ;-
-; On_error,2
+ On_error,2
+ compile_opt idl2
 
  if ( N_params() LT 2 ) then begin
      print,'Syntax - EXTAST, hdr, astr, [ noparams, ALT = ]'
@@ -125,11 +132,17 @@ pro extast,hdr,astr,noparams, alt=alt
 
  if N_elements(alt) EQ 0 then alt = '' else if (alt EQ '1') then alt = 'A' $
     else alt = strupcase(alt)
+ naxis = lonarr(2) 
+ l = where(keyword EQ 'NAXIS1',  N_ctype1)
+ if N_ctype1 GT 0 then naxis[0] = lvalue[l[N_ctype1-1]]
+ l = where(keyword EQ 'NAXIS2',  N_ctype2)
+ if N_ctype2 GT 0 then naxis[1] = lvalue[l[N_ctype2-1]]
+  
  ctype = ['','']
  l = where(keyword EQ 'CTYPE1'+alt,  N_ctype1)
- if N_ctype1 GT 0 then ctype[0] = lvalue[l[0]]
+ if N_ctype1 GT 0 then ctype[0] = lvalue[l[N_ctype1-1]]
  l = where(keyword EQ 'CTYPE2'+alt,  N_ctype2)
- if N_ctype2 GT 0 then ctype[1] = lvalue[l[0]]
+ if N_ctype2 GT 0 then ctype[1] = lvalue[l[N_ctype2-1]]
  remchar,ctype,"'"
  ctype = strtrim(ctype,2)
 
@@ -156,17 +169,16 @@ pro extast,hdr,astr,noparams, alt=alt
  crval = dblarr(2)
 
  l = where(keyword EQ 'CRVAL1'+alt,  N_crval1)
- if N_crval1 GT 0 then crval[0] = lvalue[l[0]]
+ if N_crval1 GT 0 then crval[0] = lvalue[l[N_crval1-1]]
  l = where(keyword EQ 'CRVAL2'+alt,  N_crval2)
- if N_crval2 GT 0 then crval[1] = lvalue[l[0]]
+ if N_crval2 GT 0 then crval[1] = lvalue[l[N_crval2-1]]
  if (N_crval1 EQ 0) or (N_crval2 EQ 0) then return  
 
-
- crpix = fltarr(2)
+ crpix = dblarr(2)
  l = where(keyword EQ 'CRPIX1'+alt,  N_crpix1)
- if N_crpix1 GT 0 then crpix[0] = lvalue[l[0]]
+ if N_crpix1 GT 0 then crpix[0] = lvalue[l[N_crpix1-1]]
  l = where(keyword EQ 'CRPIX2'+alt,  N_crpix2)
- if N_crpix2 GT 0 then crpix[1] = lvalue[l[0]]
+ if N_crpix2 GT 0 then crpix[1] = lvalue[l[N_crpix2-1]]
  if (N_crpix1 EQ 0) or (N_crpix2 EQ 0) then return  
 
 
@@ -177,27 +189,27 @@ cdelt = [1.0d,1.0d]
  if N_PC11 GT 0 then begin 
         cd[0,0]  = lvalue[l]
         l = where(keyword EQ 'PC1_2' + alt,  N_pc12) 
-        if N_pc12 GT 0 then cd[0,1]  = lvalue[l[0]]
+        if N_pc12 GT 0 then cd[0,1]  = lvalue[l[N_pc12-1]]
         l = where(keyword EQ 'PC2_1' + alt,  N_pc21) 
-        if N_pc21 GT 0 then cd[1,0]  = lvalue[l[0]]
+        if N_pc21 GT 0 then cd[1,0]  = lvalue[l[N_pc21-1]]
         l = where(keyword EQ 'PC2_2' + alt,  N_pc22) 
-        if N_pc22 GT 0 then cd[1,1]  = lvalue[l[0]]
+        if N_pc22 GT 0 then cd[1,1]  = lvalue[l[N_pc22-1]]
          l = where(keyword EQ 'CDELT1' + alt,  N_cdelt1) 
-        if N_cdelt1 GT 0 then cdelt[0]  = lvalue[l[0]]
+        if N_cdelt1 GT 0 then cdelt[0]  = lvalue[l[N_cdelt1-1]]
         l = where(keyword EQ 'CDELT2' + alt,  N_cdelt2) 
-        if N_cdelt2 GT 0 then cdelt[1]  = lvalue[l[0]]
+        if N_cdelt2 GT 0 then cdelt[1]  = lvalue[l[N_cdelt2-1]]
         noparams = 3
  endif else begin 
 
     l = where(keyword EQ 'CD1_1' + alt,  N_cd11) 
      if N_CD11 GT 0 then begin        ;If CD parameters don't exist, try CROTA
-        cd[0,0]  = strtrim(lvalue[l],2)
+        cd[0,0]  = strtrim(lvalue[l[N_cd11-1]],2)
         l = where(keyword EQ 'CD1_2' + alt,  N_cd12) 
-        if N_cd12 GT 0 then cd[0,1]  = lvalue[l[0]]
+        if N_cd12 GT 0 then cd[0,1]  = lvalue[l[N_cd12-1]]
         l = where(keyword EQ 'CD2_1' + alt,  N_cd21) 
-        if N_cd21 GT 0 then cd[1,0]  = lvalue[l[0]]
+        if N_cd21 GT 0 then cd[1,0]  = lvalue[l[N_cd21-1]]
         l = where(keyword EQ 'CD2_2' + alt,  N_cd22) 
-        if N_cd22 GT 0 then cd[1,1]  = lvalue[l[0]]
+        if N_cd22 GT 0 then cd[1,1]  = lvalue[l[N_cd22-1]]
         noparams = 2
     endif else begin
 
@@ -206,16 +218,16 @@ cdelt = [1.0d,1.0d]
 ; Greisen and Calabretta
 
         l = where(keyword EQ 'CDELT1' + alt,  N_cdelt1) 
-        if N_cdelt1 GT 0 then cdelt[0]  =lvalue[l[0]]
+        if N_cdelt1 GT 0 then cdelt[0]  = lvalue[l[N_cdelt1-1]]
         l = where(keyword EQ 'CDELT2' + alt,  N_cdelt2) 
-        if N_cdelt2 GT 0 then cdelt[1]  = lvalue[l[0]]
+        if N_cdelt2 GT 0 then cdelt[1]  = lvalue[l[N_cdelt2-1]]
         if (N_cdelt1 EQ 0) or (N_Cdelt2 EQ 0) then return   ;Must have CDELT1 and CDELT2
 
         l = where(keyword EQ 'CROTA2' + alt,  N_crota) 
         if N_Crota EQ 0 then $
             l = where(keyword EQ 'CROTA1' + alt,  N_crota) 
         if N_crota EQ 0 then crota = 0.0d else $
-                             crota = double(lvalue[l[0]])/RADEG
+                             crota = double(lvalue[l[N_crota-1]])/RADEG
         cd = [ [cos(crota), -sin(crota)],[sin(crota), cos(crota)] ] 
  
        noparams = 1           ;Signal AIPS-type astrometry found
@@ -234,14 +246,14 @@ cdelt = [1.0d,1.0d]
       pv2 = dblarr(npv)
       for i=0,npv-1 do begin 
       l = where(keyword EQ 'PV2_' + index[i] + alt,  N_pv2)
-      if N_pv2 GT 0 then pv2[i] = lvalue[l[0]] 
+      if N_pv2 GT 0 then pv2[i] = lvalue[l[N_pv2-1]] 
       endfor
  
           
   l = where(keyword EQ 'PV1_3' + alt,  N_pv1_3)
-  if N_pv1_3 GT 0 then  longpole = double(lvalue[l[0]]) else begin
+  if N_pv1_3 GT 0 then  longpole = double(lvalue[l[N_pv1_3-1]]) else begin
       l = where(keyword EQ 'LONPOLE' + alt,  N_lonpole)
-      if N_lonpole GT 0 then  longpole = double(lvalue[l[0]]) 
+      if N_lonpole GT 0 then  longpole = double(lvalue[l[N_lonpole-1]]) 
   endelse
 
 ; If LONPOLE (or PV1_3) is not defined in the header, then we must determine 
@@ -257,7 +269,7 @@ cdelt = [1.0d,1.0d]
       if N_pv2 EQ 0 then message, $
      'ERROR -- Conic projections require a PV2_1 keyword in FITS header' else $
       theta0 = PV2[0]
-    endif else if (proj EQ 'ZAP') or (proj EQ 'SZP') or (proj EQ 'TAN') or $
+    endif else if (proj EQ 'AZP') or (proj EQ 'SZP') or (proj EQ 'TAN') or $
           (proj EQ 'STG') or (proj EQ 'SIN') or (proj EQ 'ARC') or $
           (proj EQ 'ZPN') or (proj EQ 'ZEA') or (proj EQ 'AIR') then begin
        theta0 = 90.0
@@ -285,7 +297,7 @@ cdelt = [1.0d,1.0d]
 ; Note that the dimensions and datatype of each tag must be explicit, so that
 ; there is no conflict with structure definitions from different FITS headers
 
-  ASTR = {CD: cd, CDELT: cdelt, $
+  ASTR = {NAXIS:naxis, CD: cd, CDELT: cdelt, $
                 CRPIX: crpix, CRVAL:crval, $
                 CTYPE: string(ctype), LONGPOLE: double( longpole[0]),  $
                 LATPOLE: double(latpole[0]), PV2: pv2 }
@@ -297,38 +309,38 @@ cdelt = [1.0d,1.0d]
        case distort_flag of 
        'SIP': begin
               l = where(keyword EQ 'A_ORDER',  N) 
-              if N GT 0 then a_order  = lvalue[l[0]] else a_order = 0
+              if N GT 0 then a_order  = lvalue[l[N-1]] else a_order = 0
               l = where(keyword EQ 'B_ORDER',  N) 
-              if N GT 0 then b_order  = lvalue[l[0]] else b_order = 0
+              if N GT 0 then b_order  = lvalue[l[N-1]] else b_order = 0
               l = where(keyword EQ 'AP_ORDER',  N) 
-              if N GT 0 then ap_order  = lvalue[l[0]] else ap_order = 0
+              if N GT 0 then ap_order  = lvalue[l[N-1]] else ap_order = 0
               l = where(keyword EQ 'BP_ORDER',  N) 
-              if N GT 0 then bp_order  = lvalue[l[0]] else bp_order = 0
+              if N GT 0 then bp_order  = lvalue[l[N-1]] else bp_order = 0
   a = fltarr(a_order+1,a_order+1) & b = fltarr(b_order+1,b_order+1) 
   ap = fltarr(ap_order+1,ap_order+1) &  bp = fltarr(bp_order+1,bp_order+1)
 
   for i=0, a_order do begin
     for j=0, a_order do begin
      l = where(keyword EQ 'A_' + strtrim(i,2) + '_' + strtrim(j,2), N)
-     if N GT 0 then a[i,j] = lvalue[l[0]]
+     if N GT 0 then a[i,j] = lvalue[l[N-1]]
   endfor & endfor
 
    for i=0, b_order  do begin
     for j=0, b_order do begin
      l = where(keyword EQ 'B_' + strtrim(i,2) + '_' + strtrim(j,2), N)
-     if N GT 0 then b[i,j] = lvalue[l[0]]
+     if N GT 0 then b[i,j] = lvalue[l[N-1]]
   endfor & endfor
 
    for i=0, bp_order do begin
     for j=0, bp_order do begin
      l = where(keyword EQ 'BP_' + strtrim(i,2) + '_' + strtrim(j,2), N)
-     if N GT 0 then bp[i,j] = lvalue[l[0]]
+     if N GT 0 then bp[i,j] = lvalue[l[N-1]]
   endfor & endfor
 
     for i=0, ap_order do begin
     for j=0, ap_order do begin
      l = where(keyword EQ 'AP_' + strtrim(i,2) + '_' + strtrim(j,2), N)
-     if N GT 0 then ap[i,j] = lvalue[l[0]]
+     if N GT 0 then ap[i,j] = lvalue[l[N-1]]
   endfor & endfor
    
   distort = {name:distort_flag, a:a, b:b, ap:ap, bp:bp}

@@ -83,7 +83,9 @@ function poly_smooth, data, width, DEGREE=degree, NLEFT=nl, NRIGHT=nr,  $
 ; MODIFICATION HISTORY:
 ;       Written, Frank Varosi NASA/GSFC 1993.
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use /EDGE_TRUNCATE keyword to CONVOL  W. Landsman March 2006
 ;-
+        compile_opt idl2
         On_error,2
 
         if N_params() LT 1 then begin
@@ -185,5 +187,5 @@ function poly_smooth, data, width, DEGREE=degree, NLEFT=nl, NRIGHT=nr,  $
 
         filter_coef = coefs[*,order]
 
-return, convol( data, filter_coef )
+return, convol( data, filter_coef, /EDGE_TRUNCATE )
 end

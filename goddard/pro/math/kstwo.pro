@@ -44,9 +44,11 @@
 ;       FP computation of N_eff      H. Ebeling/W. Landsman  March 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fix for arrays containing equal values J. Ballet/W. Landsman Oct. 2001
+;       Fix index when maximum difference is at array end Renbin Yan  Dec 2008
 ;-
   On_error, 2
-
+  compile_opt idl2 
+  
  if ( N_params() LT 4 ) then begin
     print,'Syntax - KSTWO, data1, data2, d, prob'
     return
@@ -63,8 +65,8 @@
  sortdata1 = data1[ sort( data1 ) ]        ;Sort input arrays into 
  sortdata2 = data2[ sort( data2 ) ]        ;ascending order
 
- fn1 = ( findgen( n1 )  ) / n1
- fn2 = ( findgen( n2 )  ) / n2
+ fn1 = ( findgen( n1 +1 )  ) / n1          ;updated Dec 2008
+ fn2 = ( findgen( n2 +1)  ) / n2
 
  j1 = 0l & j2 = 0l
  id1 = lonarr(n1+n2)  & id2 = id1

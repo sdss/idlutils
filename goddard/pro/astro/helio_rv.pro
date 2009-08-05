@@ -109,7 +109,7 @@ function helio_rv,HJD,T,P,V0,K,e,omega,single=single
 ;
 ;
 ; Calculate the approximate eccentric anomaly, E1, via the mean 
-; anomoly, M.
+; anomaly, M.
 ; (from Heintz DW, "Double stars", Reidel, 1978)
 ;
  M=2.D*!dpi*( (HJD-T)/P MOD 1.)

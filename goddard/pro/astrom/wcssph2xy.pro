@@ -83,10 +83,11 @@
 ;                only used for spherical cube projections to identify an axis 
 ;               as containing the face on which each x and y pair of 
 ;               coordinates lie.
-;       PV2_1 - scalar with first projection parameter, this may
-;               or may not be necessary depending on the map projection used
-;       PV2_2 - scalar with second projection parameter, this may
-;               or may not be necessary depending on the map projection used
+;       PV2  - Vector of projection parameter associated with latitude axis
+;             PV2 will have up to 21 elements for the ZPN projection, up to 3
+;             for the SIN projection and no more than 2 for any other
+;             projection.   The first element corresponds to PV2_1, the 
+;             second to PV2_2, etc.
 ;       CRVAL - 2 element vector containing standard system coordinates (the 
 ;               longitude and latitude) of the reference point
 ;       CRXY - 2 element vector giving the x and y coordinates of the 
@@ -121,9 +122,9 @@
 ;               in the "sideways T" configuration.
 ; NOTES:
 ;       The conventions followed here are described in more detail in 
-;       "Representations of Celestial Coordinates in FITS" by Mark Calabretta
-;       and Eric Greisen (2002, A&A, 395, 1077; also  see  
-;       http://www.aoc.nrao.edu/~egreisen).  The general 
+;       "Representations of Celestial Coordinates in FITS" by Calabretta
+;       and  Greisen (2002, A&A, 395, 1077; also see  
+;       http://fits.gsfc.nasa.gov/fits_wcs.html).  The general 
 ;       scheme outlined in that article is to first use WCS_ROTATE to convert 
 ;       coordinates in one of three standard systems (celestial, galactic, 
 ;       or ecliptic) into a "native system" of latitude and longitude.  The 
@@ -175,16 +176,6 @@
 ; PROCEDURES CALLED:
 ;       WCS_ROTATE
 ;
-; COPYRIGHT NOTICE:
-;
-;       Copyright 1993, The Regents of the University of California. This
-;       software was produced under U.S. Government contract (W-7405-ENG-36)
-;       by Los Alamos National Laboratory, which is operated by the
-;       University of California for the U.S. Department of Energy.
-;       The U.S. Government is licensed to use, reproduce, and distribute
-;       this software. Neither the Government nor the University makes
-;       any warranty, express or implied, or assumes any liability or
-;       responsibility for the use of this software.
 ;
 ; AUTHOR:
 ;
@@ -192,7 +183,7 @@
 ;
 ; MODIFICATIONS/REVISION LEVEL:
 ;
-;       1.1     8/31/93
+;       1.1     8/31/93  
 ;       2.3     9/15/93  W. Landsman (HSTX) Update quad cube coords, vectorize
 ;                        keywords
 ;       2.4     12/29/93 I. Freedman (HSTX) Eliminated LU decomposition
@@ -203,7 +194,6 @@
 ;       2.8     June 95 Change loop indices from integer to long
 ;       2.9     3/18/96 Change FACE usage for cube projections to match WCSLIB
 ;                       C/FORTRAN software library.
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       2.10    02/18/99 Fixed implementation of ARC algorithm
 ;       2.11    June 2003 Update conic projections, add LATPOLE keyword
 ;	2.12	Aug 2003, N.Rich - Fix pre-V5.5 bug from previous update
@@ -213,6 +203,14 @@
 ;       3.0    May 2004  W. Landsman Support extended SIN (=NCP), slant zenithal
 ;                  (SZP), and zenithal polynomail (ZPN) projections, use
 ;                   PV2 keyword vector instead of PROJP1, PROJP2
+;       3.1     Jul 2005 W.Landsman/C. Markwardt Set unprojectable points in
+;                   tangent projection to NaN
+;       3.1.1   Jul 2005 Fixed 3.1 mod to work for scalars
+;       3.2     Dec 2005 Fixed Airy projection for latitude centered at 90 deg
+;       3.3     Aug 2007 R. Munoz, W.Landsman Correct treatment of PV1_2 and 
+;                        PV2_2 parameters
+;       3.4    Oct 2007  Sergey Koposov Support HEALPIX projection
+;       3.4.1  June 2009 Check for range of validity of ZPN polynomial W.L.
 ;-
 
 PRO wcssph2xy,longitude,latitude,x,y,map_type, ctype=ctype,$
@@ -221,6 +219,7 @@ PRO wcssph2xy,longitude,latitude,x,y,map_type, ctype=ctype,$
               north_offset=north_offset, south_offset=south_offset, $
               badindex=badindex
 
+compile_opt idl2
 ; DEFINE ANGLE CONSTANTS 
  pi = !DPI
  pi2 = pi/2.d0
@@ -240,8 +239,8 @@ PRO wcssph2xy,longitude,latitude,x,y,map_type, ctype=ctype,$
 ; GENERAL ERROR CHECKING
 ; find the number of elements in each of the data arrays
 
- n_long = n_elements( longitude )
- n_lat = n_elements( latitude )
+ n_long = N_elements( longitude )
+ n_lat = N_elements( latitude )
 
 ; check to see that the data arrays have the same size
  if (n_long ne n_lat) then begin
@@ -355,6 +354,10 @@ if (((n_elements(crval1) eq 1) and (n_elements(crval2) eq 0)) or $
 ; if the CRVAL keyword is set.  Otherwise, assume the latitude and longitude 
 ; given are in "native" coordinates already (this is  essentially what is done
 ; in the procedure AITOFF).
+
+ PV2_1 = N_elements(pv2) GT 0 ? pv2[0] : 0
+ PV2_2 = N_elements(pv2) GT 1 ? pv2[1] : 0
+
  if N_elements(crval) GE 2 then begin
            if N_elements(map_type) EQ 0 then begin
            	wmt      = where(projection_type EQ map_types)
@@ -378,9 +381,7 @@ if (((n_elements(crval1) eq 1) and (n_elements(crval2) eq 0)) or $
 ; BRANCH BY MAP PROJECTION TYPE
 case strupcase(projection_type) of
   'AZP':begin
-    PV2_1 = N_elements(PV2) GT 0 ? PV2[0] : 0
-    PV2_2 = N_elements(PV2) GT 1 ? PV2[1] : 0
-    if (PV2_1 lt 0) then message,$
+     if (PV2_1 lt 0) then message,$
       'AZP map projection requires the keyword PV2_1 >= 0'
     gamma = PV2_2/radeg
     mu = PV2_1
@@ -404,9 +405,16 @@ case strupcase(projection_type) of
 
      end
   'TAN':begin
-    r_theta = radeg/tan(theta)
-    x = r_theta*sin(phi)
-    y = -r_theta*cos(phi)
+    sz_theta = size(theta,/dimen)
+    if sz_theta[0] EQ 0 then x = !Values.D_NAN else $
+          x = make_array(value = !values.D_NAN, dimen=sz_theta)
+    y = x
+    g = where(theta GT 0, Ng)
+    if Ng GT 0 then begin
+        r_theta = radeg/tan(theta[g])
+        x[g] = r_theta*sin(phi[g])
+        y[g] = -r_theta*cos(phi[g])
+    endif
   end
 
   'SIN':begin
@@ -437,11 +445,29 @@ case strupcase(projection_type) of
   'ZPN':begin
     z = pi2 - theta
     g = where(pv2 NE 0, Ng)
-    if Ng GT 0 then np = max(g) else np =0
-    r_theta = radeg*poly(z, pv2[0:np])
+    np = Ng GT 0 ? max(g) : 0
+    par = pv2[0:np]
+    Nbad  = 0
+;Check for range of validity for a nonlinear polynomial.    Set the derivative
+; to zero and check for any real, positive roots.      
+    if np GT 2 then begin 
+          dpar = (indgen(np)+1) * par[1:*]     ;Polynomial derivative
+	  zroots = fz_roots(dpar)               ;Find zeros
+	  g = where(imaginary(zroots) EQ 0, Ng)      ;Any real roots? 
+          if Ng GT 0 then zroots = float(zroots[g])
+	  g = where(zroots gt 0,Ng)
+	  if Ng GT 0 then rlim = min(zroots[g])
+	  bad = where(z GT rlim, Nbad)
+    endif   
+    r_theta = radeg*poly(z, par)
     x = r_theta*sin(phi)
     y = -r_theta*cos(phi)
+    if Nbad GT 0 then begin  
+        x[bad] = !VALUES.F_NAN
+	y[bad] = !VALUES.F_NAN
+	endif
     end
+
 
   'ZEA':begin
     r_theta = 2.d0*radeg*sin((pi2 - theta)/2.d0)
@@ -479,7 +505,8 @@ case strupcase(projection_type) of
       good = where(abs(xi) ge 1.d-10, Ngood)
       r_theta = lng*0
       if (Ngood GT 0) then $
-        r_theta[good] = -radeg*alog(cos(xi[good]))/tan(xi[good])
+        r_theta[good] = -2*radeg*(alog(cos(xi[good]))/tan(xi[good]) - $
+	                 0.5*tan(xi[good]))
 
     endif else begin
       xi_b = (pi2 - theta_b)/2.d0
@@ -490,7 +517,7 @@ case strupcase(projection_type) of
 ; are included in the data, the routine will stop.
 
       xi_temp = (findgen(90) + 1)/radeg
-      radius=-!radeg*(alog(cos(xi_temp))/tan(xi_temp)+alog(cos(xi_b))/$
+      radius=-radeg*(alog(cos(xi_temp))/tan(xi_temp)+alog(cos(xi_b))/$
                                                       tan(xi_b)*tan(xi_temp))
       i = 0
       repeat i = i + 1 $
@@ -544,7 +571,7 @@ case strupcase(projection_type) of
   end
   
   'CEA':begin
-    if not(keyword_set(PV2_1)) then message,$
+    if N_elements(PV2_1) EQ 0  then message,$
       'CEA map projection requires that PV2_1 keyword be set.'
     if ((PV2_1 le 0) or (PV2_1 gt 1)) then message,$
       'CEA map projection requires 0 < PV2_1 <= 1'
@@ -611,12 +638,13 @@ case strupcase(projection_type) of
     endelse
     x = radeg*r_theta*sin(a_phi)
     y = y_0 - radeg*r_theta*cos(a_phi)
+    
   end
   
   'COE':begin
-    if not(keyword_set(PV2_1)) then message,$
+    if N_elements(PV2_1) EQ 0 then message,$
       'COE map projection requires that PV2_1 keyword be set.'
-    if not(keyword_set(PV2_2)) then begin
+    if N_elements(PV2_2) EQ 0 then begin
       message,/informational,$
       'PV2_2 not set, using default of PV2_2 = 0 for COE map projection'
       PV2_2 = 0
@@ -625,14 +653,16 @@ case strupcase(projection_type) of
  'PV2_1 and PV2_2 must satisfy -90<=PV2_1<=PV2_2<=90 for COE map projection'
     if (PV2_1 eq -PV2_2) then message,$
     'COE gives divergent equations for PV2_1 = -PV2_2'
+   
     theta_1 = (PV2_1 - PV2_2)/radeg
     theta_2 = (PV2_1 + PV2_2)/radeg
     s_1 = sin(theta_1)
     s_2 = sin(theta_2)
     stheta_a = sin(PV2_1/radeg)
-    gamma = sin(theta_1) + sin(theta_2)
- r_theta=radeg*2.d0*sqrt(1.d0+ s_1*s_2-gamma*sin(theta))/gamma
-    a_phi = phi*gamma/2.d0
+    gamma = s_1 + s_2
+    r_theta=radeg*2.d0*sqrt(1.d0+ s_1*s_2-gamma*sin(theta))/gamma
+
+     a_phi = phi*gamma/2.d0
     y_0 = radeg*2.d0*sqrt(1.d0+ s_1*s_2-gamma*stheta_a)/gamma
     x = r_theta*sin(a_phi)
     y = y_0 - r_theta*cos(a_phi)
@@ -988,6 +1018,31 @@ case strupcase(projection_type) of
         x=(x+xf[face])
         y=(y+yf[face])
     endif
+  end
+  
+  'HPX':begin
+    hpx_k = 3.D ; The main HEALPIX parameters (see Calabretta 2007, MNRAS)
+    hpx_h = 4.D ;
+    thetalim = asin((hpx_k-1)/hpx_k) 
+    
+    eqfaces = where( abs(theta) le thetalim, complement=polfaces)
+    x=phi*0.D
+    y=theta*0.D
+
+    ; equatorial region
+    if eqfaces[0] ne -1 then begin
+        x[eqfaces] = phi[eqfaces]*radeg
+        y[eqfaces] = 90 * hpx_k/ hpx_h * sin( theta[eqfaces])
+    endif
+
+    ;polar regions
+    if polfaces[0] ne -1 then begin
+       hpx_sig = sqrt ( hpx_k * (1 - abs(sin(theta[polfaces]))))
+       hpx_omega = ((hpx_k mod 2 eq 1) or theta[polfaces] gt 0)*1.D
+       hpx_phic = -180 + (2*floor((phi[polfaces]*radeg+180)*hpx_h/360+(1-hpx_omega)/2.)+hpx_omega)*180/hpx_h
+       x[polfaces] = hpx_phic + (phi[polfaces]*radeg-hpx_phic) * hpx_sig
+       y[polfaces] = 180./hpx_h *((theta[polfaces] gt 0)*2-1)* ((hpx_k+1)/2 - hpx_sig)
+    endif 
   end
   else:message,strupcase(projection_type)+$
                ' is not a valid projection type.  Reset CTYPE1 and CTYPE2'

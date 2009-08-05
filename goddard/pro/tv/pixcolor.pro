@@ -31,6 +31,11 @@ pro pixcolor, pix_value, color
 ;
 ;	IDL> pixcolor,245,'R'
 ;
+; NOTES:
+;       A much larger number of colors and options is available from David
+;       Fanning's FSC_COLOR
+;       http://www.dfanning.com/programs/fsc_color.pro
+;      
 ; REVISION HISTORY:
 ;	Written, W. Landsman ST Systems Corp.		February, 1987
 ;	Converted to IDL V5.0   W. Landsman   September 1997

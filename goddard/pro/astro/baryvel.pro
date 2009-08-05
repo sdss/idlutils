@@ -50,24 +50,26 @@ pro baryvel, dje, deq, dvelh, dvelb, JPL = JPL
 ;
 ;       IDL> jdcnv, 1994, 2, 15, 0, jd          ;==> JD = 2449398.5
 ;       IDL> baryvel, jd, 2000, vh, vb          ;Original algorithm
-;               ==> vh = [-17.07809, -22.80063, -9.885281]  ;Heliocentric km/s
+;               ==> vh = [-17.07243, -22.81121, -9.889315]  ;Heliocentric km/s
 ;               ==> vb = [-17.08083, -22.80471, -9.886582]  ;Barycentric km/s
-;       IDL> baryvel, jd, 20000, vh, vb, /jpl   ;JPL ephemeris
-;               ==> vh = [-17.10746, -22.78912, -9.879800]  ;Heliocentric km/s
-;               ==> vb = [-17.11591, -22.78269, -9.876785]  ;Barycentric km/s
+;       IDL> baryvel, jd, 2000, vh, vb, /jpl   ;JPL ephemeris
+;               ==> vh = [-17.07236, -22.81126, -9.889419]  ;Heliocentric km/s
+;               ==> vb = [-17.08083, -22.80484, -9.886409]  ;Barycentric km/s
 ;
 ;       IDL> ra = ten(19,50,46.77)*15/!RADEG    ;RA  in radians
 ;       IDL> dec = ten(08,52,3.5)/!RADEG        ;Dec in radians
-;       IDL> v = vb(0)*cos(dec)*cos(ra) + $   ;Project velocity toward star
-;               vb(1)*cos(dec)*sin(ra) + vb(2)*sin(dec) 
+;       IDL> v = vb[0]*cos(dec)*cos(ra) + $   ;Project velocity toward star
+;               vb[1]*cos(dec)*sin(ra) + vb[2]*sin(dec) 
 ;
 ; REVISION HISTORY:
 ;       Jeff Valenti,  U.C. Berkeley    Translated BARVEL.FOR to IDL.
 ;       W. Landsman, Cleaned up program sent by Chris McCarthy (SfSU) June 1994
 ;       Converted to IDL V5.0   W. Landsman   September 1997
-;        Added /JPL keyword  W. Landsman   July 2001
+;       Added /JPL keyword  W. Landsman   July 2001
+;       Documentation update W. Landsman Dec 2005
 ;-
  On_Error,2
+ compile_opt idl2
 
  if N_params() LT 4 then begin
         print,'Syntax: BARYVEL, dje, deq, dvelh, dvelb'
@@ -329,7 +331,7 @@ dummy=cos(2.0)
 
 ;General precession from epoch dje to deq.
   deqdat = (dje-dcto-dcbes) / dctrop + dc1900
-   prema = premat(deqdat,deq, /FK4)
+   prema = premat(deqdat,deq,/FK4)
 
   dvelh = AU * ( prema # [dxhd, dyahd, dzahd] )
   dvelb = AU * ( prema # [dxbd, dyabd, dzabd] )

@@ -7,14 +7,14 @@
 ;+
 ; NAME: 
 ;	FXBADDCOL
-; Purpose     : 
+; PURPOSE     : 
 ;	Adds a column to a binary table extension.
-; Explanation : 
+; EXPLANATION : 
 ;	Modify a basic FITS binary table extension (BINTABLE) header array to
 ;	define a column.
-; Use         : 
+; USE         : 
 ;	FXBADDCOL, INDEX, HEADER, ARRAY  [, TTYPE [, COMMENT ]]
-; Inputs      : 
+; INPUTS      : 
 ;	HEADER	= String array containing FITS extension header.
 ;	ARRAY	= IDL variable used to determine the data size and type
 ;		  associated with the column.  If the column is defined as
@@ -114,9 +114,12 @@
 ;		Added keyword TCUNI.
 ;	Version 5, Wayne Landsman, GSFC, 12 Aug 1997
 ;		Recognize double complex IDL datatype
+;       Version 6, Wayne Landsman, GSFC. C. Yamauchi (ISAS) 23 Feb 2006
+;               Support 64bit integers
+;       Version 7, C. Markwardt, GSFC, Allow unsigned integers, which
+;          have special TSCAL/TZERO values.  Feb 2009
 ; Version     :
-;       Version 5, 12 Aug 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Version 7, Feb 2009
 ;-
 ;
 	ON_ERROR,2
@@ -253,6 +256,49 @@
 			TF_COMMENT = 'Complex*16 (double-' +	$
 					'precision complex)'
 			END
+
+                12: BEGIN  
+                        ;; Unsigned 16-bit integers are stored as signed
+                        ;; integers with a TZERO offset.
+                        N_BYTES = 2*N_ELEM
+                        TFORM = "I"
+                        TF_COMMENT = 'Unsigned Integer*2 (short integer)'
+                        IF N_ELEMENTS(TSCAL) EQ 0 THEN TSCAL = 1
+                        IF N_ELEMENTS(TZERO) EQ 0 THEN TZERO = 32768
+                        IF TSCAL[0] NE 1 OR TZERO[0] NE 32768 THEN BEGIN
+                           MESSAGE = 'For 2-byte unsigned type, TSCAL/TZERO must be 1/32768'
+                           IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                              ERRMSG = MESSAGE
+                              RETURN
+                           END ELSE MESSAGE, MESSAGE
+                        ENDIF
+                     END
+                           
+                13: BEGIN
+                        ;; Unsigned 32-bit integers are stored as signed
+                        ;; integers with a TZERO offset.
+                        N_BYTES = 4*N_ELEM
+                        TFORM = "J"
+                        TF_COMMENT = 'Unsigned Integer*4 (long integer)'
+                        IF N_ELEMENTS(TSCAL) EQ 0 THEN TSCAL = 1
+                        IF N_ELEMENTS(TZERO) EQ 0 THEN TZERO = 2147483648D
+                        IF TSCAL[0] NE 1 OR TZERO[0] NE 2147483648D THEN BEGIN
+                           MESSAGE = 'For 4-byte unsigned type, TSCAL/TZERO must be 1/2147483648'
+                           IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
+                              ERRMSG = MESSAGE
+                              RETURN
+                           END ELSE MESSAGE, MESSAGE
+                        ENDIF
+                     END
+
+		14: BEGIN
+			N_BYTES = 8*N_ELEM
+			TFORM = "K"
+			TF_COMMENT = 'Integer*8 (long long ' +	$
+					'integer)'
+			END
+	               		
+
 
 	ENDCASE
 ;

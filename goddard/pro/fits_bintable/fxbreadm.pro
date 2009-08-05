@@ -43,7 +43,7 @@
 ; CALLING SEQUENCE: 
 ;       FXBREADM, UNIT, COL, DATA1, [ DATA2, ... DATA48, ROW=, BUFFERSIZE = ]
 ;           /NOIEEE, /NOSCALE, /VIRTUAL, NANVALUE=, PASS_METHOD = POINTERS=, 
-;           ERRMSG = , WARNMSG = , STATUS = ]
+;           ERRMSG = , WARNMSG = , STATUS = , /DEFAULT_FLOAT]
 ;
 ; INPUT PARAMETERS : 
 ;       UNIT    = Logical unit number corresponding to the file containing the
@@ -61,6 +61,8 @@
 ;                 Ignored if PASS_METHOD is 'POINTER'.
 ;
 ; OPTIONAL INPUT KEYWORDS: 
+;       DEFAULT_FLOAT = If set, then scaling with TSCAL/TZERO is done with
+;                   floating point rather than double precision.
 ;       ROW     = Either row number in the binary table to read data from,
 ;                 starting from row one, or a two element array containing a
 ;                 range of row numbers to read.  If not passed, then the entire
@@ -159,6 +161,12 @@
 ;   Fix bug in handling of FOUND and numeric columns, 
 ;       C. Markwardt 12 May 2003
 ;   Removed pre-V5.0 HANDLE options  W. Landsman July 2004
+;   Fix bug when HANDLE options were removed, July 2004
+;   Handle special cases of TSCAL/TZERO which emulate unsigned
+;      integers, Oct 2003
+;   Add DEFAULT_FLOAT keyword to select float values instead of double
+;      for TSCAL'ed, June 2004
+;  read 64bit integer columns, E. Hivon, Mar 2008
 ;
 ;
 ;-
@@ -169,13 +177,14 @@
 ;; IDL variables.
 PRO FXBREADM_CONV, BB, DD, CTYPE, PERROW, NROWS, $
                    NOIEEE=NOIEEE, NOSCALE=NOSCALE, VARICOL=VARICOL, $
-                   NANVALUE=NANVALUE, TZERO=TZERO, TSCAL=TSCAL
+                   NANVALUE=NANVALUE, TZERO=TZERO, TSCAL=TSCAL, $
+                   DEFAULT_FLOAT=DF
 
   COMMON FXBREADM_CONV_COMMON, DTYPENAMES
   IF N_ELEMENTS(DTYPENAMES) EQ 0 THEN $
     DTYPENAMES = [ '__BAD', 'BYTE', 'FIX', 'LONG', $
                    'FLOAT', 'DOUBLE', 'COMPLEX', 'STRING', $
-                   '__BAD', 'DCOMPLEX' ]
+                   '__BAD', 'DCOMPLEX', '__BAD', '__BAD', '__BAD', '__BAD', 'LONG64' ]
   
   TYPENAME = DTYPENAMES[CTYPE]
 
@@ -191,7 +200,7 @@ PRO FXBREADM_CONV, BB, DD, CTYPE, PERROW, NROWS, $
   COUNT = 0L
   CASE 1 OF
       ;; Integer types
-      (CTYPE EQ 2 OR CTYPE EQ 3): BEGIN
+      (CTYPE EQ 2 OR CTYPE EQ 3 or ctype eq 14): BEGIN
           IF NOT KEYWORD_SET(NOIEEE) OR KEYWORD_SET(VARICOL) THEN $
             IEEE_TO_HOST, DD 
       END
@@ -216,8 +225,25 @@ PRO FXBREADM_CONV, BB, DD, CTYPE, PERROW, NROWS, $
   IF ((NOT KEYWORD_SET(NOIEEE) AND NOT KEYWORD_SET(NOSCALE)) AND $
       (NOT KEYWORD_SET(VARICOL)) AND $
       (N_ELEMENTS(TZERO) EQ 1 AND N_ELEMENTS(TSCAL) EQ 1)) THEN BEGIN
-      IF (TSCAL[0] NE 0) AND (TSCAL[0] NE 1) THEN DD = TSCAL[0]*DD
-      IF TZERO[0] NE 0 THEN DD = DD + TZERO[0]
+
+      IF KEYWORD_SET(DF) THEN BEGIN
+          ;; Default to float
+          TSCAL = FLOAT(TSCAL)
+          TZERO = FLOAT(TZERO)
+      ENDIF
+
+      FORWARD_FUNCTION UINT, ULONG
+      IF CTYPE EQ 2 AND TSCAL[0] EQ 1 AND TZERO[0] EQ 32768 THEN BEGIN
+          ;; SPECIAL CASE: Unsigned 16-bit integer
+          DD = UINT(DD) - UINT(32768)
+      ENDIF ELSE IF CTYPE EQ 3 AND TSCAL[0] EQ 1 AND $
+        TZERO[0] EQ 2147483648D THEN BEGIN
+          ;; SPECIAL CASE: Unsigned 32-bit integer
+          DD = ULONG(DD) - ULONG(2147483648)
+      ENDIF ELSE BEGIN
+          IF (TSCAL[0] NE 0) AND (TSCAL[0] NE 1) THEN DD = TSCAL[0]*DD
+          IF TZERO[0] NE 0 THEN DD = DD + TZERO[0]
+      ENDELSE
   ENDIF
 
 ;
@@ -232,9 +258,9 @@ PRO FXBREADM, UNIT, COL, $
               D10, D11, D12, D13, D14, D15, D16, D17, D18, D19, $
               D20, D21, D22, D23, D24, D25, D26, D27, D28, D29, $
               D30, D31, D32, D33, D34, D35, D36, D37, D38, D39, $
-              D40, D41, D42, D43, D44, D45, D46, D47, D48, $
+              D40, D41, D42, D43, D44, D45, D46, D47, $
               ROW=ROW, VIRTUAL=VIR, DIMENSIONS=DIM, $
-              NOSCALE=NOSCALE, NOIEEE=NOIEEE, $
+              NOSCALE=NOSCALE, NOIEEE=NOIEEE, DEFAULT_FLOAT=DEFAULT_FLOAT, $
               PASS_METHOD=PASS_METHOD, POINTERS=POINTERS, $
               NANVALUE=NANVALUE, BUFFERSIZE=BUFFERSIZE, $
               ERRMSG=ERRMSG, WARNMSG=WARNMSG, STATUS=OUTSTATUS
@@ -279,8 +305,8 @@ PRO FXBREADM, UNIT, COL, $
         ENDIF
 
         NP = N_ELEMENTS(POINTERS)
-
-             IF NP EQ 0 THEN POINTERS = PTRARR(NUMCOLS, /ALLOCATE_HEAP)
+        IF PASS EQ 'POINTER' THEN BEGIN
+            IF NP EQ 0 THEN POINTERS = PTRARR(NUMCOLS, /ALLOCATE_HEAP)
             NP = N_ELEMENTS(POINTERS)
             SZ = SIZE(POINTERS)
             IF SZ[SZ[0]+1] NE 10 THEN BEGIN
@@ -304,6 +330,8 @@ PRO FXBREADM, UNIT, COL, $
             WH = WHERE(PTR_VALID(POINTERS) EQ 0, CT)
             IF CT GT 0 THEN POINTERS[WH] = PTRARR(CT, /ALLOCATE_HEAP)
                 
+        ENDIF
+
 
 ;
 ;  Find the logical unit number in the FXBINTABLE common block.
@@ -672,7 +700,7 @@ PRO FXBREADM, UNIT, COL, $
             FXBREADM_CONV, BB[BOFF1[I]:BOFF2[I], *], DD, COLTYPE[I], PERROW, NR,$
               NOIEEE=KEYWORD_SET(NOIEEE), NOSCALE=KEYWORD_SET(NOSCALE), $
               TZERO=TZERO[ICOL[I], ILUN], TSCAL=TSCAL[ICOL[I], ILUN], $
-              VARICOL=VARICOL[I], _EXTRA=EXTRA
+              VARICOL=VARICOL[I], DEFAULT_FLOAT=DEFAULT_FLOAT, _EXTRA=EXTRA
 
             ;; Initialize the output variable on the first chunk
             IF FIRST THEN BEGIN
@@ -782,7 +810,7 @@ PRO FXBREADM, UNIT, COL, $
             FXBREADM_CONV, BB, DD, TYPE, NTOT, 1L, $
               NOIEEE=KEYWORD_SET(NOIEEE), NOSCALE=KEYWORD_SET(NOSCALE), $
               TZERO=TZERO[ICOL[I], ILUN], TSCAL=TSCAL[ICOL[I], ILUN], $
-              _EXTRA=EXTRA
+              DEFAULT_FLOAT=DEFAULT_FLOAT, _EXTRA=EXTRA
             
             ;; Ensure the correct dimensions, now that we know them
             COLNDIM[I] = 1

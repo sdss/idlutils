@@ -45,7 +45,8 @@ if (np LT 4) then begin
 	return
 endif
 if ( N_elements(xa) NE N_elements(ya) ) then begin  
-	print, 'The first two parameters must have the same number of elements.'
+	message,/CON, $
+     'ERROR - The first two parameters must have the same number of elements.'
 	return
 endif
 epa = get_equinox( hdra, codea)

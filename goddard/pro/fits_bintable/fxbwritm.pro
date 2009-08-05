@@ -4,7 +4,7 @@
                       D20, D21, D22, D23, D24, D25, D26, D27, D28, D29, $
                       D30, D31, D32, D33, D34, D35, D36, D37, D38, D39, $
                       D40, D41, D42, D43, D44, D45, D46, D47, D48, D49, $
-                      NOIEEE=NOIEEE, $
+                      NOIEEE=NOIEEE, NOSCALE=NOSCALE, $
                       POINTERS=POINTERS, PASS_METHOD=PASS_METHOD, $
                       ROW=ROW, NANVALUE=NANVALUE, BUFFERSIZE=BUFFERSIZE, $
                       ERRMSG=ERRMSG, WARNMSG=WARNMSG, STATUS=OUTSTATUS
@@ -52,6 +52,8 @@
 ;	NANVALUE= Value signalling data dropout.  All points corresponding to
 ;		  this value are set to be IEEE NaN (not-a-number).  Ignored
 ;		  unless DATA is of type float, double-precision or complex.
+;       NOSCALE = If set, then TSCAL/TZERO values are ignored, and data is 
+;                 written exactly as supplied. 
 ;       PASS_METHOD = A scalar string indicating method of passing
 ;                 data to FXBWRITM.  One of 'ARGUMENT' (indicating
 ;                 pass by positional argument),  or'POINTER' (indicating
@@ -83,7 +85,7 @@
 ;                 read, 1 meaning success and 0 meaning failure.
 ;
 ; PROCEDURE CALLS: 
-;	HOST_TO_IEEE, PRODUCT()
+;      None.
 ; EXAMPLE:
 ;      Write a binary table 'sample.fits' giving 43 X,Y positions and a 
 ;      21 x 21 PSF at each position:
@@ -138,6 +140,14 @@
 ;       W. Landsman/B.Schulz  Allow more than 50 arguments when using pointers
 ;       W. Landsman  Remove pre-V5.0 HANDLE options      July 2004
 ;       W. Landsman Remove EXECUTE() call with POINTERS   May 2005
+;       C. Markwardt Allow the output table to have TSCAL/TZERO
+;          keyword values; if that is the case, then the passed values
+;          will be quantized to match those scale factors before being
+;          written.  Sep 2007
+;       E. Hivon: write 64bit integer and double precison columns, Mar 2008
+;       C. Markwardt Allow unsigned integers, which have special
+;          TSCAL/TZERO values.  Feb 2009
+;
 ;-
 ;
         compile_opt idl2
@@ -401,7 +411,8 @@
         MESSAGE = ''
         DTYPENAMES = [ 'BAD TYPE', 'BYTE', 'FIX', 'LONG', $
                        'FLOAT', 'DOUBLE', 'COMPLEX', 'STRING', $
-                       'BAD TYPE', 'DCOMPLEX' ]
+                       'BAD TYPE', 'DCOMPLEX', $
+                       'BAD TYPE', 'BAD TYPE', 'BAD TYPE', 'BAD TYPE', 'LONG64' ]
         FOR I = 0L, NUMCOLS-1 DO BEGIN
 
             IF NOT FOUND[I] THEN GOTO, LOOP_END_DIMS
@@ -418,9 +429,29 @@
               ENDIF
             ENDIF ELSE SZ = SIZE(*(POINTERS[I])) 
 
+            TSCAL1 = TSCAL[ICOL[I],ILUN]
+            TZERO1 = TZERO[ICOL[I],ILUN]
 
             TYPE = SZ[SZ[0]+1]
-            IF TYPE NE COLTYPE[I] THEN BEGIN
+            TYPE_BAD = TYPE NE COLTYPE[I]
+            ;; Handle case of scaled data being stored in an
+            ;; integer column
+            IF NOT KEYWORD_SET(NOSCALE) AND $
+              (TSCAL1 NE 0) AND (TSCAL1 NE 1) AND $
+              (TYPE EQ 4 OR TYPE EQ 5) AND $
+              (COLTYPE[I] EQ 2 OR COLTYPE[I] EQ 3 OR COLTYPE[I] EQ 14) THEN $
+              TYPE_BAD = 0
+
+            ;; Unsigned types are OK
+            IF TSCAL1 EQ 1 AND $
+               ((COLTYPE[I] EQ 2 AND TZERO1 EQ 32768) OR $
+                (COLTYPE[I] EQ 3 AND TZERO1 EQ 2147483648D)) AND $
+               (TYPE EQ 1 OR TYPE EQ 2 OR TYPE EQ 3 OR $
+                TYPE EQ 12 OR TYPE EQ 13 OR TYPE EQ 14) THEN BEGIN
+               TYPE_BAD = 0
+            ENDIF
+            
+            IF TYPE_BAD THEN BEGIN
                 CASE COLTYPE[I] OF
                     1: STYPE = 'byte'
                     2: STYPE = 'short integer'
@@ -429,10 +460,14 @@
                     5: STYPE = 'double precision'
                     6: STYPE = 'complex'
                     7: STYPE = 'string'
+                    9: STYPE = 'double complex'
+                   12: STYPE = 'unsigned integer'
+                   13: STYPE = 'unsigned long integer'
+                   14: STYPE = 'long64 integer'
                 ENDCASE
                 FOUND[I] = 0
                 MESSAGE = '; Data type (column '+STRTRIM(MYCOL[I],2)+$
-                  ') should be ' + STYPE
+                  ') should be ' + STYPE		 
             ENDIF
 
             DIMS = N_DIMS[*,ICOL[I],ILUN]
@@ -565,12 +600,50 @@
             ;; Now any conversions to FITS format must be done
             COUNT = 0L
             CT = COLTYPE[I]
+
+            ;; Perform data scaling, if scaling values are available
+            IF NOT KEYWORD_SET(NOSCALE) THEN BEGIN
+                TSCAL1 = TSCAL[ICOL[I],ILUN]
+                TZERO1 = TZERO[ICOL[I],ILUN]
+                IF TSCAL1 EQ 0 THEN TSCAL1 = 1
+                ;; Handle special unsigned cases
+                IF TZERO1 EQ 32768 AND TSCAL1 EQ 1 AND CT EQ 2 THEN $
+                   ;; Unsigned integer
+                   DD = UINT(DD) - UINT(TZERO1) $
+                ELSE IF TZERO1 EQ 2147483648D AND TSCAL1 EQ 1 AND CT EQ 3 THEN $
+                   ;; Unsigned long integer
+                   DD = ULONG(DD) - ULONG(TZERO1) $
+                ELSE IF TZERO1 NE 0 THEN DD = DD - TZERO1
+                IF TSCAL1 NE 1 THEN DD = DD / TSCAL1
+            ENDIF
+            SZ = SIZE(DD)
+            TP = SZ[SZ[0]+1]
+
             CASE 1 OF
                 ;; Integer types
-                (CT EQ 1): CT = CT
-                (CT EQ 2 OR CT EQ 3): BEGIN
-                    IF NOT KEYWORD_SET(NOIEEE) THEN HOST_TO_IEEE, DD 
+                (CT EQ 1): BEGIN
+                    ;; Type-cast may be needed if we used TSCAL/TZERO
+                    IF TP NE 1 THEN DD = BYTE(DD)
                 END
+                (CT EQ 2): BEGIN
+                    ;; Type-cast may be needed if we used TSCAL/TZERO
+                    IF TP NE 2 THEN DD = FIX(DD)
+                    IF NOT KEYWORD_SET(NOIEEE) THEN $
+		       SWAP_ENDIAN_INPLACE, DD,/SWAP_IF_LITTLE
+               END
+                (CT EQ 3): BEGIN
+                    ;; Type-cast may be needed if we used TSCAL/TZERO
+                    IF TP NE 3 THEN DD = LONG(DD)
+                    IF NOT KEYWORD_SET(NOIEEE) THEN $
+		       SWAP_ENDIAN_INPLACE, DD,/SWAP_IF_LITTLE
+		    
+                END
+                (ct eq 14): begin
+                    ;; Type-cast may be needed if we used TSCAL/TZERO
+                    IF TP NE 14 THEN DD = LONG(DD)
+                    IF NOT KEYWORD_SET(NOIEEE) THEN   $
+		       SWAP_ENDIAN_INPLACE, DD,/SWAP_IF_LITTLE                
+                end
 
                 ;; Floating and complex types
                 (CT GE 4 AND CT LE 6 OR CT EQ 9): BEGIN
@@ -580,7 +653,7 @@
                             NAN = REPLICATE('FF'XB,16)
                             NAN = CALL_FUNCTION(DTYPENAMES,NAN,0,1)
                         ENDIF
-                        HOST_TO_IEEE, DD
+			SWAP_ENDIAN_INPLACE, DD,/SWAP_IF_LITTLE                        
                         IF COUNT GT 0 THEN DD[W] = NAN
                     ENDIF
                 END

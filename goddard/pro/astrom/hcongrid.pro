@@ -105,8 +105,11 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
 ;       Now works when both /INTERP and /HALF are set W. Landsman January 2002
 ;       Fix output astrometry for non-equal plate scales for PC matrix or
 ;       CROTA2 keyword, added ALT keyword.   W. Landsman May 2005
+;       Update distortion parameters if present  W. Landsman January 2008
+;       Don't update BSCALE/BZERO for unsigned integer W.Landsman Mar 2008
 ;- 
  On_error,2
+ compile_opt idl2
  Npar = N_params()      ;Check # of parameters
 
  if Npar EQ 0  then begin 
@@ -126,6 +129,7 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
  endif else begin
 ;   Check for valid 2-D image & header
   check_FITS, oldim, oldhd, dimen, /NOTYPE,ERRMSG = errmsg
+
   if errmsg NE '' then begin
         if not save_err then message,'ERROR - ' + errmsg,/CON
         return
@@ -137,7 +141,8 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
   endif 
   xsize = dimen[0]  &  ysize = dimen[1]
  endelse
- 
+    tname = size(oldim,/tname)
+
  if keyword_set(CUBIC) then interp = 2
  if N_elements(interp) EQ 0 then interp = 1
 
@@ -232,6 +237,17 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
      sxaddpar, newhd, 'CRPIX2' + alt , crpix[1]*yratio + 1.0, FORMAT='(G14.7)'
  endelse 
 
+
+ if tag_exist(astr,'DISTORT') then begin
+         distort = astr.distort
+	 message,'Updating SIP distortion parameters',/INF
+         update_distort,distort, [1./xratio,0],[1./yratio,0]
+	 astr.distort= distort
+	 add_distort, newhd, astr
+   endif	 
+
+
+
  if (noparams NE 2) then begin 
 
     cdelt = astr.cdelt
@@ -263,18 +279,23 @@ pro hcongrid, oldim, oldhd, newim, newhd, newx, newy, HALF_HALF = half_half, $
  endelse
  endif 
 
-; Update BSCALE and BZERO if needed
+; Adjust BZERO and BSCALE for new pixel size, unless these values are used
+; to define unsigned integer data types.  
 
- bscale = sxpar( oldhd,'BSCALE', count = N_bscale)
- if (N_bscale NE 0) and ( bscale NE 1 ) then $
-     sxaddpar, newhd, 'BSCALE', bscale/pix_ratio
+ bscale = sxpar( oldhd, 'BSCALE')
+ bzero = sxpar( oldhd, 'BZERO')
+ unsgn = (tname EQ 'UINT') or (tname EQ 'ULONG') 
 
- bzero = sxpar( oldhd,'BZERO', count = N_bzero)
- if (N_bzero NE 0) and ( bzero NE 0) then $
-       sxaddpar, newhd, 'BZERO', bzero/pix_ratio
+ if not unsgn then begin 
+ if (bscale NE 0) and (bscale NE 1) then $
+    sxaddpar, newhd, 'BSCALE', bscale/pix_ratio, 'Calibration Factor'
+ if (bzero NE 0) then sxaddpar, newhd, 'BZERO', bzero/pix_ratio, $
+       ' Additive Constant for Calibration'
+ endif 
 
  if npar EQ 2 then oldhd = newhd else $
        if npar EQ 1 then oldim = newhd
+
 
  return
  end

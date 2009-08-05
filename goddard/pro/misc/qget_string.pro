@@ -22,8 +22,7 @@ FUNCTION qget_string, dummy
 ;     the string.  Each character is added to the string until a
 ;     carriage return is struck.  The carriage return is not appended
 ;     to the string.  Striking the delete key or the backspace key
-;     removes the previous character from the string (only the backspace
-;     key will work in VMS IDL).
+;     removes the previous character from the string.
 ;
 ; NOTES:
 ;     For a widget password procedure see 

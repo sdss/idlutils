@@ -23,9 +23,11 @@ pro db_titles,fnames,titles
 ;	William Thompson, GSFC, 3 November 1994
 ;			Modified to allow ZDBASE to be a path string.
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Assume since V5.5,      W. Landsman   September 2006
 ;-
 ;
 ;-----------------------------------------------------------------------------
+ compile_opt idl2
  n = N_elements(fnames)
  get_lun,unit
  b = bytarr(59)
@@ -33,12 +35,7 @@ pro db_titles,fnames,titles
  if npar eq 2 then titles = strarr(n)
  for i = 0,n-1 do begin
      dbh_file = find_with_def(strtrim(fnames[i])+'.dbh', 'ZDBASE')
-     openr,unit,dbh_file,error=err,/segmented
-;
-;  If /SEGMENTED doesn't work, then maybe the file was written in external
-;  format.  Try /BLOCK instead.
-;
-     if err then openr,unit,dbh_file,error=err,/block
+     openr,unit,dbh_file,error=err
      if err lt 0 then $               ;Does database exist?
         printf,!TEXTUNIT,'Unable to locate database ',fnames[i] $
  else begin

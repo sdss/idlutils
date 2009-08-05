@@ -1,5 +1,4 @@
-function minmax,array,NAN=nan, DIMEN=dimen, $
-	SUBSCRIPT_MAX = subscript_max, SUBSCRIPT_MIN = subscript_min
+function minmax,array,subs,NAN=nan, DIMEN=dimen
 ;+
 ; NAME:
 ;      MINMAX
@@ -9,7 +8,7 @@ function minmax,array,NAN=nan, DIMEN=dimen, $
 ;      Using MINMAX() is faster than doing a separate MAX and MIN.
 ;
 ; CALLING SEQUENCE:
-;      value = minmax( array )
+;      value = minmax( array, [subs, /NAN, DIMEN= ] )
 ; INPUTS:
 ;      array - an IDL numeric scalar, vector or array.
 ;
@@ -22,20 +21,20 @@ function minmax,array,NAN=nan, DIMEN=dimen, $
 ;            array where N is the number of elements in the specified
 ;            dimension
 ;              
-; OPTIONAL INPUT KEYWORDS:
+; OPTIONAL OUTPUT PARAMETER:
+;       subs - two-dimensional vector; the first element gives the subscript
+;              of the minimum value, the second element gives the subscript
+;              of the maximum value.     
+;
+; OPTIONAL INPUT KEYWORD:
 ;      /NAN   - Set this keyword to cause the routine to check for occurrences
 ;            of the IEEE floating-point value NaN in the input data.  Elements 
 ;            with the value NaN are treated as missing data.
 ;
-;      DIMEN - (V5.5 or later) integer (either 1 or 2) specifying which 
-;            dimension of a 2-d array to  take the minimum and maximum.   Note
-;            that DIMEN is only valid for a 2-d array, larger dimensions are 
-;            not supported.
-;
-; OPTIONAL OUTPUT KEYWORDS:
-;      SUBSCRIPT_MAX and SUBSCRIPT_MIN  Set either of these keywords to 
-;            named variables to return the subscripts of the MIN and MAX
-;	     values (V5.5 or later).
+;      DIMEN -  integer (either 1 or 2) specifying which dimension of a 2-d 
+;            array to  take the minimum and maximum.   Note that (unlike the
+;            DIMENSION keyword to the MIN() function) DIMEN is only valid
+;            for a 2-d array, larger dimensions are  not supported.  
 ; EXAMPLE:
 ;     (1)  Print the minimum and maximum of an image array, im
 ; 
@@ -51,25 +50,20 @@ function minmax,array,NAN=nan, DIMEN=dimen, $
 ;
 ; REVISION HISTORY:
 ;      Written W. Landsman                January, 1990
-;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Added NaN keyword.      M. Buie       June 1998
-;      Added DIMENSION keyword    W. Landsman  January 2002
+;      Added DIMEN keyword    W. Landsman  January 2002
 ;      Added SUBSCRIPT_MIN and SUBSCRIPT_MAX  BT Jan 2005
-;      Check for IDL 5.5 or later, W. Thompson, 24-Feb-2005
+;      Added optional subs output parameter  W. Landsman July 2009
 ;-
  On_error,2
- if !version.release ge '5.5' then begin
-   if N_elements(DIMEN) GT 0 then begin
-      amin = min(array, subscript_min, $
-      	MAX = amax, NAN = nan, DIMEN = dimen, SUBSCRIPT_MAX = subscript_max) 
-      return, transpose( [[amin], [amax] ])
-   endif else  begin 
-     amin = min( array, subscript_min, $
-     	MAX = amax, NAN=nan, SUBSCRIPT_MAX = subscript_max)
+ compile_opt idl2
+ if N_elements(DIMEN) GT 0 then begin
+      amin = min(array, MAX = amax, NAN = nan, DIMEN = dimen,cmin,sub=cmax) 
+      if arg_present(subs) then subs = transpose([[cmin], [cmax]])
+      return, transpose([[amin],[amax] ])
+ endif else  begin 
+     amin = min( array, MAX = amax, NAN=nan, cmin, sub=cmax)
+      if arg_present(subs) then subs = [cmin, cmax]
      return, [ amin, amax ]
-   endelse
- end else begin
-   amin = min( array, MAX = amax, NAN=nan)
-   return, [ amin, amax ]
  endelse
  end

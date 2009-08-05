@@ -63,7 +63,6 @@
 ;                Spherical Cube
 ;   TSC    25    Tangential Spherical Cube
 ;   SZP    26    Slant Zenithal perspective  PV2_1,PV2_2, PV2_3 optional 
-;   HCT    27    HealCart (Cartesian approximation of Healpix)
 ;
 ; OPTIONAL KEYWORD PARAMETERS:
 ;
@@ -97,10 +96,11 @@
 ;       LATPOLE -  native latitude of the standard system's North Pole
 ;       LONGPOLE - native longitude of standard system's North Pole, default
 ;               is 180 degrees, numeric scalar
-;       pv2_1 - scalar with first projection parameter (PV2_1), this may
-;               or may not be necessary depending on the map projection used
-;       pv2_2 - scalar with second projection parameter (PV2_2), this may
-;               or may not be necessary depending on the map projection used
+;       PV2  - Vector of projection parameter associated with latitude axis
+;             PV2 will have up to 21 elements for the ZPN projection, up to 3
+;             for the SIN projection and no more than 2 for any other
+;             projection.   The first element corresponds to PV2_1, the 
+;             second to PV2_2, etc.
 ;
 ; OUTPUT PARAMETERS:
 ;
@@ -113,7 +113,7 @@
 ;       The conventions followed here are described in more detail in the paper
 ;      "Representations of Celestial Coordinates in FITS" by Calabretta &
 ;       Greisen (2002, A&A, 395, 1077, also see 
-;       http://www.aoc.nrao.edu/~egreisen).   The general scheme 
+;       http://fits.gsfc.nasa.gov/fits_wcs.html).   The general scheme 
 ;       outlined in that article is to convert x and y coordinates into a 
 ;       "native" longitude and latitude and then rotate the system into one of 
 ;       three generally recognized systems (celestial, galactic or ecliptic).
@@ -154,17 +154,6 @@
 ; PROCEDURES CALLED:
 ;       WCS_ROTATE
 ;
-; COPYRIGHT NOTICE:
-;
-;       Copyright 1991, The Regents of the University of California. This
-;       software was produced under U.S. Government contract (W-7405-ENG-36)
-;       by Los Alamos National Laboratory, which is operated by the
-;       University of California for the U.S. Department of Energy.
-;       The U.S. Government is licensed to use, reproduce, and distribute
-;       this software. Neither the Government nor the University makes
-;       any warranty, express or implied, or assumes any liability or
-;       responsibility for the use of this software.
-;
 ; AUTHOR:
 ;
 ;       Rick Balsano
@@ -177,7 +166,6 @@
 ; 1.4    22/09/94  W. Landsman If scalar input, then scalar output
 ; 1.5    02/03/05  W. Landsman Change variable name BETA for V4.0 compatibility
 ; 1.6    06/07/05  W. Landsman Change loop index from integer to long
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ; 1.7    02/18/99  W. Landsman Fixed implementation of ARC algorithm
 ; 1.8    June 2003 W. Landsman Update conic projections, add LATPOLE keyword
 ; 1.81   Sep 2003 W. Landsman Avoid divide by zero 
@@ -191,6 +179,12 @@
 ;                   PV2 keyword vector instead of PROJP1, PROJP2
 ; 3.1    May 2004 W. Landsman/J. Ballet Handle NaN values, flag invalid output
 ;                   for AITOFF projection
+; 3.1.1  Dec 2005 W. Landsman/W. Thompson Fixed problem with Airy projection
+;                   centered on 90 degree latitude
+; 3.1.2  May 2006 W. Landsman/Y.Sato Fix problem selecting the correct root
+;                    for the ZPN projection
+; 3.2    Aug 2007  W. Landsman Correct treatment of PVi_j parameters
+; 3.3    Oct 2007  Sergey Koposov Support HEALPIX projection
 ;-
 
 PRO wcsxy2sph, x, y, longitude, latitude, map_type, ctype=ctype, $
@@ -199,12 +193,13 @@ PRO wcsxy2sph, x, y, longitude, latitude, map_type, ctype=ctype, $
 
 ; Define angle constants 
 
+ compile_opt idl2
  pi = !DPI
  radeg = 57.295779513082323d0
  pi2 = pi/2.0d
  map_types=['DEF','AZP','TAN','SIN','STG','ARC','ZPN','ZEA','AIR','CYP',$
             'CAR','MER','CEA','COP','COD','COE','COO','BON','PCO','SFL',$
-            'PAR','AIT','MOL','CSC','QSC','TSC','SZP','HCT']
+            'PAR','AIT','MOL','CSC','QSC','TSC','SZP']
 
 ; check to see that enough parameters (at least 4) were sent
  if ( N_params() lt 4 ) then begin
@@ -309,7 +304,6 @@ case strupcase(projection_type) of
   PV2_1 = N_elements(PV2) GE 1 ? PV2[0] : 0.0  ;PV2_1 =mu (spherical radii)
   PV2_2 = N_elements(PV2) GE 2 ? PV2[1] : 0.0   ; PV2_2 = gamma (degrees)
 
-    
     if (pv2_1 lt 0) then message,$
       'AZP map projection requires the keyword pv2_1 >= 0'
     gamma = pv2_2/radeg
@@ -435,7 +429,14 @@ case strupcase(projection_type) of
    good = where( imaginary(gamma) EQ 0, Ng) 
    if Ng EQ 0 then message,'ERROR in ZPN computation: no real roots found'
    gamma = double( gamma[good])
-   if Ng GT 1 then begin
+
+; If multiple real roots are found, then we seek the value closest to the 
+; approximate linear solution
+   
+   if Ng GT 1 then begin         
+        gamma1 = -pv[0]/pv[1]
+        dgmin = min(abs(gamma - gamma1), dgmin_index)
+        gamma = gamma[dgmin_index]   
       good = where( (gamma GE -pi2) and (gamma LE pi2), Ng)
       if Ng EQ 0 then gamma = gamma[0] else gamma = gamma[good[0]]
    endif
@@ -465,9 +466,9 @@ case strupcase(projection_type) of
     theta_b = pv2_1/radeg
     xi = theta_b
     zeta_b = (pi2-theta_b)/2.d0
-    if (theta_b ne pi2) then $
+    if (cos(zeta_b) NE 1) then $
       a = alog(cos(zeta_b))/(tan(zeta_b))^2 $
-    else a = 0.d0
+    else a = -0.5d0
     rtheta = sqrt(xx^2 + yy^2)/(2.0d*radeg) 
 
     repeat begin
@@ -483,7 +484,7 @@ case strupcase(projection_type) of
 
     endrep until (max(abs(xi_old - xi)) lt tolerance)
 
-    print,rtheta,alog(cos(xi))/tan(xi) + a*tan(xi)
+;    print,rtheta,alog(cos(xi))/tan(xi) + a*tan(xi)
     theta = pi2 - 2.d0*xi
     phi = atan(xx,-yy)
   end
@@ -560,7 +561,6 @@ case strupcase(projection_type) of
      'PV2_2 not set, using default of PV2_2 = 0 for COD map projection'
       pv2_2 = 0
     endif else pv2_2 = pv2[1]
-
     if ((pv2_1 lt -90) or (pv2_2 gt 90) or (pv2_1 gt 90)) then message,$
  'pv2_1 and pv2_2 must satisfy -90<=pv2_1<=90,pv2_2<=90 for COD projection'
 
@@ -593,20 +593,24 @@ case strupcase(projection_type) of
       message,/informational,$
       'pv2_2 not set, using default of pv2_2 = 0 for COE map projection'
       pv2_2 = 0
-    endif else pv2_2 = pv2[0]
+    endif else pv2_2 = pv2[1]
     if ((pv2_1 lt -90) or (pv2_2 gt 90) or (pv2_1 gt 90)) then message,$
  'pv2_1 and pv2_2 must satisfy -90<=pv2_1<=90,pv2_2<=90 for COE projection'
-   theta2 = (pv2_1 + pv2_2)/radeg 
-   s_1 = sin( (pv2_1 - pv2_2)/radeg)
+    theta_a = pv2_1/radeg
+    eta = pv2_2/radeg
+    theta1 = (theta_a - eta)
+     theta2 = (theta_a + eta)
+    s_1 = sin( theta1)
     s_2 = sin( theta2)
-    stheta_a = sin(pv2_1/radeg)
+    stheta_a = sin(theta_a)
     gamma = s_1 + s_2
     C = gamma/2
     y_0 = radeg*2.d0*sqrt(1.d0 + s_1*s_2 - gamma*stheta_a)/gamma
     R_theta = (xx^2+(y_0-yy)^2)
     if pv2_1 LT 0 then R_theta = -R_theta
     phi = 2*atan(xx/R_theta,(y_0 - yy)/R_theta)/gamma
-    theta = asin((1.d0+s_1*s_2-(xx^2+(y_0-yy)^2)*(gamma/(2.d0*radeg))^2)/gamma)
+    theta = asin((1.d0 + s_1*s_2-(xx^2+(y_0-yy)^2)*(gamma/(2.d0*radeg))^2)/gamma)
+    
   end
   
   'COO':begin
@@ -732,7 +736,6 @@ case strupcase(projection_type) of
       theta[bad] = !values.d_nan
    endif
 
-  print,z2,nbad
   end
   
   'MOL':begin
@@ -1210,22 +1213,45 @@ case strupcase(projection_type) of
 
       endcase
     endfor
-
-  end
-
-  'HCT':begin
-    phi = xx/radeg
-     
-    w_np = where(yy ge 45, n_np)
-    w_eq = where((yy lt 45) and (yy gt -45), n_eq)
-    w_sp = where(yy le -45, n_sp)
-    theta = dblarr(n_elements(yy)) 
-    
-    if n_np gt 0 then theta[w_np] =  asin(1-(yy/45-2)^2/3.d)
-    if n_eq gt 0 then theta[w_eq] =  asin((yy/45)*2./3.d)
-    if n_sp gt 0 then theta[w_sp] = -asin(1-(yy/45+2)^2/3.d)
   end
   
+  'HPX':begin
+    hpx_k = 3.D ; The main HEALPIX parameters (see Calabretta 2007, MNRAS)
+    hpx_h = 4.D ;
+    ylim = 90D *(hpx_k-1)/hpx_h
+    phi=xx*1.D
+    theta=yy*1.D
+    
+    eqfaces = where( abs(yy) le ylim, complement=polfaces)
+
+    ; equatorial region
+    if eqfaces[0] ne -1 then begin
+        phi[eqfaces]=xx[eqfaces]/radeg
+        theta[eqfaces]=asin(yy[eqfaces]*hpx_h/90.D/hpx_k)
+	hpx_bad = where(xx[eqfaces] lt -180 or xx[eqfaces] gt 180)
+	if hpx_bad[0] ne -1 then begin
+		phi[eqfaces[hpx_bad]]=!VALUES.F_NAN
+		theta[eqfaces[hpx_bad]]=!VALUES.F_NAN
+	end
+
+    endif
+
+    ;polar regions
+    if polfaces[0] ne -1 then begin
+        hpx_sig = (hpx_k+1)/2.D -abs(yy[polfaces]*hpx_h)/180.D
+        hpx_omega = ((hpx_k mod 2 eq 1) or yy[polfaces] gt 0)*1.D
+        hpx_xc=-180+(2*floor((xx[polfaces]+180)*hpx_h/360+(1-hpx_omega)/2)+hpx_omega)*180.D/hpx_h
+        phi[polfaces] = (hpx_xc + (xx[polfaces]-hpx_xc)/hpx_sig)/radeg
+        theta[polfaces] = ((yy[polfaces] gt 0)*2-1)*asin(1-hpx_sig^2/hpx_k)
+
+	; points outside reasonable area
+	hpx_bad = where( ((abs(((xx[polfaces]-hpx_xc)*hpx_h) mod 180)+(abs(yy[polfaces])-ylim)*hpx_h) gt 45*(3+hpx_h-hpx_k)) or (xx[polfaces] lt -180) or (xx[polfaces] gt 180))
+	if hpx_bad[0] ne -1 then begin
+		phi[polfaces[hpx_bad]]=!VALUES.F_NAN
+		theta[polfaces[hpx_bad]]=!VALUES.F_NAN
+	end
+    endif
+  end
   else:message,strupcase(projection_type) + $
                ' is not a valid projection type.  Reset CTYPE1 and CTYPE2'
 
@@ -1237,6 +1263,7 @@ endcase
 
  phi = phi*radeg
  theta = theta*radeg
+ 
  if ( N_elements(crval) GE 2 ) then begin
 
  
@@ -1252,7 +1279,6 @@ endcase
             else theta0 = 0 
    wcs_rotate, longitude, latitude, phi, theta, crval, longpole=longpole, $
            theta0 = theta0, latpole = latpole, /REVERSE
-       
  endif else begin    ;no rotation from standard to native coordinates
 
   latitude = theta

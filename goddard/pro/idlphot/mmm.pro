@@ -1,5 +1,6 @@
 pro mmm, sky_vector, skymod, sigma , skew, HIGHBAD = highbad, DEBUG = debug, $
-           ReadNoise = readnoise, Nsky = nsky, INTEGER = discrete
+           ReadNoise = readnoise, Nsky = nsky, INTEGER = discrete, $
+	   SILENT = silent
 ;+
 ; NAME:
 ;       MMM
@@ -12,7 +13,7 @@ pro mmm, sky_vector, skymod, sigma , skew, HIGHBAD = highbad, DEBUG = debug, $
 ;
 ; CALLING SEQUENCE:
 ;       MMM, sky, [ skymod, sigma, skew, HIGHBAD = , READNOISE=, /DEBUG, 
-;                  NSKY=, /INTEGER]
+;                  NSKY=, /INTEGER,/SILENT]
 ;
 ; INPUTS:
 ;       SKY - Array or Vector containing sky values.  This version of
@@ -47,7 +48,8 @@ pro mmm, sky_vector, skymod, sigma , skew, HIGHBAD = highbad, DEBUG = debug, $
 ;                equivalent of /INTEGER was set for all data types)
 ;       /DEBUG - If this keyword is set and non-zero, then additional 
 ;               information is displayed at the terminal.
-;
+;       /SILENT - If set, then error messages will be suppressed when MMM
+;                cannot compute a background.    Sigma will still be set to -1
 ; OPTIONAL OUTPUT KEYWORD:
 ;      NSKY - Integer scalar giving the number of pixels actually used for the
 ;             sky computation (after outliers have been removed).
@@ -73,7 +75,6 @@ pro mmm, sky_vector, skymod, sigma , skew, HIGHBAD = highbad, DEBUG = debug, $
 ; REVISION HISTORY:
 ;       Adapted to IDL from 1986 version of DAOPHOT in STSDAS, 
 ;       W. Landsman, STX Feb 1987
-;       Adapted for IDL Version 2, J. Isensee, STX, Sept 1990
 ;       Added HIGHBAD keyword, W. Landsman January, 1991
 ;       Fixed occasional problem with integer inputs    W. Landsman  Feb, 1994
 ;       Avoid possible 16 bit integer overflow   W. Landsman  November 2001
@@ -81,21 +82,33 @@ pro mmm, sky_vector, skymod, sigma , skew, HIGHBAD = highbad, DEBUG = debug, $
 ;                          W. Landsman   June 2004
 ;       Added INTEGER keyword W. Landsman July 2004
 ;       Improve numerical precision  W. Landsman  October 2004
+;       Fewer aborts on strange input sky histograms W. Landsman October 2005
+;       Added /SILENT keyword  November 2005
+;       Fix too many /CON keywords to MESSAGE  W.L. December 2005
+;       Fix bug introduced June 2004 removing outliers when READNOISE not set
+;         N. Cunningham/W. Landsman  January 2006
+;       Make sure that MESSAGE never aborts  W. Landsman   January 2008
 ;-
  compile_opt idl2
  On_error,2               ;Return to caller
  if N_params() EQ 0 then begin          
-        print,'Syntax:  MMM, sky, skymod, sigma, skew, [/INTEGER, ' 
+        print,'Syntax:  MMM, sky, skymod, sigma, skew, [/INTEGER, /SILENT' 
         print,'                [HIGHBAD = , READNOISE =, /DEBUG, NSKY=] '
         return
  endif
 
+ silent = keyword_set(SILENT)
  mxiter = 30              ;Maximum number of iterations allowed
  minsky = 20              ;Minimum number of legal sky elements
- nsky = N_elements( sky_vector )            ;Get number of sky elements     
- if nsky LE minsky then message, $   
+ nsky = N_elements( sky_vector )            ;Get number of sky elements 
+ 
+  if nsky LE minsky then begin
+      sigma=-1.0 &  skew = 0.0
+      message,/CON, NoPrint= Silent, $
     'ERROR -Input vector must contain at least '+strtrim(minsky,2)+' elements'
-
+      return
+ endif
+ 
  nlast = nsky-1                        ;Subscript of last pixel in SKY array
  if keyword_set(DEBUG) then $
      message,'Processing '+strtrim(nsky,2) + ' element array',/INF
@@ -113,7 +126,15 @@ pro mmm, sky_vector, skymod, sigma , skew, HIGHBAD = highbad, DEBUG = debug, $
          
 ; Select the pixels between Cut1 and Cut2
 
- good = where( (sky LE cut2) and (sky GE cut1) )   
+ good = where( (sky LE cut2) and (sky GE cut1), Ngood ) 
+ if ( Ngood EQ 0 ) then begin
+      sigma=-1.0 &  skew = 0.0   
+      message,/CON, NoPrint=Silent, $ 
+           'ERROR - No sky values fall within ' + strtrim(cut1,2) + $
+	   ' and ' + strtrim(cut2,2)           
+      return
+   endif
+  
  delta = sky[good] - skymid  ;Subtract median to improve arithmetic accuracy
  sum = total(delta,/double)                     
  sumsq = total(delta^2,/double)
@@ -142,16 +163,19 @@ START_LOOP:
    niter = niter + 1                     
    if ( niter GT mxiter ) then begin
       sigma=-1.0 &  skew = 0.0   
-      message,'ERROR - Too many ('+strtrim(mxiter,2) + ') iterations,' + $
-               ' unable to compute sky',/CON
+      message,/CON, NoPrint=Silent, $ 
+           'ERROR - Too many ('+strtrim(mxiter,2) + ') iterations,' + $
+           ' unable to compute sky'
       return
    endif
 
    if ( maximm-minimm LT minsky ) then begin    ;Error? 
 
       sigma = -1.0 &  skew = 0.0   
-      message,'ERROR - Too few ('+strtrim(maximm-minimm,2) +  $
-                 ') valid sky elements, unable to compute sky'
+      message,/CON,NoPrint=Silent, $
+            'ERROR - Too few ('+strtrim(maximm-minimm,2) +  $
+           ') valid sky elements, unable to compute sky'
+      return
    endif 
 
 ; Compute Chauvenet rejection criterion.
@@ -178,7 +202,7 @@ START_LOOP:
         istep = 1 - 2*fix(tst_min)
         repeat begin
                 newmin = newmin + istep
-                done = (newmin EQ -1)
+                done = (newmin EQ -1) or (newmin EQ nlast)
                 if not done then $
                     done = (sky[newmin] LE cut1) and (sky[newmin+1] GE cut1)
         endrep until done
@@ -199,14 +223,14 @@ START_LOOP:
        istep = -1 + 2*fix(tst_max)         ;Increment up or down?
        Repeat begin
           newmax = newmax + istep
-          done = (newmax EQ nlast)
+          done = (newmax EQ nlast) or (newmax EQ -1)
           if not done then $
                 done = ( sky[newmax] LE cut2 ) and ( sky[newmax+1] GE cut2 )
        endrep until done
        if tst_max then delta = sky[maximm+1:newmax] - skymid $
                else delta = sky[newmax+1:maximm] - skymid
-       sum = sum + istep*total(delta)
-       sumsq = sumsq + istep*total(delta^2)
+       sum = sum + istep*total(delta,/double)
+       sumsq = sumsq + istep*total(delta^2,/double)
        redo = 1b
        maximm = newmax
     endif
@@ -214,9 +238,16 @@ START_LOOP:
 ; Compute mean and sigma (from this pass).
 ;
    nsky = maximm - minimm
+   if ( nsky LT minsky ) then begin    ;Error? 
+       sigma = -1.0 &  skew = 0.0   
+       message,NoPrint=Silent, /CON, $ 
+               'ERROR - Outlier rejection left too few sky elements'
+       return		 		 
+   endif 
+
    skymn = sum/nsky       
-   sigma = float( sqrt(sumsq/nsky - skymn^2) )
-   skymn = skymn + skymid 
+   sigma = float( sqrt( (sumsq/nsky - skymn^2)>0 ))
+    skymn = skymn + skymid 
                 
 
 ;  Determine a more robust median by averaging the central 20% of pixels.
@@ -243,8 +274,8 @@ START_LOOP:
              J = J - 1
              K = K + 1
         endwhile
-        skymed = total(sky[j:k])/(k-j+1)
-  endif 
+        endif 
+   skymed = total(sky[j:k])/(k-j+1)
    
 ;  If the mean is less than the median, then the problem of contamination
 ;  is slight, and the mean is what we really want.

@@ -40,8 +40,10 @@ pro tvbox,width,x,y,color,DATA = data,COLOR=thecolor,ANGLE = angle, $
 ;             defined (e.g. with a PLOT or CONTOUR call).
 ;
 ;      Any keyword recognized by PLOTS is also recognized by TVBOX.   
-;      In particular, the color, linestyle, and thickness of the boxes is 
-;      controlled by the COLOR, LINESTYLE, and THICK keywords.     
+;      In particular, the color, linestyle, thickness and clipping of the boxes
+;      is controlled by the COLOR, LINESTYLE, THICK and NOCLIP keywords.
+;      (Clipping is turned off by default, set NOCLIP=0 to activate it.)
+;
 ; SIDE EFFECTS:
 ;       A square or rectangle will be drawn on the device
 ;       For best results WIDTH should be odd when using the default DEVICE
@@ -62,8 +64,7 @@ pro tvbox,width,x,y,color,DATA = data,COLOR=thecolor,ANGLE = angle, $
 ;           IDL> w = [2.,52.]/arcsec_per_pixel ;Convert slit size to pixel units
 ;           IDL> tvbox,w,XC,YC,ang=-32          ;Draw slit
 ; RESTRICTIONS:
-;       (1) TVBOX does not check whether box is off the edge of the screen
-;       (2) Allows use of only device (default) or data (if /DATA is set) 
+;         Allows use of only device (default) or data (if /DATA is set) 
 ;           coordinates.   Normalized coordinates are not allowed
 ; PROCEDURES USED:
 ;       ZPARCHECK
@@ -76,7 +77,10 @@ pro tvbox,width,x,y,color,DATA = data,COLOR=thecolor,ANGLE = angle, $
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added ANGLE keyword    W.Landsman     February 2000 
 ;       Make sure ANGLE is a scalar   W. Landsman  September 2001
+;       Don't round coordinates if /DATA is set.   M. Perrin  August 2005
+;       Use STRICT_EXTRA to flag valid keywords W. Landsman Sep 2005
 ;-
+ compile_opt idl2
  On_error,2
 
  npar = N_params()                         ;Get number of parameters
@@ -100,7 +104,7 @@ pro tvbox,width,x,y,color,DATA = data,COLOR=thecolor,ANGLE = angle, $
               ' -- then hit mouse button',/INF
        cursor,x,y,/DEVICE,/WAIT
        message, 'Box is centered at (' + strtrim(x,2) + ',' + $
-		 strtrim(y,2) + ')',/INF
+                 strtrim(y,2) + ')',/INF
     endif
  endif else message, $
      'ERROR - X,Y position must be specified for Postscript device'
@@ -113,7 +117,13 @@ pro tvbox,width,x,y,color,DATA = data,COLOR=thecolor,ANGLE = angle, $
  if ( nbox NE N_elements(Y) ) then $
        message,'ERROR - X and Y positions must have same number of elements'
 
- xs = round(x)  &  ys = round(y)
+ ; only round coordinates to integers if using device coords;
+ ; data coords can potentially be fractional.
+ if keyword_set(data) then begin
+         xs = x & ys = y
+ endif else begin
+        xs = round(x)  &  ys = round(y)
+ endelse
 
  Ncol = N_elements(color)
  xbox = [1,1,-1,-1,1]*w[0]
@@ -134,8 +144,8 @@ pro tvbox,width,x,y,color,DATA = data,COLOR=thecolor,ANGLE = angle, $
 ;Plot the box in data or device coordinates 
 
   if keyword_set( DATA ) then $ 
-  plots, xt, yt, /DATA,  COLOR=color[j], _EXTRA = _EXTRA  else $
-  plots, round(xt), round(yt), /DEVICE, COLOR=color[j], _EXTRA = _EXTRA
+  plots, xt, yt, /DATA,  COLOR=color[j], _STRICT_EXTRA = _EXTRA  else $
+  plots, round(xt), round(yt), /DEVICE, COLOR=color[j], _STRICT_EXTRA = _EXTRA
 
  endfor
 

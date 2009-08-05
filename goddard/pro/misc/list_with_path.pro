@@ -6,7 +6,7 @@
 ; PURPOSE: 
 ;	Search for files in a specified directory path.
 ; EXPLANATION:
-;	Lists files in a set of default paths, similar to using FINDFILE,
+;	Lists files in a set of default paths, similar to using FILE_SEARCH,
 ;	except that a list of paths to be searched can be given.
 ;
 ; CALLING SEQUENCE: 
@@ -27,10 +27,8 @@
 ;
 ;		     A leading $ can be used in any path to signal that what
 ;		     follows is an environmental variable, but the $ is not
-;		     necessary.  (In VMS the $ can either be part of the path,
-;		     or can signal logical names for compatibility with Unix.)
-;		     Environmental variables can themselves contain multiple
-;		     paths.
+;		     necessary.    Environmental variables can themselves 
+;                    contain multiple paths.
 ;
 ; OUTPUTS: 
 ;	The result of the function is a list of filenames.
@@ -40,42 +38,33 @@
 ;	FILE = LIST_WITH_PATH( FILENAME, 'SERTS_DATA', '.fix' )
 ;	IF FILE NE '' THEN ...
 ; PROCEDURE CALLS: 
-;	BREAK_PATH, CONCAT_DIR
+;	BREAK_PATH, CONCAT_DIR()
 ; Category    : 
 ;	Utilities, Operating_system
 ; REVISION HISTORY:
 ;	Version 1, William Thompson, GSFC, 3 November 1994
 ;	Documentation modified Wayne Landsman HSTX  November 1994
-;	Converted to IDL V5.0   W. Landsman   September 1997
+;	Assume since V5.5, vector call to FILE_SEARCH()  W. Landsman Sep 2006
+;       Restore pre-Sep 2006 behavior of not searching subdirectories 
+;                      W.Landsman. Feb 2007
 ;-
 ;
+        COMPILE_OPT IDL2
 	ON_ERROR, 2
 ;
 ;  Check the number of parameters:
 ;
 	IF N_PARAMS() NE 2 THEN MESSAGE, 'Syntax:  Result = ' + $
 		'LIST_WITH_PATH(FILENAME, PATHS)'
-;
-;  Reformat PATHS into an array.  The first element is the null string.
-;
-	PATH = BREAK_PATH(PATHS)
+
+       PATH = BREAK_PATH(PATHS)
 ;
 ;  If NOCURRENT was set, then remove the first (blank) entry from the PATH
 ;  array.
 ;
 	IF KEYWORD_SET(NOCURRENT) THEN PATH = PATH[1:*]
-;
-;  Step through each of the paths.
-;
-	FILES = FINDFILE( CONCAT_DIR( PATH[0], FILENAME ))
-	FOR I = 1,N_ELEMENTS(PATH)-1 DO		$
-		FILES = [FILES, FINDFILE( CONCAT_DIR( PATH[I], FILENAME ))]
-;
-;  Remove any null strings.  If they're all nulls, then return a single null
-;  string.  At the same time, get the COUNT parameter.
-;
-	W = WHERE(FILES NE '', COUNT)
-	IF COUNT EQ 0 THEN FILES = '' ELSE FILES = FILES[W]
+
+	FILES = FILE_SEARCH( CONCAT_DIR(PATH, FILENAME), COUNT=COUNT) 
 ;
 	RETURN, FILES
 	END

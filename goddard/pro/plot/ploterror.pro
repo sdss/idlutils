@@ -1,7 +1,7 @@
 PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
       ERRSTYLE=est, TYPE=itype, XRANGE = xrange, XLOG=xlog, YLOG=ylog, $
       NSKIP = nskip, NOCLIP = noclip, ERRCOLOR = ecol, YRANGE = yrange, $
-      NSUM = nsum, _EXTRA = pkey, ANONYMOUS_ = DUMMY_
+      NSUM = nsum, _EXTRA = pkey
 
 ;+
 ; NAME:
@@ -101,7 +101,6 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;     W. Landsman     Added NSKIP keyword                           Dec 1996
 ;     W. Landsman     Use XLOG, YLOG instead of XTYPE, YTYPE        Jan 1998
 ;     W. Landsman     Rename to PLOTERROR, OPLOTERROR               Jun 1998
-;     W. Landsman     Convert to IDL V5.0                           Jun 1998
 ;     W. Landsman  Better default scaling when NSKIP supplied       Oct 1998 
 ;     W. Landsman  Ignore !P.PSYM when drawing error bars           Jan 1999
 ;     W. Landsman  Handle NSUM keyword correctly                    Aug 1999
@@ -110,9 +109,13 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;     W. Landsman  Improve logic when NSUM or !P.NSUM is set        Jan 2001
 ;     W. Landsman  Only draw error bars with in XRANGE (for speed)  Jan 2002
 ;     W. Landsman  Fix Jan 2002 update to work with log plots       Jun 2002
+;     W. Landsman  Added _STRICT_EXTRA                              Jul 2005
+;     W. Landsman/D.Nidever Fixed case of logarithmic axes reversed Mar 2009
 ;-
 ;                       Check the parameters.
  On_error, 2
+ compile_opt idl2
+
  np = N_params()
  IF (np LT 2) THEN BEGIN
         print, "PLOTERROR must be called with at least two parameters."
@@ -213,32 +216,25 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  if not keyword_set( YRANGE ) then yrange = !Y.RANGE
  IF yrange[0] EQ yrange[1] THEN BEGIN
 	if keyword_set( XRANGE ) then  begin
-		good = where( (xx GT min(xrange)) and (xx LT max(xrange)) )
+		good = where( (xx GT min(xrange)) and (xx LT max(xrange)), Ng )
+		if Ng EQ 0 then message, $
+		   'ERROR - No X data within specified X range'
 		yrange = [min(ylo[good],/NAN), max(yhi[good], /NAN)]
 	endif else yrange = [min(ylo,/NAN), max(yhi, /NAN)]
- ENDIF ELSE IF yrange[0] GT yrange[1] THEN BEGIN
-	ylo = yy + yerror
-	yhi = yy - yerror
- ENDIF
-
+ ENDIF 
 ;        Similarly for x-range
-
  if not keyword_set( XRANGE ) then xrange = !X.RANGE
  if NP EQ 4 then begin
    xlo = xx - xerror
    xhi = xx + xerror
    IF xrange[0] EQ xrange[1] THEN xrange = [min(xlo,/NAN), max(xhi,/NAN)]
-   IF xrange[0] GT xrange[1] THEN BEGIN
-      xlo = xx + xerror
-      xhi = xx - xerror
-   ENDIF
  endif
 
 ; Plot the positions.    Always set NSUM = 1 since we already took care of 
 ; smoothing with FREBIN
 
  plot, xx, yy, XRANGE = xrange, YRANGE = yrange, XLOG = xlog, YLOG = ylog, $
-         _EXTRA = pkey, NOCLIP = noclip, NSum= 1
+         _STRICT_EXTRA = pkey, NOCLIP = noclip, NSum= 1
 
 ;	Plot the error bars.   Compute the hat length in device coordinates
 ;       so that it remains fixed even when doing logarithmic plots.
@@ -249,10 +245,13 @@ PRO ploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
        x_low = convert_coord(xlo,yy,/TO_DEVICE)
        x_hi = convert_coord(xhi,yy,/TO_DEVICE)
     endif
-    ycrange = !Y.CRANGE   &  xcrange = !X.CRANGE
+    ycrange = !Y.crange
+    xcrange = !x.crange
     sv_psym = !P.PSYM & !P.PSYM = 0
-    if ylog EQ 1 then ylo = ylo > 10^ycrange[0]
-    if (xlog EQ 1) and (np EQ 4) then xlo = xlo > 10^xcrange[0]
+    
+    if ylog EQ 1 then ylo = ylo > 10^min(ycrange)    
+    if (xlog EQ 1) and (np EQ 4) then  xlo = xlo > 10^min(xcrange)    
+	                   
 ; Only draw error bars for X values within XCRANGE
     if xlog EQ 1 then xcrange = 10^xcrange
     g = where((xx GT xcrange[0]) and (xx LE xcrange[1]), Ng)

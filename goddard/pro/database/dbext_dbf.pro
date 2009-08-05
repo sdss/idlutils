@@ -1,5 +1,6 @@
 pro dbext_dbf,list,dbno,sbyte,nbytes,idltype,nval,v1,v2,v3,v4,v5,v6, $
         v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, item_dbno=item_dbno
+	
 ;+
 ; NAME:
 ;       DBEXT_DBF
@@ -47,11 +48,13 @@ pro dbext_dbf,list,dbno,sbyte,nbytes,idltype,nval,v1,v2,v3,v4,v5,v6, $
 ;       Return a vector even if only 1 value W. Thompson  October 1996
 ;       Change variable name of BYTESWAP to BSWAP  W. Thompson Mar 1997
 ;       Use /OVERWRITE with reform   W. Landsman   May 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Increase maximum number of items to 18  W. Landsman  November 1999
 ;       2 May 2003, W. Thompson, Use DBXVAL with BSWAP instead of IEEE_TO_HOST.
+;       Avoid EXECUTE() for V6.1 or later  W. Landsman Jan 2007 
+;       Assume since V6.1  W. Landsman June 2009
 ;-
 ;
+ compile_opt idl2
 ;*****************************************************************
 ;
 COMMON db_com,qdb,qitems,qdbrec
@@ -133,23 +136,16 @@ end
 ; now extract each value and convert to correct type
 ;
 last = bpos + nbytes -1
+
 for i = 0,nitems-1 do begin
     item = dbxval(big, idltype[i], nval[i], bpos[i], nbytes[i], bswap=bswap[i])
-;;  if bswap[i] then ieee_to_host, item, idltype = idltype[i]
     st = 'v' + strtrim(i+1,2)
     if nlist GT 1 then $
-             st = st + '= reform(item, /overwrite)'  else $
-             st = st + '= [item]'
+       (SCOPE_VARFETCH(st)) = reform(item,/overwrite) else $
+       (SCOPE_VARFETCH(st)) = [item]
 
+  endfor;for i loop on items
 ;
-; copy v to correct output vector
-;
-        status = execute(st)
-                
-;
-; create line of form   v<i> = v and execute it
-;
-end;for i loop on items
 if scalar then list=savelist    ;restore scalar value
 return
 end

@@ -32,9 +32,8 @@
 ;  which case the intervening gap is filled with zeros (optionally).
 ;  The gap left at the old position of the block is also optionally
 ;  zero-filled.    If a set of data up to the end of the file is being
-;  moved forward (thus making the file smaller) and the IDL version is 
-;  5.6 or larger (so that the TRUNCATE_LUN procedure is available) then
-;  the file is truncated at the new end.
+;  moved forward (thus making the file smaller) then
+;  the file is truncated at the new end.using TRUNCATE_LUN.
 ;
 ; INPUTS:
 ;
@@ -63,8 +62,8 @@
 ;        overrides the TO keyword.
 ;
 ;   NOZERO - if set, then newly created gaps will not be explicitly
-;            zeroed.  However, for some operating systems (Mac and
-;            VMS), zeroing is required and will be done anyway.
+;            zeroed.  However, for some operating systems (Mac),
+;            zeroing is required and will be done anyway.
 ;
 ;   ERRMSG - If defined and passed, then any error messages will be
 ;            returned to the user in this parameter rather than
@@ -90,6 +89,8 @@
 ;   Documentation, CM, 12 Dec 2002
 ;   Truncate if moving data block forward from  the end of file 
 ;             using TRUNCATE_LUN   W. Landsman Feb. 2005 
+;   Assume since V5.5, remove VMS support  W. Landsman  Sep 2006
+;   Assume since V5.6, TRUNCATE_LUN available  W. Landsman Sep 2006
 ;
 ;-
 ; Copyright (C) 2000, 2002, Craig Markwardt
@@ -102,6 +103,7 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
               BUFFERSIZE=BUFFERSIZE0, TO=TO0
 
   ;; Default error handling
+  compile_opt idl2
   on_error, 2
   on_ioerror, IO_FINISH
   if n_params() LT 3 then begin
@@ -147,10 +149,9 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
   ;; Seek to end of file and add zeroes (if needed)
   pos_fin = pos_fin + 1L
 
-  ;; Note: Mac and VMS (record files) cannot point beyond EOF
+  ;; Note: Mac  cannot point beyond EOF
   nozero1 = nozero
-  if (!version.os_family EQ 'MacOS' OR $
-      (!version.os EQ 'vms' AND fs.rec_len GT 0)) then nozero1 = 0
+  if !version.os_family EQ 'MacOS' then nozero1 = 0
   if delta GT 0 AND nozero1 EQ 0 AND (pos_fin+delta GT fs.size) then begin
       point_lun, unit, fs.size
       nleft = (pos_fin-fs.size) + delta
@@ -194,7 +195,7 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
           if cc NE ntrans then goto, IO_FINISH
           bdat = bdat + ntrans
       endwhile
-      if pos_fin EQ fs.size  then if !VERSION.RELEASE GE '5.6' then begin 
+      if pos_fin EQ fs.size  then begin 
                   Truncate_Lun, unit
                   goto, GOOD_FINISH
       endif

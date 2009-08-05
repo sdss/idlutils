@@ -59,7 +59,7 @@ PRO ZENPOS, date, ra, dec
  d2rad = !DPI / 180.D0
  h2rad = !DPI / 12.D0
 ;
-;                            Get the sideral time corresponding to the 
+;                            Get the sidereal time corresponding to the 
 ;                            supplied date.
 ;
  ct2lst, lst, lng, tzone, date

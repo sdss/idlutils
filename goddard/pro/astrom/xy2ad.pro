@@ -8,7 +8,7 @@ pro xy2ad, x, y, astr, a, d
 ; EXPLANATION:
 ;     The astrometry structure must first be extracted by EXTAST from a FITS
 ;     header.   The offset from the reference pixel is computed and the CD 
-;     matrix is applied.     Of distortion is present then this is corrected.
+;     matrix is applied.     If distortion is present then this is corrected.
 ;     If a WCS projection (Calabretta & Greisen 2002, A&A, 395, 1077) is 
 ;     present, then the procedure WCSXY2SPH is used to compute astronomical
 ;     coordinates.    Angles are returned in  degrees.
@@ -61,11 +61,12 @@ pro xy2ad, x, y, astr, a, d
 ;       Written by R. Cornett, SASC Tech., 4/7/86
 ;       Converted to IDL by B. Boothman, SASC Tech., 4/21/86
 ;       Perform CD  multiplication in degrees  W. Landsman   Dec 1994
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
 ;       Consistent conversion between CROTA and CD matrix W. Landsman Oct. 2000
 ;       No special case for tangent projection W. Landsman June 2003
 ;       Work for non-WCS coordinate transformations W. Landsman Oct 2004
+;       Use CRVAL reference point for non-WCS transformation  W.L. March 2007
+;       
 ;- 
  compile_opt idl2
  if N_params() LT 4 then begin
@@ -127,7 +128,7 @@ pro xy2ad, x, y, astr, a, d
  WCSXY2SPH, xsi, eta, a, d, CTYPE = ctype[0:1], PV2 = astr.pv2, $
         LONGPOLE = astr.longpole, CRVAL = crval, LATPOLE = astr.latpole
  endif else begin
-         a = xsi & d = eta
+         a = crval[0] +xsi & d = crval[1] + eta	
  endelse
  return
  end

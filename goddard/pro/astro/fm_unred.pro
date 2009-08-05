@@ -88,9 +88,11 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
 ;       Based on FMRCurve by E. Fitzpatrick (Villanova)
 ;       Added /LMC2 and /AVGLMC keywords,  W. Landsman   August 2000
 ;       Added ExtCurve keyword, J. Wm. Parker   August 2000
+;       Assume since V5.4 use COMPLEMENT to WHERE  W. Landsman April 2006
 ;
 ;-
  On_error, 2
+ compile_opt idl2
 
  if N_params() LT 3 then begin
      print,'Syntax: FM_UNRED, wave, flux, ebv, funred,[ R_V =, /LMC2, /AVGLMC '
@@ -133,7 +135,7 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
  
  xcutuv = 10000.0/2700.0
  xspluv = 10000.0/[2700.0,2600.0]
- iuv = where(x ge xcutuv, N_UV)
+ iuv = where(x ge xcutuv, N_UV, complement = iopir, Ncomp = Nopir)
  IF (N_UV GT 0) THEN xuv = [xspluv,x[iuv]] ELSE  xuv = xspluv
 
     yuv = c1  + c2*xuv
@@ -157,7 +159,6 @@ pro fm_unred, wave, flux, ebv, funred, R_V = R_V, gamma = gamma, x0 = x0, $
   
  ysplopir = [ysplir,ysplop]
 
- iopir = where(x lt xcutuv, Nopir)
  if (Nopir GT 0) then $
           curve[iopir] = CSPLINE([xsplopir,xspluv],[ysplopir,yspluv],x[iopir])
 

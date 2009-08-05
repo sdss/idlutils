@@ -1,5 +1,6 @@
-pro tvellipse, rmax, rmin, xc, yc, pos_ang, color, DATA = data, THICK = thick, $
-	NPOINTS = npoints, COLOR = thecolor, LINESTYLE = linestyle
+pro tvellipse, rmax, rmin, xc, yc, pos_ang, color, DATA = data, $
+	NPOINTS = npoints, COLOR=thecolor, MAJOR=major, MINOR=minor, $
+        _Extra = _extra
 ;+
 ; NAME:
 ;      TVELLIPSE
@@ -9,70 +10,84 @@ pro tvellipse, rmax, rmin, xc, yc, pos_ang, color, DATA = data, THICK = thick, $
 ;
 ; CALLING SEQUENCE:
 ;      TVELLIPSE, rmax, rmin, xc, yc, [ pos_ang, color, COLOR= ,/DATA, NPOINTS=
-;                                        LINESTYLE=, THICK = 
+;                                        LINESTYLE=, THICK=, /MAJOR, /MINOR ]
 ; INPUTS:
-;       RMAX,RMIN - Scalars giving the major and minor axis of the ellipse
+;       RMAX,RMIN - Scalars giving the semi-major and semi-minor axes of
+;                   the ellipse
 ; OPTIONAL INPUTS:
 ;       XC,YC - Scalars giving the position on the TV of the ellipse center
-;               If not supplied (or if XC, YC are negative and /DATA is not set), 
+;               If not supplied (or if XC, YC are negative and /DATA is not set),
 ;               and an interactive graphics device (e.g. not postscript) is set,
 ;               then the user will be prompted for X,Y
 ;       POS_ANG - Position angle of the major axis, measured counter-clockwise
 ;                 from the X axis.  Default is 0.
 ;       COLOR - Scalar  giving intensity level to draw ellipse.   The color
-;               can be specified either with either this parameter or with the 
+;               can be specified either with either this parameter or with the
 ;               COLOR keyword.   Default is !P.COLOR
 ;
 ; OPTIONAL KEYWORD INPUT:
 ;        COLOR - Intensity value used to draw the circle, overrides parameter
 ;               value.  Default = !P.COLOR
 ;        /DATA - if this keyword is set and non-zero, then the ellipse radii and
-;               X,Y position center are interpreted as being in DATA 
-;               coordinates.   Note that the data coordinates must have been 
+;               X,Y position center are interpreted as being in DATA
+;               coordinates.   Note that the data coordinates must have been
 ;               previously defined (with a PLOT or CONTOUR call).
-;        THICK - Thickness of the drawn ellipse, default = !P.THICK
-;        LINESTLYLE - Linestyle used to draw ellipse, default = !P.LINESTYLE
 ;        NPOINTS - Number of points to connect to draw ellipse, default = 120
 ;                  Increase this value to improve smoothness
+;        /MAJOR - Plot a line along the ellipse's major axis
+;        /MINOR - Plot a line along the ellipse's minor axis
+;
+;               Any keyword recognized by PLOTS is also recognized by TVELLIPSE.
+;               In particular, the color, linestyle, thickness and clipping of
+;               the ellipses are controlled by the  COLOR, LINESTYLE, THICK and
+;               NOCLIP keywords.  (Clipping is turned off by default, set
+;               NOCLIP=0 to activate it.)
+;
 ; RESTRICTIONS:
 ;        TVELLIPSE does not check whether the ellipse is within the boundaries
 ;        of the window.
 ;
-;        The ellipse is evaluated at NPOINTS (default = 120) points and 
-;        connected by straight lines, rather than using the more sophisticated 
+;        The ellipse is evaluated at NPOINTS (default = 120) points and
+;        connected by straight lines, rather than using the more sophisticated
 ;        algorithm used by TVCIRCLE
 ;
 ;        TVELLIPSE does not accept normalized coordinates.
 ;
 ;        TVELLIPSE is not vectorized; it only draws one ellipse at a time
+;
 ; EXAMPLE:
-;        Draw an ellipse of major axis 50 pixels, minor axis 30 pixels, centered
-;        on (250,100), with the major axis inclined 25 degrees counter-clockwise
-;        from the X axis.   Use a double thickness line and device coordinates 
-;        (default)
+;        Draw an ellipse of semi-major axis 50 pixels, minor axis 30
+;        pixels, centered on (250,100), with the major axis inclined 25
+;        degrees counter-clockwise from the X axis.  Use a double thickness
+;        line and device coordinates (default)
 ;
 ;	IDL> tvellipse,50,30,250,100,25,thick=2
+;
 ; NOTES:
-;        Note that the position angle for TVELLIPSE (counter-clockwise from the
-;        X axis) differs from the astronomical position angle (counter-clockwise
-;        from the Y axis). 
+;        Note that the position angle for TVELLIPSE (counter-clockwise from
+;        the X axis) differs from the astronomical position angle
+;        (counter-clockwise from the Y axis).
 ;
 ; REVISION HISTORY:
-;        Written  W. Landsman STX          July, 1989            
+;        Written  W. Landsman STX          July, 1989
 ;        Converted to use with a workstation.  M. Greason, STX, June 1990
 ;        LINESTYLE keyword, evaluate at 120 points,  W. Landsman HSTX Nov 1995
 ;        Added NPOINTS keyword, fixed /DATA keyword W. Landsman HSTX Jan 1996
 ;        Check for reversed /DATA coordinates  P. Mangiafico, W.Landsman May 1996
 ;        Converted to IDL V5.0   W. Landsman   September 1997
 ;        Work correctly when X & Y data scales are unequal  December 1998
-;        Removed cursor input when -ve coords are entered with /data 
+;        Removed cursor input when -ve coords are entered with /data
 ;        keyword set  P. Maxted, Keele, 2002
+;        Use _EXTRA keywords including NOCLIP  W. Landsman October 2006
+;        Add plotting of major and minor axes and /MAJOR, /MINOR keywords;
+;        fixed description of RMAX,RMIN (semi-axes).  J. Guerber Feb. 2007
 ;-
  On_error,2                              ;Return to caller
 
  if N_params() lt 2 then begin
-   print,'Syntax - TVELLIPSE, rmax, rmin, xc, yc,[ pos_ang, color, COLOR = '
-   print,'                         NPOINTS =, LINESTYLE = ,THICK=, /DATA ]'
+   print,'Syntax - TVELLIPSE, rmax, rmin, xc, yc, [pos_ang, color, COLOR=,'
+   print,'              NPOINTS=, LINESTYLE=, THICK=, /DATA, /MAJOR, /MINOR ]'
+   print,'              any other keywords accepted by PLOTS'
    return
  endif
 
@@ -88,13 +103,12 @@ pro tvellipse, rmax, rmin, xc, yc, pos_ang, color, DATA = data, THICK = thick, $
  endif
 
  if N_params() LT 5 then pos_ang = 0.    ;Default position angle
-  if N_Elements(TheColor) EQ 0 then begin
-      IF N_Elements( Color ) eq 0 THEN Color = !P.COLOR
-  endif else color = TheColor
+ if N_Elements(TheColor) EQ 0 then begin
+     IF N_Elements( Color ) eq 0 THEN Color = !P.COLOR
+ endif else color = TheColor
 
- if not keyword_set(THICK) then thick = !P.THICK
- if not keyword_set(LINESTYLE) then linestyle = !P.LINESTYLE
  if not keyword_set(NPOINTS) then npoints = 120   ;Number of points to connect
+
  phi = 2*!pi*(findgen(npoints)/(npoints-1))       ;Divide circle into Npoints
  ang = pos_ang/!RADEG               	          ;Position angle in radians
  cosang = cos(ang)
@@ -107,10 +121,27 @@ pro tvellipse, rmax, rmin, xc, yc, pos_ang, color, DATA = data, THICK = thick, $
  yprime = yc + x*sinang + y*cosang
 
  if keyword_set(data) then $
- plots, xprime, yprime, /DATA, COLOR=color, THICK=thick, LINESTYLE=linestyle $
- else $
- plots, round(xprime), round(yprime), $
-        /DEVICE, COLOR=color, THICK=thick, LINESTYLE=linestyle
+   plots, xprime, yprime, /DATA, COLOR=color, _STRICT_Extra = _extra else $
+   plots, round(xprime), round(yprime),  COLOR=color, /DEVICE,  $
+                _STRICT_Extra = _extra
+
+ if keyword_set(major) then begin
+     xmaj = xc + [rmax,-rmax]*cosang  ; rot & transl points (rmax,0),(-rmax,0)
+     ymaj = yc + [rmax,-rmax]*sinang
+     if keyword_set(data) then $
+       plots, xmaj, ymaj, /DATA, COLOR=color, _STRICT_Extra=_extra  $
+     else   plots, round(xmaj), round(ymaj), $
+       /DEVICE, COLOR=color, _STRICT_Extra=_extra
+ endif
+
+ if keyword_set(minor) then begin
+     xmin = xc - [rmin,-rmin]*sinang  ; rot & transl points (0,rmin),(0,-rmin)
+     ymin = yc + [rmin,-rmin]*cosang
+     if keyword_set(data) then $
+       plots, xmin, ymin, /DATA, COLOR=color, _STRICT_Extra=_extra  $
+     else   plots, round(xmin), round(ymin), $
+       /DEVICE, COLOR=color, _STRICT_Extra=_extra
+ endif
 
  return
  end

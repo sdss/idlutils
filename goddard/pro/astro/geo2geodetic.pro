@@ -27,7 +27,7 @@
 ;       REF: Stephen P.  Keeler and Yves Nievergelt, "Computing geodetic
 ;       coordinates", SIAM Rev. Vol. 40, No. 2, pp. 300-309, June 1998
 ;
-;       Planterary constants from "Allen's Astrophysical Quantities", 
+;       Planetary constants from "Allen's Astrophysical Quantities", 
 ;       Fourth Ed., (2000)
 ;
 ; CALLING SEQUENCE:

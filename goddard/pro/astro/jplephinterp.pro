@@ -117,8 +117,9 @@
 ;   RAWDATA - raw data array returned by JPLEPHREAD.  Users should not
 ;             modify this data array.
 ;
-;   T - ephemeris time(s) of interest.  May be a scalar or vector.
-;       The actual time is (T+TBASE).
+;   T - ephemeris time(s) of interest, relative to TBASE (i.e. the
+;       actual interpolation time is (T+TBASE)).  May be a scalar or
+;       vector.
 ;
 ;   X, Y, Z - upon return, the x-, y- and z-components of the body
 ;             position are returned in these parameters.  For
@@ -143,8 +144,8 @@
 ;                   1 - 'MERCURY'     9 - 'PLUTO'
 ;                   2 - 'VENUS'      10 - 'MOON'  (earth's moon)
 ;                   3 - 'EARTH'      11 - 'SUN'
-;                   4 - 'MARS'       12 - 'SOLARBARY' (solar system barycenter)
-;                   5 - 'JUPITER'    13 - 'EARTHBARY' (earth-moon barycenter)
+;                   4 - 'MARS'       12 - 'SOLARBARY' or 'SSB' (solar system barycenter)
+;                   5 - 'JUPITER'    13 - 'EARTHBARY' or 'EMB' (earth-moon barycenter)
 ;                   6 - 'SATURN'     14 - 'NUTATIONS' (see above)
 ;                   7 - 'URANUS'     15 - 'LIBRATIONS' (see above)
 ;                   8 - 'NEPTUNE' 
@@ -171,6 +172,8 @@
 ;                 'CM' - centimeters
 ;                 'AU' - astronomical units
 ;                 'LT-S' - light seconds
+;               If angles are requested, this keyword is ignored and
+;               the units are always 'RADIANS'.
 ;
 ;   VELUNITS - a scalar string specifying the desired units for VX, VY
 ;              and VZ.  Allowed values:
@@ -180,9 +183,9 @@
 ;                 'LT-S/S' - light seconds per second
 ;                 'AU/DAY' - astronomical units per day
 ;
-;   TBASE - a scalar number, specifies a fixed epoch against wich T is
-;           measured.  The ephemeris time will be (T+TBASE).  Use this
-;           keyword for maximum precision.
+;   TBASE - a scalar or vector, specifies a fixed epoch against wich T
+;           is measured.  The ephemeris time will be (T+TBASE).  Use
+;           this keyword for maximum precision.
 ;
 ;
 ; EXAMPLE:
@@ -227,11 +230,18 @@
 ;   Fix bug in evaluation of velocity (only appears in highest order
 ;     polynomial term); JPLEPHTEST verification tests still pass;
 ;     change is of order < 0.5 cm in position, 22 Nov 2004, CM
+;   Perform more validity checking on inputs; and more informative
+;     outputs, 09 Oct 2008, CM
+;   Allow SSB and EMB as shortcuts for solar system and earth-moon
+;     bary center, 15 Oct 2008, CM
+;   TBASE now allowed to be a vector or scalar, 01 Jan 2009, CM
+;   VELFAC keyword gives scale factor between POSUNITS and VELUNITS, 
+;     12 Jan 2009, CM
 ;
-;  $Id: jplephinterp.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $
+;  $Id: jplephinterp.pro,v 1.18 2009/01/13 04:53:26 craigm Exp $
 ;
 ;-
-; Copyright (C) 2001, 2002, 2004, Craig Markwardt
+; Copyright (C) 2001, 2002, 2004, 2008, 2009, Craig Markwardt
 ; This software is provided as is without any warranty whatsoever.
 ; Permission to use, copy and distribute unmodified copies for
 ; non-commercial purposes, and to modify and use for personal or
@@ -241,7 +251,7 @@
 pro jplephinterp_calc, info, raw, obj, t, x, y, z, vx, vy, vz, $
                        velocity=vel, tbase=tbase
 
-  ; '$Id: jplephinterp.pro,v 1.3 2005-08-26 18:14:07 hogg Exp $'
+  ; '$Id: jplephinterp.pro,v 1.18 2009/01/13 04:53:26 craigm Exp $'
 
   if n_elements(tbase) EQ 0 then tbase = 0D
   ;; Number of coefficients (x3), number of subintervals, num of rows
@@ -249,8 +259,8 @@ pro jplephinterp_calc, info, raw, obj, t, x, y, z, vx, vy, vz, $
   ns = info.nsub[obj]
   dt = info.timedel
   nr = info.jdrows
-  jd0 = info.jdlimits[0] - tbase[0]
-  jd1 = info.jdlimits[1] - tbase[0]
+  jd0 = info.jdlimits[0] - tbase
+  jd1 = info.jdlimits[1] - tbase
 
   ;; Extract coefficient data from RAW
   if obj EQ 11 then begin
@@ -418,6 +428,7 @@ end
 pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
                   objectname=obj0, velocity=vel, center=cent, tbase=tbase, $
                   posunits=outunit0, velunits=velunit0, $
+                  pos_vel_factor=velfac, $
                   xobjnum=objnum, decode_obj=decode
 
   if n_params() EQ 0 then begin
@@ -436,9 +447,17 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
   ;;   6 = Saturn            13 = Earth-Moon barycenter
   ;;   7 = Uranus            14 = Nutations (longitude and obliquity; untested)
   ;;                         15 = Librations 
-  ;;1000 = TDB to TDT offset (s), returned in X component
   ;; This numbering scheme is 1-relative, to be consistent with the
-  ;; Fortran version.
+  ;; Fortran version.  (units are seconds; derivative units are seconds/day)
+  ;;1000 = TDB to TDT offset (s), returned in X component
+
+  sz = size(info)
+  if sz[sz[0]+1] NE 8 then message, 'ERROR: INFO must be a structure'
+  if ((info.format NE 'JPLEPHMAKE') AND $
+      (info.format NE 'BINEPH2FITS') AND $
+      (info.format NE 'DENEW')) then begin
+      message, 'ERROR: ephemeris type "'+info.format+'" is not recognized'
+  endif
 
   ;; Handle case of custom ephemerides
   if info.format EQ 'JPLEPHMAKE' then begin
@@ -475,7 +494,9 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
           case obj of 
               'EARTH':      obj = 3
               'SOLARBARY':  obj = 12
+              'SSB':        obj = 12
               'EARTHBARY':  obj = 13
+              'EMB':        obj = 13
               'NUTATIONS':  obj = 14
               'LIBRATIONS': obj = 15
               'TDB2TDT':    obj = 1000
@@ -592,6 +613,13 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
 
       1000: begin ;; TDT to TDB conversion
           x = tdb2tdt(t, deriv=vx, tbase=tbase)
+          if n_elements(velunit0) GT 0 then begin
+             ;; Special case of unit conversion when user asks for 
+             ;; "per second"
+             if strpos(strupcase(velunit0[0]),'/S') GE 0 then $
+                vx = vx / 86400d
+          endif
+
           goto, CLEAN_RETURN
       end
 
@@ -633,51 +661,62 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
   endif
 
   DO_UNIT:
+  
+  velfac = 1d
+
   ;; -------------------------------------------------------
   ;; Convert positional units
   if n_elements(outunit0) GT 0 then begin
-      case strupcase(strtrim(outunit0[0],2)) of
+      pu = strupcase(strtrim(outunit0[0],2))
+      case pu of
           'KM': km = 1 ;; Dummy statement
           'CM': begin
               x = x * 1D5
               y = y * 1D5
               z = z * 1D5
+              velfac = velfac * 1D5
           end
           'AU': begin
               au = info.au*info.c/1000d
               x = x / au
               y = y / au
               z = z / au
+              velfac = velfac / au
           end
           'LT-S': begin
               c = info.c / 1000d
               x = x / c
               y = y / c
               z = z / c
+              velfac = velfac / c
           end
-          ELSE: message, 'ERROR: Unrecognized position units'
+          ELSE: message, 'ERROR: Unrecognized position units "'+pu+'"'
       endcase
   endif
 
   ;; -------------------------------------------------------
   ;; Convert velocity units
   if n_elements(velunit0) GT 0 AND keyword_set(vel) then begin
-      case strupcase(strtrim(velunit0[0],2)) of
+      vu = strupcase(strtrim(velunit0[0],2))
+      case vu of 
           'CM/S': begin
               vx = vx * (1D5/86400D)
               vy = vy * (1D5/86400D)
               vz = vz * (1D5/86400D)
+              velfac = velfac / (1D5/86400D)
           end
           'KM/S': begin
               vx = vx * (1D/86400D)
               vy = vy * (1D/86400D)
               vz = vz * (1D/86400D)
+              velfac = velfac / (1D/86400D)
           end
           'LT-S/S': begin
               c = info.c / 1000D
               vx = vx / (c*86400D)
               vy = vy / (c*86400D)
               vz = vz / (c*86400D)
+              velfac = velfac / (c*86400D)
           end
           'KM/DAY': km = 1 ;; Dummy statement
           'AU/DAY': begin
@@ -685,8 +724,9 @@ pro jplephinterp, info, raw, t, x, y, z, vx, vy, vz, earth=earth, sun=sun, $
               vx = vx / au
               vy = vy / au
               vz = vz / au
+              velfac = velfac * au
           end
-          ELSE: message, 'ERROR: Unrecognized velocity units'
+          ELSE: message, 'ERROR: Unrecognized velocity units "'+vu+'"'
       endcase
   endif
 

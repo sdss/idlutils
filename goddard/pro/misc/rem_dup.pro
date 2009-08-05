@@ -28,28 +28,31 @@ function rem_dup, a, flag
 ; EXAMPLES:
 ;
 ;	Remove duplicate values in vector a.
-;	 	a = a( rem_dup(a) )
+;	 	a = a[ rem_dup(a)]
 ;
 ;	Remove duplicates in vector WAVE.  When duplicate values
 ;	are found, select the one with the largest intensity, INTE.
 ;
 ;		sub = rem_dup( wave, inte)
-;		wave = wave( sub )
-;		inte = inte( sub )
+;		wave = wave[sub]      
+;		inte = inte[sub]
 ;
 ; NOTES:
 ;	The UNIQ function in the User's Library uses a faster algorithm,
-;	but has no equivalent of the "flag" parameter
+;	but has no equivalent of the "flag" parameter.    Also, note that
+;       REM_DUP() gives the index of the *first* equal value found, while
+;       UNIQ() gives the index of the *last* equal value found.
 ;
 ; MODIFICATION HISTORY:
 ;	D. Lindler  Mar. 87
 ;	11/16/90 JKF ACC - converted to IDL Version 2.
 ;	August 1997  -- Changed loop index to type LONG
 ;	October 1997 -- Also changed NGOOD index to LONG
-;	Converted to IDL V5.0   W. Landsman   October 1997
+;       April 2007 - Use faster algorithm when Flag vector not set, W. Landsman
 ;-
 ;-------------------------------------------------------------------------------
 ;
+ compile_opt idl2
  On_error,2
  npar = N_params()		;number of input parameters supplied
  if npar EQ 0 then begin
@@ -62,13 +65,15 @@ function rem_dup, a, flag
  if npar lt 2 then flag = intarr(n)     ;default flags
  sub = sort(a)			;sorted subscripts
  aa = a[sub]			;sorted a
- ff = flag[sub]			;sorted flags
- good = lonarr(n)		;values to keep
- ngood = 0L			;number kept.
 ;
 ; loop on aa
 ;
  val = aa[0]			;first value processed
+ if npar GE 2 then begin 
+ 
+ good = lonarr(n)		;values to keep
+ ngood = 0L			;number kept.
+ff = flag[sub]			;sorted flags
  f = ff[0]			;flag for first value
  for i = 1L, n-1 do begin
 	if aa[i] ne val then begin
@@ -83,7 +88,15 @@ function rem_dup, a, flag
 		endif
 	endelse
  endfor
- good = good[0:ngood]
+  good = good[0:ngood]
+
+ endif else begin
+ 
+   good    = where( shift( aa, 1) NE aa, count)
+   if count EQ 0 then good = 0
+
+ endelse
+ 
  return, sub[good]		;return subscripts in original a
  end
 

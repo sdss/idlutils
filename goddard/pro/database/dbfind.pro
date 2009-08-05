@@ -64,8 +64,8 @@ function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
 ;               concatenating them with commas in a single string.
 ;               Example:
 ;                       input_array = strarr(2)
-;                       input_array(0) = '14<ra<16'   ; 14-16 hrs of ra.
-;                       input_array(1) = '8<dec<20'   ; + 8-20 deg. decl.
+;                       input_array[0] = '14<ra<16'   ; 14-16 hrs of ra.
+;                       input_array[1] = '8<dec<20'   ; + 8-20 deg. decl.
 ;
 ; OPTIONAL INPUT:       
 ;       listin - gives list of entries to be searched.  If not supplied or 
@@ -296,7 +296,7 @@ endif
   if total(done) eq nitems then goto, FINI      ;all items searched
 
   nlist     = N_elements(list)        ;number of entries to search
-  if nlist GT 200 then begin
+  if nlist GT 2000 then begin
         print,'Non-indexed search on ',strtrim(nlist,2),' entries'
         print,'Expect Delay'
   end

@@ -51,7 +51,7 @@
 ;                     correction.
 ;       altitude: The altitude of the observing location, in meters. [default=0].
 ;       verbose: Set this for verbose output.  The default is verbose=0.
-;       _extra: This is for setting TEMPERATURE or PRESSURE explicity, which are
+;       _extra: This is for setting TEMPERATURE or PRESSURE explicitly, which are
 ;               used by CO_REFRACT to calculate the refraction effect of the
 ;               atmosphere. If you don't set these, the program will make an
 ;               intelligent guess as to what they are (taking into account your
@@ -145,6 +145,9 @@ pro eq2hor, ra, dec, jd, alt, az, ha, lat=lat, lon=lon, WS=WS, obsname=obsname,$
                 refract_ = refract_, aberration_ = aberration_,  $
                 altitude = altitude, _extra= _extra
 
+ On_error,2
+ compile_opt idl2
+ 
 if N_params() LT 4 then begin
     print,'Syntax - EQ2HOR, ra, dec, jd, alt, az, [ha, LAT= , LON= , /WS, '
     print,'          OBSNAME= ,/B1950 , PRECESS_= 0, NUTATE_= 0, REFRACT_= 0 '

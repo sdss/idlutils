@@ -33,8 +33,10 @@ PRO XMEDSKY, Image, Bkg, CLIP=clip, Nsig = nsig
 ;       Written by:     R. S. Hill, Hughes STX, 20 Oct. 1997
 ;       Converted to V5.0, use STDDEV()   W. Landsman   June 1998
 ;       Check for valid WHERE, added NSIG keyword  W. Landsman   December 2000 
-;       Assume since V5.1 so always use STDDEV  W. Landsman Feb 2004   
+;       Assume since V5.1 so always use STDDEV  W. Landsman Feb 2004 
+;       Assume since V5.6 use DIMEN keyword to MEDIAN W. Landsman Jan 2008  
 ;-
+ compile_opt idl2
  if N_params() LT 2 then begin
         print,'Syntax - Xmedsky, Image, Bkg, [CLIP = ]'
         return
@@ -44,9 +46,7 @@ PRO XMEDSKY, Image, Bkg, CLIP=clip, Nsig = nsig
  nbkg = sz[1]
  if N_elements(clip) LT 1 then clip = [0,sz[1]-1,0,sz[2]-1 ]
 
- bkg = fltarr(nbkg)
- FOR i=0,nbkg-1 DO $
-   bkg[i] = median( image[i,*] )
+  bkg = median( image, dimen=2)
 
  tmpimg=image
  FOR i=0,sz[2]-1 DO tmpimg[0,i] = image[*,i] - bkg

@@ -78,11 +78,13 @@
 ;       Version 4, William Thompson, GSFC, 23 June 1994
 ;               Modified so that ERRMSG is not touched if not defined.
 ;       Version 4, 23 June 1994
-;       	Converted to IDL V5.0   W. Landsman   September 1997
 ;
 ; Added ACCESS, REOPEN keywords, and FXFILTER package, CM 1999 Feb 03
 ; Added FILENAME[EXT] and FILENAME+EXT extension parsing, CM 1999 Jun 28
 ; Some general tidying, CM 1999 Nov 18
+;       Allow for possible 64bit integer number of bytes W. Landsman Nov 2007
+;       Make Ndata a 64bit integer to deal with larger files, E. Hivon, Mar 2008
+;       
 ;
 ;-
 ;
@@ -284,14 +286,14 @@ NEXT_EXT:
 	PCOUNT = FXPAR(HEADER,'PCOUNT', START=START)
 	IF NAXIS GT 0 THEN BEGIN 
 		DIMS = FXPAR(HEADER,'NAXIS*')		;Read dimensions
-		NDATA = DIMS[0]
+		NDATA = long64(DIMS[0])
 		IF NAXIS GT 1 THEN FOR I=2,NAXIS DO NDATA = NDATA*DIMS[I-1]
 	ENDIF ELSE NDATA = 0
-	NBYTES = (ABS(BITPIX) / 8) * GCOUNT * (PCOUNT + NDATA)
+	NBYTES = LONG64(ABS(BITPIX) / 8) * GCOUNT * (PCOUNT + NDATA)
 ;
 ;  Read the next extension header in the file.
 ;
-	NREC = LONG((NBYTES + 2879) / 2880)
+	NREC = (NBYTES + 2879) / 2880
 	POINT_LUN, -UNIT, POINTLUN			;Current position
 	MHEAD0 = POINTLUN + NREC*2880L
 	POINT_LUN, UNIT, MHEAD0				;Next FITS extension

@@ -51,12 +51,14 @@ pro dbcompare,list1,list2, items, TEXTOUT=textout, DIFF = diff
 ;     TEXTOPEN, TEXTCLOSE
 ; HISTORY:
 ;     Written,  W. Landsman            July 1996
-;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Fix documentation, add Syntax display    W. Landsman   November 1998   
 ;     Replace DATATYPE() with size(/TNAME)   W. Landsman    November 2001
+;     Assume since V5.5, remove VMS call  W. Landsman       September 2006
+;     Fix problem with multiple values when /DIFF set W. Landsman April 2007
 ;-
 ;
  On_error,2                                ;Return to caller
+ compile_opt idl2
  if N_params() LT 2 then begin
        print,'Syntax - DBCOMPARE, list1, list2, [items, TEXTOUT= ,/DIFF]'  
        return
@@ -65,7 +67,6 @@ pro dbcompare,list1,list2, items, TEXTOUT=textout, DIFF = diff
 ; Make list a vector
 
  dbname = db_info( 'NAME', 0 )
- if !VERSION.OS NE 'vms' then dbname = strlowcase(dbname)
 
  nentry = db_info( 'ENTRIES', 0)
  if list1[0] GT nentry then message, dbname + $
@@ -113,7 +114,8 @@ pro dbcompare,list1,list2, items, TEXTOUT=textout, DIFF = diff
                 endif
                 value1 = strtrim(value1,2)
                 value2 = strtrim(value2,2)
-                if keyword_set(diff) then doprint = value1 NE value2  $
+                if keyword_set(diff) then $
+		       doprint = total(value1 NE value2) GT 0  $
                                       else doprint = 1
                 if doprint then printf,!textunit,it[k],') ',qnames[k],  $
                         f = '(i,a,a,a,t55,a)',  value1,value2

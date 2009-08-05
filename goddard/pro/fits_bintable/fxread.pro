@@ -147,6 +147,10 @@
 ;       Version 10, Craig Markwardt, 01 Mar 2004
 ;               Add EXTENSION keyword and ability to read different
 ;               extensions than the primary one.
+;       Version 11,  W. Landsamn   September 2006 
+;               Assume since V5.5, remove VMS support
+;       Version 11.1,  W. Landsamn   November 2007
+;               Allow for possibility number of bytes requires 64 bit integer
 ;-
 ;
 	ON_ERROR, 2
@@ -196,7 +200,7 @@
 ;
         IF NOT KEYWORD_SET(COMPRESS) THEN $
          COMPRESS = STRLOWCASE( STRMID(FILENAME, STRLEN(FILENAME)-3,3)) EQ '.gz'
-	OPENR, UNIT, FILENAME, /BLOCK, /GET_LUN, ERROR=ERROR,COMPRESS=COMPRESS[0]
+	OPENR, UNIT, FILENAME, /GET_LUN, ERROR=ERROR,COMPRESS=COMPRESS[0]
         IF ERROR NE 0 THEN BEGIN
 	    MESSAGE='Error opening '+FILENAME
 	    IF N_ELEMENTS(ERRMSG) NE 0 THEN BEGIN
@@ -236,8 +240,8 @@
                 NDATA = DIMS[0]
                 IF NAXIS GT 1 THEN FOR I=2,NAXIS DO NDATA = NDATA*DIMS[I-1]
             ENDIF ELSE NDATA = 0
-            NBYTES = (ABS(BITPIX) / 8) * GCOUNT * (PCOUNT + NDATA)
-            NREC = LONG((NBYTES + 2879) / 2880)
+            NBYTES = LONG64(ABS(BITPIX) / 8) * GCOUNT * (PCOUNT + NDATA)
+            NREC = (NBYTES + 2879) / 2880
             
             IF ETYPE EQ 7 THEN BEGIN
                 EXTNAME = STRTRIM(STRUPCASE(FXPAR(HEADER,'EXTNAME', $
@@ -500,19 +504,6 @@
 	                END ELSE BEGIN
 	                    DATA[0,J] = REBIN(LINE[0:XSTEP*DIMS[0]-1,*],DIMS[0],1)
 	                ENDELSE
-;
-;  It seems that VAXes don't like to even subsample floating point data that
-;  isn't yet in local format.  Therefore it is necessary to convert beforehand.
-;  To be compatible with the rest of the routine, the data is then converted
-;  back again.
-;
-	            END ELSE IF (!VERSION.ARCH EQ 'vax') AND (IDLTYPE GE 4) $
-			    THEN BEGIN
-			TEST = LINE
-			IEEE_TO_HOST, TEST
-			TEST = TEST[INDEX]
-			HOST_TO_IEEE, TEST
-			DATA[0,J] = TEST
 		    END ELSE DATA[0,J] = LINE[INDEX]
 ;
 ;  Otherwise, if the step size is trivial, then simply store the line in the

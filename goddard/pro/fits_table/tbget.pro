@@ -27,7 +27,7 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ; OPTIONAL KEYWORD INPUT:
 ;       /NOSCALE - If this keyword is set and nonzero, then the TSCALn and
 ;               TZEROn keywords will *not* be used to scale to physical values
-;               Default is to perfrom scaling
+;               Default is to perform scaling
 ;       CONTINUE - This keyword does nothing, it is kept for consistency with
 ;               with earlier versions of TBGET().
 ; OUTPUTS:
@@ -60,7 +60,7 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ;       binary tables, and FTAB_HELP or TBHELP to determine the columns of the
 ;       table
 ; PROCEDURE CALLS:
-;       IS_IEEE_BIG(), TBINFO, TBSIZE 
+;       TBINFO, TBSIZE 
 ; HISTORY:
 ;       Written  W. Landsman        February, 1991
 ;       Work for string and complex   W. Landsman         April, 1993
@@ -70,7 +70,6 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ;       Added a check for zero width column  W. Landsman   April, 1997
 ;       Add TEMPORARY() and REFORM() for speed  W. Landsman  May, 1997
 ;       Use new structure returned by TBINFO    W. Landsman  August 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Add IS_IEEE_BIG(), No subscripting when all rows requested
 ;                               W. Landsman    March 2000
 ;       Use SIZE(/TNAME) instead of DATATYPE()  W. Landsman October 2001
@@ -80,9 +79,12 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ;       Support unsigned integers, new pointer types of TSCAL and TZERO
 ;       returned by TBINFO   W. Landsman        April 2003
 ;       Add an i = i[0] for V6.0 compatibility  W. Landsman  August 2003
+;       Use faster BYTEORDER byteswapping  W. Landsman April 2006
+;       Free pointers if FITS header supplied W. Landsman March 2007
 ;-
 ;------------------------------------------------------------------
  On_error,2
+ compile_opt idl2
         
  if N_params() LT 3 then begin
     print, $
@@ -99,7 +101,7 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 ; get characteristics of specified field
 
  case size(hdr_or_tbstr,/type) of 
- 7: tbinfo,hdr_or_tbstr,tb_str
+ 7: tbinfo,hdr_or_tbstr,tb_str,NOSCALE=noscale
  8: tb_str = hdr_or_tbstr
  else: message,'ERROR - Invalid FITS header or structure supplied' 
  endcase 
@@ -169,7 +171,6 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
   else $                                        ;vector of rows
         d = tab[tbcol:tbcol + numval*width-1,row]
  Nnull = 0
- bswap = 1 - is_ieee_big()
 ; convert data to the correct type
 
  case idltype of
@@ -183,30 +184,30 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
      end
 
  2:  begin
-     if bswap then byteorder,d,/NtoHS
+     byteorder,d,/NTOHS, /SWAP_IF_LITTLE
      d = fix(d,0, numval, nrow)
      if tnull NE 0 then nullval = where(d EQ tnull, Nnull)
      end
  
  3:  begin
-     if bswap then byteorder,d,/NtoHL
+     byteorder,d,/NTOHL, /SWAP_IF_LITTLE
      d = long( d, 0, numval, nrow)
      if tnull NE 0 then nullval = where(d EQ tnull, Nnull)
      end
 
  4:  begin
      d = float( d, 0, numval, nrow)
-     if bswap then byteorder, d, /XDRTOF
+     byteorder,d,/LSWAP, /SWAP_IF_LITTLE
      end
 
  5:  begin
      d = double( d, 0, numval, nrow)
-     if bswap then byteorder, d, /XDRTOD
-     end
+     byteorder,d,/L64SWAP, /SWAP_IF_LITTLE
+      end
 
  6:  begin
      d = complex( d, 0, numval, nrow)
-     if bswap then byteorder, d, /XDRTOF
+     byteorder,d,/LSWAP, /SWAP_IF_LITTLE
      end
 
  7:  d = string(d)
@@ -214,13 +215,14 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 
  14: begin
      d = long64(d, 0, numval, nrow)
-     if bswap then byteorder, d, /L64swap
+     byteorder, d, /L64swap, /SWAP_IF_LITTLE
      end
 
  endcase
 
 
  if not keyword_set(NOSCALE) then begin
+    if tag_exist(tb_str,'TSCAL') then begin
         tscale = *tb_str.tscal[i]
         tzero = *tb_str.tzero[i]
         unsgn_int = (tzero EQ 32768) and (tscale EQ 1)
@@ -229,6 +231,7 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
         else if unsgn_lng then d = ulong(d) - ulong(2147483648) else $
         if ( (tscale NE 1.0) or (tzero NE 0.0) ) then $
                 d = temporary(d)*tscale + tzero
+	endif	
  endif
 
  if N_params() EQ 5 then begin
@@ -241,6 +244,12 @@ function tbget, hdr_or_tbstr, tab, field, rows, nulls, NOSCALE = noscale, $
 
 ; Extract correct rows if vector supplied
 
+ if size(hdr_or_tbstr,/TYPE) NE 8 and (not keyword_set(NOSCALE)) then begin
+       ptr_free, tb_str.tscal
+       ptr_free, tb_str.tzero
+ endif       
+
  if N_elements(d) EQ 1 then return, d[0] else return, reform(d,/overwrite)
+ 
 
  end

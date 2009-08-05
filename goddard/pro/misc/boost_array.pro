@@ -6,7 +6,7 @@
 ;	Append one array onto a destination array
 ; EXPLANATION:
 ;	Add array APPEND to array DESTINATION, allowing the dimensions of
-;	DESTINATION to adjust to accomodate it.  If both input arrays have the
+;	DESTINATION to adjust to accommodate it.  If both input arrays have the
 ;	same number of dimensions, then the output array will have one
 ;	additional dimension.  Otherwise, the last dimension of DESTINATION
 ;	will be incremented by one.

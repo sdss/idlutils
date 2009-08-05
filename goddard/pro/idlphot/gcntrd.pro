@@ -64,8 +64,11 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 ;  MODIFICATION HISTORY:
 ;       Written June 2004, W. Landsman  following algorithm used by P. Stetson 
 ;             in DAOPHOT2.
+;       Modified centroid computation (as in IRAF/DAOFIND) to allow shifts of
+;      more than 1 pixel from initial guess.    March 2008
 ;-      
  On_error,2 
+ compile_opt idl2
 
  if N_params() LT 5 then begin
         print,'Syntax: GCNTRD, img, x, y, xcen, ycen, [ fwhm, ' 
@@ -182,6 +185,7 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 ;  Extract  subimage centered on maximum pixel 
 
  d = img[xmax-nhalf : xmax+nhalf, ymax-nhalf : ymax+nhalf]
+ 
 
  if keyword_set(DEBUG) then begin
        message,'Subarray used to compute centroid:',/inf
@@ -203,10 +207,20 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 	 xcen[i] = -1	& ycen[i] = -1
 	 goto, DONE
   endif
+  
   ywt = y_wt*mask
   xwt = x_wt*mask
   wt1 = wt*maskx
   wt2 = wt*masky
+;
+; Centroid computation:   The centroid computation was modified in Mar 2008 and
+; now differs from DAOPHOT which multiplies the correction dx by 1/(1+abs(dx)). 
+; The DAOPHOT method is more robust (e.g. two different sources will not merge)
+; especially in a package where the centroid will be subsequently be 
+; redetermined using PSF fitting.   However, it is less accurate, and introduces
+; biases in the centroid histogram.   The change here is the same made in the 
+; IRAF DAOFIND routine (see 
+; http://iraf.net/article.php?story=7211&query=daofind )
   
  sd = total(d*ywt,2,/nan)
  sg = total(g*ywt,2)
@@ -238,7 +252,11 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 
  skylvl = (sumd - hx*sumg)/p
  dx = (sgdgdx - (sddgdx-sdgdx*(hx*sumg + skylvl*p)))/(hx*sdgdxs/sigsq)
- xcen[i] = xmax + dx/(1+abs(dx))    ;X centroid in original array
+ xcen[i] = xmax + dx    ;X centroid in original array
+
+
+
+
 
 ;Now repeat computation for Y centroid
 
@@ -269,7 +287,7 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 
  skylvl = (sumd - hy*sumg)/p
  dy = (sgdgdy - (sddgdy-sdgdy*(hy*sumg + skylvl*p)))/(hy*sdgdys/sigsq)
- ycen[i] = ymax + dy/(1+abs(dy))    ;X centroid in original array
+ ycen[i] = ymax +dy   ;Y centroid in original array
 DONE:
  endfor
 

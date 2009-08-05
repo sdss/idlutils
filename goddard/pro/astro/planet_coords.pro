@@ -61,7 +61,7 @@ pro planet_coords, date, ra, dec, planet=planet, jd = jd, jpl = jpl
 ;          HELIO is based on the two-body problem and neglects interactions 
 ;           between the planets.   This is why the worst results are for
 ;           Saturn.   Use the /JPL option or the online ephemeris generator 
-;           http://ssd.jpl.nasa.gov/cgi-bin/eph for more accuracy. 
+;           http://ssd.jpl.nasa.gov/horizons.cgi for more accuracy. 
 ;
 ;           The procedure returns astrometric coordinates, i.e. no correction
 ;           for aberration.   A correction for light travel time is applied

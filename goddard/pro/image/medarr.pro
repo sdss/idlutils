@@ -33,14 +33,13 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       outarr -- The output array.  It will have dimensions equal to the
 ;                 first two dimensions of the input array.
 ;
-; OPTIONAL OUTPUT:
+; OPTIONAL OUPUT:
 ;       output_mask -- Same structure as outarr, byte array with 1b
 ;                      pixels are valid, 0b where all the input pixels
 ;                      have been masked out.
 ; RESTRICTIONS:
-;        Prior to V5.6, this procedure was *SLOW* because it had to loop over 
-;        each pixel of the image.   See notes below about an alternative with 
-;        CALL_EXTERNAL.
+;        This procedure was *SLOW* when using the Mask parameter because it has
+;        to loop over  each pixel of the image.  
 ;
 ; EXAMPLE:
 ;       Suppose one wants to combine three floating point 1024 x 1024 bias 
@@ -52,7 +51,9 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;
 ;       The variable avgbias will be the desired 1024x 1024 float image.
 ; PROCEDURE:
-;       A scalar median function over the third dimension is looped over 
+;       If the MASK parameter is not set, then MEDARR is just a wrapper for 
+;       MEDIAN(/EVEN, dimension = 3).    If the MASK parameter is set,
+;       a scalar median function over the third dimension is looped over 
 ;       each pixel of the first two dimensions.   The /EVEN keyword is used
 ;       with MEDIAN (which averages the two middle values), since this avoids 
 ;       biasing the output for an even number of images.
@@ -61,10 +62,6 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       median.    If all values for a pixel location are NAN, then the median
 ;       is also returned as NAN.
 ;
-;       MEDARR is also available as a C procedure linked to IDL via
-;       CALL_EXTERNAL (but without the mask parameter).   The callable C 
-;       version is 2-3 times faster for large  (~ 500 x 500 x 7) images.   
-;       Contact W. Landsman (landsman@mpb.gsfc.nasa.gov) for the C program
 ; MODIFICATION HISTORY:
 ;       Written by Michael R. Greason, STX, 12 June 1990.
 ;       Don't use MEDIAN function for even number of images.
@@ -79,7 +76,8 @@ PRO medarr, inarr, outarr, mask, output_mask
 ;       Use MEDIAN(/DIMEN) for V5.6 or later   W. Landsman   November 2002
 ;       Use keyword_set() instead of ARG_present() to test for presence of mask
 ;           parameter  D. Hanish/W. Landsman   June 2003
-;       Use MEDIAN(/EVEN) when mask not set V5.6 or later W. Landsman Feb 2004
+;       Assume since V5.6  W. Landsman  Feb 2004
+; 
 ;-
  On_error,2
 ;                       Check parameters.
@@ -92,7 +90,7 @@ PRO medarr, inarr, outarr, mask, output_mask
  s = size(inarr)
  if s[0] NE 3 then $                    ; Input array size.
         message, "Input array must have 3 dimensions"
- if !VERSION.RELEASE GE '5.6' and (N_elements(mask) EQ 0) then begin
+ if (N_elements(mask) EQ 0) then begin
         outarr = median(inarr,dimension=3,/even)
         return
  endif
@@ -103,38 +101,20 @@ PRO medarr, inarr, outarr, mask, output_mask
  narr = s[3]
  type = s[s[0] + 1]
  outarr = make_array( dimen = [ncol,nrow], /NOZERO, TYPE = type )
- if N_params() GT 2 then $
-        output_mask = make_array (dimen = [ncol,nrow], VALUE = 1b)
- even = (narr mod 2) EQ 0
+ output_mask = make_array (dimen = [ncol,nrow], VALUE = 1b)
 
 ;                       Combine the input arrays into the output array.
 
- mask_given = 0b
- if keyword_set(mask) then begin
-    sm = size(mask)
-    if N_elements(mask) LT 4 then $ 
-           message,'Input mask not valid... must have 3 dimensions'
-    w = where(sm[0:3] eq s[0:3], cw)
-    if cw eq 4 then begin
-       mask_given = 1b 
-    endif else begin
-       message,'Mask not valid... must be same shape as input cube.'
-    endelse
- endif
+  sm = size(mask)
+  if N_elements(mask) LT 4 then $ 
+	 message,'Input mask not valid... must have 3 dimensions'
+  w = where(sm[0:3] eq s[0:3], cw)
+  if cw eq 4 then begin
+     mask_given = 1b 
+  endif else begin
+     message,'Mask not valid... must be same shape as input cube.'
+  endelse
 
- if not mask_given then begin
-; If the /EVEN keyword is not needed, then it is faster not to use it
-
-     if even then begin     
-       for j = 0l, nrow-1 do $
-            for i = 0l, ncol-1 do outarr[i,j] = median(inarr[i,j,*],/EVEN)
-      endif else begin 
-        for j = 0l, nrow-1 do $
-            for i = 0l, ncol-1 do outarr[i,j] = median(inarr[i,j,*])
-     endelse
-
-
- endif else begin
 
  for j = 0l, (nrow-1) do begin    
         for i = 0l, (ncol-1) do begin
@@ -151,7 +131,6 @@ PRO medarr, inarr, outarr, mask, output_mask
           
         endfor
  endfor
- endelse 
-
+ 
  return
  end

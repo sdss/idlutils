@@ -43,7 +43,7 @@ pro ad2xy, a, d, astr, x, y
 ;     *not* the FITS convention (first pixel is 1)
 ; NOTES:
 ;      AD2XY tests for presence of WCS coordinates by the presence of a dash 
-;      in the 5th character position in the value of CTYPE (e.g 'DEC--SIN').       
+;      in the 5th character position in the value of CTYPE (e.g 'DEC--SIN').
 ; PROCEDURES USED:
 ;       TAG_EXIST(), WCSSPH2XY
 ; REVISION HISTORY:
@@ -52,11 +52,11 @@ pro ad2xy, a, d, astr, x, y
 ;     Do computation correctly in degrees  W. Landsman       Dec. 1994
 ;     Only pass 2 CRVAL values to WCSSPH2XY   W. Landsman      June 1995
 ;     Don't subscript CTYPE      W. Landsman       August 1995        
-;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
 ;     Consistent conversion between CROTA and CD matrix W. Landsman October 2000
 ;     No special case for tangent projection W. Landsman June 2003
 ;     Work for non-WCS coordinate transformations W. Landsman Oct 2004
+;     Use CRVAL reference point for non-WCS transformation  W.L. March 2007
 ;-
  On_error,2
  compile_opt idl2
@@ -86,7 +86,7 @@ pro ad2xy, a, d, astr, x, y
   wcssph2xy, a, d, xsi, eta, CTYPE = ctype, PV2 = astr.pv2, $
         LONGPOLE = astr.longpole, CRVAL = crval, LATPOLE = astr.latpole
   endif else begin
-        xsi = a & eta = d
+        xsi = a - crval[0] & eta = d - crval[1]
   endelse	
   cd = astr.cd
   cdelt = astr.cdelt

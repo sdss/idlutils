@@ -25,12 +25,13 @@ pro table_append,list,name
 ;	version 1  D. Lindler	April 1989
 ;       Removed call to non-standard system variable !DUMP WBL  September 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Use file_search rather than findfile  W. Landsman Sep 2006
 ;-
 ;---------------------------------------------------------------------
 ;
 ; get list of file names if list is a scalar
 ;
-	if n_elements(list) eq 1 then files=findfile(list) $
+	if n_elements(list) eq 1 then files=file_search(list) $
 				 else files=list
 		print,'Merging files:'
 		print,files

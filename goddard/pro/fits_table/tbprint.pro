@@ -47,7 +47,7 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 ;                                         ;an ASCII file named 'stars.dat'
 ;
 ; PROCEDURES USED:
-;       GETTOK(), TEXTOPEN, TEXTCLOSE, TBINFO
+;       GETTOK(), STRNUMBER(), TEXTOPEN, TEXTCLOSE, TBINFO
 ;
 ; RESTRICTIONS: 
 ;       (1) Program does not check whether output length exceeds output
@@ -56,20 +56,24 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 ;               the FORMAT specified for the column
 ;       (3) Program does not check for null values
 ;       (4) Does not work with variable length columns
+;       (5) Will only the display the first value of fields with multiple values
+;        (unless there is one row each with the same number of mulitple values
 ;
-; MINIMUM IDL VERSION:
-;       V5.3 (uses STRSPLIT)
 ; HISTORY:
 ;       version 1  D. Lindler Feb. 1987
 ;       Accept undefined values of rows,columns W. Landsman  August 1997
 ;       Use new structure returned by TBINFO    W. Landsman  August 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Made formatting more robust    W. Landsman   March 2000
 ;       Use STRSPLIT to parse string column listing W. Landsman July 2002
 ;       Wasn't always printing last row   W. Landsman  Feb. 2003
+;       Better formatting (space between columns) W. Landsman Oct. 2005
+;       Use case-insensitive match with TTYPE, use STRJOIN W.L. June 2006
+;       Fixed check for multiple values W.L. August 2006
+;       Fixed bad index value in August 2006 fix  W.L Aug 15 2006
+;       Free-up pointers after calling TBINFO  W.L. Mar 2007
 ;-
  On_error,2
-
+ compile_opt idl2
 
  if N_params() LT 2 then begin
    print,'Syntax -  TBPRINT, h, tab, [ columns, rows, device, TEXTOUT= ,FMT= ]'
@@ -109,7 +113,7 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
         colnum = intarr(numcol)
         field = strupcase(colnames)
         for i = 0,numcol-1 do begin 
-        colnum[i] = where(tb_str.ttype EQ field[i],nfound) + 1
+        colnum[i] = where(strupcase(tb_str.ttype) EQ field[i],nfound) + 1
         if nfound EQ 0 then $ 
            message,'Field '+ field[i] + ' not found in header'
        end
@@ -146,11 +150,12 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
 
  default = where(form EQ '',Ndef)
  if Ndef GT 0 then form[default] = fmt_def[ tb_str.idltype[colnum[default]-1] ]
- form = '(' + form + ')'
- 
+  form = strtrim(form,2)
+
  num = where(tb_str.idltype[colnum-1] NE 7, Nnumeric)
  if Nnumeric GT 0 then minnumval = min(tb_str.numval[colnum[num]-1]) $
  else minnumval = 1
+
  if (minnumval GT 1) then begin 
         if rows[0] NE -1 then nrow1 = N_elements(rows)-1 else begin
                 rows = lindgen(minnumval)
@@ -164,30 +169,43 @@ pro tbprint,hdr_or_tbstr,tab,columns,rows,textout=textout,fmt=fmt
  varname = 'v' + strtrim(sindgen(numcol)+1,2)
  len = lonarr(numcol)
  varstr = varname + '[0]'
+ xform = '(' + form + ')'
  for i = 0,numcol-1 do begin
         result = execute(varname[i] + '= tbget(tb_str,tab,colnum[i],r)' )
-        result = execute('len[i] = strlen(string(' + varstr[i] + ',f=form[i]))')
+        result = execute('len[i] = strlen(string(' + varstr[i] + ',f=xform[i]))')
  endfor
 
  field = strtrim(tb_str.ttype[colnum-1],2)
  fieldlen = strlen(field)
  for i=0,numcol-1 do begin
-        if fieldlen[i] LT len[i]-1 then begin
-                pad = string(replicate(32b,(len[i] - fieldlen[i])/2))
-                field[i] = pad + field[i] + pad
+        if fieldlen[i] LT len[i] then begin
+	        space = len[i] - fieldlen[i]
+		if space EQ 1 then field[i] = field[i]+ ' ' else begin
+                   pad = string(replicate(32b,space/2))
+                   field[i] = pad + field[i] + pad
+		   if space mod 2 EQ 1 then field[i] = field[i] + ' '
+		endelse   
         endif else field[i] = strmid(field[i],0,len[i])
  endfor
+ 
+ if size(hdr_or_tbstr,/TYPE) NE 8  then begin
+       ptr_free, tb_str.tscal
+       ptr_free, tb_str.tzero
+ endif
+
 
  printf,!TEXTUNIT,field
 
- varstr = varname + '[i]'
- vstring = varstr[0]
- if numcol GT 1 then for i=1,numcol-1 do vstring = vstring + ',' + varstr[i]
- format = form[0]
- if N_elements(form) GT 0 then for i=1,N_elements(form)-1 do $
-        format = format + ',' + form[i]
- format = '(' + format + ')'
+; If there are multiple values then only print the first value....
 
+  if minnumval EQ 1 then begin        
+       index = replicate('[i]',numcol)
+       g = where( tb_str.numval[colnum-1] GT 1,Ng) 
+       if Ng GT 0 then index[g] = '[0,i]'  
+       vstring  = strjoin(varname + index,',')
+  endif else  vstring = strjoin(varname + '[i]',',') 
+ format = strjoin(form,',1x,')
+ format = '(' + format + ')'
 
  if minnumval EQ 1 then $
  result = execute('for i=0,n-1 do printf,!TEXTUNIT,' +  $

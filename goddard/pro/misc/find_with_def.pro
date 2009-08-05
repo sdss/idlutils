@@ -6,8 +6,7 @@
 ; PURPOSE: 
 ;     Searches for files with a default path and extension. 
 ; EXPLANATION:
-;     Finds files using default paths and extensions, similar to using the
-;     DEFAULT keyword with the OPEN statement in VMS.  Using this routine
+;     Finds files using default paths and extensions,   Using this routine
 ;     together with environment variables allows an OS-independent approach
 ;     to finding files.
 ; CALLING SEQUENCE: 
@@ -30,16 +29,14 @@
 ;
 ;                    A leading $ can be used in any path to signal that what
 ;                    follows is an environmental variable, but the $ is not
-;                    necessary.  (In VMS the $ can either be part of the path,
-;                    or can signal logical names for compatibility with Unix.)
-;                    Environmental variables can themselves contain multiple
-;                    paths.
+;                    necessary.  Environmental variables can themselves contain
+;                    multiple paths.
 ;
 ; OPTIONAL INPUTS: 
-;     EXTENSIONS = One or more extensions to append to end of filename if the
-;                    filename does not contain one (e.g. ".dat").  The period
-;                    is optional.  Multiple extensions can be separated by
-;                    commas or colons.
+;     EXTENSIONS = Scalar string giving one or more extensions to append to 
+;                  end of filename if the filename does not contain one (e.g. 
+;                   ".dat").  The period is optional.  Multiple extensions can 
+;                   be separated by commas or colons.
 ; OUTPUTS: 
 ;     The result of the function is the name of the file if successful, or
 ;     the null string if unsuccessful.
@@ -134,44 +131,23 @@
 ;  Set up variables used by the loops below.
 ;
         I_PATH = -1
-        I_EXT = -1
         GET_LUN, UNIT
+	FNAME = STRTRIM(FILENAME,2) + EXT
 ;
 ;  Step through each of the paths.
 ;
-NEXT_PATH:
-        I_PATH = I_PATH + 1
-        IF I_PATH GE N_ELEMENTS(PATH) THEN GOTO, NO_FILE
-        PTH = PATH[I_PATH]
+        FOR I_PATH = 0, N_ELEMENTS(PATH)- 1 DO BEGIN 
 ;
-;  Step through each of the extensions.
+;  If the file is found then terminate the loop and clean up.
 ;
-NEXT_EXT:
-        I_EXT = I_EXT + 1
-        IF I_EXT GE N_ELEMENTS(EXT) THEN BEGIN
-                I_EXT = -1
-                GOTO, NEXT_PATH
-        ENDIF
-        EX = EXT[I_EXT]
-;
-;  Try to open the file.  Note:  ON_IOERROR and OPENR are used instead of
-;  FINDFILE because it is much faster.
-;
-        ON_IOERROR, NEXT_EXT
-        FILE = PTH + STRTRIM(FILENAME,2) + EX
-        OPENR, UNIT, FILE,error=error    ;; Added use of error status instead
-        IF error NE 0 THEN GOTO,NEXT_EXT ;; of counting on ON_IOERROR.
-        !ERR = 0
-        GOTO, DONE
-;
-;  If we reach this point, then no file has been found.
-;
-NO_FILE:
-        FILE = ''
+        FILE = FILE_SEARCH(PATH[I_PATH] + FNAME, COUNT = COUNT)
+        IF COUNT GT 0 THEN BREAK
+        ENDFOR
 ;
 ;  Otherwise, we jump directly to here when we find a file.
 ;
 DONE:
         FREE_LUN, UNIT
-        RETURN, FILE
+	!ERR = COUNT
+        RETURN, FILE[0]
         END

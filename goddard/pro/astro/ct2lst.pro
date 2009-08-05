@@ -14,10 +14,12 @@ PRO CT2LST, lst, lng, tz, tme, day, mon, year
 ;     Lng  - The longitude in degrees (east of Greenwich) of the place for 
 ;            which the local sidereal time is desired, scalar.   The Greenwich 
 ;            mean sidereal time (GMST) can be found by setting Lng = 0.
-;     Tz  - The time zone of the site in hours.  Use this to easily account 
-;            for Daylight Savings time (e.g. 4=EDT, 5 = EST/CDT), scalar
-;            This parameter is not needed (and ignored) if Julian date is 
-;            supplied.
+;     Tz  - The time zone of the site in hours, positive East  of the Greenwich
+;           meridian (ahead of GMT).  Use this parameter to easily account 
+;           for Daylight Savings time (e.g. -4=EDT, -5 = EST/CDT), scalar
+;           This parameter is not needed (and ignored) if Julian date is 
+;           supplied.    ***Note that the sign of TZ was changed in July 2008
+;           to match the standard definition.*** 
 ;     Time or JD  - If more than four parameters are specified, then this is 
 ;               the time of day of the specified date in decimal hours.  If 
 ;               exactly four parameters are specified, then this is the 
@@ -25,8 +27,8 @@ PRO CT2LST, lst, lng, tz, tme, day, mon, year
 ;
 ; OPTIONAL INPUTS:
 ;      Day -  The day of the month (1-31),integer scalar or vector
-;      Mon -  The month, in numerical format (1-12), integer scalar or 
-;      Year - The year (e.g. 1987)
+;      Mon -  The month, in numerical format (1-12), integer scalar or vector
+;      Year - The 4 digit year (e.g. 2008), integer scalar or vector
 ;
 ; OUTPUTS:
 ;       Lst   The Local Sidereal Time for the date/time specified in hours.
@@ -43,13 +45,13 @@ PRO CT2LST, lst, lng, tz, tme, day, mon, year
 ;       by Jean Meeus, p. 84 (Eq. 11-4) for the constants used.
 ;
 ; EXAMPLE:
-;       Find the Greenwich mean sidereal time (GMST) on 1987 April 10, 19h21m UT
+;       Find the Greenwich mean sidereal time (GMST) on 2008 Jul 30 at 15:53 pm
+;       in Baltimore, Maryland (longitude=-76.72 degrees).   The timezone is 
+;       EDT or tz=-4
 ;
-;       For GMST, we set lng=0, and for UT we set Tz = 0
+;       IDL> CT2LST, lst, -76.72, -4,ten(15,53), 30, 07, 2008
 ;
-;       IDL> CT2LST, lst, 0, 0,ten(19,21), 10, 4, 1987
-;
-;               ==> lst =  8.5825249 hours  (= 8h 34m 57.0896s)
+;               ==> lst =  11.356505  hours  (= 11h 21m 23.418s)
 ;
 ;       The Web site  http://tycho.usno.navy.mil/sidereal.html contains more
 ;       info on sidereal time, as well as an interactive calculator.
@@ -61,10 +63,12 @@ PRO CT2LST, lst, lng, tz, tme, day, mon, year
 ;               27 October 1988.
 ;     Use IAU 1984 constants Wayne Landsman, HSTX, April 1995, results 
 ;               differ by about 0.1 seconds  
-;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Longitudes measured *east* of Greenwich   W. Landsman    December 1998
+;     Time zone now measure positive East of Greenwich W. Landsman July 2008
+;     Remove debugging print statement  W. Landsman April 2009
 ;-
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 3 THEN BEGIN
         print,'Syntax - CT2LST, Lst, Lng, Tz, Time, Day, Mon, Year' 
@@ -78,8 +82,9 @@ PRO CT2LST, lst, lng, tz, tme, day, mon, year
 ;
 
  IF N_params() gt 4 THEN BEGIN
-   time = tme + tz
+   time = tme - tz
    jdcnv, year, mon, day, time, jd 
+
  ENDIF ELSE jd = double(tme)
 ;
 ;                            Useful constants, see Meeus, p.84

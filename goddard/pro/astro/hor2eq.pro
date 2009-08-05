@@ -9,7 +9,7 @@
 ;     This is a nice code to calculate equatorial (ra,dec) coordinates from
 ;     horizon (alt,az) coords.    It is typically accurate to about 1 arcsecond
 ;     or better (I have checked the output against the publicly available XEPHEM
-;     software). It preforms precession, nutation, abberation, and refraction
+;     software). It preforms precession, nutation, aberration, and refraction
 ;     corrections.  The perhaps best thing about it is that it can take arrays
 ;     as inputs, in all variables and keywords EXCEPT Lat, lon, and Altitude
 ;    (the code assumes these aren't changing), and uses vector arithmetic in
@@ -26,7 +26,7 @@
 ;       alt  : altitude (in degrees) [scalar or vector]
 ;       az   : azimuth angle (in degrees, measured EAST from NORTH, but see
 ;              keyword WS below.) [scalar or vector]
-;       JD   : Julian Date [scalar or vector]
+;       JD   : Julian Date [scalar or vector], double precision
 
 ;       Note: if RA and DEC are arrays, then alt and az will also be arrays.
 ;             If RA and DEC are arrays, JD may be a scalar OR an array of
@@ -52,7 +52,7 @@
 ;                   no correction.
 ;       altitude: The altitude of the observing location, in meters. [default=0].
 ;       /verbose: Set this for verbose output.  The default is verbose=0.
-;   _extra: This is for setting TEMPERATURE or PRESSURE explicity, which are
+;   _extra: This is for setting TEMPERATURE or PRESSURE explicitly, which are
 ;           used by CO_REFRACT to calculate the refraction effect of the
 ;           atmosphere. If you don't set these, the program will make an
 ;           intelligent guess as to what they are (taking into account your
@@ -129,6 +129,9 @@
 ;       Univ. of Wisconsin-Madison
 ;   Observational Cosmology Laboratory
 ;   Email: odell@cmb.physics.wisc.edu
+; REVISION HISTORY:
+;     Made all integers type LONG  W. Landsman   September 2007
+;     Fixed for case of scalar Julian date but vector positions W L June 2009
 ;-
 
 pro hor2eq, alt, az, jd, ra, dec, ha, lat=lat, lon=lon, WS=WS, obsname=obsname,$
@@ -136,6 +139,8 @@ pro hor2eq, alt, az, jd, ra, dec, ha, lat=lat, lon=lon, WS=WS, obsname=obsname,$
            refract_ = refract_, aberration_ = aberration_, altitude=altitude, $
            _extra = _extra
 
+ On_error,2
+ compile_opt idl2
  if N_params() LT 4 then begin
    print,'Syntax - HOR2EQ, alt, az, jd, ra, dec, [ha, LAT= , LON= , /WS, '
    print,'        OBSNAME= ,/B1950 , PRECESS_= 0, NUTATE_= 0, REFRACT_= 0, '
@@ -218,8 +223,10 @@ co_aberration, jd, ra, dec, dra2, ddec2, eps=eps
 ; Make Nutation and Aberration Corrections (if wanted)
 ra = ra - (dra1*nutate_ + dra2*aberration_)/3600.
 dec = dec - (ddec1*nutate_ + ddec2*aberration_)/3600.
-
 J_now = (JD - 2451545.)/365.25 + 2000.0 ; compute current equinox
+Njd = N_elements(J_now)
+Npos = N_elements(ra)
+if (Njd EQ 1) and (Npos GT 1) then J_now = replicate(J_now, Npos) 
 if v then print, 'Ra, Dec: ', adstring(ra,dec), '   (J'+ $
            strcompress(string(J_now),/rem)+')'
 
@@ -229,23 +236,21 @@ if v then print, 'Ra, Dec: ', adstring(ra,dec), '   (J'+ $
 
 if precess_ then begin
         if keyword_set(B1950) then begin
-                for i=0,n_elements(jd)-1 do begin
+                for i=0, Npos-1 do begin
                         ra_i = ra[i] & dec_i = dec[i]
                         precess, ra_i, dec_i, J_now[i], 1950.0, /FK4
                         ra[i] = ra_i & dec[i] = dec_i
                 endfor
         endif else begin
-                for i=0,n_elements(jd)-1 do begin
+                for i=0, Npos-1 do begin
                         ra_i = ra[i] & dec_i = dec[i]
                         precess, ra_i, dec_i, J_now[i], 2000.0
                         ra[i] = ra_i & dec[i] = dec_i
                 endfor
         endelse
 endif
-
 if keyword_set(B1950) then s_now='   (J1950)' else s_now='   (J2000)'
 if v then print, 'Ra, Dec: ', adstring(ra,dec), s_now
-
 
 Return
 END

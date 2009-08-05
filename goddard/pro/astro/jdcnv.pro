@@ -38,8 +38,10 @@ PRO JDCNV, YR, MN, DAY, HR, JULIAN
 ;	Converted to IDL from Don Yeomans Comet Ephemeris Generator,
 ;	B. Pfarr, STX, 6/15/88
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Added checks on valid month, day ranges W. Landsman July 2008
 ;-
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 5 then begin
 	print,'Syntax -  JDCNV, yr, mn, day, hr, julian'  
@@ -50,6 +52,10 @@ PRO JDCNV, YR, MN, DAY, HR, JULIAN
 	print,'   julian - output Julian date'
         return
  endif
+ if max(mn) GT 12 then message,/con,  $
+     'Warning - Month number outside of expected range [1-12] '
+ if max(day) GT 31 then message,/con, $
+     'Warning - Day number outside of expected range [1-31] '
 
  yr = long(yr) & mn = long(mn) &  day = long(day)	;Make sure integral
  L = (mn-14)/12		;In leap years, -1 for Jan, Feb, else 0

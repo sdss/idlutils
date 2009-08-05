@@ -29,21 +29,16 @@ pro dbfparse, spar, items, stype, values
 ;     D. Lindler NOV, 1987
 ;     Check for valid numeric values before assuming a date string
 ;     W. Landsman                    July, 1993
-;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Accept four digit years when in ccyy/doy format W. Landsman   October 1998
+;     Don't do DATE/Time test for string items  W. Landsman   July 2006
 ;-
 ;--------------------------------------------------------------
  On_error,2
 ;
 ; parse string array search parameters into a single string.
 ;
- par    = spar
-  s = size(par) & ndim=s[0]
-  if ndim gt 0 then begin       ;string array
-    par  = strtrim( spar[0], 2)
-    if n_elements(spar) gt 1 then $
-        for i=1, N_elements(spar)-1 do par = par + ',' + strtrim( spar[i], 2)
-  end
+  par  = strjoin( strtrim( spar, 2),',')    ;Make into a scalar if necessary
+ 
   items = strarr(20)                 ;array of items
   values = strarr(20,10)              ;range limited to 10 elements/item.
   stype = intarr(20)                  ;search type for item j
@@ -162,10 +157,12 @@ while par ne '' do begin
 ; convert data/time and ra, dec to real numbers (special user mode).
 
  n = N_elements(values)
-
+ db_item,items,it,ivalnum,idltype
+ idltype = rebin(idltype,n)
 ; loop on elements in vals
 
  for i = 0,n-1 do begin
+        if idltype[i] NE 7 then begin
         v = strtrim(values[i])
 
 ; is it of the form DD-MMM-YYYY hh:mm:ss.ss
@@ -224,9 +221,9 @@ NOT_DATE:
                 val = val+gettok(v,':')/60.0*sign
                 val = val+strtrim(v)/3600.0d0*sign
                 v = val
-        end
+        endif
         values[i]=v
- end
-
+ endif
+ endfor
  return
  end

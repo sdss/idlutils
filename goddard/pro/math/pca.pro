@@ -20,7 +20,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 ;               for the ith object in the sample.    If N_OBJ is the total
 ;               number of objects (rows) in the sample, and N_ATTRIB is the 
 ;               total number of attributes (columns) then data should be
-;               dimensioned N_OBJ x N_ATTRIB.
+;               dimensioned N_OBJ x N_ATTRIB.         
 ;
 ; OPTIONAL INPUT KEYWORD PARAMETERS:
 ;     /COVARIANCE - if this keyword is set, then the PCA will be carried out
@@ -58,7 +58,8 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 ; NOTES:
 ;      This procedure performs Principal Components Analysis (Karhunen-Loeve
 ;      Transform) according to the method described in "Multivariate Data 
-;      Analysis" by Murtagh & Heck [Reidel : Dordrecht 1987], pp. 33-48. 
+;      Analysis" by Murtagh & Heck [Reidel : Dordrecht 1987], pp. 33-48.
+;      See  http://astro.u-strasbg.fr/~fmurtagh/mda-sw/
 ;
 ;      Keywords /COVARIANCE and /SSQ are mutually exclusive.
 ;
@@ -73,18 +74,21 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 ;      PCA uses the non-standard system variables !TEXTOUT and !TEXTUNIT.
 ;      These can be added to one's session using the procedure ASTROLIB.
 ;
-;      The intrinsic IDL function PCOMP (introduced in V5.0) duplicates most
+;      The intrinsic IDL function PCOMP  duplicates most
 ;      most of the functionality of PCA, but uses different conventions and
 ;      normalizations.   Note the following:
 ;
 ;   (1) PCOMP requires a N_ATTRIB x N_OBJ input array; this is the transpose
 ;         of what PCA expects
-;   (2) PCA uses standardized variables; use /STANDARIZE keyword to PCOMP
-;         for a direct comparison.
+;   (2) PCA uses standardized variables for the correlation matrix:  the input 
+;        vectors are set to a  mean of zero and variance of one and divided by 
+;        sqrt(n); use the /STANDARDIZE keyword to PCOMP for a direct comparison.
 ;   (3) PCA (unlike PCOMP) normalizes the eigenvectors by the square root
 ;         of the eigenvalues.
 ;   (4) PCA returns cumulative percentages; the VARIANCES keyword of PCOMP
 ;         returns the variance in each variable
+;   (5) PCOMP divides the eigenvalues by (1/N_OBJ-1) when the covariance matrix
+;          is used.
 ;
 ; EXAMPLE:
 ;      Perform a PCA analysis on the covariance matrix of a data matrix, DATA,
@@ -103,10 +107,12 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 ; REVISION HISTORY:
 ;      Immanuel Freedman (after Murtagh F. and Heck A.).     December 1993
 ;      Wayne Landsman, modified I/O              December 1993
-;      Converted to IDL V5.0   W. Landsman   September 1997
 ;      Fix MATRIX output, remove GOTO statements   W. Landsman August 1998      
 ;      Changed some index variable to type LONG    W. Landsman March 2000
+;      Fix error in computation of proj_atr, see Jan 1990 fix in 
+;       http://astro.u-strasbg.fr/~fmurtagh/mda-sw/pca.f   W. Landsman Feb 2008
 ;- 
+  compile_opt idl2
   On_Error,2     ;return to user if error
 
 ; Constants
@@ -120,21 +126,28 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
   RETURN
  ENDIF 
 
-  SZ = size(data)
-  if SZ[0] NE 2 THEN $
-  BEGIN
-   HELP,data
-   MESSAGE,'ERROR - Data matrix is not two-dimensional'
+;Define nonstandard system variables if not already present
+
+  defsysv, '!TEXTUNIT', exist = exist
+     if not exist then  defsysv, '!TEXTUNIT', 0
+  defsysv, '!TEXTOUT', exist = exist
+     if not exist then defsysv, '!TEXTOUT', 1
+
+  
+  if size(data,/N_dimen)  NE 2 THEN BEGIN 
+    HELP,data
+    MESSAGE,'ERROR - Data matrix is not two-dimensional'
   ENDIF
 
-  Nobj = sz[1]   &  Mattr = sz[2]      ;Number of objects and attributes
+  dimen = size(data,/dimen) 
+  Nobj = dimen[0]   &  Mattr = dimen[1]      ;Number of objects and attributes
 
 
   IF KEYWORD_SET(cov) THEN BEGIN
         msg = 'Covariance matrix will be analyzed'
 ; form column-means
-       temp = replicate(1.0, Nobj)
-        column_mean = (temp # data)/Nobj
+        column_mean = total( data,1 )/Nobj
+	temp = replicate(1.0, Nobj)
         X = (data - temp # transpose(column_mean))
   ENDIF ELSE $
   IF KEYWORD_SET(ssq) THEN BEGIN
@@ -174,9 +187,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
  W1 = 100.0 * reverse(D)/total(D)
 
 ;... Cumulative percentage variance
- C = replicate(1., Mattr, Mattr) 
- for j = 1L, Mattr-1 do C[0,j] = fltarr(j)
- W = C # W1
+ W = total(W1, /cumul)
 
 ;Define returned parameters
  eigenval = reverse(D)
@@ -237,7 +248,7 @@ PRO PCA, data, eigenval, eigenvect, percentages, proj_obj, proj_atr, $
 
 ; scale by square root of eigenvalues...
  temp = replicate( 1.0, Mattr )
- proj_atr = reverse(projy)/(sqrt(W)#temp)
+ proj_atr = reverse(projy)/(sqrt(eigenval)#temp)
 
  if not keyword_set( SILENT ) then begin
         printf,!TEXTUNIT,' '

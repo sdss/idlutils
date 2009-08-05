@@ -18,7 +18,7 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ; OPTIONAL INPUTS:
 ;       NEWIM - If NEWIM is set to -1, then the old image and header will
 ;               be updated
-;       ANGLE - Rotation angle, degrees clockwise
+;       ANGLE - Rotation angle, degrees clockwise, scalar
 ;       XC    - X Center of rotation (-1 for center of image)
 ;       YC    - Y Center of rotation (-1 for center of image)
 ;       INT   - 0 for nearest neighbor, 1 for bilinear interpolation
@@ -99,8 +99,10 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
 ;       Update astrometry correctly when /PIVOT applied W. Landsman March 2002
 ;       Update CROTA2 astrometry correctly, approximate GSSS W.L. June 2003
 ;       Work with CD1_1, PC1_1 and CROTA keywords W. L. July 2003 
+;       Work with angle as a 1 element vector  W.L.  May 2006
 ;- 
  On_error,2
+ compile_opt idl2
  npar = N_params()
 
  if (npar LT 2) or (npar EQ 3) then begin       ;Check # of parameters
@@ -163,7 +165,8 @@ pro hrot, oldim, oldhd, newim, newhd, angle, xc, yc, int, MISSING=missing, $
    if newim EQ -1 then npar = 2                                      
 
  newhd = oldhd
- if N_elements(cubic) EQ 0 then if int EQ 2 then cubic = 1 else cubic = 0
+ if N_elements(cubic) EQ 0 then cubic = (int EQ 2) 
+ angle = angle[0]
 
   if N_elements(MISSING) NE 1 then begin
 

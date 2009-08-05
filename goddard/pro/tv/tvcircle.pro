@@ -4,7 +4,7 @@ Pro Tvcircle, radius, xc, yc, color, COLOR = TheColor, $
 ; NAME:
 ;     TVCIRCLE
 ; PURPOSE:
-;     Draw circle(s) of specified radius at specified position(s)
+;     Draw circle(s) of specified radius at specified position(s) 
 ; EXPLANATION: 
 ;     If a position is not specified, and device has a cursor, then a circle
 ;     is drawn at the current cursor position.
@@ -36,20 +36,20 @@ Pro Tvcircle, radius, xc, yc, color, COLOR = TheColor, $
 ;
 ;               Any keyword recognized by PLOTS (or POLYFILL if /FILL is set)
 ;               is also recognized by TVCIRCLE.   In particular, the color,
-;               linestyle, and thickness of the circles are controlled by the 
-;               COLOR, LINESTYLE, and THICK keywords.    If POLYFILL is set
-;               then available keywords are LINE_FILL and FILL_PATTERN. 
+;               linestyle, thickness and clipping of the circles are controlled
+;               by the  COLOR, LINESTYLE, THICK and NOCLIP keywords.  (Clipping
+;               is turned off by default, set NOCLIP=0 to activate it.)
+;               If POLYFILL is set then available keywords are LINE_FILL and 
+;               FILL_PATTERN. 
 ; OUTPUTS:
 ;       None
 ;
 ; RESTRICTIONS:
-;       (1) TVCIRCLE does not check whether it writes off of the edge of the 
-;           display
-;       (2) Some round-off error may occur when non-integral values are 
+;       (1) Some round-off error may occur when non-integral values are 
 ;           supplied for both the radius and the center coordinates
-;       (3) TVCIRCLE does not accept /NORMAL coordinates, only data coordinates
+;       (2) TVCIRCLE does not accept /NORMAL coordinates, only data coordinates
 ;           (if /DATA is set) or device coordinates (the default)
-;       (4) TVCIRCLE always draws a circle --- even if /DATA is set, and the
+;       (3) TVCIRCLE always draws a circle --- even if /DATA is set, and the
 ;           X and Y data scales are unequal.    (The X data scale is used to 
 ;           define the circle radius.)     If this is not the behaviour
 ;           you want, then use TVELLIPSE instead.
@@ -78,14 +78,17 @@ Pro Tvcircle, radius, xc, yc, color, COLOR = TheColor, $
 ;           colors.   Wayne Landsman, HSTX,  May 1995
 ;           Allow one to set COLOR = 0,   W. Landsman, HSTX, November 1995
 ;           Check if data axes reversed.  P. Mangifico, W. Landsman  May 1996
-;           Converted to IDL V5.0   W. Landsman   September 1997
+;           Use strict_extra to check input keywords W. Landsman  July 2005
+;           Update documentation to note NOCLIP=0 option W.L.  Oct. 2006
+;           Make all integers default to LONG  W. Landsman  Dec 2006
 ;-
 
    On_Error, 2   ; Return to caller
+   compile_opt idl2
 
    if ( N_params() LT 1) then begin
-         print, 'Syntax - TVCIRCLE, rad, [ xc, yc, color, /DATA, /FILL, _EXTRA= ]'
-         return
+       print, 'Syntax - TVCIRCLE, rad, [ xc, yc, color, /DATA, /FILL, _EXTRA= ]'
+       return
    endif
 
 
@@ -126,7 +129,7 @@ Pro Tvcircle, radius, xc, yc, color, COLOR = TheColor, $
    ; Find the x and y coordinates for one eighth of a circle.
    ; The maximum number of these coordinates is the radius of the circle.
 
-   xHalfQuad = Make_Array( irad + 1, /Int, /NoZero )
+   xHalfQuad = Make_Array( irad + 1, /Long, /NoZero )
    yHalfQuad = xHalfQuad
 
    path = 0
@@ -196,10 +199,10 @@ Pro Tvcircle, radius, xc, yc, color, COLOR = TheColor, $
         j = i < Ncolor1
       if keyword_set(fill) then begin
             polyfill, x+xcen[i],  y + ycen[i], COLOR=color[j], /DEV, $
-                _Extra = _extra
+                _STRICT_Extra = _extra
       endif else begin
             PlotS, x + xcen[i], y+ ycen[i], COLOR = Color[j], /DEV, $
-                _Extra = _extra
+                _STRICT_Extra = _extra
       endelse
 
    endfor

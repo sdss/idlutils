@@ -67,7 +67,7 @@ FUNCTION eci2geo,ECI_XYZ,JDtim
         lon= (theta - angle_sid ) MOD (2* !DPI)                  ;longitude      
         r=sqrt(coord[0,*]^2+coord[1,*]^2)
         lat=atan(coord[2,*],r)                                  ; latitude
-        alt=r/cos(lat) - Re                                     ; altidude 
+        alt=r/cos(lat) - Re                                     ; altitude 
 
         lat=lat*180./(!DPI)      ; to convert from radians into degrees...
         lon=lon*180./(!DPI)

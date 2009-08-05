@@ -21,12 +21,13 @@ pro dbext_ind,list,item,dbno,values
 ;       Faster processing of string values    W. Landsman   April, 1992
 ;       William Thompson, GSFC/CDS (ARC), 30 May 1994
 ;               Added support for external (IEEE) data format
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Allow multiple valued (nonstring) index items W. Landsman  November 2000      
 ;       Use 64bit integer index for large databases W. Landsman  February 2001
-;       Fix sublisting of multiple valued index items W. Landsamn  March 2001
+;       Fix sublisting of multiple valued index items W. Landsman  March 2001
+;       Check whether any supplied entries are valid W. Landsman Jan 2009
 ;-
 On_error,2
+compile_opt idl2
 ;
 if N_params() LT 4 then begin
      print,'Syntax - DBEXT_IND, list, item, dbno, values'
@@ -45,8 +46,8 @@ if ndim EQ 0 then begin
         minl = min(list)
         if minl EQ 0 then begin ;any zero values in list
                 zeros = 1
-                nonzero = where(list GT 0)
-                bad = where(list LE 0)
+                nonzero = where(list GT 0, Ngood, comp=bad)
+		if Ngood EQ 0 then message,'ERROR - No valid entry numbers supplied'
                 minl = min(list[nonzero])
         endif
         maxl=max(list)

@@ -95,10 +95,10 @@ pro xyz,date,x,y,z,xvel,yvel,zvel,equinox=equinox
 ; Compute the mean jupiter anomaly
    j = 225.444651d + 2880.0d*t + 154.906654d*t*t
 
-; Compute mean anamoly of Venus
+; Compute mean anomaly of Venus
    v = 212.603219d + 58320.d*t + 197.803875d*t + 0.001286d*t*t
 
-; Compute mean anamoly of Mars
+; Compute mean anomaly of Mars
    m = 319.529425d + 19080.d*t + 59.8585d*t + 0.000181d*t*t
 
 ; Convert degrees to radians for trig functions

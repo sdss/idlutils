@@ -54,7 +54,8 @@
 ;       IDL> data = randomn(seed, 50)          ;create data array to be tested
 ;       IDL> kuiperone, data, 'gauss_pdf', D, prob, /PLOT     ;Use Kuiper test
 ;
-;       PROB gives the probability that DATA came from a Gaussian distribution
+;       A small value of PROB indicates that the cumulative distribution of
+;       DATA is significantly different from a Gaussian
 ;
 ; NOTES:
 ;       Note that the 2nd (1992) edition of Numerical Recipes includes

@@ -24,8 +24,11 @@ PRO sunpos, jd, ra, dec, longmed, oblt, RADIAN = radian
 ;               are given in Radians rather than Degrees
 ;
 ; NOTES:
-;       The accuracy in the 20th century  should be within 1"; however this 
-;       has not been extensively tested.
+;       Patrick Wallace (Rutherford Appleton Laboratory, UK) has tested the
+;       accuracy of a C adaptation of the sunpos.pro code and found the 
+;       following results.   From 1900-2100 SUNPOS  gave 7.3 arcsec maximum 
+;       error, 2.6 arcsec RMS.  Over the shorter interval 1950-2050 the figures
+;       were 6.4 arcsec max, 2.2 arcsec RMS.  
 ;
 ;       The returned RA and Dec are in the given date's equinox.
 ;
@@ -63,6 +66,7 @@ PRO sunpos, jd, ra, dec, longmed, oblt, RADIAN = radian
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;-
  On_error,2
+ compile_opt idl2
 ;                       Check arguments.
  if N_params() LT 3 then begin 
      print, 'Syntax - SUNPOS, jd, ra, dec, [elong, obliquity, /RADIAN] '
@@ -83,7 +87,7 @@ PRO sunpos, jd, ra, dec, longmed, oblt, RADIAN = radian
  l = (279.696678d0+((36000.768925d0*t) mod 360.0d0))*3600.0d0
 
 ;  allow for ellipticity of the orbit (equation of centre)
-;  using the Earth's mean anomoly ME
+;  using the Earth's mean anomaly ME
 
  me = 358.475844d0 + ((35999.049750D0*t) mod 360.0d0)
  ellcor  = (6910.1d0 - 17.2D0*t)*sin(me*dtor) + 72.3D0*sin(2.0D0*me*dtor)

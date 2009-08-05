@@ -4,9 +4,9 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ; NAME:
 ;       HASTROM
 ; PURPOSE:
-;       Linear transformation of an image to align it with a reference image
+;       Transformation of an image to align it with a reference image
 ; EXPLANATION:
-;       A linear transformation is applied (using POLY_2D) to an image so that   
+;       A  transformation is applied (using POLY_2D) to an image so that   
 ;       its astrometry is identical with that in a reference header.  This
 ;       procedure can be used to align two images.
 ;
@@ -25,7 +25,7 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;               will be rotated, shifted, and compressed or expanded until
 ;               its astrometry matches that in REFHD.
 ; OUTPUTS:
-;       NEWIM - Image array after linear tranformation has been performed.
+;       NEWIM - Image array after transformation has been performed.
 ;               The dimensions of NEWIM will be identical to the NAXIS1 and 
 ;               NAXIS2 keywords specified in REFHD.  Regions on the reference 
 ;               image that do not exist in OLDIM can be assigned a value with
@@ -89,14 +89,16 @@ pro hastrom,oldim,oldhd,newim,newhd,refhd,MISSING=missing, INTERP = interp, $
 ;       New astrometry keywords                    Mar, 1994
 ;       Recognize GSSS header   W. Landsman        June, 1994
 ;       Added CUBIC keyword     W. Landsman        March, 1997
-;       Converted to IDL V5.0   W. Landsman        September 1997
 ;       Accept INTERP=0, Convert output GSS header to standard astrometry
 ;                               W. Landsman        June 1998
 ;       Remove calls to obsolete !ERR system variable   March 2000
 ;       Added ERRMSG output keyword  W. Landsman    April 2000
 ;       Need to re-extract astrometry after precession  W. Landsman Nov. 2000
 ;       Check for distortion parameters in headers, add more FITS HISTORY
-;       information    W. Landsman   February 2005
+;       information                        W. Landsman   February 2005
+;       Use different coefficient for nearest neighbor to avoid half-pixel
+;       shift with POLY_2D      W. Landsman   Aug 2006
+;       Return ERRMSG if no overlap between images  W. Landsman  Nov 2007
 ;       
 ;-
  compile_opt idl2
@@ -224,13 +226,20 @@ save_err = arg_present(errmsg)     ;Does user want error msgs returned?
 
  if ( max(x) LT 0 ) or ( min(x) GT xsize_old ) or $
     ( max(y) LT 0 ) or ( min(y) GT ysize_old ) then begin
-  message,'ERROR - No overlap found between original and reference images',/CON
-  print,'Be sure you have the right headers and the right equinoxes'
-  return
+      errmsg = 'No overlap found between original and reference images'
+      if not save_err then begin 
+         message,'ERROR - ' + errmsg,/CON
+         message,'Be sure you have the right headers and the right equinoxes',/CON
+      endif	 
+      return
  endif
 
- polywarp, x, y, xref, yref, degree, kx, ky            ;Get coefficients
 
+  if interp EQ 0 $ ;Get coefficients
+    then polywarp, x+.5, y+.5, xref, yref, degree, kx, ky $
+  else polywarp, x, y, xref, yref, degree, kx, ky 
+  
+ 
  if N_elements(missing) NE 1 then begin        ;Do the warping
 
  if npar EQ 3 then $

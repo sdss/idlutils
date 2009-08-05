@@ -15,7 +15,7 @@ pro remove,index, v1, v2, v3, v4, v5, v6, v7
 ; INPUT-OUTPUT:
 ;       v1 - Vector or array.  Elements specifed by INDEX will be 
 ;               removed from v1.  Upon return v1 will contain
-;               N fewer elements, where N is the number of values in
+;               N fewer elements, where N is the number of distinct values in
 ;               INDEX.
 ;
 ; OPTIONAL INPUT-OUTPUTS:

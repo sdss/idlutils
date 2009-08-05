@@ -42,7 +42,7 @@ pro irafrd,im,hd,filename, SILENT=silent    ;Read in IRAF image array and header
 ;       IRAFRD obtains dimensions and type of image from the IRAF header.
 ;
 ; PROCEDURES CALLED:
-;       FDECOMP, SPEC_DIR(), SXADDPAR, SXPAR()
+;       FDECOMP, SXADDPAR, SXPAR()
 ;
 ; MODIFICATION HISTORY:
 ;       Written W. Landsman, STX January 1989
@@ -61,8 +61,10 @@ pro irafrd,im,hd,filename, SILENT=silent    ;Read in IRAF image array and header
 ;       Test for big endian machine under V2.11 format W. Landsman Feb. 1999
 ;       Don't read past the end of file for V5.4 compatilibity  W.L.  Jan. 2001
 ;       Convert to square brackets W.L   May 2001
+;       Assume since V5.4, remove SPEC_DIR()   W. L.   April 2006
 ;-
  On_error,2                    ;Return to caller
+ compile_opt idl2
  npar = N_params() 
 
  if ( npar EQ 0 ) then begin 
@@ -87,16 +89,15 @@ FINDER:
 
   IF ext EQ 'imh' THEN fname = file_name ELSE fname = file_name + '.imh'
 
-  openr, lun1, fname, /STREAM, /GET_LUN, ERROR = error  ;Open the IRAF header file
+  openr, lun1, fname, /GET_LUN, ERROR = error  ;Open the IRAF header file
   if error NE 0 then  $
-    message, 'Unable to find IRAF header file '+ spec_dir(fname) 
+    message, 'Unable to find IRAF header file '+ FILE_EXPAND_PATH(fname) 
 
 ; Get image size and name from IRAF header
  irafver = bytarr(5)
  readu, lun1, irafver
  newformat = string(irafver) EQ 'imhv2' 
- big_endian = (!VERSION.OS EQ "vms") or (!VERSION.ARCH EQ "mipsel") or $
-              (!VERSION.OS EQ "OSF") or (!VERSION.ARCH EQ "x86")
+ big_endian = is_ieee_big()
 
  if newformat then begin
         hdrsize = 2048
@@ -162,7 +163,7 @@ FINDER:
  if strmid(pixname,0,4) eq 'HDR$' then begin
         if disk + dir EQ '' then begin 
                 cd, CURRENT = curdir 
-                if !VERSION.OS NE 'vms' then curdir = curdir + '/'
+                curdir = curdir + path_sep()
         endif else curdir = disk+dir
         pixname = curdir +  strmid(pixname,4,strlen(pixname))
  endif
@@ -170,20 +171,18 @@ FINDER:
 ;  Use file name found in header to open .pix file.  If this file is not
 ;  found then look for a .pix file in the same directory as the header  
  
- openr, lun2, pixname, ERROR=err, /STREAM, /GET_LUN     ; ...on given directory
+ openr, lun2, pixname, ERROR=err, /GET_LUN     ; ...on given directory
 
  if ( err LT 0 ) then begin
-     openr,lun2, name + '.pix',/STREAM, ERROR = err, /GET_LUN   
+     openr,lun2, name + '.pix', ERROR = err, /GET_LUN   
      if ( err LT 0 ) then goto, NOFILE   
  endif 
 
  if not keyword_set(SILENT) then begin 
                                             
         sdim = strtrim(dimen[0],2)
-        if ( ndim GT 1 ) then for i = 1,ndim-1 do $
-                sdim = sdim + ' by ' + strtrim(dimen[i],2) $
-        else sdim = sdim + ' element' 
-        message,'Now reading '+sdim+' IRAF array', /INFORM
+        message,'Now reading '+strjoin(sdim,' by ')  + $
+                 ' IRAF array', /INFORM
  endif 
 
 ;       Convert from IRAF data types to IDL data types
@@ -277,7 +276,7 @@ SKIP1:
                 origin = gettok( strmid( st1, 0, strlen(st1)),"'")
         sxaddpar, hd, 'ORIGIN', origin, ' ', 'IRAFNAME'   ; Add 'ORIGIN" record
 
-        test = sxpar(hd,'HISTORY', COUNT = N)
+        test = sxpar(hd,'HISTORY', Count = N)
         if N EQ 0 then begin
          while (strpos(history,string(10B)) GE 0) do begin
 

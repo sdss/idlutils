@@ -62,11 +62,22 @@ function correl_images, image_A, image_B, XSHIFT = x_shift,	$
 ;	Remove use of !DEBUG    W. Landsman   June 1997
 ;       Subtract mean of entire image before computing correlation, not just 
 ;          mean of overlap region   H. Ebeling/W. Landsman   June 1998
+;       Always REBIN() using floating pt arithmetic W. Landsman  Nov 2007
 ;       
 ;-
+ compile_opt idl2
+ if N_params() LT 2 then begin 
+        print,'Syntax  -  Result = CORREL_IMAGES( image_A, image_B,'
+	print,'[         XSHIFT=, YSHIFT=, XOFFSET_B=, YOFFSET_B=, REDUCTION=, '
+	print,'          MAGNIFICATION=, /NUMPIX, /MONITOR  )'
+	return,-1
+ endif
+ 	
 	simA = size( image_A )
 	simB = size( image_B )
-
+	do_int = (simA[3] LE 3) or (simA[3] GE 12) or $ 
+                 (simB[3] LE 3) or (simB[3] GE 12)
+		 
 	if (simA[0] LT 2) OR (simB[0] LT 2) then begin
 		message,"first two arguments must be images",/INFO,/CONTIN
 		return,[-1]
@@ -90,8 +101,16 @@ function correl_images, image_A, image_B, XSHIFT = x_shift,	$
 		simB = simB/reducf
 		LB = simB * reducf -1
 
-		imtmp_A = Rebin( image_A[ 0:LA[1], 0:LA[2] ], simA[1], simA[2] )
-		imtmp_B = Rebin( image_B[ 0:LB[1], 0:LB[2] ], simB[1], simB[2] )
+                if do_int then begin 
+		
+		imtmp_A = Rebin( float( image_A[ 0:LA[1], 0:LA[2] ]),  $
+		                       simA[1], simA[2] )
+		imtmp_B = Rebin( float( image_B[ 0:LB[1], 0:LB[2] ]),  $ 
+		                        simB[1], simB[2] )
+		endif else begin 
+		imtmp_A =Rebin( image_A[ 0:LA[1], 0:LA[2] ], simA[1], simA[2] )
+		imtmp_B =Rebin( image_B[ 0:LB[1], 0:LB[2] ], simB[1], simB[2] )
+                 endelse 
 
 		xoff = round ( x_offset/reducf )
 		yoff = round ( y_offset/reducf )

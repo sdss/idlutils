@@ -62,13 +62,13 @@ PRO select_w, items, iselected, comments, command_line, only_one, $
 ;	Written, K. Venkatakrishna & W. Landsman, Hughes/STX    January, 1992
 ;	Widgets made MODAL.  M. Greason, Hughes STX, 15 July 1992.
 ;       Changed handling of MODAL keyword for V5.0   W.Thompson  September 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added selectin keyword  D. Lindler 01/12/99 
 ;-
 ;
  On_error,2
  common select_w, val, exclusive
 
+ if N_elements(only_one) EQ 0 then only_one = 0
  if N_params() LT 5 then exclusive = 0 else exclusive = only_one
 
  val = -1

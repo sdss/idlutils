@@ -1,5 +1,6 @@
 Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, $
-            COLOR = color, POSITION = position, NORMAL = normal, SECONDS=SECONDS
+            COLOR = color, POSITION = position, NORMAL = normal, $
+            SECONDS=SECONDS, FONT=font
 ;+
 ; NAME:
 ;       ARCBAR
@@ -8,7 +9,7 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ;
 ; CALLING SEQUENCE:
 ;       ARCBAR, hdr, arclen,[  COLOR= , /DATA, LABEL= , /NORMAL, POSITION =, 
-;                              /SECONDS, SIZE=, THICK= ]
+;                              /SECONDS, SIZE=, THICK=, FONT= ]
 ;
 ; INPUTS:
 ;       hdr - image FITS header with astrometry, string array
@@ -33,6 +34,7 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ;               arcminutes
 ;       SIZE  - scalar specifying character size of label, default = 1.0
 ;       THICK -  Character thickness of the label, default = !P.THICK
+;       FONT - scalar font graphics keyword (-1,0 or 1) for text
 ;
 ; EXAMPLE:
 ;       Place a 3' arc minute scale bar, at position 300,200 of the current
@@ -56,9 +58,10 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 ;       Use NAXIS1 for postscript if data coords not set,  W. Landsman Aug 96
 ;       Fixed typo for postscript W. Landsman   Oct. 96
 ;       Account for zeropoint offset in postscript  W. Landsman   Apr 97
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /DATA, /SECONDS keywords   W. Landsman    July 1998
 ;       Use device-independent label offset  W. Landsman   August 2001
+;       Allow font keyword to be passed.  T. Robishaw Apr. 2006
+;       Remove obsolete TVCURSOR command  W. Landsman Jul 2007
 ;-
 ;
  compile_opt idl2
@@ -77,6 +80,7 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
  if not keyword_set( SIZE ) then size = 1.0
  if not keyword_set( THICK ) then thick = !P.THICK
  if not keyword_set( COLOR ) then color = !P.COLOR
+ if not keyword_set( FONT ) then font = !P.FONT
 
  a = bastr.crval[0]
  d = bastr.crval[1]
@@ -103,7 +107,6 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
  dmini2 = round(dmin * arclen)
 
  if not keyword_set( POSITION) then begin
-          tvcursor,1
           print,'Position the cursor where you want the bar to begin'
           print,'Hit right mouse button when ready'
           cursor,xi,yi,1,/device
@@ -127,10 +130,10 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
  plots,[xi,xi],[ yi+dmini3, yi-dmini3 ], COLOR=color, /DEV, THICK=thick
 
  if not keyword_set(Seconds) then begin
- if (!D.NAME EQ 'PS') and (!P.FONT EQ 0) then $        ;Postscript Font?
+ if (!D.NAME EQ 'PS') and (FONT EQ 0) then $        ;Postscript Font?
         arcsym='!9'+string(162B)+'!X' else arcsym = "'" 
  endif else begin
- if (!D.NAME EQ 'PS') and (!P.FONT EQ 0) then $        ;Postscript Font?
+ if (!D.NAME EQ 'PS') and (FONT EQ 0) then $        ;Postscript Font?
         arcsym = '!9'+string(178B)+'!X' else arcsym = "''" 
  endelse
  if not keyword_set( LABEL) then begin
@@ -141,7 +144,7 @@ Pro arcbar, hdr, arclen, LABEL = label, SIZE = size, THICK = thick, DATA =data, 
 
  yoffset = round(!D.Y_CH_SIZE/3.)
  xyouts,(xi+xf)/2, yi+yoffset, label, SIZE = size,COLOR=color,/DEV,  $
-       alignment=0.5, CHARTHICK=thick
+       alignment=0.5, CHARTHICK=thick, FONT=font
 
  return
  end

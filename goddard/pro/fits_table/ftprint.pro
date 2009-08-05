@@ -48,18 +48,16 @@ pro ftprint,h,tab,columns,rows,textout=textout
 ;               the FORMAT specified for the column
 ;       (3) Program does not check for null values
 ;
-; MINIMUM IDL VERSION:
-;       V5.3 (uses STRSPLIT)
 ; HISTORY:
 ;       version 1  D. Lindler Feb. 1987
 ;       Accept undefined values of rows, columns   W. Landsman August 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       New FTINFO calling sequence    W. Landsman   May 2000
 ;       Parse scalar string with STRSPLIT   W. Landsman  July 2002
 ;       Fix format display of row number  W. Landsman March 2003
 ;       Fix format display of row number again  W. Landsman May 2003
 ;-
 ; On_error,2
+  compile_opt idl2
 ;
 ; set defaulted parameters
 ;

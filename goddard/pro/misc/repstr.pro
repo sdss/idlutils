@@ -6,6 +6,9 @@ function repstr,obj,in,out
 ;	Replace all occurences of one substring by another.
 ; EXPLANATION:
 ;	Meant to emulate the string substitution capabilities of text editors
+;
+;       For a more sophisticated routine that allows regular expressions look
+;       at STR_REPLACE()  http://www.ittvis.com/codebank/search.asp?FID=311
 ; CALLING SEQUENCE:
 ;	result = repstr( obj, in, out )
 ;
@@ -42,6 +45,8 @@ function repstr,obj,in,out
 ;       Remove limitation of 9999 characters, C. Markwardt Dec 2003
 ;-
  On_error,2
+ compile_opt idl2
+ 
  if N_params() LT 2 then begin
 	print,'Syntax - result = REPSTR( obj, in, out )'
 	return, obj

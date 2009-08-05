@@ -9,7 +9,7 @@
 ;       MOONPOS, jd, ra, dec, dis, geolong, geolat, [/RADIAN ]
 ;
 ; INPUTS:
-;       JD - Julian date, scalar or vector, double precision suggested
+;       JD - Julian ephemeris date, scalar or vector, double precision suggested
 ;
 ; OUTPUTS:
 ;       Ra  - Apparent right ascension of the moon in DEGREES, referred to the
@@ -135,7 +135,7 @@
      421,-366,-351,331,315,302,-283,-229,223,223,-220,-220,-185,181,-177,176, $
     166,-164,132,-119,115,107.0d]
 
-; Mean longitude of the moon refered to mean equinox of the date
+; Mean longitude of the moon referred to mean equinox of the date
 
  coeff0 = [218.3164477d, 481267.88123421d, -0.0015786d0, 1.0d/538841.0d, $
          -1.0d/6.5194d7 ]

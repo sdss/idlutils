@@ -53,10 +53,10 @@ pro adxy, hdr, a, d, x, y, PRINT = print, ALT = alt        ;Ra, Dec to X,Y
 ;       W. Landsman                 HSTX          January, 1988
 ;       Use astrometry structure   W. Landsman   January, 1994  
 ;       Changed default ADSTRING format   W. Landsman    September, 1995
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Check if latitude/longitude reversed in CTYPE keyword W. L. Feb. 2004
 ;       Added ALT keyword   W. Landsman   September 2004
-;       Work for non-spherical coordinate transformation W. Landsman May 2005        
+;       Work for non-spherical coordinate transformation W. Landsman May 2005 
+;       More informative error message if astrometry missing W.L. Feb 2008       
 ;-
  Compile_opt idl2
  On_error,2
@@ -70,7 +70,13 @@ pro adxy, hdr, a, d, x, y, PRINT = print, ALT = alt        ;Ra, Dec to X,Y
  endif                                                                  
  
  extast, hdr, astr, noparams, ALT = alt   ;Extract astrometry from FITS header
- if ( noparams LT 0 ) then return 
+  if ( noparams LT 0 ) then begin
+        if N_elements(alt) EQ 0 then $
+        message,'ERROR - No astrometry info in supplied FITS header' $
+	else  message, $
+	'ERROR  - No alt=' + alt + ' astrometry info in supplied FITS header'
+  endif	
+
  
  if npar lt 3 then begin
    RD: print,'Coordinates must be entered in either decimal (2 parameter) ' 

@@ -20,11 +20,14 @@ pro curs, sel
 ;       f -- Finger pointing right
 ;       g -- Narrow crosshair
 ;       h -- Cycle through all possible standard cursor shapes
+; 
+;       The full list of available cursor values is given in 
+;      /usr/include/X11/cursorfont.h
 ; OUTPUTS:
 ;       None.
 ; RESTRICTIONS:
 ;       Uses the CURSOR_STANDARD keyword of the DEVICE procedure.  Although 
-;       this keyword is available under Macintosh and Windows IDL, the values
+;       this keyword is available in Windows IDL, the values
 ;       used by this procedure are specific to the X windows device.
 ;
 ; PROCEDURE:
@@ -35,7 +38,6 @@ pro curs, sel
 ;       Converted to VAX 3100 workstations / IDL V2.  M. Greason, STX, May 1990.
 ;       Avoid bad cursor parameter values  W. Landsman   February, 1991
 ;       Don't change value of input param        W. Landsman   August 1995
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use SIZE(/TNAME) instead of DATATYPE()   W. Landsman  October 2001
 ;-
 On_error,2

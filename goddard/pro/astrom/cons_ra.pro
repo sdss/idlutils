@@ -43,14 +43,16 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
 ;
 ; REVISION HISTORY:
 ;       Written, Wayne Landsman  STX Co.        April, 1988
-;       Algorithm adapted from AIPS memo No. 27 by Eric Griessen
+;       Algorithm adapted from AIPS memo No. 27 by Eric Greisen
 ;       New astrometry structure
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added SIN projection    W. Landsman   January 2000
 ;       Fix possible sign error introduced Jan. 2000   W. Landsman  May 2000
 ;       Work for the CARee' projection W. Landsman   May 2003
+;       For TAN projection ensure angles between -90 and 90 W. Landsman Jan 2008
 ;-
   On_error,2
+  compile_opt idl2
 
   if ( N_params() LT 3 ) then begin
         print,'Syntax - X = CONS_RA( RA, Y, ASTR, [ Dec ])'
@@ -76,8 +78,9 @@ FUNCTION CONS_RA,RA,Y,ASTR, DELTA      ;Find line of constant RA
  
   cdi = invert( cdelta # cd )     ;Greisen uses invert of CD matrix
   yy = y - ( crpix[1])    ;New coordinate origin, Unit pixel offset in CRPIX
-  delta = atan( sdel0*cdelra*cdi[1,1] - sin(delra)*cdi[1,0] + yy*cdelra*cdel0, $
-              cdel0*cdi[1,1] - yy*sdel0)
+  delta = atan((sdel0*cdelra*cdi[1,1] - sin(delra)*cdi[1,0] + yy*cdelra*cdel0) $
+              / (cdel0*cdi[1,1] - yy*sdel0))
+	      
   end
   'SIN': begin
 

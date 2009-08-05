@@ -1,5 +1,5 @@
 pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
-                      PRINT = print, SILENT=silent
+                      PRINT = print, SILENT=silent, MONITOR= monitor
 ;+
 ; NAME:
 ;	FIND
@@ -7,8 +7,10 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	Find positive brightness perturbations (i.e stars) in an image 
 ; EXPLANATION:
 ;	Also returns centroids and shape parameters (roundness & sharpness).
-;	Adapted from 1986 STSDAS version of DAOPHOT.
+;	Adapted from 1991 version of DAOPHOT, but does not allow for bad pixels
+;       and uses a slightly different centroid algorithm.
 ;
+;       Modified in March 2008 to use marginal Gaussian fits to find centroids       
 ; CALLING SEQUENCE:
 ;	FIND, image, [ x, y, flux, sharp, round, hmin, fwhm, roundlim, sharplim 
 ;		PRINT= , /SILENT ]
@@ -21,7 +23,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	FIND will prompt for these parameters if not supplied
 ;
 ;	hmin -  Threshold intensity for a point source - should generally 
-;		be 3 or 4 sigma above background
+;		be 3 or 4 sigma above background RMS
 ;	fwhm  - FWHM to be used in the convolve filter
 ;	sharplim - 2 element vector giving low and high cutoff for the
 ;		sharpness statistic (Default: [0.2,1.0] ).   Change this
@@ -32,9 +34,10 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;		default only if the stars are significantly elongated.
 ;
 ; OPTIONAL INPUT KEYWORDS:
-;	/SILENT - Normally, FIND will write out each star that meets all
-;		selection criteria.   If the SILENT keyword is set and 
-;		non-zero, then this printout is suppressed.
+;       /MONITOR - Normally, FIND will display the results for each star 
+;                only if no output variables are supplied.   Set /MONITOR
+;                to always see the result of each individual star.
+;	/SILENT - set /SILENT keyword to suppress all output display 
 ;	PRINT - if set and non-zero then FIND will also write its results to
 ;		a file find.prt.   Also one can specify a different output file 
 ;		name by setting PRINT = 'filename'.
@@ -58,6 +61,14 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;       ignoring bad pixels.    Unfortunately, to implement this in IDL
 ;       would preclude the vectorization made possible with the CONVOL function
 ;       and would run extremely slowly.
+;
+;       (3) Modified in March 2008 to use marginal Gaussian distributions to 
+;       compute centroid.   (Formerly, find.pro determined centroids by locating
+;       where derivatives went to zero -- see cntrd.pro for this algorithm.   
+;       This was the method used in very old (~1984) versions of DAOPHOT. )   
+;       As discussed in more  detail in the comments to the code, the  centroid
+;       computation here is  the same as in IRAF DAOFIND but differs slightly 
+;       from the current DAOPHOT.
 ; PROCEDURE CALLS:
 ;	GETOPT()
 ; REVISION HISTORY:
@@ -66,10 +77,14 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;	Change variable name DERIV to DERIVAT    W. Landsman Feb. 1996
 ;	Use /PRINT keyword instead of TEXTOUT    W. Landsman May  1996
 ;	Changed loop indices to type LONG       W. Landsman Aug. 1997
-;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Replace DATATYPE() with size(/TNAME)   W. Landsman Nov. 2001
 ;       Fix problem when PRINT= filename   W. Landsman   October 2002
 ;       Fix problems with >32767 stars   D. Schlegel/W. Landsman Sep. 2004
+;       Fix error message when no stars found  S. Carey/W. Landsman Sep 2007
+;       Rewrite centroid computation to use marginal Gaussians W. Landsman 
+;                 Mar 2008
+;       Added Monitor keyword, /SILENT now suppresses all output 
+;                   W. Landsman    Nov 2008
 ;-
 ;
  On_error,2                         ;Return to caller
@@ -82,6 +97,11 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
     print,'                      PRINT= , /SILENT ]'
     return
  endif
+;Determine if hardcopy output is desired
+ doprint = keyword_set( PRINT)
+ silent =  keyword_set( SILENT )
+ if N_elements(monitor) EQ 0 then $
+      monitor = (not silent) and (not arg_present(flux) ) 
 
  maxbox = 13 	;Maximum size of convolution box in pixels 
 
@@ -91,12 +111,9 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
  if ( type[0] NE 2 ) then message, $
      'ERROR - Image array (first parameter) must be 2 dimensional'
  n_x  = type[1] & n_y = type[2]
- message,  $
+ message, NoPrint=Silent, $
     'Input Image Size is '+strtrim(n_x,2) + ' by '+ strtrim(n_y,2),/INF
 
-;Determine if hardcopy output is desired
- doprint = keyword_set( PRINT)
- if not keyword_set( SILENT ) then silent = 0
  if ( N_elements(fwhm) NE 1 ) then $
            read, 'Enter approximate FWHM: ', fwhm
 
@@ -110,26 +127,65 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
  lastcl = n_y - nhalf
  sigsq = ( fwhm/2.35482 )^2
  mask = bytarr( nbox, nbox )   ;Mask identifies valid pixels in convolution box 
- c = fltarr( nbox, nbox )      ;c will contain Gaussian convolution kernel
+ g = fltarr( nbox, nbox )      ;g will contain Gaussian convolution kernel
 
  dd = indgen(nbox-1) + 0.5 - middle	;Constants need to compute ROUND
  dd2 = dd^2
- w = 1. - 0.5*(abs(dd)-0.5) / (middle-.5)   
- ir = (nhalf-1) > 1
 
  row2 = (findgen(Nbox)-nhalf)^2
 
  for i = 0, nhalf do begin
 	temp = row2 + i^2
-	c[0,nhalf-i] = temp         
-        c[0,nhalf+i] = temp                           
+	g[0,nhalf-i] = temp         
+        g[0,nhalf+i] = temp                           
  endfor
 
- mask = fix(c LE radsq)     ;MASK is complementary to SKIP in Stetson's Fortran
+
+ mask = fix(g LE radsq)     ;MASK is complementary to SKIP in Stetson's Fortran
  good = where( mask, pixels)  ;Value of c are now equal to distance to center
 
- c = c*mask               
- c[good] = exp(-0.5*c[good]/sigsq)	;Make c into a Gaussian kernel
+;  Compute quantities for centroid computations that can be used for all stars
+ g = exp(-0.5*g/sigsq)
+
+;  In fitting Gaussians to the marginal sums, pixels will arbitrarily be 
+; assigned weights ranging from unity at the corners of the box to 
+; NHALF^2 at the center (e.g. if NBOX = 5 or 7, the weights will be
+;
+;                                 1   2   3   4   3   2   1
+;      1   2   3   2   1          2   4   6   8   6   4   2
+;      2   4   6   4   2          3   6   9  12   9   6   3
+;      3   6   9   6   3          4   8  12  16  12   8   4
+;      2   4   6   4   2          3   6   9  12   9   6   3
+;      1   2   3   2   1          2   4   6   8   6   4   2
+;                                 1   2   3   4   3   2   1
+;
+; respectively).  This is done to desensitize the derived parameters to 
+; possible neighboring, brighter stars.
+
+
+ xwt = fltarr(nbox,nbox)
+ wt = nhalf - abs(findgen(nbox)-nhalf ) + 1
+ for i=0,nbox-1 do xwt[0,i] = wt
+ ywt = transpose(xwt) 
+  sgx = total(g*xwt,1)
+ p = total(wt)
+ sgy = total(g*ywt,2)
+ sumgx = total(wt*sgy)
+ sumgy = total(wt*sgx)
+ sumgsqy = total(wt*sgy*sgy)
+ sumgsqx = total(wt*sgx*sgx)
+ vec = nhalf - findgen(nbox) 
+ dgdx = sgy*vec
+ dgdy = sgx*vec
+ sdgdxs = total(wt*dgdx^2)
+ sdgdx = total(wt*dgdx) 
+ sdgdys = total(wt*dgdy^2)
+ sdgdy = total(wt*dgdy) 
+ sgdgdx = total(wt*sgy*dgdx)
+ sgdgdy = total(wt*sgx*dgdy)
+
+ 
+ c = g*mask          ;Convolution kernel now in c      
  sumc = total(c)
  sumcsq = total(c^2) - sumc^2/pixels
  sumc = sumc/pixels
@@ -138,9 +194,9 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
  sumc1 = total(c1)/nbox
  sumc1sq = total(c1^2) - sumc1
  c1 = (c1-sumc1)/sumc1sq
- sumc = total(w)                         ;Needed for centroid computation
 
- print,'RELATIVE ERROR computed from FWHM',sqrt(total(c[good]^2))
+ message,/INF,Noprint=Silent, $
+    'RELATIVE ERROR computed from FWHM ' + strtrim(sqrt(total(c[good]^2)),2)
  if N_elements(hmin) NE 1 then read, $
     'Enter minimum value above background for threshold detection: ',hmin
 
@@ -169,14 +225,14 @@ GETROUND:
  endelse
  endif 
 
- message,'Beginning convolution of image', /INF
+ message,'Beginning convolution of image', /INF, NoPrint=Silent
 
  h = convol(float(image),c)    ;Convolve image with kernel "c"
 
     h[0:nhalf-1,*] = 0 & h[n_x-nhalf:n_x-1,*] = 0
     h[*,0:nhalf-1] = 0 & h[*,n_y-nhalf:n_y-1] = 0
 
- message,'Finished convolution of image', /INF
+ message,'Finished convolution of image', /INF, NoPrint=Silent
 
  mask[middle,middle] = 0	;From now on we exclude the central pixel
  pixels = pixels -1      ;so the number of valid pixels is reduced by 1
@@ -198,7 +254,7 @@ SEARCH: 			    ;Threshold dependent search begins here
  for i= 0L, pixels-1 do begin                             
 
 	stars = where (h[index] GE h[index+offset[i]], nfound)
-        if nfound LT 0 then begin  ;Do valid local maxima exist?
+        if nfound EQ 0 then begin  ;Do valid local maxima exist?
              message,'ERROR - No maxima exceed input threshold of ' + $
                      string(hmin,'(F9.1)'),/CON
              goto,FINISH  
@@ -210,7 +266,8 @@ SEARCH: 			    ;Threshold dependent search begins here
  ix = index mod n_x              ;X index of local maxima
  iy = index/n_x                  ;Y index of local maxima
  ngood = N_elements(index)       
- message,strtrim(ngood,2)+' local maxima located above threshold',/INF
+ message,/INF,Noprint=Silent, $
+    strtrim(ngood,2)+' local maxima located above threshold'
 
  nstar = 0L       	;NSTAR counts all stars meeting selection criteria
  badround = 0L & badsharp=0L  &  badcntrd=0L
@@ -226,7 +283,7 @@ SEARCH: 			    ;Threshold dependent search begins here
 
          if ( size(print,/TNAME) NE 'STRING' ) then file = 'find.prt' $
                                          else file = print
-         message,'Results will be written to a file ' + file,/INF
+         message,'Results will be written to a file ' + file,/INF,Noprint=Silent
          openw,lun,file,/GET_LUN
 	printf,lun,' Program: FIND '+ systime()
 	printf,lun,format='(/A,F7.1)',' Threshold above background:',hmin
@@ -239,7 +296,7 @@ SEARCH: 			    ;Threshold dependent search begins here
 
  endif                      
 
- if not SILENT then $
+ if (not SILENT) and MONITOR then $
   print,format='(/8x,a)','     STAR      X      Y     FLUX     SHARP    ROUND'
 
 ;  Loop over star positions; compute statistics
@@ -271,50 +328,71 @@ SEARCH: 			    ;Threshold dependent search begins here
 	goto,REJECT           ;Does not meet roundness criteria
      endif
 
-; Find X centroid
+;
+; Centroid computation:   The centroid computation was modified in Mar 2008 and
+; now differs from DAOPHOT which multiplies the correction dx by 1/(1+abs(dx)). 
+; The DAOPHOT method is more robust (e.g. two different sources will not merge)
+; especially in a package where the centroid will be subsequently be 
+; redetermined using PSF fitting.   However, it is less accurate, and introduces
+; biases in the centroid histogram.   The change here is the same made in the 
+; IRAF DAOFIND routine (see 
+; http://iraf.net/article.php?story=7211&query=daofind )
+;    
 
-     derivat = shift(temp,-1,0) - temp
-     derivat = total( derivat[0:nbox-2,middle-ir:middle+ir],2)
-     sumd = total(w*derivat)
-     sumxd = total(w*dd*derivat)
-     sumxsq = total(w*dd2) 
+ sd = total(temp*ywt,2)
 
-     if ( sumxd GE 0. ) then begin
+ sumgd = total(wt*sgy*sd)
+ sumd = total(wt*sd)
+ sddgdx = total(wt*sd*dgdx)
+
+ hx = (sumgd - sumgx*sumd/p) / (sumgsqy - sumgx^2/p)
+
+; HX is the height of the best-fitting marginal Gaussian.   If this is not
+; positive then the centroid does not make sense 
+
+  if (hx LE 0) then begin
+    	badcntrd = badcntrd + 1
+	 goto, REJECT
+  endif
+
+ skylvl = (sumd - hx*sumgx)/p
+ dx = (sgdgdx - (sddgdx-sdgdx*(hx*sumgx + skylvl*p)))/(hx*sdgdxs/sigsq)
+ if abs(dx) GE nhalf then begin 
 	badcntrd = badcntrd + 1
-	goto,REJECT           ;Cannot compute X centroid
-     endif
+	 goto, REJECT
+  endif
 
-     dx =sumxsq*sumd/(sumc*sumxd)
-     if abs(dx) GT nhalf then begin
-      	 badcntrd = badcntrd + 1
-	 goto,REJECT           ;X centroid too far from local X maxima
-     endif
-
-     xcen = ix[i]-dx               ;Convert back to big image coordinates
+ xcen = ix[i] + dx    ;X centroid in original array
 
 ; Find Y centroid                 
 
-     derivat = shift(temp,0,-1) - temp 
-     derivat = total( derivat[middle-ir:middle+ir,0:nbox-2], 1 )
-     sumd = total( w*derivat )
-     sumxd = total( w*dd*derivat )
-     sumxsq = total( w*dd2 )
-     if (sumxd GE 0) then begin
-	  badcntrd = badcntrd + 1
-	  goto, REJECT  
-     endif
+ sd = total(temp*xwt,1)
+ 
+ sumgd = total(wt*sgx*sd)
+ sumd = total(wt*sd)
 
-     dy = sumxsq*sumd/(sumc*sumxd)
-     if ( abs(dy) GT nhalf ) then begin
+ sddgdy = total(wt*sd*dgdy)
+
+ hy = (sumgd - sumgy*sumd/p) / (sumgsqx - sumgy^2/p)
+
+  if (hy LE 0) then begin
 	badcntrd = badcntrd + 1
-	goto,REJECT 
-     endif
-     
-     ycen = iy[i] - dy
+	 goto, REJECT
+  endif
+
+ skylvl = (sumd - hy*sumgy)/p
+ dy = (sgdgdy - (sddgdy-sdgdy*(hy*sumgy + skylvl*p)))/(hy*sdgdys/sigsq)
+ if abs(dy) GE nhalf then begin 
+	badcntrd = badcntrd + 1
+	 goto, REJECT
+  endif
+      
+ ycen = iy[i] +dy    ;Y centroid in original array
+ 
 
 ;  This star has met all selection criteria.  Print out and save results
 
-   if not SILENT then $
+   if monitor then $
       print,FORM = '(12x,i5,2f7.1,f9.1,2f9.2)', $ 
             nstar, xcen, ycen, d, sharp1, around
 
@@ -329,7 +407,6 @@ SEARCH: 			    ;Threshold dependent search begins here
    nstar = nstar+1
 
 REJECT: 
-  
  endfor
 
  nstar = nstar-1		;NSTAR is now the index of last star found
@@ -340,9 +417,11 @@ REJECT:
   printf,lun,' No. of sources rejected by CENTROID  criteria',badcntrd
  endif
  
+if (not SILENT) and (MONITOR) then begin 
   print,' No. of sources rejected by SHARPNESS criteria',badsharp
   print,' No. of sources rejected by ROUNDNESS criteria',badround
   print,' No. of sources rejected by CENTROID  criteria',badcntrd
+endif 
 
   if nstar LT 0 then return               ;Any stars found?
 
@@ -366,7 +445,7 @@ REJECT:
 
 FINISH:
 
- if SILENT then return
+ if SILENT or (not MONITOR) then return
 
  print,form='(A,F8.1)',' Threshold above background for this pass was',hmin
  ans = ''

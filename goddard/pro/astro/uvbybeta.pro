@@ -189,7 +189,7 @@ pro uvbybeta,xby,xm1,xc1,xHbeta,xn,Te,MV,eby,delm0,radius,TEXTOUT=textout, $
 
  1: BEGIN
 
-;   For group 1, beta is a luminosity inticator and c0 is a temperature
+;   For group 1, beta is a luminosity indicator and c0 is a temperature
 ;   indicator. (u-b) is also a suitable temperature indicator.
 
 ;   For dereddening a linear relation between the intrinsic (b-y)

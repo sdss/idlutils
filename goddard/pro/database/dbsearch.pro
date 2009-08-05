@@ -31,9 +31,12 @@ pro dbsearch,type,svals,values,good, FULLSTRING = fullstring, COUNT = count
 ;	D. Lindler  July,1987
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added COUNT keyword, deprecate !ERR   W. Landsman   March 2000
+;      Some speed improvements W.L. August 2008
 ;-
 ;-----------------------------------------------------------
  On_error,2
+ compile_opt idl2
+ 
  svals = strupcase(svals)
 ;
 ; determine data type of values to be searched
@@ -68,6 +71,8 @@ if datatype EQ 7 then begin
                ' Tolerance specification for strings is not valid'
          else:  begin
                 sv = strtrim(sv,2)
+		sv = sv[uniq(sv,sort(sv))]     ;Remove duplicates
+		type = N_elements(sv)
 
 		if keyword_set(FULLSTRING) then begin
 		values = strtrim(values,2)
@@ -109,15 +114,21 @@ case type of
 	-4: good=where(values, count)		;non-zero
 	else: begin				;set of values	
 	      count=0				;number found
+              sv = sv[uniq(sv,sort(sv))]     ;Remove duplicates
+	      type = N_elements(sv)
+	      good = lonarr(nv)
+	      count = 0l
 	      for i=0L,type-1 do begin		;loop on possible values    
 		g = where( values EQ sv[i], Ng)
 		if Ng gt 0 then begin
-			if count eq 0 then good=g else good=[good,g]
+		        good[count] = g
 			count = count + Ng
 		endif
-	      end
+	      endfor
+              if count EQ 0 then good = intarr(1)-1  else $ ;Make sure good is defined
+	                         good = good[0:count-1]
+	      
 	      !err=count
-              if count EQ 0 then good = intarr(1)-1   ;Make sure good is defined
 	      end
 endcase
 return

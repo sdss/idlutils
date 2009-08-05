@@ -5,6 +5,11 @@ pro nstar,image,id,xc,yc,mags,sky,group,phpadu,readns,psfname,DEBUG=debug, $
 ;       NSTAR
 ; PURPOSE:
 ;       Simultaneous point spread function fitting (adapted from DAOPHOT)
+; EXPLANATION:
+;       This PSF fitting algorithm is based on a very old (~1987) version of 
+;       DAOPHOT, and much better algorithms (e.g. ALLSTAR) are now available
+;       -- though not in IDL.
+;       
 ; CALLING SEQUENCE:
 ;       NSTAR, image, id, xc, yc, mags, sky, group, [ phpadu, readns, psfname,
 ;               magerr, iter, chisq, peak, /PRINT , /SILENT, /VARSKY, /DEBUG ]
@@ -70,7 +75,9 @@ pro nstar,image,id,xc,yc,mags,sky,group,phpadu,readns,psfname,DEBUG=debug, $
 ;       Added /VARSKY option   W. Landsman   HSTX      May 1996
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Replace DATATYPE() with size(/TNAME)  W. Landsman November 2001
+;       Assume since V5.5, remove VMS calls W. Landsman September 2006
 ;-
+ compile_opt idl2
  common rinter,c1,c2,c3,init            ;Save time in RINTER()
  npar = N_params()
  if npar LT 7 then begin
@@ -85,7 +92,7 @@ pro nstar,image,id,xc,yc,mags,sky,group,phpadu,readns,psfname,DEBUG=debug, $
    read,'Enter name of FITS file containing PSF: ',psfname
  endif else zparcheck,'PSFNAME',psfname,10,7,0,'PSF disk file name'
 
- psf_file = findfile( psfname, COUNT = n)
+ psf_file = file_search( psfname, COUNT = n)
  if n EQ 0 then message, $
       'ERROR - Unable to locate PSF file ' + spec_dir(psfname)
 
@@ -154,12 +161,7 @@ endif
  if keyword_set(PRINT) then begin
      if ( size(print,/TNAME) NE 'STRING' ) then file = 'nstar.prt' $
                                            else file = print
-     if !VERSION.OS EQ "vms" then begin
-              fdecomp,file,disk,dir,name,ext
-              if ( ext EQ '') then ext = 'prt'
-              file = strupcase(disk+dir+name + '.' + ext)
-     endif
-     message,'Results will be written to a file '+ file,/INF
+    message,'Results will be written to a file '+ file,/INF
      openw,lun,file,/GET_LUN
      printf,lun,'NSTAR:    '+ getenv('USER') + ' '+ systime()
      printf,lun,'PSF File:',psfname

@@ -58,11 +58,11 @@ function dbmatch, item, values, listin, FULLSTRING = fullstring
 ;       Added keyword FULLSTRING,check for empty database, William Thompson, 
 ;               GSFC, 15 March 1995
 ;       Work for more than 32767 values, added CATCH W. Landsman   July 1997
-;       Converted to IDL V5.0   W. Landsman 25-Nov-1997
 ;       Change some loop variables to type LONG,  W. Landsman  July 1999
 ;       Remove loop for substring searches (faster)  W. landsman August 1999
 ;       Replace DATATYPE() with size(/TNAME)  W. Landsman  November 2001
 ;       Fixed typo when search on sorted items W. Landsman February 2002
+;       Fixed bug from Nov 2001 where /FULLSTRING was always set.  W.L Feb 2007
 ;-
  On_error,2
 
@@ -145,14 +145,14 @@ function dbmatch, item, values, listin, FULLSTRING = fullstring
                 vals   = strupcase( strtrim(values,2) )
     endif else vals = values
     for i=0L,nvals-1 do begin             
-       if typ NE 'STR' then begin 
+       if typ NE 'STRING' then begin                  ;Fixed Feb 2007
                good = where( itvals EQ vals[i], Nfound ) 
                if Nfound GT 0 then list[i] = tmplist[ good[0] ]  ;Fixed May-92
 
         endif else begin                 ;Can't use WHERE on string arrays
                                          ;unless FULLSTRING is set
 
-                if keyword_set(fullstring) then begin
+               if keyword_set(fullstring) then begin
                    good = where( itvals EQ vals[i], Nfound)
                    if Nfound GT 0 then list[i] = tmplist[ good[0] ]
                 end else begin

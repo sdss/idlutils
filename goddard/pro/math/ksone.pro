@@ -53,8 +53,8 @@
 ;       IDL> data = randomn(seed, 50)          ;create data array to be tested
 ;       IDL> ksone, abs(data), 'gauss_cdf', D, prob, /PLOT     ;Use K-S test
 ;      
-;       PROB gives the probability that the null hypothesis (DATA came from a 
-;       Gaussian distribution with unit variance) is correct.
+;       A small value of PROB indicates that the cumulative distribution of 
+;        DATA is significantly different from a Gaussian
 ;
 ; NOTES:
 ;       The code for PROB_KS is from the 2nd (1992) edition of Numerical 

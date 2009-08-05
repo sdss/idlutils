@@ -68,12 +68,12 @@ pro dbhelp,flag,TEXTOUT=textout,sort=sort
 ;               Modified to allow ZDBASE to be a path string.
 ;       Remove duplicate database names  Wayne Landsman    December 1994
 ;       8/17/95 jkf/acc - force lowercase filenames for .hlp files.
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added /SORT keyword  J. Sandoval/W. Landsman     October 1998
 ;       V5.3 version use vectorized FDECOMP   W. Landsman   February 2001
 ;       Recognize 64 bit, unsigned integer datatypes W. Landsman September 2001
 ;       Fix display of number of bytes with /SORT W. Landsman February 2002
 ;       Assume since V5.2                 W. Landsman February 2002  
+;       Assume since V5.5                 W. Landsman   
 ;-
 ;****************************************************************************
 ;
@@ -98,7 +98,7 @@ end
 ;
 ; determine where user wants output...default terminal.
 ;
-if (n_elements(textout) EQ 0) then textout = !textout  ;use default output dev.
+if N_elements(textout) EQ 0 then textout = !textout  ;use default output dev.
 ;
 textopen,'dbhelp',textout=textout
 ;
@@ -232,12 +232,8 @@ if opened then begin                    ;data base opened?
              names = names[fsort]
              b=bytarr(79)              ;Database title is 79 bytes
              for i=0,n-1 do begin
-                  openr,unit,names[i],/segmented,error=err
-;
-;  If /SEGMENTED doesn't work, then maybe the file was written in external
-;  format.  Try /BLOCK instead.
-;
-                  if err NE 0 then openr,unit,names[i],/BLOCK
+                  openr,unit,names[i],error=err
+                  if err NE 0 then message,/CON, 'Error opening ' + names[i]
                   readu,unit,b
                   printf,!TEXTUNIT,strtrim(b[0:78],2) 
                   close,unit

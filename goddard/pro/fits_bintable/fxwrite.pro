@@ -1,13 +1,13 @@
 	PRO FXWRITE, FILENAME, HEADER, DATA, NANVALUE=NANVALUE,		$
-		NOUPDATE=NOUPDATE, ERRMSG=ERRMSG
+		NOUPDATE=NOUPDATE, ERRMSG=ERRMSG, APPEND=APPEND
 ;+
 ; NAME: 
 ;	FXWRITE
 ; Purpose     : 
 ;	Write a disk FITS file.
 ; Explanation : 
-;	Creates a disk FITS file and writes a FITS primary header, and
-;	optionally a primary data array.
+;       Creates or appends to a disk FITS file and writes a FITS
+;       header, and optionally an image data array.
 ; Use         : 
 ;	FXWRITE, FILENAME, HEADER [, DATA ]
 ; Inputs      : 
@@ -28,6 +28,10 @@
 ;	NOUPDATE = If set, then the optional BSCALE and BZERO keywords in the
 ;		   HEADER array will not be changed.  The default is to reset
 ;		   these keywords to BSCALE=1, BZERO=0.
+;       APPEND = If set, then an existing file will be appended to.
+;                Appending to a non-existent file will create it.  If
+;                a primary HDU already exists then it will be modified
+;                to have EXTEND = T.
 ;	ERRMSG	 = If defined and passed, then any error messages will be
 ;		   returned to the user in this parameter rather than
 ;		   depending on the MESSAGE routine in IDL.  If no errors are
@@ -62,7 +66,12 @@
 ;	Groups are not supported.
 ;
 ; Side effects: 
-;	None.
+;	HEADER may be modified.  One way it may be modified is describe
+;       above under NOUPDATE.  The first header card may also be
+;       modified to conform to the FITS standard if it does not
+;       already agree (i.e. use of either the SIMPLE or XTENSION
+;       keyword depending on whether the image is the primary HDU or
+;       not).
 ; Category    : 
 ;	Data Handling, I/O, FITS, Generic.
 ; Prev. Hist. : 
@@ -94,8 +103,12 @@
 ;               Remove !ERR in call to CHECK_FITS, Use ARG_PRESENT()
 ;       Version 5, William Thompson, GSFC, 22 September 2004
 ;               Recognize unsigned integer types
+;       Version 5.1 W. Landsman 14 November 204 
+;               Allow for need for 64bit number of bytes
+;       Version 6, Craig Markwardt, GSFC, 30 May 2005
+;               Ability to append to existing files
 ; Version     : 
-;	Version 5, 22 Sep 2004
+;	Version 6, 30 May 2005
 ;-
 ;
 	ON_ERROR, 2
@@ -161,11 +174,74 @@
 ;  Get the UNIT number, and open the file.
 ;
        	GET_LUN, UNIT      
-       	OPENW, UNIT, FILENAME, 2880, /BLOCK, ERROR=ERR
+       	OPENW, UNIT, FILENAME, 2880, /BLOCK, ERROR=ERR, APPEND=APPEND
+        VERB = 'creating'
+        IF KEYWORD_SET(APPEND) THEN VERB = 'appending to'
 	IF ERR NE 0 THEN BEGIN
-	    MESSAGE = 'Error creating file '+FILENAME
+	    MESSAGE = 'Error '+VERB+' file '+FILENAME
 	    GOTO, HANDLE_ERROR
-	ENDIF
+        ENDIF
+
+;
+;  Special processing is required when we are appending to 
+;  the file, to ensure that the FITS standards are met.
+;  (i.e. primary HDU must have EXTEND = T, and the header
+;  to be written must have XTENSION = 'IMAGE').
+;  
+
+        POINT_LUN, -UNIT, POS
+        IF POS GT 0 THEN BEGIN
+            ;; Release the file and call FXHMODIFY to edit the
+            ;; header of the primary HDU.  It is required to have
+            ;; EXTEND=T.  FXHMODIFY calls FXADDPAR, which
+            ;; automatically places the EXTEND keyword in the
+            ;; required position.
+            FREE_LUN, UNIT
+            FXHMODIFY, FILENAME, ERRMSG=MESSAGE, $ ; (EXTENSION=0 implied)
+              'EXTEND', 'T', ' FITS dataset may contain extensions'
+            IF MESSAGE NE '' THEN GOTO, HANDLE_ERROR
+            
+            ;; Re-open the file
+            GET_LUN, UNIT      
+            OPENW, UNIT, FILENAME, 2880, /BLOCK, ERROR=ERR, APPEND=APPEND
+            IF ERR NE 0 THEN BEGIN
+                MESSAGE = 'Error re-opening file '+FILENAME
+                GOTO, HANDLE_ERROR
+            ENDIF
+            
+            ;; Revise the header so that it begins with an
+            ;; XTENSION keyword... if it doesn't already
+            IF STRMID(HEADER[0], 0, 9) EQ 'SIMPLE  =' THEN BEGIN
+                ;; Extra work to preserve the comment
+                DUMMY = FXPAR(HEADER, 'SIMPLE', COMMENT=COMMENT) 
+                FXADDPAR, DUMMYHEADER, 'XTENSION', 'IMAGE', COMMENT
+                HEADER[0] = DUMMYHEADER[0]
+            ENDIF
+
+            ;; Find last NAXIS* keyword, since PCOUNT/GCOUNT follow them
+            NAXIS = FXPAR(HEADER, 'NAXIS', COUNT=COUNT_NAXIS)
+            IF NAXIS[0] GT 0 THEN PCOUNT_AFTER='NAXIS'+strtrim(NAXIS[0],2)
+            ;; Required PCOUNT/GCOUNT keywords for following extensions
+            FXADDPAR, HEADER, 'PCOUNT', 0, ' number of random group parameters', $
+              AFTER=PCOUNT_AFTER
+            FXADDPAR, HEADER, 'GCOUNT', 1, ' number of random groups', $
+              AFTER='PCOUNT'
+            
+        ENDIF ELSE BEGIN
+            ;; In the off chance that this header was used before to
+            ;; write a header with XTENSION, make sure this *new* file
+            ;; has SIMPLE = T
+            
+            IF STRMID(HEADER[0], 0, 9) EQ 'XTENSION=' THEN BEGIN
+                ;; Extra work to preserve the comment
+                DUMMY = FXPAR(HEADER, 'XTENSION', COMMENT=COMMENT) 
+                FXADDPAR, DUMMYHEADER, 'SIMPLE', 'T', COMMENT
+                HEADER[0] = DUMMYHEADER[0]
+            ENDIF
+
+        ENDELSE
+
+
 ;
 ;  Determine if an END line occurs, and add one if necessary
 ;
@@ -212,7 +288,7 @@
 ;  If necessary, then pad out to an integral multiple of 2880 bytes.
 ;
 	    BITPIX = FXPAR( HEADER, 'BITPIX' )
-	    NBYTES = N_ELEMENTS(DATA) * (ABS(BITPIX) / 8 )
+	    NBYTES = LONG64(N_ELEMENTS(DATA)) * (ABS(BITPIX) / 8 )
 	    NPAD = NBYTES MOD 2880
 	    IF NPAD NE 0 THEN BEGIN
 		NPAD = 2880 - NPAD

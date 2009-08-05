@@ -9,7 +9,7 @@ function zang,dl,z, h0=h0, k = k, Lambda0 = lambda0, Omega_m = Omega_m, $
 ;       Requires an input size in kpc and returns an angular size in arc seconds
 ;       Default cosmology has a Hubble constant of 70 km/s/Mpc, Omega (matter)
 ;       =0.3 and a normalized cosmological constant Lambda = 0.7; however these
-;       values can be changed with apropriate keywords.
+;       values can be changed with appropriate keywords.
 ;
 ; CALLING SEQUENCE:
 ;       angsiz = zang( dl, [ z, H0 =, Omega_m =, Lambda0 = , q0 = , k =, 
@@ -32,7 +32,7 @@ function zang,dl,z, h0=h0, k = k, Lambda0 = lambda0, Omega_m = Omega_m, $
 ;    Lambda0 - Cosmological constant, normalized to the closure density,
 ;        default is 0.7
 ;    q0 - Deceleration parameter, numeric scalar = -R*(R'')/(R')^2, default
-;        is -0.5
+;        is -0.55
 ;
 ;    Note that Omega_m + lambda0 + k = 1 and q0 = 0.5*omega_m - lambda0
 ; OUTPUT:

@@ -34,7 +34,9 @@ PRO co_aberration, jd, ra, dec, d_ra, d_dec, eps=eps
 ;
 ; REVISION HISTORY:
 ;   Written, June 2002,      Chris O'Dell, U. of Wisconsin
+;   Fix error with vector input   W. Landsman   June 2009
 ;-
+ compile_opt idl2
  d2r = !dpi/180.
  T = (jd -2451545.0)/36525.0 ; julian centuries from J2000 of jd.
  if n_elements(eps) eq 0 then begin ; must calculate obliquity of ecliptic
@@ -62,7 +64,7 @@ k = 20.49552 ;constant of aberration, in arcseconds
 
 ;Useful Trig Functions
 cd = cos(dec*d2r) & sd = sin(dec*d2r)
-ce = cos(eps) & te = tan(eps)
+ce = cos(eps[0]) & te = tan(eps[0])
 cp = cos(pi*d2r) & sp = sin(pi*d2r)
 cs = cos(sunlon*d2r) & ss = sin(sunlon*d2r)
 ca = cos(ra*d2r) & sa = sin(ra*d2r)

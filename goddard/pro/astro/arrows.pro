@@ -13,7 +13,7 @@ pro arrows,h,xcen,ycen,thick=thick,charsize=charsize,arrowlen=arrowlen, $
 ;                              FONT=, /NORMAL, /NOTVERTEX, THICK=  ]
 ;
 ; INPUTS:
-;       h - FITS or STSDAS header array, must include astrometry
+;       h - FITS header array, must include astrometry
 ;
 ; OPTIONAL INPUTS:
 ;       xcen,ycen - numeric scalars, specifying the center position of

@@ -12,56 +12,70 @@ function date_conv,date,type
 ;               year*1000 + day + hour/24. + min/24./60 + sec/24./60/60
 ;               where day is the day of year (1 to 366)
 ;       format 2: Vector encoded as:
-;               date[0] = year (eg. 1987)
+;               date[0] = year (eg. 2005)
 ;               date[1] = day of year (1 to 366)
 ;               date[2] = hour
 ;               date[3] = minute
 ;               date[4] = second
 ;       format 3: string (ascii text) encoded as
 ;               DD-MON-YEAR HH:MM:SS.SS
-;               (eg.  14-JUL-1987 15:25:44.23)
+;               (eg.  14-JUL-2005 15:25:44.23)
 ;            OR
 ;               YYYY-MM-DD HH:MM:SS.SS  (ISO standard)
 ;               (eg.  1987-07-14 15:25:44.23 or 1987-07-14T15:25:44.23)
-;	            
+;                   
 ;       format 4: three element vector giving spacecraft time words
-;       from a Hubble Space Telescope (HST) telemetry packet.
+;       from a Hubble Space Telescope (HST) telemetry packet.   Based on
+;       total number of secs since midnight, JAN. 1, 1979
+;
+;       format 5: Julian day. As this is also a scalar, like format 1, 
+;       	the distinction between the two on input is made based on their
+;       	value. Numbers > 2300000 are interpreted as Julian days.
 ;
 ; CALLING SEQUENCE
 ;       results = DATE_CONV( DATE, TYPE )
 ;
 ; INPUTS:
-;       DATE - input date in one of the three possible formats.
+;       DATE - input date in one of the possible formats. Must be scalar.
 ;       TYPE - type of output format desired.  If not supplied then
 ;               format 3 (real*8 scalar) is used.
 ;                       valid values:
 ;                       'REAL'  - format 1
 ;                       'VECTOR' - format 2
 ;                       'STRING' - format 3
-;			'FITS' - YYYY-MM-DDTHH:MM:SS.SS'
+;                       'FITS' - YYYY-MM-DDTHH:MM:SS.SS'
+;                       'JULIAN' - Julian date
+;                       'MODIFIED' - Modified Julian date (JD-2400000.5)
 ;               TYPE can be abbreviated to the single character strings 'R',
-;               'V', 'S' and 'F'.
+;               'V', 'S', 'F', 'J', and 'M'.
 ;               Nobody wants to convert TO spacecraft time (I hope!)
 ; OUTPUTS:
 ;       The converted date is returned as the function value.
 ;
-; NOTES:
-;      Prior to Oct 1998, the returned real*8 date (format 1) was given as
-;      (year-1900)*1000 + day + hour/24. + min/24./60 + sec/24./60/60 
-;      This output is ambiguous with respect to the year 2000.   Note that the
-;      current version of DATE_CONV() may not be backwards compatible with 
-;      versions prior to Oct 1998.
+; EXAMPLES:
+;       IDL> print,date_conv('2006-03-13 19:58:00.00'),f='(f15.5)' 
+;             2006072.83194 
+;       IDL> print,date_conv( 2006072.8319444d,'F')
+;             2006-03-13T19:58:00.00
+;       IDL> print,date_conv( 2006072.8319444d,'V')
+;             2006.00      72.0000      19.0000      57.0000      59.9962
+;       IDL> print,date_conv( 2006072.8319444d,'J'), f='(f15.5)'
+;             2453808.33194
+;
 ;
 ; HISTORY:
 ;      version 1  D. Lindler  July, 1987
 ;      adapted for IDL version 2  J. Isensee  May, 1990
 ;      Made year 2000 compliant; allow ISO format input  jls/acc Oct 1998
 ;      DJL/ACC Jan 1998, Modified to work with dates such as 6-JAN-1996 where
-;		day of month has only one digit.
+;               day of month has only one digit.
 ;      DJL, Nov. 2000, Added input/output format YYYY-MM-DDTHH:MM:SS.SS
+;      Replace spaces with '0' in output FITS format  W.Landsman April 2006
+;      Added Julian date capabilities on input and output.  M.Perrin, July 2007
 ;-
 ;-------------------------------------------------------------
 ;
+compile_opt idl2
 ; data declaration
 ;
 days = [0,31,28,31,30,31,30,31,31,30,31,30,31]
@@ -70,7 +84,7 @@ months = ['   ','JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT',$
 ;
 ; set default type if not supplied
 ;
-if n_params(0) lt 2 then type = 'REAL'
+if N_params() lt 2 then type = 'REAL'
 ;
 ; Determine type of input supplied
 ;
@@ -93,38 +107,57 @@ end
 case form of
 
         1: begin                                        ;real scalar
+			; The 'real' input format may be interpreted EITHER
+			; a) if < 2300000
+			;    as the traditional 'real*8 encoded' format used by date_conv
+			; b) if > 2300000
+			;    as a Julian Day Number
                 idate = long(date)
                 year = long(idate/1000)
-;
-; if year is only 2 digits, assume 1900
-;
-                if year lt 100 then begin
-                   print,'DATE_CONV: Warning: Year specified is only 2 digits, assuming 19xx'
-                   year=1900+year
-                   idate=1900000+idate
-                   date=1900000.+date
-                end
-;
-                day = idate - year*1000
-                fdate = date-idate
-                fdate = fdate*24.
-                hour = fix(fdate)
-                fdate = (fdate-hour)*60.0
-                minute = fix(fdate)
-                sec = float((fdate-minute)*60.0)
+
+				if year lt 2300 then begin
+					
+					; if year is only 2 digits, assume 1900
+	                if year lt 100 then begin
+	                   message,/WARN, $
+	                     'Warning: Year specified is only 2 digits, assuming 19xx'
+	                   year=1900+year
+	                   idate=1900000+idate
+	                   date=1900000.+date
+	                end
+	                day = idate - year*1000
+	                fdate = date-idate
+	                fdate = fdate*24.
+	                hour = fix(fdate)
+	                fdate = (fdate-hour)*60.0
+	                minute = fix(fdate)
+	                sec = float((fdate-minute)*60.0)
+
+				endif else begin
+					daycnv, date, year, mn, mndy, hr
+					; convert from month/day to day of year
+					; how many days PRECEED the start of each month?
+					YDAYS = [0,31,59,90,120,151,181,212,243,273,304,334,366] 
+					LEAP =  (((YeaR MOD 4) EQ 0) AND ((YeaR MOD 100) NE 0)) OR $
+					                 ((YeaR MOD 400) EQ 0)
+			        IF LEAP THEN YDAYS[2:*] = YDAYS[2:*] + 1
+					day = ydays[mn-1]+mndy
+					
+					hour = fix(hr)
+					fmin = (hr-hour)*60
+					minute = fix(fmin)
+					sec = float((fmin-minute)*60)
+				endelse
            end
 
         2: begin                                        ;vector
                 year = fix(date[0])
-                if year lt 100 then begin
-                   print,'DATE_CONV: Warning: Year specified is only 2 digits, assuming 19xx'
-                   year=1900+year
-                end
 ;
 ; if year is only 2 digits, assume 1900
 ;
                 if year lt 100 then begin
-                   print,'DATE_CONV: Warning: Year specified is only 2 digits, assuming 19xx'
+                   message,/WARN, $
+                    'Warning: Year specified is only 2 digits, assuming 19xx'
                    year=1900+year
                 end
 ;
@@ -153,8 +186,8 @@ case form of
                   for mon = 1,12 do begin
                         if month_name eq months[mon] then goto,found
                   end
-                  print,'DATE_CONV -- invalid month name specified'
-                  retall
+                  message,'Invalid month name specified'
+                  
 ;
 ; check for new type of date, ISO: YYYY-MM-DD
 ;
@@ -178,7 +211,8 @@ case form of
 ; if year is only 2 digits, assume 1900
 ;
                 if year lt 100 then begin
-                   print,'DATE_CONV: Warning: Year specified is only 2 digits, assuming 19xx'
+                   message,/WARN, $ 
+                     'Warning: Year specified is only 2 digits, assuming 19xx'
                    year=1900+year
                 end
 ;
@@ -253,7 +287,8 @@ case form of
 ; if year is only 2 digits, assume 1900
 ;
                 if year lt 100 then begin
-                   print,'DATE_CONV: Warning: Year specified is only 2 digits, assuming 19xx'
+                   message, /CON, $ 
+                     'Warning: Year specified is only 2 digits, assuming 19xx'
                    year=1900+year
                 end
 ;
@@ -272,6 +307,13 @@ ENDCASE
            if lpyr eq 1 then days[2] = 29 ; if leap year, add day to Feb.
         end
 ;
+;            check for valid day
+;
+        if (day lt 1) or (day gt total(days)) then $
+            message,'ERROR -- There are only ' + strtrim(fix(total(days)),2) + $
+	         ' days  in year '+strtrim(year,2)
+
+;
 ;            find month which day occurs
 ;
         day_of_month = day
@@ -279,13 +321,6 @@ ENDCASE
         while day_of_month gt days[month_num] do begin
                day_of_month = day_of_month - days[month_num]
                month_num = month_num+1
-        end
-;
-;            check for valid day
-;
-        if (day lt 1) or (day gt total(days)) then begin
-           print,'DATE_CONV -- There are only',total(days),' in year ',year
-           retall
         end
 ;           ---------------------------------------
 ;
@@ -296,10 +331,8 @@ ENDCASE
 ; is type a string
 ;
 s = size(type)
-if (s[0] ne 0) or (s[1] ne 7) then begin
-        print,'DATE_CONV- Output type specification must be a string'
-        retall
-end
+if (s[0] ne 0) or (s[1] ne 7) then $
+        message,'ERROR - Output type specification must be a string'
 ;
 case strmid(strupcase(type),0,1) of
 
@@ -326,20 +359,44 @@ case strmid(strupcase(type),0,1) of
 ;
                 out = string(day_of_month,'(i2)') +'-'+ month_name +'-' + $
                         string(year,'(i4)') + ' '+ $
-                        string(hour,'(i2)') +':'+ $
+                        string(hour,'(i2.2)') +':'+ $
                         strmid(string(minute+100,'(i3)'),1,2) + ':'+ $
                         strmid(string(sec+100,'(f6.2)'),1,5)
            end
-	'F' : begin
-		out = string(year,'(i4)')+'-'+string(month_num,'(I2)')+'-'+ $
-			string(day_of_month,'(i2)')+'T'+string(hour,'(i2)') +':'+ $
-                        string(minute,'(i2.2)') + ':'+ $
-                        strmid(string(sec+100,'(f6.2)'),1,5)
-	      end
+        'F' : begin
+               xsec = strmid(string(sec+100,'(f6.2)'),1,5)
+               if xsec EQ '60.00' then begin
+                     minute = minute+1
+                     xsec = '00.00'
+                endif
+                xminute =   string(minute,'(i2.2)')
+                if xminute EQ '60' then begin
+                       hour = hour+1
+                       xminute = '00'                  
+                endif          
+                out = string(year,'(i4)')+'-'+string(month_num,'(I2.2)')+'-'+ $
+                        string(day_of_month,'(i2.2)')+'T' + $
+                        string(hour,'(i2.2)') +  ':' +xminute + ':'+ xsec
+                        
+              end
+
+		'J' : begin	; Julian Date
+				ydn2md, year, day, mn, dy
+				juldate, [year, mn, dy, hour, minute, sec], rjd
+				out = rjd+2400000   ; convert from reduced to regular JD
+			  end
+		'M' : begin ; Modified Julian Date = JD - 2400000.5
+				ydn2md, year, day, mn, dy
+				juldate, [year, mn, dy, hour, minute, sec], rjd
+				out = rjd-0.5   ; convert from reduced to modified JD
+			  end
+
+
+
         else: begin                     ;invalid type specified
                 print,'DATE_CONV-- Invalid output type specified'
-                print,' It must be ''REAL'', ''STRING'', or ''VECTOR'''
-                retall
+                print,' It must be ''REAL'', ''STRING'', ''VECTOR'', ''JULIAN'', ''MODIFIED'', or ''FITS''.'
+                return,-1
               end
 endcase
 return,out
@@ -347,6 +404,6 @@ return,out
 ; invalid input date error section
 ;
 notvalid:
-print,'DATE_CONV -- invalid input date specified'
-retall
+message,'Invalid input date specified',/CON
+return, -1
 end

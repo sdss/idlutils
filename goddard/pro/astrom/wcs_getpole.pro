@@ -10,7 +10,7 @@
 ;       position of the native pole.    See section 2.4 of the paper 
 ;       "Representation of Celestial Coordinates in FITS" by Calabretta 
 ;       Greisen (2002, A&A, 395, 1077, also available at  
-;       http://www.aoc.nrao.edu/~egreisen    Called by WCS_ROTATE
+;       http://fits.gsfc.nasa.gov/fits_wcs.html    Called by WCS_ROTATE
 ;
 ; CALLING SEQUENCE:
 ;       WCS_GETPOLE,  crval, lonpole, theta0, alpha_p, delta_p, LATPOLE= ]
@@ -31,7 +31,8 @@
 ;-
 
 pro WCS_GETPOLE, crval, lonpole, theta0, alpha_p, delta_p, LATPOLE = latpole
-          
+    
+ compile_opt idl2         
 ; check to see that enough parameters (at least 4) were sent
  if (N_params() lt 5) then begin
     print,'Syntax - WCS_GETPOLE,  crval, lonpole, theta0 = ,alpha_p, delta_p, '

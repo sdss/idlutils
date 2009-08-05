@@ -1,5 +1,5 @@
 PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
-               CHARSIZE=CSIZE, _EXTRA = _extra
+               CHARSIZE=CSIZE, FONT=font, _EXTRA = _extra
 ;
 ;+
 ;NAME:
@@ -10,7 +10,8 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;       and number of points on the plot.
 ;
 ; CALLING SEQUENCE:
-;       HISTOGAUSS, Sample, A, [XX, YY, GX, GY, /NOPLOT, /NOFIT, CHARSIZE = ]
+;       HISTOGAUSS, Sample, A, [XX, YY, GX, GY, /NOPLOT, /NOFIT, FONT=, 
+;                               CHARSIZE = ]
 ;
 ; INPUT:
 ;       SAMPLE = Vector to be histogrammed
@@ -46,7 +47,7 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;               By default, a Gaussian with the same mean and sigma is drawn; 
 ;               the height is the only free parameter.
 ;       CHARSIZE Size of the characters in the annotation. Default = 0.82.
-;
+;       FONT - scalar font graphics keyword (-1,0 or 1) for text
 ;       _EXTRA - Any value keywords to the PLOT command (e.g. XTITLE) may also
 ;               be passed to HISTOGAUSS
 ; SUBROUTINE CALLS:
@@ -66,6 +67,7 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;           FITAGAUSS  W. Landsman April 2002 
 ;       Correct call to T_CVF for calculation of A[3], 95% confidence interval
 ;                P. Broos/W. Landsman   July 2003
+;       Allow FONT keyword to be passed.  T. Robishaw Apr. 2006
 ;-
 
  On_error,2
@@ -76,6 +78,7 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
     return
  endif
 
+ if (N_elements(FONT) eq 0) then font = !p.font
  DATA = SAMPLE
  N = N_ELEMENTS(DATA)
 
@@ -98,7 +101,7 @@ IF DATA[N3] EQ DATA[N1] THEN BEGIN
       ENDELSE
       Q=0
    ENDIF ELSE BEGIN
-      message,/CON,' Too Many Identical Values: ',DATA[N/2]
+      message,/CON,' Too Many Identical Values: ' + strtrim(DATA[N/2],2)
       RETURN
    ENDELSE
 ENDIF
@@ -130,8 +133,10 @@ A[4]=TOTAL((DATA-A[1])^2)/((N-1)*A[2]^2)
  IF NQ GT 0 THEN DATA[Q] = U2
 
 ; Draw the histogram
+ font_in = !P.FONT & !P.FONT=font
  AUTOHIST,DATA,X,Y,XX,YY,NOPLOT = noplot, _EXTRA = _extra
-
+ !P.FONT=font_in
+ 
 ; Check for error in AUTOHIST:
 
 M = N_ELEMENTS(X)
@@ -177,11 +182,11 @@ NUM = N_ELEMENTS(DATA)
 NUMST =STRING(N,'(I6)')
 
 IF KEYWORD_SET(CSIZE) THEN ANNOT=CSIZE ELSE ANNOT=.82
- if !P.FONT EQ 0 then LABL = '#, !Mm!X, !Ms!X=' else  LABL='#, !7l!6, !7r!3='
+ if FONT EQ 0 then LABL = '#, !Mm!X, !Ms!X=' else  LABL='#, !7l!6, !7r!3='
  LABL = LABL +numst+','+meanst+','+sigst 
 X1 = !x.crange[0] + annot*(!x.crange[1]-!x.crange[0])/20./0.82 
 y1 = !y.crange[1] - annot*(!y.crange[1]-!y.crange[0])/23./0.82 
-XYOUTS, X1, Y1, LABL, CHARSIZE=ANNOT
+XYOUTS, X1, Y1, LABL, CHARSIZE=ANNOT, FONT=font
 
 RETURN
 END

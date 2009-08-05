@@ -47,6 +47,8 @@
 ; Version     : 
 ;	Version 3, 22 May 1996
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Make NAXIS1, NAXIS2, HEAP, DHEAP, BYTOFF 64-bit integers to deal with large files,
+;         E. Hivon Mar 2008
 ;-
 ;
 @fxbintable
@@ -65,12 +67,12 @@
 		HEAD	= ''
 		MHEADER	= 0L
 		NHEADER = 0L
-		NAXIS1  = 0L
-		NAXIS2  = 0L
+		NAXIS1  = 0LL
+		NAXIS2  = 0LL
 		TFIELDS = 0L
-		HEAP	= 0L
-		DHEAP	= 0L
-		BYTOFF  = 0L
+		HEAP	= 0LL
+		DHEAP	= 0LL
+		BYTOFF  = 0LL
 		TTYPE	= ''
 		FORMAT	= ''
 		IDLTYPE	= 0

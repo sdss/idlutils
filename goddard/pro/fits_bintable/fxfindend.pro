@@ -45,6 +45,8 @@
 ;	Version 1, 12 April 1993.
 ;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added EXTENSION parameter, CM 1999 Nov 18
+;       Allow for possible 64bit integer number of bytes W. Landsman Nov 2007
+;       make Ndata a long64 to deal with large files. E. Hivon Mar 2008
 ;-
 ;
 	ON_ERROR,2
@@ -69,14 +71,14 @@ NEXT_EXT:
 	PCOUNT = FXPAR(HEADER,'PCOUNT')
 	IF NAXIS GT 0 THEN BEGIN 
 		DIMS = FXPAR(HEADER,'NAXIS*')		;Read dimensions
-		NDATA = DIMS[0]
+		NDATA = long64(DIMS[0])
 		IF NAXIS GT 1 THEN FOR I=2,NAXIS DO NDATA = NDATA*DIMS[I-1]
 	ENDIF ELSE NDATA = 0
-	NBYTES = (ABS(BITPIX) / 8) * GCOUNT * (PCOUNT + NDATA)
+	NBYTES = LONG64(ABS(BITPIX) / 8) * GCOUNT * (PCOUNT + NDATA)
 ;
 ;  Move to the next extension header in the file.
 ;
-	NREC = LONG((NBYTES + 2879) / 2880)
+	NREC = (NBYTES + 2879) / 2880
 	POINT_LUN, -UNIT, POINTLUN			;Current position
 	POINT_LUN, UNIT, POINTLUN + NREC*2880L		;Next FITS extension
         EXTENSION = EXTENSION + 1L

@@ -1,4 +1,4 @@
-PRO RESISTANT_Mean,Y,CUT,Mean,Sigma,Num_Rej 
+PRO RESISTANT_Mean,Y,CUT,Mean,Sigma,Num_Rej,goodvec = goodvec
 ;+
 ; NAME:
 ;    RESISTANT_Mean  
@@ -30,6 +30,8 @@ PRO RESISTANT_Mean,Y,CUT,Mean,Sigma,Num_Rej
 ;            cuts of 2.0 or less. 
 ;       Num_RejECTED = the number of points trimmed, integer scalar
 ;
+; OPTIONAL OUTPUT KEYWORD:
+;       Goodvec -  Indicies of non-trimmed elements of the input vector
 ; EXAMPLE:
 ;       IDL> a = randomn(seed, 10000)    ;Normal distribution with 10000 pts
 ;       IDL> RESISTANT_Mean,a, 3, mean, meansig, num    ;3 Sigma clipping    
@@ -45,6 +47,9 @@ PRO RESISTANT_Mean,Y,CUT,Mean,Sigma,Num_Rej
 ;       Correct conditional test, higher order truncation correction formula
 ;                R. Arendt/W. Landsman   June 2002
 ;       New truncation formula for sigma H. Freudenriech  July 2002
+;       Divide Sigma_mean by Num_good rather than Npts W. Landsman/A. Conley
+;                          January 2006
+;       Use of double precision S. Bianchi February 2008
 ;-
 
  On_Error,2
@@ -62,12 +67,13 @@ PRO RESISTANT_Mean,Y,CUT,Mean,Sigma,Num_Rej
 
  Cutoff    = Cut*MedAbsDev
 
- GoodPts = Y[ WHERE( AbsDev LE Cutoff, Num_Good ) ]
+ goodvec = where( AbsDev LE Cutoff, Num_Good) 
+ GoodPts = double(Y[ goodvec ])
  Mean    = AVG( GoodPts )
  Sigma   = SQRT( TOTAL((GoodPts-Mean)^2)/Num_Good )
  Num_Rej = Npts - Num_Good
 
-; Compenate Sigma for truncation (formula by HF):
+; Compensate Sigma for truncation (formula by HF):
  SC = Cut > 1.0
  IF SC LE 4.50 THEN $
     SIGMA=SIGMA/(-0.15405+0.90723*SC-0.23584*SC^2+0.020142*SC^3)
@@ -85,7 +91,7 @@ PRO RESISTANT_Mean,Y,CUT,Mean,Sigma,Num_Rej
     SIGMA=SIGMA/(-0.15405+0.90723*SC-0.23584*SC^2+0.020142*SC^3)
 
 ; Now the standard deviation of the mean:
- Sigma = Sigma/SQRT(Npts-1.)
+ Sigma = Sigma/SQRT(Num_Good-1.)
 
  RETURN
  END

@@ -3,19 +3,17 @@ function boxave, array, xsize, ysize
 ; NAME:
 ;       BOXAVE
 ; PURPOSE:
-;       Box-average a 1 or 2 dimensional array.
-; EXPLANATION:   
-;       This procedure differs from the intrinsic REBIN function in the 
-;       following 2 ways: 
+;       Box-average a 1 or 2 dimensional array.   
+; EXPLANATION:
+;       This procedure differs from the intrinsic REBIN function in the follow 
+;       2 ways: 
 ;
 ;       (1) the box size parameter is specified rather than the output 
 ;               array size
 ;       (2) for INTEGER arrays, BOXAVE computes intermediate steps using REAL*4 
-;               arithmetic.   This is considerably slower than REBIN but avoids 
-;               integer truncation
+;               (or REAL*8 for 64bit integers) arithmetic.   This is 
+;               considerably slower than REBIN but avoids integer truncation
 ;
-;       A version of BOXAVE() that supports 64 bit integers is available for
-;       V5.4 or later in http://idlastro.gsfc.nasa.gov/ftp/v54/
 ; CALLING SEQUENCE:
 ;       result = BOXAVE( Array, Xsize,[ Ysize ] )     
 ;
@@ -59,8 +57,10 @@ function boxave, array, xsize, ysize
 ;       Removed /NOZERO in output array definition     W. Landsman 1995
 ;       Fixed occasional integer overflow problem      W. Landsman Sep. 1995
 ;       Allow unsigned data types                      W. Landsman Jan. 2000
+;       Assume since V5.4, Allow 64bit integers        W. Landsman Apr  2006
 ;-
  On_error,2
+ compile_opt idl2
 
  if N_params() EQ 0 then $
      message,'Syntax -   out =  BOXAVE( array, xsize, [ysize ])',/NoName
@@ -76,7 +76,7 @@ function boxave, array, xsize, ysize
  ninx = s[1]                                  
  noutx = ninx/xsize     
  type = s[ s[0] + 1]
- integer = (type LT 4) or (type EQ 12) or (type EQ 13)
+ integer = (type LT 4) or (type GE 12)
 
  if s[0] EQ 1 then begin                ; 1 dimension?
 
@@ -86,7 +86,7 @@ function boxave, array, xsize, ysize
         counter = lindgen(noutx)*xsize
         output = array[counter]
         for i=1,xsize-1 do output = output + array[counter + i]
-        nboxsq = float(xsize)
+        if type GE 14 then nboxsq = double(xsize) else nboxsq = float(xsize)
 
       endif else return, rebin( array, noutx)     ;Use REBIN if not integer
 
@@ -96,9 +96,13 @@ function boxave, array, xsize, ysize
         nouty = niny/ysize
         if integer then begin                        ;Byte, Integer, or Long
 
-           
-           nboxsq = float( xsize*ysize )
-           output = fltarr( noutx, nouty)     ;Create output array 
+           if type GE 14 then begin 
+               nboxsq = double( xsize*ysize )
+               output = dblarr( noutx, nouty)     ;Create output array 
+           endif else begin
+                nboxsq = float( xsize*ysize )
+                output = fltarr( noutx, nouty)     ;Create output array 
+           endelse
            counter = lindgen( noutx*nouty )     
            counter = xsize*(counter mod noutx) + $
                     (ysize*ninx)*long((counter/noutx))
@@ -114,6 +118,8 @@ function boxave, array, xsize, ysize
  case type of 
  12:  return, uint(round( output/nboxsq ))               ;Unsigned Integer
  13:  return, ulong( round(output/nboxsq))               ;Unsigned Long
+ 14:  return, round(output/nboxsq, /L64)                 ;64bit integer
+ 15:  return, ulong64(round(output/nboxsq,/L64))         ;Unsigned 64bit  
   2:  return, fix( round( output/ nboxsq ))              ;Integer
   3:  return, round( output / nboxsq )                   ;Long
   1:  return, byte( round( output/nboxsq) )              ;Byte

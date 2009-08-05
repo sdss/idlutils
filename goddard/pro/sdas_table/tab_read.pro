@@ -62,8 +62,8 @@ fdecomp,name,disk,dir,root,ext
 if ext eq '' then ext = 'tab'
 fname=disk+dir+root+'.'+ext
 !err=0
-openr,unit,fname,/block,/get_lun
-if !err lt 0 then begin
+openr,unit,fname,/get_lun,error=err
+if err lt 0 then begin
 	free_lun,unit
 	message,'Error opening file '+fname,/CON
 	print,!ERROR_STATE.MSG

@@ -8,12 +8,15 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename, ALT = alt
 ;       CURVAL displays different information depending whether the user 
 ;       supplied an image array, and/or a FITS header array
 ;
+;       Note that in the usual truecolor mode, the byte intensity returned by 
+;       CURVAL does not correspond to the byte scaled image value but rather 
+;       returns the maximum value in each color gun.
 ; CALLING SEQUENCE(S):
 ;       curval          ;Display x,y and byte intensity (inten)
 ;       
 ;       curval, im   ;Display x,y,inten, and also pixel value (from image array)
 ;       
-;       curval, hdr, [ im, OFFSET = , ZOOM =, FILEIMAGE =]        
+;       curval, hdr, [ im, OFFSET= , ZOOM=, FILENAME=, ALT=]        
 ;
 ; OPTIONAL INPUTS:
 ;       Hdr  = FITS Header array
@@ -51,8 +54,6 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename, ALT = alt
 ;       If the keyword FILENAME is defined, the date and time, and a heading 
 ;       will be printed in the file before the data.
 ;
-; MINIMUM IDL VERSION:
-;       V5.0   (uses !MOUSE, square brackets)
 ; PROCEDURES CALLED:
 ;       ADSTRING(), EXTAST, GSSSXYAD, RADEC, SXPAR(), UNZOOM_XY, XY2AD
 ; REVISION HISTORY:
@@ -63,21 +64,17 @@ pro curval, hd, im, OFFSET = offset, ZOOM = zoom, Filename=Filename, ALT = alt
 ;       Modified for Mac IDL          I.   Freedman     April 1994
 ;       Allow for zoomed or offset image  W. Landsman      Mar 1996
 ;       Proper rounding of zoomed pixel values   W. Landsman/R. Hurt  Dec. 1997
-;       Converted to IDL V5.0   W. Landsman 10-Dec-1997
 ;       Remove unneeded calls to obsolete !ERR   W. Landsman   December 2000
 ;       Replace remaining !ERR calls with !MOUSE.BUTTON W. Landsman Jan 2001
 ;       Allow for non-celestial (e.g. Galactic) coordinates W. Landsman Apr 2003
 ;       Work if RA/Dec reversed in CTYPE keyword  W. Landsman Feb. 2004
 ;       Always call UNZOOM_XY for MOUSSE compatibility W. Landsman Sep. 2004
 ;       Added ALT keyword  W. Landsman October 2004 
+;       Always test if offset/zoom supplied  W. Landsman  Feb 2008 
 ;-
  On_error,2    ;if an error occurs, return to caller
  compile_opt idl2
 
- if !VERSION.OS EQ 'MacOS' then begin
-  print,'Macintosh Mouse maps to "LEFT" button and LEFT and RIGHT arrow keys to'
-  print,'"CENTER" and "RIGHT" buttons respectively'
- endif
 
  f_header = 0b           ;True if a FITS header supplied
  f_image =  0b           ;True if an image array supplied
@@ -158,7 +155,7 @@ endif
  endif
 
 ; Determine if an offset or zoom supplied
- unzoom = f_image  or f_header
+ unzoom = f_image  or f_header or keyword_set(offset) or keyword_set(zoom)
 
  if f_astrom GT 0 then begin
   coord = strmid(astr.ctype,0,4)
@@ -172,7 +169,7 @@ endif
   line4 = '  X     Y   ByteInten     Value      '  + coord[0] + '          ' + $
              coord[1]
 
-  sexig = strupcase(strmid(coord[0],0,2))  EQ 'RA' 
+  sexig = strupcase(strmid(coord[0],0,4))  EQ 'RA  ' 
  endif
 
  print,'Press left or center mouse button for new output line,'
