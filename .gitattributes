@@ -98,6 +98,7 @@ goddard/data/Makefile -text
 goddard/data/README -text
 goddard/news.txt -text
 goddard/pro/Makefile -text
+goddard/pro/aaareadme.txt -text
 goddard/pro/astro/aaareadme.txt -text
 goddard/pro/astro/adstring.pro -text
 goddard/pro/astro/airtovac.pro -text
@@ -191,6 +192,7 @@ goddard/pro/astrom/README -text
 goddard/pro/astrom/aaareadme.txt -text
 goddard/pro/astrom/abscal.pro -text
 goddard/pro/astrom/ad2xy.pro -text
+goddard/pro/astrom/add_distort.pro -text
 goddard/pro/astrom/adxy.pro -text
 goddard/pro/astrom/cons_dec.pro -text
 goddard/pro/astrom/cons_ra.pro -text
@@ -215,6 +217,7 @@ goddard/pro/astrom/hrotate.pro -text
 goddard/pro/astrom/make_astr.pro -text
 goddard/pro/astrom/putast.pro -text
 goddard/pro/astrom/starast.pro -text
+goddard/pro/astrom/update_distort.pro -text
 goddard/pro/astrom/wcs_demo.pro -text
 goddard/pro/astrom/wcs_getpole.pro -text
 goddard/pro/astrom/wcs_rotate.pro -text
@@ -427,12 +430,16 @@ goddard/pro/math/ksone.pro -text
 goddard/pro/math/kstwo.pro -text
 goddard/pro/math/kuiperone.pro -text
 goddard/pro/math/kuipertwo.pro -text
+goddard/pro/math/linmix_err.pro -text
 goddard/pro/math/linterp.pro -text
 goddard/pro/math/meanclip.pro -text
 goddard/pro/math/minf_bracket.pro -text
 goddard/pro/math/minf_conj_grad.pro -text
 goddard/pro/math/minf_parabol_d.pro -text
 goddard/pro/math/minf_parabolic.pro -text
+goddard/pro/math/mlinmix_err.pro -text
+goddard/pro/math/mrandomn.pro -text
+goddard/pro/math/multinom.pro -text
 goddard/pro/math/ngp.pro -text
 goddard/pro/math/pca.pro -text
 goddard/pro/math/pent.pro -text
@@ -445,9 +452,14 @@ goddard/pro/math/prob_kuiper.pro -text
 goddard/pro/math/qsimp.pro -text
 goddard/pro/math/qtrap.pro -text
 goddard/pro/math/quadterp.pro -text
+goddard/pro/math/randomchi.pro -text
+goddard/pro/math/randomdir.pro -text
+goddard/pro/math/randomgam.pro -text
 goddard/pro/math/randomp.pro -text
+goddard/pro/math/randomwish.pro -text
 goddard/pro/math/sixlin.pro -text
 goddard/pro/math/tabinv.pro -text
+goddard/pro/math/transform_coeff.pro -text
 goddard/pro/math/trapzd.pro -text
 goddard/pro/math/tsc.pro -text
 goddard/pro/math/tsum.pro -text
@@ -481,6 +493,7 @@ goddard/pro/misc/is_ieee_big.pro -text
 goddard/pro/misc/list_with_path.pro -text
 goddard/pro/misc/make_2d.pro -text
 goddard/pro/misc/match.pro -text
+goddard/pro/misc/match2.pro -text
 goddard/pro/misc/minmax.pro -text
 goddard/pro/misc/mrd_skip.pro -text
 goddard/pro/misc/n_bytes.pro -text
@@ -503,6 +516,7 @@ goddard/pro/misc/select_w.pro -text
 goddard/pro/misc/spec_dir.pro -text
 goddard/pro/misc/store_array.pro -text
 goddard/pro/misc/str_index.pro -text
+goddard/pro/misc/strcompress2.pro -text
 goddard/pro/misc/strn.pro -text
 goddard/pro/misc/strnumber.pro -text
 goddard/pro/misc/textclose.pro -text
@@ -511,6 +525,7 @@ goddard/pro/misc/to_hex.pro -text
 goddard/pro/misc/valid_num.pro -text
 goddard/pro/misc/vect.pro -text
 goddard/pro/misc/wherenan.pro -text
+goddard/pro/misc/xdispstr.pro -text
 goddard/pro/misc/zparcheck.pro -text
 goddard/pro/plot/README -text
 goddard/pro/plot/aaareadme.txt -text
