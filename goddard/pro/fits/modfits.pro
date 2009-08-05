@@ -1,4 +1,5 @@
-pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
+pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg, $
+    EXTNAME = extname
            
 ;+
 ; NAME:
@@ -6,11 +7,11 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ; PURPOSE:
 ;      Modify a FITS file by updating the header and/or data array.  
 ; EXPLANATION:
-;      Since August 2003, the size of the supplied FITS header or data array
+;      The size of the supplied FITS header or data array
 ;      does not need to match the size of the existing header or data array.
 ;
 ; CALLING SEQUENCE:
-;      MODFITS, Filename_or_fcb, Data, [ Header, EXTEN_NO =, ERRMSG=]
+;      MODFITS, Filename_or_fcb, Data, [ Header, EXTEN_NO =, EXTNAME= , ERRMSG=]
 ;
 ; INPUTS:
 ;      FILENAME/FCB = Scalar string containing either the name of the FITS file  
@@ -20,14 +21,22 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;                  single file will be updated.
 ;
 ;      DATA - data array to be inserted into the FITS file.   Set DATA = 0
-;               to leave the data portion of the FITS file unmodified
+;               to leave the data portion of the FITS file unmodified.   Data
+;               can also be an IDL structure (e.g. as returned by MRDFITS). 
+;               provided that it does not include IDL pointers.
 ;
 ;      HEADER - FITS header (string array) to be updated in the FITS file.
 ;
 ; OPTIONAL INPUT KEYWORDS:
+;      A specific extension can be specified with either the EXTNAME or
+;      EXTEN_NO keyword
+; 
 ;      EXTEN_NO - scalar integer specifying the FITS extension to modified.  For
 ;               example, specify EXTEN = 1 or /EXTEN to modify the first 
-;               FITS extension. 
+;               FITS extension.
+;      EXTNAME - string name of the extension to modify.   
+;
+;
 ; OPTIONAL OUTPUT KEYWORD:
 ;       ERRMSG - If this keyword is supplied, then any error mesasges will be
 ;               returned to the user in this parameter rather than depending on
@@ -75,11 +84,16 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ; NOTES:
 ;       Uses the BLKSHIFT procedure to shift the contents of the FITS file if 
 ;       the new data or header differs in size by more than 2880 bytes from the
-;       old data or header.
+;       old data or header.    If a file control block (FCB) structure is 
+;       supplied, then the values of START_HEADER, START_DATA and NBYTES may 
+;       be modified if the file size changes.
 ;
 ;       Also see the procedures FXHMODIFY to add a single FITS keyword to a 
 ;       header in a FITS files, and FXBGROW to enlarge the size of a binary 
 ;       table.
+;       
+;       This version of MODFITS must be used with a post Sep 2006 version of FITS_OPEN.
+;
 ; RESTRICTIONS:
 ;       (1) Cannot be used to modifiy the data in FITS files with random 
 ;           groups or variable length binary tables.   (The headers in such
@@ -91,12 +105,11 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;
 ;       (3) Does not work with compressed files
 ; PROCEDURES USED:
-;       Functions:   IS_IEEE_BIG(), N_BYTES(), SXPAR()
-;       Procedures:  BLKSHIFT, CHECK_FITS, FITS_OPEN, FITS_READ, HOST_TO_IEEE
+;       Functions:   N_BYTES(), SXPAR()
+;       Procedures:  BLKSHIFT, CHECK_FITS, FITS_OPEN, FITS_READ
 ;
 ; MODIFICATION HISTORY:
 ;       Written,    Wayne Landsman          December, 1994
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fixed possible problem when using WRITEU after READU   October 1997
 ;       New and old sizes need only be the same within multiple of 2880 bytes
 ;       Added call to IS_IEEE_BIG()     W. Landsman   May 1999
@@ -111,32 +124,55 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 ;       Major rewrite to allow changing size of data or header W.L. Aug 2003
 ;       Fixed case where updated header exactly fills boundary W.L. Feb 2004
 ;       More robust error reporting W.L. Dec 2004
+;       Make sure input header ends with a END W.L.  March 2006
+;       Assume since V5.5, remove VMS support, assume FITS_OPEN will
+;           perform byte swapping   W.L. Sep 2006 
+;       Update FCB structure if file size changes W.L. March 2007
+;       Fix problem when data size must be extended W.L. August 2007
+;       Don't assume supplied FITS header is 80 bytes W. L. Dec 2007
+;       Check for new END position after adding CHECKSUM  W.L. July 2008
+;       Added EXTNAME input keyword  W.L. July 2008
+;       Allow data to be an IDL structure  A. Conley/W.L. June 2009
 ;-
   On_error,2                    ;Return to user
+  compile_opt idl2
 
 ; Check for filename input
 
    if N_params() LT 1 then begin                
-      print,'Syntax - MODFITS, Filename, Data, [ Header, EXTEN_NO=, ERRMSG= ]'
+      print,'Syntax - ' + $
+        'MODFITS, Filename, Data, [ Header, EXTEN_NO=, EXTNAME=, ERRMSG= ]'
       return
    endif
 
    if not keyword_set( EXTEN_NO ) then exten_no = 0
    if N_params() LT 2 then Header = 0
    nheader = N_elements(Header)
+
+;Make sure END statement is the last line in supplied FITS header   
+   
+   if nheader GT 1 then begin
+         endline = where( strmid(Header,0,8) EQ 'END     ', Nend)
+         if Nend EQ 0 then begin
+         message,/INF,  $
+	  'WARNING - An END statement has been appended to the FITS header'
+         Header = [ Header, 'END' + string( replicate(32b,77) ) ]
+	 endif else header = header[0:endline]  
+   endif 
+   
    ndata = N_elements(data)
    dtype = size(data,/TNAME)
    printerr =  not arg_present(ERRMSG) 
    fcbsupplied = size(filename,/TNAME) EQ 'STRUCT'
 
-   if (nheader GT 1) and (ndata GT 1) then begin
+   if (nheader GT 1) and (ndata GT 1) and (dtype NE 'STRUCT') then begin
         check_fits, data, header, /FITS, ERRMSG = MESSAGE
         if message NE '' then goto, BAD_EXIT
    endif
 
 ; Open file and read header information
          
-   if exten_no EQ 0 then begin 
+   if (exten_no EQ 0) and (not keyword_set(EXTNAME)) then begin 
          if nheader GT 0 then $
              if strmid( header[0], 0, 8)  NE 'SIMPLE  ' then begin 
                  message = $
@@ -167,6 +203,13 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 
 ; Getting starting position of data and header
 
+   if keyword_set(extname) then begin 
+       exten_no = where( strupcase(io.extname) EQ strupcase(extname), Nfound)
+       if Nfound EQ  0 then begin       
+          message,'Extension name ' + extname + ' not found in FITS file'
+	  GOTO, BAD_EXIT
+       endif
+   endif    	   
    unit = io.unit
    start_d = io.start_data[exten_no]
    if exten_no NE io.nextend then begin
@@ -193,15 +236,26 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
                if Ndata GT 1 then FITS_ADD_CHECKSUM, header, data else $
                 FITS_ADD_CHECKSUM, header 
         endif
+; Position of 'END' card may have changed - Bug fix July 2008	
+        endline = where( strmid(Header,0,8) EQ 'END     ', Nend)
+
         newbytes = N_elements(header)*80 
         block = (newbytes-1)/2880 - (Noldheader-1)/2880
         if block NE 0 then begin  
             BLKSHIFT, io.unit, start_d, block*2880L
             start_d = start_d + block*2880L
-            if exten_no NE io.nextend then start_h = start_h + block*2880L
+	    io.start_data[exten_no:*] = io.start_data[exten_no:*] + block*2880L
+            io.nbytes = io.nbytes + block*2880L
+            if exten_no NE io.nextend then begin
+                    start_h = start_h + block*2880L
+		    io.start_header[exten_no+1:*] = block*2880L + $
+		        io.start_header[exten_no+1:*]
+	     endif		
         endif
         point_lun, unit, io.start_header[exten_no]      ;Position header start  
-        writeu, unit, byte(header)
+        bhdr = replicate(32b, newbytes)
+        for n = 0l, endline[0] do bhdr[80*n] = byte( header[n] )
+         writeu, unit, bhdr
         remain = newbytes mod 2880
 	if remain GT 0 then writeu, unit, replicate( 32b, 2880 - remain)
  
@@ -210,26 +264,26 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
    if ndata GT 1 then begin
  
         newbytes = N_BYTES(data)    ;total number of bytes in supplied data
-        nblock = (newbytes-1)/2880 - (nbytes-1)/2880
-        if nblock NE 0 and exten_no NE io.nextend then $
-              BLKSHIFT, io.unit, start_h, nblock*2880L
+        block = (newbytes-1)/2880 - (nbytes-1)/2880
+        if block NE 0 and exten_no NE io.nextend then begin
+              BLKSHIFT, io.unit, start_h, block*2880L
+	      io.nbytes = io.nbytes + block*2880L
+	      io.start_header[exten_no+1:*] = block*2880L + $
+		        io.start_header[exten_no+1:*]
+	      io.start_data[exten_no+1:*] = block*2880L + $
+		        io.start_data[exten_no+1:*]
+        endif
       
         if nheader EQ 0 then begin
                 check_fits,data,oldheader,/FITS,ERRMSG = message
                 if message NE '' then goto, BAD_EXIT
         endif
-        vms = !VERSION.OS EQ "vms"
-        Little_endian = not IS_IEEE_BIG()
-
+ 
         junk = fstat(unit)   ;Need this before changing from READU to WRITEU
         point_lun, unit, start_d
         if dtype EQ 'UINT' then newdata = fix(data - 32768)
         if dtype EQ 'ULONG' then newdata = long(data - 2147483648)
-        if (VMS or Little_endian) then begin
-             if (dtype NE 'UINT') and (dtype NE 'ULONG') then newdata = data
-             HOST_TO_IEEE, newdata
-        endif
-        if N_elements(newdata) GT 0 then writeu, unit, newdata  else $
+         if N_elements(newdata) GT 0 then writeu, unit, newdata  else $
                                          writeu, unit ,data
         remain = newbytes mod 2880
 	if remain GT 0 then begin
@@ -242,7 +296,10 @@ pro MODFITS, filename, data, header, EXTEN_NO = exten_no, ERRMSG = errmsg
 	endif
     endif       
 
-   if not fcbsupplied then FITS_CLOSE,io
+   if not fcbsupplied then FITS_CLOSE,io  else filename = io
+        
+   
+         
    return 
 
 BAD_EXIT:

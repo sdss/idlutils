@@ -9,12 +9,13 @@
 ;      Further information on MRDFITS is available at
 ;      http://idlastro.gsfc.nasa.gov/mrdfits.html 
 ;
+;      **This version requires a post March 2009 version of fxposit.pro**
 ; CALLING SEQUENCE:
-;      Result = MRDFITS( Filename/FileUnit,[Extension, Header],
+;      Result = MRDFITS( Filename/FileUnit,[Exten_no/Exten_name, Header],
 ;                       /FSCALE , /DSCALE , /UNSIGNED,
 ;                       ALIAS=strarr[2,n], /USE_COLNUM,
 ;                       /NO_TDIM, ROWS = [a,b,...], $
-;                       /POINTER_VAR, /FIXED_VAR,
+;                       /POINTER_VAR, /FIXED_VAR, EXTNUM= 
 ;                       RANGE=[a,b], COLUMNS=[a,b,...]), ERROR_ACTION=x,
 ;                       COMPRESS=comp_prog, STATUS=status, /VERSION )
 ;
@@ -22,8 +23,7 @@
 ;      Filename = String containing the name of the file to be read or
 ;                 file number of an open unit.  If a unit is specified
 ;                 if will be left open positioned to read the next HDU.
-;                 Note that the file name may be of the form
-;                 name.gz or name.Z on UNIX systems.  If so
+;                 If the file name ends in .gz (or .Z on Unix systems)
 ;                 the file will be dynamically decompressed.
 ;      FiluUnit = An integer file unit which has already been
 ;                 opened for input.  Data will be read from this
@@ -36,12 +36,14 @@
 ;                          ... process the HDU ...
 ;                      endrep until status lt 0
 ;
-;      Extension= Extension number to be read, 0 for primary array.
+;      Exten_no= Extension number to be read, 0 for primary array.
 ;                 Assumed 0 if not specified.
 ;                 If a unit rather than a filename
 ;                 is specified in the first argument, this is
 ;                 the number of HDU's to skip from the current position.
-;
+;      Exten_name - Name of the extension to read (as stored in the EXTNAME
+;                 keyword).   This is a slightly slower method then specifying
+;                 the extension number.
 ; OUTPUTS:
 ;      Result = FITS data array or structure constructed from
 ;               the designated extension.  The format of result depends
@@ -163,6 +165,14 @@
 ;       /VERSION Print the current version number
 ;
 ; OPTIONAL OUTPUT KEYWORDS:
+;       EXTNUM - the number of the extension actually read.   Useful if the
+;                 user specified the extension by name.
+;       OUTALIAS - This is a 2xn string array where the first column gives the
+;                actual structure tagname, and the second gives the
+;                corresponding FITS keyword name (e.g. in the TTYPE keyword).   
+;                This array can be passed directly to
+;                the alias keyword of MWRFITS to recreate the file originally
+;                read by MRDFITS.
 ;       STATUS - A integer status indicating success or failure of
 ;                the request.  A status of >=0 indicates a successful read.
 ;                Currently
@@ -200,9 +210,9 @@
 ;       MRDFITS DOES NOT scale data by default.  The FSCALE or DSCALE
 ;       parameters must be used.
 ;
-;       As of version 2.5 MRDFITS support 64 bit integer data types.
-;       These are not standard FITS.  64 bit data also requires
-;       IDL version 5.2 or greater.
+;       MRDFITS supports 64 bit integer data types, which were
+;       included in the FITS standard in 2005.
+;       http://fits.gsfc.nasa.gov/fits_64bit.html
 ;    
 ;
 ; PROCEDURES USED:
@@ -218,8 +228,7 @@
 ;           MRD_COLUMNS         -- Extract columns.
 ;
 ;        Other ASTRON Library routines used
-;           FXPAR(), FXADDPAR, IEEE_TO_HOST, FXPOSIT, FXMOVE(), IS_IEEE_BIG()
-;           MRD_STRUCT(), MRD_SKIP
+;           FXPAR(), FXADDPAR, FXPOSIT, FXMOVE(), MATCH, MRD_STRUCT(), MRD_SKIP 
 ;
 ; MODIfICATION HISTORY:
 ;       V1.0 November 9, 1994 ----  Initial release.
@@ -275,7 +284,6 @@
 ;       V2.1d June 16, 1997 Fixed problem for >32767 entries introduced 24-Apr
 ;       V2.1e Aug 12, 1997 Fixed problem handling double complex arrays
 ;       V2.1f Oct 22, 1997 IDL reserved words can't be structure tag names
-;       Converted to IDL V5.0   W. Landsman  2-Nov-1997
 ;       V2.1g Nov 24, 1997 Handle XTENSION keywords with extra blanks.
 ;       V2.1h Jul 26, 1998 More flexible parsing of TFORM characters
 ;       V2.2 Dec 14, 1998 Allow fields with longer names for
@@ -319,6 +327,26 @@
 ;       V2.9f Fix problem with string variable binary tables, possible math 
 ;             overflow on non-IEEE machines  WL Feb. 2005 
 ;       V2.9g Fix problem when setting /USE_COLNUM   WL Feb. 2005
+;       V2.10 Use faster keywords to BYTEORDER  WL May 2006
+;       V2.11  Add ON_IOERROR, CATCH, and STATUS keyword to MRD_READ_IMAGE to
+;             trap EOF in compressed files DZ  Also fix handling of unsigned 
+;             images when BSCALE not present  K Chu/WL   June 2006 
+;       V2.12 Allow extension to be specified by name, added EXTNUM keyword
+;                     WL    December 2006
+;       V2.12a Convert ASCII table column to DOUBLE if single precision is
+;                 insufficient  
+;       V2.12b Fixed problem when both /fscale and /unsigned are set 
+;                  C. Markwardt    Aug 2007
+;       V2.13  Use SWAP_ENDIAN_INPLACE instead of IEEE_TO_HOST and IS_IEEE_BIG
+;                W. Landsman Nov 2007
+;       V2.13a One element vector allowed for file name W.L. Dec 2007
+;       V2.13b More informative error message when EOF found W.L. Jun 2008
+;       V2.14  Use vector form of VALID_NUM(), added OUTALIAS keyword
+;                                       W.L. Aug 2008
+;       V2.15  Use new FXPOSIT which uses on-the-fly byteswapping W.L. Mar 2009
+;       V2.15a Small efficiency updates to MRD_SCALE W.L. Apr 2009
+;       V2.15b Fixed typo introduced Apr 2009
+;       V2.15c Fix bug introduced Mar 2009  when file unit used W.L. July 2009
 ;-
 PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 ;
@@ -359,15 +387,11 @@ PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 
   IF ( n_mforms GT 0 ) THEN BEGIN
       numst= STRMID(hdr[mforms], 5 ,3)      
-      number = INTARR(n_mforms)-1
-
-      FOR i = 0, n_mforms-1 DO         $
-        IF VALID_NUM( numst[i], num) THEN number[i] = num
-
-      igood = WHERE(number GE 0, n_mforms)
+ 
+      igood = WHERE(VALID_NUM(numst,/INTEGER), n_mforms)
       IF n_mforms GT 0 THEN BEGIN
           mforms = mforms[igood]
-          number = number[igood]
+          number = fix( numst[igood])
           numst = numst[igood]
       ENDIF
 
@@ -464,13 +488,7 @@ NEXT_APOST:
                       GOTO, NEXT_APOST
                   ENDIF
 
-;
-; CM 19 Sep 1997
-; This is a string that could be continued on the next line.  Check this
-; possibility with the following four criteria: *1) Ends with '&'
-; (2) Next line is CONTINUE  (3) LONGSTRN keyword is present (recursive call to
-;  FXPAR) 4. /NOCONTINE is not set
-                  
+                 
 ;
 ;  If not a string, then separate the parameter field from the comment field.
 ;
@@ -478,9 +496,8 @@ NEXT_APOST:
                   ;; not a string
                   test = svalue[I]
                   slash = STRPOS(test, "/")
-                  IF slash GT 0 THEN BEGIN
-                      test = STRMID(test, 0, slash)
-                  END 
+                  IF slash GT 0 THEN  test = STRMID(test, 0, slash)
+                 
 ;
 ;  Find the first word in TEST.  Is it a logical value ('T' or 'F')?
 ;
@@ -521,9 +538,9 @@ NOT_COMPLEX:
                               value = DOUBLE(value)
                           END ELSE value = FLOAT(value)
                       ENDIF ELSE BEGIN
-                          lmax = 2.0D^31 - 1.0D
-                          lmin = -2.0D31
-                          value = DOUBLE(value)
+                          lmax = long64(2)^31 - 1
+                          lmin = -long64(2)^31
+                          value = long64(value)
                           if (value GE lmin) and (value LE lmax) THEN $
                             value = LONG(value)
                       ENDELSE
@@ -572,10 +589,8 @@ function  mrd_dofn, name, index, use_colnum, alias=alias
 	sz = size(alias)
 	
 	if (sz[0] eq 1 or sz[0] eq 2) and sz[1] eq 2 and sz[sz[0]+1] eq 7 then begin
-	    w=where(name eq alias[1,*])
-	    if (w[0] ne -1) then begin
-		name = alias[0,w[0]];
-	    endif
+	    w = where( name eq alias[1,*], Nw)
+	    if Nw GT 0 then name = alias[0,w[0]];
 	endif
     endif
     ; Convert the string name to a valid variable name.  If name 
@@ -705,20 +720,16 @@ end
 
 ; Is this one of the IDL unsigned types?
 function mrd_unsignedtype, data
-    
-    sz = size(data)
-    type = sz[sz[0]+1]
-    if type eq 12 or type eq 13 or type eq 15 then begin
-	return, type
-    endif else begin
-	return, 0
-    endelse
+       
+    type = size(data,/ type) 
+    if (type eq 12) or (type eq 13) or (type eq 15) then return, type $
+                                                    else return, 0
     
 end
     
 ; Return the currrent version string for MRDFITS
 function mrd_version
-    return, '2.9g'
+    return, '2.15c '
 end
 ;=====================================================================
 ; END OF GENERAL UTILITY FUNCTIONS ===================================
@@ -748,6 +759,8 @@ pro mrd_atype, form, type, slen
     if p gt 0 then length = strmid(length,0,p)
 
    if strlen(length) gt 0 then slen = fix(length) else slen = 1
+   if (type EQ 'F') or (type EQ 'E') then $     ;Updated April 2007
+        if (slen GE 8) then type = 'D'
 
 end
 
@@ -833,7 +846,7 @@ pro mrd_ascii, header, structyp, use_colnum,   $
     range, table, $
     nbytes, nrows, nfld, typarr, posarr, lenarr, nullarr, $
     fnames, fvalues, scales, offsets, scaling, status, rows = rows, $
-    silent=silent, columns=columns, alias=alias
+    silent=silent, columns=columns, alias=alias, outalias=outalias
 
     ;
     ; Header                FITS header for table.
@@ -862,7 +875,7 @@ pro mrd_ascii, header, structyp, use_colnum,   $
     status = 0
 
     if strmid(fxpar(header, 'XTENSION'),0,8) ne 'TABLE   ' then begin
-        print, 'MRDFITS: Header is not from ASCII table.'
+        message, 'ERROR - Header is not from ASCII table.',/CON
         status = -1;
         return
     endif
@@ -882,7 +895,7 @@ pro mrd_ascii, header, structyp, use_colnum,   $
     if N_elements(rows) EQ 0 then nrows = range[1] - range[0] + 1 else begin
           bad = where(rows GT nrows, Nbad)
           if Nbad GT 0  then begin 
-             print,'MRDFITS: Row numbers must be between 0 and ' + $
+             message,/CON,'ERROR: Row numbers must be between 0 and ' + $
                       strtrim(nrows-1,2)
              status = -1
              return
@@ -909,11 +922,12 @@ pro mrd_ascii, header, structyp, use_colnum,   $
     fvalues = strarr(nfld)
     scales  = dblarr(nfld)
     offsets = dblarr(nfld)
-
+    tname  =  strarr(nfld)
 
     for i=0, nfld-1 do begin
         suffix = strcompress(string(i+1), /remove_all)
         fname = fxpar(header, 'TTYPE' + suffix, count=cnt)
+	tname[i] = fname
 	if cnt eq 0 then xx = temporary(fname)
         fform = fxpar(header, 'TFORM' + suffix)
         fpos = fxpar(header, 'TBCOL' + suffix)
@@ -971,6 +985,7 @@ pro mrd_ascii, header, structyp, use_colnum,   $
          ' columns by ',strcompress(string(nrows)), ' rows.'
     endif
     
+    outalias = transpose([ [tag_names(table)],[tname] ] )
     status = 0
     return
 
@@ -1086,20 +1101,30 @@ end
 
 
 ; Read in the image information. 
-pro mrd_read_image, unit, range, maxd, rsize, table, rows = rows 
+pro mrd_read_image, unit, range, maxd, rsize, table, rows = rows,status=status, $
+     unixpipe = unixpipe
  
     ; 
     ; Unit          Unit to read data from. 
     ; Table         Table/array to read information into. 
     ; 
 
+    error=0
+    catch,error
+    if error ne 0 then begin
+     catch,/cancel
+     status=-2
+     return
+    endif
+
     ; If necessary skip to beginning of desired data. 
 
-
     if range[0] gt 0 then mrd_skip, unit, range[0]*rsize
- 
+
+    status=-2
     if rsize eq 0 then return 
- 
+
+    on_ioerror,done
     readu, unit, table
 
     if N_elements(rows) GT 0 then begin
@@ -1131,13 +1156,24 @@ pro mrd_read_image, unit, range, maxd, rsize, table, rows = rows
     endif
 
     mrd_skip, unit, skipB
-    if not is_ieee_big() then ieee_to_host, table
+    if unixpipe then swap_endian_inplace, table,/swap_if_little
 
     ; Fix offset for unsigned data
     type = mrd_unsignedtype(table)
     if type gt 0 then begin
 	table = table - mrd_unsigned_offset(type)
     endif
+    
+    status=0
+    done:
+
+;-- probably an EOF 
+
+    if status ne 0 then begin 
+          message,!ERROR_STATE.MSG,/CON
+         free_lun,unit
+    endif
+
     return
 end 
 
@@ -1206,7 +1242,7 @@ pro mrd_image, header, range, maxd, rsize, table, scales, offsets, scaling, $
     gcount = long(gcount)
 
     xscale = fxpar(header, 'BSCALE', count=cnt)
-    if cnt eq 0 then scale = 1
+    if cnt eq 0 then xscale = 1      ;Corrected 06/29/06
     
     xunsigned = mrd_chkunsigned(bitpix,  xscale, $
 				fxpar(header, 'BZERO'), unsigned=unsigned)
@@ -1442,11 +1478,14 @@ pro mrd_scale, type, scales, offsets, table, header,  $
     ; nrec:         Number of records used.
     ; structyp:     Structure name.
  
-    w = where(scales ne 1.d0  or offsets ne 0.d0)
-    if w[0] eq -1 then return
-    ww = where(scales eq 1.d0 and offsets eq 0.d0)
+    w = where( (scales ne 1.d0  or offsets ne 0.d0), Nw, $
+                complement=ww, Ncomplement = Nww)
+		
+    if Nw EQ 0 then return    ;No tags require scaling? 
 
-    ; First do ASCII and Binary tables.
+; First do ASCII and Binary tables.    We need to create a new structure 
+; because scaling will change the tag data types.
+
     if type ne 0 then begin
         
         if type eq 1 then begin
@@ -1465,59 +1504,53 @@ pro mrd_scale, type, scales, offsets, table, header,  $
                 vc = 'fltarr'
             endelse
                 
-            for i=0, n_elements(w)-1 do begin
+           for i=0, Nw-1 do begin
                 col = w[i]
-                    sz = size(table[0].(col))
+                sz = size(table[0].(col),/str)
 
 		; Handle pointer columns
-		if sz[sz[0]+1] eq 10 then begin
+		if sz.type eq 10 then begin
 		    fvalues[col] = 'ptr_new()'
 
 		; Scalar columns
-		endif else if sz[0] eq 0 then begin
+		endif else if sz.N_dimensions eq 0 then begin
                     fvalues[col] = sclr
 
 		; Vectors
                 endif else begin
-                    str = vc + '('
-                    for j=0, sz[0]-1 do begin
-                        if j ne 0 then str = str + ','
-                        str = str + strtrim(sz[j+1],2)
-                    endfor
-                    str = str + ')'
-                    fvalues[col] = str
+		    dim = sz.dimensions[0:sz.N_dimensions-1]
+                    fvalues[col] = vc + $
+		      '(' + strjoin(strtrim(dim,2),',') + ')'
 		    
                 endelse
-		
             endfor
         endif
 
         tabx = mrd_struct(fnames, fvalues, nrec, structyp=structyp, silent=silent )
 
-	; Just copy the unscaled columns
-        if ww[0] ne -1 then begin
-	    
-            for i=0, n_elements(ww)-1 do begin
-                     tabx.(ww[i]) = table.(ww[i])
-            endfor
-        endif
-        
-        for i=0, n_elements(w)-1 do begin
-	    
+; First copy the unscaled columns indexed by ww.     This is actually more 
+; efficient than using STRUCT_ASSIGN since the tag names are all identical,
+; so STRUCT_ASSIGN would copy everything (scaled and unscaled).
+ 	    
+       for i=0, Nww - 1 do tabx.(ww[i]) = table.(ww[i])
+       
+; Now copy the scaled items indexed by w after applying the scaling.        
+       
+        for i=0, Nw - 1 do begin	    
  		
-		sz = size(tabx.(w[i]))
-		if sz[sz[0]+1] eq 10 then begin
+		dtype = size(tabx.(w[i]),/type)
+		if dtype eq 10 then $
 		    mrd_ptrscale, table.(w[i]), scales[w[i]], offsets[w[i]]
-		endif
+		
                 tabx.(w[i]) = table.(w[i])*scales[w[i]] + offsets[w[i]]
 		
-            istr = strcompress(string(w[i]+1), /remo)
-            fxaddpar, header, 'TSCAL'+istr, 1.0, 'Set by MRD_SCALE'
-            fxaddpar, header, 'TZERO'+istr, 0.0, 'Set by MRD_SCALE'
+            istr = strtrim(w[i]+1,2)
+            fxaddpar, header, 'TSCAL'+istr, 1.0, ' Set by MRD_SCALE'
+            fxaddpar, header, 'TZERO'+istr, 0.0, ' Set by MRD_SCALE'
+	    
         endfor
 
-        table = temporary(tabx)
-
+        table = temporary(tabx)   ;Remove original structure from memory
     endif else begin
     ; Now process images and random groups.
 
@@ -1525,9 +1558,9 @@ pro mrd_scale, type, scales, offsets, table, header,  $
         if sz[sz[0]+1] ne 8 then begin
             ; Not a structure so we just have an array of data.
             if keyword_set(dscale) then begin
-                table = table*scales[0]+offsets[0]
+                table = temporary(table)*scales[0]+offsets[0]
             endif else begin
-                table = table*float(scales[0]) + float(offsets[0])
+                table = temporary(table)*float(scales[0]) + float(offsets[0])
             endelse
             fxaddpar, header, 'BSCALE', 1.0, 'Set by MRD_SCALE'
             fxaddpar, header, 'BZERO', 0.0, 'Set by MRD_SCALE'
@@ -1614,7 +1647,7 @@ pro mrd_varcolumn, vtype, array, heap, off, siz
 
 	; Fix endianness.
         if vtype ne 'B' and vtype ne 'X' and vtype ne 'L' then begin
-	    ieee_to_host, *array[w[j]]
+	    swap_endian_inplace, *array[w[j]],/swap_if_little
         endif
 
 	; Scale unsigneds.
@@ -1649,12 +1682,12 @@ pro mrd_fixcolumn, vtype, array, heap, off, siz
 			  
             'E': begin                  ;Delay conversion until after byteswapping to avoid possible math overflow   Feb 2005
 	         temp = heap[off[j]: off[j] + 4*siz[j]-1 ]
-		 byteorder, temp, /XDRTOF		 
+		 byteorder, temp, /LSWAP, /SWAP_IF_LITTLE	 
 	         array[0:siz[j]-1,w[j]] = float(temp,0,siz[j]) 
                  end			  
            'D': begin 
 	         temp = heap[off[j]: off[j] + 8*siz[j]-1 ]
-		 byteorder, temp, /XDRTOD		 
+		 byteorder, temp, /L64SWAP, /SWAP_IF_LITTLE		 
 	         array[0:siz[j]-1,w[j]] = double(temp,0,siz[j]) 
                  end			  
             'C': array[0:siz[j]-1,w[j]] = complex(heap, off[j], siz[j]) 
@@ -1673,7 +1706,7 @@ pro mrd_fixcolumn, vtype, array, heap, off, siz
     ; Fix endianness
     if (vtype ne 'A') and (vtype ne 'B') and (vtype ne 'X') and (vtype ne 'L')  and $
        (vtype NE 'D')  and (vtype NE 'E') then begin
-	ieee_to_host, array
+	swap_endian_inplace, array, /swap_if_little
     endif
 
     ; Scale unsigned data
@@ -1868,7 +1901,7 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
                 ww = where(col eq vcols)
                 w = w[0]
                 ww = ww[0]
-                fvstr = '0l'
+                fvstr = '0L' ; <-- Originally, '0l'; breaks under the virtual machine!
                 fnstr = 'L'+strcompress(string(col),/remo)+'_'+fnames[w]
                 nf = n_elements(fnames)
                 
@@ -1924,7 +1957,6 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
 
     if N_elements(rows) EQ 0 then nrow = range[1]-range[0]+1 $
                              else nrow = N_elements(rows)
-    is_ieee = is_ieee_big()
     
     ; I loops over the new table columns, col loops over the old table.
     ; When col is negative, it is a length column.
@@ -2034,7 +2066,8 @@ pro mrd_read_heap, unit, header, range, fnames, fvalues, vcls, vtpes, table, $
 end 
 
 ; Read in the binary table information. 
-pro mrd_read_table, unit, range, rsize, structyp, nrows, nfld, typarr, table, rows = rows
+pro mrd_read_table, unit, range, rsize, structyp, nrows, nfld, typarr, table, rows = rows, $
+     unixpipe = unixpipe
  
     ; 
     ; 
@@ -2061,32 +2094,8 @@ pro mrd_read_table, unit, range, rsize, structyp, nrows, nfld, typarr, table, ro
     
 
     ; If necessary then convert to native format.
-    if not is_ieee_big() then begin
+    if unixpipe then swap_endian_inplace,table,/swap_if_little
 	
-        for i=0, nfld-1 do begin 
- 
-            typ = typarr[i] 
-            if typ eq 'B' or typ eq 'A'  or typ eq 'X' or typ eq 'L' $ 
-               then goto, nxtfld 
-            fld = table.(i)
-            if typ eq 'I' then byteorder, fld, /htons 
-            if typ eq 'J' or typ eq 'P' then byteorder, fld, /htonl 
-            if typ eq 'K' then byteorder, fld, /l64swap
-            if typ eq 'E' or typarr[i] eq 'C' then byteorder, fld, /xdrtof
-	    
-            if typ eq 'D' or typarr[i] eq 'M' then begin 
-                ieee_to_host, fld 
-            endif
-	    
-            if n_elements(fld) gt 1 then begin
-		
-                    table.(i) = fld
-           endif else begin
-                    table.(i) = fld[0]
-            endelse
-  nxtfld: 
-        endfor 
-    endif
 
     ; Handle unsigned fields.
     for i=0, nfld-1 do begin
@@ -2195,7 +2204,7 @@ pro mrd_table, header, structyp, use_colnum,           $
     range, rsize, table, nrows, nfld, typarr, fnames, fvalues,   $ 
     vcls, vtpes, scales, offsets, scaling, status, rows = rows, $
     silent=silent, columns=columns, no_tdim=no_tdim, $
-    alias=alias, unsigned=unsigned
+    alias=alias, unsigned=unsigned, outalias=outalias
  
     ; 
     ; Header                FITS header for table. 
@@ -2231,6 +2240,7 @@ pro mrd_table, header, structyp, use_colnum,           $
     mrd_fxpar, header, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
     nnames = n_elements(fnames)
 
+    tname = fnames
     ;; nrow will change later
     nrows = nrow
 
@@ -2280,12 +2290,9 @@ pro mrd_table, header, structyp, use_colnum,           $
     ;  Loop over the columns           
  
     typarr   = strarr(nfld) 
-;    fnames   = strarr(nfld)
     
     fvalues  = strarr(nfld) 
     dimfld   = strarr(nfld)
-;    scales   = dblarr(nfld)
-;    offsets  = dblarr(nfld)
     
     vcls     = intarr(nfld)
     vtpes    = strarr(nfld)
@@ -2308,19 +2315,6 @@ pro mrd_table, header, structyp, use_colnum,           $
         fnames[i] = fname
         ;; for checking conflicts
         fnames2[i] = fname
-
-;        fname = fxpar(header, 'TTYPE' +  istr) 
-;        fform = strtrim( fxpar(header, 'TFORM' +   istr),2)
-	
-;        scales[i] = fxpar(header, 'TSCAL'+istr)
-;        if scales[i] eq 0.d0 then scales[i] = 1.d0
-	
-;        offsets[i] = fxpar(header, 'TZERO'+istr)
-	
-;        fname = mrd_dofn(fname,i+1, use_colnum, alias=alias) 
-;        fname = mrd_chkfn(fname, fnames, i)
-	
-;        fnames[i] = fname
 	
         fform = fforms[i]
 
@@ -2368,13 +2362,7 @@ pro mrd_table, header, structyp, use_colnum,           $
 
             vcls[i] = 1
 	    
-;	    xscale =fxpar(header,'TSCAL'+istr,count=cnt)
-;	    if cnt eq 0 then xscale = 1
 	    
-;	    xunsigned = mrd_chkunsigned(bitpix[ppos], xscale,       $
-;				       fxpar(header, 'TZERO'+istr), $
-;				       unsigned=unsigned)
-
 	    xunsigned = mrd_chkunsigned(bitpix[ppos], scales[i],       $
 				       offsets[i], $
 				       unsigned=unsigned)
@@ -2410,7 +2398,8 @@ pro mrd_table, header, structyp, use_colnum,           $
 
 		if xunsigned then begin
 		    fxaddpar, header, 'TZERO'+istr, 0, 'Modified by MRDFITS V'+mrd_version()
-		endif
+                    offsets[i] = 0 ;; C. Markwardt Aug 2007 - reset to zero so offset is not applied twice'
+	        endif
 
                 if dim eq 0 then begin
 
@@ -2477,7 +2466,8 @@ pro mrd_table, header, structyp, use_colnum,           $
         fnames  = fnames[good]
         fvalues = fvalues[good]
         typarr = typarr[good]      ;Added 2005-1-6   (A.Csillaghy)
-
+        tname = tname[good]        
+	
     endif
 
     if n_elements(vcls) eq 0  and  (not scaling) and not keyword_set(columns) then begin
@@ -2498,6 +2488,7 @@ pro mrd_table, header, structyp, use_colnum,           $
         endif
     endif
 
+    outalias = transpose([[tag_names(table)],[tname] ])
     status = 0 
     return 
  
@@ -2519,31 +2510,24 @@ function mrdfits, file, extension, header,      $
 	version=version,                        $
 	pointer_var=pointer_var,                $
 	fixed_var=fixed_var,                    $
-        status=status
+	outalias = outalias,                     $
+        status=status, extnum = extnum
 
-    
+    compile_opt idl2    
     ;   Let user know version if MRDFITS being used.
-    if keyword_set(version) then begin
-        print,'MRDFITS: Version '+mrd_version()+' Feb 07, 2005'
-    endif
-    
-    ;
-    ;  Can't use keyword_set since default is 2, not 0.
-
-    if n_elements(error_action) eq 0 then begin
-        error_action = 2
-    endif
-    
-    on_error, error_action
-   
-
+    if keyword_set(version) then $
+        print,'MRDFITS: Version '+mrd_version() + 'July 1, 2009'
+        
+      
+    if N_elements(error_action) EQ 0 then error_action = 2
+    On_error, error_action
    
     ; Check positional arguments.
 
     if n_params() le 0  or n_params() gt 3 then begin
 	if keyword_set(version) then return, 0
         print, 'MRDFITS: Usage'
-        print, '   a=mrdfits(file/unit, [extension, header], /version       $'
+        print, '   a=mrdfits(file/unit, [exten_no/exten_name, header], /version $'
         print, '       /fscale, /dscale, /unsigned, /use_colnum, /silent    $'
         print, '       range=, rows= , structyp=, columns=, $'
 	print, '       /pointer_var, /fixed_var, error_action=, status= )'
@@ -2593,68 +2577,59 @@ function mrdfits, file, extension, header,      $
     ; Open the file and position to the appropriate extension then read
     ; the header.
 
-    sz = size(file)
-    if (sz[0] ne 0) then begin
+    if (N_elements(file) GT 1 ) then begin
         print, 'MRDFITS: Vector input not supported'
         return, 0
     endif
 
     inputUnit = 0
-    if sz[1] gt 0 and sz[1] lt 4 then begin
+   
+    dtype = size(file,/type)
+    if dtype gt 0 and dtype lt 4 then begin    ;File unit number specified
 	
         inputUnit = 1
         unit = file
+        unixpipe =  (fstat(unit)).size EQ 0     ;Unix pipes have no files size    
+        if fxmove(unit,extension) lt 0 then return, -1
     
-        if fxmove(unit,extension) lt 0 then begin
-            return, -1
-        endif
-    
-    endif else begin 
-        unit = fxposit(file, extension, compress=compress, /readonly)
+    endif else begin                         ;File name specified
+        unit = fxposit(file, extension, compress=compress, unixpipe=unixpipe, $
+	               /readonly,extnum=extnum, errmsg= errmsg)
 
         if unit lt 0 then begin
-            print, 'MRDFITS: File access error'
+            message, 'File access error',/CON
+	    if errmsg NE '' then message,errmsg,/CON
             status = -1
             return, 0
         endif
     endelse
 
     if eof(unit) then begin
-        print,'MRDFITS: Extension past EOF'
-	if inputUnit eq 0 then begin
-            free_lun, unit
-	endif
-	
+        message,'ERROR - Extension past EOF',/CON
+	if inputUnit eq 0 then free_lun,unit 
 	status = -2
-	
-        return, 0
+	return, 0
     endif
 
     mrd_hread, unit, header, status, SILENT = silent
     
-    if status lt 0 then begin
-        print, 'MRDFITS: Unable to read header for extension'
-	if inputUnit eq 0 then begin
-            free_lun, unit
-	endif
+        if status lt 0 then begin
+        message, 'ERROR - Unable to read header for extension',/CON
+	if inputUnit eq 0 then free_lun,unit
         return, 0
     endif
+
 
     ; If this is primary array then XTENSION will have value
     ; 0 which will be converted by strtrim to '0'
 
     xten = strtrim( fxpar(header,'XTENSION'), 2)
-    if xten eq '0' or xten eq 'IMAGE' then begin
-        type = 0
-    endif else if xten eq 'TABLE' then begin
-	type = 1
-    endif else if xten eq 'BINTABLE'  or xten eq 'A3DTABLE' then begin
-	type = 2
-    endif else begin 
-        print, 'MRDFITS: Unable to process extension type:', xten
-	if inputUnit eq 0 then begin
-	    free_lun,unit
-	endif
+    if xten eq '0' or xten eq 'IMAGE' then type = 0 $
+    else if xten eq 'TABLE' then type = 1 $
+    else if xten eq 'BINTABLE'  or xten eq 'A3DTABLE' then type = 2 $
+    else begin 
+        message, 'Unable to process extension type:' + strtrim(xten,2),/CON
+	if inputUnit eq 0 then free_lun,unit
 	status = -1
         return, 0
     endelse
@@ -2668,8 +2643,10 @@ function mrdfits, file, extension, header,      $
         mrd_image, header, arange, maxd, rsize, table, scales, offsets, $
           scaling, status, silent=silent, unsigned=unsigned, $
            rows= rows
-       if status ge 0 and rsize gt 0 then $
-           mrd_read_image, unit, arange, maxd, rsize, table, rows = rows
+       if status ge 0 and rsize gt 0 then begin
+           mrd_read_image, unit, arange, maxd, rsize, table, rows = rows,$
+            status=status, unixpipe=unixpipe
+        endif
        size = rsize
     endif else if type eq 1 then begin
 
@@ -2679,7 +2656,7 @@ function mrdfits, file, extension, header,      $
             arange, table, nbytes, nrows, nfld, rows=rows,                    $
             typarr, posarr, lenarr, nullarr, fnames, fvalues,                 $
             scales, offsets, scaling, status, silent=silent,                  $
-            columns=columns, alias=alias
+            columns=columns, alias=alias, outalias=outalias
         size = nbytes*nrows
         
         if status ge 0   and  size gt 0  then begin
@@ -2702,14 +2679,14 @@ function mrdfits, file, extension, header,      $
           arange, rsize, table, nrows, nfld, typarr,                        $ 
           fnames, fvalues, vcls, vtpes, scales, offsets, scaling, status,   $
           silent=silent, columns=columns, no_tdim=no_tdim, $
-          alias=alias, unsigned=unsigned, rows = rows
+          alias=alias, unsigned=unsigned, rows = rows, outalias = outalias
 
         size = nfld*(arange[1] - arange[0] + 1)
         if status ge 0  and  size gt 0  then begin
      
             ;*** Read data.
             mrd_read_table, unit, arange, rsize,  rows = rows, $
-              structyp, nrows, nfld, typarr, table
+              structyp, nrows, nfld, typarr, table, unixpipe=unixpipe
 
             if status ge 0 and keyword_set(columns) then begin
         

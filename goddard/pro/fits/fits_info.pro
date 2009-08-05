@@ -1,4 +1,4 @@
-pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
+pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext, extname=extname
 ;+
 ; NAME:
 ;     FITS_INFO
@@ -14,14 +14,13 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;     information into a structure)
 ;
 ; CALLING SEQUENCE:
-;     FITS_INFO, Filename, [ /SILENT , TEXTOUT = , N_ext = ]
+;     FITS_INFO, Filename, [ /SILENT , TEXTOUT = , N_ext =, EXTNAME= ]
 ;
 ; INPUT:
 ;     Filename - Scalar string giving the name of the FITS file(s)
-;               Can include wildcards such as '*.fits'.   In IDL V5.5 one can
-;               use the regular expressions allowed by the FILE_SEARCH()
-;               function.     One can also search gzip compressed 
-;               FITS files.
+;               Can include wildcards such as '*.fits', or regular expressions 
+;               allowed by the FILE_SEARCH() function.     One can also search 
+;               gzip compressed  FITS files.
 ; OPTIONAL INPUT KEYWORDS:
 ;     /SILENT - If set, then the display of the file description on the 
 ;                terminal will be suppressed
@@ -36,9 +35,11 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;               textout = filename (default extension of .prt)
 ;
 ;               If TEXTOUT is not supplied, then !TEXTOUT is used
-; OPTIONAL OUTPUT KEYWORD:
+; OPTIONAL OUTPUT KEYWORDS:
 ;       N_ext - Returns an integer scalar giving the number of extensions in
 ;               the FITS file
+;       extname - returns a list containing the EXTNAME keywords for each
+;       		extension.
 ;
 ; COMMON BLOCKS
 ;       DESCRIPTOR =  File descriptor string of the form N_hdrrec Naxis IDL_type
@@ -93,22 +94,24 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;       EXTNAME keyword can be anywhere in extension header again 
 ;                         WBL/S. Bansal Dec 2004
 ;       Read more than 200 extensions  WBL   March 2005
+;       Work for FITS files with SIMPLE=F   WBL July 2005
+;       Assume since V5.4, fstat.compress available WBL April 2006
+;       Added EXTNAME as an IDL keyword to return values. M. Perrin Dec 2007
+;       make Ndata a long64 to deal with large files. E. Hivon Mar 2008
 ;-
+ compile_opt idl2
  COMMON descriptor,fdescript
- FORWARD_FUNCTION FILE_SEARCH       ;For pre-V5.5 compatibility
 
  if N_params() lt 1 then begin
-     print,'Syntax - FITS_INFO, filename, [/SILENT, TEXTOUT =, N_ext = ]'
+     print,'Syntax - FITS_INFO, filename, [/SILENT, TEXTOUT=, N_ext=, EXTNAME=]'
      return
  endif
 
   defsysv,'!TEXTOUT',exists=ex                  ; Check if !TEXTOUT exists.
   if ex eq 0 then defsysv,'!TEXTOUT',1          ; If not define it.
 
- if !VERSION.RELEASE GE '5.5' then $
-    fil = file_search( filename, COUNT = nfiles) else $
-    fil = findfile( filename, COUNT = nfiles)
- if nfiles EQ 0 then message,'No files found'
+    fil = file_search( filename, COUNT = nfiles) 
+    if nfiles EQ 0 then message,'No files found'
 
  silent = keyword_set( SILENT )
  if not silent then begin 
@@ -120,13 +123,12 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 
     file = fil[nf]
 
-   openr, lun1, file, /GET_LUN, /BLOCK,/compress 
+   openr, lun1, file, /GET_LUN, /compress 
 
-   if !VERSION.RELEASE GE '5.4' then $
-          compress = (fstat(lun1)).compress else compress = 1   
+   compress = (fstat(lun1)).compress  
    N_ext = -1
     fdescript = ''
-    nmax = 100
+    nmax = 400 ; MDP was 100
     extname = strarr(nmax)
 
    ptr = 0l
@@ -139,8 +141,10 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
  
    if N_ext EQ -1 then begin
         if string(test) NE 'SIMPLE  ' then goto, BAD_FILE
+	simple = 1
    endif else begin
         if string(test) NE 'XTENSION' then goto, END_OF_FILE
+	simple = 0
    endelse
    point_lun, lun1, ptr
 
@@ -158,7 +162,7 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
    Naxis = sxpar( hd, 'NAXIS', Count = N_NAXIS)
    if N_NAXIS EQ 0 then message, $ 
            'WARNING - FITS header missing NAXIS keyword',/CON
-   simple = sxpar( hd, 'SIMPLE')
+   
    exten = sxpar( hd, 'XTENSION')
    Ext_type = strmid( strtrim( exten ,2), 0, 8)      ;Use only first 8 char
    gcount = sxpar( hd, 'GCOUNT') > 1
@@ -202,7 +206,6 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
   if N_extname GT 0 then extname[N_ext+1] = exname
   get_extname =  (N_ext GE 0) and (N_extname EQ 0) and not keyword_set(SILENT)  
 
-
 ;  Read header records, till end of header is reached
 
   hdr = bytarr(80, 36, /NOZERO)
@@ -215,17 +218,11 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
        if get_extname then begin
            exname = sxpar(hd1, 'extname', Count = N_extname)
            if N_extname GT 0 then begin
-               if extname GT nmax then begin
-                   extname = [extname,strarr(nmax)]
-                   nmax = nmax*2
-               endif
-               extname[N_ext+1] = exname
+                extname[N_ext+1] = exname
                get_extname = 0
            endif
        endif 
   endwhile
-
-
  
  n_hdrec = 36L*(n_hdrblock-1) + end_rec[0] + 1L         ; size of header
  descript = strn( n_hdrec ) + descript
@@ -233,7 +230,7 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
 ;  If there is data associated with primary header, then find out the size
 
  if Naxis GT 0 then begin
-         ndata = Nax[0] 
+         ndata = long64(Nax[0])
          if naxis GT 1 then for i = 2, naxis do ndata=ndata*Nax[i-1]
  endif else ndata = 0
 
@@ -247,6 +244,11 @@ pro fits_info, filename, SILENT=silent,TEXTOUT=textout, N_ext=n_ext
  if ( simple EQ 0 ) AND ( strlen(strn(exten)) EQ 1) then goto, END_OF_FILE  
 
     N_ext = N_ext + 1
+    if N_ext GT nmax then begin
+              extname = [extname,strarr(nmax)]
+              nmax = nmax*2
+    endif
+
 
 ; Append information concerning the current extension to descriptor
 

@@ -4,14 +4,17 @@
 ; PURPOSE:
 ;       Read a FITS file into IDL data and header variables. 
 ; EXPLANATION:
-;       READFITS() can also read gzip or Unix compressed FITS files.
+;       READFITS() can read FITS files compressed with gzip or Unix (.Z) 
+;       compression.  FPACK ( http://heasarc.gsfc.nasa.gov/fitsio/fpack/ )
+;       compressed FITS files can also be read provided that the FPACK software
+;       is installed.
 ;       See http://idlastro.gsfc.nasa.gov/fitsio.html for other ways of
 ;       reading FITS files with IDL.   
 ;
 ; CALLING SEQUENCE:
 ;       Result = READFITS( Filename/Fileunit,[ Header, heap, /NOSCALE, EXTEN_NO=,
 ;                     NSLICE=, /SILENT , STARTROW =, NUMROW = , HBUFFER=,
-;                     /CHECKSUM, /COMPRESS, /No_Unsigned, NaNVALUE = ]
+;                     /CHECKSUM, /COMPRESS, /FPACK, /No_Unsigned, NaNVALUE = ]
 ;
 ; INPUTS:
 ;       Filename = Scalar string containing the name of the FITS file  
@@ -29,8 +32,7 @@
 ;              is more efficient than repeatedly starting at the beginning of 
 ;              the file.
 ;          (2) For reading a FITS file across a Web http: address after opening
-;              the unit with the SOCKET procedure (IDL V5.4 or later,
-;              Unix and Windows only) 
+;              the unit with the SOCKET procedure 
 ;
 ; OUTPUTS:
 ;       Result = FITS data array constructed from designated record.
@@ -63,6 +65,12 @@
 ;       EXTEN_NO - non-negative scalar integer specifying the FITS extension to
 ;               read.  For example, specify EXTEN = 1 or /EXTEN to read the 
 ;               first FITS extension.   
+;
+;       /FPACK - Signal that the file is compressed with the FPACK software. 
+;               http://heasarc.gsfc.nasa.gov/fitsio/fpack/ ) By default, 
+;               (READFITS will assume that if the file name extension ends in 
+;               .fz that it is fpack compressed.     The FPACK software must
+;               be installed on the system 
 ;   
 ;        HBUFFER - Number of lines in the header, set this to slightly larger
 ;                than the expected number of lines in the FITS header, to 
@@ -114,6 +122,10 @@
 ;                  with routines that require IEEE "not a number" values to be
 ;                  converted to a regular value.
 ;
+;       /UNIXPIPE - When a FileUnit is supplied to READFITS(), then /UNIXPIPE
+;                 indicates that the unit is to a Unix pipe, and that 
+;                 no automatic byte swapping is performed.
+;
 ; EXAMPLE:
 ;       Read a FITS file test.fits into an IDL image array, IM and FITS 
 ;       header array, H.   Do not scale the data with BSCALE and BZERO.
@@ -158,28 +170,13 @@
 ;       (2) The use of the NSLICE keyword is incompatible with the NUMROW
 ;       or STARTROW keywords.
 ;
-;       (3) READFITS() underwent a substantial rewrite in February 2000 to 
-;       take advantage of new features in IDL V5.3
-;            1. The /swap_if_little_endian keyword is now used to OPENR rather
-;                than calling IEEE_TO_HOST for improved performance
-;            2. The /compress keyword is now used with OPENR to allow gzip files
-;                to be read on any machine architecture.
-;            3. Removed NANvalue keyword, since in V5.3, NaN is recognized on
-;                all machine architectures
-;            4. Assume unsigned integers are always allowed
-;            5. Use STRJOIN to display image size
-;            6. Use !ERROR_STATE.MSG rather than !ERR_STRING
-;      
-;
-;       (4) On some Unix shells, one may get a "Broken pipe" message if reading
+;       (3) On some Unix shells, one may get a "Broken pipe" message if reading
 ;        a Unix compressed (.Z) file, and not reading to the end of the file 
 ;       (i.e. the decompression has not gone to completion).     This is an 
 ;        informative message only, and should not affect the output of READFITS.   
 ; PROCEDURES USED:
 ;       Functions:   SXPAR()
-;       Procedures:  SXADDPAR, SXDELPAR
-; MINIMUM IDL VERSION:
-;       V5.3 (Uses STRJOIN, /COMPRESS keyword to OPENR)
+;       Procedures:  MRD_SKIP, SXADDPAR, SXDELPAR
 ;
 ; MODIFICATION HISTORY:
 ;       Original Version written in 1988, W.B. Landsman   Raytheon STX
@@ -203,13 +200,24 @@
 ;               William Thompson, 16-Aug-2004, GSFC
 ;       Recognize .ftz extension as compressed  W. Landsman   September 2004
 ;       Fix unsigned integer problem introduced Sep 2004 W. Landsman Feb 2005
+;       Don't modify header for unsigned integers, preserve double precision
+;           BSCALE value  W. Landsman March 2006
+;       Use gzip instead of compress for Unix compress files W.Landsman Sep 2006
+;       Call MRD_SKIP to skip bytes on different file types W. Landsman Oct 2006
+;       Make ndata 64bit for very large files E. Hivon/W. Landsman May 2007
+;       Fixed bug introduced March 2006 in applying Bzero C. Magri/W.L. Aug 2007
+;       Check possible 32bit overflow when using NSKIP W. Landsman Mar 2008
+;       Always reset BSCALE, BZERO even for unsigned integers W. Landsman May 2008
+;       Make ndata 64bit for very large extensions J. Schou/W. Landsman Jan 2009
+;       Use PRODUCT() to compute # of data points  W. Landsman  May 2009
+;       Read FPACK compressed file via UNIX pipe. W. Landsman May 2009
 ;-
 function READFITS, filename, header, heap, CHECKSUM=checksum, $ 
                    COMPRESS = compress, HBUFFER=hbuf, EXTEN_NO = exten_no, $
                    NOSCALE = noscale, NSLICE = nslice, $
                    NO_UNSIGNED = no_unsigned,  NUMROW = numrow, $
                    POINTLUN = pointlun, SILENT = silent, STARTROW = startrow, $
-                   NaNvalue = NaNvalue
+                   NaNvalue = NaNvalue, FPACK = fpack, UNIXpipe=unixpipe
 
   On_error,2                    ;Return to user
   compile_opt idl2
@@ -235,37 +243,43 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
 ;  Check if this is a Unix compressed file.   (gzip files are handled 
 ;  separately using the /compress keyword to OPENR).
 
-    unixZ = 0                
+    if N_elements(unixpipe) EQ 0 then unixpipe = 0                  
     if unitsupplied then unit = filename else begin
     len = strlen(filename)
     ext = strlowcase(strmid(filename,len-3,3))
     gzip = (ext EQ '.gz') or (ext EQ 'ftz')
     compress = keyword_set(compress) or gzip[0]
-    unixZ =  (strmid(filename, len-2, 2) EQ '.Z') and $
-             (!VERSION.OS_FAMILY EQ 'unix') 
+    unixZ =  (strmid(filename, len-2, 2) EQ '.Z') 
+    fcompress = keyword_set(fpack) or ( ext EQ '.fz') 
+    unixpipe = unixZ or fcompress	      
 
+ 
 ;  Go to the start of the file.
 
-   openr, unit, filename, ERROR=error,/get_lun,/BLOCK,/binary, $
+   openr, unit, filename, ERROR=error,/get_lun, $
                 COMPRESS = compress, /swap_if_little_endian
    if error NE 0 then begin
         message,/con,' ERROR - Unable to locate file ' + filename
         return, -1
    endif
 
-;  Handle Unix compressed files.   On some Unix machines, users might wish to 
-;  force use of /bin/sh in the line spawn, ucmprs+filename, unit=unit,/sh
+;  Handle Unix or Fpack compressed files which will be opened via a pipe using
+;  the SPAWN command.     
 
         if unixZ then begin
                 free_lun, unit
-                spawn, 'uncompress -c '+filename, unit=unit                 
+                spawn, 'gzip -cd '+filename, unit=unit                 
                 gzip = 1b
-        endif 
+
+        endif else if fcompress then begin 
+	        free_lun, unit
+		spawn,'funpack -V',test,err
+		if err NE '' then message,'ERROR - ' + err
+		spawn,'funpack -S ' + filename, unit=unit,/sh
+	endif	
   endelse
-  if keyword_set(POINTLUN) then begin
-       if gzip then  readu,unit,bytarr(pointlun,/nozero) $
-               else point_lun, unit, pointlun
-  endif
+  if keyword_set(POINTLUN) then mrd_skip, unit, pointlun
+
   doheader = arg_present(header) or do_checksum
   if doheader  then begin
           if N_elements(hbuf) EQ 0 then hbuf = 180 else begin
@@ -333,28 +347,18 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
                 
        if naxis GT 0 then begin 
             dims = sxpar( header,'NAXIS*')           ;Read dimensions
-            ndata = dims[0]
-            if naxis GT 1 then for i = 2, naxis do ndata = ndata*dims[i-1]
-                        
-                endif else ndata = 0
+	    ndata = product(dims,/integer)
+       endif else ndata = 0
                 
-                nbytes = (abs(bitpix) / 8) * gcount * (pcount + ndata)
+       nbytes = (abs(bitpix) / 8) * gcount * (pcount + ndata)
 
-;  Move to the next extension header in the file.   Although we could use
-;  POINT_LUN with compressed files, a faster way is to simply read into the 
-;  file
+;  Move to the next extension header in the file.   Use MRD_SKIP to skip with
+;  fastest available method (POINT_LUN or readu) for different file
+;  types (regular, compressed, Unix pipe, socket) 
 
       if ext LT exten_no then begin
                 nrec = long((nbytes + 2879) / 2880)
-                if nrec GT 0 then begin     
-                if gzip then begin 
-                        buf = bytarr(nrec*2880L,/nozero)
-                        readu,unit,buf 
-                        endif else  begin 
-                        point_lun, -unit,curr_pos
-                        point_lun, unit,curr_pos + nrec*2880L
-                endelse
-                endif
+                if nrec GT 0 then mrd_skip, unit, nrec*2880L    
        endif
        endfor
 
@@ -377,7 +381,7 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
 
  if Naxis GT 0 then begin 
         Nax = sxpar( header, 'NAXIS*' )   ;Read NAXES
-        ndata = nax[0]
+        ndata = long64(nax[0])            ;Updated Jan 2009
         if naxis GT 1 then for i = 2, naxis do ndata = ndata*nax[i-1]
 
   endif else ndata = 0
@@ -436,16 +440,10 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
         nax[1] = nax[1] - startrow    
         nax[1] = nax[1] < numrow
         sxaddpar, header, 'NAXIS2', nax[1]
-        if gzip then begin
-                if startrow GT 0 then begin
-                        tmp=bytarr(startrow*nax[0],/nozero)
-                        readu,unit,tmp
-                endif 
-        endif else begin 
-              point_lun, -unit, pointlun          ;Current position
-              point_lun, unit, pointlun + startrow*nax[0]
-    endelse
+	if startrow GT 0 then mrd_skip, unit, startrow*nax[0]
+
     endif else if (N_elements(NSLICE) EQ 1) then begin
+
         lastdim = nax[naxis-1]
         if nslice GE lastdim then message,/CON, $
         'ERROR - Value of NSLICE must be less than ' + strtrim(lastdim,2)
@@ -454,16 +452,8 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
         naxis = naxis-1
         sxaddpar,header,'NAXIS',naxis
         ndata = ndata/lastdim
-        nskip = nslice*ndata*abs(bitpix/8) 
-        if gzip then  begin 
-              if Ndata GT 0 then begin
-                  buf = bytarr(nskip,/nozero)
-                  readu,unit,buf
-               endif   
-        endif else begin 
-                   point_lun, -unit, currpoint          ;Current position
-                   point_lun, unit, currpoint + nskip
-        endelse
+        nskip = long64(nslice)*ndata*abs(bitpix/8)
+	if Ndata GT 0 then mrd_skip, unit, nskip  
   endif
 
 
@@ -481,7 +471,7 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
 
     data = make_array( DIM = nax, TYPE = IDL_type, /NOZERO)
     readu, unit, data
-    if unixZ then if not is_ieee_big() then ieee_to_host,data
+    if unixpipe  then swap_endian_inplace,data,/swap_if_little
     if (exten_no GT 0) and (pcount GT 0) then begin
         theap = sxpar(header,'THEAP')
         skip = theap - N_elements(data)
@@ -518,8 +508,8 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
                         blankval = where( data EQ blank, Nblank)
           endif
 
-          Bscale = float( sxpar( header, 'BSCALE' , Count = N_bscale))
-          Bzero = float( sxpar(header, 'BZERO', Count = N_Bzero ))
+          Bscale = sxpar( header, 'BSCALE' , Count = N_bscale)
+          Bzero = sxpar(header, 'BZERO', Count = N_Bzero )
  
 ; Check for unsigned integer (BZERO = 2^15) or unsigned long (BZERO = 2^31)
 
@@ -531,25 +521,30 @@ function READFITS, filename, header, heap, CHECKSUM=checksum, $
            endif else unsgn = 0
 
           if unsgn then begin
-                 sxaddpar, header, 'BZERO', 0
-                 sxaddpar, header, 'O_BZERO', bzero, $
-                          'Original Data is unsigned Integer'
-                   if unsgn_int then $ 
+                    if unsgn_int then $ 
                         data =  uint(data) - 32768US else $
                    if unsgn_lng then  data = ulong(data) - 2147483648UL 
-                
+                   sxaddpar, header, 'BSCALE', 1.
+                   sxaddpar, header, 'O_BSCALE', Bscale,' Original BSCALE Value'
+               
           endif else begin
  
           if N_Bscale GT 0  then $ 
                if ( Bscale NE 1. ) then begin
-                   data = temporary(data) * Bscale 
+	           if size(Bscale,/TNAME) NE 'DOUBLE' then $
+                      data = temporary(data) * float(Bscale) else $ 
+		      data = temporary(data) * Bscale 
                    sxaddpar, header, 'BSCALE', 1.
                    sxaddpar, header, 'O_BSCALE', Bscale,' Original BSCALE Value'
+                   sxaddpar, header, 'BZERO', 0.
+                   sxaddpar, header, 'O_BZERO', Bzero,' Original BZERO Value'
                endif
 
          if N_Bzero GT 0  then $
                if (Bzero NE 0) then begin
-                     data = temporary( data ) + Bzero
+	             if size(Bzero,/TNAME) NE 'DOUBLE' then $
+                      data = temporary( data ) + float(Bzero) else $    ;Fixed Aug 07
+                      data = temporary( data ) + Bzero
                      sxaddpar, header, 'BZERO', 0.
                      sxaddpar, header, 'O_BZERO', Bzero,' Original BZERO Value'
                endif

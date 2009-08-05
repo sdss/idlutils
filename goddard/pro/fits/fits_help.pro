@@ -12,12 +12,14 @@ pro fits_help,file_or_fcb
 ;
 ; INPUTS:
 ;       FILENAME_OR_FCB - name of the fits file or the FITS Control Block (FCB)
-;               returned by FITS_OPEN.     For versions since V5.3, the 
-;               file name is allowed to be gzip compressed (with a .gz 
-;               extension)
+;               structure returned by FITS_OPEN.     The  file name is allowed 
+;               to be gzip compressed (with a .gz  extension)
 ;
 ; OUTPUTS:
-;       a summary of the fits file is printed.  
+;       A summary of the FITS file is printed.   For each extension, the values
+;       of the XTENSION, EXTNAME EXTVER EXTLEVEL BITPIX GCOUNT, PCOUNT NAXIS 
+;       and NAXIS* keywords are displayed. 
+; 
 ;
 ; EXAMPLES:
 ;       FITS_HELP,'myfile.fits'
@@ -47,7 +49,7 @@ pro fits_help,file_or_fcb
         fcbtype = size(file_or_fcb,/type) 
         fcbsize = n_elements(file_or_fcb)
         if (fcbsize ne 1) or ((fcbtype ne 7) and (fcbtype ne 8)) then begin
-                print, 'FITS_HELP: Invalid Filename or FCB supplied'
+                message, 'Invalid Filename or FCB supplied',/con
                 return
         end
 

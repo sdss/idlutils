@@ -4,11 +4,13 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ; NAME:
 ;       FITS_OPEN
 ;
-;*PURPOSE:
+; PURPOSE:
 ;       Opens a FITS (Flexible Image Transport System) data file.
 ;
-;*CATEGORY:
-;       INPUT/OUTPUT
+; EXPLANATION:
+;       FITS_OPEN was modified in Sep 2006 to open with /SWAP_IF_LITTLE_ENDIAN
+;       It must be used with post-Sep 2006 versions of FITS_READ, FITS_WRITE
+;       and MODFITS.
 ;
 ;*CALLING SEQUENCE:
 ;       FITS_OPEN, filename, fcb
@@ -20,19 +22,17 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;*OUTPUTS:
 ;       fcb : (FITS Control Block) a IDL structure containing information
 ;               concerning the file.  It is an input to FITS_READ, FITS_WRITE
-;               and FITS_CLOSE
+;               FITS_CLOSE and MODFITS.
 ;
 ; INPUT KEYWORD PARAMETERS:
 ;       /APPEND: Set to append to an existing file.
 ;       /HPRINT - print headers with routine HPRINT as they are read.
 ;               (useful for debugging a strange file)
-;       /NO_ABORT: Set to return to calling program instead of a RETALL
-;               when an I/O error is encountered.  If set, the routine will
-;               return  a non-null string (containing the error message) in the
-;               keyword MESSAGE.    (For backward compatibility, the obsolete 
-;               system variable !ERR is also set to -1 in case of an error.)   
-;               If /NO_ABORT not set, then FITS_OPEN will print the message and
-;               issue a RETALL
+;       /NO_ABORT: Set to quietly return to calling program when an I/O error  
+;               is encountered, and return  a non-null string
+;               (containing the error message) in the keyword MESSAGE.    
+;               If /NO_ABORT not set, then FITS_OPEN will display the error 
+;               message and return to the calling program.
 ;       /UPDATE Set this keyword to open an existing file for update
 ;       /WRITE: Set this keyword to open a new file for writing. 
 ;
@@ -108,13 +108,19 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use Message = '' rather than !ERR =1 as preferred signal of normal
 ;           operation   W. Landsman  November 2000
-;     	Lindler, Dec, 2001, Modified to use 64 bit words for storing byte
+;       Lindler, Dec, 2001, Modified to use 64 bit words for storing byte
 ;             positions within the file to allow support for very large
 ;             files 
 ;       Work with gzip compressed files W. Landsman    January 2003
 ;       Fix gzip compress for V5.4 and earlier  W.Landsman/M.Fitzgerald Dec 2003 
 ;       Assume since V5.3 (STRSPLIT, OPENR,/COMPRESS) W. Landsman Feb 2004
 ;       Treat FTZ extension as gzip compressed W. Landsman Sep 2004
+;       Assume since V5.4 fstat.compress available W. Landsman Apr 2006
+;       FCB.Filename  now expands any wildcards W. Landsman July 2006
+;       Make ndata 64bit for very large files B. Garwood/W. Landsman Sep 2006
+;       Open with /SWAP_IF_LITTLE_ENDIAN, remove obsolete keywords to OPEN
+;                W. Landsman  Sep 2006
+;       Warn that one cannot open a compressed file for update W.L. April 2007
 ;-
 ;--------------------------------------------------------------------
       compile_opt idl2
@@ -161,37 +167,41 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ; open file
 ;
         docompress = 0
-           if open_for_read and (not open_for_overwrite) then begin
-           len = strlen(filename)
-           ext = strlowcase(strmid(filename, len-3, 3))
-           docompress = (ext EQ '.gz') or (ext EQ 'ftz') 
-        endif
+        len = strlen(filename)
+        ext = strlowcase(strmid(filename, len-3, 3))
+        docompress = (ext EQ '.gz') or (ext EQ 'ftz') 
+        if docompress and open_for_overwrite then begin 
+            message = 'Compressed FITS files cannot be open for update'
+            if not keyword_set(no_abort) then $
+                   message,' ERROR: '+message,/CON
+            return
+       endif   
  ;
 ; open file
 ;
         get_lun,unit
-       if docompress then openr,unit,filename,/block, /compress else begin
+       if docompress then $
+                openr,unit,filename, /compress,/swap_if_little else begin
        case 1 of
-                keyword_set(append): openu,unit,filename,/block
-                keyword_set(update): openu,unit,filename,/block
-                keyword_set(write) : if !version.os eq 'vms' then $
-                                         openw,unit,filename,/block,/none,2880 $
-                                     else openw,unit,filename
-                else               : openr,unit,filename,/block
+                keyword_set(append): openu,unit,filename,/swap_if_little
+                keyword_set(update): openu,unit,filename,/swap_if_little
+                keyword_set(write) : openw,unit,filename,/swap_if_little
+                else               : openr,unit,filename,/swap_if_little
         endcase
         endelse
 
         file = fstat(unit)
-        if !VERSION.RELEASE GE '5.4' then docompress = file.compress
+        fname = file.name          ;In case the user input a wildcard
+        docompress = file.compress
 
 ; Need to spawn to "gzip -l" to get the number of uncompressed bytes in a gzip
 ; compressed file.    I'm not sure how independent this code is with different
 ; shells and OS's.
 
         if docompress then begin 
-             spawn,'gzip -l ' + filename, output
-	     output = strtrim(output,2)
-	     g = where(strmid(output,0,8) EQ 'compress')
+             spawn,'gzip -l ' + fname, output
+             output = strtrim(output,2)
+             g = where(strmid(output,0,8) EQ 'compress')
              nbytes_in_file = long64((strsplit(output[g[0]+1],/extract))[1])
         endif else nbytes_in_file = file.size
 ;
@@ -335,7 +345,7 @@ pro fits_open,filename,fcb,write=write,append=append,update=update, $
 ;
 ; skip past data to go to next header
 ;
-                ndata = axis[0,extend_number]
+                ndata = long64(axis[0,extend_number])
                 if naxis[extend_number] gt 1 then $
                                 for i=2,naxis[extend_number] do $
                                     ndata = ndata*axis[i-1,extend_number]
@@ -372,11 +382,11 @@ done_headers:
 ; create output structure for the file control block
 ;
         if open_for_write or open_for_update then begin
-                fcb = {filename:filename,unit:unit,nextend:nextend, $
+                fcb = {filename:fname,unit:unit,nextend:nextend, $
                         open_for_write:open_for_write + open_for_update*2}
            end else begin
                 nx = nextend
-                fcb = {filename:filename,unit:unit,nextend:nextend, $
+                fcb = {filename:fname,unit:unit,nextend:nextend, $
                         xtension:xtension[0:nx],extname:extname[0:nx], $
                         extver:extver[0:nx],extlevel:extlevel[0:nx], $
                         gcount:gcount[0:nx],pcount:pcount[0:nx], $
@@ -401,6 +411,5 @@ error_exit:
         !err = -1
         if keyword_set(no_abort) then return
         message,' ERROR: '+message,/CON
-        retall
+        return
 end
-

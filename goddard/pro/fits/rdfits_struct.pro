@@ -1,4 +1,5 @@
-pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only 
+pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only,$
+    EXTEN = exten 
 ;+
 ; NAME:
 ;      RDFITS_STRUCT
@@ -9,7 +10,7 @@ pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only
 ;      tag.
 ;
 ; CALLING SEQUENCE:
-;      RDFITS_STRUCT, filename, struct, /SILENT, /HEADER_ONLY ]
+;      RDFITS_STRUCT, filename, struct, /SILENT, /HEADER_ONLY, EXTEN= ]
 ;
 ; INPUT:
 ;      FILENAME = Scalar string giving the name of the FITS file.  
@@ -30,6 +31,9 @@ pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only
 ;             If /HEADER_ONLY is set, then struct will contain tags HDR0, HDR1
 ;             ....HDRn containing all the headers of a FITS file with n 
 ;             extensions
+; OPTIONAL INPUT KEYWORD:
+;       EXTEN - positive integer array specifying which extensions to read.
+;             Default is to read all extensions. 
 ; PROCEDURES USED:
 ;       FITS_OPEN, FITS_READ, FITS_CLOSE
 ;
@@ -44,6 +48,8 @@ pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only
 ;       IDL> rdfits_struct, 'm33.fits', st
 ;       IDL> help, /str, st                   ;Display info about the structure
 ;
+;       To just read the second and fourth extensions 
+;       IDL> rdfits_struct, 'm33.fits', st, exten=[2,4]
 ; RESTRICTIONS:
 ;       Does not handle random groups or variable length binary tables
 ; MODIFICATION HISTORY:
@@ -58,6 +64,7 @@ pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only
 ;       Added /HEADER_ONLY keyword   W. Landsman  October 2003
 ;       Do not copy primary header into extension headers W. Landsman Dec 2004
 ;       Do not modify NAXIS when using /HEADER_ONLY W. Landsman Jan 2005
+;       Added EXTEN keyword  W. Landsman July 2009
 ;-
 
  compile_opt idl2
@@ -84,16 +91,27 @@ pro rdfits_struct, filename, struct,SILENT = silent, HEADER_ONLY = header_only
       fits_close,fcb 
       return
  endif
- for i=1,fcb.nextend do begin
+
+ n = N_elements(exten)
+ if N_elements(exten) EQ 0 then begin 
+      n = fcb.nextend 
+      exten = indgen(n)+1
+ endif else begin 
+      if max(exten) GT fcb.nextend then message, $
+          'ERROR - extension ' + strtrim(max(exten),2) + ' does not exist'     
+ endelse
+ for i= 0, n-1 do begin
+     j = exten[i]
+     jj  = strtrim(j,2)
      if h_only then begin
-     fits_read,fcb,0,h,/header_only,/no_pdu
-     struct = create_struct(temporary(struct), 'hdr' + strtrim(i,2), $
+     fits_read,fcb,0,h,/header_only,/no_pdu,exten=j
+     struct = create_struct(temporary(struct), 'hdr' + jj, $
               temporary(h))
      endif else begin
-     fits_read,fcb,d,h,/no_pdu
-     if fcb.xtension[i] EQ 'IMAGE' then tag = 'im' + strtrim(i,2) $
-                                else tag = 'tab' + strtrim(i,2)
-     struct = create_struct(temporary(struct), 'hdr' + strtrim(i,2), $
+     fits_read,fcb,d,h,/no_pdu,exten=j
+     if fcb.xtension[j] EQ 'IMAGE' then tag = 'im' + jj $
+                                else tag = 'tab' + jj
+     struct = create_struct(temporary(struct), 'hdr' + jj, $
               temporary(h),tag, temporary(d))
     endelse
  endfor

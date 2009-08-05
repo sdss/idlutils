@@ -43,6 +43,8 @@ pro writefits, filename, data, header, heap, Append = Append,  $
 ;      /Checksum - If set, then the CHECKSUM keywords to monitor data integrity
 ;                 will be included in the FITS header.    For more info, see
 ;                  http://heasarc.gsfc.nasa.gov/docs/heasarc/fits/checksum.html
+;                 By default, checksum keywords will updated if they are already
+;                 in the FITS header.
 ;       NaNvalue - Value in the data array which represents missing pixels.
 ;		 This keyword is only used when missing pixels are not
 ;		 represented by NaN values in the input array.
@@ -51,8 +53,12 @@ pro writefits, filename, data, header, heap, Append = Append,  $
 ;
 ; RESTRICTIONS:
 ;       (1) It recommended that BSCALE and BZERO not be used (or set equal
-;           to 1. and 0) with REAL*4 or REAL*8 data.
+;           to 1. and 0) except with integer data
 ;       (2) WRITEFITS will remove any group parameters from the FITS header
+;       (3) As of Feb 2008, WRITEFITS no longer requires the primary header of a
+;           FITS file with extension contain the EXTEND keyword, consistent with 
+;           the draft revised FITS standard.    A warning is still given.
+;           http://fits.gsfc.nasa.gov/fits_draft.html
 ;
 ; EXAMPLE:
 ;       Write a randomn 50 x 50 array as a FITS file creating a minimal header.
@@ -70,7 +76,6 @@ pro writefits, filename, data, header, heap, Append = Append,  $
 ;       Make sure SIMPLE is written in first line of header  W. Landsman Jun 97
 ;       Use SYSTIME() instead of !STIME    W. Landsman  July 97
 ;       Create a default image extension header if needed W. Landsman June 98
-;       Converted to IDL V5.0   W. Landsman         June 98
 ;       Write unsigned data types W. Landsman       December 1999
 ;       Update for IDL V5.3, add /COMPRESS keyword W. Landsman  February 2000
 ;       Correct BZERO value for unsigned data  W. Landsman   July 2000
@@ -84,10 +89,16 @@ pro writefits, filename, data, header, heap, Append = Append,  $
 ;       Write BZERO in beginning of header for unsigned integers WL April 2004
 ;       Added ability to write heap array       WL             October 2004
 ;       Correct checksum if writing heap array   WL           November 2004
+;       Assume since V5.5, no VMS support, use file_search() WL   September 2006
+;       Set nbytes variable to LONG64 for very large files WL  May 2007
+;       Update CHECKSUM keywords if already present  WL   Oct 2007
+;       EXTEND keyword no longer required in FITS files with extensions WL Feb 2008
+;       Bug fix when filename ends with '.gz' and COMPRESS is used,
+;            the output file must be compressed          S. Koposov June 2008 
+
 ;-
   On_error, 2
   compile_opt idl2  
-     ;For pre-V5.5 compatibility
 
   if N_params() LT 2 then begin 
        print,'Syntax - WRITEFITS, filename, data,[ header, /APPEND, /CHECKSUM]'
@@ -158,24 +169,17 @@ pro writefits, filename, data, header, heap, Append = Append,  $
             'ERROR - "XTENSION" must be first keyword in header extension',/CON
                   return
             endif
-            if !VERSION.RELEASE GE '5.5' then $
-            test = file_search(filename, COUNT = n) else $
-            test = findfile( filename, COUNT = n)
+            test = file_search(filename, COUNT = n) 
              if n EQ 0 then  begin       ;Create default primary header
                  mkhdr,h0,0,/exten
                  writefits,filename,0,h0, checksum = checksum
-                 openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
+                 openu, unit, filename, /GET_LUN, /swap_if_little_endian
              endif else begin
-            openu, unit, filename, /BLOCK, /GET_LUN, /swap_if_little_endian
+            openu, unit, filename, /GET_LUN, /swap_if_little_endian
             mrd_hread, unit, hprimary
             extend = where( strmid(hprimary,0,8) EQ 'EXTEND  ', Nextend)
-            if Nextend EQ 0 then begin
-               message,'EXTEND keyword not found in primary FITS header',/CON
-               message,'Recreate primary FITS header with EXTEND keyword ' + $
-                       'before adding extensions', /CON
-               free_lun, unit
-               return
-            endif
+            if Nextend EQ 0 then $
+               message,'WARNING - EXTEND keyword not found in primary FITS header',/CON
             endelse
                    
             file = fstat(unit)
@@ -187,15 +191,13 @@ pro writefits, filename, data, header, heap, Append = Append,  $
     endif else begin
 
         ext = ''
-        if keyword_set(COMPRESS) then $
+        if keyword_set(COMPRESS) then begin 
             if strlowcase(strmid(filename,2,3,/reverse)) NE '.gz' $
-               then ext = '.gz' $
-        else compress = 0
+               then ext = '.gz' 
+        endif else compress = 0
 
-        if !VERSION.OS EQ "vms" then $
-             openw, unit, filename +ext, /NONE, /BLOCK, /GET_LUN, 2880, $
-                    /swap_if_little_endian,compress=compress  else $
-             openw, unit, filename + ext, /GET_LUN, /swap_if_little_endian, $
+
+       openw, unit, filename + ext, /GET_LUN, /swap_if_little_endian, $
                              compress = compress
 
     endelse
@@ -211,9 +213,12 @@ pro writefits, filename, data, header, heap, Append = Append,  $
 
    endif
 
-; Add any CHECKSUM keywords if desired
-
-       if keyword_set(CHECKSUM) then begin 
+; Add any CHECKSUM keywords if desired or already present
+   
+    do_Checksum = keyword_set(checksum)
+    if not do_checksum then test = sxpar(hdr,'CHECKSUM',count=do_checksum)
+  
+     if do_checksum then begin 
                if N_elements(heap) GT 0 then $
 	         FITS_ADD_CHECKSUM, hdr, [data,heap] else $
                  FITS_ADD_CHECKSUM, hdr, data
@@ -232,7 +237,7 @@ pro writefits, filename, data, header, heap, Append = Append,  $
 ; Write data
        if naxis EQ 0 then goto, DONE
         bitpix = sxpar( hdr, 'BITPIX' )
-        nbytes = N_elements( data) * (abs(bitpix) / 8 )
+        nbytes = long64( N_elements( data)) * (abs(bitpix) / 8 )
         npad = nbytes mod 2880
 
         if unsigned then writeu, unit, newdata $
@@ -255,7 +260,7 @@ pro writefits, filename, data, header, heap, Append = Append,  $
 ; ASCII Tables padded with blanks (32b) otherwise pad with zeros
         if keyword_set( APPEND) then begin
              exten = sxpar( header, 'XTENSION')
-             if exten EQ 'TABLE   ' then padnum = 32b else padnum = 0b
+             padnum =  exten EQ 'TABLE   ' ? 32b : 0b
         endif else padnum = 0b
          
         if npad GT 0 then writeu, unit, replicate( padnum, 2880 - npad)

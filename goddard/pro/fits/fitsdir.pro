@@ -23,7 +23,7 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;      FITSDIR will also recognize gzip compressed files (must have a .gz 
 ;      or FTZ extension).
 ; CALLING SEQUENCE:
-;     FITSDIR , [ directory, TEXTOUT =, /FLAT, KEYWORDS=, /NOSIZE, /NoTELESCOPE
+;     FITSDIR , [ directory, TEXTOUT =, EXTEN=, KEYWORDS=, /NOSIZE, /NoTELESCOPE
 ;                            ALT1_KEYWORDS= ,ALT2_KEYWORDS = ,ALT3_KEYWORDS =  
 ;
 ; OPTIONAL INPUT PARAMETERS:
@@ -85,10 +85,9 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;       IDL> fitsdir ,'/usr2/smith/*.fits',t='smith.txt', /NoTel 
 ;
 ; PROCEDURE:
-;       FINDFILE (or FILE_SEARCH if since V5.5) is used to find the specified 
-;       FITS files.   The header of each file is read, and the selected 
-;       keywords are extracted.   The formatting is adjusted so that no value 
-;       is truncated on display.        
+;       FILE_SEARCH()  is used to find the specified FITS files.   The 
+;       header of each file is read, and the selected keywords are extracted.
+;       The formatting is adjusted so that no value is truncated on display.        
 ;
 ; SYSTEM VARIABLES:
 ;       TEXTOPEN (called by FITSDIR) will automatically define the following 
@@ -98,11 +97,10 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;       DEFSYSV,'!TEXTUNIT',0
 ;
 ; PROCEDURES USED:
-;       FDECOMP, FXMOVE, MRD_HREAD, REMCHAR,  SPEC_DIR(), 
+;       FDECOMP, FXMOVE, MRD_HREAD, REMCHAR
 ;       TEXTOPEN, TEXTCLOSE
 ; MODIFICATION HISTORY:
 ;       Written, W. Landsman,  HSTX    February, 1993
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Search alternate keyword names    W.Landsman    October 1998
 ;       Avoid integer truncation for NAXISi >32767  W. Landsman  July 2000
 ;       Don't leave open unit    W. Landsman  July 2000 
@@ -116,10 +114,11 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 ;       NAXIS* values must be integers W. Landsman SSAI  June 2003
 ;       Trim spaces off of input KEYWORD values W. Landsman March 2004
 ;       Treat .FTZ extension as gzip compressed  W. Landsman September 2004
+;       Assume since V5.5, file_search() available W. Landsman Aug 2006
 ;-
  On_error,2
 
- compile_opt idl2      ;For pre-V5.5 compatibility
+ compile_opt idl2     
  if N_elements(directory) EQ 0 then directory = '*.fits'
  if N_elements(exten) EQ 0 then exten = 0 
 
@@ -179,13 +178,10 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
    keylen = strlen(keys)
  
   direct = spec_dir(directory)
-  if !VERSION.RELEASE GE '5.5' then $
-          files = file_search(directory,COUNT = n,/full)  else $
-           files = findfile( direct, COUNT = n)
-
+  files = file_search(directory,COUNT = n,/full) 
 
  if n EQ 0 then begin                                      ;Any files found?
-       message,'No files found on '+ directory, /CON
+       message,'No files found on '+ direct, /CON
        return
  endif 
 
@@ -214,15 +210,14 @@ pro fitsdir ,directory, TEXTOUT = textout, Keywords = keywords, $
 
  for i = 0,n-1 do begin                           ;Loop over each FITS file
      compress = (ext EQ 'gz') or (strupcase(ext) EQ 'FTZ') 
-     openr, unit, files[i], /block, /binary, error = error, compress = compress 
+     openr, unit, files[i], error = error, compress = compress 
     if error LT 0 then goto, BADHD
     mrd_hread, unit, h, status, /silent
    if status LT 0 then goto, BADHD
 
    if exten GT 0 then begin 
          close,unit
-            openr, unit, files[i], /block, /binary, $
-                       error = error, compress = compress   
+            openr, unit, files[i], error = error, compress = compress   
          stat = fxmove(unit, exten, /silent)
          mrd_hread, unit, h1, status, /silent
          if status EQ 0 then h = [h1,h] 

@@ -6,21 +6,22 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ; NAME:
 ;	FITS_WRITE
 ;
-;*PURPOSE:
+; PURPOSE:
 ;	To write a FITS primary data unit or extension.
 ;
-;*CATEGORY:
-;	INPUT/OUTPUT
+; EXPLANATION:
+;       ***NOTE** This version of FITS_READ must be used with a post Sep 2006
+;          version of FITS_OPEN.
 ;
-;*CALLING SEQUENCE:
+; CALLING SEQUENCE:
 ;	FITS_WRITE, filename_or_fcb, data, [header_in]
 ;
-;*INPUTS:
+; INPUTS:
 ;	FILENAME_OR_FCB: name of the output data file or the FITS control
 ;		block returned by FITS_OPEN (called with the /WRITE or
 ;		/APPEND) parameters.
 ;
-;*OPTIONAL INPUTS:
+; OPTIONAL INPUTS:
 ;	DATA: data array to write.  If not supplied or set to a scalar, a
 ;		null image is written.
 ;	HEADER_IN: FITS header keyword.  If not supplied, a minimal basic
@@ -29,7 +30,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;		do not need to be supplied with the header.  If supplied,
 ;		their values will be updated as necessary to reflect DATA.
 ;
-;*INPUT KEYWORD PARAMETERS:
+; INPUT KEYWORD PARAMETERS:
 ;
 ;	XTENSION: type of extension to write (Default="IMAGE"). If not
 ;		supplied, it will be taken from HEADER_IN.  If not in either
@@ -60,11 +61,11 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;		is used in this fashion, it will pad the data from a previously
 ;		written extension to 2880 blocks before writting the header.
 ;
-;*OUTPUT KEYWORD PARAMETERS:
+; OUTPUT KEYWORD PARAMETERS:
 ;       MESSAGE: value of the error message for use with /NO_ABORT
 ;	HEADER: actual output header written to the FITS file.
 ;
-;*NOTES:
+; NOTES:
 ;	If the first call to FITS_WRITE is an extension, FITS_WRITE will
 ;	automatically write a null image as the primary data unit.
 ;
@@ -73,7 +74,7 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;	the output header (See FITS_READ for information on the internal
 ;	Header format which separates the extension and PDU header portions).
 ;	
-;*EXAMPLES:
+; EXAMPLES:
 ;	Write an IDL variable to a FITS file with the minimal required header.
 ;		FITS_WRITE,'newfile.fits',ARRAY
 ;
@@ -89,9 +90,13 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;		FITS_WRITE,fcb,err2,extname='ERR',extver=2
 ;		FITS_CLOSE,FCB
 ;		
-;*PROCEDURES USED:
+; WARNING: 
+;       FITS_WRITE currently does not completely update the file control block.
+;       When mixing FITS_READ and FITS_WRITE commands it is safer to use 
+;       file names, rather than passing the file control block.
+; PROCEDURES USED:
 ;	FITS_OPEN, SXADDPAR, SXDELPAR, SXPAR()
-;*HISTORY:
+; HISTORY:
 ;	Written by:	D. Lindler	August, 1995
 ;	Work for variable length extensions  W. Landsman   August 1997
 ;	Converted to IDL V5.0   W. Landsman   September 1997
@@ -104,6 +109,10 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
 ;       Assume since V5.1, remove NaNValue keyword   W. Landsman Nov. 2002
 ;       Removed obsolete !ERR system variable  W. Landsman Feb 2004
 ;       Check that byte array supplied with table extension W. Landsman Mar 2004
+;       Make number of bytes 64bit to avoid possible overflow W.L  Apr 2006
+;       Asuume FITS_OPEN has opened the file with /SWAP_IF_LITTLE_ENDIAN
+;                         W. Landsman   September 2006
+;       Removes BZERO and BSCALE for floating point output, D. Lindler, Sep 2008
 ;-
 ;-----------------------------------------------------------------------------
 ;
@@ -289,6 +298,8 @@ pro fits_write,file_or_fcb,data,header_in,extname=extname,extver=extver, $
         if idltype EQ 13 then $
                sxaddpar,header,'BZERO',2147483648,'Data is unsigned long'
         if idltype GE 12 then sxdelpar,header,'BSCALE'
+	if (idltype EQ 4) or (idltype EQ 5) then $
+	          sxdelpar,header,['BSCALE','BZERO']
 ;
 ; delete special keywords from user supplied header
 ;
@@ -329,17 +340,16 @@ write_header:
 ;
 ; convert to IEEE
 ;
-	    newdata = data
+            unsigned = (idltype EQ 12) or (idltype EQ 13)
             if idltype EQ 12 then newdata = fix(data - 32768)
             if idltype EQ 13 then newdata = long(data - 2147483648)
-	    host_to_ieee, newdata
 ;
 ; write the data
 ;
-	    nbytes = n_elements(data) * abs(bitpix)/8
+	    nbytes = long64(N_elements(data)) * (abs(bitpix)/8)
 	    npad = 2880 - (nbytes mod 2880)
 	    if npad eq 2880 then npad = 0
-	    writeu,fcb.unit,newdata
+	    if unsigned then writeu,fcb.unit,newdata else writeu,fcb.unit,data
             if npad gt 0 then begin
                 if Axtension EQ 'TABLE   ' then padnum = 32b else padnum = 0b
 	        writeu,fcb.unit,replicate(padnum,npad)
