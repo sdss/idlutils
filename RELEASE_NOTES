@@ -1,3 +1,5 @@
+pro/misc/flag*.pro: New routines generalizing sdss_flag*.pro, handling reading
+                    multiple sources of maskbits.
 Goddard Astrolib version from about July 9 - hundreds of changes.
           revision 2167.
 SDSS_FLAGVAL: return value as 64-bit integer to handle longer bitmasks
