@@ -966,6 +966,9 @@ pro/misc/djs_selectlines.pro -text
 pro/misc/djs_unlockfile.pro -text
 pro/misc/fileandpath.pro -text
 pro/misc/fillspan.pro -text
+pro/misc/flagfile.pro -text
+pro/misc/flagname.pro -text
+pro/misc/flagval.pro -text
 pro/misc/floatcompress.pro -text
 pro/misc/group_indx.pro -text
 pro/misc/hogg_iau_name.pro -text
