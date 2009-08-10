@@ -27,16 +27,46 @@
 ;   2006-May-25   Written by Douglas Finkbeiner, Princeton
 ;
 ;----------------------------------------------------------------------
-function psf_norm, stamp, rad
+function psf_norm, stamp, rad, ivar=ivar, status=status
 
-  if NOT keyword_set(rad) then message, 'must set rad'
+  if ~n_elements(rad) then begin
+     message, 'must set rad'
+  endif
+
+  if rad eq 0 then begin
+     tryboth = 1
+     rad = 2
+  endif
+
   sz = size(stamp, /dimen)
   cen = (sz-1)/2
 
   if rad GT min(cen) then message, 'rad too big'
 
   subimg = stamp[cen[0]-rad:cen[0]+rad, cen[1]-rad:cen[1]+rad]
-  norm   = total(subimg)
+
+  if n_elements(ivar) ne 0 then begin
+     subivar = ivar[cen[0]-rad:cen[0]+rad, cen[1]-rad:cen[1]+rad]
+     if total(subivar ne 0) eq 0 then begin
+        ;splog, 'star is completely masked' these spam PS
+        if arg_present(status) ne 0 then begin
+           status = psf_flagval('PSF', 'PSF_NO_GOOD_PIX')
+        endif
+        return, 1
+     endif
+  endif else begin
+     subivar = subimg*0+1
+  endelse
+
+  mask = subivar ne 0
+  goodfrac = total(mask)/float(n_elements(mask))
+
+  status = 0
+  norm   = total(subimg*mask)/goodfrac
+
+  if keyword_set(tryboth) and 0 then begin
+     peakflux = psf_peak(stamp, cen[0], cen[1])
+  endif
 
   return, norm
 end

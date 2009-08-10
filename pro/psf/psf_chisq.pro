@@ -43,8 +43,12 @@ function psf_chisq, stamps, stampivar, par, dx=dx, dy=dy
 
   for i=0L, nstamp-1 do begin 
      w = where(mask AND (stampivar[*, *, i] NE 0), nmask)
-     shiftstamp =  sshift2d(stamps[*, *, i], [dx[i], dy[i]])
-     chisq[i] = total(shiftstamp[w]^2 * (stampivar[*, *, i])[w])/nmask
+     if nmask eq 0 then begin
+        chisq[i] = !values.f_infinity
+     endif else begin
+        shiftstamp =  sshift2d(stamps[*, *, i], [dx[i], dy[i]])
+        chisq[i] = total(shiftstamp[w]^2 * (stampivar[*, *, i])[w])/nmask
+     endelse
   endfor
 
   return, chisq

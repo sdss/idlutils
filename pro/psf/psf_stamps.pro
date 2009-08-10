@@ -41,7 +41,8 @@
 ;
 ;----------------------------------------------------------------------
 function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
-                         stampivar=stampivar
+                     stampivar=stampivar, norm=norm, noreject=noreject, $
+                     status=status
 
   rad    = par.cenrad           ; box rad. used for center and norm
   sz     = size(image, /dim)
@@ -51,6 +52,7 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
   
   arr       = fltarr(box, box, nstar)
   stampivar = fltarr(box, box, nstar)
+  norm      = fltarr(nstar)
 
   x0 = (px-boxrad) > 0
   x1 = (px+boxrad) < (sz[0]-1)
@@ -64,7 +66,7 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
 
   dx = fltarr(nstar)            ; sub-pixel offsets
   dy = fltarr(nstar)
-  status = fltarr(nstar)
+  status = lonarr(nstar)
 
   for i=0L, nstar-1 do begin 
      stamp = fltarr(box, box)
@@ -73,20 +75,22 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
      sivar[sx0[i]:sx1[i], sy0[i]:sy1[i]] = ivar[x0[i]:x1[i], y0[i]:y1[i]]
 
      if keyword_set(shift) then begin 
-        stampcen = psf_stamp_center_iter(stamp, rad, maxiter=10, $
+        stampcen = psf_stamp_center_iter(stamp, sivar, rad, maxiter=10, $
                                   dx=dx0, dy=dy0, status=status0)
         dx[i]=dx0 & dy[i]=dy0 & status[i]=status0
         stamp = temporary(stampcen)
      endif
 
 ; -------- normalize stamp with psf_norm
-     norm = psf_norm(stamp, par.cenrad)
-     arr[*, *, i] = stamp/norm
-     stampivar[*, *, i] = sivar*norm^2
+     snorm = psf_norm(stamp, par.cenrad, ivar=sivar, status=status0)
+     arr[*, *, i] = stamp/snorm
+     stampivar[*, *, i] = sivar*snorm^2
+     norm[i] = snorm
+     status[i] = status[i] or status0
 
   endfor
 
-  if ~keyword_set(shift) then return, arr
+  if ~keyword_set(shift) || keyword_set(noreject) then return, arr
 
 ; -------- reject those where central pixel is not consistent with
 ;          being the highest.
@@ -106,11 +110,12 @@ function psf_stamps, image, ivar, px, py, par, shift=shift, dx=dx, dy=dy, $
      cenbrt[i] = ((maxpix-arr[boxrad, boxrad, i])*sqrt(maxpixivar*cenivar) $
        LT (2*sqrt(maxpixivar + cenivar))) AND (maxpix EQ cenmax)
   endfor
-  wbrt = where(cenbrt and (status EQ 1), nbrt)
+  wbrt = where(cenbrt and (status EQ 0), nbrt)
 
   if nbrt EQ 0 then message, 'no stars are bright - this is BAD.'
   arr = arr[*, *, wbrt]
   stampivar = stampivar[*, *, wbrt]
+  norm = norm[wbrt]
   px = px[wbrt]
   py = py[wbrt]
   dx = dx[wbrt]

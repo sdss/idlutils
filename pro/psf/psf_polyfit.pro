@@ -46,7 +46,7 @@
 ;
 ;----------------------------------------------------------------------
 function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
-            cond=cond, scale=scale, chisq=chisq
+            cond=cond, scale=scale, chisq=chisq, coeffcovar=coeffcovar
 
 ; -------- check inputs
   psfsize = (size(stack, /dimen))[0]
@@ -75,6 +75,7 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
   endif 
 
   cf   = fltarr(psfsize, psfsize, ncoeff)
+  coeffcovar = fltarr(psfsize, psfsize, ncoeff, ncoeff)
   cond = fltarr(psfsize, psfsize)
 
 ; -------- construct A matrix
@@ -84,6 +85,7 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
 ; -------- map (x,y) to (-1.1) so condition number makes sense
   xd = double(x)/scale[0]*2-1
   yd = double(y)/scale[1]*2-1
+
   for ord=0L, ndeg do begin
      for ypow=0, ord do begin 
         xpow = (ord-ypow)
@@ -101,15 +103,16 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
         W = W < (min(W)*100)
         data = reform(stack[i, j, *])
         hogg_iter_linfit, A, data, W, coeff, nsigma=5, /median, $
-          /truesigma, condition=condition
+          /truesigma, condition=condition, covar=covar
 
         cf[i, j, *] = coeff
+        coeffcovar[i,j,*,*] = covar
         cond[i, j] = condition
      endfor
   endfor
 
 ; -------- reject
-  model = psf_eval(x, y, cf, par.cenrad)
+  model = psf_eval(x, y, cf, par.cenrad, scale=scale)
   chisq = (model-stack)^2*ivar
 
   if keyword_set(reject) then begin 
@@ -121,7 +124,8 @@ function psf_polyfit, stack, ivar, x, y, par, ndeg=ndeg, reject=reject, $
 
      splog, 'keeping ', ngood, ' stars.'
      cf = psf_polyfit(stack[*, *, good], ivar[*, *, good], x[good], y[good], $
-                  par, ndeg=ndeg, cond=cond, scale=scale)
+                      par, ndeg=ndeg, cond=cond, scale=scale, $
+                      coeffcovar=coeffcovar)
 
   endif
 

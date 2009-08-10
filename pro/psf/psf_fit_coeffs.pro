@@ -15,7 +15,6 @@
 ;   par     - structure from psf_par.pro
 ;
 ; OUTPUTS:
-;   cf      - fit coeffs
 ;   status  - status flags
 ;   pstr    - structure containing useful information about PSF stars
 ;
@@ -33,7 +32,7 @@ pro stamp_renorm, stamp, sivar, par
 
   nstamp = (size(stamp, /dimen))[2]
   for istamp=0L, nstamp-1 do begin 
-     norm = psf_norm(stamp[*, *, istamp], par.cenrad)
+     norm = psf_norm(stamp[*, *, istamp], par.cenrad, ivar=sivar[*,*,istamp])
      stamp[*, *, istamp] = stamp[*, *, istamp]/norm
      sivar[*, *, istamp] = sivar[*, *, istamp]*norm^2
   endfor 
@@ -43,11 +42,21 @@ end
 
 
 
-pro chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs, arr
+function chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs, arr, $
+                    cut=cut
   
-; -------- keep stars with chisq LT 1 but keep at least half of them.
-  chisqval = median(chisq) > 1
-  w = where(chisq LT chisqval, nstar)
+; -------- keep stars with chisq LE 1 but keep at least half of them.
+; we now do this 4 times, so, keep stars with chisq gt cut, or at
+; least 85%
+  if ~n_elements(cut) then begin
+     cut = 1
+  endif
+  s = sort(chisq)
+  chisqval = chisq[s[floor(n_elements(x)*.85)]] > cut
+;  chisqval = median(chisq) > 1
+
+  norig = n_elements(chisq)
+  w = where(chisq LE chisqval, nstar)
 
   splog, 'Cutting to', nstar, ' stars.'
 
@@ -61,13 +70,13 @@ pro chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs, arr
   psfs      = psfs[*, *, w]     
   arr       = arr[*, *, w]      
 
-  return
+  return, norig-nstar
 end
 
 
 
-function psf_fit_coeffs, image, ivar, satmask, par, cf, status=status, $
-                         stamps=stamps
+function psf_fit_coeffs, image, ivar, satmask, par, status=status, $
+                         stamps=stamps, plot=plot
 
 ; -------- highest order fit to attempt
   ndeg = 3
@@ -75,6 +84,7 @@ function psf_fit_coeffs, image, ivar, satmask, par, cf, status=status, $
 ; -------- timer
   t1 = systime(1)
   status = 0L
+  scale = size(image, /dimen)
 
 ; CAREFUL HERE!!!
 
@@ -91,7 +101,12 @@ function psf_fit_coeffs, image, ivar, satmask, par, cf, status=status, $
 
 ; -------- find some stars (not a complete list)
   psf_findstars, image, ivar, par.boxrad, clean, x, y, $
-    satmask=satmask, badpixels=badpixels
+    satmask=satmask, badpixels=badpixels, nsigma=15
+
+  if ~n_elements(x) then begin
+     splog, 'No fit possible; no stars found.'
+     return, -1
+  endif
 
 ; -------- cut out postage stamps around them
   stamps = psf_stamps(clean, ivar, x, y, par, /shift, dx=dx, dy=dy, $
@@ -100,66 +115,93 @@ function psf_fit_coeffs, image, ivar, satmask, par, cf, status=status, $
 
 ; -------- get median psf
   if nstamp GT 1 then begin
+
      median_psf = djs_median(stamps, 3)
-     
+     psfs = stamps
+     for i=0L, nstamp-1 do psfs[*, *, i] = median_psf
 
-     psfs0 = stamps
-     for i=0L, nstamp-1 do psfs0[*, *, i] = median_psf
-
-     psf_multi_fit, stamps, stampivar, psfs0, par, sub, faint, nfaint=0
+     psf_multi_fit, stamps, stampivar, psfs, par, sub, faint, nfaint=0
      psf_zero, stamps, stampivar, sub, median_psf, par, faint, chisq
      stamp_renorm, stamps, stampivar, par
+
+     median_psf = djs_median(stamps, 3)
+     for i=0L, nstamp-1 do psfs[*, *, i] = median_psf
+     newivar = stampivar
 
 ; -------- first chisq cut.  Some garbage (diffraction spikes, etc.)
 ;          may have leaked in - let's get it before we go on. 
 ; or not     
 ;     chisq = psf_chisq(stamps-psfs0, stampivar, par, dx=dx, dy=dy)
-     
-     psf_multi_fit, stamps, stampivar, psfs0, par, sub1, faint, nfaint=3
-; maybe recenter here
-     recon = sub1+psfs0
-     
-; -------- do spatial PSF fit
-     cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, $
-                      cond=cond, chisq=chisq)
-     
-; -------- if condition number is bad try again
-     while max(cond) GT 100000 do begin 
-        ndeg--
-        splog, 'Condition Number:', max(cond), '  Falling back to ndeg =', ndeg
-        if ndeg EQ -1 then stop
-        cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
-     endwhile
-     
-     
-     psfs1 = psf_eval(x, y, cf, par.cenrad)
-     psf_multi_fit, stamps, stampivar, psfs1, par, sub2, faint, nfaint=3
-     
-;  stamps2pca, psfs1, comp=comp, coeff=coeff, recon=recon
-     
-     chisq = psf_chisq(sub2, stampivar, par, dx=dx, dy=dy)
-     
-     sub3 = sub2
-help, 'foo1', x
 
-sind = sort(chisq)
-psf_tvstack, stamps[*, *, sind], window=1
+     ; this loop uses psfs,newivar; this needs to have been set up
+     for i=0, 3 do begin
 
-     chisq_cut, chisq, x, y, dx, dy, stamps, stampivar, psfs1, sub3
+        psf_multi_fit, stamps, newivar, psfs, par, sub, faint, nfaint=3*(i ne 0)
+        recon = sub+psfs
+        cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, $
+                         cond=cond, chisq=chisq, scale=scale, $
+                         coeffcovar=cfcovar)
 
-help, 'foo2', x
+        while max(cond) GT 1000 do begin 
+           ndeg--
+           splog, 'Condition Number:', max(cond), $
+                  '  Falling back to ndeg =', ndeg
+           if ndeg EQ -1 then stop
+           cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, $
+                            cond=cond, scale=scale, coeffcovar=cfcovar)
+        endwhile
      
-     recon = sub3+psfs1
-     cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, /reject, cond=cond)
-help, 'foo3', x
+        psfs = psf_eval(x, y, cf, par.cenrad, scale=scale)
 
-     psfs2 = psf_eval(x, y, cf, par.cenrad)
+        psfivar = psf_psfivar(x, y, cf, cfcovar, scale=scale)
+        newivar = $
+           (1./(1./(stampivar+(stampivar eq 0)) +1./psfivar))*(stampivar ne 0)
+        psf_multi_fit, stamps, newivar, psfs, par, sub, faint, nfaint=3
+        chisq = psf_chisq(sub, newivar, par, dx=dx, dy=dy)
+        sind = sort(chisq)
+
+        if keyword_set(plot) && (plot eq 2) then begin
+           psf_tvstack, stamps[*, *, sind], window=1, min=-.01, max=.01
+           psf_tvstack, sub[*, *, sind], window=2, min=-.01, max=.01, status=floor(10*chisq[sind])
+           stop
+        endif
+
+        ncut = chisq_cut(chisq, x, y, dx, dy, stamps, stampivar, psfs, sub, $
+                        cut=1.-float(i)/25.)
+
+        psf_zero, stamps, stampivar, sub, psfs, par, faint, chisq
+        newivar = $
+           (1./(1./(stampivar+(stampivar eq 0)) +1./psfivar))*(stampivar ne 0)
+        stamp_renorm, stamps, stampivar, par
+        psf_multi_fit, stamps, newivar, psfs, par, sub, faint, nfaint=3
+        recon = sub+psfs
+
+        cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, $
+                         cond=cond, chisq=chisq, scale=scale)
+        while max(cond) GT 1000 do begin 
+           ndeg--
+           splog, 'Condition Number:', max(cond), $
+                  '  Falling back to ndeg =', ndeg
+           if ndeg EQ -1 then stop
+           cf = psf_polyfit(recon, stampivar, x, y, par, ndeg=ndeg, $
+                            cond=cond, scale=scale)
+        endwhile
+        psfs = psf_eval(x, y, cf, par.cenrad, scale=scale)
+
+     endfor
+
+     if keyword_set(plot) then begin
+        psf_tvstack, stamps[*, *, sind], window=1, min=-.01, max=.01
+        psf_tvstack, sub[*, *, sind], window=2, min=-.01, max=.01
+     endif
+
   endif else begin 
      cond = 1.0
      cf = stamps
      ndeg = 0
      chisq = 0.0
      status = status OR 2
+     cfcovar = 0
   endelse
 
 print, '--------> CONDITION NUMBER ', max(cond), ' for ndeg =', ndeg
@@ -176,7 +218,10 @@ print, '--------> CONDITION NUMBER ', max(cond), ' for ndeg =', ndeg
             fitrad: par.fitrad, $
             cenrad: par.cenrad, $
             condition: max(cond), $
-            status: status}
+            status: status, $
+            scale: scale, $
+            coeffcovar: cfcovar $
+           }
 
   splog, 'Time: ', systime(1)-t1
   

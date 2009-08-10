@@ -43,6 +43,7 @@ function psf_eval, x, y, coeff, cenrad, dx=dx, dy=dy, scale=scale
   
 ; -------- compute A matrix
   A = dblarr(ncoeff, npsf)
+  A = reform(A, ncoeff, npsf) ; if npsf is 1, dblarr will drop the dimen
   col = 0
   xd = double(x)/scale[0]*2-1
   yd = double(y)/scale[1]*2-1
@@ -61,7 +62,7 @@ function psf_eval, x, y, coeff, cenrad, dx=dx, dy=dy, scale=scale
      endfor
   endfor
 
-  if keyword_set(dx) AND keyword_set(dy) then begin 
+  if (n_elements(dx) ne 0) AND (n_elements(dy) ne 0) then begin 
      for i=0L, npsf-1 do begin 
         psfs[*, *, i] = sshift2d(psfs[*, *, i], [dx[i], dy[i]])
         psfs[*, *, i] = psfs[*, *, i]/psf_norm(psfs[*, *, i], cenrad)

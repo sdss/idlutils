@@ -65,14 +65,20 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
   squash = image[*, row]
   squashbad = badpixels[*, row]
   wgoodsquash = where(squashbad EQ 0, ngoodsquash)
-  if ngoodsquash LT 100 then message, 'your whole image is bad!'
+  if ngoodsquash LT 100 then begin
+     splog, 'your whole image is bad!'
+     return
+  endif
   djs_iterstat, squash[wgoodsquash], sigma=sigma, mean=mean, sigrej=3
 
 ; -------- high pixels
   im  = (image-mean)*(1B-badpixels)
   ind = where(im GT (nsigma*sigma), nhigh)
 
-  if nhigh eq 0 then message, 'no high pixels!'
+  if nhigh eq 0 then begin
+     splog, 'no high pixels!'
+     return
+  endif
 
   ix = ind mod sz[0]
   iy = ind / sz[0]
@@ -126,12 +132,14 @@ pro psf_findstars, image, ivar, npad, clean, xstar, ystar, $
   diag = (im00+im02+im20+im22)/4.
 
 ; -------- compute psfvals
+
   psfvals = [median(back/im11), median(diag/im11)]
 
-  psfvals0 = [.46, .21]         ; assuming 1.88 pixel FWHM or bigger
+;  psfvals0 = [.46, .21]         ; assuming 1.88 pixel FWHM or bigger
                                 ; if the PSF is smaller, you are
                                 ; BADLY sampled!
-  
+  psfvals0 = [.50, .25]  ; PS1 has ~3 pixel FWHM; this corresponds to 2 pix
+
 ; -------- fall back to marginal sampling psf if something has gone
 ;          wrong!
 ;  if (psfvals[0] LT psfvals0[0]) OR (psfvals[1] LT psfvals0[1]) then begin

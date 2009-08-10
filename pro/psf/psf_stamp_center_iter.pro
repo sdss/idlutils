@@ -36,11 +36,13 @@
 ;   2006-May-25   Written by Douglas Finkbeiner, Princeton
 ;
 ;----------------------------------------------------------------------
-function psf_stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
-              center=center, status=status
+
+function psf_stamp_center_iter, image, ivar, rad, maxiter=maxiter, $
+                                dx=dx, dy=dy, center=center, status=status
 
 ; -------- defaults
-  if NOT keyword_set(rad) then message, 'must set rad'
+  if ~n_elements(rad) then message, 'must set rad'
+;  if NOT keyword_set(rad) then message, 'must set rad'
   if NOT keyword_set(maxiter) then maxiter = 5
 
 ; -------- check inputs
@@ -57,9 +59,14 @@ function psf_stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
 ; -------- check center not too close to edge
   if min(center) LT 2 or max(center) GT (sz[0]-3) then begin 
      print, 'center near edge of box'
-     status = 2B
+     status = psf_flagval('PSF', 'PSF_CENTER_NEAR_EDGE')
      return, image
   endif 
+
+  if rad eq 0 then begin
+     peak = psf_peak(image, center, center, dx=dx, dy=dy)
+     return, sshift2d(image, -[dx, dy])
+  endif
 
   shifted_image = image
 
@@ -69,10 +76,23 @@ function psf_stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
   for i=1L, maxiter do begin 
      subimg = shifted_image[center[0]-rad:center[0]+rad, center[1]-rad:center[1]+rad]
      subtot = total(subimg)
+     xlo = center[0]-rad+floor(dx)
+     xhi = center[0]+rad+ceil(dx)
+     ylo = center[0]-rad+floor(dy)
+     yhi = center[0]+rad+ceil(dy)
+     subivar = ivar[xlo>0:xhi<(sz[0]-1), ylo>0:yhi<(sz[1]-1)]
+     if total(subivar eq 0) gt 0 then begin
+        splog, 'shifted image center has region of zero ivar; falling back'+$
+               'to original image center.'
+        dx = 0
+        dy = 0
+        status = psf_flagval('PSF', 'PSF_CENTER_ZERO_IVAR')
+        return, image
+     endif
 
      if subtot LT (shifted_image[center[0], center[1]] > 0) then begin
         splog, 'Bad zero level in shifted image' 
-        status = 0B
+        status = psf_flagval('PSF', 'PSF_BAD_ZERO_LEVEL')
         dx = 0
         dy = 0
         return, image
@@ -86,6 +106,6 @@ function psf_stamp_center_iter, image, rad, maxiter=maxiter, dx=dx, dy=dy, $
      if (abs(dx) > abs(dy)) lt 1 then shifted_image = sshift2d(image, -[dx, dy])
   endfor 
 
-  status = 1B
+  status = 0
   return, shifted_image
 end

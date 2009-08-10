@@ -28,7 +28,7 @@
 ;----------------------------------------------------------------------
 pro psf_validate, pstr
 
-  psfs = psf_eval(pstr.x, pstr.y, pstr.coeff, pstr.cenrad)
+  psfs = psf_eval(pstr.x, pstr.y, pstr.coeff, pstr.cenrad, scale=pstr.scale)
 
   npix = (size(psfs, /dimen))[0]
   midind = (npix*npix-1)/2

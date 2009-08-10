@@ -50,9 +50,9 @@ pro psf_multi_fit, stamps, stampivar, psfs, par, sub, faint, nfaint=nfaint
   sub = stamps                        ; copy of array for output
   nstamp = (size(stamps, /dimen))[2]
   npix = (size(stamps, /dimen))[0]
-  nsigma = 5
+  nsigma = 4
   faint = faint_struc(nstamp)
-  if NOT keyword_set(nfaint) then nfaint = 3
+  if ~n_elements(nfaint) then nfaint = 3
   if nfaint GT n_elements(faint[0].peak) then message, 'nfaint too large'
   rad = 3
 
@@ -79,21 +79,21 @@ pro psf_multi_fit, stamps, stampivar, psfs, par, sub, faint, nfaint=nfaint
      psf = psfs[*, *, i]
      im = st-psf
      iv = stampivar[*, *, i]
-     status = 1B
+     status = 0B
 
      for j=0, nfaint-1 do begin 
 ; -------- look for another peak
         maxval = max(im*fmask, maxind)
-        if (maxval*sqrt(iv[maxind]) GT nsigma) and (status EQ 1B) then begin 
+        if (maxval*sqrt(iv[maxind]) GT nsigma) and (status EQ 0B) then begin 
 
            ix = maxind mod npix
            iy = maxind  /  npix
         
 ; -------- get sub-pixel center
 
-           junk = psf_stamp_center_iter(im, 1, dx=dx0, dy=dy0, center=[ix, iy], maxiter=2, status=status)
+           junk = psf_stamp_center_iter(im, iv, 1, dx=dx0, dy=dy0, center=[ix, iy], maxiter=2, status=status)
 
-           if ((abs(dx0) > abs(dy0)) GE 2) or (status NE 1B) then begin 
+           if ((abs(dx0) > abs(dy0)) GE 2) or (status NE 0B) then begin 
               print, 'Centering error on stamp', i, dx0, dy0
            endif else begin 
               px = ix+dx0

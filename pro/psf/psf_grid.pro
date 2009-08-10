@@ -27,7 +27,7 @@
 ;   2009-Jul-10 - Written by Douglas Finkbeiner, CfA (visiting IfA)
 ;
 ;----------------------------------------------------------------------
-function psf_grid, stack, npad
+function psf_grid, stack, npad, locs=locs, boxsize=boxsize
 
   sz = size(stack, /dim)
   box = sz[0]
@@ -41,6 +41,8 @@ function psf_grid, stack, npad
   nx   = ceil(sqrt(np))
   npix = nx*box
   arr  = fltarr(npix, npix)
+  locs = fltarr(2, np)
+  boxsize = 1./nx
 
   for i=0, np-1 do begin 
      stamp = stack[*, *, i]
@@ -48,6 +50,8 @@ function psf_grid, stack, npad
      ix = i mod nx
      iy = i / nx
      arr[ix*box:(ix+1)*box-1, iy*box:(iy+1)*box-1] = stamp*mask
+     locs[0,i] = float(ix)/nx
+     locs[1,i] = float(iy)/nx
   endfor
 
   return, arr
