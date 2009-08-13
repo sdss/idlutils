@@ -46,6 +46,13 @@ endelse
 nn2=n_elements(x2)/mm
 x2=reform(x2, mm, nn2)
 
+ibad=where(finite(x1) eq 0, nbad)
+if(nbad gt 0) then $
+  message, 'Infinite x1 values in matchnd!'
+ibad=where(finite(x2) eq 0, nbad)
+if(nbad gt 0) then $
+  message, 'Infinite x2 values in matchnd!'
+
 maxdiff=-1.
 for i=0L, mm-1L do begin
     if(max(x1[i,*])-min(x1[i,*]) gt maxdiff) then $
@@ -186,5 +193,10 @@ endif else begin
     d12=0.
     nmatch=0
 endelse
+
+;; free the grid!
+for i=0L, n_elements(grid)-1L do $
+  ptr_free, grid[i]
+grid=0
 
 end
