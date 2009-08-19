@@ -1,12 +1,18 @@
 
 typedef struct {
   char flag[20];  # Flag name
-  int bit;        # Bit number, 0-indexed (0 to 31)
+  short bit;      # Bit number, 0-indexed
   char label[20]; # Bit label
 } maskbits;
 
+typedef struct {
+  char flag[20];  # Flag name
+  short datatype; # Data type {8, 16, 32, 64}
+} masktype;
+
 #------------------------------------------------------------------------------
 
+masktype SPPIXMASK 32
 # The following mask bits are for the fiber, set in FIBERMASK_BITS()
 maskbits SPPIXMASK  0 NOPLUG          # Fiber not listed in plugmap file
 maskbits SPPIXMASK  1 BADTRACE        # Bad trace from routine TRACE320CRUDE
@@ -40,7 +46,7 @@ maskbits SPPIXMASK 28 REDMONSTER      # Contiguous region of bad chi^2 in sky re
                                       # (with threshhold of relative chi^2 > 3).
 
 #------------------------------------------------------------------------------
-
+masktype TARGET 32
 maskbits TARGET  0 QSO_HIZ
 maskbits TARGET  1 QSO_CAP
 maskbits TARGET  2 QSO_SKIRT
@@ -74,7 +80,7 @@ maskbits TARGET 29 QSO_REJECT
 maskbits TARGET 31 SOUTHERN_SURVEY
 
 #------------------------------------------------------------------------------
-
+masktype TTARGET 32
 maskbits TTARGET  0 LIGHT_TRAP
 maskbits TTARGET  1 REDDEN_STD
 maskbits TTARGET  2 TEST_TARGET
@@ -89,7 +95,7 @@ maskbits TTARGET 30 SEGUE_SURVEY
 maskbits TTARGET 31 SOUTHERN_SURVEY
 
 #------------------------------------------------------------------------------
-
+masktype ZWARNING 32
 maskbits ZWARNING  0 SKY
 maskbits ZWARNING  1 LITTLE_COVERAGE
 maskbits ZWARNING  2 SMALL_DELTA_CHI2
@@ -100,7 +106,7 @@ maskbits ZWARNING  6 NEGATIVE_EMISSION
 maskbits ZWARNING  7 UNPLUGGED
 
 #------------------------------------------------------------------------------
-
+masktype RESOLVE_STATUS 32
 maskbits RESOLVE_STATUS  0 RUN_PRIMARY
 maskbits RESOLVE_STATUS  1 RUN_RAMP
 maskbits RESOLVE_STATUS  2 RUN_OVERLAPONLY
@@ -114,7 +120,7 @@ maskbits RESOLVE_STATUS 11 SURVEY_BADFIELD
 maskbits RESOLVE_STATUS 12 SURVEY_EDGE
 
 #------------------------------------------------------------------------------
-
+masktype IMAGE_STATUS 32
 maskbits IMAGE_STATUS  0 CLEAR
 maskbits IMAGE_STATUS  1 CLOUDY      # Unphotometric score
 maskbits IMAGE_STATUS  2 UNKNOWN     # Unphotometric score
@@ -127,7 +133,7 @@ maskbits IMAGE_STATUS  8 DEAD_CCD    # Unphotometric score
 maskbits IMAGE_STATUS  9 NOISY_CCD   # Unphotometric score
 
 #------------------------------------------------------------------------------
-
+masktype CALIB_STATUS  32
 maskbits CALIB_STATUS   0  PHOTOMETRIC
 maskbits CALIB_STATUS   1  UNPHOT_OVERLAP
 maskbits CALIB_STATUS   2  UNPHOT_EXTRAP_CLEAR
@@ -142,26 +148,26 @@ maskbits CALIB_STATUS  10  DEFAULT
 maskbits CALIB_STATUS  11  NO_UBERCAL  # For matching to external catalogs.
 
 #------------------------------------------------------------------------------
-
+masktype VAGC_SELECT  32
 maskbits VAGC_SELECT  0 TILED
 maskbits VAGC_SELECT  1 PLATEHOLE
 maskbits VAGC_SELECT  2 MAIN
 
 #------------------------------------------------------------------------------
-
-maskbits OBJECT1 0 CANONICAL_CENTER 	
-maskbits OBJECT1 1 BRIGHT 	
-maskbits OBJECT1 2 EDGE 	
-maskbits OBJECT1 3 BLENDED 	
-maskbits OBJECT1 4 CHILD  	
-maskbits OBJECT1 5 PEAKCENTER 	
-maskbits OBJECT1 6 NODEBLEND 	
-maskbits OBJECT1 7 NOPROFILE 	
-maskbits OBJECT1 8 NOPETRO 	
-maskbits OBJECT1 9 MANYPETRO 	
+masktype OBJECT1 32
+maskbits OBJECT1 0 CANONICAL_CENTER
+maskbits OBJECT1 1 BRIGHT
+maskbits OBJECT1 2 EDGE
+maskbits OBJECT1 3 BLENDED
+maskbits OBJECT1 4 CHILD
+maskbits OBJECT1 5 PEAKCENTER
+maskbits OBJECT1 6 NODEBLEND
+maskbits OBJECT1 7 NOPROFILE
+maskbits OBJECT1 8 NOPETRO
+maskbits OBJECT1 9 MANYPETRO
 maskbits OBJECT1 10 NOPETRO_BIG
 maskbits OBJECT1 11 DEBLEND_TOO_MANY_PEAKS  
-maskbits OBJECT1 12	CR
+maskbits OBJECT1 12 CR
 maskbits OBJECT1 13 MANYR50 
 maskbits OBJECT1 14 MANYR90 
 maskbits OBJECT1 15 BAD_RADIAL 
@@ -183,7 +189,7 @@ maskbits OBJECT1 30 BINNED4
 maskbits OBJECT1 31 MOVED 
 
 #------------------------------------------------------------------------------
-
+masktype OBJECT2 32
 maskbits OBJECT2 0 DEBLENDED_AS_MOVING 
 maskbits OBJECT2 1 NODEBLEND_MOVING 
 maskbits OBJECT2 2 TOO_FEW_DETECTIONS 
@@ -218,7 +224,7 @@ maskbits OBJECT2 30 SPARE2
 maskbits OBJECT2 31 SPARE1 
 
 #------------------------------------------------------------------------------
-
+masktype Q_EYEBALL 32
 maskbits Q_EYEBALL 0 DONE
 maskbits Q_EYEBALL 1 OTHER
 maskbits Q_EYEBALL 2 UNCLASSIFIABLE
@@ -250,7 +256,7 @@ maskbits Q_EYEBALL 27 USE_CHILD_IMAGE
 maskbits Q_EYEBALL 28 USE_CHILD_SPECTRUM
 
 #------------------------------------------------------------------------------
-
+masktype T_EYEBALL 32
 maskbits T_EYEBALL 0 DONE
 maskbits T_EYEBALL 1 OTHER
 maskbits T_EYEBALL 2 UNCLASSIFIABLE
@@ -281,7 +287,7 @@ maskbits T_EYEBALL 26 MERGER
 maskbits T_EYEBALL 27 OUTFLOW
 
 #------------------------------------------------------------------------------
-
+masktype M_EYEBALL 32
 maskbits M_EYEBALL 0 DONE
 maskbits M_EYEBALL 1 NOT_MERGER
 maskbits M_EYEBALL 2 QUESTIONABLE
@@ -299,6 +305,7 @@ maskbits M_EYEBALL 13 BEFORE
 maskbits M_EYEBALL 14 DURING
 maskbits M_EYEBALL 15 AFTER
 
+masktype FLUXMATCH_STATUS 16
 maskbits FLUXMATCH_STATUS 0 ORIGINAL_FLUXMATCH
 maskbits FLUXMATCH_STATUS 1 FIBER_FLUXMATCH
 maskbits FLUXMATCH_STATUS 2 NONMATCH_FLUXMATCH
@@ -308,6 +315,7 @@ maskbits FLUXMATCH_STATUS 5 BRIGHTEST_FLUXMATCH
 
 #----------- boss target selection flags
 
+masktype BOSS_TARGET1 64
 # galaxies
 maskbits BOSS_TARGET1 0 LRG_LOZ             # low-z lrgs
 maskbits BOSS_TARGET1 1 GAL_HIZ             # high-z blue/red gals
@@ -339,6 +347,7 @@ maskbits BOSS_TARGET1 34 TEMPLATE_STAR_PHOTO    # stellar templates
 maskbits BOSS_TARGET1 35 TEMPLATE_STAR_SPECTRO  # stellar templates (spectroscopically known)
 
 #------------ ancillary target selection flags
+masktype ANCILLARY_TARGET1 64
 maskbits ANCILLARY_TARGET1  0 AMC        # defined in blake_boss_v2.descr
 maskbits ANCILLARY_TARGET1  1 FLARE1     # defined in blake_boss_v2.descr
 maskbits ANCILLARY_TARGET1  2 FLARE2     # defined in blake_boss_v2.descr
@@ -389,8 +398,9 @@ maskbits ANCILLARY_TARGET1 46 FAINTERL     # defined in sd3targets_final.descr
 maskbits ANCILLARY_TARGET1 47 FAINTERM   # defined in sd3targets_final.descr
 maskbits ANCILLARY_TARGET1 48 RED_KG        # defined in redkg.descr
 maskbits ANCILLARY_TARGET1 49 RVTEST        # defined in redkg.descr
-												  
+
 #-------- bosstile status bits
+masktype BOSSTILE_STATUS 32
 maskbits BOSSTILE_STATUS 0 TILED      # assigned a fiber
 maskbits BOSSTILE_STATUS 1 NAKED      # not in area covered by tiles
 maskbits BOSSTILE_STATUS 2 BOSSTARGET # in the high priority set of targets
