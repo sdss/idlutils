@@ -30,6 +30,13 @@
 ;   manyd        [nx,ny,NX,NY] data
 ; BUGS:
 ;   Can get infinite plot ranges.
+; COMMENTS:
+;   XDIMS and YDIMS can either be:
+;     (a) [N] arrays, yielding an NxN set of plots of xdims[0] vs
+;         ydims[0], xdims[0] vs ydims[1], etc up to xdims[n-1] vs
+;         ydims[n-1]; OR
+;     (b) [N,M] arrays, yielding an NxM set of plots of xdims[0,0] vs
+;         ydims[0,0], xdims[0,1] vs ydims[0,1] etc.
 ; DEPENDENCIES:
 ;   hogg_plot_defaults
 ;   hogg_scatterplot
@@ -74,6 +81,17 @@ if(NOT keyword_set(default_font)) then default_font='!3'
 xdimen=n_elements(xdims) 
 ydimen=n_elements(ydims)
 
+;; deal with explicit dimension case
+explicit=0L
+if((size(xdims))[0] eq 2) then begin
+    explicit=1L
+    if(((size(ydims))[0] ne 2) OR $
+       (n_elements(xdims) ne n_elements(ydims))) then $
+      message, 'Explicit 2d XDIMS and YDIMS input must be parallel!'
+    xdimen= (size(xdims))[1]
+    ydimen= (size(xdims))[2]
+endif
+
 ; cram inputs into correct format
 point= reform(double(point),dimen,ndata)
 weight= reform(double(weight),ndata)
@@ -114,8 +132,13 @@ xyouts, 0,0,default_font
 ; loop over all pairs of dimensions
 for id2=ydimen-1L,0L,-1 do begin
     for id1=0L,xdimen-1 do begin
-        d1=xdims[id1]
-        d2=ydims[id2]
+        if(NOT keyword_set(explicit)) then begin
+            d1=xdims[id1]
+            d2=ydims[id2]
+        endif else begin
+            d1=xdims[id1,id2]
+            d2=ydims[id1,id2]
+        endelse
         if d1 lt 0 or d2 lt 0 then begin
             !P.MULTI[0]=!P.MULTI[0]-1L
         endif else begin 
@@ -137,10 +160,29 @@ for id2=ydimen-1L,0L,-1 do begin
             yprevblank=0
             xnextblank=0
             ynextblank=0
-            if (id1 gt 0) then if (xdims[id1-1] eq -1) then xprevblank=1
-            if (id1 lt xdimen-1) then if (xdims[id1+1] eq -1) then xnextblank=1
-            if (id2 gt 0) then if (ydims[id2-1] eq -1) then ynextblank=1
-            if (id2 lt xdimen-1) then if (ydims[id2+1] eq -1) then yprevblank=1
+            if(keyword_set(explicit)) then begin
+                if(id1 gt 0) then $
+                  if(xdims[id1-1,id2] eq -1) then $
+                  xprevblank=1
+                if(id1 lt xdimen-1L) then $
+                  if(xdims[id1+1,id2] eq -1) then $
+                  xnextblank=1
+                if(id2 gt 0) then $
+                  if(xdims[id1,id2-1] eq -1) then $
+                  yprevblank=1
+                if(id2 lt ydimen-1L) then $
+                  if(xdims[id1,id2+1] eq -1) then $
+                  ynextblank=1
+            endif else begin
+                if (id1 gt 0) then $
+                  if (xdims[id1-1] eq -1) then xprevblank=1
+                if (id1 lt xdimen-1) then $
+                  if (xdims[id1+1] eq -1) then xnextblank=1
+                if (id2 gt 0) then $
+                  if (ydims[id2-1] eq -1) then ynextblank=1
+                if (id2 lt xdimen-1) then $
+                  if (ydims[id2+1] eq -1) then yprevblank=1
+            endelse
             leftside= 0B
             if (!P.MULTI[0] EQ 0) OR $
               (((!P.MULTI[0]-1) MOD xdimen) EQ (xdimen-1) OR $

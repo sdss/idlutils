@@ -3,6 +3,7 @@ pro/misc/flag*.pro: New routines generalizing sdss_flag*.pro, handling reading
                     multiple sources of maskbits.
 Goddard Astrolib version from about July 9 - hundreds of changes.
           revision 2167.
+HOGG_MANYD_SCATTERPLOT: allow 2-d XDIMS, YDIMS input
 SDSS_FLAGVAL: return value as 64-bit integer to handle longer bitmasks
 STRUCT2LINES, LINES2STRUCT: keyword/value pair interpreters, mved from platedesign
 Makefile, include/export.h: Link in current export.h from idl rather 

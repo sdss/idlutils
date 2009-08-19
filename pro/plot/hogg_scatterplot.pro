@@ -168,6 +168,7 @@ endif
 
 ; compute quantiles, if necessary
 xgrid= floor(xnpix*(x-xrange[0])/(xrange[1]-xrange[0]))
+ygrid= floor(ynpix*(y-yrange[0])/(yrange[1]-yrange[0]))
 if keyword_set(conditional) then begin
     outquantiles= dblarr(xnpix,nquantiles)
     for ii=0L,xnpix-1 do begin
