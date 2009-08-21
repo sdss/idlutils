@@ -1,16 +1,31 @@
-pro/psf/: Updates to psf fitting routines
-pro/misc/flag*.pro: New routines generalizing sdss_flag*.pro, handling reading
-                    multiple sources of maskbits.
-Goddard Astrolib version from about July 9 - hundreds of changes.
+
+
+FLAGFILE,FLAGNAME: New routines generalizing sdss_flag*.pro, handling reading
+          multiple sources of maskbits (Shafley)
+HOGG_SCATTERPLOT,HOGG_MANYD_SCATTERPLOT: Allow 2-d XDIMS, YDIMS input
+LINES2STRUCT,STRUCT2LINES: Keyword/value pair interpreters, moved from
+          platedesign
+MAKE_HTML_HELP: Write modern HTML files (Weaver)
+MATCHND: Free grid; sanity checks (Blanton)
+SDSS_FLAGNAME,SDSS_FLAGVAL,sdssMaskbits.par:
+          sdssMaskbits.par now has accompanying
+          information on the associated datatype for the bits.
+          Code modified to read in this information, check the validity
+          of the par file, and return values of the correct type.
+          Most existing flags are now explicitly declared as signed 32-bit,
+          which is consistent with behaviour of previous code versions.
+          New target flags are 64-bit.
+
+pro/psf/*: Updates to PSF fitting routines (Shalfley)
+
+goddard libraries: Sync with Landsman version as of July 9, 2009 by Finkbeiner;
           revision 2167.
-HOGG_MANYD_SCATTERPLOT: allow 2-d XDIMS, YDIMS input
-SDSS_FLAGVAL: return value as 64-bit integer to handle longer bitmasks
-STRUCT2LINES, LINES2STRUCT: keyword/value pair interpreters, mved from platedesign
+
 Makefile, include/export.h: Link in current export.h from idl rather 
           than use and maintain a copy in this product. 
-          #### Depends on $IDL_DIR being set to the root of the IDL dir. #####
-src/evilmake: a few more changes to push flags down, especially -m32/-m64 for OS X.
-
+          Depends on $IDL_DIR being set to the root of the IDL dir.
+src/evilmake: a few more changes to push flags down, especially -m32/-m64
+          for OS X.
 
 -----------------------------------------------------------------------
 v5_4_3 (July 5, 2009) tagged for idlmapper product upgrade
