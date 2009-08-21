@@ -52,6 +52,8 @@ function sdss_flagname, flagprefix, flagvalue, concat=concat, silent=silent
    ; Declare a common block so that the mask names are remembered between calls.
    common com_maskbits, maskbits, masktype
 
+  legaltypes=[16,32,64]
+
    if (n_params() NE 2 OR n_elements(flagprefix) NE 1) then begin
       print, 'Syntax - label = sdss_flagname(flagprefix, flagvalue, [ /concat ] )'
       return, ''
