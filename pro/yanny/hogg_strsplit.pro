@@ -9,7 +9,8 @@
 ; REVISION HISTORY:
 ;   2002-10-10  written - Hogg
 ;-
-pro hogg_strsplit, string, output, count, recurse=recurse, verbose=verbose
+pro hogg_strsplit, string, output, count, recurse=recurse, verbose=verbose, $
+                   keepquote=keepquote
 
    if keyword_set(verbose) then splog, 'splitting string >'+string+'<'
 
@@ -51,8 +52,11 @@ pro hogg_strsplit, string, output, count, recurse=recurse, verbose=verbose
                         verbose=verbose
 
          ; Now add to that the quoted string, but excluding the quotation
-         ; marks themselves.
-         word = strmid(string,pos+1,len-2)
+         ; marks themselves. (Unless we are requested to keep the quotes).
+         if(NOT keyword_set(keepquote)) then $
+           word = strmid(string,pos+1,len-2) $
+         else $
+           word = strmid(string,pos,len-1) 
          output= [output, word]
          count = count + 1
 
