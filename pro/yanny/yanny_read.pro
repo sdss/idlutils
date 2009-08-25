@@ -214,7 +214,6 @@ function yanny_getwords, sline_in
    ;----------
    ; First, we need to replace any empty double curly-bracket,
    ; like "{ { } }" or "{{}}" with a double-quoted empty string.
-
    pos = 0
    while (pos GE 0) do begin
       pos = stregex(sline,'\{ *\{ *\} *\}', length=len)
@@ -225,18 +224,18 @@ function yanny_getwords, sline_in
    ;----------
    ; Dispose of any commas, semi-colons, or curly-brackets
    ; that are not inside double-quotes.  Replace them with spaces.
-
-   rgx = hogg_unquoted_regex('[,;}{]') ; This logic looks for any of these
-   len = 0
-   while (len[0] LT strlen(sline)) do begin
-      pos = strsplit(sline, rgx, /regex, length=len)
-      if (len[0] LT strlen(sline)) then strput, sline, ' ', len[0]
-   endwhile
+   ; First, split up into sections separated by double quotes. 
+   ; Then, in every OTHER section remove offending characters.
+   ; (Start at zeroth section if first character is not double quote,
+   ; first section otherwise)
+   sections= strsplit(sline, '"', /extr, /preserve_null)
+   for i=0L, n_elements(sections)-1L, 2L do $
+         sections[i]=strjoin(strsplit(sections[i], ',;{}',/extr),' ')
+   sline= strjoin(sections, '"')
 
    ;----------
-   ; Now split this line into words, protecting anything inside
+   ; Split this line into words, protecting anything inside
    ; double-quotes as a single word.
-
    hogg_strsplit, sline, words
    if (NOT keyword_set(words)) then words = ''
 
@@ -250,10 +249,10 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    lastlinenum = 0
 
    if (N_params() LT 1) then begin
-      print, 'Syntax - yanny_read, filename, [ pdata, hdr=, enums=, structs=, $
-      print, ' /anonymous, stnames=, /quick, errcode= ]'
+      print, 'Syntax - yanny_read, filename, [ pdata, hdr=, enums=, '
+      print, ' structs=, /anonymous, stnames=, /quick, errcode= ]'
       return
-   endif
+  endif
 
    tname = ['char', 'short', 'int', 'long', 'float', 'double']
    ; Read and write variables that are denoted INT in the Yanny file
