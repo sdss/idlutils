@@ -15,6 +15,7 @@ SDSS_FLAGNAME,SDSS_FLAGVAL,sdssMaskbits.par:
           Most existing flags are now explicitly declared as signed 32-bit,
           which is consistent with behaviour of previous code versions.
           New target flags are 64-bit.
+YANNY_READ,HOGG_STRSPLIT: Make quote analysis much faster (Blanton).
 
 pro/psf/*: Updates to PSF fitting routines (Shalfley)
 
