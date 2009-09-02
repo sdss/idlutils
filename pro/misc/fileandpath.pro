@@ -44,7 +44,7 @@ function fileandpath, fullname, path=path
    if (size(fullname,/n_dim) GT 0) then begin
       filename = make_array(size=size(fullname))
       path = make_array(size=size(fullname))
-      for i=0, n_elements(fullname)-1 do begin
+      for i=0L, n_elements(fullname)-1 do begin
          filename[i] = fileandpath(fullname[i], path=tmp_path)
          path[i] = tmp_path
       endfor
