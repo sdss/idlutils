@@ -1,5 +1,5 @@
 
-
+FILEANDPATH: Make loop variable long.
 FLAGFILE,FLAGNAME: New routines generalizing sdss_flag*.pro, handling reading
           multiple sources of maskbits (Shafley)
 HOGG_SCATTERPLOT,HOGG_MANYD_SCATTERPLOT: Allow 2-d XDIMS, YDIMS input
