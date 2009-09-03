@@ -186,14 +186,21 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   ; in any of its elements.  If there is white space, then
                   ; put double-quotes around that element.  Or, use quotes
                   ; if the string is completely empty.
-                  if (size(words,/tname) EQ 'STRING') then begin
+                  thistname = size(words,/tname)
+                  case thistname of
+                  'STRING': begin
                      for iw=0, nword-1 do $
                       if (strpos(words[iw],' ') NE -1 $
                        OR strtrim(words[iw],2) EQ '') then $
                        words[iw] = '"' + words[iw] + '"'
-                  endif else begin
+                     end
+                  'BYTE': begin
+                     words = string(words + 0) ; convert byte to int
+                     end
+                  else: begin
                      words = string(words)
-                  endelse
+                     end
+                  endcase
 
                   if (nword EQ 1) then begin
                      sline = sline + ' ' + words
