@@ -16,6 +16,9 @@ SDSS_FLAGNAME,SDSS_FLAGVAL,sdssMaskbits.par:
           which is consistent with behaviour of previous code versions.
           New target flags are 64-bit.
 YANNY_READ,HOGG_STRSPLIT: Make quote analysis much faster (Blanton).
+YANNY_WRITE: Bug fix whereby values of type BYTE were not being written,
+          since for example IDL interprets STRING(1B) as the ASCII code 1.
+          Recast these as type INT during the write to avoid that problem.
 
 pro/psf/*: Updates to PSF fitting routines (Shalfley)
 
