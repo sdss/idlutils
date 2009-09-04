@@ -79,14 +79,14 @@ case $UNAME in
                                                      # With recent (3.1?) Xcodes, there is a 
                                                      # MAC_OS_X_VERSION_MIN_REQUIRED
                 
-                #if [ $idlarch = "x86_64" ]; then
-                    #BITS_FLAGS=-m64
-                #elif [ $idlarch = "i386" ]; then
-                    #BITS_FLAGS=-m32
-                #else 
-                    #echo "unsupported architecture for Darwin/Intel: $idlarch" >&2
-                    #exit 1
-                #fi
+                if [ $idlarch = "x86_64" ]; then
+                    BITS_FLAGS=-m64
+                elif [ $idlarch = "i386" ]; then
+                    BITS_FLAGS=-m32
+                else 
+                    echo "unsupported architecture for Darwin/Intel: $idlarch" >&2
+                    exit 1
+                fi
                 echo "   trying for a $BITS_FLAGS build... "
 
                 SDSS_CFLAGS="$BITS_FLAGS"
