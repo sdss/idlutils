@@ -2020,8 +2020,9 @@ if (!ERR EQ -1) then begin
 endif
 
 ; Two system variable definitions are needed in order to run fits_info
-defsysv,'!TEXTOUT',1
-defsysv,'!TEXTUNIT',0
+
+defsysv,'!TEXTOUT',1L
+defsysv,'!TEXTUNIT',0L
 
 ; Find out if this is a fits extension file, and how many extensions
 fits_info, fitsfile, n_ext = numext, /silent
