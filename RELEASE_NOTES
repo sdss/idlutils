@@ -1,7 +1,7 @@
-
+WCSXY2SPH: healcart projection got lost; restored (Schlafly)
 FILEANDPATH: Make loop variable long.
 FLAGFILE,FLAGNAME: New routines generalizing sdss_flag*.pro, handling reading
-          multiple sources of maskbits (Shafley)
+          multiple sources of maskbits (Schlafly)
 HOGG_SCATTERPLOT,HOGG_MANYD_SCATTERPLOT: Allow 2-d XDIMS, YDIMS input
 LINES2STRUCT,STRUCT2LINES: Keyword/value pair interpreters, moved from
           platedesign
