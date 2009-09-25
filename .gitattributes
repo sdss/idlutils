@@ -10,6 +10,7 @@ bin/idlutils_version -text
 bin/install_ups_table -text
 bin/memtrack -text
 bin/pstogif -text
+bin/sxpar -text
 data/Makefile -text
 data/cooling/ABOUT.txt -text
 data/cooling/fetchdata.sh -text
