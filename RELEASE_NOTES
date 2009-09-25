@@ -15,6 +15,9 @@ SDSS_FLAGNAME,SDSS_FLAGVAL,sdssMaskbits.par:
           Most existing flags are now explicitly declared as signed 32-bit,
           which is consistent with behaviour of previous code versions.
           New target flags are 64-bit.
+          BOSS_TARGET1 includes the bits used up through BOSS
+          commissioning. (Sheldon)
+
 YANNY_READ,HOGG_STRSPLIT: Make quote analysis much faster (Blanton).
 YANNY_WRITE: Bug fix whereby values of type BYTE were not being written,
           since for example IDL interprets STRING(1B) as the ASCII code 1.
