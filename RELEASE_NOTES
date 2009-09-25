@@ -1,11 +1,12 @@
-WCSXY2SPH: healcart projection got lost; restored (Schlafly)
+
+-----------------------------------------------------------------------
+v5_4_8 (Sep 25, 2009) tagged for idlspec2d v5_4_1
+
+ATV: sysvars are now type long (Fink)
 FILEANDPATH: Make loop variable long.
 FLAGFILE,FLAGNAME: New routines generalizing sdss_flag*.pro, handling reading
-          multiple sources of maskbits (Schlafly)
+          multiple sources of maskbits (Shafley)
 HOGG_SCATTERPLOT,HOGG_MANYD_SCATTERPLOT: Allow 2-d XDIMS, YDIMS input
-LINES2STRUCT,STRUCT2LINES: Keyword/value pair interpreters, moved from
-          platedesign
-MAKE_HTML_HELP: Write modern HTML files (Weaver)
 MATCHND: Free grid; sanity checks (Blanton)
 SDSS_FLAGNAME,SDSS_FLAGVAL,sdssMaskbits.par:
           sdssMaskbits.par now has accompanying
@@ -15,27 +16,55 @@ SDSS_FLAGNAME,SDSS_FLAGVAL,sdssMaskbits.par:
           Most existing flags are now explicitly declared as signed 32-bit,
           which is consistent with behaviour of previous code versions.
           New target flags are 64-bit.
-          BOSS_TARGET1 includes the bits used up through BOSS
-          commissioning. (Sheldon)
-
 YANNY_READ,HOGG_STRSPLIT: Make quote analysis much faster (Blanton).
 YANNY_WRITE: Bug fix whereby values of type BYTE were not being written,
           since for example IDL interprets STRING(1B) as the ASCII code 1.
           Recast these as type INT during the write to avoid that problem.
 
+bin/evilmake: Turn on the check in the Darwin case for the type of IDL being
+          used.  Based on this the 64 flag is used in the compilation of the C
+          (Kim)
+bin/sxpar: Moved from the photoop product.
 pro/psf/*: Updates to PSF fitting routines (Shalfley)
+data/sdss/sdssMaskbits.par: Information on the associated datatype for the
+          bits.  Most existing flags are now explicitly declared as signed
+          32-bit, which is consistent with behaviour of previous code versions.
+          New target flags are 64-bit.
 
 goddard libraries: Sync with Landsman version as of July 9, 2009 by Finkbeiner;
           revision 2167.
 
+-----------------------------------------------------------------------
+v5_4_7 (Aug 4, 2009) tagged for target selection (Sheldon)
+
+LINES2STRUCT,STRUCT2LINES: Keyword/value pair interpreters, moved from
+          platedesign
+
+data/sdss/sdssMaskbits.par: Added more target flags.
+
+-----------------------------------------------------------------------
+v5_4_6 (July 29, 2009) tagged for target selection (Sheldon)
+
+MAKE_HTML_HELP: Write modern HTML files (Weaver)
+
+new known galaxies target bit
+
+-----------------------------------------------------------------------
+v5_4_5 (July 14, 2009) tagged for target selection (Sheldon)
+
+New sdssMaskbits.par
+
+-----------------------------------------------------------------------
+v5_4_4 (July 8, 2009) tagged for target selection (Sheldon)
+
+bin/evilmake: a few more changes to push flags down, especially -m32/-m64
+          for OS X.
 Makefile, include/export.h: Link in current export.h from idl rather 
           than use and maintain a copy in this product. 
           Depends on $IDL_DIR being set to the root of the IDL dir.
-src/evilmake: a few more changes to push flags down, especially -m32/-m64
-          for OS X.
 
 -----------------------------------------------------------------------
-v5_4_3 (July 5, 2009) tagged for idlmapper product upgrade
+v5_4_3 (July 5, 2009) tagged for idlmapper product upgrade (Schlegel)
 
 DJS_RGB_MAKE: Trim if necessary for rebinning automatrically
 HEALPIX2ALM, ALM2HEALPIX, MQLADVANCE: Fix underflows above l=1024.
