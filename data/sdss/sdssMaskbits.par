@@ -334,6 +334,7 @@ maskbits BOSS_TARGET1 14 QSO_NN             # Neural Net that match to sweeps/pa
 maskbits BOSS_TARGET1 15 QSO_UKIDSS         # UKIDSS stars that match sweeps/pass flag cuts
 maskbits BOSS_TARGET1 16 QSO_KDE_COADD      # kde targets from the stripe82 coadd 
 maskbits BOSS_TARGET1 17 QSO_LIKE           # likelihood method
+maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
 
 # standards
 maskbits BOSS_TARGET1 20 STD_FSTAR          # standard f-stars
