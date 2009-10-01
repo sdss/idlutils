@@ -1,6 +1,8 @@
 data/sdss/sdssMaskbits.par:  Added maskbits
 	maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
 	Erin Sheldon, 2009-10-01
+pro/sdss/sdss_flagval.pro:  Made flagprefix case insensitive again.
+	Erin Sheldon, 2009-10-01
 
 
 -----------------------------------------------------------------------

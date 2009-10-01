@@ -41,6 +41,7 @@
 ;               information on the associated datatype for the bits.
 ;               Code modified to read in this information, check the validity
 ;               of the par file, and return values of the correct type.
+;	2009-10-01: make flagprefix case insensitive again.  Erin Sheldon, BNL
 ;-
 ;------------------------------------------------------------------------------
 function sdss_flagval, flagprefix, inlabel
@@ -119,7 +120,7 @@ function sdss_flagval, flagprefix, inlabel
       + ' for flag ' + strupcase(flagprefix)
       
     ;decide the data type the answer is going to be returned in
-    typematch=(where(flagprefix[0] EQ masktype.flag, ct))[0]
+    typematch=(where(strupcase(flagprefix[0]) EQ masktype.flag, ct))[0]
     if (ct EQ 0) then $
      message, 'ABORT: Mask type not defined for '+flagprefix[0]
     case masktype[typematch].datatype of
