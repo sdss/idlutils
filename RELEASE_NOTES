@@ -1,3 +1,7 @@
+data/sdss/sdssMaskbits.par:  Added maskbits
+	maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
+	Erin Sheldon, 2009-10-01
+
 
 -----------------------------------------------------------------------
 v5_4_8 (Sep 25, 2009) tagged for idlspec2d v5_4_1
