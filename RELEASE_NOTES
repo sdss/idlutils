@@ -3,7 +3,8 @@ data/sdss/sdssMaskbits.par:  Added maskbits
 	Erin Sheldon, 2009-10-01
 pro/sdss/sdss_flagval.pro:  Made flagprefix case insensitive again.
 	Erin Sheldon, 2009-10-01
-
+src/idlmangle/idl_where_polygons_overlap: loosen tolerance for unsnapped polys
+  MRB, 2009-10-05
 
 -----------------------------------------------------------------------
 v5_4_8 (Sep 25, 2009) tagged for idlspec2d v5_4_1
