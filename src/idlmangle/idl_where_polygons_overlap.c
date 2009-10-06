@@ -44,7 +44,7 @@ int trim_poly_ez(polygon *poly)
 
   /* initialize return value to no change */
   iret = 0;
-  tol=1.e-10;
+  tol=1.e-7;
 
   /* check for cap which excludes everything */
   for (jp = 0; jp < poly->np; jp++) {
@@ -90,7 +90,7 @@ int trim_poly_ez(polygon *poly)
           poly->np = 1;
           return(3);
         }
-	    }
+			}
     }
   }
 
