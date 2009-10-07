@@ -1,3 +1,7 @@
+-----------------------------------------------------------------------
+v5_4_9 (Oct 07, 2009) tagged for second boss commissioning run, which
+	depends on sdssMaskbits.par
+
 data/sdss/sdssMaskbits.par:  Added maskbits
 	maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
 	Erin Sheldon, 2009-10-01
