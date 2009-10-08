@@ -26,6 +26,10 @@ nlines=n_elements(lines)
 
 for i=0L, nlines-1L do begin
     tline=strtrim(lines[i],2)
+    pos= strpos(tline, '#')
+    if(pos ge 0) then $
+      tline= strmid(tline, 0, pos)
+    tline=strtrim(tline,2)
     if(tline ne '') then begin
         if(strmid(tline,0,1) ne '#') then begin
             words= strsplit(lines[i], /extr)
