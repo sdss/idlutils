@@ -39,8 +39,6 @@
 ; PROCEDURES CALLED:
 ;   fxpar()
 ;   fxposit()
-;   host_to_ieee
-;   ieee_to_host
 ;   mwrfits
 ;
 ; INTERNAL SUPPORT PROCEDURES:
@@ -75,9 +73,7 @@ pro mwrbin_append, file, ext, struct
 
     point_lun, lun, data_start+data_size
 
-    host_to_ieee, struct
     writeu,lun, struct
-    ieee_to_host, struct
 
     ; Write any needed padding.
     data_size = (naxis2+n_elements(struct)) * naxis1
