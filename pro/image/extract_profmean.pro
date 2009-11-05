@@ -157,14 +157,15 @@ for i=0L, n_elements(cache)-1L do begin
             area[i+1L]=total(fracs[iuse],/double)
             profflux[i+1L]=total(fracs[iuse]*image[pixnum[iuse]],/double)
             if(n_elements(profflux_ivar) gt 0) then $
-              profflux_ivar[i+1L]=1./total(fracs[iuse]/invvar[pixnum[iuse]],/double)
+              profflux_ivar[i+1L]= $
+              1./total(fracs[iuse]^2/invvar[pixnum[iuse]],/double)
             if(arg_present(ustokes) OR arg_present(qstokes)) then begin
-                mxx=total(fracs[iuse]*image[pixnum[iuse]]*tmp_mxx[iuse], /double)/ $
-                  profflux[i+1L]
-                myy=total(fracs[iuse]*image[pixnum[iuse]]*tmp_myy[iuse], /double)/ $
-                  profflux[i+1L]
-                mxy=total(fracs[iuse]*image[pixnum[iuse]]*tmp_mxy[iuse], /double)/ $
-                  profflux[i+1L]
+                mxx=total(fracs[iuse]*image[pixnum[iuse]]*tmp_mxx[iuse], $
+                          /double)/profflux[i+1L]
+                myy=total(fracs[iuse]*image[pixnum[iuse]]*tmp_myy[iuse], $
+                          /double)/profflux[i+1L]
+                mxy=total(fracs[iuse]*image[pixnum[iuse]]*tmp_mxy[iuse], $
+                          /double)/profflux[i+1L]
                 ustokes[i]=2.*mxy
                 qstokes[i]=mxx-myy
             endif
@@ -176,14 +177,16 @@ endfor
 for i=nrad,1L,-1L do begin
     area[i,*]= area[i,*]-area[i-1,*]
     profflux[i,*]= profflux[i,*]-profflux[i-1,*]
-    if(n_elements(profflux_ivar) gt 0) then $
+    if(n_elements(profflux_ivar) gt 0 AND i gt 1) then $
       profflux_ivar[i,*]= 1./(1./profflux_ivar[i,*]-1./profflux_ivar[i-1,*])
 endfor
 
 radii=[0,cache.radius]
 fullarea=!DPI*(radii[1:n_elements(cache)]^2-radii[0:n_elements(cache)-1L]^2)
-inotenough=where(area[1:n_elements(cache)]/fullarea le 0.95, nnotenough)
-ienough=where(area[1:n_elements(cache)]/fullarea gt 0.95, nenough)
+inotenough=where(area[1:n_elements(cache)]/fullarea le 0.95 AND $
+                 lindgen(n_elements(cache)-1) gt 2, nnotenough)
+ienough=where(area[1:n_elements(cache)]/fullarea gt 0.95 OR $
+              lindgen(n_elements(cache)-1) le 2, nenough)
 
 profmean=fltarr(n_elements(cache))
 if(arg_present(profmean_ivar)) then $
@@ -199,7 +202,7 @@ for i=0, nenough-1 do begin
     profmean[ienough[i]]=profflux[ienough[i]+1]/area[ienough[i]+1]
     if(arg_present(profmean_ivar)) then $
       profmean_ivar[ienough[i]]= $
-      profflux_ivar[ienough[i]+1]*area[ienough[i]+1]^2
+      profflux_ivar[ienough[i]+1]*area[ienough[i]+1]
 endfor
 area=area[1:n_elements(cache)]
 

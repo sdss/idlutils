@@ -1,3 +1,9 @@
+EXTRACT_PROFMEAN: more careful handling of zeroes in ivars
+MWRFITS_CHUNKS: drop host_to_ieee and ieee_to_host calls, to account
+                for changed in fxposit.pro introduced in
+                v5_4_8. (v5_4_8 and v5_4_9 versions of this routine
+                will fail on little-endian machines).
+
 -----------------------------------------------------------------------
 v5_4_9 (Oct 07, 2009) tagged for second boss commissioning run, which
 	depends on sdssMaskbits.par
