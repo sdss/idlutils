@@ -1,3 +1,6 @@
+-----------------------------------------------------------------------
+v5_4_10 (Nov 10, 2009) tagged for resolve_global_secondary  
+
 EXTRACT_PROFMEAN: more careful handling of zeroes in ivars
 MWRFITS_CHUNKS: drop host_to_ieee and ieee_to_host calls, to account
                 for changed in fxposit.pro introduced in
