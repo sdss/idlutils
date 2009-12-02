@@ -317,12 +317,12 @@ maskbits FLUXMATCH_STATUS 5 BRIGHTEST_FLUXMATCH
 
 masktype BOSS_TARGET1 64
 # galaxies
-maskbits BOSS_TARGET1 0 LRG_LOZ             # low-z lrgs
-maskbits BOSS_TARGET1 1 GAL_HIZ             # high-z blue/red gals
-maskbits BOSS_TARGET1 2 GAL_CMASS           # GAL_HIZ and Christy's sliding cut
-maskbits BOSS_TARGET1 3 GAL_GRRED           # red in g-r
-maskbits BOSS_TARGET1 4 GAL_TRIANGLE        # GAL_HIZ and !GAL_CMASS
-maskbits BOSS_TARGET1 5 GAL_LODPERP         # Same as hiz but between dperp00 and dperp0
+maskbits BOSS_TARGET1 0 GAL_LOZ             # low-z lrgs
+maskbits BOSS_TARGET1 1 GAL_CMASS           # dperp > 0.55, color-mag cut 
+maskbits BOSS_TARGET1 2 GAL_CMASS_SPARSE    # dperp > 0.55, commissioning color-mag cut
+#maskbits BOSS_TARGET1 3 GAL_GRRED          # red in g-r
+#maskbits BOSS_TARGET1 4 GAL_TRIANGLE       # GAL_HIZ and !GAL_CMASS
+#maskbits BOSS_TARGET1 5 GAL_LODPERP        # Same as hiz but between dperp00 and dperp0
 maskbits BOSS_TARGET1 6 SDSS_GAL_KNOWN      # Matches to existing ZWARNING=0 SDSS galaxy spectra
 
 # qsos
