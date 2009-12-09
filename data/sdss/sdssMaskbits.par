@@ -336,6 +336,8 @@ maskbits BOSS_TARGET1 15 QSO_UKIDSS         # UKIDSS stars that match sweeps/pas
 maskbits BOSS_TARGET1 16 QSO_KDE_COADD      # kde targets from the stripe82 coadd 
 maskbits BOSS_TARGET1 17 QSO_LIKE           # likelihood method
 maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
+maskbits BOSS_TARGET1 40 QSO_CORE_MAIN      # Main survey core sample
+maskbits BOSS_TARGET1 41 QSO_BONUS_MAIN     # Main survey bonus sample
 
 # standards
 maskbits BOSS_TARGET1 20 STD_FSTAR          # standard f-stars
