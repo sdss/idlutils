@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 data/sdss/sdssMaskbits.par:  Added bits 40,41 for qsos.  Currently
-	called QSO_CORE_MAIN, QSO_BONUS_MAIN.  ESS.
+	called QSO_KDE, QSO_CORE_MAIN, QSO_BONUS_MAIN.  ESS.
 
 -----------------------------------------------------------------------
 v5_4_10 (Nov 10, 2009) tagged for resolve_global_secondary  

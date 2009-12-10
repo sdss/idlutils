@@ -327,8 +327,8 @@ maskbits BOSS_TARGET1 3 GAL_CMASS_SPARSE    # GAL_CMASS_COMM & (!GAL_CMASS) & (i
 maskbits BOSS_TARGET1 6 SDSS_GAL_KNOWN      # Matches to existing ZWARNING=0 SDSS galaxy spectra
 
 # qsos
-maskbits BOSS_TARGET1 10 QSO_CORE           # restrictive qso selection
-maskbits BOSS_TARGET1 11 QSO_BONUS          # permissive qso selection
+maskbits BOSS_TARGET1 10 QSO_CORE           # restrictive qso selection: commissioning only
+maskbits BOSS_TARGET1 11 QSO_BONUS          # permissive qso selection:  commissioning only
 maskbits BOSS_TARGET1 12 QSO_KNOWN_MIDZ     # known qso between [2.2,9.99]
 maskbits BOSS_TARGET1 13 QSO_KNOWN_LOHIZ    # known qso outside of miz range. never target
 maskbits BOSS_TARGET1 14 QSO_NN             # Neural Net that match to sweeps/pass cuts
@@ -336,6 +336,7 @@ maskbits BOSS_TARGET1 15 QSO_UKIDSS         # UKIDSS stars that match sweeps/pas
 maskbits BOSS_TARGET1 16 QSO_KDE_COADD      # kde targets from the stripe82 coadd 
 maskbits BOSS_TARGET1 17 QSO_LIKE           # likelihood method
 maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
+maskbits BOSS_TARGET1 19 QSO_KDE            # selected by kde+chi2
 maskbits BOSS_TARGET1 40 QSO_CORE_MAIN      # Main survey core sample
 maskbits BOSS_TARGET1 41 QSO_BONUS_MAIN     # Main survey bonus sample
 
