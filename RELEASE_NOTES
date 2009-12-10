@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 data/sdss/sdssMaskbits.par:  Added bits 40,41 for qsos.  Currently
-	called QSO_KDE, QSO_CORE_MAIN, QSO_BONUS_MAIN GAL_CMASS_SPARSE_ALL
+	called QSO_KDE, QSO_CORE_MAIN, QSO_BONUS_MAIN GAL_CMASS_ALL
 	ESS.
 
 -----------------------------------------------------------------------
