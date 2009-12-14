@@ -419,3 +419,5 @@ maskbits BOSSTILE_STATUS 8 BLUEFIBER  # allocate this object a blue fiber
 maskbits BOSSTILE_STATUS 9 CENTERPOST  # 92 arcsec collision with center post
 maskbits BOSSTILE_STATUS 10 REPEAT  # included on more than one tile
 maskbits BOSSTILE_STATUS 11 FILLER  # was a filler (not normal repeat)
+maskbits BOSSTILE_STATUS 12 NOT_TILED_TARGET  # though in input file, not a tiled target
+maskbits BOSSTILE_STATUS 13 OUT_OF_BOUNDS  # outside bounds for this sort of target (for restricted QSO geometry, e.g.)
