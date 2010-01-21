@@ -1,5 +1,14 @@
+
+LINES2STRUCT: Add check for hash (#).
+SDSS_FLAGVAL: Revert to this being case-insensitive (Sheldon).
+STRUCT_PRINT: Change from html to xhtml (Weaver).
+        Add CSS keyword.
+UKIDSS_CSV2FITS,UKIDSS_READ: Add UKISS utilities (Blanton).
+
 data/sdss/sdssMaskbits.par:  Added bits OUT_OF_BOUNDS and 
-  NOT_TILED_TARGET for BOSSTILE_STATUS
+        NOT_TILED_TARGET for BOSSTILE_STATUS
+pro/Makefile: Adds ukidss directory.
+src/idlmangle/idl_where_polygons_overlap.c
 
 -----------------------------------------------------------------------
 v5_4_11 (Dec, 2009) tagged for resolve_global_secondary  
