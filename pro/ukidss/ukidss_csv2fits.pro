@@ -6,7 +6,7 @@
 ; CALLING SEQUENCE:
 ;   ukidss_csv2fits, csvfile, fitsbase
 ; COMMENTS:
-;   Requires that $UKIDSS_DIR is set
+;   Requires that $UKIDSS_DIR is set. 
 ; REVISION HISTORY:
 ;   12-Jan-2010 MRB, NYU
 ;-
