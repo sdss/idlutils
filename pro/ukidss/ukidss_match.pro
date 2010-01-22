@@ -159,7 +159,6 @@ objindx= ptrarr(nread)
 radecindx= ptrarr(nread)
 nmatch=0L
 for i=0L, nread-1L do begin
-    help,i
     tmp_obj= mrdfits(getenv('UKIDSS_DIR')+'/'+ $
                      (*indx)[iread[i]].radecfile,1, silent=silent)
     spherematch, ra, dec, tmp_obj.ra, tmp_obj.dec, dtol, m1, m2
@@ -195,8 +194,6 @@ for i=0L, nread-1L do begin
         endif
         ncurr= n_elements(*objindx[i])
         icurr= (*objindx[i])-range[0]
-        help, tmp_match[icurr]
-        help, (*radecindx[i])
         match[ntotcurr:ntotcurr+ncurr-1]= tmp_match[icurr]
         imatch[ntotcurr:ntotcurr+ncurr-1]= (*radecindx[i])
         ntotcurr= ntotcurr+ncurr
