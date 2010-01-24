@@ -1,3 +1,6 @@
+-----------------------------------------------------------------------
+v5_4_12 (Jan 23, 2010) tagged for spectro reductions
+
 LINES2STRUCT: Add check for hash (#).
 SDSS_FLAGVAL: Revert to this being case-insensitive (Sheldon).
 STRUCT_PRINT: Change from html to xhtml (Weaver).
