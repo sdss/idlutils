@@ -32,7 +32,8 @@
 pro pie_plot, radius, theta, rrange=rrange, thrange=thrange, $
               hours=hours, rlabel=rlabel, _EXTRA=_extra_for_djs_oplot, $
               thaxes=thaxes, saxes=saxes, over=over, rotate=rotate, $
-              nodata=nodata, plots=plots, color=color
+              nodata=nodata, plots=plots, color=color, rcharsize=rcharsize, $
+              thcharsize=thcharsize, charthick=charthick, axisthick=axisthick
 
 if(NOT keyword_set(nrticks)) then $
   nrticks=5L
@@ -40,6 +41,10 @@ if(NOT keyword_set(rrange)) then $
   rrange=[0., max(radius)*1.05]
 if(NOT keyword_set(rlabel)) then $
   rlabel=''
+if(NOT keyword_set(rcharsize)) then $
+  rcharsize=1.3
+if(NOT keyword_set(thcharsize)) then $
+  thcharsize=1.3
 if(NOT keyword_set(rotate)) then $
   rotate=0.
 if(NOT keyword_set(thrange)) then $
@@ -69,7 +74,7 @@ if(NOT keyword_set(over)) then begin
               thrange[0]
             x= rrange[irad]* cos((ang+rotate)*!DPI/180.D)
             y= rrange[irad]* sin((ang+rotate)*!DPI/180.D)
-            djs_oplot, x, y
+            djs_oplot, x, y, thick=axisthick
             
             ;; small tick marks
             firsttick= 0L
@@ -83,7 +88,7 @@ if(NOT keyword_set(over)) then begin
                     y1= rrange[irad]* sin((fang+rotate)*!DPI/180.)
                     x2= rrange[irad]*(1.-stick)* cos((fang+rotate)*!DPI/180.)
                     y2= rrange[irad]*(1.-stick)* sin((fang+rotate)*!DPI/180.)
-                    djs_oplot, [x1, x2], [y1, y2]
+                    djs_oplot, [x1, x2], [y1, y2], thick=axisthick
                 endif
             endfor
 
@@ -100,7 +105,7 @@ if(NOT keyword_set(over)) then begin
                     y2= rrange[irad]*(1.-btick)* sin((fang+rotate)*!DPI/180.)
                     x3= rrange[irad]*(1.+roffset)* cos((fang+rotate)*!DPI/180.)
                     y3= rrange[irad]*(1.+roffset)* sin((fang+rotate)*!DPI/180.)
-                    djs_oplot, [x1, x2], [y1, y2]
+                    djs_oplot, [x1, x2], [y1, y2], thick=axisthick
                     if(NOT keyword_set(hours)) then $
                       tmark=textoidl(strtrim(string(ang),2)+'^\circ') $
                     else $
@@ -108,7 +113,7 @@ if(NOT keyword_set(over)) then begin
                     if(irad eq 1) then $
                       djs_xyouts, [x3], [y3], tmark, $
                       /noclip, orientation= fang+rotate-90., align=0.5, $
-                      charsize=1.3
+                      charsize=thcharsize, charthick=charthick
                 endif
             endfor
         endif
@@ -127,7 +132,7 @@ if(NOT keyword_set(over)) then begin
             signtick= saxes[ith]
             x1= rrange*cos((thaxes[ith]+rotate)*!DPI/180.)
             y1= rrange*sin((thaxes[ith]+rotate)*!DPI/180.)
-            djs_oplot, x1, y1
+            djs_oplot, x1, y1, thick=axisthick
             tickint= hogg_interval(rrange, nticks=nrticks)
             if(alog10(tickint) lt 0) then begin
                 digit= long(-alog10(tickint))
@@ -154,7 +159,8 @@ if(NOT keyword_set(over)) then begin
                     dr= sqrt((x1-x2)^2+(y1-y2)^2)
                     dx= (x2-x1)/dr
                     dy= (y2-y1)/dr
-                    djs_oplot, x1+[0., dx]*btick, y1+[0., dy]*btick
+                    djs_oplot, x1+[0., dx]*btick, y1+[0., dy]*btick, $
+                      thick=axisthick
                     x3= (rtick-rrange[1]*0.015)* $
                       cos(((thaxes[ith]+rotate)+signtick*1.)*!DPI/180.)
                     y3= (rtick-rrange[1]*0.015)* $
@@ -164,7 +170,7 @@ if(NOT keyword_set(over)) then begin
                     rmark= strtrim(string(rtick, format=tformat),2)
                     djs_xyouts, [x4], [y4], rmark, $
                       /noclip, orientation= thaxes[ith]+rotate-90., $
-                      charsize=1.3
+                      charsize=rcharsize, charthick=charthick
                 endif
             endfor
             rtick= 0.5*(rrange[1]+rrange[0])
@@ -181,8 +187,8 @@ if(NOT keyword_set(over)) then begin
               sin(((thaxes[ith]+rotate)+signtick*1.)*!DPI/180.)
             x4= x3-dx*roffset*4.
             y4= y3-dy*roffset*4.
-            djs_xyouts, x4, y4, rlabel, /noclip, charsize=1.3, $
-              orientation= thaxes[ith]+rotate, align=0.5
+            djs_xyouts, x4, y4, rlabel, /noclip, charsize=rcharsize, $
+              orientation= thaxes[ith]+rotate, align=0.5, charthick=charthick
         endfor
     endif
 endif 
