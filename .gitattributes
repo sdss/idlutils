@@ -1035,6 +1035,7 @@ pro/physics/freefree.pro -text
 pro/physics/gauntff.pro -text
 pro/physics/positronium_spectrum.pro -text
 pro/physics/sigma_pbar_p.pro -text
+pro/physics/synch_power.pro -text
 pro/plot/atv.pro -text
 pro/plot/atv_joe_writeps.pro -text
 pro/plot/blanton_oned_meanplot.pro -text
