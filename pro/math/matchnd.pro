@@ -194,9 +194,12 @@ endif else begin
     nmatch=0
 endelse
 
-;; free the grid!
-for i=0L, n_elements(grid)-1L do $
-  ptr_free, grid[i]
-grid=0
+;; free the grids!
+for i=0L, n_elements(grid1)-1L do $
+  ptr_free, grid1[i]
+grid1=0
+for i=0L, n_elements(grid2)-1L do $
+  ptr_free, grid2[i]
+grid2=0
 
 end
