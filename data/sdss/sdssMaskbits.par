@@ -422,3 +422,4 @@ maskbits BOSSTILE_STATUS 11 FILLER  # was a filler (not normal repeat)
 maskbits BOSSTILE_STATUS 12 NOT_TILED_TARGET  # though in input file, not a tiled target
 maskbits BOSSTILE_STATUS 13 OUT_OF_BOUNDS  # outside bounds for this sort of target (for restricted QSO geometry, e.g.)
 maskbits BOSSTILE_STATUS 14 BAD_CALIB_STATUS  # bad CALIB_STATUS
+maskbits BOSSTILE_STATUS 15 PREVIOUS_CHUNK  # included because not tiled in previous overlapping chunk
