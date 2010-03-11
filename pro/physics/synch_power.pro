@@ -43,7 +43,7 @@ function synch_power1, gamma, rad, nu
   w = where(arg LT 20, nw) ; don't bother if this is too big
   P = prefactor*0
   if nw GE 1 then $
-    P[w] = prefactor*dm_int_k53(arg[w])
+    P[w] = prefactor*integrate_k53(arg[w])
 
   wbad = where(finite(P) EQ 0, nbad)
   if nbad gt 0 then begin 
