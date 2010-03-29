@@ -1,3 +1,5 @@
+-----------------------------------------------------------------------
+v5_4_13 (2010-03-29)
 
 INTEGRATE_K53: Compute integral of K_5/3 Bessel function for synch_power (Fink)
 MATCHND: Fix grid memory leak (Blanton)
@@ -5,6 +7,7 @@ PIE_PLOT: Add charthick and line thickness options (Blanton)
 SYNCH_POWER: Compute the synchrotron spectrum of a single electron (Fink)
 
 data/sdss/sdssMaskbits.par: Add more BOSSTILE_STATUS bits (Blanton)
+                            Renamed SDSS_GAL_KNOWN to SDSS_KNOWN
 
 -----------------------------------------------------------------------
 v5_4_12 (Jan 23, 2010) tagged for spectro reductions
