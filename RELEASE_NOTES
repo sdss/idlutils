@@ -1,4 +1,10 @@
 -----------------------------------------------------------------------
+
+data/sdss/sdssMaskbits.par: Increased declared length of label
+	field from 20 to 30. 20 was smaller than some of the existing
+	fields.
+
+-----------------------------------------------------------------------
 v5_4_13 (2010-03-29)
 
 INTEGRATE_K53: Compute integral of K_5/3 Bessel function for synch_power (Fink)
