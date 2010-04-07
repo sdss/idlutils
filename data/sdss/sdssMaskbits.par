@@ -2,7 +2,7 @@
 typedef struct {
   char flag[20];  # Flag name
   short bit;      # Bit number, 0-indexed
-  char label[20]; # Bit label
+  char label[30]; # Bit label
 } maskbits;
 
 typedef struct {
