@@ -1,38 +1,50 @@
 #!/usr/bin/perl
+#
+# $Id$
+#
 # Parse FITS header
 # D. Finkbeiner 2001 Dec 20
-
+#
 # Example:
 # sxpar /u/dfink/idR-001331-z1-0278.fit TAI
+#
+# If the COMMENT keyword is selected, prints ALL comments.
+#
+use warnings;
+use strict;
 
-$fname = $ARGV[0];
-$card  = $ARGV[1];
-$card = uc($card);
-
-if ($fname ne "-") {if (!-e $fname) {die "File not found: $fname\n";}}
+my $fname = $ARGV[0];
+my $card  = uc $ARGV[1];
+die "No card name specified!" unless $card;
+if ($fname ne '-') {
+    die "File not found: $fname" unless -e $fname;
+}
 open RLUN, $fname or die "Cannot read file: $fname\n";
-$atend = 0;
-$fits = 0;
+my $atend = 0;
+my $fits = 0;
+my $buf;
 while (! $atend) {
-    for ($i = 1; $i <= 36; $i++) {
-	read RLUN, $buf, 80;
-	($key, $val) = split("=| " , $buf);
-	if ($key eq "SIMPLE") {$fits=1;}
-	if ($key eq "END") {$atend=1;}
-	if (($key eq $card) && ($key eq "COMMENT")) {printf "%s\n", $buf}
-	
-	if (($key eq $card) && ($key ne "COMMENT")) {
-	    ($key, $val, $comment) = split("=|/" , $buf);
-	    $val =~ s/^[\s|\']+//;
-	    $val =~ s/[\s|\']+$//;
-	    printf "%s\n", $val;
-	    close RLUN;
-	    exit;
-	}
+    for my $i (1 .. 36) {
+        read RLUN, $buf, 80;
+        my ($key, $val) = split("=| " , $buf);
+        $fits = 1 if $key eq 'SIMPLE';
+        $atend = 1 if $key eq 'END';
+        if ($key eq $card) {
+            if ($key eq "COMMENT") {
+                printf "%s\n", $buf
+            } else {
+                my ($key, $val, $comment) = split("=|/" , $buf);
+                $val =~ s/^[\s|\']+//;
+                $val =~ s/[\s|\']+$//;
+                printf "%s\n", $val;
+                close RLUN;
+                exit;
+            }
+        }
     }
     if (! $fits) {
-	print STDERR "Corrupted FITS file?  No SIMPLE keyword in header!\n";
-	exit;
+        print STDERR "Corrupted FITS file?  No SIMPLE keyword in header!\n";
+        exit 1;
     }
 }
 close RLUN;
