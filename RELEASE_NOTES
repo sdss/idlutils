@@ -1,10 +1,9 @@
 -----------------------------------------------------------------------
 
-data/sdss/sdssMaskbits.par: added new bit to BOSSTILE_STATUS (Tinker)
-
+bin/sxpar: Modernize the perl (Weaver)
 data/sdss/sdssMaskbits.par: Increased declared length of label
-	field from 20 to 30. 20 was smaller than some of the existing
-	fields.
+	field from 20 to 30. 20 was smaller than some of the existing fields.
+        Added new bit to BOSSTILE_STATUS (Tinker)
 
 -----------------------------------------------------------------------
 v5_4_13 (2010-03-29)
