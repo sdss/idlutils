@@ -1154,6 +1154,7 @@ pro/trace/traceset2pix.pro -text
 pro/trace/traceset2xy.pro -text
 pro/trace/traceset_trim.pro -text
 pro/trace/xy2traceset.pro -text
+pro/ukidss/las_blank.pro -text
 pro/ukidss/ukidss_csv2fits.pro -text
 pro/ukidss/ukidss_match.pro -text
 pro/ukidss/ukidss_read.pro -text

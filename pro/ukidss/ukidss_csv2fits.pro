@@ -11,23 +11,29 @@
 ;   12-Jan-2010 MRB, NYU
 ;-
 ;------------------------------------------------------------------------------
-pro ukidss_csv2fits, csvfile, fitsbase
+pro ukidss_csv2fits
 
 if(NOT keyword_set('UKIDSS_DIR')) then $
   message, 'UKIDSS_DIR must be set'
 
 cd, getenv('UKIDSS_DIR')
 
+csvfile= 'lasSourceDR3.csv'
+fitsbase= 'las'
+
 openr, unit, csvfile, /get_lun
 line=' '
 readf, unit, line
 
+str0= las_blank()
+       
 names= strsplit(line, ',', /extr)
+strnames= tag_names(str0)
+if(n_elements(strnames) ne n_elements(names)) then $
+  message, 'Bad source file or structure def!'
 for i=0L, n_elements(names)-1L do begin
-    if(n_tags(str0) eq 0) then $
-      str0= create_struct(names[i], 0.D) $
-    else $
-      str0= create_struct(str0, names[i], 0.D) 
+    if(strlowcase(names[i]) ne strlowcase(strnames[i])) then $
+      message, 'Bad source file or structure def!'
 endfor
 
 chunksize=1000L
