@@ -424,3 +424,23 @@ maskbits BOSSTILE_STATUS 13 OUT_OF_BOUNDS  # outside bounds for this sort of tar
 maskbits BOSSTILE_STATUS 14 BAD_CALIB_STATUS  # bad CALIB_STATUS
 maskbits BOSSTILE_STATUS 15 PREVIOUS_CHUNK  # included because not tiled in previous overlapping chunk
 maskbits BOSSTILE_STATUS 16 KNOWN_OBJECT # galaxy has known redshift
+
+#-------- SEGUE-1 target bits
+masktype SEGUE1_TARGET 32
+maskbits SEGUE1_TARGET 9 FG
+maskbits SEGUE1_TARGET 10 LL_KIII
+maskbits SEGUE1_TARGET 11 LL_BLUE
+maskbits SEGUE1_TARGET 12 WDMS_PAIR
+maskbits SEGUE1_TARGET 13 BHB
+maskbits SEGUE1_TARGET 14 MK_GIANT
+maskbits SEGUE1_TARGET 15 MK_DWARF
+maskbits SEGUE1_TARGET 16 LOW_METAL
+maskbits SEGUE1_TARGET 17 COOL_WD
+maskbits SEGUE1_TARGET 18 G_STAR
+maskbits SEGUE1_TARGET 19 WHITEDWARF
+maskbits SEGUE1_TARGET 20 F_STAR
+maskbits SEGUE1_TARGET 21 L_STAR
+maskbits SEGUE1_TARGET 22 SDM
+maskbits SEGUE1_TARGET 23 AGB
+maskbits SEGUE1_TARGET 24 ESDM
+maskbits SEGUE1_TARGET 27 LL_AGB
