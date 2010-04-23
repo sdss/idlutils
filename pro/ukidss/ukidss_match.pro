@@ -142,6 +142,7 @@ for i=0L, n_elements(lookfiles)-1L do begin
 endfor
 ikeep=where(iread ge 0, nread)
 
+nmatch=0
 if(nread eq 0) then begin
     if(keyword_set(fill)) then begin
         nmatch= 0L
