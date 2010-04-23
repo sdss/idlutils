@@ -1,5 +1,7 @@
 -----------------------------------------------------------------------
 
+ROSAT_BLANK, ROSAT_FITS: code to create FITS version of RASS (Blanton)
+
 bin/sxpar: Modernize the perl (Weaver)
 data/sdss/sdssMaskbits.par: Increased declared length of label
 	field from 20 to 30. 20 was smaller than some of the existing fields.
