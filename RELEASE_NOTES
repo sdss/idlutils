@@ -1,4 +1,6 @@
+
 -----------------------------------------------------------------------
+v5_4_14 (2010-05-20) 
 
 ROSAT_BLANK, ROSAT_FITS: code to create FITS version of RASS (Blanton)
 
@@ -6,6 +8,7 @@ bin/sxpar: Modernize the perl (Weaver)
 data/sdss/sdssMaskbits.par: Increased declared length of label
 	field from 20 to 30. 20 was smaller than some of the existing fields.
         Added new bit to BOSSTILE_STATUS (Tinker)
+        Added SEGUE1_TARGET1, SEGUE1_TARGET2, SEGUE2_TARGET1, SEGUE2_TARGET2
 
 -----------------------------------------------------------------------
 v5_4_13 (2010-03-29)
