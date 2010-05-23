@@ -16,7 +16,11 @@
 ;------------------------------------------------------------------------------
 function intersect, window1, window2
 
-out= [window1, window2]
+out1= replicate(construct_polygon(), n_elements(window1))
+struct_assign, window1, out1
+out2= replicate(construct_polygon(), n_elements(window2))
+struct_assign, window2, out2
+out= [out1, out2]
 
 cmd = [ filepath('snap', root_dir=getenv('IDLUTILS_DIR'), $
                  subdir='bin'),'-', '-' ]
