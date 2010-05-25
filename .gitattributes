@@ -660,6 +660,8 @@ pro/2mass/tmass_read.pro -text
 pro/2mass/tmass_readzone.pro -text
 pro/2mass/tmass_reformat_psc.pro -text
 pro/2mass/tmass_struc.pro -text
+pro/2mass/tmass_xsc_read.pro -text
+pro/2mass/tmass_xsc_sfiles.pro -text
 pro/Makefile -text
 pro/TeXtoIDL/COPYRIGHT -text
 pro/TeXtoIDL/DESCRIPTIONS -text
