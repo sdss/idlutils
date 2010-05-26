@@ -60,6 +60,7 @@ stype='twomassxsc'
 
 ;; read in all appropriate data and match
 fitsbase= getenv('TWOMASS_XSC_DIR')+'/data/fits'
+obj=0
 for i=0L, n_elements(m2)-1L do begin
     ira= tmass_xsc_indx[m2[i]].ira
     idec= tmass_xsc_indx[m2[i]].idec
