@@ -1,18 +1,20 @@
-TMASS_XSC_READ, TMASS_XSC_SFILES: reading in the XSC data
+Updated html files in doc to point to new repository location (Weaver).
+
+TMASS_XSC_READ, TMASS_XSC_SFILES: reading in the XSC data (Blanton?)
 
 -----------------------------------------------------------------------
-v5_4_15 (2010-05-22) 
+v5_4_15 (2010-05-22)
 
 Makefile: fix rosat directory installation
 
 -----------------------------------------------------------------------
-v5_4_14 (2010-05-20) 
+v5_4_14 (2010-05-20)
 
 ROSAT_BLANK, ROSAT_FITS: code to create FITS version of RASS (Blanton)
 
 bin/sxpar: Modernize the perl (Weaver)
 data/sdss/sdssMaskbits.par: Increased declared length of label
-	field from 20 to 30. 20 was smaller than some of the existing fields.
+    field from 20 to 30. 20 was smaller than some of the existing fields.
         Added new bit to BOSSTILE_STATUS (Tinker)
         Added SEGUE1_TARGET1, SEGUE1_TARGET2, SEGUE2_TARGET1, SEGUE2_TARGET2
 
@@ -38,20 +40,20 @@ UKIDSS_READ(): quickly read small region of UKIDSS catalog(s)
 UKIDSS_MATCH: match RA/Dec list to UKIDSS catalog(s)
 UKIDSS_CSV2FITS: conversion of UKIDSS CSV to hierarchical FITS files
 
-data/sdss/sdssMaskbits.par:  Added bits OUT_OF_BOUNDS and 
+data/sdss/sdssMaskbits.par:  Added bits OUT_OF_BOUNDS and
         NOT_TILED_TARGET for BOSSTILE_STATUS
 pro/Makefile: Adds ukidss directory.
 src/idlmangle/idl_where_polygons_overlap.c
 
 -----------------------------------------------------------------------
-v5_4_11 (Dec, 2009) tagged for resolve_global_secondary  
+v5_4_11 (Dec, 2009) tagged for resolve_global_secondary
 
 data/sdss/sdssMaskbits.par:  Added bits 40,41 for qsos.  Currently
-	called QSO_KDE, QSO_CORE_MAIN, QSO_BONUS_MAIN GAL_CMASS_ALL
-	ESS.
+    called QSO_KDE, QSO_CORE_MAIN, QSO_BONUS_MAIN GAL_CMASS_ALL
+    ESS.
 
 -----------------------------------------------------------------------
-v5_4_10 (Nov 10, 2009) tagged for resolve_global_secondary  
+v5_4_10 (Nov 10, 2009) tagged for resolve_global_secondary
 
 EXTRACT_PROFMEAN: more careful handling of zeroes in ivars
 MWRFITS_CHUNKS: drop host_to_ieee and ieee_to_host calls, to account
@@ -61,13 +63,13 @@ MWRFITS_CHUNKS: drop host_to_ieee and ieee_to_host calls, to account
 
 -----------------------------------------------------------------------
 v5_4_9 (Oct 07, 2009) tagged for second boss commissioning run, which
-	depends on sdssMaskbits.par
+    depends on sdssMaskbits.par
 
 data/sdss/sdssMaskbits.par:  Added maskbits
-	maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
-	Erin Sheldon, 2009-10-01
+    maskbits BOSS_TARGET1 18 QSO_FIRST_BOSS     # FIRST radio match
+    Erin Sheldon, 2009-10-01
 pro/sdss/sdss_flagval.pro:  Made flagprefix case insensitive again.
-	Erin Sheldon, 2009-10-01
+    Erin Sheldon, 2009-10-01
 src/idlmangle/idl_where_polygons_overlap: loosen tolerance for unsnapped polys
   MRB, 2009-10-05
 
@@ -131,8 +133,8 @@ v5_4_4 (July 8, 2009) tagged for target selection (Sheldon)
 
 bin/evilmake: a few more changes to push flags down, especially -m32/-m64
           for OS X.
-Makefile, include/export.h: Link in current export.h from idl rather 
-          than use and maintain a copy in this product. 
+Makefile, include/export.h: Link in current export.h from idl rather
+          than use and maintain a copy in this product.
           Depends on $IDL_DIR being set to the root of the IDL dir.
 
 -----------------------------------------------------------------------
@@ -160,7 +162,7 @@ READ_FITS_POLYGONS: Read in pixel number
 READ_YANNY_POLYGONS, WRITE_YANNY_POLYGONS: Write Yanny format polygon files
 YANNY_WRITE: Add ULONG.
 
-src/idlmangle - use libmangle14.a 
+src/idlmangle - use libmangle14.a
 src/mangle1.4 - changed to only compile mrb_* commands, write libmangle14.a
 src/mangle2.2 - added pixelize-capable mangle (Molly Swanson)
 www/doc/index.html: New documentation
@@ -170,9 +172,9 @@ v5_4_1 (June 8, 2009) tagged before mangle2.2 upgrade
 
 ANGLES_TO_X: fix documentation
 CSURVEY2EQ, CEQ2SURVEY, SDSS_TRANSFORM__DEFINE: Erin Sheldon code
-  for "corrected" SDSS survey coordinate support 
+  for "corrected" SDSS survey coordinate support
 DJS_PLOT: add /topaxis, /bottomaxis, /leftaxis, /rightaxis
-IDLUTILS_VERSION: fix routine for SVN 
+IDLUTILS_VERSION: fix routine for SVN
 READ_MANGLE_POLYGONS: change to be forward-compatible with mangle v2 files
 
 deleted mangle1.2 directory (obsolete)
@@ -318,9 +320,9 @@ bin/evilmake: Try supporting Darwin/x86 as long as IDL is PPC.
                 "-undefined suppress ", but it requires
                 MACOSX_DEPLOYMENT_TARGET=10.4 for cross-compilers.
               Try supporting Darwin/x86 with the x86-native IDL (6.3+).
-              - I don't think it's worth keeping the IDL/ppc on x86 evilmake 
+              - I don't think it's worth keeping the IDL/ppc on x86 evilmake
                 stuff, and am overwriting it.
-              - evilmake now expects IDL/x86 and gfortran. See the 
+              - evilmake now expects IDL/x86 and gfortran. See the
                 http://hpc.sourceforge.net/ pages for links to gfortran.
 
 data/sdss/sdssMaskbits.par: Change to CALIB_STATUS mask bits.
@@ -373,7 +375,7 @@ GAUSS1,GAUSS1P,GAUSS2,MPCURVEFIT,MPFIT,MPFIT2DFUN,MPFIT2DPEAK,MPFITEXPR,
                directory had been updated from Craig Markwardt's web site
                on 7 Feb 2006.  Included are the following new routines:
                MPCHILIM,MPCHITEST,MPFITELLIPSE,MPFTEST,MPNORMLIM,MPNORMTEST.
-SIGMA_PBAR_P: Annihilation cross section of pbar on p 
+SIGMA_PBAR_P: Annihilation cross section of pbar on p
 WCSXY2SPH:     Add healCart projection so atv works on healpix.
 
 data/filters/PS1.dat: Filter curves for Pan-STARRS, downloaded from
@@ -545,7 +547,7 @@ CHOLESKY_SOLVE: Up to date bspline implementation, passing structure and
 DCOMDISDZ,COMDIS,PROPMOTDIS,ANGDIDIS,LUMDIS: Added equation of state w
                parameter for OmegaL.
 DJS_PHOTFRAC: Add documentation on /exact keyword, and report error in case
-               of non-integer center given with /exact keyword set. also, 
+               of non-integer center given with /exact keyword set. also,
                changed so it doesn't recenter on its own if /exact is set.
 DPF_REJECT_CR: ???
 DUST_GETMAP: Use EULER_2000_FAST instead of non-existent EULER_2000.
@@ -569,7 +571,7 @@ HOGG_NAME2RADEC: New proc to convert IAU name in "J" format to RA,DEC (Hogg).
 HOGG_OPLOT_COVAR: Add support for a vectorized THICK keyword.
 HOGG_PLOTHIST: Change in behviour for setting X range when using /OVERPLOT.
 HOGG_SCATTERPLOT: Added IOUTLIERS keyword, to plot the outliers differently.
-LABELLOC: Simple utility for XYOUTS plotting to get positions relative to 
+LABELLOC: Simple utility for XYOUTS plotting to get positions relative to
                plot frame
 LG_TO_HELIO: Inverse function to HELIO_TO_LG.
 MRDFITS:       LONG64 stuff, handle degenerate excess NAXIS keywords
@@ -577,8 +579,8 @@ MWRFITS_CHUNKS: More bug fixes for appending to existing FITS binary
                tables for string-type elements.  Bug fix to allow appending
                string elements that are different lengths, though if the
                appended strings are longer then they get truncated.
-NMF_SPARSE, MMEVAL, MMSPARSE: New procedure (and utility procedures) for 
-               nonnegative PCA on sparse data matrices. 
+NMF_SPARSE, MMEVAL, MMSPARSE: New procedure (and utility procedures) for
+               nonnegative PCA on sparse data matrices.
 NW_RGB_MAKE: Trivial bug fixes; change SPLOG statements to PRINT.
                Change default quality to 100, add dpitiff keyword.
                Other changes???
@@ -631,7 +633,7 @@ FITS_PURGE_NANS: New procedure to deal with some invalid FITS header
 HEALGEN        Updated to use dpf* routines and break dependence on HEALPIX
                packages.
                No longer loop over chunks to save memory.
-HEALPIX_RING_WEIGHT: Fix fatal bug caused by new mrdfits() response to 
+HEALPIX_RING_WEIGHT: Fix fatal bug caused by new mrdfits() response to
                Gorski's nonstandard file format for ring weights.
 HEAL_SMOOTH    Prevent "Floating underflow" condition
 HOGG_MANYD_SCATTERPLOT: Fix xdim=0 bug, add EXTRAFUN parameter,
@@ -644,7 +646,7 @@ IS_IN_CAP, IS_INPOLYGON: Fix ra=0 bug (changing keyword_set to n_elements).
 LOCAL_EXTRAGALACTIC: Code added by Blanton for returning the locations of
                nearby clusters, using the data files in data/objects.
 MAKE_RA_CAP,MAKE_DEC_CAP: Functions moved from photoop; make mangle
-               caps along ra and dec lines. 
+               caps along ra and dec lines.
 MRDFITS: When we updated the Goddard routines on 15 April 2004, it went
                back to a version from Landsman that only included some of
                the patches for large file (> 2Gb) support.  This meant that
@@ -664,11 +666,11 @@ MWRFITS: Fix a bug, whereby if a pointer was included in an output structure,
 NW_AD_GRID,NW_OVERLAY_RANGE: New (but unused?) code.
 NW_RGB_MAKE: Slight change to overlay code.  Option for TIFF files.
 PLOT_POLY: Add /AITOFF flag to plot on Aitoff projections.
-POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and 
-               poly_2d to perform a rotation of an imaging using the 
+POLYWARP_ROTATE: New function which is simply a wrapper on polywarp and
+               poly_2d to perform a rotation of an imaging using the
                cubic approximation to the sinc shift.
 REJECT_CR: A previous error in determining the background for rejection
-               has been fixed, so more cosmics are now successfully rejected. 
+               has been fixed, so more cosmics are now successfully rejected.
 RINGWT: Finkbeiner's stab at computing ring weights for Healpix integrations;
                probably doesn't work?
 SORTINPLACE: New function for sorting arrays in-place.
@@ -745,8 +747,8 @@ DJS_BATCH: Add a call to COUNT_FREELUN().  Do not try to use more hosts than
 DUST_RV_TABLE,WEB_TABLE: Throw-away proc for making table of R_V values for
                sources with different spectral energy distributions.
 EMBED_STAMP: New procedure to take one image and add it to another, starting
-               at an arbitrary position (SSHIFTing appropriately) without 
-               rotation. 
+               at an arbitrary position (SSHIFTing appropriately) without
+               rotation.
 GVERTS: Bug fix for the case of single-cap polygons.
 HELIO_TO_LG: Fixed sign error in correction.
 HOGG_IAU_NAME: New proc by Hogg to format astronomical source names to
@@ -768,7 +770,7 @@ RADEC_GREATCIRCLE: In the internal function RADEC_GCFN, return the
                starting guess.
 SPLOG: Only call FLUSH if we're not in demo mode (since we cannot call FLUSH
                from demo mode).
-SPLOT: Add xoffset and yoffset keywords which position splot on the 
+SPLOT: Add xoffset and yoffset keywords which position splot on the
                screen where you want it.
 VMIDC,idl_vmidc.c,vmid.c: New function to return the central vector in
                a polygon.
@@ -780,8 +782,8 @@ WHERE_POLYGONS_OVERLAP: Add optional output AREAMATCH.
 
 data/filters/ogle_I.dat: Approximate OGLE I-band filter from Taka Sumi.
 data/sdss/sdssMaskbits.par: Remove the RESOLVE bits, which have been deprecated
-               with the RESOLVE_STATUS mask bits.                            
-               Add Q_EYEBALL and T_EYEBALL, eyeball quality and 
+               with the RESOLVE_STATUS mask bits.
+               Add Q_EYEBALL and T_EYEBALL, eyeball quality and
                type bitmasks for SDSS galaxies
 src/idlmangle/Makefile: Add idl_garea.o
                Change the order of the line that does linking from
@@ -1100,7 +1102,7 @@ Tagged for photoop v0_9.  Make sure that mangle code builds.
 
 data/sdss/sdssMaskbits.par: Add RESOLVE_STATUS flag, which probably
                 deprecates the RESOLVE flag.
-lib/Makefile: When installing, copy over *.a files and Makefile, not 
+lib/Makefile: When installing, copy over *.a files and Makefile, not
                 that they're needed.
 src/Makefile: Note that mangle1.2 must be built before idlmangle!
                 This prevented the mangle code from building in v4_10_0,v4_10_1.
