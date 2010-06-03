@@ -1,6 +1,9 @@
-Updated html files in doc to point to new repository location (Weaver).
 
-TMASS_XSC_READ, TMASS_XSC_SFILES: reading in the XSC data (Blanton?)
+INTERSECT: Homogenize.
+ROSAT_FITS: Add XSC readers.
+TMASS_XSC_READ, TMASS_XSC_SFILES: Reading in the XSC data.
+
+doc/www/index.html: Point to new repository location (Weaver).
 
 -----------------------------------------------------------------------
 v5_4_15 (2010-05-22)
@@ -10,7 +13,10 @@ Makefile: fix rosat directory installation
 -----------------------------------------------------------------------
 v5_4_14 (2010-05-20)
 
+LAS_BLANK: Return nmatch.
 ROSAT_BLANK, ROSAT_FITS: code to create FITS version of RASS (Blanton)
+UKIDSS_CSV2FITS: Change LAS to type correctly.
+UKIDSS_MATCH: Add known object bit.
 
 bin/sxpar: Modernize the perl (Weaver)
 data/sdss/sdssMaskbits.par: Increased declared length of label
