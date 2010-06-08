@@ -427,6 +427,7 @@ maskbits BOSSTILE_STATUS 16 KNOWN_OBJECT # galaxy has known redshift
 
 #-------- SEGUE-1 target bits
 masktype SEGUE1_TARGET 32
+maskbits SEGUE1_TARGET 6 GALAXY  # for example, in Perseus (chunk84) plates
 maskbits SEGUE1_TARGET 9 FG
 maskbits SEGUE1_TARGET 10 LL_KIII
 maskbits SEGUE1_TARGET 11 LL_BLUE
@@ -474,3 +475,43 @@ maskbits SEGUE2_TARGET2 8 QUALITY_HOLE
 maskbits SEGUE2_TARGET2 9 HOT_STD
 maskbits SEGUE2_TARGET2 10 CLUSTER_CALIB
 maskbits SEGUE2_TARGET2 11 STETSON_CALIB
+
+#-------- SDSS special
+masktype SPECIAL_TARGET1 64
+maskbits SPECIAL_TARGET1 0 APBIAS # aperture bias target (chunk55)
+maskbits SPECIAL_TARGET1 1 LOWZ_ANNIS # low-redshift cluster galaxy (chunk29)
+maskbits SPECIAL_TARGET1 2 QSO_M31  # QSO in M31 (chunk72) 0x000000020
+maskbits SPECIAL_TARGET1 3 COMMISSIONING_STAR  # star in commissioning (stellar) 
+maskbits SPECIAL_TARGET1 4 DISKSTAR  # thin/thick disk star (chunk49) 
+maskbits SPECIAL_TARGET1 5 FSTAR # F-stars
+maskbits SPECIAL_TARGET1 6 HYADES_MSTAR # M-star in Hyades
+maskbits SPECIAL_TARGET1 7 LOWZ_GALAXY # low-redshift galaxy (chunk45, chunk52, chunk62, chunk74, chunk97)
+maskbits SPECIAL_TARGET1 8 DEEP_GALAXY_RED # deep LRG
+maskbits SPECIAL_TARGET1 9 DEEP_GALAXY_RED_II # deep LRG
+maskbits SPECIAL_TARGET1 10 BCG # brightest cluster galaxy
+maskbits SPECIAL_TARGET1 11 MSTURNOFF # main sequence turnoff (chunk50)
+maskbits SPECIAL_TARGET1 12 ORION_BD # (chunk61)
+maskbits SPECIAL_TARGET1 13 ORION_MSTAR_EARLY # (chunk61)
+maskbits SPECIAL_TARGET1 14 ORION_MSTAR_LATE # (chunk61)
+maskbits SPECIAL_TARGET1 15 SPECIAL_FILLER # filler from completeTile, check primtarget for details
+maskbits SPECIAL_TARGET1 16 PHOTOZ_GALAXY # test galaxy for photometric redshifts (chunk21, chunk29, chunk79)
+maskbits SPECIAL_TARGET1 17 PREBOSS_QSO # QSO for pre-BOSS observations
+maskbits SPECIAL_TARGET1 18 PREBOSS_LRG # QSO for pre-BOSS observations
+maskbits SPECIAL_TARGET1 19 PREMARVELS # pre-MARVELS stellar target
+maskbits SPECIAL_TARGET1 20 SOUTHERN_EXTENDED # simple extension of southern targets
+maskbits SPECIAL_TARGET1 21 SOUTHERN_COMPLETE # completion in south of main targets
+maskbits SPECIAL_TARGET1 22 U_PRIORITY # priority u-band target 
+maskbits SPECIAL_TARGET1 23 U_EXTRA # extra u-band target 
+maskbits SPECIAL_TARGET1 24 U_EXTRA2 # extra u-band target 
+maskbits SPECIAL_TARGET1 25 FAINT_LRG # faint LRG in south
+maskbits SPECIAL_TARGET1 26 FAINT_QSO # faint QSO in south
+maskbits SPECIAL_TARGET1 27 BENT_RADIO # bent double-lobed radio source
+maskbits SPECIAL_TARGET1 28 STRAIGHT_RADIUS # straight double-lobed radio source
+maskbits SPECIAL_TARGET1 29 VARIABLE_HIPRI # high priority variable
+maskbits SPECIAL_TARGET1 30 VARIABLE_LOPRI # low priority variable
+maskbits SPECIAL_TARGET1 31 ALLPSF # i<19.1 point sources
+maskbits SPECIAL_TARGET1 32 ALLPSF_NONSTELLAR # i<19.1 point sources off stellar locus
+maskbits SPECIAL_TARGET1 33 ALLPSF_STELLAR # i<19.1 point sources on stellar locus
+maskbits SPECIAL_TARGET1 34 HIPM # high proper motion
+maskbits SPECIAL_TARGET1 35 TAURUS_STAR # star on taurus or reddening plate
+maskbits SPECIAL_TARGET1 36 TAURUS_GALAXY # galaxy on taurus or reddening plate
