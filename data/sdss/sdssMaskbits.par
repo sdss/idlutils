@@ -506,7 +506,7 @@ maskbits SPECIAL_TARGET1 24 U_EXTRA2 # extra u-band target
 maskbits SPECIAL_TARGET1 25 FAINT_LRG # faint LRG in south
 maskbits SPECIAL_TARGET1 26 FAINT_QSO # faint QSO in south
 maskbits SPECIAL_TARGET1 27 BENT_RADIO # bent double-lobed radio source
-maskbits SPECIAL_TARGET1 28 STRAIGHT_RADIUS # straight double-lobed radio source
+maskbits SPECIAL_TARGET1 28 STRAIGHT_RADIO # straight double-lobed radio source
 maskbits SPECIAL_TARGET1 29 VARIABLE_HIPRI # high priority variable
 maskbits SPECIAL_TARGET1 30 VARIABLE_LOPRI # low priority variable
 maskbits SPECIAL_TARGET1 31 ALLPSF # i<19.1 point sources
