@@ -515,3 +515,4 @@ maskbits SPECIAL_TARGET1 33 ALLPSF_STELLAR # i<19.1 point sources on stellar loc
 maskbits SPECIAL_TARGET1 34 HIPM # high proper motion
 maskbits SPECIAL_TARGET1 35 TAURUS_STAR # star on taurus or reddening plate
 maskbits SPECIAL_TARGET1 36 TAURUS_GALAXY # galaxy on taurus or reddening plate
+maskbits SPECIAL_TARGET1 37 PERSEUS # galaxy in perseus-pisces
