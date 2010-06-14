@@ -516,3 +516,4 @@ maskbits SPECIAL_TARGET1 34 HIPM # high proper motion
 maskbits SPECIAL_TARGET1 35 TAURUS_STAR # star on taurus or reddening plate
 maskbits SPECIAL_TARGET1 36 TAURUS_GALAXY # galaxy on taurus or reddening plate
 maskbits SPECIAL_TARGET1 37 PERSEUS # galaxy in perseus-pisces
+maskbits SPECIAL_TARGET1 38 LOWZ_LOVEDAY # low redshift galaxy selected by Loveday 
