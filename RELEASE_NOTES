@@ -4,6 +4,9 @@ ROSAT_FITS: Add XSC readers.
 TMASS_XSC_READ, TMASS_XSC_SFILES: Reading in the XSC data.
 
 doc/www/index.html: Point to new repository location (Weaver).
+data/sdss/sdssMaskbits.par:
+  added BOSSTILE_STATUS bits pertaining to duplicates
+  added description field for documentation purposes 
 
 -----------------------------------------------------------------------
 v5_4_15 (2010-05-22)
