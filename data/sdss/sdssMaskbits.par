@@ -438,9 +438,9 @@ maskbits BOSSTILE_STATUS 19 DUPLICATE_TILED "trimmed as a duplicate object, and 
 
 #-------- SEGUE-1 target bits
 masktype SEGUE1_TARGET 32 "SEGUE-1 primary target bits"
-maskbits SEGUE1_TARGET 9 FG ""
-maskbits SEGUE1_TARGET 10 LL_KIII ""
-maskbits SEGUE1_TARGET 11 LL_BLUE ""
+maskbits SEGUE1_TARGET 9 FG "F and G stars, based on g-r color (0.2<g-r<0.48 and 14<g<20.2)"
+maskbits SEGUE1_TARGET 10 LL_KIII "low latitude selection of KIII stars"
+maskbits SEGUE1_TARGET 11 LL_BLUE "low latitude selection of bluetip stars"
 maskbits SEGUE1_TARGET 12 WDMS_PAIR ""
 maskbits SEGUE1_TARGET 13 BHB ""
 maskbits SEGUE1_TARGET 14 MK_GIANT ""
@@ -454,7 +454,7 @@ maskbits SEGUE1_TARGET 21 L_STAR ""
 maskbits SEGUE1_TARGET 22 SDM ""
 maskbits SEGUE1_TARGET 23 AGB ""
 maskbits SEGUE1_TARGET 24 ESDM ""
-maskbits SEGUE1_TARGET 27 LL_AGB ""
+maskbits SEGUE1_TARGET 27 LL_AGB "low latitude selection of AGB stars"
 
 #-------- SEGUE-2 target bits
 masktype SEGUE2_TARGET1 32 "SEGUE-2 primary target bits"
