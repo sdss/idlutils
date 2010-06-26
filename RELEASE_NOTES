@@ -3,6 +3,7 @@ INTERSECT: Homogenize.
 ROSAT_FITS: Add XSC readers.
 TMASS_XSC_READ, TMASS_XSC_SFILES: Reading in the XSC data.
 
+bin/Makefile: Include sxpar in the install.
 doc/www/index.html: Point to new repository location (Weaver).
 data/sdss/sdssMaskbits.par:
   added BOSSTILE_STATUS bits pertaining to duplicates
