@@ -1132,6 +1132,7 @@ pro/rgbcolor/nw_scale_rgb.pro -text
 pro/rosat/rosat_blank.pro -text
 pro/rosat/rosat_fits.pro -text
 pro/sdss/findopfile.pro -text
+pro/sdss/sdss_flagexist.pro -text
 pro/sdss/sdss_flagname.pro -text
 pro/sdss/sdss_flagval.pro -text
 pro/sdss/sdss_sweep_circle.pro -text

@@ -1,4 +1,5 @@
 
+SDSS_FLAGEXIST: just check if a flag name or bit label exists
 INTERSECT: Homogenize.
 ROSAT_FITS: Add XSC readers.
 TMASS_XSC_READ, TMASS_XSC_SFILES: Reading in the XSC data.
@@ -6,6 +7,7 @@ TMASS_XSC_READ, TMASS_XSC_SFILES: Reading in the XSC data.
 bin/Makefile: Include sxpar in the install.
 doc/www/index.html: Point to new repository location (Weaver).
 data/sdss/sdssMaskbits.par:
+  added new ANCILLARY_TARGET1 and ANCILLARY_TARGET2 bits
   added BOSSTILE_STATUS bits pertaining to duplicates
   added description field for documentation purposes 
   added BOSS_TARGET1 bit 42 for Extreme Deconvolution in the core (ESS).
