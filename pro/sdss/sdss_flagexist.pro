@@ -39,7 +39,20 @@ function sdss_flagexist, flagprefix, inlabel, flagexist=flagexist
   if (n_params() NE 2 OR n_elements(flagprefix) NE 1) then begin
     print, 'Syntax - exist = sdss_flagexist(flagprefix, label [, flagexist=])'
     return, ''
-  endif
+endif
+
+  ;----------
+  ; Generate a list of all non-blank labels as a string array
+  
+  flagvalue = 0
+  
+  alllabel = strsplit(inlabel[0], /extract)
+  for i=1, n_elements(inlabel)-1 do $
+    alllabel = [alllabel, strsplit(inlabel[i], /extract)]
+  ilabel = where(alllabel NE '', nlabel)
+  if (nlabel EQ 0) then return, flagvalue
+  alllabel = alllabel[ilabel]
+
   
   ;----------
   ; Read the parameter file the 1st time this function is called.
@@ -83,7 +96,7 @@ function sdss_flagexist, flagprefix, inlabel, flagexist=flagexist
   endif
   
   imatch = where(strupcase(flagprefix[0]) EQ maskbits.flag AND $
-                 strupcase(inlabel[0]) EQ strupcase(maskbits.label), $
+                 strupcase(alllabel[0]) EQ strupcase(maskbits.label), $
                  ct)
   if (ct NE 1) then begin
       exist=0
