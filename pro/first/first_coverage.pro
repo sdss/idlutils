@@ -26,12 +26,17 @@
 ;   to whether this is the correct interpretation.
 ;
 ; DATA FILES:
-;   The following data files can be copied from:
+;   The coverage data files can be copied from:
 ;     http://sundog.stsci.edu/first/catalogs/
 ;   and should be put in a directory pointed to by the environment
-;   variable $FIRST_DIR:
+;   variable $FIRST_DIR.
+;   If the version of FIRST used is v03Apr11, then we assume:
 ;     $FIRST_DIR/coverage-north-3arcmin-03apr11.fits
 ;     $FIRST_DIR/coverage-south-3arcmin-01oct15.fits
+;   If the version of FIRST used is v08jul16, then we assume:
+;     $FIRST_DIR/coverage-north-3arcmin-08jul16.fits
+;     $FIRST_DIR/coverage-south-3arcmin-08jul16.fits
+;  
 ;
 ; PROCEDURES CALLED:
 ;   headfits()
@@ -44,7 +49,7 @@
 ;------------------------------------------------------------------------------
 function first_coverage, ravec1, decvec
 
-   common com_first_coverage, ramin, ramax, decmin, decmax, dra, ddec
+   common com_first_coverage, ftype, ramin, ramax, decmin, decmax, dra, ddec
 
    npts = n_elements(ravec1)
    if (npts EQ 0) then return, 0
@@ -58,11 +63,29 @@ function first_coverage, ravec1, decvec
       splog, '  http://sundog.stsci.edu/first/catalogs/'
       return, 0
    endif
+  
+   if(NOT keyword_set(ftype)) then begin
+       words= strsplit(first_dir, '/', /extr)
+       ftype= words[n_elements(words)-1]
+       if(ftype ne 'v03Apr11' AND ftype ne 'v08jul16') then $
+         message, 'FIRST_DIR must point to directory named '+ $
+         'v03Apr11 or v08jul16'
+   endif
 
+   
    nfile = 2
-   filename = filepath([ $
-    'coverage-north-3arcmin-03apr11.fits', $
-    'coverage-south-3arcmin-01oct15.fits'], root_dir=first_dir)
+   if(ftype eq 'v03Apr11') then $
+     filename = filepath([ $
+                           'coverage-north-3arcmin-03apr11.fits', $
+                           'coverage-south-3arcmin-01oct15.fits'], $
+                         root_dir=first_dir) $
+   else if(ftype eq 'v08jul16') then $
+     filename = filepath([ $
+                           'coverage-north-3arcmin-08jul16.fits', $
+                           'coverage-south-3arcmin-08jul16.fits'], $
+                         root_dir=first_dir) 
+   if(keyword_set(filename) eq 0) then $
+     message, 'Error in FIRST_COVERAGE, no filenames known for '+ftype
 
    ;----------
    ; Start by reading (and caching) coordinates from the two file headers

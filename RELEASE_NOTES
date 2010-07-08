@@ -1,4 +1,6 @@
 
+FIRST_READ, FIRST_COVERAGE, FIRST_CONVERT: add support for 
+  v08jul16 version of catalog, fix 0/360 error
 SDSS_FLAGEXIST: just check if a flag name or bit label exists
 INTERSECT: Homogenize.
 ROSAT_FITS: Add XSC readers.

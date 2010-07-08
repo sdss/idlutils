@@ -202,58 +202,6 @@ function first_readascii, filename, range=range1, columns=columns
    return, bigdat
 end
 ;------------------------------------------------------------------------------
-pro first_rdindex, filename, first_dir=first_dir
-
-   common com_first_read, first_index
-
-   ;----------
-   ; Find the FIRST index file if it exists.
-
-   indfile = filepath('firstindex.fits', root_dir=first_dir)
-   thisfile = (findfile(indfile))[0]
-
-   if (keyword_set(thisfile)) then begin
-      first_index = mrdfits(thisfile, 1)
-      return
-   endif
-
-   ;----------
-   ; Generate the index file, with one index per 1000 lines.
-
-   splog, 'Building index file...'
-   totline = numlines(filename)
-   nper = 1000L
-   nindex = long((totline-1) / nper) + 1
-
-   ; Create data structure and allocate memory for data.
-   first_index = replicate( $
-   { firstind, $
-     istart    : 0L , $
-     ra        : 0.d  $
-   }, nindex)
-
-   ; Loop through the actual data file every NPER line,
-   ; and assemble the index list.
-
-   for i=0L, nindex-2 do begin
-      iline = i * nper
-      onedat = first_readascii(filename, range=[iline,iline])
-      first_index[i].istart = iline
-      first_index[i].ra = onedat.first_ra
-   endfor
-   first_index[0].ra = -1.D
-   first_index[nindex-1].istart = totline
-   first_index[nindex-1].ra = 361.D
-
-   ;----------
-   ; If we can write this index file to disk, do so.
-
-   if (first_testwrite(indfile)) then $
-    mwrfits, first_index, indfile, /create
-
-   return
-end
-;------------------------------------------------------------------------------
 ; If a FITS data file exists, return the name of that file.
 ; Otherwise, generate the FITS file if it is possible to write to disk,
 ; and return the name of that newly-written FITS file.
@@ -306,10 +254,70 @@ function first_readfile, filename, range=range, columns=columns
    return, bigdat
 end
 ;------------------------------------------------------------------------------
-function first_read, racen, deccen, radius, $
+pro first_rdindex, filename, first_dir=first_dir
+
+   common com_first_read, first_index, ftype
+
+   ;----------
+   ; Find the FIRST index file if it exists.
+
+   indfile = filepath('firstindex.fits', root_dir=first_dir)
+   thisfile = (findfile(indfile))[0]
+
+   if (keyword_set(thisfile)) then begin
+      first_index = mrdfits(thisfile, 1)
+      return
+   endif
+
+   ;----------
+   ; Generate the index file, with one index per 1000 lines.
+
+   splog, 'Building index file...'
+   if(ftype eq 'v03Apr11') then $
+     totline = numlines(filename)
+   if(ftype eq 'v08jul16') then $
+     totline = long(sxpar(headfits(filename+'.fits',ext=1), 'NAXIS2'))
+   if(keyword_set(totline) eq 0) then $
+     message, 'Error in building index!'
+   nper = 1000L
+   nindex = long((totline-1) / nper) + 1
+
+   ; Create data structure and allocate memory for data.
+   first_index = replicate( $
+   { firstind, $
+     istart    : 0L , $
+     ra        : 0.d  $
+   }, nindex)
+
+   ; Loop through the actual data file every NPER line,
+   ; and assemble the index list.
+
+   for i=0L, nindex-2 do begin
+      iline = i * nper
+      onedat = first_readfile(filename, range=[iline,iline])
+      first_index[i].istart = iline
+      first_index[i].ra = onedat.first_ra
+   endfor
+   first_index[0].ra = -1.D
+   first_index[nindex-1].istart = totline
+   first_index[nindex-1].ra = 361.D
+
+   ;----------
+   ; If we can write this index file to disk, do so.
+
+   if (first_testwrite(indfile)) then $
+    mwrfits, first_index, indfile, /create
+
+   return
+end
+;------------------------------------------------------------------------------
+function first_read, in_racen, deccen, radius, $
  node=node, incl=incl, hwidth=hwidth, columns=columns
 
-   common com_first_read, first_index
+   common com_first_read, first_index, ftype
+
+   if(n_elements(in_racen) gt 0) then $
+     racen= in_racen
 
    first_dir = getenv('FIRST_DIR')
    if (NOT keyword_set(first_dir)) then begin
@@ -318,8 +326,21 @@ function first_read, racen, deccen, radius, $
       splog, '  http://sundog.stsci.edu/first/catalogs/'
       return, 0
    endif
+  
+   if(NOT keyword_set(ftype)) then begin
+       words= strsplit(first_dir, '/', /extr)
+       ftype= words[n_elements(words)-1]
+       if(ftype ne 'v03Apr11' AND ftype ne 'v08jul16') then $
+         message, 'FIRST_DIR must point to directory named '+ $
+         'v03Apr11 or v08jul16'
+   endif
 
-   filename = 'catalog_03apr11.bin'
+   if(ftype eq 'v03Apr11') then $
+     filename = 'catalog_03apr11.bin'
+   if(ftype eq 'v08jul16') then $
+     filename = 'first_08jul16_resorted'
+   if(keyword_set(filename) eq 0) then $
+     message, 'Not a valid $FIRST_DIR='+getenv('FIRST_DIR')
 
    ;----------
    ; Read the Tycho index file if it is not already cached in the common block
@@ -338,6 +359,12 @@ function first_read, racen, deccen, radius, $
     AND n_elements(hwidth) GT 0)
 
    if (qreadcircle) then begin
+
+      if(racen gt 360.) then $
+        racen= racen MOD 360. 
+      if(racen lt 0.) then $
+        racen= 360.-(abs(racen) MOD 360. )
+      
       decmin = deccen - radius
       decmax = deccen + radius
       if (decmax GE 90) then cosdec = 1.d0 $
@@ -347,23 +374,39 @@ function first_read, racen, deccen, radius, $
       if (ramax - ramin GE 360 OR decmax GE 90) then begin
          ramin = 0.0
          ramax = 360.0
-      endif
-      ramin = ramin > 0
-      ramax = ramax < 360
+     endif
+
+     if(ramin lt 0.) then begin
+         tmp_ramin=ramin
+         tmp_ramax=ramax
+         ramin=[tmp_ramin+360., 0.]
+         ramax=[360., tmp_ramax]
+     endif else if(ramax gt 360.) then begin
+         tmp_ramin=ramin
+         tmp_ramax=ramax
+         ramin=[0., tmp_ramin]
+         ramax=[tmp_ramax-360., 360.]
+     endif 
+         
    endif else begin
       ramin = 0.0
       ramax = 360.0
    endelse
 
-   i1 = (reverse(where(first_index.ra LE ramin)))[0]
-   i2 = (where(first_index.ra GE ramax))[0]
-   range = [first_index[i1].istart, first_index[i2].istart-1]
+   for i=0L, n_elements(ramin)-1L do begin
+       i1 = (reverse(where(first_index.ra LE ramin[i])))[0]
+       i2 = (where(first_index.ra GE ramax[i]))[0]
+       range = [first_index[i1].istart, first_index[i2].istart-1]
 
-   ;----------
-   ; Read the files
-
-   bigdat = first_readfile(filepath(filename, root_dir=first_dir), $
-    range=range, columns=columns)
+       ;;----------
+       ;; Read the files
+       tmp_bigdat = first_readfile(filepath(filename, root_dir=first_dir), $
+                                   range=range, columns=columns)
+       if(n_tags(bigdat) eq 0) then $
+         bigdat= temporary(tmp_bigdat) $
+       else $
+         bigdat= [bigdat, temporary(tmp_bigdat)]
+   endfor
 
    ;----------
    ; Further trim to the requested circle on the sky
