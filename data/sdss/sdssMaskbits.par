@@ -427,6 +427,8 @@ maskbits ANCILLARY_TARGET1 60 CXORED						"defined in brandt-xray.par"
 maskbits ANCILLARY_TARGET1 61 ELG							"defined in kneib-cfht-elg.fits"
 maskbits ANCILLARY_TARGET1 62 GAL_NEAR_QSO			"defined in weiner-qso-sightline.fits"
 maskbits ANCILLARY_TARGET1 63 MTEMP						"defined in blake-transient-v3.fits"
+
+masktype ANCILLARY_TARGET2 64 "additional BOSS survey target flags for ancillary programs"
 maskbits ANCILLARY_TARGET2 0 HIZQSO82					"defined in mcgreer-hizqso.fits"
 maskbits ANCILLARY_TARGET2 1 HIZQSOIR					"defined in mcgreer-hizqso.fits"
 maskbits ANCILLARY_TARGET2 2 KQSO_BOSS				"defined in mcmahon-ukidss.fits"

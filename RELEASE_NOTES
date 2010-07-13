@@ -13,6 +13,7 @@ data/sdss/sdssMaskbits.par:
   added BOSSTILE_STATUS bits pertaining to duplicates
   added description field for documentation purposes 
   added BOSS_TARGET1 bit 42 for Extreme Deconvolution in the core (ESS).
+  set masktype for ANCILLARY_TARGET2
 
 -----------------------------------------------------------------------
 v5_4_15 (2010-05-22)
