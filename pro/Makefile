@@ -7,7 +7,7 @@
 
 SHELL = /bin/sh
 #
-SUBDIRS = 2mass astrom bspline coord cosmography djsphot dust first fits healpix image mangle math misc mcmc mpeg mpfit physics plot psconfig psf rgbcolor rosat sdss slatec spheregroup TeXtoIDL trace ukidss yanny
+SUBDIRS = 2mass astrom bspline coord cosmography djsphot dust first fits healpix image mangle math misc mcmc mpeg mpfit physics plot psconfig psf rgbcolor rosat sdss slatec spheregroup TeXtoIDL trace ukidss yanny dimage cooling
 
 all :;
 
