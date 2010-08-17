@@ -1,4 +1,5 @@
-
+v5_4_19 (not yet tagged)
+-----------------------------------------------------------------------
 FIRST_READ, FIRST_COVERAGE, FIRST_CONVERT: add support for 
   v08jul16 version of catalog, fix 0/360 error
 SDSS_FLAGEXIST: just check if a flag name or bit label exists
@@ -13,6 +14,7 @@ data/sdss/sdssMaskbits.par:
   added BOSSTILE_STATUS bits pertaining to duplicates
   added description field for documentation purposes 
   added BOSS_TARGET1 bit 42 for Extreme Deconvolution in the core (ESS).
+  added BOSS_TARGET1 bit 43 for Likelihood in the core (ESS).
   set masktype for ANCILLARY_TARGET2
 
 -----------------------------------------------------------------------
