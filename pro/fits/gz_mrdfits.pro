@@ -6,13 +6,13 @@
 ; CALLING SEQUENCE:
 ;   str= gz_mrdfits([params for mrdfits])
 ; COMMENTS:
-;   Tries .gz, .Z, then .z
+;   Tries .gz, .Z, .z, then .bz2
 ; REVISION HISTORY:
 ;   27-Sep-2006  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
 function gz_mrdfits, file, ext, hdr, status=status, $
-                     _EXTRA=extra_for_gz_mrdfits 
+                     _EXTRA=extra_for_gz_mrdfits
 
 if(n_elements(ext) eq 0) then ext=0
 
@@ -31,6 +31,11 @@ endif
 if(status ne 0) then begin
     splog, 'Trying .z extension ...'
     str=mrdfits(file+'.z', ext, hdr, status=status, $
+                _EXTRA=extra_for_gz_mrdfits)
+endif
+if(status ne 0) then begin
+    splog, 'Trying .bz2 extension ...'
+    str=mrdfits(file+'.bz2', ext, hdr, status=status, $
                 _EXTRA=extra_for_gz_mrdfits)
 endif
 if(status ne 0) then begin
