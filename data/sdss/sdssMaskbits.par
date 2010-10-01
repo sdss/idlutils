@@ -437,7 +437,6 @@ maskbits ANCILLARY_TARGET2 3 QSO_VAR					"defined in butler-variable.fits.gz"
 maskbits ANCILLARY_TARGET2 4 QSO_VAR_FPG			"defined in nathalie-ancillary3.par"
 maskbits ANCILLARY_TARGET2 5 RADIO_2LOBE_QSO	"defined in kimball-radio-2lobe-qso.fits.gz"
 maskbits ANCILLARY_TARGET2 6 STRIPE82BCG			"defined in alexie-bcgs.fits"	
-maskbits ANCILLARY_TARGET2 7 ELG 		"defined in kneib-w1.fits"
 
 
 #-------- bosstile status bits
