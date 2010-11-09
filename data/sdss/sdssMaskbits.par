@@ -461,6 +461,7 @@ maskbits BOSSTILE_STATUS 16 KNOWN_OBJECT "galaxy has known redshift"
 maskbits BOSSTILE_STATUS 17 DUPLICATE "trimmed as a duplicate object (only checked if not trimmed for any other reason)"
 maskbits BOSSTILE_STATUS 18 DUPLICATE_PRIMARY "has associated duplicate object that were trimmed (but this one is kept)"
 maskbits BOSSTILE_STATUS 19 DUPLICATE_TILED "trimmed as a duplicate object, and its primary was tiled"
+maskbits BOSSTILE_STATUS 20 TOOFAINT "trimmed because it was fainter than the ifiber2mag limit"
 
 #-------- SEGUE-1 target bits
 masktype SEGUE1_TARGET 32 "SEGUE-1 primary target bits"
