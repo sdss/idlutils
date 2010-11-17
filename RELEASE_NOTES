@@ -1,7 +1,17 @@
+v5_4_21 (2010-11-17)
+-----------------------------------------------------------------------
+
+Tagged for target run main009
+
+data/sdss/sdssMaskbits.par:
+    added BOSS_TARGET1 flag GAL_IFIBER2_FAINT at bit 7  (ESS)
+
+v5_4_20
+-----------------------------------------------------------------------
 
 added new BOSSTILE_STATUS flag for fiber2mag limit
 
-v5_4_19 (not yet tagged)
+v5_4_19
 -----------------------------------------------------------------------
 
 GZ_MRDFITS, GZ_HEADFITS: Try .bz2 files.
