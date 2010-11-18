@@ -1,3 +1,10 @@
+v5_4_22 (2010-11-17)
+-----------------------------------------------------------------------
+
+Bug fix in gal_ifiber2_faint, it was given the wrong value.  Normally I would
+have just deleted the tag v5_4_21 and re-tagged, but because we are not allowed
+to delete tags any more, I had to make a new tag. (ESS)
+
 v5_4_21 (2010-11-17)
 -----------------------------------------------------------------------
 
