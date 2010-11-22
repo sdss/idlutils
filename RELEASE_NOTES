@@ -1,4 +1,4 @@
-v5_4_22 (2010-11-17)
+v5_4_22 (2010-11-22)
 -----------------------------------------------------------------------
 
 Bug fix in gal_ifiber2_faint, it was given the wrong value.  Normally I would
