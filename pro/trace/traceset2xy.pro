@@ -34,9 +34,10 @@
 ;   19-May-1999  Written by David Schlegel, Princeton.
 ;   01-Dec-2000  Handle scalar xpos correctly - D. Finkbeiner
 ;   10-Jul-2001  Added fpoly- S.Burles
+;   25-Jan-2011  added "xjump" handling, A. bolton, U. of Utah
 ;-
 ;------------------------------------------------------------------------------
-pro traceset2xy, tset, xpos, ypos
+pro traceset2xy, tset, xpos, ypos, ignore_jump=ignore_jump
 
    ; Need 3 parameters
    if (N_params() LT 3) then begin
@@ -47,6 +48,11 @@ pro traceset2xy, tset, xpos, ypos
    if (tset.func EQ 'legendre' OR $
        tset.func EQ 'chebyshev' OR $
        tset.func EQ 'poly') then begin
+
+      ; test for presence of jump
+      ; (see xy2traceset for details)
+      if tag_exist(tset, 'XJUMPVAL') then do_jump = 1B
+      if keyword_set(ignore_jump) then do_jump = 0B
 
       ndim = size(tset.coeff, /n_dim)
       dims = size(tset.coeff, /dim)
@@ -71,7 +77,14 @@ pro traceset2xy, tset, xpos, ypos
 
       ypos = xpos*0.0
       for iTrace=0, nTrace-1 do begin
-         xvec = 2.0 * (xpos[*,iTrace]-xmid)/xrange
+         xinput = xpos[*,iTrace]
+         if keyword_set(do_jump) then begin
+            ; Vector specifying what fraction of the jump has passed:
+            jfrac = (((xinput - tset.xjumplo) / (tset.xjumphi - tset.xjumplo)) > 0.) < 1.
+            ; Conversion to "natural" x baseline:
+            xnatural = xinput + jfrac * tset.xjumpval
+         endif else xnatural = xinput
+         xvec = 2.0 * (xnatural-xmid)/xrange
          if (tset.func EQ 'poly') then legarr = fpoly(xvec, ncoeff)
          if (tset.func EQ 'legendre') then legarr = flegendre(xvec, ncoeff)
          if (tset.func EQ 'chebyshev') then legarr = fchebyshev(xvec, ncoeff)

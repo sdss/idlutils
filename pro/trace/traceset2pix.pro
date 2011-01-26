@@ -42,6 +42,7 @@
 ;   09-Nov-1999  Written by David Schlegel, Ringberg.
 ;   01-Dec-2000  added silent keyword - D. Finkbeiner
 ;   10-Jul-2001  added polynomial option
+;   25-Jan-2011  added "xjump" handling, A. bolton, U. of Utah
 ;-
 ;------------------------------------------------------------------------------
 function traceset2pix, tset, lambda, nicoeff=nicoeff, silent=silent
@@ -71,7 +72,7 @@ function traceset2pix, tset, lambda, nicoeff=nicoeff, silent=silent
       if (NOT keyword_set(nicoeff)) then nicoeff = ncoeff + 2
 
       ; Invert the trace set
-      traceset2xy, tset, xpos, ypos
+      traceset2xy, tset, xpos, ypos, /ignore_jump
       xmin = min(ypos)
       xmax = max(ypos)
       xy2traceset, ypos, xpos, invset, func=tset.func, ncoeff=nicoeff, $
@@ -84,6 +85,17 @@ function traceset2pix, tset, lambda, nicoeff=nicoeff, silent=silent
        else pixpos = fltarr(nlambda,ntrace)
       for itrace=0, ntrace-1 do $
        pixpos[*,itrace] = legarr # invset.coeff[*,itrace]
+
+      ; take out any jumps that might be present:
+      ; (see docs in xy2traceset)
+      if tag_exist(tset, 'XJUMPVAL') then begin
+         ; derive upper boundary of the jump in natural units:
+         xnjumphi = tset.xjumphi + tset.xjumpval
+         ; Array that encodes what fraction of the ramp has passed:
+         jfrac = (((pixpos - tset.xjumplo) / (xnjumphi - tset.xjumplo)) > 0.) < 1.
+         ; transform to "input" units
+         pixpos = pixpos - jfrac * tset.xjumpval
+      endif
 
    endif else begin
       error, 'Unknown function' + func

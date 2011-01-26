@@ -41,6 +41,10 @@
 ;                values, which will occur anyway if XPOS, YPOS or INVVAR
 ;                are double-precision
 ;   silent     - Set to suppress print and splog outputs
+;   xjumplo    - x position locating start of an x discontinuity
+;   xjumphi    - x position locating end of that x discontinuity
+;   xjumpval   - magnitude of the discontinuity "jump" between those bounds
+;                (previous 3 keywords motivated by BOSS 2-phase readout)
 ;   EXTRA      - Keywords passed to either the function FUNC, or DJS_REJECT().
 ;                Note that keywords like MAXREJ relate to each individual trace.
 ;
@@ -80,12 +84,15 @@
 ;   02-Sep-2000  Modify to use rejection schemes in DJS_REJECT() (DJS).
 ;   07-Dec-2000  Added /silent keyword (DPF)
 ;   10-Jul-2001  Add polynomial option
+;   25-Jan-2011  Added "xjump" functionality for BOSS 2-phase readout
+;                (A. Bolton, U. of Utah)
 ;-
 ;------------------------------------------------------------------------------
 pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
  xmin=xmin, xmax=xmax, maxiter=maxiter, inputfunc=inputfunc, $
  inmask=inmask, outmask=outmask, yfit=yfit, inputans=inputans, $
- double=double1, silent=silent, _EXTRA=EXTRA
+ double=double1, silent=silent, xjumplo=xjumplo, xjumphi=xjumphi, $
+ xjumpval=xjumpval, _EXTRA=EXTRA
 
    ; Need 3 parameters
    if (N_params() LT 3) then begin
@@ -129,6 +136,14 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
      coeff   :    dblarr(ncoeff, ntrace) $
    }
 
+   if ((n_elements(xjumplo) gt 0) and (n_elements(xjumphi) gt 0) $
+    and keyword_set(xjumpval)) then begin
+      do_jump = 1B
+      newset = {xjumplo: xjumplo[0], xjumphi: xjumphi[0], $
+                xjumpval: xjumpval[0]}
+      tset = struct_addtags(tset, newset)
+   endif
+
    if (size(xmin, /tname) NE 'UNDEFINED') then tset.xmin = xmin $
     else tset.xmin = min(xpos)
    if (size(xmax, /tname) NE 'UNDEFINED') then tset.xmax = xmax $
@@ -151,7 +166,17 @@ pro xy2traceset, xpos, ypos, tset, invvar=invvar, func=func, ncoeff=ncoeff, $
 
    for itrace=0, ntrace-1 do begin
 
-      xnorm = 2.0 * (xpos[*,itrace] - xmid) / xrange ; X positions renormalized
+      ; Put in any discontinuity:
+      xinput = xpos[*,itrace]
+      if keyword_set(do_jump) then begin
+         ; Vector specifying what fraction of the jump has passed:
+         jfrac = (((xinput - tset.xjumplo) / (tset.xjumphi - tset.xjumplo)) > 0.) < 1.
+         ; Conversion to "natural" x baseline:
+         xnatural = xinput + jfrac * tset.xjumpval
+      endif else xnatural = xinput
+
+;      xnorm = 2.0 * (xpos[*,itrace] - xmid) / xrange ; X positions renormalized
+      xnorm = 2.0 * (xnatural - xmid) / xrange ; X positions renormalized
 
       if (keyword_set(inputans)) then curans = inputans[*,itrace] 
 
