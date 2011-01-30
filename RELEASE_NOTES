@@ -1,7 +1,11 @@
+
+v5_4_23 (2011-01-29)
+-----------------------------------------------------------------------
+
 XY2TRACESET, TRACESET2XY, TRACESET2PIX:
   Added functionality to handle pixel-frame discontinuity due to
   BOSS 2-phase readout on red side (A. Bolton, U. of Utah).
-  All previous funcitonality preserved (I believe!)
+  All previous functionality preserved (I believe!)
 
 v5_4_22 (2010-11-22)
 -----------------------------------------------------------------------
