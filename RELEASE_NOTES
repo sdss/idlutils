@@ -7,6 +7,8 @@ XY2TRACESET, TRACESET2XY, TRACESET2PIX:
   BOSS 2-phase readout on red side (A. Bolton, U. of Utah).
   All previous functionality preserved (I believe!)
 
+  Tagging to get dependency right in idlspec2d.
+
 v5_4_22 (2010-11-22)
 -----------------------------------------------------------------------
 
