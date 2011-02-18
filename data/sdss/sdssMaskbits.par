@@ -354,6 +354,7 @@ maskbits BOSS_TARGET1 40 QSO_CORE_MAIN      "Main survey core sample"
 maskbits BOSS_TARGET1 41 QSO_BONUS_MAIN     "Main survey bonus sample"
 maskbits BOSS_TARGET1 42 QSO_CORE_ED        "Extreme Deconvolution in Core"
 maskbits BOSS_TARGET1 43 QSO_CORE_LIKE      "Likelihood that make it into core"
+maskbits BOSS_TARGET1 44 QSO_KNOWN_SUPPZ    "known qso between [1.8,2.15]"
 
 # standards
 maskbits BOSS_TARGET1 20 STD_FSTAR          "standard f-stars"
