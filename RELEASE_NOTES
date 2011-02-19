@@ -1,4 +1,4 @@
-v5_4_24 (??)
+v5_4_24 (2011-02-19)
 -----------------------------------------------------------------------
 data/sdss/sdssMaskbits.par: Added bit
     BOSS_TARGET1 43 QSO_KNOWN_SUPPZ    "known qso between [1.8,2.15]"
