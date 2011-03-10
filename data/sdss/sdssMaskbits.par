@@ -441,7 +441,8 @@ maskbits ANCILLARY_TARGET2 2 KQSO_BOSS				"defined in mcmahon-ukidss.fits"
 maskbits ANCILLARY_TARGET2 3 QSO_VAR					"defined in butler-variable.fits.gz"
 maskbits ANCILLARY_TARGET2 4 QSO_VAR_FPG			"defined in nathalie-ancillary3.par"
 maskbits ANCILLARY_TARGET2 5 RADIO_2LOBE_QSO	"defined in kimball-radio-2lobe-qso.fits.gz"
-maskbits ANCILLARY_TARGET2 6 STRIPE82BCG			"defined in alexie-bcgs.fits"	
+maskbits ANCILLARY_TARGET2 6 STRIPE82BCG			"defined in alexie-bcgs.fits"
+maskbits ANCILLARY_TARGET2 7 QSO_SUPPZ			"defined in qso_suppz.descr"
 
 
 #-------- bosstile status bits
@@ -467,6 +468,7 @@ maskbits BOSSTILE_STATUS 17 DUPLICATE "trimmed as a duplicate object (only check
 maskbits BOSSTILE_STATUS 18 DUPLICATE_PRIMARY "has associated duplicate object that were trimmed (but this one is kept)"
 maskbits BOSSTILE_STATUS 19 DUPLICATE_TILED "trimmed as a duplicate object, and its primary was tiled"
 maskbits BOSSTILE_STATUS 20 TOOFAINT "trimmed because it was fainter than the ifiber2mag limit"
+maskbits BOSSTILE_STATUS 21 SUPPLEMENTARY "supplementary targets tiles after the ancillaries (subset of ancillaries)"
 
 #-------- SEGUE-1 target bits
 masktype SEGUE1_TARGET 32 "SEGUE-1 primary target bits"
