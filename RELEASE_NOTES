@@ -2,6 +2,7 @@
 data/sdss/sdssMaskbits.par: Added bits
 maskbits BOSSTILE_STATUS 21 SUPPLEMENTARY "supplementary targets tiles after the ancillaries (subset of ancillaries)"
 maskbits ANCILLARY_TARGET2 7 QSO_SUPPZ			"defined in qso_suppz.descr"
+maskbits ANCILLARY_TARGET2 8 QSO_VAR_SDSS			"defined in VARQSO.descr"
 
 
 v5_4_24 (2011-02-19)
