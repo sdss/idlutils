@@ -124,6 +124,20 @@ if (matchlength le 0l) then begin
     return
 endif
 
+ibadra1= where(ra1 lt 0. OR ra1 gt 360., nbadra1)
+if(nbadra1 gt 0) then $
+  message, 'spherematch does not accept RA outside 0 to 360 (RA1)'
+ibadra2= where(ra2 lt 0. OR ra2 gt 360., nbadra2)
+if(nbadra2 gt 0) then $
+  message, 'spherematch does not accept RA outside 0 to 360 (RA2)'
+ibaddec1= where(dec1 lt -90. OR dec1 gt 90., nbaddec1)
+if(nbaddec1 gt 0) then $
+  message, 'spherematch does not accept DEC outside -90 to 90 (DEC1)'
+ibaddec2= where(dec2 lt -90. OR dec2 gt 90., nbaddec2)
+if(nbaddec2 gt 0) then $
+  message, 'spherematch does not accept DEC outside -90 to 90 (DEC1)'
+
+
 soname = filepath('libspheregroup.'+idlutils_so_ext(), $
                   root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
 onmatch = keyword_set(estnmatch) ? long(estnmatch) : 0L
