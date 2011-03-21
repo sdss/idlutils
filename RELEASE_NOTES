@@ -1,47 +1,56 @@
 
+AIRTOVAC,VACTOAIR: Carlos Prieto pointed out that the air-to-vacuum
+    wavelength conversion is based upon the Morton (1991 Ap.J. Suppl.
+    77, 119) formula that appears to be incorrect at the level of
+    approx 0.2 km/s.  Furthermore, this implementation approximated
+    that formula with only two terms of a Taylor expansion.
+    Replace this with the Ciddor (1996) formula which has been
+    adopted by the International Association of Geodesy, and
+    appears to be more widely used, see, e.g.
+      http://emtoolbox.nist.gov/Wavelength/Documentation.asp
+      http://refractiveindex.info/?group=GASES&material=Air
+    (Ticket #1247).
+
 data/sdss/sdssMaskbits.par: Added bits
-maskbits BOSSTILE_STATUS 21 SUPPLEMENTARY "supplementary targets tiles after the ancillaries (subset of ancillaries)"
-maskbits ANCILLARY_TARGET2 7 QSO_SUPPZ			"defined in qso_suppz.descr"
-maskbits ANCILLARY_TARGET2 8 QSO_VAR_SDSS			"defined in VARQSO.descr"
+    BOSSTILE_STATUS 21 SUPPLEMENTARY "supplementary targets
+     tiles after the ancillaries (subset of ancillaries)"
+    ANCILLARY_TARGET2 7 QSO_SUPPZ "defined in qso_suppz.descr"
+    ANCILLARY_TARGET2 8 QSO_VAR_SDSS "defined in VARQSO.descr"
 
-
+-------------------------------------------------------------------------------
 v5_4_24 (2011-02-19)
------------------------------------------------------------------------
 data/sdss/sdssMaskbits.par: Added bit
     BOSS_TARGET1 43 QSO_KNOWN_SUPPZ    "known qso between [1.8,2.15]"
 
+-------------------------------------------------------------------------------
 v5_4_23 (2011-01-29)
------------------------------------------------------------------------
+Tagging to get dependency right in idlspec2d.
 
 XY2TRACESET, TRACESET2XY, TRACESET2PIX:
-  Added functionality to handle pixel-frame discontinuity due to
-  BOSS 2-phase readout on red side (A. Bolton, U. of Utah).
-  All previous functionality preserved (I believe!)
+    Added functionality to handle pixel-frame discontinuity due to
+    BOSS 2-phase readout on red side (A. Bolton, U. of Utah).
+    All previous functionality preserved (I believe!)
 
-  Tagging to get dependency right in idlspec2d.
-
+-------------------------------------------------------------------------------
 v5_4_22 (2010-11-22)
------------------------------------------------------------------------
-
-Bug fix in gal_ifiber2_faint, it was given the wrong value.  Normally I would
-have just deleted the tag v5_4_21 and re-tagged, but because we are not allowed
-to delete tags any more, I had to make a new tag. (ESS)
-
-v5_4_21 (2010-11-17)
------------------------------------------------------------------------
-
-Tagged for target run main009
 
 data/sdss/sdssMaskbits.par:
-    added BOSS_TARGET1 flag GAL_IFIBER2_FAINT at bit 7  (ESS)
+    Bug fix in GAL_IFIBER2_FAINT, it was given the wrong value (ESS).
 
+-------------------------------------------------------------------------------
+v5_4_21 (2010-11-17)
+Tagged for target run main009
+
+   Added BOSS_TARGET1 flag GAL_IFIBER2_FAINT at bit 7  (ESS)
+
+-------------------------------------------------------------------------------
 v5_4_20
------------------------------------------------------------------------
 
-added new BOSSTILE_STATUS flag for fiber2mag limit
+data/sdss/sdssMaskbits.par:
+    Added new BOSSTILE_STATUS flag for fiber2mag limit
 
+-------------------------------------------------------------------------------
 v5_4_19
------------------------------------------------------------------------
 
 GZ_MRDFITS, GZ_HEADFITS: Try .bz2 files.
 FIRST_READ, FIRST_COVERAGE, FIRST_CONVERT: add support for
@@ -61,12 +70,12 @@ data/sdss/sdssMaskbits.par:
   added BOSS_TARGET1 bit 43 for Likelihood in the core (ESS).
   set masktype for ANCILLARY_TARGET2
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_15 (2010-05-22)
 
 Makefile: fix rosat directory installation
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_14 (2010-05-20)
 
 LAS_BLANK: Return nmatch.
@@ -80,7 +89,7 @@ data/sdss/sdssMaskbits.par: Increased declared length of label
         Added new bit to BOSSTILE_STATUS (Tinker)
         Added SEGUE1_TARGET1, SEGUE1_TARGET2, SEGUE2_TARGET1, SEGUE2_TARGET2
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_13 (2010-03-29)
 
 INTEGRATE_K53: Compute integral of K_5/3 Bessel function for synch_power (Fink)
@@ -91,7 +100,7 @@ SYNCH_POWER: Compute the synchrotron spectrum of a single electron (Fink)
 data/sdss/sdssMaskbits.par: Add more BOSSTILE_STATUS bits (Blanton)
                             Renamed SDSS_GAL_KNOWN to SDSS_KNOWN
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_12 (Jan 23, 2010) tagged for spectro reductions
 
 LINES2STRUCT: Add check for hash (#).
@@ -107,14 +116,14 @@ data/sdss/sdssMaskbits.par:  Added bits OUT_OF_BOUNDS and
 pro/Makefile: Adds ukidss directory.
 src/idlmangle/idl_where_polygons_overlap.c
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_11 (Dec, 2009) tagged for resolve_global_secondary
 
 data/sdss/sdssMaskbits.par:  Added bits 40,41 for qsos.  Currently
     called QSO_KDE, QSO_CORE_MAIN, QSO_BONUS_MAIN GAL_CMASS_ALL
     ESS.
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_10 (Nov 10, 2009) tagged for resolve_global_secondary
 
 EXTRACT_PROFMEAN: more careful handling of zeroes in ivars
@@ -123,7 +132,7 @@ MWRFITS_CHUNKS: drop host_to_ieee and ieee_to_host calls, to account
                 v5_4_8. (v5_4_8 and v5_4_9 versions of this routine
                 will fail on little-endian machines).
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_9 (Oct 07, 2009) tagged for second boss commissioning run, which
     depends on sdssMaskbits.par
 
@@ -135,7 +144,7 @@ pro/sdss/sdss_flagval.pro:  Made flagprefix case insensitive again.
 src/idlmangle/idl_where_polygons_overlap: loosen tolerance for unsnapped polys
   MRB, 2009-10-05
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_8 (Sep 25, 2009) tagged for idlspec2d v5_4_1
 
 ATV: sysvars are now type long (Fink)
@@ -170,7 +179,7 @@ data/sdss/sdssMaskbits.par: Information on the associated datatype for the
 goddard libraries: Sync with Landsman version as of July 9, 2009 by Finkbeiner;
           revision 2167.
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_7 (Aug 4, 2009) tagged for target selection (Sheldon)
 
 LINES2STRUCT,STRUCT2LINES: Keyword/value pair interpreters, moved from
@@ -178,19 +187,19 @@ LINES2STRUCT,STRUCT2LINES: Keyword/value pair interpreters, moved from
 
 data/sdss/sdssMaskbits.par: Added more target flags.
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_6 (July 29, 2009) tagged for target selection (Sheldon)
 
 MAKE_HTML_HELP: Write modern HTML files (Weaver)
 
 new known galaxies target bit
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_5 (July 14, 2009) tagged for target selection (Sheldon)
 
 New sdssMaskbits.par
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_4 (July 8, 2009) tagged for target selection (Sheldon)
 
 bin/evilmake: a few more changes to push flags down, especially -m32/-m64
@@ -199,7 +208,7 @@ Makefile, include/export.h: Link in current export.h from idl rather
           than use and maintain a copy in this product.
           Depends on $IDL_DIR being set to the root of the IDL dir.
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_3 (July 5, 2009) tagged for idlmapper product upgrade (Schlegel)
 
 DJS_RGB_MAKE: Trim if necessary for rebinning automatrically
@@ -216,7 +225,7 @@ src/mangle2.2/src/rdmask.c - Add limit to read in only the actual
 src/dimage/dsmooth.c - faster version using separability of kernel
 www/doc/index.html: Add link to goddard.
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_2 (June 10, 2009) tagged after mangle2.2 upgrade
 
 CONSTRUCT_POLYGON: Add pixel number to structure
@@ -229,7 +238,7 @@ src/mangle1.4 - changed to only compile mrb_* commands, write libmangle14.a
 src/mangle2.2 - added pixelize-capable mangle (Molly Swanson)
 www/doc/index.html: New documentation
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_1 (June 8, 2009) tagged before mangle2.2 upgrade
 
 ANGLES_TO_X: fix documentation
@@ -246,7 +255,7 @@ doc/www/idlutils.css - style sheet for above
 bin/idlutils_version: SVN version reporting
 data/sdss/sdssMaskbits.par: Alterations to BOSSTARGET1
 
------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 v5_4_0 (April 30, 2009) tagged for SDSS-3 image processing
 
 BITMASK_WIDGET (new): Little widget to have user set a bitmask (Blanton)
