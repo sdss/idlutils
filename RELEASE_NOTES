@@ -1,3 +1,5 @@
+ROSAT_FITS: Define the blank rosat structure according to modern
+    IDL rules (i.e., rosat__define.pro).
 
 AIRTOVAC,VACTOAIR: Carlos Prieto pointed out that the air-to-vacuum
     wavelength conversion is based upon the Morton (1991 Ap.J. Suppl.

@@ -1130,7 +1130,6 @@ pro/rgbcolor/nw_overlay_range.pro -text
 pro/rgbcolor/nw_rebin_image.pro -text
 pro/rgbcolor/nw_rgb_make.pro -text
 pro/rgbcolor/nw_scale_rgb.pro -text
-pro/rosat/rosat_blank.pro -text
 pro/rosat/rosat_fits.pro -text
 pro/sdss/findopfile.pro -text
 pro/sdss/sdss_flagexist.pro -text

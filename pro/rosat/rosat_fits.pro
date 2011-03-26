@@ -17,7 +17,8 @@ fscfile= getenv('RASS_DIR')+'/ascii/rass-fsc-1rxs.cat'
 nlines= numlines(fscfile)
 nfsc= nlines-175L
 
-fsc= replicate(rosat_blank(), nfsc)
+rosat0 = { rosat }
+fsc= replicate(rosat0, nfsc)
 
 openr, unit, fscfile, /get_lun
 
@@ -74,7 +75,7 @@ bscfile= getenv('RASS_DIR')+'/ascii/rass-bsc-1rxs.cat'
 nlines= numlines(bscfile)
 nbsc= nlines-4L
 
-bsc= replicate(rosat_blank(), nbsc)
+bsc= replicate(rosat0, nbsc)
 
 openr, unit, bscfile, /get_lun
 
