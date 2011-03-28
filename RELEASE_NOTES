@@ -1,3 +1,6 @@
+CONSTRUCT_CAP: Define the blank capstr structure according to 
+    modern IDL rules (i.e., capstr__define.pro).
+
 ROSAT_FITS: Define the blank rosat structure according to modern
     IDL rules (i.e., rosat__define.pro).
 

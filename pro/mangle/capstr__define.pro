@@ -1,10 +1,10 @@
 ;+
 ; NAME:
-;   construct_cap
+;   capstr__define
 ; PURPOSE:
 ;   Create the structure for a cap
 ; CALLING SEQUENCE:
-;   poly=construct_cap()
+;   poly={capstr}
 ; INPUTS:
 ; OPTIONAL INPUTS:
 ; OUTPUTS:
@@ -13,14 +13,13 @@
 ; EXAMPLES:
 ; BUGS:
 ; PROCEDURES CALLED:
+; VERSION:
+;   $Id$
 ; REVISION HISTORY:
-;   01-Oct-2002  Written by MRB (NYU)
+;   2011-03-27 Written by B. A. Weaver (NYU)
 ;-
 ;------------------------------------------------------------------------------
-FUNCTION construct_cap
-    ;
-    ; make cap structure
-    ;
-    cap1={capstr}
-    RETURN,cap1
+PRO capstr__define
+    foo = {capstr, x:DBLARR(3), cm:0.0D}
+    RETURN
 END
