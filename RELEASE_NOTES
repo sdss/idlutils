@@ -1,3 +1,6 @@
+USNO_READZONE: Fixed bug which caused incomplete star lists to be 
+    returned in very irregular regions of the Galactic Bulge.
+
 CONSTRUCT_CAP: Define the blank capstr structure according to 
     modern IDL rules (i.e., capstr__define.pro).
 
