@@ -72,7 +72,7 @@ PRO usno_readzone, catpath, zone, ra0, ra1, rec_len, prefix, result, $
 
 ; pad arrays
   ra = [ra_acc, 24.] *15. ; convert to degrees
-  indmax = ind[ntag-1]+n[ntag-1]-1
+  indmax = round(ind[ntag-1]+n[ntag-1]-1)
   ind = [ind, indmax ]
 
 ; get (zero-indexed) offsets in .cat file
@@ -88,6 +88,21 @@ PRO usno_readzone, catpath, zone, ra0, ra1, rec_len, prefix, result, $
   data = ulonarr(rec_len/4, nstars)
   point_lun, readlun, ind0*rec_len
   readu, readlun, data
+
+; check that we got everything
+  racat  = transpose(data[0, *]) /3.6d5
+  if min(racat) GE ra0 OR max(racat) LE ra1 then begin
+     indrange = round(interpol([ind0,ind1],minmax(racat),raread))
+     indrange = (indrange > 0) < (indmax-1)
+     ind0 = indrange[0]
+     ind1 = indrange[1]
+     nstars = (ind1-ind0)+1
+     data = ulonarr(rec_len/4, nstars)
+     point_lun, readlun, ind0*rec_len
+     readu, readlun, data
+  endif
+
+; close file
   free_lun, readlun
 
 ; trim unwanted RA stars
