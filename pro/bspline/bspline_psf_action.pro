@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   bspline_radial
+;   bspline_psf_action
 ;
 ; PURPOSE:
 ;   Calculate the action matrix for a Radial B-spline with PSF convolution
