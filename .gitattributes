@@ -687,6 +687,9 @@ pro/astrom/ll2uv.pro -text
 pro/astrom/offset_from_pairs.pro -text
 pro/astrom/tycho_epoch.pro -text
 pro/astrom/tycho_read.pro -text
+pro/astrom/ucac3_read.pro -text
+pro/astrom/ucac3_readindex.pro -text
+pro/astrom/ucac3_readzone.pro -text
 pro/astrom/ucac_read.pro -text
 pro/astrom/ucac_readindex.pro -text
 pro/astrom/ucac_readzone.pro -text
