@@ -1,3 +1,10 @@
+GZ_FILE_TEST: Checks for file, but also for any zipped version
+    (.gz, .z, .Z, or .bz2)
+
+UCAC3_READ, UCAC3_READINDEX, UCAC3_READZONE: Code to read in 
+    UCAC-3 data as distributed by USNO. (Data structures differ 
+    substantially from UCAC-2 version read by ucac_read()).
+
 USNO_READZONE: Fixed bug which caused incomplete star lists to be 
     returned in very irregular regions of the Galactic Bulge.
 
