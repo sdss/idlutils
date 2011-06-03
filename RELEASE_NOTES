@@ -1,5 +1,6 @@
 GZ_FILE_TEST: Checks for file, but also for any zipped version
     (.gz, .z, .Z, or .bz2)
+GZ_MRDFITS: Cleaner and more silent implementation
 
 UCAC3_READ, UCAC3_READINDEX, UCAC3_READZONE: Code to read in 
     UCAC-3 data as distributed by USNO. (Data structures differ 
