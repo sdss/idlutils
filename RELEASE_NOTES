@@ -1,3 +1,6 @@
+UCACR14_READ: Reads in circle of data from UCAC r14 catalog (USNO's
+    internal catalog that was used for SDSS DR7.2 astrometry)
+
 GZ_FILE_TEST: Checks for file, but also for any zipped version
     (.gz, .z, .Z, or .bz2)
 GZ_MRDFITS: Cleaner and more silent implementation

@@ -687,12 +687,15 @@ pro/astrom/ll2uv.pro -text
 pro/astrom/offset_from_pairs.pro -text
 pro/astrom/tycho_epoch.pro -text
 pro/astrom/tycho_read.pro -text
+pro/astrom/ucac2patch_read.pro -text
 pro/astrom/ucac3_read.pro -text
 pro/astrom/ucac3_readindex.pro -text
 pro/astrom/ucac3_readzone.pro -text
 pro/astrom/ucac_read.pro -text
 pro/astrom/ucac_readindex.pro -text
 pro/astrom/ucac_readzone.pro -text
+pro/astrom/ucacr14_extract.pro -text
+pro/astrom/ucacr14_read.pro -text
 pro/astrom/usno_cone.pro -text
 pro/astrom/usno_parse_epoch_file.pro -text
 pro/astrom/usno_read.pro -text
