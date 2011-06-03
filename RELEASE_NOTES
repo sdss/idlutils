@@ -1,5 +1,9 @@
 UCACR14_READ: Reads in circle of data from UCAC r14 catalog (USNO's
     internal catalog that was used for SDSS DR7.2 astrometry)
+UCACR14_EXTRACT: Converts raw file sent by Zacharias and Munn into 
+    format suitable for UCACR14_READ
+UCAC2PATCH_READ: Seamlessly runs UCAC_READ() and UCACR14_READ() and 
+    combines data (favoring r14 stars) 
 
 GZ_FILE_TEST: Checks for file, but also for any zipped version
     (.gz, .z, .Z, or .bz2)
