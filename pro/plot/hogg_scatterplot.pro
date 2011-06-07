@@ -89,7 +89,10 @@ pro hogg_scatterplot, xxx,yyy,weight=weight, $
                       ioutliers=ioutliers, $
                       meanweight=meanweight, $
                       usegrid=usegrid, $
-  overplot=overplot,$
+                      overplot=overplot,$
+                      xcharsize=xcharsize, ycharsize=ycharsize, $
+                      leftaxis=leftaxis, rightaxis=rightaxis, $
+                      topaxis=topaxis, bottomaxis=bottomaxis, $
                       _EXTRA=KeywordsForPlot
 
 if(n_params() lt 2) then begin
@@ -123,6 +126,20 @@ if (n_elements(cthick) EQ 1) then begin
 endif
 if keyword_set(adqgreyscale) then nogreyscale=1
 
+if(n_elements(xcharsize) gt 0) then $
+  tmp_xcharsize=xcharsize
+
+if(n_elements(ycharsize) gt 0) then $
+  tmp_ycharsize=ycharsize
+
+if(keyword_set(rightaxis) gt 0 OR $
+   keyword_set(leftaxis) gt 0 OR $
+   keyword_set(topaxis) gt 0 OR $
+   keyword_set(bottomaxis) gt 0) then begin
+    tmp_xcharsize=0.0001
+    tmp_ycharsize=0.0001
+endif
+
 ; check inputs
 ; [tbd]
 
@@ -133,6 +150,7 @@ y= reform(yyy,ndata)
 ; make axes
 if (not keyword_set(overplot)) then $
   plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+  xcharsize=tmp_xcharsize, ycharsize=tmp_ycharsize, $
   _EXTRA=KeywordsForPlot,/nodata
 
 ; snap points to grid
@@ -220,6 +238,7 @@ if NOT keyword_set(nogreyscale) then begin
     endif
     !P.MULTI[0]= !P.MULTI[0]+1 ; HACK!
     plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
+      xcharsize=tmp_xcharsize, ycharsize=tmp_ycharsize, $
       _EXTRA=KeywordsForPlot1,/nodata,color=djs_icolor('default')
 endif
 
@@ -283,6 +302,23 @@ endif
 ;   plot, [0],[0],xrange=xrange,yrange=yrange,/xstyle,/ystyle, $
 ;     _EXTRA=KeywordsForPlot,/nodata,/noerase
 ;endif
+
+if(keyword_set(rightaxis)) then $
+  axis, !X.CRANGE[1], !Y.CRANGE[0], yaxis=1, $
+  ytitle=ytitle_tex, ycharsize=ycharsize, $
+  _EXTRA=KeywordsForPlot
+if(keyword_set(leftaxis)) then $
+  axis, !X.CRANGE[0], !Y.CRANGE[0], yaxis=0, $
+  ytitle=ytitle_tex, ycharsize=ycharsize, $
+  _EXTRA=KeywordsForPlot
+if(keyword_set(topaxis)) then $
+  axis, !X.CRANGE[0], !Y.CRANGE[1], xaxis=1, $
+  xtitle=xtitle_tex, xcharsize=xcharsize, $
+  _EXTRA=KeywordsForPlot
+if(keyword_set(bottomaxis)) then $
+  axis, !X.CRANGE[0], !Y.CRANGE[0], xaxis=0, $
+  xtitle=xtitle_tex, xcharsize=xcharsize, $
+  _EXTRA=KeywordsForPlot
 
 return
 end

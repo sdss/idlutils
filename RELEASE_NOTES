@@ -5,6 +5,8 @@ UCACR14_EXTRACT: Converts raw file sent by Zacharias and Munn into
 UCAC2PATCH_READ: Seamlessly runs UCAC_READ() and UCACR14_READ() and 
     combines data (favoring r14 stars) 
 
+HOGG_SCATTERPLOT: allow use of /leftaxis, /rightaxis, /topaxis, /bottomaxis
+
 GZ_FILE_TEST: Checks for file, but also for any zipped version
     (.gz, .z, .Z, or .bz2)
 GZ_MRDFITS: Cleaner and more silent implementation
