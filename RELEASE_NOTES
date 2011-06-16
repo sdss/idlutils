@@ -1,3 +1,6 @@
+MAKE_HTML_HELP: Apply id tags directly to h2.
+STRUCT_TO_JSON, JSON_TO_STRUCT: Add functions that convert JSON notation
+    to IDL structure & reverse.
 AIRTOVAC,VACTOAIR: Carlos Prieto pointed out that the air-to-vacuum
     wavelength conversion is based upon the Morton (1991 Ap.J. Suppl.
     77, 119) formula that appears to be incorrect at the level of

@@ -401,7 +401,7 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
     ;
     ; Index.
     ;
-    PRINTF,final_file,'<h2><a id="ROUTINELIST">List of Routines</a></h2>'
+    PRINTF,final_file,'<h2 id="ROUTINELIST">List of Routines</h2>'
     PRINTF,final_file,'<ul>'
     FOR i=0,count-1 DO BEGIN
         entry = dict[indices[i]]
@@ -420,7 +420,7 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
     FOR i=0,count-1 DO BEGIN
         entry = dict[indices[i]]
         IF (entry.nline GT 0) THEN BEGIN
-            PRINTF,final_file,'<h3><a id="',entry.subject,'">',entry.subject,'</a></h3>'
+            PRINTF,final_file,'<h3 id="',entry.subject,'">',entry.subject,'</h3>'
             prev_i = i - 1
             IF (prev_i LT 0) THEN dostep = 0 $
             ELSE BEGIN
