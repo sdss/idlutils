@@ -1,3 +1,5 @@
+GZ_MRDFITS: Add back .bz2 extension that was left out of the previous
+    revision.
 MAKE_HTML_HELP: Apply id tags directly to h2.
 STRUCT_TO_JSON, JSON_TO_STRUCT: Add functions that convert JSON notation
     to IDL structure & reverse.

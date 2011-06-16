@@ -16,7 +16,7 @@ function gz_mrdfits, file, ext, hdr, status=status, $
 
 if(n_elements(ext) eq 0) then ext=0
 
-exts=['', '.gz', '.Z', '.z']
+exts=['', '.gz', '.Z', '.z', '.bz2']
 
 for i=0L, n_elements(exts)-1L do begin
     tryfile=file+exts[i]
