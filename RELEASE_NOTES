@@ -1,3 +1,8 @@
+
+data/sdss/sdssMaskbits.par: Added bits
+maskbits ANCILLARY_TARGET2 9 QSO_WISE_SUPP			"defined in ???.descr"
+ - Tinker, june 11 2011
+
 GZ_MRDFITS: Add back .bz2 extension that was left out of the previous
     revision.
 MAKE_HTML_HELP: Apply id tags directly to h2.

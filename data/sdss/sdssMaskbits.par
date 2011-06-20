@@ -444,6 +444,7 @@ maskbits ANCILLARY_TARGET2 5 RADIO_2LOBE_QSO	"defined in kimball-radio-2lobe-qso
 maskbits ANCILLARY_TARGET2 6 STRIPE82BCG			"defined in alexie-bcgs.fits"
 maskbits ANCILLARY_TARGET2 7 QSO_SUPPZ			"defined in qso_suppz.descr"
 maskbits ANCILLARY_TARGET2 8 QSO_VAR_SDSS			"defined in VARQSO.descr"
+maskbits ANCILLARY_TARGET2 9 QSO_WISE_SUPP			"defined in ???.descr"
 
 
 #-------- bosstile status bits
