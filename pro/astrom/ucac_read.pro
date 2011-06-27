@@ -27,6 +27,9 @@
 ; OPTIONAL OUTPUTS:
 ;
 ; COMMENTS:
+;   Note that PMRA is in COORDINATE units so needs to be multiplied
+;    by cos(dec) to yield PROPER units
+;
 ;   Either RACEN, DECCEN, RADIUS must be set, or NODE, INCL, HWIDTH.
 ;   If all keywords are set, the the catalog is trimmed with both sets
 ;   of conditions.
@@ -175,7 +178,7 @@ function ucac_read, racen=racen, deccen=deccen, radius=radius, $
    ; Check inputs
 
    if (n_elements(decrange1) EQ 2) then decrange = decrange1 $
-    else decrange = [-90,90]
+    else decrange = [-90.,90.]
 
    qreadcircle = (n_elements(racen) EQ 1 AND n_elements(deccen) EQ 1 $
     AND n_elements(radius) EQ 1)
@@ -188,13 +191,16 @@ function ucac_read, racen=racen, deccen=deccen, radius=radius, $
    ; great circles.  This means that the mu values along the great circle
    ; are incorrect, but we don't care since we're returning the full circle.
    if (qreadstripe) then begin
-      if (incl1 LE 90) then begin
+      if (incl1 LE 90 and incl1 ge 0.) then begin
          node = node1
          incl = incl1
       endif else begin
          node = node1 + 180
          cirrange, node
-         incl = 180 - incl1
+         if(incl1 gt 90.) then $
+           incl = 180 - incl1 $
+         else $
+           incl = - incl1 
       endelse
    endif
 
