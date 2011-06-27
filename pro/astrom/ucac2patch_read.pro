@@ -14,7 +14,7 @@
 ;   hwidth - half-width around great circle to get stars from (deg)
 ; COMMENTS:
 ;   Either specify [ra, dec, radius] OR specify [node, incl, hwidth]
-;   We read in both UCAC-2 and the r14 supplement, and keep r14 
+;   We read in both UCAC-2 and the r14 supplement, and keep UCAC-2 
 ;    stars where they overlap.
 ;   UCAC r14 is the internal USNO catalog for Dec>+38 deg 
 ;    used by the SDSS DR7.2 for astrometric calibration
@@ -68,6 +68,7 @@ if(keyword_set(circle) eq 0 and keyword_set(stripe) eq 0)  then $
   message, 'Must set RA, DEC, RADIUS or NODE, INCL, HWIDTH'
 
 patch0= {SOURCE:' ', $
+         EPOCH:0., $
          RAMDEG:0.D, $
          DEMDEG:0.D, $
          RMAG:0., $
@@ -89,6 +90,7 @@ if(n_tags(ucac) eq 0 and n_tags(r14) eq 0) then $
 if(n_tags(r14) gt 0) then begin
     ur14= replicate(patch0, n_elements(r14)) 
     ur14.source= 'r14'
+    ur14.epoch= r14.epoch
     ur14.ramdeg= r14.ra
     ur14.demdeg= r14.dec
     ur14.rmag= r14.mag
@@ -106,6 +108,7 @@ if(n_tags(ucac) gt 0) then begin
     uucac= replicate(patch0, n_elements(ucac)) 
     struct_assign, ucac, uucac
     uucac.source= 'ucac2'
+    uucac.epoch=2000.
 endif
 
 if(n_tags(uucac) eq 0) then $
@@ -115,15 +118,15 @@ if(n_tags(ur14) eq 0) then $
 
 spherematch, ur14.ramdeg, ur14.demdeg, uucac.ramdeg, uucac.demdeg, 1.0/3600., $
   m1, m2
-keep= bytarr(n_elements(uucac))+1
-if(m2[0] ne -1) then $
-  keep[m2]=0
+keep= bytarr(n_elements(ur14))+1
+if(m1[0] ne -1) then $
+  keep[m1]=0
 ikeep= where(keep, nkeep)
 
 if(nkeep eq 0) then $
-  return, ur14 $
+  return, uucac $
 else $
-  return, [uucac[ikeep], ur14]
+  return, [uucac, ur14[ikeep]]
 
 end
 ;------------------------------------------------------------------------------
