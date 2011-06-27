@@ -24,6 +24,8 @@
 ;
 ; COMMENTS:
 ;   Quantities are de-coded to meaningful units, e.g. converting RA to degrees.
+;   Note that PMRA is in COORDINATE units so needs to be multiplied
+;    by cos(dec) to yield PROPER units
 ;
 ; EXAMPLES:
 ;
