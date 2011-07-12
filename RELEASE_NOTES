@@ -1,13 +1,4 @@
 
-data/sdss/sdssMaskbits.par: Added bits
-maskbits ANCILLARY_TARGET2 9 QSO_WISE_SUPP			"defined in ???.descr"
- - Tinker, june 11 2011
-
-GZ_MRDFITS: Add back .bz2 extension that was left out of the previous
-    revision.
-MAKE_HTML_HELP: Apply id tags directly to h2.
-STRUCT_TO_JSON, JSON_TO_STRUCT: Add functions that convert JSON notation
-    to IDL structure & reverse.
 AIRTOVAC,VACTOAIR: Carlos Prieto pointed out that the air-to-vacuum
     wavelength conversion is based upon the Morton (1991 Ap.J. Suppl.
     77, 119) formula that appears to be incorrect at the level of
@@ -24,7 +15,13 @@ CAPSTR__DEFINE,CONSTRUCT_CAP: Define the blank capstr structure according to
 GZ_FILE_TEST: Checks for file, but also for any zipped version
     (.gz, .z, .Z, or .bz2)
 GZ_MRDFITS: Cleaner and more silent implementation
+    Add back .bz2 extension that was left out of the previous revision.
 HOGG_SCATTERPLOT: Allow use of /leftaxis, /rightaxis, /topaxis, /bottomaxis
+IS_IN_WINDOW_PIX,RADEC_TO_SIMPLEPIX,WHICH_PIX_POLYGON: Code from Adam Myers
+    for is_in_window with pixelization.
+JSON_TO_STRUCT,STRUCT_TO_JSON: Add functions that convert JSON notation
+    to IDL structure & reverse (Weaver).
+MAKE_HTML_HELP: Apply HTML id tags directly to h2 (Weaver)
 ROSAT__DEFINE,ROSAT_BLANK,ROSAT_FITS: Define the blank rosat structure
     according to modern IDL rules (i.e., rosat__define.pro).
 SPHEREMATCH: Add chaeck for bad RA,Dec.
@@ -47,6 +44,7 @@ data/sdss/sdssMaskbits.par: Added bits
      tiles after the ancillaries (subset of ancillaries)"
     ANCILLARY_TARGET2 7 QSO_SUPPZ "defined in qso_suppz.descr"
     ANCILLARY_TARGET2 8 QSO_VAR_SDSS "defined in VARQSO.descr"
+    ANCILLARY_TARGET2 9 QSO_WISE_SUP "defined in ???.descr"
 
 -------------------------------------------------------------------------------
 v5_4_24 (2011-02-19)
