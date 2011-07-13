@@ -22,6 +22,7 @@ IS_IN_WINDOW_PIX,RADEC_TO_SIMPLEPIX,WHICH_PIX_POLYGON: Code from Adam Myers
 JSON_TO_STRUCT,STRUCT_TO_JSON: Add functions that convert JSON notation
     to IDL structure & reverse (Weaver).
 MAKE_HTML_HELP: Apply HTML id tags directly to h2 (Weaver)
+RSEX,WSEX: Updates for reading/writing SExtractor catalogs from L. Moustakes.
 ROSAT__DEFINE,ROSAT_BLANK,ROSAT_FITS: Define the blank rosat structure
     according to modern IDL rules (i.e., rosat__define.pro).
 SPHEREMATCH: Add chaeck for bad RA,Dec.
