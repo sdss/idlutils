@@ -6,7 +6,7 @@
 ;   Convert from a trace set to an array of x,y positions
 ;
 ; CALLING SEQUENCE:
-;   traceset2xy, tset, xpos, ypos
+;   traceset2xy, tset, xpos, ypos, [ /ignore_jump ]
 ;
 ; INPUTS:
 ;   tset       - Structure containing trace set
@@ -14,6 +14,7 @@
 ; OPTIONAL KEYWORDS:
 ;   xpos       - Input positions to evaluate YPOS; if not specified (or 0),
 ;                then generate an [NX,NTRACE] array of each pixel position
+;   ignore_jump- If set, then ignore the XJUMPVAL values in the structure
 ;
 ; OUTPUTS:
 ;   xpos       - X positions corresponding to YPOS
