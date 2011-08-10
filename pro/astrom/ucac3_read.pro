@@ -93,7 +93,7 @@ function ucac3_readcircle1, racen, deccen, radius, thiszone, decmin, decmax
    if (ravec[1] - ravec[0] GT 360) then begin
       outdat = ucac3_readgc_add(outdat, thiszone, [0,360])
    endif else if (ravec[0] LT 0) then begin
-      outdat = ucac3_readgc_add(outdat, thiszone, [360-ravec[0],360])
+      outdat = ucac3_readgc_add(outdat, thiszone, [360+ravec[0],360])
       outdat = ucac3_readgc_add(outdat, thiszone, [0,ravec[1]])
    endif else if (ravec[1] GT 360) then begin
       outdat = ucac3_readgc_add(outdat, thiszone, [ravec[0],360])

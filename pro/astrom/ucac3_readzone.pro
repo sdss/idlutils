@@ -77,7 +77,8 @@ function ucac3_readzone, thiszone, ra_min, ra_max
 
    if (j1 EQ 0) then i1 = 0L $
     else i1 = uindex[jj[j1-1]].n0
-   i2 = uindex[jj[j2]].n0 - 1L
+   if (j2 EQ n_elements(jj)-1L) then i2 = uindex[jj[j2]].n0+uindex[jj[j2]].nn-1 $
+    else i2 = uindex[jj[j2]].n0 - 1L
    nrecord = i2 - i1 + 1L
 
    if (nrecord EQ 0) then return, 0
