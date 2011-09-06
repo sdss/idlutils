@@ -18,6 +18,8 @@ Common:
       setupOptional("tycho2")
       setupOptional("ucac")
       setupOptional("usno")
+      setupOptional("ucac3")
+      setupOptional("ucacr14")
       proddir()
       setupenv()
       pathAppend(PATH, ${UPS_PROD_DIR}/bin)
