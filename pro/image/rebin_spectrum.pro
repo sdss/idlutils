@@ -99,10 +99,10 @@ function rebin_spectrum, xflux, xwave, ywave
    if (i GT 0) then begin
       dflux = xflux[i-1] / (xwave[i] - xwave[i-1])
       while (ywave[j1+1] LT xwave[i]) do begin
-         yflux[j1] = yflux[j1] + dflux * (ywave[j1+1] - ywave[j1])
+         yflux[j1] += dflux * (ywave[j1+1] - ywave[j1])
          j1 = j1 + 1
       endwhile
-      yflux[j1] = yflux[j1] + dflux * ((xwave[i] < ywave[j1+1]) - ywave[j1])
+      yflux[j1] += dflux * ((xwave[i] < ywave[j1+1]) - ywave[j1])
    endif
    j2 = j1
 
@@ -115,13 +115,13 @@ function rebin_spectrum, xflux, xwave, ywave
 
       dflux = xflux[i] / (xwave[i+1] - xwave[i])
       if (j1 EQ j2) then begin
-         yflux[j1] = yflux[j1] + dflux * ((ywave[j1+1] < xwave[i+1]) - xwave[i])
+         yflux[j1] += dflux * ((ywave[j1+1] < xwave[i+1]) - xwave[i])
       endif else begin
-         yflux[j1] = yflux[j1] + dflux * (ywave[j1+1] - xwave[i])
+         yflux[j1] += dflux * (ywave[j1+1] - xwave[i])
          for k=j1+1, j2-1 do $
-          yflux[k] = yflux[k] + dflux * (ywave[k+1] - ywave[k])
-         if (ywave[j2+1] GT xwave[i+1]) then $
-          yflux[j2] = yflux[j2] + dflux * (xwave[i+1] - ywave[j2])
+          yflux[k] += dflux * (ywave[k+1] - ywave[k])
+         if (ywave[j2+1] GE xwave[i+1]) then $
+          yflux[j2] += dflux * (xwave[i+1] - ywave[j2])
       endelse
       i = i + 1
       if (ywave[j2+1] LT xwave[i]) then i = npts
