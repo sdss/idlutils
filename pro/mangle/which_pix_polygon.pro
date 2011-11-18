@@ -9,7 +9,7 @@
 ;   resides in
 ;
 ; CALLING SEQUENCE:
-;   whichpoly = which_pix_polygon(objs,bosspoly,pixres)
+;   whichpoly = which_pix_polygon(objs,bosspoly,pixres,verbose=verbose)
 ;
 ; INPUTS:
 ;   objs - a structure with at least ra, dec set 
@@ -18,6 +18,7 @@
 ;   pixres - the pixel resolution in the simple scheme
 ;
 ; OPTIONAL INPUTS:
+;   /verbose - send to print out pixel messages for logging
 ;
 ; OUTPUTS:
 ;   whichpoly - which polygon each object in objs lies in
@@ -34,8 +35,9 @@
 ;    9-Jun-2011  Modified by Martin White (UCB) to handle large pixel files.
 ;    3-Jul-2011  Handle the (unlikely) case that just one object is passed
 ;                           Adam D. Myers, UWyo
+;   17-Nov-2011  Added /verbose keyword, Adam D. Myers, Uwyo
 ;-
-FUNCTION which_pix_polygon, objs, bosspoly, pixres
+FUNCTION which_pix_polygon, objs, bosspoly, pixres, verbose=verbose
 
   t0 = systime(1)
   
@@ -58,7 +60,8 @@ FUNCTION which_pix_polygon, objs, bosspoly, pixres
   ;ADM polygons in those pixels (mangle speedup)
   ;MJW Modify this to handle large numbers of polygons.
   for i = 0L, npixa-1L do begin
-     splog, 'working on pixel', pixarray[i],' (',i+1,' /', npixa, ' )...t=',systime(1)-t0,'s'
+     if keyword_set(verbose) then $
+        splog, 'working on pixel', pixarray[i],' (',i+1,' /', npixa, ' )...t=',systime(1)-t0,'s'
      polypix = where(bosspoly.pixel eq  pixarray[i],cnt)
      if cnt gt 0 then begin
         ;ADM only polygons in pixel
