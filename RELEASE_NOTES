@@ -1,4 +1,16 @@
 
+WHICH_PIX_POLYGON: Added verbose keyword to reduce size of log files (Myers).
+
+-------------------------------------------------------------------------------
+v5_4_26 (2011-09-05)
+Tag for UCAC dependencies (for Blanton).
+
+ups/idlutils.table: Add ucac3 and ucacr14 as optional dependencies.
+
+-------------------------------------------------------------------------------
+v5_4_25 (2011-09-02)
+Tag for mangle code updates for LSS (for Martin White).
+
 AIRTOVAC,VACTOAIR: Carlos Prieto pointed out that the air-to-vacuum
     wavelength conversion is based upon the Morton (1991 Ap.J. Suppl.
     77, 119) formula that appears to be incorrect at the level of
