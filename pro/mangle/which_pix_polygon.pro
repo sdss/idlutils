@@ -9,7 +9,7 @@
 ;   resides in
 ;
 ; CALLING SEQUENCE:
-;   whichpoly = which_pix_polygon(objs,bosspoly,pixres,verbose=verbose)
+;   whichpoly = which_pix_polygon(objs, bosspoly, pixres, [/verbose ] )
 ;
 ; INPUTS:
 ;   objs - a structure with at least ra, dec set 
