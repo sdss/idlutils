@@ -1,4 +1,6 @@
 
+MRDFITS_CHUNKS: Bug fix for when writing structures with string arrays
+    using the /APPEND option (ticket #1511).
 WHICH_PIX_POLYGON: Added verbose keyword to reduce size of log files (Myers).
 
 -------------------------------------------------------------------------------
