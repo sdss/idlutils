@@ -47,6 +47,10 @@
 ; REVISION HISTORY:
 ;   05-Jun-2002  Written by David Schlegel, Princeton, based upon
 ;                e-mail from Tom McGlynn.
+;   23-Jan-2012  Modified by Joel Brownstein <joelbrownstein@astro.utah.edu>
+;                to include the case of arrays of strings within a 
+;                structure when using the /append option (used to
+;                force all string arrays to be the same length).
 ;-
 ;-----------------------------------------------------------------------
 ; The following procedure was written by Tom McGlynn on 05-Jun-2002.
@@ -131,14 +135,19 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
 
          taglen = strlen(input.(itag))
          maxlen = max(taglen)
+         
+         ;Increase maxlen if necessary (for string or array of string)
          if (keyword_set(olddat)) then begin
-            thislen = strlen(olddat.(itag))
-            if (maxlen GT max(thislen)) then begin
+            olddat_tag = olddat.(itag)
+            for iarray = 0,n_elements(olddat_tag)-1 do begin
+               thislen = strlen(olddat_tag[iarray])
+               maxlen = thislen
+            endfor
+            if (maxlen GT thislen) then begin
                if (NOT keyword_set(silent)) then $
                 print, 'Warning: Trimming length of string array ' + tags[itag]
             endif
-            maxlen = max(thislen)
-         endif
+         endif   
 
          padspace = string('', format='(a'+string(maxlen)+')')
          input.(itag) = strmid(input.(itag) + padspace, 0, maxlen)
