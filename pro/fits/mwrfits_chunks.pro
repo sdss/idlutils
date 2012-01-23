@@ -133,11 +133,11 @@ pro mwrfits_chunks, input, filename, header, chunksize=chunksize, $
          maxlen = max(taglen)
          if (keyword_set(olddat)) then begin
             thislen = strlen(olddat.(itag))
-            if (maxlen GT thislen) then begin
+            if (maxlen GT max(thislen)) then begin
                if (NOT keyword_set(silent)) then $
                 print, 'Warning: Trimming length of string array ' + tags[itag]
             endif
-            maxlen = thislen
+            maxlen = max(thislen)
          endif
 
          padspace = string('', format='(a'+string(maxlen)+')')
