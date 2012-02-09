@@ -1,3 +1,6 @@
+-------------------------------------------------------------------------------
+v5_4_27 (2012-01-09)
+Tag prior to merging with 'weaver' branch.
 
 MRDFITS_CHUNKS: Bug fix for when writing structures with string arrays
     using the /APPEND option (ticket #1511).
@@ -24,7 +27,7 @@ AIRTOVAC,VACTOAIR: Carlos Prieto pointed out that the air-to-vacuum
       http://emtoolbox.nist.gov/Wavelength/Documentation.asp
       http://refractiveindex.info/?group=GASES&material=Air
     (Ticket #1247).
-CAPSTR__DEFINE,CONSTRUCT_CAP: Define the blank capstr structure according to 
+CAPSTR__DEFINE,CONSTRUCT_CAP: Define the blank capstr structure according to
     modern IDL rules (i.e., capstr__define.pro).
 GZ_FILE_TEST: Checks for file, but also for any zipped version
     (.gz, .z, .Z, or .bz2)
@@ -40,18 +43,18 @@ RSEX,WSEX: Updates for reading/writing SExtractor catalogs from L. Moustakes.
 ROSAT__DEFINE,ROSAT_BLANK,ROSAT_FITS: Define the blank rosat structure
     according to modern IDL rules (i.e., rosat__define.pro).
 SPHEREMATCH: Add chaeck for bad RA,Dec.
-UCAC3_READ, UCAC3_READINDEX, UCAC3_READZONE: Code to read in 
-    UCAC-3 data as distributed by USNO. (Data structures differ 
+UCAC3_READ, UCAC3_READINDEX, UCAC3_READZONE: Code to read in
+    UCAC-3 data as distributed by USNO. (Data structures differ
     substantially from UCAC-2 version read by ucac_read()).
-UCACR14_EXTRACT: Converts raw file sent by Zacharias and Munn into 
+UCACR14_EXTRACT: Converts raw file sent by Zacharias and Munn into
     format suitable for UCACR14_READ
 UCACR14_READ: Reads in circle of data from UCAC r14 catalog (USNO's
     internal catalog that was used for SDSS DR7.2 astrometry);
     includes NODE, INCL, HWIDTH options
-UCAC2PATCH_READ: Seamlessly runs UCAC_READ() and UCACR14_READ() and 
+UCAC2PATCH_READ: Seamlessly runs UCAC_READ() and UCACR14_READ() and
     combines data (favoring r14 stars); includes NODE, INCL, HWIDTH
     options
-USNO_READZONE: Fixed bug which caused incomplete star lists to be 
+USNO_READZONE: Fixed bug which caused incomplete star lists to be
     returned in very irregular regions of the Galactic Bulge.
 
 data/sdss/sdssMaskbits.par: Added bits
