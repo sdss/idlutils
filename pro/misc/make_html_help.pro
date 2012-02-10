@@ -37,16 +37,19 @@
 ;               to issue informational messages that indicate what it
 ;               is currently doing. !QUIET must be 0 for these messages
 ;               to appear.
-;     STRICT:   If this keyword is set to a non-zero value, MAKE_HTML_HELP will
+;      STRICT:  If this keyword is set to a non-zero value, MAKE_HTML_HELP will
 ;               adhere strictly to the HTML format by scanning the
 ;               the document headers for characters that are reserved in
 ;               HTML (<,>,&,").  These are then converted to the appropriate
 ;               HTML syntax in the output file. By default, this keyword
 ;               is set to zero (to allow for faster processing).
-;    LINKFILES: If this keyword is set to a non-zero value,
+;   LINKFILES:  If this keyword is set to a non-zero value,
 ;               MAKE_HTML_HELP will generate "file" links to the idl
 ;               procedures documented on the web page created by this
 ;               code.
+;     VERSION:  If set to a string, MAKE_HTML_HELP will search for a function
+;               called version+'_version.pro' and add the value returned by
+;               that function to the output file.
 ;
 ; COMMON BLOCKS:
 ;       None.
@@ -99,6 +102,9 @@
 ;       April 1, 1998, MWC, UC Berkeley.  Added option to create file
 ;               link to the location of the procedure being documented.
 ;       2009-07-17, BAW, NYU.  Emits XHTML
+;       2011-11-29, BAW, NYU.  Adds a version string to the file if requested.
+;               Strict keyword now has no effect, but it is retained for
+;               backwards-compatibility.
 ;
 ;-
 ;
@@ -118,7 +124,7 @@ PRO makehh_strict, txtlines
     FOR i=0,count-1 DO BEGIN
         txt = txtlines[i]
         ;
-        ; Ampersands get replaced with &amp.  Must do ampersands first because
+        ; Ampersands get replaced with &amp;.  Must do ampersands first because
         ; they are used to replace other reserved characters in HTML.
         ;
         spos = STRPOS(txt,'&')
@@ -165,6 +171,32 @@ END
 ;
 ;----------------------------------------------------------------------------
 ;
+; Parentheses () & square brackets [] are invalid in XHTML id attributes
+; The brackets result from duplicate routine names & should really be replaced
+; with non-duplicate names.  The parentheses are often used to designate
+; functions to distinguish them from procedures.  This function converts a
+; subject name containing parentheses into a form that is valid XHTML.
+; It has no effect on subjects that do not contain parentheses.
+;
+FUNCTION makehh_fix_subject, subject
+    ;
+    ;
+    ;
+    newsubject = subject
+    IF (STREGEX(newsubject,'\(\)',/BOOLEAN)) THEN BEGIN
+        spos = STRPOS(newsubject,'(')
+        newsubject = STRMID(newsubject,0,spos)+'_F'
+    ENDIF
+    IF (STREGEX(newsubject,'\[[0-9]+\]',/BOOLEAN)) THEN BEGIN
+        spos = STRPOS(newsubject,'[')
+        id = STREGEX(newsubject,'\[([0-9]+)\]',/SUBEXPR,/EXTRACT)
+        newsubject = STRMID(newsubject,0,spos)+'_'+id[1]+'_'
+    ENDIF
+    RETURN, newsubject
+END
+;
+;----------------------------------------------------------------------------
+;
 ; Searches an input file for all text between the ;+ and ;- comments, and
 ; updates the scratch text file appropriately. Note that this routine
 ; will extract multiple comment blocks from a single source file if they are
@@ -203,6 +235,9 @@ END
 ;
 PRO makehh_grab_hdr,name,dict,infile_indx,libfile_indx,txt_file,verbose,$
     strict
+    ;
+    ;
+    ;
     LF=10B
     IF (libfile_indx NE -1L) THEN $
         OPENR, in_file, /GET, FILEPATH('mkhtmlhelp.scr',/TMP), /DELETE $
@@ -250,7 +285,9 @@ PRO makehh_grab_hdr,name,dict,infile_indx,libfile_indx,txt_file,verbose,$
             ;
             ; Search for the subject. It is the line following name.
             ;
-            index = WHERE(STRTRIM(header, 2) EQ 'NAME:', count)
+            ; index = WHERE(STRTRIM(header, 2) EQ 'NAME:', count)
+            ; index = WHERE(STREGEX(STRTRIM(header, 2),'NAME *:',/FOLD_CASE,/BOOLEAN), count)
+            index = WHERE(STRMATCH(STRTRIM(header, 2),'name*:',/FOLD_CASE) EQ 1, count)
             IF (count EQ 1) THEN BEGIN
                 sub = STRUPCASE(STRTRIM(header[index[0]+1], 2))
                 IF (verbose NE 0) THEN MESSAGE,/INFO, 'Routine = '+sub
@@ -260,11 +297,7 @@ PRO makehh_grab_hdr,name,dict,infile_indx,libfile_indx,txt_file,verbose,$
             ENDIF ELSE BEGIN
                 MESSAGE,/INFO,'Properly formatted NAME entry not found...'
                 ifname = name
-                CASE !VERSION.OS_FAMILY OF
-                    'Windows': tok = '\'
-                    'MacOS': tok = ':'
-                    ELSE: tok = '/'
-                ENDCASE
+                tok = PATH_SEP()
                 ;
                 ; Cut the path.
                 ;
@@ -284,7 +317,9 @@ PRO makehh_grab_hdr,name,dict,infile_indx,libfile_indx,txt_file,verbose,$
                 sub = STRUPCASE(ifname)
                 MESSAGE,/INFO,'  Setting subject to filename: '+sub+'.'
             ENDELSE
-            index = WHERE(STRTRIM(header, 2) EQ 'PURPOSE:', count)
+            ; index = WHERE(STRTRIM(header, 2) EQ 'PURPOSE:', count)
+            ; index = WHERE(STREGEX(STRTRIM(header, 2),'PURPOSE *:',/FOLD_CASE,/BOOLEAN), count)
+            index = WHERE(STRMATCH(STRTRIM(header, 2),'purpose*:',/FOLD_CASE) EQ 1, count)
             IF (count EQ 1) THEN BEGIN
                 purpose = STRTRIM(header[index[0]+1], 2)
             ENDIF ELSE BEGIN
@@ -341,16 +376,18 @@ END
 ;            reserved in HTML (<,>,&,"), which are then converted to the
 ;            appropriate HTML syntax in the output file.  This should always
 ;            be nonzero now that we're generating XHTML.
+;  version - If nonzero, a version string will be inserted into the XHTML file.
 ;
 ; exit:
 ;    outfile has been created.
 ;    txt_file has been closed via FREE_LUN.
 ;
-PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,LinkCode
+PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,LinkCode,version
     ;
     ; Append unique numbers to any duplicate subject names.
     ;
     dpos = WHERE(dict.id GT 0,ndup)
+    IF (verbose NE 0) THEN MESSAGE,/INFO,'Found '+STRTRIM(STRING(ndup),2)+' duplicates!'
     FOR i=0,ndup-1 DO BEGIN
         entry = dict[dpos[i]]
         dict[dpos[i]].subject = entry.subject+'['+STRTRIM(STRING(entry.id),2)+']'
@@ -374,10 +411,6 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
     PRINTF,final_file,'     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">'
     PRINTF,final_file,'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">'
     ;
-    ; Print a comment indicating how the file was generated.
-    ;
-    PRINTF,final_file,'<!-- This file was generated by make_html_help.pro -->'
-    ;
     ; Title.
     ;
     PRINTF,final_file,'<head>'
@@ -387,15 +420,33 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
     ;
     ; Title and intro info.
     ;
+    iv = idlutils_version()
     PRINTF,final_file,'<body>'
     PRINTF,final_file,'<h1>',title,'</h1>'
     PRINTF,final_file,'<h2>Overview</h2>'
-    PRINTF,final_file,'<p>This page was created by the IDL library routine '
-    PRINTF,final_file,'<code>make_html_help</code>.  For more information on '
-    PRINTF,final_file,'this routine, refer to the IDL Online Help Navigator '
-    PRINTF,final_file,'or type: </p>'
-    PRINTF,final_file,'<pre>     ? make_html_help</pre>'
+    PRINTF,final_file,'<p>This page was created by the IDL library routine'
+    PRINTF,final_file,'<code>make_html_help</code> (from version '+iv+' of'
+    PRINTF,final_file,'idlutils).  For more information on this routine,'
+    PRINTF,final_file,'refer to the IDL Online Help Navigator or type: </p>'
+    PRINTF,final_file,'<pre>IDL&gt; ? make_html_help</pre>'
     PRINTF,final_file,'<p>at the IDL command line prompt.</p>'
+    ;
+    ; Add version string
+    ;
+    IF (version NE '') THEN BEGIN
+        version_function = version+'_version'
+        ;
+        ; See if version_function exists
+        ;
+        version_exists = FILE_WHICH(version_function+'.pro')
+        IF (version_exists NE '') THEN BEGIN
+            myversion = CALL_FUNCTION(version_function)
+            PRINTF,final_file,'<p>This file is based on version <strong>'+myversion+'</strong> of '+version+'.</p>'
+        ENDIF
+    ENDIF
+    ;
+    ; Add last modified string
+    ;
     PRINTF,final_file,'<p><strong>Last modified: </strong>',SYSTIME(),'.</p>'
     PRINTF,final_file,'<hr />'
     ;
@@ -407,8 +458,8 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
         entry = dict[indices[i]]
         IF (entry.nline GT 0) THEN $
             PRINTF,final_file,$
-                '<li><a href="#',entry.subject,'">',entry.subject,'</a>',  $
-                '-- ', entry.purpose,'</li>'
+                '<li><a href="#',makehh_fix_subject(entry.subject),'">',entry.subject,'</a>',  $
+                ' : ', entry.purpose,'</li>'
     ENDFOR
     PRINTF,final_file,'</ul>'
     PRINTF,final_file,'<hr />'
@@ -420,7 +471,7 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
     FOR i=0,count-1 DO BEGIN
         entry = dict[indices[i]]
         IF (entry.nline GT 0) THEN BEGIN
-            PRINTF,final_file,'<h3 id="',entry.subject,'">',entry.subject,'</h3>'
+            PRINTF,final_file,'<h3 id="',makehh_fix_subject(entry.subject),'">',entry.subject,'</h3>'
             prev_i = i - 1
             IF (prev_i LT 0) THEN dostep = 0 $
             ELSE BEGIN
@@ -436,7 +487,7 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
                 ENDELSE
             ENDWHILE
             IF (prev_i GE 0) THEN $
-                PRINTF,final_file,'<p><a href="#',prev_ent.subject,'">[Previous Routine]</a></p>'
+                PRINTF,final_file,'<p><a href="#',makehh_fix_subject(prev_ent.subject),'">[Previous Routine]</a></p>'
             next_i = i + 1
             IF (next_i GE count) THEN dostep = 0 $
             ELSE BEGIN
@@ -452,7 +503,7 @@ PRO makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,
                 ENDELSE
             ENDWHILE
             IF (next_i LT count) THEN $
-                PRINTF,final_file,'<p><a href="#',next_ent.subject,'">[Next Routine]</a></p>'
+                PRINTF,final_file,'<p><a href="#',makehh_fix_subject(next_ent.subject),'">[Next Routine]</a></p>'
             PRINTF,final_file,'<p><a href="#ROUTINELIST">[List of Routines]</a></p>'
             PRINTF,final_file,'<pre>'
             tmp = ''
@@ -497,11 +548,16 @@ END
 ;
 ; The main routine
 ;
-PRO make_html_help, sources, outfile, VERBOSE=verbose, TITLE=title, STRICT=strict, LINK_FILES=LinkFiles
+PRO make_html_help, sources, outfile, verbose=verbose, title=title, $
+    strict=strict, link_files=LinkFiles, version=version
+    ;
+    ;
+    ;
     IF ~KEYWORD_SET(verbose) THEN verbose=0
     IF ~KEYWORD_SET(title) THEN title="Extended IDL Help"
     IF ~KEYWORD_SET(strict) THEN strict=1
     IF ~KEYWORD_SET(LinkFiles) THEN LinkFiles = 0
+    IF ~KEYWORD_SET(version) THEN version=''
     infiles = ''
     istlb = 0B
     count = N_ELEMENTS(sources)
@@ -542,12 +598,7 @@ PRO make_html_help, sources, outfile, VERBOSE=verbose, TITLE=title, STRICT=stric
                 ;
                 ; If not a VMS text library or .PRO file, it must be a directory name.
                 ;
-                CASE !VERSION.OS_FAMILY OF
-                    'Windows': tok = '\'
-                    'MacOS': tok = ':'
-                    'unix': tok = '/'
-                    'vms': tok = ''
-                ENDCASE
+                tok = PATH_SEP()
                 ;
                 ; Get a list of all .pro files in the directory.
                 ;
@@ -611,6 +662,6 @@ PRO make_html_help, sources, outfile, VERBOSE=verbose, TITLE=title, STRICT=stric
     ;
     ; Generate the HTML file.
     ;
-    makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,LinkFiles
+    makehh_gen_file,dict,txt_file,infiles,libfiles,outfile,verbose,title,strict,LinkFiles,version
     RETURN
 END

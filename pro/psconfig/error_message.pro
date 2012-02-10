@@ -1,8 +1,9 @@
 ;+
 ; NAME:
-;    ERROR_MESSAGE
+;    ERROR_MESSAGE()
 ;
 ; PURPOSE:
+;    A device-independent error messaging function.
 ;
 ;    The purpose of this function  is to have a device-independent
 ;    error messaging function. The error message is reported

@@ -3,6 +3,7 @@
 ;   FSC_PSCONFIG__DEFINE
 ;
 ; PURPOSE:
+;   Define an object that tracks PostScript configuration.
 ;
 ;   The purpose of this program is to implement an object that
 ;   can keep track of--and allow the user to change--the current

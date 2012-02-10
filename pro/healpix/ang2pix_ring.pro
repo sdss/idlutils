@@ -1,13 +1,17 @@
 PRO ang2pix_ring, nside, theta, phi, ipring
 ;*********************************************************************************
 ;+
-; ANG2PIX_RING, Nside, Theta, Phi, Ipring
+; NAME:
+;    ANG2PIX_RING
 ;
-;        renders the RING scheme pixel number Ipring for a pixel which, given the
-;        map resolution parameter Nside, contains the point on the sphere
-;        at angular coordinates Theta and Phi
+; PURPOSE:
+;    Renders the RING scheme pixel number Ipring for a pixel which, given the
+;    map resolution parameter Nside, contains the point on the sphere
+;    at angular coordinates Theta and Phi
 ;
 ; INPUT
+;    ANG2PIX_RING, Nside, Theta, Phi, Ipring
+;
 ;    Nside     : determines the resolution (Npix = 12* Nside^2)
 ;	SCALAR
 ;    Theta : angle (along meridian), in [0,Pi], theta=0 : north pole,

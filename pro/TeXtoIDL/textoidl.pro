@@ -946,17 +946,6 @@ END
 ;   compile. 
 ;
 ;+
-; SPECIAL NOTE: 
-;       The file textoidl_trans_sub_super.pro contains two functions,
-;       textoidl_trans_sub_super, and textoidl_sub_sup.  The former is the
-;       generic routine for processing TeX sub/superscripts, the
-;       latter is used only by textoidl_trans_sub_super and has no general
-;       utility.  Hence it lives here.  You will see documentation for
-;       textoidl_trans_sub_super second if you use DOC_LIBRARY.
-;-
-;
-;
-;+
 ; NAME:
 ;       TEXTOIDL_SUB_SUP
 ; PURPOSE:
@@ -981,6 +970,13 @@ END
 ; NOTES:
 ;       Used only by textoidl_trans_sub_super.  Should be kept in same
 ;       file. 
+; SPECIAL NOTE: 
+;       The file textoidl_trans_sub_super.pro contains two functions,
+;       textoidl_trans_sub_super, and textoidl_sub_sup.  The former is the
+;       generic routine for processing TeX sub/superscripts, the
+;       latter is used only by textoidl_trans_sub_super and has no general
+;       utility.  Hence it lives here.  You will see documentation for
+;       textoidl_trans_sub_super second if you use DOC_LIBRARY.
 ; EXAMPLE:
 ; MODIFICATION HISTORY:
 ;       $Id: textoidl.pro,v 1.9 2007-08-28 17:04:45 blanton Exp $

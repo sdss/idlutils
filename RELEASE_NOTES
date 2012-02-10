@@ -1,3 +1,20 @@
+Merge with 'weaver' branch (2012-01-10):
+
+Makefile (top-level): building of documentation is now turned off by default.
+    This allows sdss3install to install successfully without IDL installed.
+    However, a copy of the export.h file is still required.
+evilmake: Updated to allow evilmake to work on Mac OS 10.7 (Lion).  The
+    compiler flags for MacOS were updated to reflect the values used by the
+    IDL MAKE_DLL procedure.
+eviltarball: Should in principle work with SDSS-III svn repository.
+MAKE_HTML_HELP: Handle some special cases where the names of routines were
+    causing invalid XHTML to be emitted.  Also deal better with duplicate
+    routine names.  Add version string to top of the file.
+Numerous files: update documentation so they work better with MAKE_HTML_HELP.
+Makefiles (lower-level): Deleted several Makefiles that did nothing but copy
+    files into the install directory.  The only Makefiles retained are those
+    absolutely necessary for code & documentation building.
+
 -------------------------------------------------------------------------------
 v5_4_27 (2012-01-09)
 Tag prior to merging with 'weaver' branch.

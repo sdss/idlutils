@@ -1,8 +1,8 @@
 ;+
 ; NAME:
 ;	 nonneg_mult_update
-; PURPOSE: (one line)
-;	 Apply an SSL multiplicative update to iterate nonnegative quadratic problem 
+; PURPOSE:
+;	 Apply an SSL multiplicative update to iterate nonnegative quadratic problem
 ; DESCRIPTION:
 ;  Using the method of Sha, Saul, & Lee (2002), "Multiplicative
 ;  updates for nonnegative quadratic programming in support vector
@@ -14,13 +14,13 @@
 ;
 ;  It requires the user to supply a function avfunc(vec,sign) which returns
 ;  A+.v if sign>0. and A-.v if sign<0, where:
-;  
+;
 ;     A+_ij = A_ij for A_ij>0.
 ;             0.   otherwise
 ;
 ;     A-_ij = |A_ij|  for A_ij<0.
 ;             0.      otherwise
-; 
+;
 ; CATEGORY:
 ;       Numerical
 ; CALLING SEQUENCE:
@@ -46,7 +46,7 @@ pro nonneg_mult_update,old,new,avfunc,b,factor=factor
 if(n_params() ne 4) then begin
     print,'Syntax - new=nonneg_mult_update(old, avfunc, b [, factor=])'
     return
-endif 
+endif
 
 avpos=call_function(avfunc,old,1.)
 avneg=call_function(avfunc,old,-1.)

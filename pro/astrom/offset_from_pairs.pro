@@ -1,7 +1,11 @@
 ;+
+; NAME:
+;   OFFSET_FROM_PAIRS()
+; PURPOSE:
+;   Offset from some pairs.
 ; BUGS:
 ;   - No correct code header!
-;
+; REVISION HISTORY:
 ; D. Finkbeiner - modified to compare probabilities of first and
 ;                 second peaks.  -DPF 4 Nov 2000
 ; set errflag if best value on edge - DPF 26 Nov 2000

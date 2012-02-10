@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;    sshift2d
-; PURPOSE: (one line)
+; PURPOSE:
 ;    Shift a 2-D array using a damped sinc function for the fractional part.
 ; DESCRIPTION:
 ;

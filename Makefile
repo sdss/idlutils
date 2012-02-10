@@ -1,68 +1,82 @@
 ###############################################################################
-# Sloan Digital Sky Survey (SDSS)
-# IDL support code for products: idlmapper, idlspec2d
+# Sloan Digital Sky Survey III (SDSS-III)
+# Code for product: idlutils
 #
-# S. Burles & D. Schlegel
-###############################################################################
-
+# IDL support code for products: idlmapper, idlspec2d
 #
 # IDL support utilities for spectro2d and the fibermapper
 #
-SHELL = /bin/sh
+# S. Burles & D. Schlegel
 #
-.c.o :
-	$(CC) -c $(CCCHK) $(CFLAGS) $*.c
+# This Makefile & all Makefiles in this product are GNU make compliant.
+# Please help keep them that way.  See
+# http://www.gnu.org/software/make/manual/make.html
 #
-CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
-
-SUBDIRS = bin data doc goddard include lib pro src ups
-
-all :	include/export.h
-	@ for f in $(SUBDIRS); do \
-		(cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) all ); \
-	done
-
+# $Id$
 #
-# Install things in their proper places in $(IDLUTILS_DIR)
+###############################################################################
+#
+# Change TEMPLATE_DIR here!
+#
+INSTALL_DIR = $(IDLUTILS_DIR)
+#
+# Use this shell to interpret shell commands, & pass its value to sub-make
+#
+export SHELL = /bin/sh
+#
+# This is like doing 'make -w' on the command line.  This tells make to
+# print the directory it is in.
+#
+MAKEFLAGS = w
+#
+# This is a list of subdirectories that make should descend into.  Makefiles
+# in these subdirectories should also understand 'make all' & 'make clean'.
+# This list can be empty, but should still be defined.
+#
+SUBDIRS = include src
+#
+# This line helps prevent make from getting confused in the case where you
+# have a file named 'clean'.
+#
+.PHONY : clean doc
+#
+# This should compile all code prior to it being installed
+#
+all :
+	@ for f in $(SUBDIRS); do $(MAKE) -C $$f all ; done
+#
+# Used to (re)make the documentation files
+#
+doc :
+	$(MAKE) -C doc clean
+	$(MAKE) -C doc all
+#
+# Install things in their proper places in $(INSTALL_DIR)
 #
 install :
-	@echo "You should be sure to have updated before doing this."
-	@echo ""
-	@if [ "$(IDLUTILS_DIR)" = "" ]; then \
+	@ echo "You should be sure to have updated before doing this."
+	@ echo ""
+	@ if [ "$(INSTALL_DIR)" = "" ]; then \
 		echo You have not specified a destination directory >&2; \
 		exit 1; \
-	fi 
-	@if [ -e $(IDLUTILS_DIR) ]; then \
+	fi
+	@ if [ -e $(INSTALL_DIR) ]; then \
 		echo The destination directory already exists >&2; \
 		exit 1; \
-	fi 
-	@echo ""
-	@echo "You will be installing in \$$IDLUTILS_DIR=$$IDLUTILS_DIR"
-	@echo "I'll give you 5 seconds to think about it"
-	@sleep 5
-	@echo ""
-	@ rm -rf $(IDLUTILS_DIR)
-	@ mkdir $(IDLUTILS_DIR)
-	@ for f in $(SUBDIRS); do \
-		(mkdir $(IDLUTILS_DIR)/$$f; cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) install ); \
-	done
-	- cp Makefile $(IDLUTILS_DIR)
-	- cp RELEASE_NOTES $(IDLUTILS_DIR)
-
-clean :
-	- /bin/rm -f *~ core
-	@ for f in $(SUBDIRS); do \
-		(cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) clean ); \
-	done
-
-# Some versions of IDL have non-backward compatible export.h files. So use whatever is current.
-include/export.h:
-	@if test -z "$$IDL_DIR"; then \
-		echo "IDL_DIR environment variable is not set -- it must point to the top of the IDL product directory, "; \
-		echo "   e.g. /usr/local/itt/idl"; \
-		exit 1; \
-	else \
-		echo "Linking in IDL export.h, using IDL_DIR=$$IDL_DIR"; \
-		test -r "$$IDL_DIR/external/export.h" || (echo "no valid $$IDL_DIR/external/export.h"; exit 1); \
-		( cd include; rm export.h; ln -s $$IDL_DIR/external/export.h ); \
 	fi
+	@ echo ""
+	@ echo "You will be installing in \$$INSTALL_DIR=$(INSTALL_DIR)"
+	@ echo "I'll give you 5 seconds to think about it"
+	@ sleep 5
+	@ echo ""
+	@ rm -rf $(INSTALL_DIR)
+	@ mkdir $(INSTALL_DIR)
+	@ cp -Rf . $(INSTALL_DIR)
+
+#
+# GNU make pre-defines $(RM).  The - in front of $(RM) causes make to
+# ignore any errors produced by $(RM).
+#
+clean :
+	- $(RM) *~ core
+	@ for f in $(SUBDIRS); do $(MAKE) -C $$f clean ; done

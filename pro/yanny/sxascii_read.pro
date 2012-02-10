@@ -3,6 +3,7 @@
 ;   sxascii_read 
 ;
 ; PURPOSE:
+;   This routine has no obvious purpose.
 ;
 ; CALLING SEQUENCE:
 ;   sxascii_read, filename, [ pstr, hdr=hdr]

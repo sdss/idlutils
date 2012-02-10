@@ -1,8 +1,14 @@
 ;+
 ; NAME:
-;   is_file_readable
+;   is_file_readable()
+; PURPOSE:
+;   Returns true if a file is readable.
 ; CALLING SEQUENCE:
 ;   good= is_file_readable(filename,/compress)
+; INPUT:
+;   filename - Name of a file.
+; KEYWORDS:
+;   /compress - Passed directly to the OPENR procedure.
 ; OUTPUT:
 ;   good  - 1 if good, 0 if bad
 ; BUGS:

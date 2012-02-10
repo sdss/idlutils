@@ -3,6 +3,7 @@
 ;   FSC_DROPLIST
 ;
 ; PURPOSE:
+;   Alternative to the IDL DROPLIST widget.
 ;
 ;   The purpose of this compound widget is to provide an alternative
 ;   to the DROPLIST widget offered in the IDL distribution. What has

@@ -88,8 +88,6 @@ IDL_LONG pop_image_float_long
    IDL_LONG    ix1;
    IDL_LONG    iy1;
    IDL_LONG    retval = 1;
-   float       dx;
-   float       dy;
 
    /* Allocate pointers from IDL */
    npts = *((IDL_LONG *)argv[0]);
@@ -202,8 +200,6 @@ IDL_LONG pop_image_double_long
    IDL_LONG    ix1;
    IDL_LONG    iy1;
    IDL_LONG    retval = 1;
-   double      dx;
-   double      dy;
 
    /* Allocate pointers from IDL */
    npts = *((IDL_LONG *)argv[0]);

@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;	  logsum
-; PURPOSE: (one line)
+; PURPOSE:
 ;   sum quantities when you have them as logs (preserving dynamic range)
 ; CATEGORY:
 ;       Numerical

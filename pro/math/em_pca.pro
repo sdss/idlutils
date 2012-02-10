@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;    em_pca
-; PURPOSE: (one line)
+; PURPOSE:
 ;    Perform E-M PCA to get first k principal components
 ; DESCRIPTION:
 ;    Uses Sam Roweis' Expectation Maximization version of PCA to
@@ -56,7 +56,7 @@ if(n_elements(maxiter) eq 0) then maxiter=20
 
 ; check args
 if (n_params() lt 1) then begin
-    print, 'Syntax - em_pca, data, k, eigenvec, hidden [, tol=, maxiter=, niter=, $' 
+    print, 'Syntax - em_pca, data, k, eigenvec, hidden [, tol=, maxiter=, niter=, $'
     print, '                 /verbose]'
     return
 endif
@@ -106,13 +106,13 @@ if(NOT keyword_set(noortho)) then begin
         for bp = 0l, b-1l do begin
             dot=total(eigenvec[*,b]*eigenvec[*,bp],/double)
             eigenvec[*,b]=eigenvec[*,b]-dot*eigenvec[*,bp]
-        endfor 
-        
+        endfor
+
 ;       normalize
         dot=total(eigenvec[*,b]^2,/double)
         dot=1./sqrt(dot)
         eigenvec[*,b]=eigenvec[*,b]*dot
-    endfor 
+    endfor
 
     if(NOT keyword_set(nofix)) then begin
 ;       project variables onto new coordinates

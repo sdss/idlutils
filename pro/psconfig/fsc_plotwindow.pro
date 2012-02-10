@@ -3,6 +3,7 @@
 ;   FSC_PLOTWINDOW
 ;
 ; PURPOSE:
+;   Create a resizable plot window inside another window.
 ;
 ;   The purpose of this compound widget is to create a resizeable
 ;   "plot window" inside a larger "page window". I'm not sure it

@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   func_ccm_fitrv, params
+;   func_ccm_fitrv()
 ;
 ; PURPOSE:
 ;   compute chi2 for the ccm_fitrv function

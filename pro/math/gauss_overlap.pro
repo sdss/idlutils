@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;	  gauss_overlap
-; PURPOSE: (one line)
+; PURPOSE:
 ;   calculate log integral, covariance, and mean of product of two gaussians
 ; DESCRIPTION:
 ;   calculate log integral, covariance, and mean of product of two gaussians

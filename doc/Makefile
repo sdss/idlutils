@@ -1,26 +1,36 @@
 ###############################################################################
-# Sloan Digital Sky Survey (SDSS)
-# IDL support code for products: idlmapper, idlspec2d
+# Sloan Digital Sky Survey III (SDSS-III)
+# Code for product: idlutils
 #
-# S. Burles & D. Schlegel
+# This Makefile & all Makefiles in this product are GNU make compliant.
+# Please help keep them that way.  See
+# http://www.gnu.org/software/make/manual/make.html
+#
+# $Id$
+#
 ###############################################################################
-
-SHELL = /bin/sh
 #
-all :
-	idl mk_doc
+# This line helps prevent make from getting confused in the case where you
+# have a file named 'clean'.
+#
+.PHONY : clean
+#
+# This should compile all code prior to it being installed.
+#
+all : www/idlutils_doc.html www/goddard_doc.html
 
 #
-# Install things in their proper places in $(IDLUTILS_DIR)
+# Replace mk_doc
 #
-install :
-	@ rm -rf $(IDLUTILS_DIR)/doc/www
-	@ mkdir $(IDLUTILS_DIR)/doc/www
-	- cp mk_doc $(IDLUTILS_DIR)/doc
-	- cp www/*.html $(IDLUTILS_DIR)/doc/www
-	- cp Makefile $(IDLUTILS_DIR)/doc
+www/idlutils_doc.html :
+	idl -e 'make_html_help, getenv("IDLUTILS_DIR")+"/pro/*/", "www/idlutils_doc.html", /strict, title="IDL Help for IDLUTILS", /verbose, version="idlutils"'
 
+www/goddard_doc.html :
+	idl -e 'make_html_help, getenv("IDLUTILS_DIR")+"/goddard/pro/*/", "www/goddard_doc.html", /strict, title="IDL Help for Goddard Utilities", /verbose, version="idlutils"'
+#
+# GNU make pre-defines $(RM).  The - in front of $(RM) causes make to
+# ignore any errors produced by $(RM).
+#
 clean :
-	- /bin/rm -f *~ core www/*~ www/core
-
+	- $(RM) www/idlutils_doc.html www/goddard_doc.html
 

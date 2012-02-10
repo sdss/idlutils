@@ -1,6 +1,10 @@
 function djs_planck, Ttemp, nu_or_lambda, dBdT, units=units, mjy=mjy, wcm2=wcm2
-;+NAME/ONE LINE DESCRIPTION OF ROUTINE:
-;     DJS_PLANCK returns the spectral radiance of a blackbody.
+;+
+;NAME:
+;    DJS_PLANCK()
+;
+;PURPOSE:
+;     Returns the spectral radiance of a blackbody.
 ;
 ;DESCRIPTION:  
 ;    IDL function to return the spectral radiance of a blackbody,

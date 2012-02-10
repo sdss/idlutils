@@ -2,10 +2,12 @@
 ;  NAME:
 ;    acssip_invert
 ;
+;  PURPOSE:
+;    Iterates the distortion correction to invert the distortion pixel map.
+;
 ;  COMMENTS: 
 ;    Based on the reference of "The SIP Convention for Representing 
 ;      Distortion in FITS Image Headers", by Shupe et al. 2005.
-;    Iterates the distortion correction to invert the distortion pixel map
 ;
 ;  EXAMPLE:
 ;

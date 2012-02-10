@@ -1,12 +1,12 @@
 ;+
 ; NAME:
-;   psf_reject_cr_single
+;   dpf_psf_reject_cr_single()
 ;
 ; PURPOSE:
 ;   test a list of "suspect" pixels for cosmic rays (CRs)
 ;
 ; CALLING SEQUENCE:
-;   result=psf_reject_cr_single(im, gd, ivar, satmask, min_sigma, $
+;   result=dpf_psf_reject_cr_single(im, gd, ivar, satmask, min_sigma, $
 ;         c3fac, psfvals, ind0, neighbor=neighbor)
 ;
 ; INPUTS:
@@ -26,21 +26,21 @@
 ;   neighbor  - index list of neighbors of just-found CRs
 ;
 ; EXAMPLES:
-;   always called by psf_reject_cr
+;   always (only) called by dpf_reject_cr
 ;
 ; COMMENTS:
 ;   Algorithms designed by R Lupton and J. Gunn, implemented in C by Lupton,
-;    re-implemented by M. Blanton as reject_cr. 
+;    re-implemented by M. Blanton as reject_cr.
 ;    Now completely rewritten by D. Finkbeiner as psf_reject_cr.
-;    see psf_reject_cr for more details. 
+;    see psf_reject_cr for more details.
 ;   gd indicates which pixels may be safely used for interpolate and
-;    background determination.  gd gets updated as CRs are zapped. 
-;   
+;    background determination.  gd gets updated as CRs are zapped.
+;
 ; REVISION HISTORY:
 ;   2005-Mar-09  Written by Douglas Finkbeiner, Princeton
 ;
 ;----------------------------------------------------------------------
-function psf_reject_cr_single, im, gd, ivar, satmask, min_sigma, $
+function dpf_psf_reject_cr_single, im, gd, ivar, satmask, min_sigma, $
             c3fac, psfvals, ind0, neighbor=neighbor
 
   isig = sqrt(ivar[ind0]) ; inverse sigma
@@ -108,10 +108,10 @@ function psf_reject_cr_single, im, gd, ivar, satmask, min_sigma, $
   nby   = [y0, yu, yu, yu, y0, yd, yd, yd]
   wsat  = where(satmask[nbx, nby], nsat)
 
-  if nsat GT 0 then begin 
-     isat = wsat mod n_elements(ind0) 
+  if nsat GT 0 then begin
+     isat = wsat mod n_elements(ind0)
      cond4[isat] = 0B
-  endif 
+  endif
 
 ; -------- See which pixels satisfy all conditions:
   mpeak = cond2 AND cond3 AND cond4
@@ -121,26 +121,32 @@ function psf_reject_cr_single, im, gd, ivar, satmask, min_sigma, $
   if npeak EQ 0 then begin      ; do not set neighbors
      delvarx, neighbor
      return, mpeak
-  endif 
+  endif
 
 ; -------- replace detected CRs for next round.
-;           minback is good or cond2 fails. 
+;           minback is good or cond2 fails.
   im[ind0[w]] = minback[w]
 
 ; -------- get neighbors
-  if arg_present(neighbor) then begin 
+  if arg_present(neighbor) then begin
      neighborx = [xr[w], xr[w], x0[w], xl[w], xl[w], xl[w], x0[w], xr[w]]
      neighbory = [y0[w], yu[w], yu[w], yu[w], y0[w], yd[w], yd[w], yd[w]]
-     
+
      neighbor_all = neighbory*sz[0]+neighborx
      u = uniq(neighbor_all, sort(neighbor_all))
      neighbor = neighbor_all[u]
-  endif 
+  endif
 
   return, mpeak
 end
 
-
+;+
+;NAME:
+;  dpf_reject_cr()
+;PURPOSE:
+;  An old Cosmic Ray rejection routine.
+;
+;-
 ; do NOT need to call with zeroed image
 function dpf_reject_cr, image, ivar, psfvals, satmask=satmask, $
             nsigma=nsigma, cfac=cfac, niter=niter, c2fudge=c2fudge
@@ -176,20 +182,20 @@ function dpf_reject_cr, image, ivar, psfvals, satmask=satmask, $
   suspects = where(msig, nsuspect)
   if nsuspect EQ 0 then return, cr  ; cannot find anything
 
-  for iiter=0L, niter-1 do begin 
+  for iiter=0L, niter-1 do begin
                                 ; cr_find investigates suspects,
                                 ; returns mpeak of same lenght (1=CR, 0=OK)
 
      c3fac = iiter EQ 0 ? cfac : 0.0
      thisc2 = iiter EQ 0 ? c2fudge[0] : 1.0
-     mpeak = psf_reject_cr_single(im, gd, ivar, satmask, nsigma, $
+     mpeak = dpf_psf_reject_cr_single(im, gd, ivar, satmask, nsigma, $
                                   c3fac, psfvals*thisc2, $
                                   suspects, neighbor=neighbor)
      wrej  = where(mpeak, nrej)
 
-; -------- escape if we are done     
+; -------- escape if we are done
      if nrej EQ 0 then return, cr
-  
+
 ; -------- otherwise examine neighbors
      cr[suspects[wrej]] = 1B
      suspects = neighbor
@@ -199,10 +205,12 @@ function dpf_reject_cr, image, ivar, psfvals, satmask=satmask, $
   return, cr
 end
 
-
-
-
-
+;+
+;NAME:
+;  cr
+;PURPOSE:
+;  Wrapper procedure on dpf_reject_cr().
+;-
 pro cr
 
 ;  psfvals = [0.56, 0.31]
@@ -245,7 +253,7 @@ pro cr
 
   atverase
   ind1 = where(cr)
-  
+
   x = ind1 mod sz[0]
   y = ind1 / sz[0]
   atvplot, x, y, psym=6, color='magenta', syms=1

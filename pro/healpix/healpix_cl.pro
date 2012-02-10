@@ -1,10 +1,12 @@
 ;+
-; 
-; A rapid power spectrum computation
-; code. Doesn't try to do *anything*
+;NAME:
+; HEALPIX_CL()
+;PURPOSE: 
+; A rapid power spectrum computation code.
+; Doesn't try to do *anything*
 ; fancy or clever --- just straight
 ; spherical transforms and averaging.
-;
+;CALLING SEQUENCE:
 ; cl =  healpix_cl(data, [lmax=lmax], cross=cross_data)
 ;
 ; data === healpix array in ring format (can be multiple maps)
@@ -12,9 +14,9 @@
 ; cross === If you want to compute a cross power spectrum, 
 ;           then send the second healpix map here. Must be the
 ;           same resolution
-;
-; Nikhil Padmanabhan, Princeton 
-; August 25, 2003
+;REVISION HISTORY:
+; Nikhil Padmanabhan, Princeton, August 25, 2003
+; Updated documentation, B. A. Weaver, NYU, 2011-11-30
 ;-
 
 function  healpix_cl, data, lmax=lmax, cross=cross

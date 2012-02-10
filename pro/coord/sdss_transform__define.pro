@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   sdss_transform__define  (and IDL class file)
+;   sdss_transform__define
 ;
 ; PURPOSE:
 ;   Defines a set of methods for coordinate transformations.

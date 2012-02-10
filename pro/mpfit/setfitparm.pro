@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   SetFitParm.pro
+;   SetFitParm
 ;
 ; AUTHOR:
 ;	F.Bringezu, denet - Internetservice, Halle Germany,

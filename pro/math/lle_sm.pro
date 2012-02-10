@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;	  lle_sm
-; PURPOSE: (one line)
+; PURPOSE:
 ;   create sparse matrix from full matrix for LLE routines
 ; DESCRIPTION:
 ;   rather crappy sparse matrix format for NxM matrix:

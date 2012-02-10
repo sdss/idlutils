@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;	  lle_sm_transpose
-; PURPOSE: (one line)
+; PURPOSE:
 ;   transpose a sparse matrix for the LLE routines
 ; DESCRIPTION:
 ;   transposes the rather crappy sparse matrix format for NxM matrix:

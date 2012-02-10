@@ -10,30 +10,32 @@
 #    are actually built.
 # -- This script builds useless links if $PATH2 isn't a fully-qualified
 #    directory, i.e. "/u/schlegel/dirname", not "dirname".
+#
+# $Id$
 #------------------------------------------------------------------------------
+#
 # Demand that both a source and destination directory are specified.
+#
 if [ $# != 2 ] ; then
-  echo "Need to specify a source and destination directory, i.e."
-  echo "  \"build_links /foo /bar\""
-  exit
+    echo "Need to specify a source and destination directory, i.e."
+    echo '  "build_links /foo /bar"'
+    exit 1
 fi
-PATH1=$1
-PATH2=$2
-if [ "$PATH1" = "$PATH2" ] ; then
-   echo "The source and destination directories cannot be the same!"
-   exit
+path1=$1
+path2=$2
+if [ "${path1}" = "${path2}" ] ; then
+    echo "The source and destination directories cannot be the same!"
+    exit 1
 fi
-
-dirlist=`\ls -d $PATH2/*`
-for dirname in $dirlist ; do
-    shortname=`echo $dirname | sed -n 's/.*\///p'`
-    if [ -e $PATH1/$shortname ] ; then
-       echo Removing old link for $PATH1/$shortname
-       \rm $PATH1/$shortname
+for dirname in $(/bin/ls -d ${path2}/*); do
+    if [ -d ${dirname} ]; then
+        shortname=$(basename ${dirname})
+        if [ -e "${path1}/${shortname}" ] ; then
+            echo "Removing old link for ${path1}/${shortname}"
+            /bin/rm ${path1}/${shortname}
+        fi
+        echo "Linking ${path1}/${shortname} -> ${path2}/${shortname}"
+        /bin/ln -s ${path2}/${shortname} ${path1}/${shortname}
     fi
-    echo Linking $PATH1/$shortname "->" $PATH2/$shortname
-    \ln -s $PATH2/$shortname $PATH1/$shortname
 done
 
-exit
-#------------------------------------------------------------------------------

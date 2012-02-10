@@ -1,10 +1,8 @@
-
 ;+
 ; NAME:
 ;   PSCONFIG
 ;
 ; PURPOSE:
-;
 ;   This program is simply a function wrapper for the FSC_PSCONFIG
 ;   object program (fsc_psconfig__define.pro). It was written so
 ;   that it could serve as a drop-in replacement for the PS_FORM

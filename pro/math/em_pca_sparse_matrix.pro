@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;    em_pca_sparse_matrix
-; PURPOSE: (one line)
+; PURPOSE:
 ;    Perform E-M PCA to get first k principal components of large sparse matrix
 ; DESCRIPTION:
 ;    Uses Sam Roweis's algorithm (described in em_pca.pro in detail)

@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   ccm_fitrv.pro
+;   ccm_fitrv()
 ;
 ; PURPOSE:
 ;   Does a simple fit to R_V and normalization

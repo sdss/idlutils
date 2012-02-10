@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   qzap.pro
+;   qzap
 ;
 ; PURPOSE:
 ;   Remove cosmic rays from a 2-D image.

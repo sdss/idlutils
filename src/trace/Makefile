@@ -1,40 +1,55 @@
 ###############################################################################
-# Sloan Digital Sky Survey (SDSS)
-# IDL support code for products: idlmapper, idlspec2d
+# Sloan Digital Sky Survey III (SDSS-III)
+# Code for product: idlutils
+#
+# trace code
 #
 # S. Burles & D. Schlegel
+#
+# This Makefile & all Makefiles in this product are GNU make compliant.
+# Please help keep them that way.  See
+# http://www.gnu.org/software/make/manual/make.html
+#
+# $Id$
+#
 ###############################################################################
-
-SHELL = /bin/sh
 #
-.c.o :
-	$(CC) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.c
+# Pass these flags to the C compiler
 #
-INC = ../../include
-CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(INC)
-
+# SDSS_CFLAGS X_CFLAGS X_LD_FLAGS SO_EXT are defined by evilmake
+# CCCHK is NOT defined by evilmake but is defined by sdssmake
+# CCCHK = -Wall is the standard for Linux
+#
+INC = $(IDLUTILS_DIR)/include
 LIB = $(IDLUTILS_DIR)/lib
-
+CFLAGS = $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(INC)
+CCCHK = -Wall
+#
+# How to make objects from c files
+#
+%.o : %.c
+	$(CC) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $<
+#
+# Objects to compile
+#
 OBJECTS = \
 	evilmath.o \
 	trace_crude.o \
 	trace_fweight.o \
 	trace_gweight.o
 
+#
+# SDSS-III Makefiles should always define this target.
+#
 all : $(LIB)/libtrace.$(SO_EXT)
-
 
 $(LIB)/libtrace.$(SO_EXT): $(OBJECTS)
 	$(LD) $(X_LD_FLAGS) -o $(LIB)/libtrace.$(SO_EXT) $(OBJECTS)
-#	nm -s ../lib/libtrace.$(SO_EXT)
+#	nm -s $(LIB)/libtrace.$(SO_EXT)
 
 #
-# Install things in their proper places in $(IDLUTILS_DIR)
+# GNU make pre-defines $(RM).  The - in front of $(RM) causes make to
+# ignore any errors produced by $(RM).
 #
-install : 
-	-@ cp *.c $(IDLUTILS_DIR)/src/trace
-	-@ cp *.h $(IDLUTILS_DIR)/src/trace
-	-@ cp Makefile $(IDLUTILS_DIR)/src/trace
-
 clean :
-	- /bin/rm -f *~ core *.o so_locations
+	- $(RM) *~ core *.o $(LIB)/libtrace.$(SO_EXT)

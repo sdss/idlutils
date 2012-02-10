@@ -4,7 +4,6 @@
 ;    CSURVEY2EQ
 ;       
 ; PURPOSE:
-;
 ;    Convert from corrected lambda, eta (SDSS survey coordinates) to ra, dec
 ;    The system is corrected so that the longitude eta ranges from 
 ;    [-180.0, 180.0] and the latitude lambda ranges from [-90.0,90.0].  

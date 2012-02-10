@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;	 nonneg_mult_update_solve
-; PURPOSE: (one line)
+; PURPOSE:
 ;	 Use nonneg_mult_update to iterate to convergence
 ; DESCRIPTION:
 ;  From some starting point, iterates to convergence a

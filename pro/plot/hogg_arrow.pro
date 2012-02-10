@@ -1,7 +1,10 @@
 ;+
-; NAME:				Hogg_ARROW
-; PURPOSE:	Draw a vector(s) with an arrow head
-; CATEGORY:	Graphics
+; NAME:
+;	Hogg_ARROW
+; PURPOSE:
+;	Draw a vector(s) with an arrow head
+; CATEGORY:
+;	Graphics
 ; CALLING SEQUENCE:
 ;	Hogg_ARROW, x0, y0, x1, y1
 ; INPUTS:

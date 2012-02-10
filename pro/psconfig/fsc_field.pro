@@ -3,6 +3,7 @@
 ;   FSC_FIELD
 ;
 ; PURPOSE:
+;   Alternative to the CW_FIELD widget.
 ;
 ;   The purpose of this compound widget is to provide an alternative
 ;   to the CW_FIELD widget offered in the IDL distribution. One weakness

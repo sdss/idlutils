@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;	sshift
-; PURPOSE: (one line)
+; PURPOSE:
 ;	Shift data using a damped sinc function for fractional part.
 ; DESCRIPTION:
 ;

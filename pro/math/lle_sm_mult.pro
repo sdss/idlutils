@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;	  lle_sm_mult
-; PURPOSE: (one line)
+; PURPOSE:
 ;   multiply two sparse matrices kind of efficiently for LLE routines
 ; DESCRIPTION:
 ;   rather crappy sparse matrix format for NxM matrix:

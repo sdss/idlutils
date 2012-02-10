@@ -3,6 +3,7 @@
 ;   FSC_FILESELECT
 ;
 ; PURPOSE:
+;   Select files from a widget.
 ;
 ;   The purpose of this compound widget is to provide a means
 ;   by which the user can type or select a file name. The

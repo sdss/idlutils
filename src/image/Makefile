@@ -1,22 +1,40 @@
 ###############################################################################
-# Sloan Digital Sky Survey (SDSS)
-# IDL support code for products: idlmapper, idlspec2d
+# Sloan Digital Sky Survey III (SDSS-III)
+# Code for product: idlutils
 #
-# S. Burles & D. Schlegel
+# Compile libimage
+#
+# This Makefile & all Makefiles in this product are GNU make compliant.
+# Please help keep them that way.  See
+# http://www.gnu.org/software/make/manual/make.html
+#
+# $Id$
+#
 ###############################################################################
-
-SHELL = /bin/sh
 #
-.c.o :
-	$(CC) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.c
-#.f.o :
-#	$(F77) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $*.f
+# Pass these flags to the C compiler
 #
-INC = ../../include
-CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(INC)
-
+# SDSS_CFLAGS X_CFLAGS X_LD_FLAGS SO_EXT are defined by evilmake
+# CCCHK is NOT defined by evilmake but is defined by sdssmake
+# CCCHK = -Wall is the standard for Linux
+#
+INC = $(IDLUTILS_DIR)/include
 LIB = $(IDLUTILS_DIR)/lib
-
+CFLAGS = $(SDSS_CFLAGS) -DCHECK_LEAKS -I$(INC)
+CCCHK = -Wall
+#
+# How to make objects from c files
+#
+%.o : %.c
+	$(CC) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $<
+#
+# How to make objects from f files
+#
+#%.o : %.f
+#	$(F77) -c $(CCCHK) $(CFLAGS) $(X_CFLAGS) $<
+#
+# Objects to compile
+#
 OBJECTS = \
 	grow_obj.o \
 	pop_image.o \
@@ -29,26 +47,25 @@ OBJECTS = \
 	p_midpnt.o \
 	p_qromo.o \
 	p_polint.o \
-	p_utils.o 
+	p_utils.o
 #	idl_interp_profmean.o
 #	ppvalu.o
 #	tautsp.o
 #	interv.o
 
+#
+# SDSS-III Makefiles should always define this target.
+#
 all : $(LIB)/libimage.$(SO_EXT)
 
 $(LIB)/libimage.$(SO_EXT): $(OBJECTS) ph.h
 	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) -lm
 #	$(LD) $(X_LD_FLAGS) -o $(LIB)/libimage.$(SO_EXT) $(OBJECTS) $(MAKE_FTNLIB)
-#	nm -s ../lib/libimage.$(SO_EXT)
+#	nm -s $(LIB)/libimage.$(SO_EXT)
 
 #
-# Install things in their proper places in $(IDLUTILS_DIR)
+# GNU make pre-defines $(RM).  The - in front of $(RM) causes make to
+# ignore any errors produced by $(RM).
 #
-install : 
-	-@ cp *.c $(IDLUTILS_DIR)/src/image
-	-@ cp *.h $(IDLUTILS_DIR)/src/image
-	-@ cp Makefile $(IDLUTILS_DIR)/src/image
-
 clean :
-	- /bin/rm -f *~ core *.o so_locations
+	- $(RM) *~ core *.o $(LIB)/libimage.$(SO_EXT)

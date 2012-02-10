@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;    lle
-; PURPOSE: (one line)
+; PURPOSE:
 ;    Perform local linear embedding
 ; DESCRIPTION:
 ;    Uses Sam Roweis's local linear embedding technique to reduce the 

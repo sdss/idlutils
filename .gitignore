@@ -19,8 +19,4 @@ doc/www/idlutils_doc.html
 lib/*.a
 lib/*.dylib
 lib/*.so
-src/mangle1.4/bin
-src/mangle1.4/masks
 src/mangle2.2/src/test
-src/math/so_locations
-src/slatec/so_locations

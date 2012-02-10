@@ -1,36 +1,53 @@
 ###############################################################################
-# Sloan Digital Sky Survey (SDSS)
-# IDL support code for products: idlmapper, idlspec2d
+# Sloan Digital Sky Survey III (SDSS-III)
+# Code for product: idlutils
 #
-# S. Burles & D. Schlegel
+# This Makefile & all Makefiles in this product are GNU make compliant.
+# Please help keep them that way.  See
+# http://www.gnu.org/software/make/manual/make.html
+#
+# $Id$
+#
 ###############################################################################
-
-SHELL = /bin/sh
 #
-.c.o :
-	$(CC) -c $(CCCHK) $(CFLAGS) $*.c
+# By default, make compiles C code with the rule
 #
-CFLAGS  = $(SDSS_CFLAGS) -DCHECK_LEAKS -I../include
-
+#%.o : %.c
+#	$(CC) -c $(CPPFLAGS) $(CFLAGS) $<
+#
+# You can override these variables here or even override the rule itself,
+# but be sure you know what you are doing, & also export the overrides
+# to sub-makes appropriately.  For example
+#
+# export CFLAGS = -W -Wall -pedantic -O2 -DCHECK_LEAKS -I../include
+#
+# For more details:
+# http://www.gnu.org/software/make/manual/make.html#Implicit-Rules
+#
+# This is a list of subdirectories that make should descend into.  Makefiles
+# in these subdirectories should also understand 'make all' & 'make clean'.
+# This list can be empty, but should still be defined.
+#
+# You may also have source code in this directory, but be sure to modify
+# the all & clean targets appropriately.
+#
 # Note that mangle2.2/src must be built before idlmangle!
+#
 SUBDIRS = image mangle2.2/src mangle1.4/src idlmangle math spheregroup trace dimage
-
+#
+# This line helps prevent make from getting confused in the case where you
+# have a file named 'clean'.
+#
+.PHONY : clean
+#
+# This should compile all code prior to it being installed.
+#
 all :
-	@ for f in $(SUBDIRS); do \
-		(cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) all ); \
-	done
-
+	@ for f in $(SUBDIRS); do $(MAKE) -C $$f all ; done
 #
-# Install things in their proper places in $(IDLUTILS_DIR)
+# GNU make pre-defines $(RM).  The - in front of $(RM) causes make to
+# ignore any errors produced by $(RM).
 #
-install :
-	@ for f in $(SUBDIRS); do \
-		(mkdir $(IDLUTILS_DIR)/src/$$f; cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) install ); \
-	done
-	-@ cp Makefile $(IDLUTILS_DIR)/src
-
 clean :
-	- /bin/rm -f *~ core
-	@ for f in $(SUBDIRS); do \
-		(cd $$f ; echo In $$f; $(MAKE) $(MFLAGS) clean ); \
-	done
+	- $(RM) *~ core
+	@ for f in $(SUBDIRS); do $(MAKE) -C $$f clean ; done
