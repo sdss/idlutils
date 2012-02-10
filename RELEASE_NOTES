@@ -1,3 +1,7 @@
+-------------------------------------------------------------------------------
+v5_4_28 (2012-01-10)
+Tag after merging 'weaver' branch.
+
 Merge with 'weaver' branch (2012-01-10):
 
 Makefile (top-level): building of documentation is now turned off by default.
