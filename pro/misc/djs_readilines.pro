@@ -42,7 +42,7 @@ function djs_readilines, infile, indx=indx, nhead=nhead, Head=Head
    endif
 
    if (NOT keyword_set(nhead)) then nhead = 0
-   nline = numlines(infile)
+   nline = FILE_LINES(infile)
    ndata = nline - nhead
    if (nline LT nhead) then return, -1
    if (n_elements(indx) EQ 0L) then indx = lindgen(ndata)

@@ -86,7 +86,7 @@ pro djs_readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;	the value 0.13 read with an 'I' format will be converted to 0.
 ;
 ; PROCEDURES CALLED
-;	GETTOK(), NUMLINES(), REPCHR(), STRNUMBER(), ZPARCHECK
+;	GETTOK(), REPCHR(), STRNUMBER(), ZPARCHECK
 ;
 ; REVISION HISTORY:
 ;	Written         W. Landsman                 November, 1988
@@ -95,6 +95,7 @@ pro djs_readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 ;	Added SKIPLINE and NUMLINE keywords  W. Landsman    March 92
 ;	Read a maximum of 25 cols.  Joan Isensee, Hughes STX Corp., 15-SEP-93.
 ;	Call NUMLINES() function W. Lansdman          Feb. 1996
+;       Use FILE_LINES() instead of numlines()  2012-03-08.
 ;-
   On_error,2                           ;Return to caller
 
@@ -106,7 +107,7 @@ pro djs_readcol,name,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15, $
 
 ; Get number of lines in file
 
-   nlines = NUMLINES( name )
+   nlines = FILE_LINES( name )
    if nlines LT 0 then return
 
    if keyword_set(DEBUG) then $

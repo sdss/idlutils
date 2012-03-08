@@ -52,13 +52,13 @@
 ;
 ; PROCEDURES CALLED:
 ;   ext_odonnell()
-;   numlines()
 ;   readcol
 ;
 ; DATA FILES:
 ;
 ; REVISION HISTORY:
-;   01-Dec-2002  Written by D. Schlegel, Princeton
+;   2002-12-01  Written by D. Schlegel, Princeton
+;   2012-03-08  Changed numlines() to FILE_LINES()
 ;-
 ;------------------------------------------------------------------------------
 function dust_intfilter, ixval, ffilename=ffilename1, sfilename=sfilename1, $
@@ -100,7 +100,7 @@ function dust_intfilter, ixval, ffilename=ffilename1, sfilename=sfilename1, $
    if (NOT keyword_set(ffilename)) then ffilename = ''
    if (ffilename1 NE ffilename) then begin
       ffilename = ffilename1
-      if (numlines(ffilename) LE 0) then begin
+      if (FILE_LINES(ffilename) LE 0) then begin
          print, 'Filter curve file is empty ' + ffilename
          ffilename = ''
          return, 0
@@ -118,7 +118,7 @@ function dust_intfilter, ixval, ffilename=ffilename1, sfilename=sfilename1, $
    if (NOT keyword_set(sfilename)) then sfilename = ''
    if (sfilename1 NE sfilename) then begin
       sfilename = sfilename1
-      if (numlines(sfilename) LE 0) then begin
+      if (FILE_LINES(sfilename) LE 0) then begin
          print, 'Source function file is empty ' + sfilename
          sfilename = ''
          return, 0
@@ -136,7 +136,7 @@ function dust_intfilter, ixval, ffilename=ffilename1, sfilename=sfilename1, $
    if (keyword_set(atmfilename1)) then begin
       if (atmfilename1 NE atmfilename) then begin
          atmfilename = atmfilename1
-         if (numlines(atmfilename) LE 0) then begin
+         if (FILE_LINES(atmfilename) LE 0) then begin
             print, 'Atmospheric extinction file is empty ' + atmfilename
             atmfilename = ''
             awave = 0

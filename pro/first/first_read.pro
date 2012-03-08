@@ -60,6 +60,7 @@
 ;
 ; REVISION HISTORY:
 ;   Written D. Schlegel, 18 July 2003, Princeton
+;   2012-03-08 Change numlines() to FILE_LINES()
 ;-
 ;------------------------------------------------------------------------------
 function first_convert, barr, format
@@ -122,7 +123,7 @@ function first_readascii, filename, range=range1, columns=columns
 ;  NUMLINES fails if the index file is compressed
 ;   expectlines = 811117L
    if (keyword_set(range1)) then range = range1 $
-    else range = [0L, numlines(thisfile)-1]
+    else range = [0L, FILE_LINES(thisfile)-1]
 ;   if (keyword_set(range1)) then range = range1 $
 ;    else range = [0L, expectlines-1]
    nline = range[1] - range[0] + 1
@@ -274,7 +275,7 @@ pro first_rdindex, filename, first_dir=first_dir
 
    splog, 'Building index file...'
    if(ftype eq 'v03Apr11') then $
-     totline = numlines(filename)
+     totline = FILE_LINES(filename)
    if(ftype eq 'v08jul16') then $
      totline = long(sxpar(headfits(filename+'.fits',ext=1), 'NAXIS2'))
    if(keyword_set(totline) eq 0) then $

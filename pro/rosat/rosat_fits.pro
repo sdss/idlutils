@@ -6,7 +6,8 @@
 ; CALLING SEQUENCE:
 ;   rosat_fits
 ; REVISION HISTORY:
-;   23-Apr-2010  Written by Blanton, NYU
+;   2010-04-23  Written by Blanton, NYU
+;   2012-03-08  Replace numlines() with FILE_LINES()
 ;-
 ;------------------------------------------------------------------------------
 pro rosat_fits
@@ -14,7 +15,7 @@ pro rosat_fits
 ;; faint source catalog
 
 fscfile= getenv('RASS_DIR')+'/ascii/rass-fsc-1rxs.cat'
-nlines= numlines(fscfile)
+nlines= FILE_LINES(fscfile)
 nfsc= nlines-175L
 
 rosat0 = { rosat }
@@ -72,7 +73,7 @@ mwrfits, fsc, getenv('RASS_DIR')+'/fits/rass-fsc-1rxs.fits', /create
 ;; bright source catalog
 
 bscfile= getenv('RASS_DIR')+'/ascii/rass-bsc-1rxs.cat'
-nlines= numlines(bscfile)
+nlines= FILE_LINES(bscfile)
 nbsc= nlines-4L
 
 bsc= replicate(rosat0, nbsc)

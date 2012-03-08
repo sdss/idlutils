@@ -70,7 +70,7 @@ for i=0L, n_elements(names)-1L do begin
 endfor
 
 ; create table 
-nelem=numlines(tblfile)
+nelem=FILE_LINES(tblfile)
 instr=replicate(instr1,nelem)
 
 ; now read in table

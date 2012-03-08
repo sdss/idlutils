@@ -27,6 +27,7 @@
 ;
 ; REVISION HISTORY:
 ;   Written by D. Schlegel, 29 May 1997, Durham
+;   Use FILE_LINES() instead of numlines(), B. A. Weaver, 2012-03-08, NYU
 ;-
 ;-----------------------------------------------------------------------
 function djs_readlines, infile, nhead=nhead, Head=Head
@@ -38,7 +39,7 @@ function djs_readlines, infile, nhead=nhead, Head=Head
    endif
 
    if (NOT keyword_set(nhead)) then nhead = 0
-   nline = numlines(infile)
+   nline = FILE_LINES(infile)
    ndata = nline - nhead
    if (nline LT nhead) then return, -1
 

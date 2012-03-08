@@ -127,7 +127,7 @@ pro tyc_rdindex, tyc_dir=tyc_dir
    ;----------
    ; Read the entire Tycho index file into a byte array
 
-;   nline = numlines(indfile) ; NUMLINES fails if the index file is compressed
+;   nline = FILE_LINES(indfile) ; NUMLINES fails if the index file is compressed
    nline = 9538
 ;   splog, 'Reading Tycho index file ' + indfile
    barr = bytarr(43,nline)
@@ -212,7 +212,7 @@ function tyc_readascii, filename, range=range1, columns=columns
     else expectlines = 126913L
 ;  NUMLINES fails if the index file is compressed
 ;   if (keyword_set(range1)) then range = range1 $
-;    else range = [0L, numlines(thisfile)-1]
+;    else range = [0L, FILE_LINES(thisfile)-1]
    if (keyword_set(range1)) then range = range1 $
     else range = [0L, expectlines-1]
    nline = range[1] - range[0] + 1

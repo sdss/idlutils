@@ -22,7 +22,7 @@ if(NOT keyword_set(list)) then $
          'COMA_CLUSTER']
 
 infile=getenv('IDLUTILS_DIR')+'/data/objects/ned-query-clusters-lt0.03.txt'
-nclusters=numlines(infile)
+nclusters=FILE_LINES(infile)
 ra=dblarr(nclusters)
 dec=dblarr(nclusters)
 cz_lg=fltarr(nclusters)

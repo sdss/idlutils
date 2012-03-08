@@ -68,7 +68,6 @@
 ;   hogg_strsplit
 ;   hogg_unquoted_regex()
 ;   mrd_struct
-;   numlines
 ;
 ; INTERNAL SUPPORT ROUTINES:
 ;   yanny_strip_commas()
@@ -88,6 +87,7 @@
 ;                code when reading large files by pre-allocating the memory,
 ;                and use regular-expression matching for speed, robustness,
 ;                and clarity.
+;   08-Mar-2012  Replace numlines() with FILE_LINES().
 ;-
 ;------------------------------------------------------------------------------
 ; All this function actually does is trim any semi-colons at the end
@@ -312,7 +312,7 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
        openr, ilun, filename, error=err, /get_lun, /compress
        end
    else: begin
-       maxlen = numlines(filename[0]) > 1
+       maxlen = FILE_LINES(filename[0]) > 1
        openr, ilun, filename, error=err, /get_lun
        end
    endcase
