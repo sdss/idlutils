@@ -1,6 +1,10 @@
+
+WISE_FITS_GEN: New proc for converting WISE catalog to FITS format.
+
 Numerous files (but especially YANNY_READ): Replace instances of numlines()
     with FILE_LINES().  FILE_LINES is the approved internal IDL routine.
     numlines() has been deprecated & removed from recent Goddard distributions.
+
 -------------------------------------------------------------------------------
 v5_4_28 (2012-01-10)
 Tag after merging 'weaver' branch.
