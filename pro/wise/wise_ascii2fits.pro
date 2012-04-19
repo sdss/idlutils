@@ -174,12 +174,12 @@ pro wise_ascii2fits
    outdir = getenv('WISE_DIR') + '/fits'
    schemafile = getenv('WISE_DIR') + '/wise-allsky-cat-schema.txt'
 
-   if (file_search(indir, /test_directory) EQ 0) then begin
+   if keyword_set(file_search(indir, /test_directory)) EQ 0 then begin
       print, 'Input directory does not exist '+indir
       return
    endif
 
-   if (file_search(outdir, /test_directory) EQ 0) then begin
+   if keyword_set(file_search(outdir, /test_directory)) EQ 0 then begin
       print, 'Output directory does not exist '+indir
       return
    endif
