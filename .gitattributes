@@ -1,6 +1,7 @@
 * text=auto !eol
 pro/mpfit/fakedata.sav -text svneol=unset#unset
 pro/wise/wise_ascii2fits.pro -text
+pro/wise/wise_match.pro -text
 src/mangle2.2/src/Makefile -text
 src/mangle2.2/src/Makefile.bak -text
 src/mangle2.2/src/Makefile.in -text
