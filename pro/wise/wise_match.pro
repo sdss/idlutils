@@ -77,8 +77,8 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
        OR (dec-dtol LE decrange1 AND dec+dtol GE decrange2), ct)
       if (ct GT 0) then begin
          thisd = mrdfits(topdir+'/fits/'+wfile+'-radec.fits', 1)
-         spherematch(ra[indx], dec[indx], thisd.ra, thisd.dec, tol, $
-          i1, i2, d12)
+         spherematch, ra[indx], dec[indx], thisd.ra, thisd.dec, tol, $
+          i1, i2, d12
          if (i1[0] NE -1) then begin
             ; Find which matches are closer than any previous matches
             ibetter = where(d12 LT mdat[indx].matchdist, nbetter)
