@@ -15,6 +15,9 @@
 ;   which works if the full file is larger than memory.
 ; OUTPUTS:
 ;   see MRDFITS
+; BUGS:
+;   This function could be smarter about reading consecutive rows in
+;   the same read, and not re-reading the same row more than once.
 ; REVISION HISTORY:
 ;   2012-04-19  Written by D. Schlegel, LBL
 ;-
