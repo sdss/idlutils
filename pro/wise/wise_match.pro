@@ -33,6 +33,8 @@
 ;    NULL entries for floating-point values are returned as NaN.
 ;    NULL entries for integer-values are returned as 0.
 ;
+;    Only the closest match is found to each object.
+;
 ; DATA FILES:
 ;      $WISE_DIR/fits/wise-allsky-cat-part??.fits
 ;      $WISE_DIR/fits/wise-allsky-cat-part??-radec.fits
@@ -59,13 +61,16 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
    dtol = tol[0] / 3600.d0
 
    if (NOT keyword_set(decrange1)) then begin
-      readfmt, top_dir+'/wise-allsky-cat-dec-ranges.txt', $
+; This readfmt command is only single-precision float ???
+      readfmt, topdir+'/wise-allsky-cat-dec-ranges.txt', $
        '6X,F10.6,14X,F10.6,6X,A22', decrange1, decrange2, wfile
       if (NOT keyword_set(decrange1)) then $
        message, 'Error reading Dec ranges'
+      decrange1[0] = -90.
+      decrange2[n_elements(decrange2)-1] = 90.
    endif
 
-   mdat1 = create_struct('ifile', 0, 'rows', 0L, 'matchdist', 999.d0)
+   mdat1 = create_struct('ifile', -1, 'rows', 0L, 'matchdist', 999.d0)
    mdat = replicate(mdat1, nobj)
 
    ;----------
@@ -73,20 +78,24 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
    nfile = n_elements(decrange1)
    for ifile=0, nfile-1 do begin
       ; Determine which objects may match within this declination strip
-      indx = where((dec-dtol GE decrange1 AND dec-dtol LE decrange2) $
-       OR (dec+dtol GE decrange1 AND dec+dtol LE decrange2) $
-       OR (dec-dtol LE decrange1 AND dec+dtol GE decrange2), ct)
+      rtol = dtol + 1d-4 ; pad a little bit more for roundoff errors
+      indx = where( $
+       (dec-rtol GE decrange1[ifile] AND dec-rtol LE decrange2[ifile]) $
+       OR (dec+rtol GE decrange1[ifile] AND dec+rtol LE decrange2[ifile]) $
+       OR (dec-rtol LE decrange1[ifile] AND dec+rtol GE decrange2[ifile]), ct)
       if (ct GT 0) then begin
-         thisd = mrdfits(topdir+'/fits/'+wfile+'-radec.fits', 1)
-         spherematch, ra[indx], dec[indx], thisd.ra, thisd.dec, tol, $
+         thisd = mrdfits(topdir+'/fits/'+wfile[ifile]+'-radec.fits', 1)
+         if (NOT keyword_set(thisd)) then $
+          message, 'Error reading RA,Dec file for '+wfile[ifile]
+         spherematch, ra[indx], dec[indx], thisd.ra, thisd.dec, dtol, $
           i1, i2, d12
          if (i1[0] NE -1) then begin
             ; Find which matches are closer than any previous matches
             ibetter = where(d12 LT mdat[indx].matchdist, nbetter)
             if (nbetter GT 0) then begin
-               mdat[indx].ifile = ifile
-               mdat[indx].rows = i2
-               mdat[indx].matchdist = d12
+               mdat[indx[i1[ibetter]]].ifile = ifile
+               mdat[indx[i1[ibetter]]].rows = i2
+               mdat[indx[i1[ibetter]]].matchdist = d12
             endif
          endif
       endif
@@ -100,6 +109,8 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
       for ifile=0, nfile-1 do begin
          indx = where(mdat.ifile EQ ifile, ct)
          if (ct GT 0) then begin
+; Do we need to use RANGE instead of ROWS???
+; Do we need any sorting of the rows ???
             match1 = mrdfits(topdir+'/fits/'+wfile+'-.fits', 1, $
              rows=mdat[indx].rows, _EXTRA=KeywordsForMRDFITS)
             if (keyword_set(match1) AND keyword_set(match) EQ 0) then begin
@@ -111,6 +122,8 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
          endif
       endfor
    endif
+
+   nmatch = total(mdat.ifile NE -1)
 
    return
 end
