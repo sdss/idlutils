@@ -1,4 +1,5 @@
 
+MRDFITS_ROWS: New wrapper function for MRDFITS() to read selected rows only.
 WISE_ASCII2FITS: New proc for converting WISE catalog to FITS format.
 WISE_MATCH: New proc for matching to WISE catalog.
 
