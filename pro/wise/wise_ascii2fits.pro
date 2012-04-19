@@ -197,8 +197,8 @@ pro wise_ascii2fits
 
    for ifile=0, nfile-1 do begin
       print, 'Working on file '+files[ifile]
-      fitsfile = repstr(files[ifile], '.gz', '.fits')
-      radecfile = repstr(files[ifile], '.gz', '-radec.fits')
+      fitsfile = repstr(fileandpath(files[ifile]), '.gz', '.fits')
+      radecfile = repstr(fileandpath(files[ifile]), '.gz', '-radec.fits')
       outfile1 = file_search(outdir, fitsfile, count=ct1)
       outfile2 = file_search(outdir, radecfile, count=ct2)
       if (ct1 EQ 0) then begin
