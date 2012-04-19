@@ -6,7 +6,7 @@
 ;   Match a set of RA/Decs to WISE
 ;
 ; CALLING SEQUENCE:
-;   wise_match, ra, dec, [ tol=, match=, mdat=, nmatch=, columns= ]
+;   wise_match, ra, dec, [ tol=, match=, mdat=, nmatch=, _EXTRA= ]
 ;
 ; INPUTS:
 ;   ra         - RA coordinate(s) in deg [N]
@@ -21,6 +21,7 @@
 ;   match      - Structure with catalog matches [N]
 ;   mdat       - Structure with matching distances [N]
 ;   nmatch     - Number of matches
+;   _EXTRA     - Keywords for MRDFITS, such as COLUMNS=
 ;
 ; COMMENTS:
 ;
