@@ -1,12 +1,12 @@
 ;+
 ; NAME:
-;   wise_fits_gen
+;   wise_ascii2fits
 ;
 ; PURPOSE:
 ;   Reformat the WISE catalog release as FITS binary table files
 ;
 ; CALLING SEQUENCE:
-;   wise_fits_gen
+;   wise_ascii2fits
 ;
 ; INPUTS:
 ;
@@ -166,7 +166,7 @@ pro wisefmt1, filename, outfile, nrowchunk=nrowchunk, schemafile=schemafile
    return
 end
 ;------------------------------------------------------------------------------
-pro wise_fits_gen
+pro wise_ascii2fits
 
    nrowchunk = 100000L ; number of rows to parse in memory at once
 
