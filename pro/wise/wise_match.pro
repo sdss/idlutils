@@ -61,7 +61,7 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
    dtol = tol[0] / 3600.d0
 
    if (NOT keyword_set(decrange1)) then begin
-; This readfmt command is only single-precision float ???
+      ; This readfmt command is only single-precision float
       readfmt, topdir+'/wise-allsky-cat-dec-ranges.txt', $
        '6X,F10.6,14X,F10.6,6X,A22', decrange1, decrange2, wfile
       if (NOT keyword_set(decrange1)) then $
@@ -109,8 +109,6 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
       for ifile=0, nfile-1 do begin
          indx = where(mdat.ifile EQ ifile, ct)
          if (ct GT 0) then begin
-; Do we need to use RANGE instead of ROWS???
-; Do we need any sorting of the rows ???
             match1 = mrdfits_rows(topdir+'/fits/'+wfile[ifile]+'.fits', 1, $
              rows=mdat[indx].rows, _EXTRA=KeywordsForMRDFITS)
             if (NOT keyword_set(match1)) then $
