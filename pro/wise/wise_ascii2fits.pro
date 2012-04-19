@@ -205,7 +205,7 @@ pro wise_ascii2fits
          wisefmt, files[ifile], djs_filepath(fitsfile, root_dir=outdir), $
           nrowchunk=nrowchunk, schemafile=schemafile
       endif
-      if (ct2 EQ 0)
+      if (ct2 EQ 0) then begin
          alldat = hogg_mrdfits(djs_filepath(fitsfile, root_dir=outdir), 1, $
           columns=['ra','dec'], nrowchunk=nrowchunk)
          mwrfits, alldat, djs_filepath(radecfile, root_dir=outdir), /create
