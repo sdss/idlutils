@@ -170,7 +170,6 @@ pro wise_ascii2fits
 
    nrowchunk = 100000L ; number of rows to parse in memory at once
 
-setenv,'WISE_DIR=irsadist.ipac.caltech.edu/wise-allsky' ; ???
    indir = getenv('WISE_DIR') + '/ascii'
    outdir = getenv('WISE_DIR') + '/fits'
    schemafile = getenv('WISE_DIR') + '/wise-allsky-cat-schema.txt'
