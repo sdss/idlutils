@@ -111,8 +111,10 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
          if (ct GT 0) then begin
 ; Do we need to use RANGE instead of ROWS???
 ; Do we need any sorting of the rows ???
-            match1 = mrdfits(topdir+'/fits/'+wfile+'-.fits', 1, $
+            match1 = mrdfits_rows(topdir+'/fits/'+wfile[ifile]+'.fits', 1, $
              rows=mdat[indx].rows, _EXTRA=KeywordsForMRDFITS)
+            if (NOT keyword_set(match1)) then $
+             message, 'Error reading WISE FITS file for '+wfile[ifile]
             if (keyword_set(match1) AND keyword_set(match) EQ 0) then begin
                blankdat = match1[0]
                struct_assign, {junk: 0}, blankdat
