@@ -202,7 +202,7 @@ pro wise_ascii2fits
       outfile1 = file_search(outdir, fitsfile, count=ct1)
       outfile2 = file_search(outdir, radecfile, count=ct2)
       if (ct1 EQ 0) then begin
-         wisefmt, files[ifile], djs_filepath(fitsfile, root_dir=outdir), $
+         wisefmt1, files[ifile], djs_filepath(fitsfile, root_dir=outdir), $
           nrowchunk=nrowchunk, schemafile=schemafile
       endif
       if (ct2 EQ 0) then begin
