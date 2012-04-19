@@ -2,6 +2,8 @@
 WISE_ASCII2FITS: New proc for converting WISE catalog to FITS format.
 WISE_MATCH: New proc for matching to WISE catalog.
 
+ups/idlutils.table: Add optional dependency on wise product.
+
 Numerous files (but especially YANNY_READ): Replace instances of numlines()
     with FILE_LINES().  FILE_LINES is the approved internal IDL routine.
     numlines() has been deprecated & removed from recent Goddard distributions.
