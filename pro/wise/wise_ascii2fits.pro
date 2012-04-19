@@ -33,8 +33,8 @@
 ;      $WISE_DIR/wise-allsky-cat-schema.txt
 ;      $WISE_DIR/ascii/wise-allsky-cat-part??.gz
 ;    The output files are:
-;      $WISE_DIR/ascii/wise-allsky-cat-part??.fits
-;      $WISE_DIR/ascii/wise-allsky-cat-part??-radec.fits
+;      $WISE_DIR/fits/wise-allsky-cat-part??.fits
+;      $WISE_DIR/fits/wise-allsky-cat-part??-radec.fits
 ;    where the latter file contains the RA,Dec coordinates per object only.
 ;
 ; PROCEDURES CALLED:
