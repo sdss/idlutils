@@ -20,6 +20,8 @@
 ; OPTIONAL OUTPUTS:
 ;   match      - Structure with catalog matches [N]
 ;   mdat       - Structure with matching distances [N]
+;                Elements are IFILE (file name), ROWS (0-indexed row),
+;                MATCHDIST (match distance in degrees)
 ;   nmatch     - Number of matches
 ;   _EXTRA     - Keywords for MRDFITS, such as COLUMNS=
 ;
@@ -94,8 +96,8 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
             ibetter = where(d12 LT mdat[indx].matchdist, nbetter)
             if (nbetter GT 0) then begin
                mdat[indx[i1[ibetter]]].ifile = ifile
-               mdat[indx[i1[ibetter]]].rows = i2
-               mdat[indx[i1[ibetter]]].matchdist = d12
+               mdat[indx[i1[ibetter]]].rows = i2[ibetter]
+               mdat[indx[i1[ibetter]]].matchdist = d12[ibetter]
             endif
          endif
       endif
