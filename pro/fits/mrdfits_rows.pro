@@ -37,6 +37,8 @@ function mrdfits_rows, file, extension, header, rows=rows, range=range, $
    for i=0L, nrow-1L do begin
       res1 = mrdfits(file, extension, header, rows=rows[isort[i]], $
        _EXTRA=KeywordsForMRDFITS)
+      if (NOT keyword_set(res1)) then $
+       message, 'Error reading file '+file
       if (i EQ 0) then result = replicate(res1, nrow)
       result[isort[i]] = res1
    endfor
