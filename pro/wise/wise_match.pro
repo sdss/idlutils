@@ -13,7 +13,7 @@
 ;   dec        - Dec coordinate(s) in deg [N]
 ;
 ; OPTIONAL INPUTS:
-;   tol        - Matching radius in arcsec; default to 6 arcsec
+;   tol        - Matching radius in arcsec; default to 3 arcsec
 ;
 ; OUTPUTS:
 ;
@@ -37,6 +37,10 @@
 ;
 ;    Only the closest match is found to each object.
 ;
+;    For matches against denser catalogs (such as SDSS), it would be more
+;    efficient to load all rows from the WISE catalog in chunks and seek
+;    in memory rather than on disk.
+;
 ; DATA FILES:
 ;      $WISE_DIR/fits/wise-allsky-cat-part??.fits
 ;      $WISE_DIR/fits/wise-allsky-cat-part??-radec.fits
@@ -59,7 +63,7 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
    if (NOT keyword_set(topdir)) then $
     message, 'WISE_DIR must be set'
    if (n_elements(tol1) NE 0) then tol = tol1 $
-    else tol = 6.
+    else tol = 3.
    dtol = tol[0] / 3600.d0
 
    if (NOT keyword_set(decrange1)) then begin
