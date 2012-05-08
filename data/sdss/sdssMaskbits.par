@@ -445,6 +445,7 @@ maskbits ANCILLARY_TARGET2 6 STRIPE82BCG			"defined in alexie-bcgs.fits"
 maskbits ANCILLARY_TARGET2 7 QSO_SUPPZ			"defined in qso_suppz.descr"
 maskbits ANCILLARY_TARGET2 8 QSO_VAR_SDSS			"defined in VARQSO.descr"
 maskbits ANCILLARY_TARGET2 9 QSO_WISE_SUPP			"defined in BOSS_QSO_targets_July_WISE.descr"
+maskbits ANCILLARY_TARGET2 10 XMMSDSS			"defined in georgakakis.descr"
 
 
 #-------- bosstile status bits
