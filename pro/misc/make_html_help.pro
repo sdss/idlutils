@@ -333,8 +333,8 @@ PRO makehh_grab_hdr,name,dict,infile_indx,libfile_indx,txt_file,verbose,$
                 ndup=0 $
             ELSE BEGIN
                 dpos = WHERE(dict.subject EQ sub,ndup)
-                IF (ndup EQ 1) THEN BEGIN
-                    dict[dpos[0]].id = 1
+                IF (ndup GT 0) THEN BEGIN
+                    FOR i=1,ndup DO dict[dpos[i-1]].id = i
                     ndup = ndup + 1
                 ENDIF
             ENDELSE

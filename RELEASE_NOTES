@@ -1,3 +1,5 @@
+MAKE_HTML_HELP: Deal correctly with cases where there are 3 or more duplicate
+    function names.
 
 Tinker: added new ANCILLARY_TARGET2 bits to the sdssMaskbit.par file (may 8 2012)
 
