@@ -14,7 +14,8 @@
 ;   25-May-2010  Written by Mike Blanton, NYU
 ;-
 ;------------------------------------------------------------------------------
-function intersect, window1, window2
+function intersect, window1, window2, balkanize_options=balkanize_options
+
 
 out1= replicate(construct_polygon(), n_elements(window1))
 struct_assign, window1, out1
@@ -29,8 +30,12 @@ write_mangle_polygons,'',out,unit=unit
 read_mangle_polygons,'',snapped,unit=unit,/allow_doubles
 free_lun,unit
 
-cmd = [ filepath('balkanize', root_dir=getenv('IDLUTILS_DIR'), $
-                 subdir='bin'),'-', '-' ]
+if(NOT keyword_set(balkanize_options)) then $
+  cmd = [ filepath('balkanize', root_dir=getenv('IDLUTILS_DIR'), $
+                   subdir='bin'),'-', '-' ]  $
+else $
+  cmd = [ filepath('balkanize', root_dir=getenv('IDLUTILS_DIR'), $
+                   subdir='bin'),balkanize_options, '-', '-' ]  
 spawn, cmd, /noshell, unit=unit
 hdr= ['snapped']
 write_mangle_polygons,'',snapped,hdr=hdr,unit=unit
