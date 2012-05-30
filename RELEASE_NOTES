@@ -1,3 +1,7 @@
+-------------------------------------------------------------------------------
+v5_5_5 (2012-05-30)
+Tagging new version with latest Goddard merge.
+
 The Goddard utilities have been brought up to date with the Goddard distribution
 as of 2012-05-29.  Any differences from the exact Goddard distribution are
 noted in goddard/idlutils_readme.txt.
