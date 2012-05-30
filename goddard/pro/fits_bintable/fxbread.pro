@@ -1,5 +1,5 @@
 	PRO FXBREAD, UNIT, DATA, COL, ROW, NOSCALE=NOSCALE, VIRTUAL=VIR, $
-		DIMENSIONS=DIMENSIONS, NANVALUE=NANVALUE, ERRMSG=ERRMSG, $
+		DIMENSIONS=DIMS0, NANVALUE=NANVALUE, ERRMSG=ERRMSG, $
                 NOIEEE=NOIEEE
 ;+
 ; NAME: 
@@ -63,7 +63,7 @@
 ;			IF ERRMSG NE '' THEN ...
 ;
 ; Calls       : 
-;	IEEE_TO_HOST, FXPAR, WHERE_NEGZERO, WHERENAN
+;	FXPAR, WHERE_NEGZERO, WHERENAN
 ; Common      : 
 ;	Uses common block FXBINTABLE--see "fxbintable.pro" for more
 ;	information.
@@ -128,8 +128,10 @@
 ;	Version 13, 18 Nov 1999, CM, Add NOIEEE keyword
 ;	Version 14, 21 Aug 2000, William Thompson, GSFC
 ;		Catch I/O errors
+;       Version 15, W. Landsman GSFC 10 Dec 2009
+;                Fix Dimension keyword, remove  IEEE_TO_HOST
 ; Version     :
-;       Version 14, 21 Aug 2000
+;       Version 15, 10 Dec 2009
 ;-
 ;
 @fxbintable
@@ -171,8 +173,8 @@
 		IF NCOL EQ 0 THEN BEGIN
 			IF KEYWORD_SET(VIR) THEN BEGIN
 				HEADER = HEAD[*,ILUN]
-				VALUE = FXPAR(HEADER,SCOL)
-				IF !ERR GE 0 THEN BEGIN
+				VALUE = FXPAR(HEADER,SCOL,COUNT=CC)
+				IF CC GT 0 THEN BEGIN
 					DATA = VALUE
 					VIRTUAL = 1
 					GOTO, CHECK_ROW
@@ -264,7 +266,7 @@ CHECK_ROW:
 	IF MAXVAL[ICOL,ILUN] GT 0 THEN BEGIN
 		POINTER = LONARR(2)
 		READU,UNIT,POINTER
-		IEEE_TO_HOST,POINTER
+		BYTEORDER, POINTER, /NTOHL
 		DIMS = POINTER[0]
 		POINT_LUN,UNIT,NHEADER[ILUN] + HEAP[ILUN] + POINTER[1]
 ;
@@ -292,7 +294,7 @@ CHECK_ROW:
 ;  If the DIMENSIONS keyword has been passed, then use that instead of the
 ;  dimensions already determined.
 ;
-	IF (N_ELEMENTS(DIMENSIONS) GT 0) AND (FORMAT[ICOL,ILUN] NE 'X')	$
+	IF (N_ELEMENTS(DIMS0) GT 0) AND (FORMAT[ICOL,ILUN] NE 'X')	$
 			THEN BEGIN
 		IF PRODUCT(DIMS0) GT PRODUCT(DIMS) THEN BEGIN
 			MESSAGE = 'Requested dimensions exceeds the ' +	$
@@ -343,7 +345,8 @@ CHECK_ROW:
 		IF (N_ELEMENTS(NANVALUE) EQ 1) AND (IDLTYPE[ICOL,ILUN] GE 4) $
 			AND (IDLTYPE[ICOL,ILUN] LE 6) THEN	$
 			W = WHERENAN(DATA,COUNT) ELSE COUNT = 0
-                IF NOT KEYWORD_SET(NOIEEE) THEN IEEE_TO_HOST,DATA
+                IF NOT KEYWORD_SET(NOIEEE) THEN $
+		       SWAP_ENDIAN_INPLACE,DATA,/SWAP_IF_LITTLE
 	END ELSE COUNT = 0
 ;
 ;  If DIMS is simply the number 1, then convert DATA either to a scalar or to a
@@ -360,8 +363,8 @@ CHECK_ROW:
 	IF NOT KEYWORD_SET(NOSCALE) AND NOT KEYWORD_SET(NOIEEE) THEN BEGIN
 		BZERO  = TZERO[ICOL,ILUN]
 		BSCALE = TSCAL[ICOL,ILUN]
-		IF (BSCALE NE 0) AND (BSCALE NE 1) THEN DATA = BSCALE*DATA
-		IF BZERO NE 0 THEN DATA = DATA + BZERO
+		IF (BSCALE NE 0) AND (BSCALE NE 1) THEN DATA *= BSCALE
+		IF BZERO NE 0 THEN DATA += BZERO
 	ENDIF
 ;
 ;  Store NANVALUE everywhere where the data corresponded to IEE NaN.

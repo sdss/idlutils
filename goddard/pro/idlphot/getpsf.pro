@@ -70,7 +70,7 @@ pro getpsf,image,xc,yc,apmag,sky,ronois,phpadu, gauss,psf,idpsf,psfrad, $
 ;	centroid, scale the same Gaussian to the new star's core, and add the
 ;	differences between the actual data and the scaled Gaussian to the
 ;	table of residuals.   (In other words, the Gaussian fit is performed
-;	only on the first star.)
+;       only on the first star.)
 ;
 ; OPTIONAL KEYWORD INPUT:
 ;	DEBUG - if this keyword is set and non-zero, then the result of each
@@ -207,8 +207,10 @@ GETSTAR:
 ;                            Print the current star
  fmt1 = "(/17X, 'STAR', 5X, 'X', 8X, 'Y', 5X, 'MAG  1', 5X, 'SKY')"
  fmt2 = "(15X, I5, 2F9.2, 12F9.3)"
- print,format=fmt1          
- print,format=fmt2,istar, xc[istar], yc[istar], mag[istar], sky[istar]
+ if keyword_set(DEBUG) then begin
+    print,format=fmt1          
+    print,format=fmt2,istar, xc[istar], yc[istar], mag[istar], sky[istar]
+ endif
 
  if keyword_set(DEBUG) then print,'GETPSF: Gaussian Fit Iteration'
 
@@ -320,8 +322,10 @@ GETMORE:            ;Loop for additional PSF stars begins here
    goto,GETMORE
  endif                      
 
- print,format=fmt1
- print,format=fmt2, istar, xc[istar], yc[istar], mag[istar], sky[istar]
+ if keyword_set(DEBUG) then begin
+   print,format=fmt1
+   print,format=fmt2, istar, xc[istar], yc[istar], mag[istar], sky[istar]
+ endif
 
  f = image[lx:ux,ly:uy]
  x = xc[istar]-lx   &   y = yc[istar]-ly   

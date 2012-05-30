@@ -10,7 +10,7 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
 ; EXPLANATION:
 ;   Uses the IDL SOCKET command to query the GSC 2.3.2 database over the Web.    
 ;
-;   Alternatively, the user can query the GSC 2.3.2 catalog using
+;   Alternatively, (and more reliably) one can query the GSC 2.3.2 catalog using
 ;   queryvizier.pro and the VIZIER database, e.g.  
 ;     IDL> st = queryvizier('GSC2.3',[23,35],10,/all)
 ; 
@@ -24,7 +24,7 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
 ;   magnitude per bandpass for each unique sky object
 ;
 ; CALLING SEQUENCE: 
-;     info = QueryGSC(targetname_or_coords, [ dis, /HOURS, /BOX, /VERBOSE] )
+;     info = QueryGSC(targetname_or_coords, [ dis, /HOURS] )
 ;
 ; INPUTS: 
 ;      TARGETNAME_OR_COORDS - Either a scalar string giving a target name, 
@@ -47,7 +47,7 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
 ;   info - IDL structure containing information on the GSC stars within the 
 ;          specified distance of the specified center.   There are (currently)
 ;          23 tags in this structure  -- for further information see
-;          www-gsss.stsci.edu/Catalogs/GSC/GSC2/gsc23/gsc23_release_notes.htm
+;          http://gsss.stsci.edu/Catalogs/GSC/GSC2/gsc23/gsc23_release_notes.htm
 ;
 ;          .HSTID - GSC 2.3 name for HST operations
 ;          .GSC1ID - GSC1 name
@@ -62,6 +62,11 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
 ;          .UMAG, .UERR - magnitude and error
 ;          .BMAG, .BERR - magnitude and error
 ;          .VMAG, .VERR - magnitude and error
+;          .RMAG, .RERR - magnitude and error
+;          .IMAG, .IERR - magnitude and error
+;          .JMAG, .JERR - magnitude and error
+;          .HMAG, .HERR - magnitude and error
+;          .KMAG, .KERR - magnitude and error
 ;          .A - semi-major axis in pixels
 ;          .PA - Position angle of extended objects in degrees
 ;          .E - eccentricity of extended objects
@@ -89,6 +94,8 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
 ;         Major rewrite to use new STScI Web server, remove magrange
 ;           keyword   W. Landsman Dec 2007
 ;         Update server name, added /BOX,/ VERBOSE keywords W.L 19 Dec 2007
+;         Web server now also returns infrared data  W.L. Feb 2010
+;         Fixed case where dec neg. and deg or min 0 Pat Fry Jul 2010
 ;
 ;-
   compile_opt idl2
@@ -114,6 +121,11 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
    deg = string(deg,'(i3.2)')
    dsn = strmid(deg,0,1)
    deg = strmid(deg,1,2)
+   if (dmn lt 0 || dsc lt 0) then begin
+       dmn = abs(dmn)
+       dsc = abs(dsc)
+       dsn = '-'
+   endif
    sc = round(sc)
    dsc = round(dsc)
    if dsn EQ ' ' then dsn = '%2B'
@@ -136,19 +148,23 @@ function Querygsc, target, dis,magrange = magrange, HOURS = hours, $
   headers = strsplit(t[0],',',/extract)
   
   info = create_struct(Name='gsc',headers, '','',0.0d,0.0d,0.0,0.0,0.0, $
-   0.0, 0, 0.0, $   ;F
-   0.0, 0, 0.0, $ ;J
-   0.0, 0, 0.0, $   ;N 
+   0.0, 0, 0.0, $   ;Fpg
+   0.0, 0, 0.0, $ ;Jpg
+   0.0, 0, 0.0, $   ;Npg 
    0.0, 0, 0.0,  $   ;U 
    0.0, 0, 0.0, $ ;B
    0.0, 0, 0.0, $ ;V
    0.0, 0, 0.0, $ ;R
    0.0, 0, 0.0, $ ;I
+   0.0, 0, 0.0, $ ;J
+   0.0, 0, 0.0, $ ;H
+   0.0, 0, 0.0, $ ;K
    0, 0ULL, 0.0, 0.0, 0.0,0,0 )
   info = replicate(info,nstar)
+
   for i=0,nstar-1 do begin
       temp = strsplit(t[i+1],',',/extract)
-      for j=0,36 do info[i].(j) = temp[j]
+       for j=0,N_elements(temp)-1 do info[i].(j) = temp[j]
   endfor
    ENDIF ELSE BEGIN 
       message, 'No objects returned by server. The server answered:', /info

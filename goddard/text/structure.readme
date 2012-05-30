@@ -1,15 +1,13 @@
-pro/structure                                                 April 1996
+pro/structure                                                 December 2006
 
   This directory contains IDL procedures for working with IDL structure 
-variables.    The procedure CREATE_STRUCT will dynamically create an IDL 
-structure and is useful when the structure properties are not known before
-run time.   RSI subsequently introduced the intrinsic *function* CREATE_STRUCT()
-in IDL V3.6 which has a similar purpose, but requires that each tag value
-be input as a separate parameter.    This makes the intrinisc function awkward
-to use when the *number* of tags is not known prior to run time and thus
-the procedure CREATE_STRUCT is being kept in the Library.   The procedure 
-MRD_STRUCT is similar to CREATE_STRUCT and was developed for the MRDFITS 
-procedure.
+variables.    The *procedure* CREATE_STRUCT will dynamically create an IDL 
+structure and is useful when the structure properties are not known before run
+time.   The intrinsic *function* CREATE_STRUCT() in IDL  has a similar purpose,
+but requires that each tag value be input as a separate parameter.    This makes
+the intrinisc function awkward to use when the *number* of tags is not known
+prior to run time.   The procedure  MRD_STRUCT is similar to CREATE_STRUCT and
+was developed for the MRDFITS  procedure.
 
 This directory also contains following IDL routines for working with 
 structures, written by Frank Varosi (Hughes STX):   

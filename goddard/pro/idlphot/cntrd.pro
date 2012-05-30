@@ -83,9 +83,11 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
 ;       Avoid integer wraparound for unsigned arrays W.Landsman January 2001
 ;       Handle case where more than 1 pixel has maximum value W.L. July 2002
 ;       Added /KEEPCENTER, EXTENDBOX (with default = 0) keywords WL June 2004
+;       Some errrors were returning X,Y = NaN rather than -1,-1  WL Aug 2010
 ;-      
  On_error,2                          ;Return to caller
-
+ compile_opt idl2
+ 
  if N_params() LT 5 then begin
         print,'Syntax: CNTRD, img, x, y, xcen, ycen, [ fwhm, ' 
         print,'              EXTENDBOX= , /KEEPCENTER, /SILENT, /DEBUG ]'
@@ -106,7 +108,7 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
 
 ;   Compute size of box needed to compute centroid
 
- if not keyword_set(extendbox) then extendbox = 0
+ if ~keyword_set(extendbox) then extendbox = 0
  nhalf =  fix(0.637*fwhm) > 2  ;
  nbox = 2*nhalf+1             ;Width of box to be used to compute centroid
  nhalfbig = nhalf + extendbox
@@ -120,9 +122,9 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
 
  pos = strtrim(x[i],2) + ' ' + strtrim(y[i],2)
 
- if not keyword_set(keepcenter) then begin
- if ( (ix[i] LT nhalfbig) or ((ix[i] + nhalfbig) GT xsize-1) or $
-      (iy[i] LT nhalfbig) or ((iy[i] + nhalfbig) GT ysize-1) ) then begin
+ if ~keyword_set(keepcenter) then begin
+ if ( (ix[i] LT nhalfbig) || ((ix[i] + nhalfbig) GT xsize-1) || $
+      (iy[i] LT nhalfbig) || ((iy[i] + nhalfbig) GT ysize-1) ) then begin
      if not keyword_set(SILENT) then message,/INF, $
            'Position '+ pos + ' too near edge of image'
      xcen[i] = -1   & ycen[i] = -1
@@ -156,8 +158,8 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
 ; check *new* center location for range
 ; added by Hogg
 
- if ( (xmax LT nhalf) or ((xmax + nhalf) GT xsize-1) or $
-      (ymax LT nhalf) or ((ymax + nhalf) GT ysize-1) ) then begin
+ if ( (xmax LT nhalf) || ((xmax + nhalf) GT xsize-1) || $
+      (ymax LT nhalf) || ((ymax + nhalf) GT ysize-1) ) then begin
      if not keyword_set(SILENT) then message,/INF, $
            'Position '+ pos + ' moved too near edge of image'
      xcen[i] = -1   & ycen[i] = -1
@@ -190,13 +192,14 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
  sumxd  = total( w*dd*deriv )
  sumxsq = total( w*dd^2 )
 
- if sumxd GT 0 then begin  ;Reject if X derivative not decreasing
+ if sumxd GE 0 then begin  ;Reject if X derivative not decreasing
    
-   if not keyword_set(SILENT) then message,/INF, $
+   if ~keyword_set(SILENT) then message,/INF, $
         'Unable to compute X centroid around position '+ pos
    xcen[i]=-1 & ycen[i]=-1
    goto,DONE
  endif 
+
  dx = sumxsq*sumd/(sumc*sumxd)
  if ( abs(dx) GT nhalf ) then begin    ;Reject if centroid outside box  
    if not keyword_set(SILENT) then message,/INF, $
@@ -215,7 +218,7 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
  sumd =   total( w*deriv )
  sumxd =  total( w*deriv*dd )
  sumxsq = total( w*dd^2 )
- if (sumxd GT 0) then begin  ;Reject if Y derivative not decreasing
+ if (sumxd GE 0) then begin  ;Reject if Y derivative not decreasing
    if not keyword_set(SILENT) then message,/INF, $
         'Unable to compute Y centroid around position '+ pos
         xcen[i] = -1   & ycen[i] = -1
@@ -224,7 +227,7 @@ pro cntrd, img, x, y, xcen, ycen, fwhm, SILENT= silent, DEBUG=debug, $
 
  dy = sumxsq*sumd/(sumc*sumxd)
  if (abs(dy) GT nhalf) then begin ;Reject if computed Y centroid outside box
-   if not keyword_set(SILENT) then message,/INF, $
+   if ~keyword_set(SILENT) then message,/INF, $
        'Computed X centroid for position '+ pos + ' out of range'
         xcen[i]=-1 & ycen[i]=-1
         goto, DONE

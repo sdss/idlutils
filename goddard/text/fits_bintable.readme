@@ -1,11 +1,10 @@
 			      FITS Binary Tables
 
-			  Last updated:  13 Dec 2002
+			  Last updated:  13 Dec 2007
 
 
 The routines in this directory are for reading and writing (disk) FITS binary
-table extensions.  Access to FITS files is direct, rather than passing through
-intermediate file structures (such as SDAS/Geis).  Some routines for reading
+table extensions.  .  Some routines for reading
 and writing primary FITS files are also included.  Additional information is 
 available in the LateX file fits_bintable.tex in the /text directory. 
 
@@ -100,13 +99,11 @@ mentioned above.
 	FXBTFORM	Parse TFORM column descriptor--called by FXBPARSE.
 	FXHREAD		Read FITS header--called by FXBOPEN.
 	FXFINDEND	Find the last FITS record--called by FXBCREATE.
-	WHERENAN	Find points equal to IEEE NaN--called by FXBREAD.
+	WHERENAN	Find points equal to big-endian IEEE NaN.
         BLKSHIFT        Shift a block of data to a new position in a file 
 	BOOST_ARRAY	Resize array, and append another array.
 	STORE_ARRAY	Resize array, and insert another array.
 	DETABIFY	Removes tabs from strings.
-	PRODUCT		Calculates total product of all elements of an array.
-
 
 			Multidimensional Array Facility
 
@@ -169,17 +166,8 @@ At present, there is no support for IEEE +/- Infinity and -0 special values.
 However, it would be a simple matter to add support similar to IEEE NaN.
 
 
-	       Bit, Logical, and Double-precision Complex Arrays
+	       Bit and Logical Arrays
 
-Prior to V4.0,  IDL did not support a data type corresponding to double-
-precision complex (type "M" in FITS binary tables).   Users with earlier 
-versions of IDL can still use these routines to read and write double complex
-data types as ordinary double-precision arrays with an extra first
-dimension of two.  Support for this is automatic when reading binary tables.
-Columns can be defined as type "M" when writing binary tables if the /DCOMPLEX
-keyword is passed to FXBADDCOL, and the data array is complex with the first
-dimension being of size two.     Users with IDL versions since V4.0 can
-simply use the double complex datatype.
 
 Bit arrays (type "X" in FITS binary tables) are treated in IDL as byte arrays
 with approximately 1/8 the number of elements.  Support for this is automatic
@@ -223,7 +211,7 @@ by keeping this file in the same directory with the IDL procedures found here.
 
 Questions should be directed to:
 
-	William.T.Thompson.1@gsfc.nasa.gov	(Internet)
+	William.T.Thompson.1@gsfc.nasa.gov
 
 ----------------------------------------------------------------------------
  
@@ -276,7 +264,6 @@ Some procedures from other directories are also useful
 
 CHECK_FITS        - Checks validity of FITS header.
 GET_DATE          - Gets date in format used by FITS headers.
-GETFILES          - Interactively asks for a list of tape file numbers.
 HPRINT            - Prints FITS headers on terminal screen.
 STRNUMBER()       - Function to determine if a string is a valid numeric value.
 SXDELPAR()        - Procedure to delete keyword parameter(s) from FITS header.

@@ -238,7 +238,7 @@ The most commonly used items with DBFIND are probably those
 pertaining to position.
 All of the positional databases will have an indexed item named RA in decimal
 hours, and an indexed item named DEC in decimal degrees.  In addition, another
-set of non-indexed items may exist (e.g.\ RA\_1950, DEC\_1950) which store
+set of non-indexed items may exist (e.g.\ RA\_2000, DEC\_2000) which store
 the position as character strings.  These latter items are used for pretty
 output with DBPRINT, {\em and should not be used with} DBFIND.  A nice
 feature of DBFIND is that it recognizes numbers separated by colons as being
@@ -640,9 +640,10 @@ same as the name of the .dbd file.
 \item [\#maxentries] Underneath the \#maxentries header should be a single
 number giving the maximum number of entries one expects to be in the database.
 The only cost in making the value of \#maxentries too large is that extra
-disk space will have to be allocated for the index files.   On the other
-hand, if the value of \#maxentries is less than the actual number of entries,   
-then you will not be able to create the index file.
+disk space will have to be allocated for the index files.  In fact, this
+value is now mostly obsolete, since if the value of
+\#maxentries is less than the actual number of entries, then DBCREATE will
+automatically be called create a larger index file.   
 \item [\#items]  This required block contains three columns of information.
 The first column contains the name of every item.  Multiple valued items
 should have the number of values per entry put in parentheses next to the
@@ -675,9 +676,10 @@ searched very quickly.  `Sorted' items are assumed to have entry order
 already coincident with numeric order, and the ``sorted'' index should be
 used whenever it is allowed. For example, some catalogs are
 listed by increasing right ascension, which would allow RA to be a
-``sorted'' item.  Neither multiple-valued items nor string items are allowed 
+``sorted'' item.  Multiple-valued  items are not allowed 
 an index type of ``sort'' or
-``sorted''.  Finally, the values of a ``sort/index'' item are copied in both
+``sorted''.   Since November 2009 string items are allows to be 'sorted'. 
+Finally, the values of a ``sort/index'' item are copied in both
 entry order and numeric order to the index file.  This type is mainly used
 for items which are used to ``point'' at another database (see below).
 The following table summarizes the relative disk space and search
@@ -689,8 +691,8 @@ Type & Space  & Speed & Speed & \\ \hline\hline
 None & 1 &  Slow & Slow & \\ \hline
 Index & 2 & Moderate & Fast & \\ \hline
 Sorted & 3 & Very Fast & Fast & Item must be in entry order \\ \hline 
-Sort & 4 & Fast & Slow & Multiple and String items not allowed \\   \hline
-Sort/Index & 5 & Fast & Fast & Multiple and String items not allowed \\ \hline
+Sort & 4 & Fast & Slow & Multiple value items not allowed \\   \hline
+Sort/Index & 5 & Fast & Fast & Multiple value items not allowed \\ \hline
 \end{tabular}
 \vspace{0.1in}
 \item [\#pointers] The \#pointers block contains the names of items
@@ -735,7 +737,7 @@ DBBUILD as follows:
 \exc{!PRIV=2}{;Set !PRIV to create or modify database files}
 \exc{dbcreate,`EXAMPLE',1,1}{;Need new index and data files}
 \exc{dbopen,`EXAMPLE',1}{;Open the database for update}
-\exc{dbbuild,cat,bs,ra\_1950,dec\_1950,flux, ra,dec}{;Load IDL vectors into
+\exc{dbbuild,cat,bs,ra\_2000,dec\_2000,flux, ra,dec}{;Load IDL vectors into
 database}
 \exend
 If {\tt DBCREATE} is supplied with an /EXTERNAL keyword then the data

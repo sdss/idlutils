@@ -1,4 +1,5 @@
- pro kuiperone, data, func_name, d, prob, PLOT = plot, _EXTRA = extra
+ pro kuiperone, data, func_name, d, prob, PLOT = plot, WINDOW=window, $
+     _EXTRA = extra
 ;+
 ; NAME:
 ;       KUIPERONE
@@ -32,7 +33,7 @@
 ;               different from FUNC_NAME.
 ;
 ; OPTIONAL INPUT KEYWORD:
-;       PLOT - If this keyword is set and non-zero, then KUIPERONE will display a
+;       /PLOT - If this keyword is set and non-zero, then KUIPERONE will display a
 ;               plot of the CDF of the data with the supplied function
 ;               superposed.   The data values where the Kuiper statistic is
 ;               computed (i.e. at the maximum difference between the data CDF
@@ -70,10 +71,11 @@
 ;       Accept _EXTRA keywords   W. Landsman      September, 1995
 ;       Fixed possible bug in plot display showing position maximum difference
 ;       in histogram   M. Fardal/ W. Landsman      March, 1997
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Adapted from KSONE      J. Ballet     July 2003
+;       Use Coyote graphics   W. Landsman     Feb 2011
 ;-
  On_error, 2
+ compile_opt idl2
 
  if ( N_params() LT 3 ) then begin
     print,'Syntax - kuiperone, data, func_name, D, [prob ,/PLOT]'
@@ -98,22 +100,24 @@
 
  D = D1 + D2
 
- if keyword_set(plot) then begin
+ if keyword_set(plot) || keyword_set(WINDOW) then begin
 
 ; Prepare the step function
      xx = REBIN(sortdata,2*N,/SAMPLE)
      yy = REBIN(f0,2*N,/SAMPLE)
      yy = [yy[1:*],1.]
 
-     plot, xx,yy,_EXTRA = extra
-     plots, [sortdata[sub0], sortdata[sub0]], [0,ff[sub0]], linestyle=2
-     plots, [sortdata[subn], sortdata[subn]], [ff[subn],1], linestyle=2
+     cgplot, xx,yy,_EXTRA = extra, WINDOW=window
+     cgplots, [sortdata[sub0], sortdata[sub0]], [0,ff[sub0]], linestyle=2, $
+         WINDOW=window
+     cgplots, [sortdata[subn], sortdata[subn]], [ff[subn],1], linestyle=2, $
+        WINDOW=window
 
 ; Plot the expected cumulative distribution
      n2 = n > 100
      x2 = FINDGEN(n2+1)*(!X.CRANGE[1]-!X.CRANGE[0])/n2 + !X.CRANGE[0]
      y2 = call_function( func_name, x2 )
-     oplot,x2,y2,lines=1,thick=2
+     cgplot,/over, x2,y2,lines=1,thick=2, WINDOW=window
  endif
 
  prob_kuiper, D, N, prob           ;Compute significance of Kuiper statistic

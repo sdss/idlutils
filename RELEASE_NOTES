@@ -1,3 +1,12 @@
+The Goddard utilities have been brought up to date with the Goddard distribution
+as of 2012-05-29.  Any differences from the exact Goddard distribution are
+noted in goddard/idlutils_readme.txt.
+
+pro/psconfig: Removing whole directory.  All functions in this directory
+    are now defined in goddard/pro/coyote.
+pro/misc/undefine.pro: Removed this routine which is replaced by
+    goddard/pro/coyote/undefine.pro
+
 INTERSECT: Added keyword to pass in options to balkanize
 
 -------------------------------------------------------------------------------

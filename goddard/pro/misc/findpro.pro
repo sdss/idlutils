@@ -68,7 +68,7 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
 ;       lower case.
 ;
 ; PROCEDURES USED:
-;       ZPARCHECK
+;       FDECOMP   -- Decompose file name
 ; REVISION HISTORY:
 ;       Based on code extracted from the GETPRO procedure, J. Parker 1994
 ;       Use the intrinsic EXPAND_PATH function    W. Landsman Nov. 1994
@@ -94,7 +94,9 @@ pro FindPro, Proc_Name, NoPrint=NoPrint, DirList=DirList, ProList=ProList
  if (N_params() EQ 0) then begin      ;Prompt for procedure name?
    Proc_Name = ' ' 
    read,'Enter name of procedure for which you want the path: ',Proc_Name
- endif else zparcheck, 'getpro', Proc_Name, 1, 7, 0, 'Procedure name'
+ endif else $
+   if (size(proc_name,/type) NE 7 ) and (N_elements(proc_name) NE 1) then $
+       message,'ERROR - First parameter (.pro name) must be a scalar string'
 
  NoPrint = keyword_set(NoPrint)
 

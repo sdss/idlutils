@@ -37,8 +37,8 @@ function cspline,xx, yy, tt, Deriv = deriv
 ;       IDL> x = (findgen(21)/20.0)*2.0*!PI ;X vector
 ;       IDL> y = sin(x)                     ;Y vector
 ;       IDL> t = (findgen(11)/11.0)*!PI     ;Values at which to interpolate 
-;       IDL> plot,x,y,psym=1                ;Plot original grid
-;       IDL> oplot, t,cspline(x,y,t),psym=2 ;Overplot interpolated values
+;       IDL> cgplot,x,y,psym=1                ;Plot original grid
+;       IDL> cgplot, /over, t,cspline(x,y,t),psym=2 ;Overplot interpolated values
 ;
 ; METHOD:
 ;      The "Numerical Recipes" implementation of the natural cubic spline is 
@@ -54,6 +54,7 @@ function cspline,xx, yy, tt, Deriv = deriv
 ;--------------------------------------------------------------------------
 
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 3 then begin
         print,'Syntax:  result = cspline( x, y, t, [ DERIV = ] )'

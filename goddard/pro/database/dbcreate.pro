@@ -11,6 +11,7 @@ pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL, Maxentry=maxentry
 ;       in a ZDBASE directory, then the user must have write privilege to that 
 ;       directory
 ;
+;       This version allows record length to be larger than 32767 bytes
 ; CALLING SEQUENCE:     
 ;       dbcreate, name,[ newindex, newdb, maxitems]  [,/EXTERNAL, MAXENTRY=]  
 ;
@@ -74,6 +75,7 @@ pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL, Maxentry=maxentry
 ;
 ;       !priv must be 2 or greater to execute this routine.
 ;
+;
 ; SIDE EFFECTS:  
 ;       data base description file ZDBASE:name.dbh is created
 ;       and optionally ZDBASE:name.dbf (data file) and
@@ -93,8 +95,12 @@ pro dbcreate,name,newindex,newdb,maxitems,EXTERNAL=EXTERNAL, Maxentry=maxentry
 ;       Added MAXENTRY keyword   W. Landsman July 2006
 ;       Assume since V5.5, remove obsolete keywords to OPEN W. Landsman Sep2006
 ;       No longer required to be a ZDBASE directory  W. Landsman Feb 2008
+;       Fix Feb 2008 bug when files are in current dir W. L.  May 2008
 ;       Fix May 2008 bug when files are not in current dir (sigh) W. L. May 2008
-;       Remove calls to IEEE_TO_HOST     W. L.  June 2008
+;       Warn if database length exceeds 32767 bytes  W.L. Dec 2009
+;       Remove spurious warning that database name is too long W.L. April 2010
+;       Support entry lengths larger than 32767 bytes W.L. Oct. 2010
+;       Better testing for valid print formats W.L. Nov 2010
 ;-
 ;----------------------------------------------------------
  On_error,2                         ;Return to caller
@@ -120,7 +126,8 @@ if N_params() LT 3 then newdb = 0
 if N_params() LT 4 then maxitems = 200
 if not keyword_set(maxentry) then maxentry = 1
 filename = strlowcase(strtrim(name,2))
-
+if strlen(filename) GT 19 then message,/INF, $
+   'Warning - database name must not exceed 19 characters'
 
  dbclose                         ;Close any databases already open
  ;
@@ -128,13 +135,11 @@ filename = strlowcase(strtrim(name,2))
 ;
 get_lun, unit                   ;get free unit number
 dbdname =  find_with_def(filename+'.dbd', 'ZDBASE')
-if strlen(dbdname) GT 19 then message,/INF, $
-   'Warning - database name must not exceed 19 characters'
 fdecomp,dbdname,disk,dir
 zdir = disk+ dir 
 if zdir EQ '' then cd,current=zdir
 zdir = zdir + path_sep()
-if not file_test(zdir,/write) then message, $
+if ~file_test(zdir,/write) then message, $
    'ERROR - must have write privileges to directory ' + zdir
 openr, unit, dbdname,error=err
 if err NE 0 then goto, Bad_IO
@@ -145,10 +150,10 @@ On_ioerror, BAD_IO              ;On I/O errors go to BAD_IO
 ;   8/14/95  JKF/ACC - allow EXTERNAL data for newindex OR newdb modes.
 ;
 if ((newindex ne 0) or (newdb ne 0)) or $
-                ((file_search(zdir+ filename+'.dbh'))[0] eq '') then begin
+                (~file_test(zdir+ filename+'.dbh')) then begin
         extern = keyword_set(external)
 end else begin
-        openr,tempunit,filename+'.dbh',/get_lun
+        openr,tempunit,zdir +filename+'.dbh',/get_lun
         point_lun,tempunit,119
         extern = 0b
         readu,tempunit,extern
@@ -158,11 +163,11 @@ endelse
 ; set up data buffers
 ;
 names = strarr(maxitems)                        ;names of items
-numvals = intarr(maxitems)+1S                   ;number of values
+numvals = replicate(1L,maxitems)                   ;number of values
 type = intarr(maxitems)                         ;data type
 nbytes = intarr(maxitems)                       ;number of bytes in item
 desc = strarr(maxitems)                         ;descriptions of items
-sbyte = intarr(maxitems)                        ;starting byte position
+sbyte = lonarr(maxitems)                        ;starting byte position
 format = strarr(maxitems)                       ;print formats
 headers = strarr(3,maxitems)                    ;print headers
 headers[*,*]='               '                  ;init headers
@@ -329,6 +334,7 @@ while not eof(unit) do begin            ;loop on records in the file
         endcase
 next:
 endwhile; loop on records
+
 ;
 ; create data base descriptor record --------------------------------------
 ;
@@ -338,8 +344,8 @@ endwhile; loop on records
 ;         0-18   data base name character*19
 ;         19-79  data base title character*61
 ;         80-81  number of items (integer*2)
-;         82-83  record length of DBF file (integer*2)
-;         84-118 values filled in by DBOPEN
+;         105-108  record length of DBF file (integer*4)
+;         84-117 values filled in by DBOPEN
 ;         119    equals 1 if keyword EXTERNAL is true.
 ;
 totbytes=((nextbyte+3)/4*4)  ;make record length a multiple of 4
@@ -348,7 +354,8 @@ drec[0:79]=32b                      ;blanks
 drec[0] = byte(strupcase(filename))
 drec[19] = byte(title)
 drec[80] = byte(fix(nitems),0,2)
-drec[82] = byte(fix(totbytes),0,2)
+drec[105] = byte(long(totbytes),0,4)
+drec[118] = 1b
 drec[119] = byte(extern)
 ;
 ; create item description records
@@ -357,7 +364,6 @@ drec[119] = byte(extern)
 ;  byte assignments:
 ;       0-19    item name (character*20)
 ;       20-21   IDL data type (integet*2)
-;       22-23   Number of values for item (1 for scalar) (integer*2)
 ;       24-25   Starting byte position i record (integer*2)
 ;       26-27   Number of bytes per data value (integer*2)
 ;       28      Index type
@@ -367,17 +373,20 @@ drec[119] = byte(extern)
 ;       101-119 Data base this item points to
 ;       120-125 Print format
 ;       126-170 Print headers
-;       171-199 Added by DBOPEN
+;       179-182   Number of values for item (1 for scalar) (integer*4)
+;       183-186 Starting byte position in original DBF record (integer*4)
+;       187-199 Added by DBOPEN
 irec=bytarr(200,nitems)
 rec=bytarr(200)
 headers = strmid(headers,0,15)       ;Added 15-Sep-92
+
 for i=0,nitems-1 do begin
         rec[0:19]=32b  &  rec[101:170]=32b    ;Default string values are blanks
         rec[29:87] = 32b
         rec[0]  = byte(names[i])
         rec[20] = byte(type[i],0,2)
-        rec[22] = byte(numvals[i],0,2)
-        rec[24] = byte(sbyte[i],0,2)
+        rec[179] = byte(numvals[i],0,4)
+        rec[183] = byte(sbyte[i],0,4)
         rec[26] = byte(nbytes[i],0,2)
         rec[28] = index[i]
         rec[29] = byte(desc[i])
@@ -385,23 +394,26 @@ for i=0,nitems-1 do begin
         rec[101]= byte(strupcase(pointers[i]))
         rec[120]= byte(format[i])
         ff=strtrim(format[i])
-        flen=fix(gettok(strmid(ff,1,strlen(ff)-1),'.'))
+	test = strnumber(gettok(strmid(ff,1,strlen(ff)-1),'.'),val)
+        if test then flen =fix(val) else $    ;Modified Nov-10
+	   message,'Invalid print format supplied: ' + format[i],/IOERROR
         rec[98] = byte(flen,0,2)
         rec[126]= byte(headers[0,i]) > 32b    ;Modified Nov-91
         rec[141]= byte(headers[1,i]) > 32b
         rec[156]= byte(headers[2,i]) > 32b
         irec[0,i]=rec
+
 end
 ;
 ; Make sure user is on ZDBASE and write description file
 ;
+
  close,unit
  openw,unit,zdir + filename+'.dbh'
-   
 On_ioerror, NULL 
 if extern then begin
         tmp = fix(drec,80,1) & byteorder,tmp,/htons & drec[80] = byte(tmp,0,2)
-        tmp = fix(drec,82,1) & byteorder,tmp,/htons & drec[82] = byte(tmp,0,2)
+        tmp = long(drec,105,1) & byteorder,tmp,/htonl & drec[105] = byte(tmp,0,4)
 ;
         tmp = fix(irec[20:27,*],0,4,nitems)
         byteorder,tmp,/htons 
@@ -414,6 +426,11 @@ if extern then begin
         tmp = fix(irec[171:178,*],0,4,nitems)
         byteorder,tmp,/htons 
         irec[171,0] = byte(tmp,0,8,nitems)
+	
+	tmp = long(irec[179:186,*],0,2,nitems)
+        byteorder,tmp,/htonl 
+        irec[179,0] = byte(tmp,0,8,nitems)
+
 endif
 writeu, unit, drec
 writeu, unit, irec

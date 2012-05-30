@@ -121,7 +121,7 @@ follows:
 \item
 	Next, the binary table extension header must be created, and the
 	various columns to be used have to be defined.  The routines FXBHMAKE
-	and FXADDCOL take care of this.
+	and FXBADDCOL take care of this.
 \item
 	Then, the extension file must be opened, and the header written out.
 	FXBCREATE takes care of this.
@@ -188,11 +188,11 @@ this
 %
 \begin{quote}
 \begin{verbatim}
-SIMPLE  =                    T /Written by IDL:  30-Jan-1992 11:19:34.00
+SIMPLE  =                    T /Written by IDL:  Sun Mar 28 20:24:37 2010
 BITPIX  =                    8 /
 NAXIS   =                    0 /
 EXTEND  =                    T /File contains extensions
-DATE    = '30/01/92'           /
+DATE    = '2010-03-29'         /
 END
 \end{verbatim}
 \end{quote}
@@ -211,13 +211,13 @@ GCOUNT  =                    1 /Group count
 TFIELDS =                    3 /Number of columns
 EXTNAME = 'TESTEXT '           /Test binary table extension
 TFORM1  = '1000I   '           /Integer*2 (short integer)
-TTYPE1  = 'COLUMN 1'           /Label for column 1
+TTYPE1  = 'Column 1'           /Label for column 1
 TDIM1   = '(10,100)'           /Array dimensions for column 1
 TFORM2  = '2000I   '           /Integer*2 (short integer)
-TTYPE2  = 'COLUMN 2'           /Label for column 2
+TTYPE2  = 'Column 2'           /Label for column 2
 TDIM2   = '(20,100)'           /Array dimensions for column 2
 TFORM3  = '2500I   '           /Integer*2 (short integer)
-TTYPE3  = 'COLUMN 3'           /Label for column 3
+TTYPE3  = 'Column 3'           /Label for column 3
 TDIM3   = '(50,50) '           /Array dimensions for column 3
 END
 \end{verbatim}
@@ -377,29 +377,6 @@ disk and memory images of the header must be modified.  Also, be aware
 that the number of rows in the table can never decrease by calling
 FXBGROW.
 
-\section{Tape I/O}
-
-The following routines are for writing and reading FITS files to and from tape.
-Each has a menu driven interface, so that the user only has to enter the name
-of the routine itself, and everything else is prompted for.  Currently, these
-routines are only supported under VMS and are only available in the /obsolete
-directory of the IDL Astronomy Library
-\begin{quote}
-\begin{description}
-\item[FXTAPEREAD:]
-Reads FITS files from tape to disk.  This routine is for standard FITS tapes,
-i.e. raw tape files separated by filemarks, with a blocking factor of \mbox{$N
-\times 2880$}~bytes, where $N$ is between 1 and 10.  The selected files are
-copied from tape to disk as a byte stream, without any conversion being
-applied.
-\item[FXTAPEWRITE:]
-Writes FITS files from disk to tape.  This routine writes standard FITS tapes.
-Optionally a user-selected keyword can be inserted into the primary header as
-written to tape to store the filename of each FITS file.  Otherwise, the
-selected files are copied from tape to disk as a byte stream, without any
-conversion being applied.
-\end{description}
-\end{quote}
 
 \section{Multidimensional Array Facility}
 \label{tdim}
@@ -470,15 +447,7 @@ keyword.
 
 \section{Bit, Logical, and Double-precision Complex Arrays}
 
-Prior to V4.0, IDL did not support a data type corresponding to double-precision
-complex (type ``M'' in FITS binary tables).   Users with earlier versions of
-IDL can still use these routines to read and write
-double complex as ordinary double-precision arrays with an extra first
-dimension of two.  Support for this is automatic when reading binary tables.
-Columns can be defined as type ``M'' when writing binary tables if the
-/DCOMPLEX keyword is passed to FXBADDCOL, and the data array is complex with
-the first dimension being of size two.    For users with V4.0 or later,
-these routines will recognize the double complex data type.
+
 
 Bit arrays (type ``X'' in FITS binary tables) are treated in IDL as byte arrays
 with approximately 1/8th the number of elements.  Support for this is automatic

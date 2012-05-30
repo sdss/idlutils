@@ -36,7 +36,8 @@ function sunsymbol, FONT=font
 ;
 ; RESTRICTIONS:
 ;	(1) The postscript output does not have the dot perfectly centered in 
-;		the circle
+;		the circle.   For a better symbol, consider postprocessing with
+;               psfrag (see http://www.astrobetter.com/idl-psfrag/ ).
 ;	(2) SUNSYMBOL() includes subscript output positioning commands in the 
 ;		output string.
 ;       (3) True type fonts (!p.font = 1) are not supported.   If you want

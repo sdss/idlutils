@@ -1,4 +1,4 @@
-pro/structure                                                 December 2006
+pro/structure                                                 July 2009
 
   This directory contains IDL procedures for working with IDL structure 
 variables.    The *procedure* CREATE_STRUCT will dynamically create an IDL 

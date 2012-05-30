@@ -39,6 +39,7 @@ function db_item_info,request,itnums
 ; HISTORY:
 ;	version 1  D. Lindler  Nov. 1987
 ;	Converted to IDL V5.0   W. Landsman   September 1997
+;       Support new DB format which allows > 32767 bytes W.L. Oct 2010
 ;-
 ;------------------------------------------------------------------------
 ; data base common block
@@ -82,17 +83,23 @@ common db_com,QDB,QITEMS,QLINK
 ;	173-174 Data base number in QDB
 ;	175-176 Data base number this item points to
 ;	177-178 item number within file
+;       179-182 Number of values for item (1 for scalar) (integer*4)
+;       183-186   Starting byte position in original DBF record (integer*4)
+;       187-190 Starting byte in record returned by DBRD
 ;
 ; QLINK(i) contains the entry number in the second data base
 ;	corresponding to entry i in the first data base.
 ;-------------------------------------------------------------------------
 s=size(qitems) & n=s[2]
+newdb = qdb[118,0] EQ 1
 case strupcase(strtrim(request)) of
 
 	'NAME'		: x=string(qitems[0:19,*])
 	'IDLTYPE'	: x=fix(qitems[20:21,*],0,n)
-	'NVALUES'	: x=fix(qitems[22:23,*],0,n)
-	'SBYTE'		: x=fix(qitems[24:25,*],0,n)
+	'NVALUES'	: x = newdb? long(qitems[179:182,*],0,n) : $ 
+			             fix(qitems[22:23,*],0,n)
+	'SBYTE'		: x = newdb ? long(qitems[183:186,*],0,n) : $
+			               fix(qitems[24:25,*],0,n) 
 	'NBYTES'	: x=fix(qitems[26:27,*],0,n)
 	'INDEX'		: x=qitems[28,*]
 	'DESCRIPTION'	: x=string(qitems[29:99,*])
@@ -101,7 +108,8 @@ case strupcase(strtrim(request)) of
 	'FORMAT'	: x=string(qitems[120:125,*])
 	'FLEN'		: x=fix(qitems[98:99,*],0,n)
 	'HEADERS'	: x=string(qitems[126:170,*])
-	'BYTEPOS'	: x=fix(qitems[171:172,*],0,n)
+	'BYTEPOS'	: x = newdb ?  long(qitems[187:190,*],0,n) : $ 
+	                                fix(qitems[171:172,*],0,n)
 	'DBNUMBER'	: x=fix(qitems[173:174,*],0,n)
 	'PNUMBER'	: x=fix(qitems[175:176,*],0,n)
 	'ITEMNUMBER'	: x=fix(qitems[177:178,*],0,n)
@@ -110,5 +118,5 @@ case strupcase(strtrim(request)) of
 		retall
 	      end
 endcase
-if n_params(0) eq 1 then return,x else return,x[itnums]
+if N_params() eq 1 then return,x else return,x[itnums]
 end

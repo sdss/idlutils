@@ -1,16 +1,20 @@
-/astrom                                                  May 2004
+/astrom                                                   January 2008
 
-This directory contain IDL procedures for manipulating FITS images which
-include header keywords specifying the coordinate system.   The FITS header
-must follow the specification in the paper "Representations of
+This directory contain IDL procedures for manipulating FITS images which include
+header keywords specifying the coordinate system.   The FITS header must follow
+the world coordinate (WCS) specification in the paper "Representations of
 Celestial Coordinates in FITS"  by Eric Greisen and Mark Calabretta (2002, A&A,
-395, 1061).   This paper may be obtained from   
-http://www.aoc.nrao.edu/~egreisen/ or http://www.atnf.csiro.au/~mcalabre/ .
-All projections in that paper are implemented as of May 2004     
-The IDL code has been  validated using the test images on   
-http://www.atnf.csiro.au/people/mcalabre/WCS/sample_data/index.html 
+395, 1061).   This paper and other WCS documentation may be obtained from    
+http://fits.gsfc.nasa.gov/fits_wcs.html.  All projections in that paper are 
+implemented as of May 2004      The IDL code has been  validated using the test
+images on http://www.atnf.csiro.au/people/mcalabre/WCS/sample_data/index.html 
 
-Users should be aware that FITS defines the center of the first pixel in the
+Bill Thompson has written a different IDL implementation of the WCS
+specification which also includes support fo solar and spectroscopic
+coordinates.    His routines are available at the SolarSoftWare (SSW) library
+at     http://sohowww.nascom.nasa.gov/solarsoft/gen/idl/wcs/
+
+The FITS convention defines the center of the first pixel in the
 array to have coordinates (1,1).    This differs from the IDL convention where
 the first pixel has coordinates (0,0).    Whenever an (X,Y) position is
 extracted or inserted into a FITS header then this difference must be accounted
@@ -19,6 +23,7 @@ for.
 Several procedures use an IDL structure that contains astrometry information in
 the following tags:
 
+  .NAXIS - 2 element long vector giving dimensions of the images
   .CD	-  2 x 2 array containing the astrometry parameters CD1_1 CD1_2
 	   in DEGREES/PIXEL				      CD2_1 CD2_2
   .CDELT - 2 element vector giving physical increment at the reference pixel
@@ -30,9 +35,10 @@ the following tags:
 	 ['RA---TAN','DEC--TAN']
   .LONGPOLE - scalar longitude of north pole (default = 180)
   .LATPOLE - scalar giving native latitude of the celestial pole default=0)
-  .PROJP1 - Scalar parameter needed in some projections, FITS keyword PV2_1
-  .PROJP2 - Scalar parameter needed in some projections, FITS keyword PV2_2
-  .DISTORT - Optional substructure giving distortion parameters
+  .PV2 - Vector of parameters (PV2_1, PV2_2...) needed in some projections 
+  .DISTORT - Optional substructure giving distortion parameters.   Currently
+         only implemented for the Spitzer simple imaging polynomial (SIP) see
+         http://ssc.spitzer.caltech.edu/postbcd/doc/shupeADASS.pdf
 
 The procedures EXTAST and PUTAST can be used, respectively, to extract
 astrometry information from a FITS header and place it into an astrometry
@@ -61,7 +67,6 @@ structure should always use the following code
         cd[1,1] = cd[1,1]*cdelt[1] & cd[1,0] =  cd[1,0]*cdelt[1]
  endif
 
-(Note that the IF statement is not really needed).
 
 (2) Earlier draft versions of the World Coordinate System paper represented the
 CD matrix in a FITS header with names such as 'CD001001' rather than 'CD1_1', and
@@ -70,6 +75,11 @@ procedure FITS_CD_FIX can be used to convert the FITS header to modern notation.
 
 (3) The CRPIX value is stored in the astrometry structure the same way as it is
 in the FITS header, i.e. in FORTRAN (first pixel is 1) convention.    
+
+(4) The procedures HREBIN and HCONGRID will update the astrometry, including the
+SIP distortion coefficients,  when expanding or contracting an image.   However,
+note that HROT or HROTATE currently will not update any SIP coefficients if
+present. 
 
 Special astrometry procedures are required for the Digitized Sky Survey Images
 which were released on CD-Rom in early 1994.    Information about the Guidestar
@@ -92,7 +102,7 @@ system including
   IMDBASE - (in /database) Find all catalog sources within the field of an 
             image (given a FITS header with astrometry)
 
-ABSCAL() - Apply the BSCALE and BZERO FITS keywords values to a data array
+ADD_DISTORT - Add a distortion structure into a FITS header
 AD2XY - Use astrometry structure to convert celestial to pixel coordinates 
 ADXY  - Use FITS header to convert celestial (RA,Dec) to pixel coordinates
 CONS_DEC() - Obtain the X and Y coordinates of a line of constant 

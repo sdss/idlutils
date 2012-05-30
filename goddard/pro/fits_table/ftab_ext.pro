@@ -1,5 +1,6 @@
-pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
-        EXTEN_NO = exten_no
+pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12, $
+    v13,v14,v15,v16,v17,v18,v19,v20, v21,v22,v23,v24,v25,v26,v27,v28,v29,v30, $
+        ROWS=rows,EXTEN_NO = exten_no
 ;+
 ; NAME:
 ;       FTAB_EXT
@@ -20,7 +21,7 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;               (2) Scalar or vector of column numbers
 ;
 ; OUTPUTS:
-;       v1,...,v9 - values for the columns.   Up to 9 columns can be extracted
+;       v1,...,v30 - values for the columns.   Up to 30 columns can be extracted
 ;
 ; OPTIONAL INPUT KEYWORDS:
 ;       ROWS -  scalar or vector giving row number(s) to extract
@@ -51,11 +52,12 @@ pro ftab_ext,file_or_fcb,columns,v1,v2,v3,v4,v5,v6,v7,v8,v9,ROWS=rows, $
 ;       Cleanup pointers in TBINFO structure  W. Landsman November 2003
 ;       Avoid EXECUTE() if V6.1 or later  W. Landsamn   December 2006
 ;       Assume since V6.1  W. Landsman   June 2009
+;       Read up to 30 columns  W.L. Aug 2009
 ;-
 ;---------------------------------------------------------------------
  compile_opt idl2
  if N_params() LT 3 then begin
-        print,'Syntax - FTAB_EXT, name, columns, v1, [v2,...,v9, ROWS=, EXTEN=]'
+        print,'Syntax - FTAB_EXT, name, columns, v1, [v2,...,v30, ROWS=, EXTEN=]'
         return
  endif
  N_ext = N_params() - 2

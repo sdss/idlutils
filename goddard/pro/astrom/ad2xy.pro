@@ -57,6 +57,7 @@ pro ad2xy, a, d, astr, x, y
 ;     No special case for tangent projection W. Landsman June 2003
 ;     Work for non-WCS coordinate transformations W. Landsman Oct 2004
 ;     Use CRVAL reference point for non-WCS transformation  W.L. March 2007
+;     Use post V6.0 notation  W.L. July 2009
 ;-
  On_error,2
  compile_opt idl2
@@ -71,9 +72,9 @@ pro ad2xy, a, d, astr, x, y
  crval = astr.crval
 
  coord = strmid(ctype,0,4)
- reverse = ((coord[0] EQ 'DEC-') and (coord[1] EQ 'RA--')) or $
-           ((coord[0] EQ 'GLAT') and (coord[1] EQ 'GLON')) or $
-           ((coord[0] EQ 'ELAT') and (coord[1] EQ 'ELON'))
+ reverse = ((coord[0] EQ 'DEC-') && (coord[1] EQ 'RA--')) || $
+           ((coord[0] EQ 'GLAT') && (coord[1] EQ 'GLON')) || $
+           ((coord[0] EQ 'ELAT') && (coord[1] EQ 'ELON'))
  if reverse then crval = rotate(crval,2)        ;Invert CRVAL?
 
  if (ctype[0] EQ '') then begin   
@@ -92,8 +93,8 @@ pro ad2xy, a, d, astr, x, y
   cdelt = astr.cdelt
 
   if cdelt[0] NE 1.0 then begin
-         cd[0,0] = cd[0,0]*cdelt[0] & cd[0,1] = cd[0,1]*cdelt[0]
-         cd[1,1] = cd[1,1]*cdelt[1] & cd[1,0] = cd[1,0]*cdelt[1]
+         cd[0,0] *= cdelt[0] & cd[0,1] *= cdelt[0]
+         cd[1,1] *= cdelt[1] & cd[1,0] *= cdelt[1]
      endif
 
  if reverse then begin
@@ -116,8 +117,8 @@ pro ad2xy, a, d, astr, x, y
            
            for i=0,na-1 do begin
                for j=0,na-1 do begin
-                  if ap[i,j] NE 0.0 then xdif1 = xdif1 + xdif^i*ydif^j*ap[i,j]            
-                  if bp[i,j] NE 0.0 then ydif1 = ydif1 + xdif^i*ydif^j*bp[i,j]
+                  if ap[i,j] NE 0.0 then xdif1 += xdif^i*ydif^j*ap[i,j]            
+                  if bp[i,j] NE 0.0 then ydif1 += xdif^i*ydif^j*bp[i,j]
            endfor
            endfor
 

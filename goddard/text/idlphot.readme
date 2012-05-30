@@ -1,15 +1,22 @@
-DAOPHOT-type Photometry                                  June 2004
+DAOPHOT-type Photometry                                  March 2008
 
   These are a set of IDL procedures adapted from an early FORTRAN
   version of DAOPHOT aperture photometry.   The creators of DAOPHOT
   have no responsibility whatsoever for the IDL code.  The IDL code
   will give similar, but not identical, results as the original FORTRAN.
-  A slight modification of the procedures for use with digitized 
-  photographs is available from the UIT (Ultraviolet Imaging Telescope) group. 
   A LaTex file daophot.tex  in /text supplies further documentation for 
-  the IDL-DAOPHOT procedures for CCD images.
+  the IDL-DAOPHOT procedures for CCD images.    The PSF fitting portion of the 
+  code (e.g. nstar.pro) is now fairly obsolete, but the routines for source
+  detection, aperture photometry and sky level determination have been kept
+  up to date.
 
 Changes: 
+
+ March 2008: GCNTRD - Modified to match IRAF/DAOFIND and use a more accurate
+    (though possibly less robust) 
+             FIND - Now uses the Gaussian fits to the marginal X & Y
+	     distributions (as in GCNTRD) rather than finding where the
+	     derivative goes to zero.
 
  June 2004: SKY,MMM updated to better match more recent versions of DAOPHOT
 

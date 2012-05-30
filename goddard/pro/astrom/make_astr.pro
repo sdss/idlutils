@@ -29,7 +29,7 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
 ;       CD -  2 x 2 array containing the astrometry parameters CD1_1 CD1_2
 ;              in DEGREES/PIXEL                                CD2_1 CD2_2
 ;       DELT - 2 element vector giving physical increment at reference pixel
-;              CDELT default = [1.0D, 1.0D].
+;              in DEGREES/PIXEL default = [-1.0D, 1.0D]/3600.  (1 arcsec/pixel)
 ;       CTYPE - 2 element string vector giving projection types, default
 ;              ['RA---TAN','DEC--TAN']
 ;       LATPOLE - Scalar latitude of the north pole, default = 0
@@ -52,12 +52,17 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
 ;               the IDL keyword CDELT would conflict with the CD keyword
 ;       (3) The astrometry structure definition was slightly modified in 
 ;               July 2003; all angles are now double precision, and the 
-;               LATPOLE tag was added.
+;               LATPOLE tag was added.   In April 2007 the CRPIX tag was also
+;               changed to double precision.
 ; REVISION HISTORY:
 ;       Written by   W. Landsman              Mar. 1994
 ;       Added LATPOLE, all angles double precision  W. Landsman July 2003
 ;       Use PV2 keyword rather than PROJP1, PROJP2 W. Landsman May 2004
-;       Make .CRPIX tag double precision  W. Landsman April 2007
+;       Make .CRPIX tag double precision, change CDELT default to 1"/pixel
+;                      W. Landsman April 2007
+;        Default plate scale is now 1"/pixel (not 1 deg/pix)  WL  Oct. 2010
+;        Oct 2010 change should only apply when CD matrix not given 
+;                     M. Cushing/W.L.  Aug 2011
 ;-
  On_error,2
  compile_opt idl2
@@ -68,9 +73,14 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
 	return
  endif
 
+; If neither CD nor CDELT keywords present then assume 1"/pixel
+; If CD supplied but not CDELT then set CDELT = [1.0,1.0] 
 
- if N_elements( cd ) EQ 0 then cd = [ [1.,0.], [0.,1.] ]
-
+ if N_elements( cd ) EQ 0 then begin 
+     cd = [ [1.,0.], [0.,1.] ]
+     if N_elements( cdelt) EQ 0 then cdelt = [-1.0D, 1.0D]/3600.0d
+ endif else if N_elements( cdelt) EQ 0 then cdelt = [1.0D, 1.0D]    
+     
  if N_elements( crpix) EQ 0 then message, $
 	'ERROR - CRPIX is a required keyword for a new astrometry structure'
  
@@ -78,8 +88,6 @@ pro make_astr,astr, CD=cd, DELTA = cdelt, CRPIX = crpix, CRVAL = crval, $
 	'ERROR - CRVAL is a required keyword for a new astrometry structure'
 
  if N_elements( ctype)  EQ 0 then ctype = ['RA---TAN','DEC--TAN']
-
- if N_elements( cdelt) EQ 0 then cdelt = [1.0D, 1.0D]
 
  if N_elements(longpole) EQ 0 then longpole = 180.0D
  if N_elements(latpole) EQ 0 then latpole = 0.0D

@@ -26,6 +26,7 @@
 ;	add test of /left,/right,/top,/bottom keywords, 21 June 93, FKK
 ;	update based on recent changes to legend, 7 Feb 94, FKK
 ;       Fix ambiguous CHAR keyword  W. Landsman Sep 2007
+;       Use Coyote graphics routines  W. Landsman Jan 2011
 ;-
 pro legendtest
 if (!d.name eq 'PS') and (!p.font eq 0) then device,/Symbol,font_index=20
@@ -39,45 +40,46 @@ psym = [4,2,6]
 lineitems = ['solid','dotted','DASHED']
 linestyle = [0,1,2]
 citems = 'color '+strtrim(string(indgen(8)),2)
-colors = 15*indgen(8)+50
+colors = ['red','blue','violet','green','yellow','brown','black','cyan']
 usersym,[-1,1,1,-1,-1],[-1,-1,1,1,-1],/fill
-z =	['legend,explanation,charsize=1.5' $
-	,'legend,items,psym=[4,2,6]' $
-	,'plot,findgen(10) & legend,items,psym=[4,2,6] & legend,items,psym=[4,2,6],/bottom,/right' $
-	,'legend,lineitems,linestyle=linestyle,/right,/bottom' $
-	,'legend,items,psym=psym,/horizontal,chars=1.5	; horizontal format' $
-	,'legend,[items,lineitems],psym=[psym,0,0,0],line=[0,0,0,linestyle],/center,box=0		; sans border' $
-	,'legend,items,psym=psym,margin=1,spacing=2,chars=2,delimiter="=",/top,/center; delimiter & larger margin' $
-	,'legend,lineitems,line=linestyle,pos=[.3,.5],/norm,chars=3,number=4	; position of legend' $
-	,'legend,items,psym=-psym,number=2,line=linestyle,/right; plot two symbols, not one' $
-	,'legend,citems,/fill,psym=8+intarr(8),colors=colors,chars=2; 8 filled squares' $
-	,'legend,[citems[0:4],lineitems],/fill,psym=[8+intarr(5),0*psym],line=[intarr(5),linestyle],colors=colors,chars=2,text=colors' $
-	,"legend,['Absurd','Sun Lover','Lucky Lady','Fishtail Palm'],vector=['ab!9r!3','!9nu!3','!9Wf!3','!9cN!20K!3'],charsize=2,/pos,psp=3"$
+z =	['al_legend,explanation,charsize=1.5' $
+	,'al_legend,items,psym=[4,2,6]' $
+	,'cgplot,findgen(10) & legend,items,psym=[4,2,6] & al_legend,items,psym=[4,2,6],/bottom,/right' $
+	,'al_legend,lineitems,linestyle=linestyle,/right,/bottom' $
+	,'al_legend,items,psym=psym,/horizontal,chars=1.5	; horizontal format' $
+	,'al_legend,[items,lineitems],psym=[psym,0,0,0],line=[0,0,0,linestyle],/center,box=0		; sans border' $
+	,'al_legend,items,psym=psym,margin=1,spacing=2,chars=2,delimiter="=",/top,/center; delimiter & larger margin' $
+	,'al_legend,lineitems,line=linestyle,pos=[.3,.5],/norm,chars=3,number=4	; position of legend' $
+	,'al_legend,items,psym=-psym,number=2,line=linestyle,/right; plot two symbols, not one' $
+	,'al_legend,citems,/fill,psym=8+intarr(8),colors=colors,chars=2; 8 filled squares' $
+	,'al_legend,[citems[0:4],lineitems],/fill,psym=[8+intarr(5),0*psym],line=[intarr(5),linestyle],colors=colors,chars=2,text=colors' $
+	,"al_legend,['Absurd','Sun Lover','Lucky Lady','Fishtail Palm'],vector=['ab!9r!3','!9nu!3','!9Wf!3','!9cN!20K!3'],charsize=2,/pos,psp=3"$
 	]
 prompt = 'Hit return to continue:'
 for i = 0,n_elements(z) - 1 do begin
-  erase
+  cgerase
   stat = execute(z[i])
-  xyouts,.01,.15,'COMMAND TO MAKE LEGEND:',charsize=1.7,/norm
-  xyouts,.01,.05,z[i],/norm,charsize=1.2
+  cgtext,.01,.15,'COMMAND TO MAKE LEGEND:',charsize=1.7,/norm
+  cgtext,.01,.05,z[i],/norm,charsize=1.2
   print,'Command: ',z[i]
   print,prompt,format='($,a)'
   a = get_kbrd(1)
   print
   endfor
 ;stop
-erase
+cgerase
 !p.charsize=2
 c1_items = ['Plus','Asterisk','Period','Diamond','Triangle','Square','X']
 c1_psym = indgen(7)+1
 c2_items = ['Solid','Dotted','Dashed','Dash Dot','Dash Dot Dot Dot','Long Dashes']
 c2_line = indgen(6)
-legend,c1_items,psym=c1_psym,corners=c1,box=0
-legend,c2_items,line=c2_line,corners=c2,box=0,pos=[c1[2],c1[3]],/norm
+al_legend,c1_items,psym=c1_psym,corners=c1,box=0
+al_legend,c2_items,line=c2_line,corners=c2,box=0,pos=[c1[2],c1[3]],/norm
 c = [c1[0]<c2[0],c1[1]<c2[1],c1[2]>c2[2],c1[3]>c2[3]]
-plots,[c[0],c[0],c[2],c[2],c[0]],[c[1],c[3],c[3],c[1],c[1]],/norm
+cgplots,[c[0],c[0],c[2],c[2],c[0]],[c[1],c[3],c[3],c[1],c[1]],/norm
 !p.charsize=0
-xyouts,.01,.05,'Multiple columns---type "legend,/help" for details.',/norm,charsize=1.2
+cgtext,.01,.05,$
+  'Multiple columns---type "legend,/help" for details.',/norm,charsize=1.2
 return
 end
 

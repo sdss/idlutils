@@ -121,7 +121,7 @@ Function adstring,ra_dec,dec,precision, TRUNCATE = truncate,PRECISION=prec
      radec, ra, dec, ihr, imin, xsec, ideg, imn, xsc
      if N_elements(precision) EQ 0 then precision = 0
      precision = precision > 0 < 4         ;No more than 4 decimal places
- if not keyword_set(truncate) then begin
+ if ~keyword_set(truncate) then begin
      roundsec = [59.5,59.95,59.995,59.9995,59.99995,59.999995]
      carry = where(xsec GT roundsec[precision+1], Ncarry)
      if Ncarry GT 0 then begin
@@ -154,7 +154,7 @@ Function adstring,ra_dec,dec,precision, TRUNCATE = truncate,PRECISION=prec
    imn = abs(imn)  & xsc = abs(xsc)
    if ( precision EQ 0 ) then begin 
            secfmt = '(I03.2)' 
-           if not keyword_set(truncate) then begin
+           if ~keyword_set(truncate) then begin
            xsc = round(xsc)
            carry = where(xsc EQ 60, Ncarry)
            if Ncarry GT 0 then begin                 ;Updated April 2002
@@ -167,7 +167,7 @@ Function adstring,ra_dec,dec,precision, TRUNCATE = truncate,PRECISION=prec
          secfmt = '(F0' + string( 3+precision,'(I1)') + '.' + $
                          string(   precision,'(I1)') + ')'
 			 
-         if not keyword_set(truncate) then begin
+         if ~keyword_set(truncate) then begin
          ixsc = fix(xsc + 0.5/10^precision)
          carry = where(ixsc GE 60, Ncarry)
          if Ncarry GT 0 then begin

@@ -9,9 +9,6 @@
 ; PURPOSE:
 ;   Shift a block of data to a new position in a file (possibly overlapping)
 ;
-; MAJOR TOPICS:
-;   File I/O
-;
 ; CALLING SEQUENCE:
 ;
 ;   BLKSHIFT, UNIT, POS, [ DELTA, TO=TO, /NOZERO, ERRMSG=ERRMSG, 
@@ -61,18 +58,16 @@
 ;        block.  One of DELTA and TO must be specified; DELTA
 ;        overrides the TO keyword.
 ;
-;   NOZERO - if set, then newly created gaps will not be explicitly
-;            zeroed.  However, for some operating systems (Mac),
-;            zeroing is required and will be done anyway.
+;   /NOZERO - if set, then newly created gaps will not be explicitly
+;            zeroed.   Note that in same systems (e.g. MacOS) the gaps will
+;            always be zeroed whether or not /NOZERO is set.
 ;
 ;   ERRMSG - If defined and passed, then any error messages will be
 ;            returned to the user in this parameter rather than
 ;            depending on the MESSAGE routine in IDL.  If no errors
-;            are encountered, then a null string is returned.  In
-;            order to use this feature, ERRMSG must be defined first,
-;            e.g.
-;			ERRMSG = ''
-;			FXBGROW, ERRMSG=ERRMSG, ...
+;            are encountered, then a null string is returned.  
+;
+;			BLKSHIFT, UNIT, POS, DElTA, ERRMSG=ERRMSG, ...
 ;			IF ERRMSG NE '' THEN ...
 ;
 ;   BUFFERSIZE - the maximum buffer size for transfers, in bytes.
@@ -91,6 +86,7 @@
 ;             using TRUNCATE_LUN   W. Landsman Feb. 2005 
 ;   Assume since V5.5, remove VMS support  W. Landsman  Sep 2006
 ;   Assume since V5.6, TRUNCATE_LUN available  W. Landsman Sep 2006
+;   MacOS can point beyond EOF    W. Landsman   Aug 2009
 ;
 ;-
 ; Copyright (C) 2000, 2002, Craig Markwardt
@@ -149,10 +145,8 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
   ;; Seek to end of file and add zeroes (if needed)
   pos_fin = pos_fin + 1L
 
-  ;; Note: Mac  cannot point beyond EOF
-  nozero1 = nozero
-  if !version.os_family EQ 'MacOS' then nozero1 = 0
-  if delta GT 0 AND nozero1 EQ 0 AND (pos_fin+delta GT fs.size) then begin
+  ;; Unless /Nozero set, the zeroes will be explicitly written
+  if (delta GT 0) && (nozero EQ 0) && (pos_fin+delta GT fs.size) then begin
       point_lun, unit, fs.size
       nleft = (pos_fin-fs.size) + delta
       while nleft GT 0 do begin
@@ -224,7 +218,7 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
   point_lun, unit, pos_beg  ;; again, to be sure data is flushed
 
   GOOD_FINISH:
-  if n_elements(errmsg) GT 0 then errmsg = ''
+  if arg_present(errmsg) then errmsg = ''
   return
 
   IO_FINISH:
@@ -234,7 +228,7 @@ PRO BLKSHIFT, UNIT, POS0, DELTA0, NOZERO=NOZERO0, ERRMSG=ERRMSG, $
 
   ;; Error message processing.  Control does not pass through here.
   ERRMSG_OUT:
-  if n_elements(errmsg) NE 0 then begin
+  if arg_present(errmsg) then begin
       errmsg = message
       return
   endif

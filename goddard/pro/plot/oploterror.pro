@@ -1,6 +1,6 @@
-PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
+PRO  oploterror, x, y, xerr, yerr, NOHAT=nohat, HATLENGTH=hln, ERRTHICK=eth, $
       ERRSTYLE=est, THICK = thick, NOCLIP=noclip, ERRCOLOR = ecol, Nsum = nsum,$
-      NSKIP=nskip, LOBAR=lobar, HIBAR=hibar,_EXTRA = pkey
+      NSKIP=nskip, LOBAR=lobar, HIBAR=hibar, ADDCMD=addcmd, _EXTRA = pkey
 ;+
 ; NAME:
 ;      OPLOTERROR
@@ -13,7 +13,7 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ; CALLING SEQUENCE:
 ;      oploterror, [ x,]  y, [xerr], yerr,   
 ;            [ /NOHAT, HATLENGTH= , ERRTHICK =, ERRSTYLE=, ERRCOLOR =, 
-;              /LOBAR, /HIBAR, NSKIP = , NSUM = , ... OPLOT keywords ]
+;              /LOBAR, /HIBAR, NSKIP = , NSUM = , /ADDCMD, ... OPLOT keywords ]
 ; INPUTS:
 ;      X = array of abcissae, any datatype except string
 ;      Y = array of Y values, any datatype except string
@@ -21,6 +21,9 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;      YERR = array of error bar values (along Y)
 ;
 ; OPTIONAL INPUT KEYWORD PARAMETERS:
+; 
+;      /ADDCMD    = Set this keyword if you want to add this command to 
+;                   a cgWindow.
 ;      /NOHAT     = if specified and non-zero, the error bars are drawn
 ;                  without hats.
 ;      HATLENGTH = the length of the hat lines used to cap the error bars.
@@ -29,8 +32,11 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;                  THICK plotting keyword.
 ;      ERRSTYLE  = the line style to use when drawing the error bars.  Uses
 ;                  the same codes as LINESTYLE.
-;      ERRCOLOR =  scalar integer (0 - !D.N_TABLE) specifying the color to
-;                  use for the error bars
+;     ERRCOLOR =  String (e.g. 'red') or scalar integer (0 - !D.N_TABLE)
+;              specifying the color to use for the error bars.   See CGCOLOR()
+;              for a list of possible color names.  See 
+;              http://www.idlcoyote.com/cg_tips/legcolor.php
+;              for a warning about the use of indexed color
 ;      NSKIP = Positive Integer specifying the error bars to be plotted.   
 ;            For example, if NSKIP = 2 then every other error bar is 
 ;            plotted; if NSKIP=3 then every third error bar is plotted.   
@@ -98,6 +104,8 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
 ;      Fix Jan 2002 update to work with log plots  W. Landsman Jun 2002
 ;      Added STRICT_EXTRA keyword   W. Landsman     July 2005
 ;      W. Landsman Fixed case of logarithmic axes reversed Mar 2009
+;      Update for Coyote Graphics  W. Landsman     Feb. 2011 
+;      Hats were not being plotted by default  W. Landsman Apr 2011  
 ;-
 ;                  Check the parameters.
 ;
@@ -108,25 +116,38 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
       print, "OPLOTERR must be called with at least two parameters."
       print, "Syntax: oploterr, [x,] y, [xerr], yerr, [..oplot keywords... "
       print,'     /NOHAT, HATLENGTH = , ERRTHICK=, ERRSTLYE=, ERRCOLOR='
-      print,'     /LOBAR, /HIBAR, NSKIP= ]'
+      print,'     /LOBAR, /HIBAR, /ADDCMD, NSKIP= ]'
       RETURN
  ENDIF
 
+ ; Add it to a cgWindow, if required.
+ IF (Keyword_Set(addcmd)) && ((!D.Flags AND 256) NE 0) THEN BEGIN
+    
+      void = cgQuery(Count=count)
+      IF count EQ 0 THEN Message, 'No cgWindow currently exists to add this command to.'
+      cgWindow, 'oploterror', x, y, xerr, yerr, NOHAT=nohat, HATLENGTH=hln, ERRTHICK=eth, $
+          ERRSTYLE=est, THICK = thick, NOCLIP=noclip, ERRCOLOR = ecol, Nsum = nsum,$
+          NSKIP=nskip, LOBAR=lobar, HIBAR=hibar, ADDCMD=1, _EXTRA = pkey
+            
+      RETURN
+ ENDIF
+ 
+ 
 ; Error bar keywords (except for HATLENGTH; this one will be taken care of 
 ; later, when it is time to deal with the error bar hats).
 
- IF (keyword_set(hat)) THEN hat = 0 ELSE hat = 1
- if not keyword_set(THICK) then thick = !P.THICK
- IF (n_elements(eth) EQ 0) THEN eth = thick
- IF (n_elements(est) EQ 0) THEN est = 0
- IF (n_elements(ecol) EQ 0) THEN ecol = !P.COLOR
- if N_elements( NOCLIP ) EQ 0 THEN noclip = 0
- if not keyword_set(NSKIP) then nskip = 1
- if N_elements(nsum) EQ 0 then nsum = !P.NSUM
- if not keyword_set(lobar) and not keyword_set(hibar) then begin
+  setdefaultvalue, thick, !P.THICK
+  setdefaultvalue, eth, thick
+  setdefaultvalue, est, 0        ;Error line style
+  setdefaultvalue, noclip, 0
+ if ~keyword_set(NSKIP) then nskip = 1
+  setdefaultvalue, nsum , !P.NSUM
+ if (N_elements(ecol) EQ 0) && (N_elements(pkey) GT 0) then $
+    if tag_exist(pkey,'COLOR') then  ecol = pkey.color
+ if ~keyword_set(lobar) && ~keyword_set(hibar) then begin
       lobar=1
       hibar=1
- endif else if keyword_set(lobar) and keyword_set(hibar) then begin
+ endif else if keyword_set(lobar) && keyword_set(hibar) then begin
       lobar=1
       hibar=1
  endif else if keyword_set(lobar) then begin
@@ -198,18 +219,25 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
      xlo = xx - xerror*lobar
      xhi = xx + xerror*hibar
  endif
+ 
 ;
 ;                  Plot the positions.
 ;
+  window = cgquery(/current) GE 0
  if n NE 1 then begin
-     oplot, xx, yy, NOCLIP=noclip,THICK = thick,_STRICT_EXTRA = pkey 
+     cgPlot, xx, yy, NOCLIP=noclip,THICK = thick,_STRICT_EXTRA = pkey,/over
  endif else begin 
-     plots, xx, yy, NOCLIP=noclip,THICK = thick,_STRICT_EXTRA = pkey
+     cgPlots, xx, yy, NOCLIP=noclip,THICK = thick,_STRICT_EXTRA = pkey
  endelse
-;
-; Plot the error bars.   Compute the hat length in device coordinates
-; so that it remains fixed even when doing logarithmic plots.
-;
+;;
+;; Plot the error bars.   Compute the hat length in device coordinates
+;; so that it remains fixed even when doing logarithmic plots.
+;;
+     if window then  begin 
+          cgcontrol, execute = 0
+          wset,cgquery(/current)
+     endif	  
+
  data_low = convert_coord(xx,ylo,/TO_DEVICE)
  data_hi = convert_coord(xx,yhi,/TO_DEVICE)
  if NP EQ 4 then begin
@@ -220,38 +248,42 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
  ycrange = !Y.CRANGE   &  xcrange = !X.CRANGE
    if !Y.type EQ 1 then ylo = ylo > 10^min(ycrange)    
 	                    
-    if (!X.type EQ 1) and (np EQ 4) then xlo = xlo > 10^min(xcrange) 
+    if (!X.type EQ 1) && (np EQ 4) then xlo = xlo > 10^min(xcrange) 
 
  sv_psym = !P.PSYM & !P.PSYM = 0     ;Turn off !P.PSYM for error bars
 ; Only draw error bars for X values within XCRANGE
     if !X.TYPE EQ 1 then xcrange = 10^xcrange
     g = where((xx GT xcrange[0]) and (xx LE xcrange[1]), Ng)
-    if (Ng GT 0) and (Ng NE n) then begin  
+    if (Ng GT 0) && (Ng NE n) then begin  
           istart = min(g, max = iend)  
     endif else begin
           istart = 0L & iend = n-1
     endelse
     
+    ; Set plotting color.
+    ecol = cgDefaultColor(ecol, Default='opposite')
+    IF Size(ecol, /TNAME) EQ 'STRING' THEN ecol = cgColor(ecol)
+    
  FOR i = istart, iend, Nskip DO BEGIN
 
-    plots, [xx[i],xx[i]], [ylo[i],yhi[i]], LINESTYLE=est,THICK=eth,  $
+    Plots, [xx[i],xx[i]], [ylo[i],yhi[i]], LINESTYLE=est,THICK=eth,  $
            NOCLIP = noclip, COLOR = ecol
 
     ; Plot X-error bars 
     ;
     if np EQ 4 then $
-       plots, [xlo[i],xhi[i]],[yy[i],yy[i]],LINESTYLE=est, $
+       Plots, [xlo[i],xhi[i]],[yy[i],yy[i]],LINESTYLE=est, $
               THICK=eth, COLOR = ecol, NOCLIP = noclip
 
-    IF (hat NE 0) THEN BEGIN
+    IF ~keyword_set(nohat) THEN BEGIN
        IF (N_elements(hln) EQ 0) THEN hln = !D.X_VSIZE/100. 
        exx1 = data_low[0,i] - hln/2.
        exx2 = exx1 + hln
        if lobar then $
-          plots, [exx1,exx2], [data_low[1,i],data_low[1,i]],COLOR=ecol, $
+          Plots, [exx1,exx2], [data_low[1,i],data_low[1,i]],COLOR=ecol, $
                  LINESTYLE=est,THICK=eth,/DEVICE, noclip = noclip
        if hibar then $
-          plots, [exx1,exx2], [data_hi[1,i],data_hi[1,i]], COLOR = ecol,$
+          Plots, [exx1,exx2], [data_hi[1,i],data_hi[1,i]], COLOR = ecol,$
                  LINESTYLE=est,THICK=eth,/DEVICE, noclip = noclip
 ;                                          
        IF np EQ 4 THEN BEGIN
@@ -259,16 +291,17 @@ PRO  oploterror, x, y, xerr, yerr, NOHAT=hat, HATLENGTH=hln, ERRTHICK=eth, $
              eyy1 = x_low[1,i] - hln/2.
              eyy2 = eyy1 + hln
              if lobar then $
-                plots, [x_low[0,i],x_low[0,i]], [eyy1,eyy2],COLOR = ecol, $
+                Plots, [x_low[0,i],x_low[0,i]], [eyy1,eyy2],COLOR = ecol, $
                        LINESTYLE=est,THICK=eth,/DEVICE, NOCLIP = noclip
              if hibar then $
-                plots, [x_hi[0,i],x_hi[0,i]], [eyy1,eyy2],COLOR = ecol, $
+                Plots, [x_hi[0,i],x_hi[0,i]], [eyy1,eyy2],COLOR = ecol, $
                        LINESTYLE=est,THICK=eth,/DEVICE, NOCLIP = noclip
           ENDIF
        ENDIF
     NOPLOT:
 ENDFOR
  !P.PSYM = sv_psym 
+
 ;
 RETURN
 END

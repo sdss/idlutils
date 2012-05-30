@@ -48,6 +48,9 @@
 ; EXAMPLES:
 ;       (1) str = mrd_struct(['fld1', 'fld2'], ['0','dblarr(10,10)'],3)
 ;           print, str(0).fld2(3,3)
+;       Note that "0" is always considered short integer even if the default
+;       integer is set to long.
+;          
 ;
 ;       (2) str = mrd_struct(['a','b','c','d'],['1', '1.', '1.d0', "'1'"],1)
 ;               ; returns a structure with integer, float, double and string
@@ -75,12 +78,18 @@
 ;       Fix use of STRUCTYP with /NO_EXECUTE  W. Landsman June 2005
 ;       Assume since V6.0 (lmgr function available), remove 131 string length
 ;             limit for execute    W. Landsman Jun 2009 
+;       Restore EXECUTE limit (sigh...)   W. Landsman July 2009 
+;       Make sure "0" is a short integer even with compile_opt idl2  July 2010
+;       Added "0.0", "0.0d", "0u", "0ul", and "0ull" as valid tags
+;             for /NO_EXECUTE  E. Rykoff May 2012
 ;-
 
 ; Check that the number of names is the same as the number of values.
 
 function mrd_struct, names, values, nrow, no_execute = no_execute,  $
     structyp=structyp,  tempdir=tempdir, silent=silent, old_struct=old_struct
+
+compile_opt idl2
 
 ; Keywords TEMPDIR, SILENT and OLD_STRUCT no longer do anything but are kept
 ; for backward compatibility.
@@ -100,21 +109,28 @@ function mrd_struct, names, values, nrow, no_execute = no_execute,  $
 ; scalar values
 ;
 	    '0b': v = 0B
-	    '0' : v = 0
+	    '0' : v = 0S
+            '0u' : v = 0US
+            '0us': v = 0US
 	    '0l': v = 0L
 	    '0ll' : v = 0LL
+            '0ul' : v = 0UL
+            '0ull' : v = 0ULL
 	    '0.': v = 0.0
+            '0.0': v = 0.0
+            '0.0d': v = 0.0d0
 	    '0.0d0': v = 0.0d0
+ 	    '0.d0': v = 0.0d0
              '" "': v = " "          ;Added July 2004
 	    'complex(0.,0.)': v = complex(0.,0.)
 	    'dcomplex(0.d0,0.d0)': v = dcomplex(0.d0,0.d0)
 ;
 ; strings and arrays
-;
-	    else: begin
+;`
+	    else: begin	     
 	        value = values[i]
 		remchar,value,"'"
-		remchar,value,'"'
+		remchar,value,'"'   
 		if strlen(value) EQ 1 then v= value else begin 
 	        type = gettok(value,'(')
 		if type eq 'string' then $
@@ -138,7 +154,7 @@ function mrd_struct, names, values, nrow, no_execute = no_execute,  $
 					v[*] = string(replicate(32B,dimen[0]))
 		    		end else v = string(replicate(32B,dimen[0]))
 			      end
-	            else: message,'ERROR - Invalid field value: ' + value		      
+	            else: message,'ERROR - Invalid field value: ' + values[i]		      
 		endcase
 		        endelse 
 
@@ -161,24 +177,34 @@ strng = "a={"
 
 comma = ' '
 for i=0,nel-1 do  begin
+    fval = values[i]
+    if (fval eq '0') then fval = '0s'
   
-    ; Now for each element put in a name/value pair.
-    strng = strng + comma+names[i] + ':' + values[i]
+   ; Now for each element put in a name/value pair.
+    tstrng = strng + comma+names[i] + ':' + fval
+    
+    ; The nominal max length of the execute is 131
+    ; We need one chacacter for the "}"
+    if strlen(tstrng) gt 130 then begin
+        strng = strng + "}"
+        res = execute(strng)
+	if  res eq 0 then return, 0
+        struct = n_elements(struct) eq 0 ? a: $
+	         create_struct(temporary(struct), a)
+	strng = "a={" + names[i] + ":" + fval
+	
+    endif else strng = tstrng
     comma = ","
+
 endfor
 	
 
 if strlen(strng) gt 3 then begin
     strng = strng + "}"
     res = execute(strng)
-    if  res eq 0 then return, 0
-    if n_elements(struct) eq 0 then begin
-	struct = a
-    endif else begin
-	struct = create_struct(temporary(struct), a)
-    endelse
-  
-endif
+     if  res eq 0 then return, 0
+     struct = n_elements(struct) eq 0 ? a : create_struct(temporary(struct), a)
+ endif
  
 endelse
 if keyword_set(structyp) then $

@@ -63,6 +63,10 @@ pro dbopen,name,update,UNAVAIL=unavail
 ;       W. Landsman Remove obsolete keywords to OPEN   Sep 2006
 ;       Replace SCREEN_SELECT with SELECT_W, remove IEEE_TO_HOST  WL  Jan 2009
 ;       Fix typos in BYTEORDER introduced Jan 2009 G. Scandariato/W.L.Feb. 2009
+;       Support new DB format which allows entry lengths > 32767 bytes 
+;              W.L. October 2010
+;       William Thompson, fixed bug opening multiple databases Dec 2010
+;       Fix problem with external databases WL Sep 2011
 ;
 ;-
 ;
@@ -89,6 +93,8 @@ common db_com,QDB,QITEMS,QDBREC
 ;         98-99  Index number of item pointing to this file (0 for first db)
 ;         100-103 Number of entries with space allocated
 ;         104    Update flag (0 open for read only, 1 open for update)
+;         105-108  record length of DBF file (integer*4)
+;         118    Equals 1 if more 32767 bytes can be stored in database (new format)
 ;         119    Equals 1 if external data representation (IEEE) is used
 ;
 ;  QITEMS(*,i) contains decription of item number i with following
@@ -97,7 +103,9 @@ common db_com,QDB,QITEMS,QDBREC
 ;       0-19    item name (character*20)
 ;       20-21   IDL data type (integer*2)
 ;       22-23   Number of values for item (1 for scalar) (integer*2)
-;       24-25   Starting byte position in original DBF record (integer*2)
+;               in bytes 179-182 in new format
+;       24-25   Starting byte position in original DBF record 
+;                In bytes 183-186 (integer*2) New DB format
 ;       26-27   Number of bytes per data value (integer*2)
 ;       28      Index type
 ;       29-97   Item description
@@ -110,7 +118,11 @@ common db_com,QDB,QITEMS,QDBREC
 ;       173-174 Data base number in QDB
 ;       175-176 Data base number this item points to
 ;       177-178 Item number within the specific data base
+;       179-182 Number of values for item (1 for scalar) (integer*4)
+;       183-186  Starting byte position in original DBF record (integer*4)
+;       187-190 Starting byte in record returned by DBRD
 ;
+;       
 ;-------------------------------------------------------------------------
 ;
 ;
@@ -207,6 +219,7 @@ while dbno lt n_elements(fnames) do begin
 ; open .dbh file and read contents ------------------------
 ;
     dbhname = find_with_def(dbname+'.dbh', 'ZDBASE')
+
     openr,unit,dbhname,ERROR=err     
 
     if err NE 0 then begin
@@ -219,11 +232,19 @@ while dbno lt n_elements(fnames) do begin
     end
     db=bytarr(120)
     readu,unit,db
+    
     external = db[119] eq 1     ;Is external data rep. being used?
-    totbytes=fix(db,82,1) & totbytes=totbytes[0]
-    nitems=fix(db,80,1) & nitems=nitems[0] ;number of items or fields in file
+    newdb = db[118] eq 1        ; New db format allowing longwords
+    totbytes = newdb ? long(db,105,1) :  fix(db,82,1)
+    totbytes = totbytes[0]      ;Make sure is scalar
+     nitems=fix(db,80,1) & nitems=nitems[0] ;number of items or fields in file
+
     if external then begin
+        if newdb then begin
+        byteorder, totbytes, /NTOHL  &  db[105] = byte(totbytes,0,4) 
+	endif else begin
         byteorder, totbytes, /NTOHS  &  db[82] = byte(totbytes,0,2)
+	endelse
         byteorder, nitems,/NTOHS   &  db[80] = byte(nitems,0,2)
     endif
     items=bytarr(200,nitems)
@@ -240,14 +261,26 @@ while dbno lt n_elements(fnames) do begin
 ;
         tmp = fix(items[171:178,*],0,4,nitems)
         byteorder,tmp,/NTOHS
-        items[171,0] = byte(tmp,0,8,nitems)
+        items[171,0] = byte(tmp,0,8,nitems)     
+	
+	if newdb then begin
+        tmp = long(items[179:186,*],0,2,nitems)
+        byteorder,tmp,/NTOHL
+
+        items[179,0] = byte(tmp,0,8,nitems)
+	endif
     endif
+
 ;
 ; add computed information to items ---------------------------
 ;
-    sbyte=fix(items[24:25,*],0,nitems)+offset
+    sbyte = newdb ?  long(items[183:186,*],0,nitems)+offset : $ 
+                     fix(items[24:25,*],0,nitems)+offset 
+
     for i=0,nitems-1 do begin
-        items[171,i]=byte(sbyte[i],0,2) ;starting byte in DBRD record
+        if newdb then items[187,i]= byte(sbyte[i],0,4)  else $
+	              items[171,i] = byte(sbyte[i],0,2)
+	            ;starting byte in DBRD record
         items[173,i]=byte(dbno,0,2)     ;data base number
         items[177,i]=byte(i,0,2)        ;item number
     end
@@ -257,6 +290,7 @@ while dbno lt n_elements(fnames) do begin
 ;
     get_lun,unitdbf
     dbf_file = find_with_def(dbname+'.dbf', 'ZDBASE')
+
     if update eq 1 then $
          openu,unitdbf,dbf_file else $ 
          openr,unitdbf,dbf_file,error=err
@@ -265,6 +299,7 @@ while dbno lt n_elements(fnames) do begin
         free_lun,unitdbf
         goto,abort
     end
+
     p=assoc(unitdbf,lonarr(2))
     head = p[0]
     if external then byteorder, head, /NTOHL
@@ -278,7 +313,9 @@ while dbno lt n_elements(fnames) do begin
 ;
 ; open index file if necessary -----------------------------
 ;
+
     index=where(items[28,*] gt 0,nindex)        ;indexed items
+   
     if nindex gt 0 then begin           ;need to open index file.
         get_lun,unitind
         dbx_file = find_with_def(dbname+'.dbx', 'ZDBASE')
@@ -296,6 +333,7 @@ while dbno lt n_elements(fnames) do begin
 ;
 ; add to common block ---------------------
 ;
+
     if dbno eq 0 then begin
         qdb=db
         qitems=items
@@ -313,6 +351,8 @@ while dbno lt n_elements(fnames) do begin
     dbno=dbno+1
 end; loop on data bases
 done: free_lun,unit
+
+
 ;--------------------------------------------------------------------
 ;               LINK PROCESSING
 ;
@@ -332,6 +372,7 @@ if numdb gt 1 then begin
 ;
 ; found linkage item ------------------------------------
 ;
+
 found:
         item_number=j           ;number of item supplying link
         item_db=fix(qitems[173:174,item_number],0,1) & item_db=item_db[0]
@@ -346,15 +387,18 @@ found:
 nextdb:
     endfor
 endif
+
 ;
 ; create an assoc variable for the first db
 ;
+
 unit=db_info('unit_dbf',0)
 len=db_info('length',0)
 qdbrec=assoc(unit,bytarr(len))
 ;----------------------------------------------------------------------------
 ; done
 ;
+
 return
 ;
 ; abort

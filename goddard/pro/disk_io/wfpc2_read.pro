@@ -10,7 +10,8 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
 ;
 ; EXPLANATION:
 ;   This a versatile procedure for reading Wide Field Planetary Camera 2 
-;   (WFPC2) images.   One can read either FITS or STSDAS format, and specific 
+;   (WFPC2) images.   One can read either multi-extension FITS or  STSDAS or
+;   STSDAS converted to FITS format, and specific 
 ;   chip or chips.    One can also read all four chips into a "batwing" mosaic--
 ;   so-called because the PC chip (chip 1) has a plate scale of 0.045", while
 ;   the other three WF chips have a plate scale of 0.1"
@@ -83,6 +84,8 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
 ;     Use vector call to SXADDHIST  W. Landsman   March 2003
 ;     Don't use EXECUTE() for V6.1 or later W. Landsman Dec 2006
 ;     Assume since V6.1  W. Landsman  June 2009
+;     Ability to read multi-extension format FITS  W. Landsman May 2010
+;     Correct header in MEF form when only reading PC chip.  W.L. July 2010
 ;-
  compile_opt idl2
  if N_params() LT 2 then begin
@@ -107,7 +110,7 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
  y1 = [800,800,47,43]
 
  if N_elements(num_chip) EQ 0 then $
-	if (N_params() LE 3) and not keyword_set(BATWING) then num_chip = 1 
+	if (N_params() LE 3) and ~keyword_set(BATWING) then num_chip = 1 
  if N_elements(num_chip) GT 0 then num_c = num_chip $
     else num_c = [1,2,3,4]
  if keyword_set(batwing) then begin 
@@ -160,9 +163,48 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
         endfor
  
  endif else begin
-
+ 
  FITS_OPEN, a[0], fcb
 
+; Is a converted GEIS file or the newer multi-extension format (MEF)?
+ if (fcb.nextend EQ 4) && (fcb.naxis[0,0] EQ 0) then begin 
+       if Nout EQ 1 then begin
+             FITS_READ, fcb, chip1, header1, exten_no=num_chip
+	endif else begin 
+	      d = fltarr(800,800,4,/nozero)
+	      if keyword_set(batwing) then $
+	           fits_read, fcb, chip_pc, header1, exten=1 else $
+		   fits_read, fcb, chip1, header1, exten=1
+              fits_read,fcb, chip2,header2
+              fits_read,fcb, chip3,header3
+              fits_read,fcb, chip4,header4
+              if keyword_set(batwing) then begin 
+	      chip1[x1[0],y1[0]] = FREBIN(chip_pc,345.7,342.0, /total)
+	      chip1[x1[1],y1[1]] = chip2
+	      chip1[x1[2],y1[2]] = chip3
+	      chip1[x1[3],y1[3]] = chip4
+	      crpix = sxpar(header3,'CRPIX*')
+              sxaddpar, header1, 'CRPIX1', crpix[0] + x1[3]
+              sxaddpar, header1, 'CRPIX2', crpix[1] + y1[3]
+              CHECK_FITS, chip1, header1, /update, /silent, /FITS
+              endif else if keyword_set(trim) then begin 
+              HROTATE, chip1, header1, rotpars[0]
+              HEXTRACT, chip1, header1, extpars[0,0], extpars[1,0], $
+          extpars[2,0], extpars[3,0],/SILENT
+              HROTATE, chip2, header2, rotpars[1]
+              HEXTRACT, chip2, header2, extpars[0,1], extpars[1,1], $
+          extpars[2,1], extpars[3,1],/SILENT
+              HROTATE, chip3, header3, rotpars[2]
+              HEXTRACT, chip3, header3, extpars[0,2], extpars[1,2], $
+          extpars[2,2], extpars[3,2],/SILENT
+              HROTATE, chip4, header4, rotpars[3]
+              HEXTRACT, chip4, header4, extpars[0,3], extpars[1,3], $
+          extpars[2,3], extpars[3,3],/SILENT
+
+	  endif
+	  endelse    	     
+          return
+  endif 
  if Nout EQ 1 then begin
 	ns = fcb.axis[0,0]
 	nl = fcb.axis[1,0]
@@ -205,8 +247,7 @@ pro wfpc2_read,filename,chip1,header1,chip2,header2, $
          value = ftget(ft_str,dtab,j+1,cn_0)
         sxaddpar, thishdr,name[j],value[0],comment[j],format=fmt[j]
     endfor
-
-    if nout GT 1 then begin
+     if nout GT 1 then begin
 
 	thischp = d[*,*,cn_0] 
         CHECK_FITS, thischp,  thishdr, /fits, /update, /silent

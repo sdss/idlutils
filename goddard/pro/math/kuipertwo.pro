@@ -1,4 +1,4 @@
- pro kuipertwo, data1, data2, D, prob, PLOT = plot, _EXTRA = extra
+ pro kuipertwo, data1, data2, D, prob, PLOT = plot, _EXTRA = extra,WINDOW=window
 ;+
 ; NAME:
 ;       KUIPERTWO
@@ -29,14 +29,14 @@
 ;               different from DATA2
 ;
 ; OPTIONAL INPUT KEYWORD:
-;       PLOT - If this keyword is set and non-zero, then KUIPERTWO will display
+;       /PLOT - If this keyword is set and non-zero, then KUIPERTWO will display
 ;               a plot of the CDF of the two data sets.
 ;               The data values where the Kuiper statistic is
 ;               computed (i.e. at the maximum difference between the CDF of
 ;               the two data sets) are indicated by vertical dashed lines.
 ;               KUIPERTWO accepts the _EXTRA keyword, so that most plot keywords
 ;               (e.g. TITLE, XTITLE, XSTYLE) can also be passed to KUIPERTWO.
-;
+;       /WINDOW - If set the plot to a resizeable graphics window.
 ; EXAMPLE:
 ;       Test whether two vectors created by the RANDOMN function likely came
 ;       from the same distribution
@@ -51,12 +51,13 @@
 ; REVISION HISTORY:
 ;       Written     W. Landsman                August, 1992
 ;       FP computation of N_eff      H. Ebeling/W. Landsman  March 1996
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fix for arrays containing equal values J. Ballet/W. Landsman
 ;       Oct. 2001
 ;       Adapted from KSTWO, added PLOT keyword  J. Ballet     July 2004
+;       Use Coyote Graphics W. Landsman   Feb 2011
 ;-
   On_error, 2
+  compile_opt idl2
 
  if ( N_params() LT 4 ) then begin
     print,'Syntax - KUIPERTWO, data1, data2, d, prob [, /PLOT]'
@@ -106,7 +107,7 @@
  N_eff =  n1*n2/ float(n1 + n2)              ;Effective # of data points
  PROB_KUIPER, D, N_eff, prob                 ;Compute significance of statistic
 
- if keyword_set(plot) then begin
+ if keyword_set(plot) || keyword_set(Window) then begin
 
 ; Prepare the step functions
      xx1 = REBIN(sortdata1,2*n1,/SAMPLE)
@@ -117,12 +118,14 @@
      yy2 = REBIN(fn2,2*n2,/SAMPLE)
      yy2 = [yy2[1:*],1.]
 
-     plot, xx1, yy1, _EXTRA = extra
-     oplot, xx2, yy2, lines=1, thick=2
+     cgplot, xx1, yy1, _EXTRA = extra, WINDOW=window
+     cgplot, /over, xx2, yy2, lines=1, thick=2, WINDOW=window
      j1 = id1[sub1] - 1
      j2 = id1[sub2]
-     plots, [sortdata1[j2], sortdata1[j2]], [0,fn2[id2[sub2]]], linestyle=2
-     plots, [sortdata1[j1], sortdata1[j1]], [fn2[id2[sub1]],1], linestyle=2
+     cgplots, [sortdata1[j2], sortdata1[j2]], [0,fn2[id2[sub2]]], linestyle=2,$
+         WINDOW=window
+     cgplots, [sortdata1[j1], sortdata1[j1]], [fn2[id2[sub1]],1], linestyle=2,$
+        WINDOW=window
  endif
 
  return

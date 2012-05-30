@@ -56,7 +56,7 @@ PRO GROUP, X, Y, RCRIT, NGROUP
  npts = min( [N_elements(x), N_elements(y)] )    ;Number of stars
 
  if npts LT 2 then message, $
-    'ERROR - Input position X,Y vectors must contain at least 2 points
+    'ERROR - Input position X,Y vectors must contain at least 2 points'
 
  x = 1.0*x  &  y = 1.0*y   ;Make sure at least floating point
  ngroup =  lindgen(npts)   ;Initially each star in a separate group

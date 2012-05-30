@@ -1,10 +1,12 @@
-/DISK_IO                                                   Sep 2006
+/DISK_IO                                                   Feb 2010
 
 This subdirectory contains IDL procedures to read popular disk formats in
 astronomy.  Currently available are procedures to access
 
      (1) IRAF image (.imh) files  (read and write)
+     (2) Journal (ApJ, AJ) machine readable tables
      (3) WFPC2 images (FITS or STSDAS)
+     
 
 The procedures to access disk FITS files are kept in a separate subdirectory
 /FITS, and those to access STSDAS image files are in the subdirectory /SDAS.

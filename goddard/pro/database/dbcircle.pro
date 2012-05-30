@@ -78,6 +78,7 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
 ;      correct RA for latitude effect    W. Landsman   September 1999
 ;      Added COUNT, GALACTIC keywords  W. Landsman   December 2008
 ;      Fix problem when RA range exceeds 24h  W. Landsman   April 2009
+;      Work as advertised for RA_OBJ field  W. Landsman June 2010
 ;-                   
  On_error,2
  compile_opt idl2
@@ -122,9 +123,6 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
  endif else begin 
       sra = 'RA' & sdec = 'DEC'
  endelse         	        
-
- 
- 
  
  if abs(bigdec) EQ 90 then rasize = 24 else $             ;Updated Sep 1999
        rasize = abs(size/(15.*cos(bigdec/!RADEG))) < 24.  ;Correct for latitude effect
@@ -135,10 +133,6 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
  endif else begin
  rmin = double(racen-rasize)
  rmax = double(racen+rasize)
- if sra EQ 'RA_OBJ' then begin      ;Item RA_OBJ assumed to be in degrees
-	       rmin = rmin*15.
-	       rmax = rmax*15.
- endif 	       
 
 
 ;  If minimum RA is less than 0, or maximum RA is greater than 24
@@ -155,6 +149,10 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
         newrmax = 24.
         rmin = 0.
  endif else redo = 0
+ if sra EQ 'RA_OBJ' then begin      ;Item RA_OBJ assumed to be in degrees
+	       rmin = rmin*15.
+	       rmax = rmax*15.
+ endif 	       
 
  
  st = string(rmin) + '<' + sra + '<' + string(rmax) +',' + $
@@ -175,7 +173,7 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
 ; Use GCIRC to compute angular distance of each source to the field center
 
  silent = keyword_set(SILENT)
- if not silent then begin
+ if ~silent then begin
       print,' ' & print,' '
   endif     
 
@@ -192,7 +190,7 @@ function dbcircle, ra_cen, dec_cen, radius, dis, sublist,SILENT=silent, $
         endif 
  endif 
 
- if not silent then $
+ if ~silent then $
        print,'No entries found by dbcircle in ', db_info( 'NAME',0 )
  Nfound  = 0      
  return,lonarr(1)-1

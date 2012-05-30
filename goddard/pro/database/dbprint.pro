@@ -107,6 +107,8 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 ;       Fix display on GUI terminals           W. Landsman March 2006
 ;       Remove VMS statements                  W. Landsman Sep 2006
 ;       Remove EXECUTE statement               W. Landsman Jan 2007
+;       Fix display of multi element items     W. Landsman  Aug 2010
+;       Fix problem with linked databases      W. Landsman Dec 2011
 ;-
 ;
  On_error,2                                ;Return to caller
@@ -132,6 +134,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 ; Make list a vector
 
  nentry = db_info( 'ENTRIES', 0)
+ if nentry EQ 0 then message,'ERROR - Database contains no entries'
  if list[0] EQ -1 then list = lindgen(nentry) + 1 
  dbname = strlowcase( db_info( 'NAME', 0 ))
 
@@ -141,10 +144,8 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 
 ; No need for byteswapping if data is not external or it is a big endian machine
 
-  convert= db_info('EXTERNAL')
-  noconvert = 1 - convert[0]
-  if convert[0] then noconvert = is_ieee_big() 
-
+   noconvert = ~db_info('EXTERNAL',0) || is_ieee_big()      ;Updated Dec 11
+    
 ; Determine items to print
 
  if N_params() EQ 1 then begin
@@ -164,7 +165,7 @@ pro dbprint,list,items, FORMS=forms, TEXTOUT=textout, NoHeader = noheader, $
 
 ; Open output text file
 
- if not keyword_set(TEXTOUT) then textout = !textout  ;use default output dev.
+ if ~keyword_set(TEXTOUT) then textout = !textout  ;use default output dev.
 textopen, dbname, TEXTOUT = textout, more_set = more_set
  if size(TEXTOUT,/TNAME) EQ 'STRING' then text_out = 5 else text_out = textout
  if (nitems EQ qnumit)  then begin
@@ -180,10 +181,10 @@ textopen, dbname, TEXTOUT = textout, more_set = more_set
       for k = 0, qnumit-1  do begin
          ;.
          ; only print entries of reasonable size... < 5 values in item.
-         ;
-
+       
          if ( nvalues[k] LT 5 ) then begin
-            somvar =  dbxval(entry,dtype[k],nvalues[k],sbyte[k],nbytes[k]) 
+            somvar = $        
+	    dbxval(entry,dtype[k],nvalues[k],sbyte[k],nvalues[k]*nbytes[k]) 
             if dtype[k] EQ 1 then somvar=fix(somvar)
             printf,!textunit,k,') ',qnames[k], strtrim(somvar,2)
                                                         ;display name,value
@@ -228,7 +229,7 @@ textopen, dbname, TEXTOUT = textout, more_set = more_set
    dash = byte('-') & dash = dash[0]
    dashes = ' '+string( replicate( dash, linelength ) )
 ;
-   if not keyword_set( NoHeader) then begin
+   if ~keyword_set( NoHeader) then begin
 
       title = string( replicate(byte(32), linelength>42) )
       strput, title, qtitle, (linelength-40)/2>1           ;center title
@@ -243,7 +244,7 @@ textopen, dbname, TEXTOUT = textout, more_set = more_set
 ; Place value numbers for multiple valued items in h3
     for i = 0,nitems-1 do begin
           if nvals[i] GT 1 then $       ;multiple values?
-             c3[i] = '(' + strtrim(string(ivalnum[i]),2) + ')'
+             c3[i] = '[' + strtrim(string(ivalnum[i]),2) + ']'
     endfor        ;i
 
     h1 = dbtitle( c1,flen )

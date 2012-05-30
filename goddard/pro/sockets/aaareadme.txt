@@ -1,7 +1,10 @@
-                                                         December 2007
+                                                         January 2011
  
 This directory contains procedures which use the IDL SOCKET command to access
 Web servers.  
+
+The Infrared Science Archive (IRSA) has a similar set of tools for accessing 
+their catalogs -- see  http://irsa.ipac.caltech.edu/tools/irsa_idl.html
 
 Dominic Zarro (LAC/GSFC) has written an independent set of routines to use IDL
 sockets to access Web servers.   His routines use object-oriented code and are

@@ -1,4 +1,4 @@
-/database                                                 December 2006
+/database                                                 October 2010
 
 This subdirectory contains the IDL procedures, mostly written by Don Lindler,
 (ACC/Goddard) to create and access an IDL database.    Although the core
@@ -15,6 +15,45 @@ Sample astronomical catalogs, formatted as IDL databases, are available in the
 /zdbase directory.   These include the Yale Bright Star Catalog, the 
 RC3 Galaxy catalog, and a catalog of HST observations.
 
+Oct-2010 
+The database internal format has been modified to allow entries with a total
+length larger than 32767 bytes.     This has required some updating of the
+internal header format and modifying the five procedures:
+
+DBCREATE, DB_INFO(), DB_ITEM(), DB_ITEM_INFO() DBOPEN
+
+Everything should be transparent to the user -- databases are created in the new
+format, but the software works in the same way with either the new or old 
+format. 
+
+
+1.   DBCREATE now always creates databases in the new format.
+2.   There might be problems if one opens linked databases with one in the new
+format and one in the old format.
+
+Byte 118 in the QDB common block is now set to 1 if the database is in the
+new format, and one can also query DB_INFO('NEWDB') to determine if the database
+is in the new format.    Below are the four values stored in the database common
+blocks which were formerly 2 bytes but are now 4 bytes. 
+
+QDB           Bytes             Descrip
+Old:           82-83  record length of DBF file (integer*2)
+New:         105-108  record length of DBF file (integer*4)
+
+QITEMS
+Old           22-23  Number of values for item (1 for scalar) (integer*2)
+New          179-182 Number of values for item (1 for scalar) (integer*4)
+
+Old            24-25 Starting byte position in original DBF record (integer*2)
+New          183-186 Starting byte position in original DBF record (integer*4)
+
+Old          171-172 Starting byte in record returned by DBRD (integer*2)
+New          187-190 Starting byte in record returned by DBRD (integer*4)
+
+
+
+Nov-2009     String items are now allowed to be "SORT" index type.   Updates to
+             DBINDEX and DBFIND_SORT.
 
 Dec-2006:    DBINDEX - Automatically enlarge the index (.dbx) file if necessary.  
 	     Avoid use of EXECUTE() if possible.

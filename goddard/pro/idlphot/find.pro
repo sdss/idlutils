@@ -13,7 +13,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;       Modified in March 2008 to use marginal Gaussian fits to find centroids       
 ; CALLING SEQUENCE:
 ;	FIND, image, [ x, y, flux, sharp, round, hmin, fwhm, roundlim, sharplim 
-;		PRINT= , /SILENT ]
+;		PRINT= , /SILENT, /MONITOR]
 ;
 ; INPUTS:
 ;	image - 2 dimensional image array (integer or real) for which one
@@ -24,7 +24,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;
 ;	hmin -  Threshold intensity for a point source - should generally 
 ;		be 3 or 4 sigma above background RMS
-;	fwhm  - FWHM to be used in the convolve filter
+;	fwhm  - FWHM (in pixels) to be used in the convolve filter
 ;	sharplim - 2 element vector giving low and high cutoff for the
 ;		sharpness statistic (Default: [0.2,1.0] ).   Change this
 ;		default only if the stars have significantly larger or 
@@ -85,6 +85,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 ;                 Mar 2008
 ;       Added Monitor keyword, /SILENT now suppresses all output 
 ;                   W. Landsman    Nov 2008
+;       Work when threshold is negative (difference images) W. Landsman May 2010
 ;-
 ;
  On_error,2                         ;Return to caller
@@ -94,7 +95,7 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
  if npar EQ 0 then begin
     print,'Syntax - FIND, image,' + $
           '[ x, y, flux, sharp, round, hmin, fwhm, roundlim, sharplim'
-    print,'                      PRINT= , /SILENT ]'
+    print,'                      PRINT= , /SILENT, /MONITOR ]'
     return
  endif
 ;Determine if hardcopy output is desired
@@ -116,6 +117,8 @@ pro find, image, x, y, flux, sharp, roundness, hmin, fwhm, roundlim, sharplim,$
 
  if ( N_elements(fwhm) NE 1 ) then $
            read, 'Enter approximate FWHM: ', fwhm
+  if fwhm LT 0.5 then message, $
+        'ERROR - Supplied FWHM must be at least 0.5 pixels'	   
 
  radius = 0.637*FWHM > 2.001             ;Radius is 1.5 sigma
  radsq = radius^2
@@ -229,8 +232,9 @@ GETROUND:
 
  h = convol(float(image),c)    ;Convolve image with kernel "c"
 
-    h[0:nhalf-1,*] = 0 & h[n_x-nhalf:n_x-1,*] = 0
-    h[*,0:nhalf-1] = 0 & h[*,n_y-nhalf:n_y-1] = 0
+    minh = min(h)
+    h[0:nhalf-1,*] = minh & h[n_x-nhalf:n_x-1,*] = minh
+    h[*,0:nhalf-1] = minh & h[*,n_y-nhalf:n_y-1] = minh
 
  message,'Finished convolution of image', /INF, NoPrint=Silent
 

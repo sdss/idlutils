@@ -36,7 +36,7 @@ pro dbwrt,entry,index,append,noconvert=noconvert
 ;	converted to IDL Version 2.  M. Greason, STX, June 1990.
 ;	William Thompson, GSFC/CDS (ARC), 28 May 1994
 ;		Added support for external (IEEE) representation.
-;	Converted to IDL V5.0   W. Landsman 24-Nov-1997
+;	Faster handling of byte swapping  W. L.  August 2010
 ;-
 ;-------------------------------------------------------------------
  COMMON db_com,qdb,qitems,qdbrec
@@ -44,9 +44,11 @@ pro dbwrt,entry,index,append,noconvert=noconvert
  if N_params() LT 2 then index=0
  if N_params() LT 3 then append=0
 
-; Determine whether or not the database uses external data representation.
+; Byte swapping is needed if database is in external format, and user is on 
+; a little endian machine, and /noconvert is not st 
 
- external = (qdb[119] eq 1) and (not keyword_set(noconvert))
+ bswap = (qdb[119] eq 1) && ~keyword_set(noconvert) && ~is_ieee_big()
+
  
 ; get some info on the data base
 
@@ -69,8 +71,8 @@ pro dbwrt,entry,index,append,noconvert=noconvert
 
 ; get entry number
 
- if append then enum =0 else enum = dbxval(entry,3,1,0,4)
- if ( enum GT qnentry ) or ( enum LT 0 ) then $
+ enum = append ? 0 : dbxval(entry,3,1,0,4)
+ if ( enum GT qnentry ) || ( enum LT 0 ) then $
     message,'Invalid entry number of '+strtrim(enum,2)+' (first value in entry)'
 
  if enum EQ 0 then begin		;add new entry
@@ -80,10 +82,12 @@ pro dbwrt,entry,index,append,noconvert=noconvert
 	dbxput,long(enum),entry,3,0,4
         newentry = 1b
  endif else newentry =0b
- tmp = entry
- if external then db_ent2ext, tmp
- qdbrec[enum]=tmp
-
+ if bswap then begin
+      tmp = entry 
+      db_ent2ext, tmp
+      qdbrec[enum]=tmp
+  endif else qdbrec[enum] =  entry
+ 
 ; update index file if necessary
 
  if index EQ 0 then return
@@ -96,7 +100,7 @@ pro dbwrt,entry,index,append,noconvert=noconvert
  reclong = assoc(unit,lonarr(2),0)
  h = reclong[0]
  maxentries = h[1]
- if external then ieee_to_host, maxentries
+ if bswap then swap_endian_inplace, maxentries
  if newentry then $
    if (maxentries LT qnentry) then begin   ;Enough room for new indexed items?
      print,'DBWRT -- maxentries too small'
@@ -106,7 +110,7 @@ pro dbwrt,entry,index,append,noconvert=noconvert
 
  reclong = assoc(unit,lonarr(7,nindex),8)
  header = reclong[0]
- if external then ieee_to_host,header
+ if bswap then swap_endian_inplace,header
  hitem = header[0,*]            ;indexed item number
  hblock = header[3,*]
  sblock = header[4,*]  & sblock = sblock[*]
@@ -117,40 +121,33 @@ pro dbwrt,entry,index,append,noconvert=noconvert
  for i = 0, nindex-1 do begin
      v = dbxval( entry, idltype[i], numvals[i], startbyte[i], nbytes[i] )
      sbyte = nbytes[i] * (enum-1)  
-     isort = (indextype[i] EQ 3) or (indextype[i] EQ 4)
+     isort = (indextype[i] EQ 3) || (indextype[i] EQ 4)
 
      datarec = dbindex_blk(unit, sblock[pos[i]], 512, sbyte, idltype[i])
      reclong = assoc(unit,lonarr(1),(iblock[pos]*512L))
 
      case indextype[i] of
 
-	1:  begin
-	      tmp = v
-	      if external then host_to_ieee, tmp
-	      datarec[0] = tmp
-	    end
+	1:  datarec[0] = bswap ? swap_endian(v) : v
+	    
 
 	2:  begin
-	      tmp = v
-	      if external then host_to_ieee, tmp
-	      datarec[0] = tmp
+	      datarec[0] = bswap ? swap_endian(v) : v
 	      if (qnentry mod 512) EQ 0 then begin        ;Update
 	      nb = qnentry/512
               hbyte = nbytes[i] * nb
               datarec = dbindex_blk(unit,hblock[pos[i]],512,hbyte,idltype[i])
-	      tmp = v
-	      if external then host_to_ieee, tmp
-	      datarec[0] = tmp
+	      datarec[0] = bswap ? swap_endian(v) : v
               endif
       end
 	3: begin                          ;SORT
 
 	   datarec = dbindex_blk(unit,sblock[pos[i]],512,0,idltype[i])
 	   values = datarec[0:(qnentry-1)]                  ;Read in old values
-	   if external then ieee_to_host, values
+	   if bswap then swap_endian_inplace, values
 	   reclong = dbindex_blk(unit,iblock[pos[i]],512,0,3)
 	   sub = reclong[0:(qnentry-1)]                     ;Read in old indices
-	   if external then ieee_to_host, sub
+	   if bswap then swap_endian_inplace, sub
 	   if enum lt qnentry then begin       		;Change an old value?
 	       sort_index = where(sub EQ enum)          ;Which value to change
 	       sort_index = sort_index[0]
@@ -163,14 +160,12 @@ pro dbwrt,entry,index,append,noconvert=noconvert
 	4: begin                          ;SORT/INDEX
 
 	   values = datarec[qnentry-1,ublock*512]    ;Update index record
-	   if external then ieee_to_host, values
+	   if bswap then swap_endian_inplace, values
 	   if enum lt qnentry then begin
-	   if values[enum-1] EQ v then isort = 0 else values[enum-1] = v 
+	        if values[enum-1] EQ v then isort = 0 else values[enum-1] = v 
  	   endif else  values = [values,v]
 	   datarec = dbindex_blk(unit,ublock[pos[i]],512,sbyte,idltype[i])
-	   tmp = v
-	   if external then host_to_ieee, tmp
-	   datarec[0] = tmp
+	   datarec[0] = bswap ? swap_endian(v) : v
 	   end
 
 	else:
@@ -185,19 +180,13 @@ pro dbwrt,entry,index,append,noconvert=noconvert
 	sval = values[ind]
 ;
 	datarec = dbindex_blk(unit, hblock[pos[i]], 512, 0, idltype[i])
-	tmp = sval
-	if external then host_to_ieee, tmp
-	datarec[0] = tmp
+	datarec[0] = bswap ? swap_endian(sval) : sval
 ;
 	datarec = dbindex_blk(unit, sblock[pos[i]], 512, 0, idltype[i])
-	tmp = values
-	if external then host_to_ieee, tmp
-	datarec[0] = tmp
+	datarec[0] = bswap ?swap_endian(values) : values
 ;
 	reclong = dbindex_blk(unit, iblock[pos[i]], 512, 0, 3)
-	tmp = sub+1
-	if external then host_to_ieee, tmp
-	reclong[0] = tmp
+	reclong[0] = bswap ?swap_endian(sub+1) : sub+1
  endif
 
  endfor

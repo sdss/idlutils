@@ -16,9 +16,9 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;
 ;      Name = String name of the parameter to return.   If Name is of the
 ;             form 'keyword*' then an array is returned containing values of
-;             keywordN where N is an integer.  The value of keywordN will be
-;             placed in RESULT(N-1).  The data type of RESULT will be the
-;             type of the first valid match of keywordN found.
+;             keywordN where N is a positive (non-zero) integer.  The value of 
+;             keywordN will be placed in RESULT[N-1].  The data type of RESULT 
+;             will be the type of the first valid match of keywordN found.
 ;
 ; OPTIONAL INPUTS:
 ;       ABORT - string specifying that SXPAR should do a RETALL
@@ -77,7 +77,7 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;
 ;       If the value is too long for one line, it may be continued on to the
 ;       the next input card, using the OGIP CONTINUE convention.  For more info,
-;       http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/ofwg_recomm/r13.html
+;       see http://fits.gsfc.nasa.gov/registry/continue_keyword.html
 ;
 ;       Complex numbers are recognized as two numbers separated by one or more
 ;       space characters.
@@ -90,7 +90,9 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;
 ; NOTES:
 ;       The functions SXPAR() and FXPAR() are nearly identical, although
-;       FXPAR() has slightly more sophisticated parsing.   There is no
+;       FXPAR() has slightly more sophisticated parsing, and additional keywords
+;       to specify positions in the header to search (for speed), and to force
+;       the output to a specified data type..   There is no
 ;       particular reason for having two nearly identical procedures, but
 ;       both are too widely used to drop either one.
 ;
@@ -109,7 +111,6 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       W. Landsman, July 1995, Removed /NOZERO from MAKE_ARRAY call
 ;       T. Beck May 1998, Return logical as type BYTE
 ;       W. Landsman May 1998, Make sure integer values are within range of LONG
-;       Converted to IDL V5.0, May 1998
 ;       W. Landsman Feb 1998, Recognize CONTINUE convention 
 ;       W. Landsman Oct 1999, Recognize numbers such as 1E-10 as floating point
 ;       W. Landsman Jan 2000, Only accept integer N values when name = keywordN
@@ -117,13 +118,15 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;       W. Landsman/D. Finkbeiner  Mar 2002  Make sure extracted vectors 
 ;             of mixed data type are returned with the highest type.
 ;       W.Landsman Aug 2008  Use vector form of VALID_NUM()
+;       W. Landsman Jul 2009  Eliminate internal recursive call
+;       W. Landsman Apr 2012  Require vector numbers be greater than 0
 ;-
 ;----------------------------------------------------------------------
  On_error,2
  compile_opt idl2
 
  if N_params() LT 2 then begin
-     print,'Syntax -     result =  sxpar( hdr, name, [abort])'
+     print,'Syntax -  result =  sxpar( hdr, name, [abort])'
      print,'   Input Keywords:    /NOCONTINUE, /SILENT'
      print,'   Output Keywords:   COUNT=,  COMMENT= '
      return, -1
@@ -138,8 +141,8 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 
 ;       Check for valid header
 
-  s = size(hdr)         ;Check header for proper attributes.
-  if ( s[0] NE 1 ) or ( s[2] NE 7 ) then $
+;Check header for proper attributes.
+  if ( size(hdr,/N_dimen) NE 1 ) || ( size(hdr,/type) NE 7 ) then $
            message,'FITS Header (first parameter) must be a string array'
 
   nam = strtrim( strupcase(name) )      ;Copy name, make upper case     
@@ -170,22 +173,9 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ;  a number.  Store the positions of the located keywords in NFOUND, and the
 ;  value of the number field in NUMBER.
 
-        histnam = (nam eq 'HISTORY ') or (nam eq 'COMMENT ') or (nam eq '') 
-        if N_elements(start) EQ 0 then start = -1l
-        start = long(start[0])
-        if (not vector) and (start GE 0) then begin
-            if N_elements(precheck)  EQ 0 then precheck = 5
-            if N_elements(postcheck) EQ 0 then postcheck = 20
-            nheader = N_elements(hdr)
-            mn = (start - precheck)  > 0
-            mx = (start + postcheck) < nheader-1
-            keyword = strmid(hdr[mn:mx], 0, 8)
-        endif else begin
-            restart:
-            start   = -1l
-            keyword = strmid( hdr, 0, 8)
-        endelse
-
+        histnam = (nam eq 'HISTORY ') || (nam eq 'COMMENT ') || (nam eq '') 
+        keyword = strmid( hdr, 0, 8)
+ 
         if vector then begin
             nfound = where(strpos(keyword,nam) GE 0, matches)
             if  matches GT 0  then begin
@@ -194,6 +184,9 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 		if matches GT 0 then begin 
 		     nfound = nfound[igood]
                      number = long(numst[igood])
+		     g = where(number GT 0, matches)
+ 		     if matches GT 0 then number = number[g]
+
 		endif 
            endif
 
@@ -203,13 +196,10 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 
         endif else begin
             nfound = where(keyword EQ nam, matches)
-            if (matches EQ 0) and (start GE 0) then goto, RESTART
-            if (start GE 0) then nfound = nfound + mn
-            if (matches GT 1) and (not histnam) then        $
-                if not keyword_set(silent) then $
+             if (matches GT 1) && ~histnam then        $
+                if ~keyword_set(silent) then $
                 message,/informational, 'Warning - keyword ' +   $
                 nam + ' located more than once in ' + abort
-            if (matches GT 0) then start = nfound[matches-1]
         endelse
 
 
@@ -252,14 +242,14 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 ; (2) Next line is CONTINUE  (3) LONGSTRN keyword is present (recursive call to
 ; SXPAR) 4. /NOCONTINE is not set
 
-    if not keyword_set(nocontinue) then begin
-                off = off + 1
+    if ~keyword_set(nocontinue) then begin
+                off++
                 val = strtrim(value,2)
 
-                if (strlen(val) gt 0) and $
-                  (strmid(val, strlen(val)-1, 1) EQ '&') and $
-                  (strmid(hdr[nfound[i]+off],0,8) EQ 'CONTINUE') then begin
-                   if (size(sxpar(hdr, 'LONGSTRN',/NoCONTINUE)))[1] EQ 7 then begin                    
+                if (strlen(val) gt 0) && $
+                  (strmid(val, strlen(val)-1, 1) EQ '&') && $
+                  (strmid(hdr[nfound[i]+off],0,8) EQ 'CONTINUE') then $
+		      if ~array_equal(keyword EQ 'LONGSTRN',0b) then begin 
                   value = strmid(val, 0, strlen(val)-1)
                   test = hdr[nfound[i]+off]
                   test = strmid(test, 8, strlen(test)-8)
@@ -269,7 +259,6 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
                   next_char = 1
                   GOTO, NEXT_APOST
                 ENDIF
-               ENDIF
     ENDIF
 
 
@@ -307,16 +296,16 @@ function SXPAR, hdr, name, abort, COUNT=matches, COMMENT = comments, $
 
 NOT_COMPLEX:
                 On_IOerror, GOT_VALUE
-                  if (strpos(value,'.') GE 0) or (strpos(value,'E') GT 0) $
-                  or (strpos(value,'D') GE 0) then begin  ;Floating or double?
-                      if ( strpos(value,'D') GT 0 ) or $  ;Double?
+                  if (strpos(value,'.') GE 0) || (strpos(value,'E') GT 0) $
+                  || (strpos(value,'D') GE 0) then begin  ;Floating or double?
+                      if ( strpos(value,'D') GT 0 ) || $  ;Double?
                          ( strlen(value) GE 8 ) then value = double(value) $
                                                 else value = float(value)
                        endif else begin                   ;Long integer
                             lmax = 2.0d^31 - 1.0d
-                            lmin = -2.0d31
+                            lmin = -2.0d^31      ;Typo fixed Feb 2010
                             value = double(value)
-                            if (value GE lmin) and (value LE lmax) then $
+                            if (value GE lmin) && (value LE lmax) then $
                                 value = long(value)
                        endelse
 

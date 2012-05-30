@@ -14,7 +14,7 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 ;
 ; CALLING SEQUENCE:
 ;       srcor,x1in,ylin,x2in,y2in,dcr,ind1,ind2,
-;                         [MAGNITUDE=,SPHERICAL=,/SILENT]
+;                         [MAGNITUDE=,SPHERICAL=,COUNT=,/SILENT]
 ; INPUTS:
 ;       x1in,y1in - First set of x and y coordinates.  The program
 ;                   marches through this list element by element,
@@ -75,6 +75,11 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 ;                               W. Landsman  Mar 2009
 ;       Avoid error when no matches found with /SPHERICAL  O. Trottier June 2009
 ;       Added output Count keyword     W.L   June 2009
+;       Adjust right ascension for cosine angle W.L. December 2009
+;       Return as soon as no matches found W.L.  December 2009
+;       Use some V6.0 notation  W.L.   February 2011
+;       Fix problem when /Spherical and Option =2 set, and sources separated
+;          by more han 180 degrees.   W.L.  March 2011
 ;       
 ;-
 ;
@@ -86,7 +91,7 @@ PRO srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2,option=option,magnitude=magnitude,$
 IF N_params() lt 7 THEN BEGIN
   print,'SRCOR calling sequence: '
   print,'srcor,x1in,y1in,x2in,y2in,dcr,ind1,ind2 [,option={0, 1, or 2}] $'
-  print,'      [,magnitude=mag_list_1, spherical={1 or 2}, /SILENT]'
+  print,'      [,magnitude=mag_list_1, COUNT=count, spherical={1 or 2}, /SILENT]'
   RETURN
 ENDIF
  count = 0
@@ -94,7 +99,7 @@ ENDIF
 ;;;
 ;   Keywords.
 ;
-IF not keyword_set(option) THEN option=0
+IF ~keyword_set(option) THEN option=0
 IF (option lt 0) or (option gt 2) THEN MESSAGE,'Invalid option code.'
 
 SphereFlag = keyword_set(Spherical)
@@ -103,10 +108,10 @@ SphereFlag = keyword_set(Spherical)
 ;   Store the input variables into internal arrays that we can manipulate and
 ; modify.
 ;
-x1 = float(x1in)
-y1 = float(y1in)
-x2 = float(x2in)
-y2 = float(y2in)
+x1 = x1in
+y1 = y1in
+x2 = x2in
+y2 = y2in 
 
 ;;;
 ;   If the Spherical keyword is set, then convert the input values (degrees
@@ -122,7 +127,9 @@ if SphereFlag then begin
    y1 = y1 * d2r
    x2 = x2 * (XScale * d2r)
    y2 = y2 * d2r
+   cosy2 = sin(y2)
    dcr2 = dcr2 * (d2r / 3600.)
+   radcr2 = dcr2/cos(y2)        ;Adjust RA for declination
 endif else dcr2=dcr^2
 
 
@@ -131,7 +138,7 @@ endif else dcr2=dcr^2
 ;
  n1 = N_elements(x1)  
  n2 = N_elements(x2) 
- if not keyword_set(silent) then begin 
+ if ~keyword_set(silent) then begin 
       message,/info,'Option code = '+strtrim(option,2)
       message,/info,strtrim(n1,2)+' sources in list 1'
        message,/info,strtrim(n2,2)+' sources in list 2'
@@ -142,57 +149,71 @@ endif else dcr2=dcr^2
 ;
   nmch = 0L
  ind1 = lonarr(n1)-1 & ind2 = ind1
- FOR i=0L,n1-1 DO BEGIN
-   xx = x1[i] & yy = y1[i] 
+   
    if SphereFlag then begin         
       if option EQ 2 then begin      ;Closest source, no critical distance
-;For speed we find the minimum value of  1-cos(d) where d is the arc distance
-;This avoids having to calculate the arc cosine.       
-         d2  = 1.0d - abs( sin(y2)*sin(yy) + cos(y2)*cos(yy)*cos(xx-x2))
-         dmch = min(d2,m)                 ;Uncommented 29-May-2009
+;For speed we find the maximum value of cos(d) where d is the arc distance
+;This avoids having to calculate the arc cosine.    Test modified Mar 2011       
+         cosy2 = cos(y2)
+          siny2 = sin(y2)
+     FOR i=0L,n1-1 DO BEGIN
+         d2  =  siny2*sin(y1[i]) + cosy2*cos(y1[i])*cos(x1[i]-x2)
+         dmch = max(d2,m)                 ;Uncommented 29-May-2009 	 
 	 ind1[nmch] = i
          ind2[nmch] = m
-         nmch = nmch+1
-
+         nmch++
+      ENDFOR
+      
       endif else begin               ;Closest source within critical distance
+        
 ;For speed we first find sources within a square of the size of the critical
 ;distance.    Exact distances are then computed for sources within the square.      
-        g = where(( x2 GE (xx-dcr2)) and (x2 LE (xx+dcr2)) and $
-	(yy GE (yy-dcr2)) and  (yy LE (yy + dcr2)), Ng)
- 
+     FOR i=0L,n1-1 DO BEGIN
+           xx = x1[i] & yy = y1[i]
+
+        g = where(( x2 GE (xx-radcr2)) and (x2 LE (xx+radcr2)) and $
+	(y2 GE (yy-dcr2)) and  (y2 LE (yy + dcr2)), Ng)
+
         if Ng GT 0 then begin 
           gcirc,0,x2[g],y2[g],xx,yy,d2
           dmch = min(d2,mg)
           if dmch LE dcr2 then begin 
 	      ind1[nmch] = i
 	      ind2[nmch] = g[mg]
-	      nmch =nmch+1
+	      nmch++
        endif
        endif 
+       ENDFOR
        endelse
     endif else begin 
-       d2=(xx-x2)^2+(yy-y2)^2
+    FOR i=0L,n1-1 DO BEGIN
+
+       d2=(x1[i]-x2)^2+(y1[i]-y2)^2
        dmch=min(d2,m)
-      IF (option eq 2) or (dmch le dcr2) THEN BEGIN
+         IF (option eq 2) || (dmch le dcr2) THEN BEGIN
       ind1[nmch] = i
       ind2[nmch] = m
-      nmch = nmch+1
-   ENDIF   
+      nmch++
+   ENDIF 
+   ENDFOR  
    endelse
-ENDFOR
 
-if not keyword_set(silent) then message,/info,strtrim(nmch,2)+' matches found.'
+if ~keyword_set(silent) then message,/info,strtrim(nmch,2)+' matches found.'
+
 count = nmch
 if nmch GT 0 then begin 
    ind1 = ind1[0:nmch-1]
    ind2 = ind2[0:nmch-1]
-endif
+endif else begin 
+   ind1 = -1 & ind2 = -1
+   return
+endelse   
 ;;;
 ;   Modify the matches depending on input options.
 ;
 use_mag = (n_elements(magnitude) ge 1)
-IF (option eq 0) and (not use_mag) THEN RETURN
-if not keyword_set(silent) then begin
+IF (option eq 0) && (~use_mag) THEN RETURN
+if ~keyword_set(silent) then begin
 IF use_mag THEN BEGIN
    message,/info,'Cleaning up output list using magnitudes.'
 ENDIF ELSE BEGIN
@@ -228,7 +249,7 @@ FOR i=0L,max(ind2) DO BEGIN
 ENDFOR
 
  count = N_elements(ind1)
- if not keyword_set(silent) then $
+ if ~keyword_set(silent) then $
   message,/info,strtrim(n_elements(ind1),2)+' final matches found'
 
 ;

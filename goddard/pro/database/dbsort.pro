@@ -45,6 +45,7 @@ function dbsort,list,items,REVERSE = rev
 ;       Added REVERSE keyword   W. Landsman        August, 1991
 ;       Avoid use of EXECUTE() for V6.1 or later   W. Landsman Dec 2006
 ;       Assume since V6.1   W. Landsman   June 2009
+;       Add TEMPORARY call  W. Lnadsman  July 2009
 ;-
  On_error,2
  compile_opt idl2
@@ -103,7 +104,7 @@ function dbsort,list,items,REVERSE = rev
 
         j = nitems-i
         vv = 'v' + strtrim(j,2) 
-        v = (scope_varfetch(vv, level=0)) 
+        v = temporary(scope_varfetch(vv, level=0))
 
 ; perform previous sorts on item
 

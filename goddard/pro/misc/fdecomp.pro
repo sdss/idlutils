@@ -19,30 +19,29 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 ;       dir - directory name, scalar or vector string
 ;       name - file name, scalar or vector string 
 ;       qual - qualifier, set equal to the characters beyond the last "."
-;       version - obsolete (was for VMS) always ''
 ;
 ; OPTIONAL INPUT KEYWORD:
-;     OSFamily - one of the four scalar strings specifying the operating 
-;             system:  'Windows','MacOS' or 'unix'.    If not supplied,
+;     OSFamily -  scalar string specifying the operating system, must be either
+;             'Windows' or 'unix'.    If not supplied,
 ;             then !VERSION.OS_FAMILY is used to determine the OS.
 ; EXAMPLES:
 ;     Consider the following file names 
 ;
-;     unix:    file = '/rsi/idl63/avg.pro' 
-;     MacOS:   file = 'Macintosh HD:Programs:avg.pro'
-;     Windows: file =  'd:\rsi\idl63\avg.pro'
+;     unix:    file = '/itt/idl71/avg.pro' 
+;     Windows: file =  'd:\itt\idl71\avg.pro'
 ;       
-;     then IDL> FDECOMP,  file, disk, dir, name, qual, version
+;     then IDL> FDECOMP,  file, disk, dir, name, qual
 ;       will return the following
 ;
 ;                 Disk             Dir          Name        Qual    
-;       Unix:      ''            '/rsi/idl63/'  'avg'       'pro'   
-;;       Mac:     'Macintosh HD'  ':Programs:'   'avg'      'pro'  
-;       Windows:    'd:'         \rsi\idl63\    'avg'       'pro'   
+;       Unix:      ''            '/itt/idl71/'  'avg'       'pro'   
+;       Windows:    'd:'         \itt\idl71\    'avg'       'pro'   
 ;
 ; NOTES:
-;     All tokens are removed between the name and qualifier
-;          (i.e period is removed)
+;     (1) The period is removed between the name and qualifier 
+;     (2) Unlike the intrinsic FILE_BASENAME() and FILE_DIRNAME() functions,
+;         one can use FDECOMP to decompose a Windows file name on a Unix machine
+;         or a Unix filename on a Windows machine.
 ;
 ; ROUTINES CALLED:
 ;     None.
@@ -50,85 +49,35 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
 ;     version 1  D. Lindler  Oct 1986
 ;     Include VMS DECNET machine name in disk    W. Landsman  HSTX  Feb. 94
 ;     Converted to Mac IDL, I. Freedman HSTX March 1994          
-;     Converted to IDL V5.0   W. Landsman   September 1997
 ;     Major rewrite to accept vector filenames V5.3   W. Landsman June 2000
 ;     Fix cases where disk name not always present  W. Landsman  Sep. 2000
 ;     Make sure version defined for Windows  W. Landsman April 2004
 ;     Include final delimiter in directory under Windows as advertised
 ;                W. Landsman   May 2006
 ;     Remove VMS support, W. Landsman    September 2006
+;     Remove MacOS branch (same as Unix) W. Landsman  August 2009
 ;-
 ;--------------------------------------------------------
 ;
   On_error,2                            ;Return to caller
+  compile_opt idl2
 
   if N_params() LT 2 then begin
-     print, 'Syntax - FDECOMP, filename, disk, [dir, name, qual, ver ] '
+     print, 'Syntax - FDECOMP, filename, disk, [dir, name, qual ] '
      return
   endif
-
-; Find out what machine you're on, and take appropriate action.
- if not keyword_set(OSFAMILY) then osfamily = !VERSION.OS_FAMILY
- sz = size(filename)
- scalar = sz[0] EQ 0
- if scalar then filename = strarr(1) + filename
-
- case OSFAMILY of
-
-  "MacOS": begin
-
-; disk name is all characters up to the first colon
-; directory is string of folders         
-; file name+qualifier is all characters after the last colon
-; version   is null string
-   
-  st = filename
-  N= N_elements(st)
-  disk = st
-  replicate_inplace,disk,''
-  version = disk
-  qual = disk
-  lpos = strpos(st,':')
-  good = where( lpos GE 0, Ngood)
-  if Ngood GT 0 then begin 
-       stg = st[good]
-       lpos = reform( lpos[good], 1, Ngood) 
-       disk[good] = strmid( stg, 0, lpos)
-       st[good] = strmid(stg,lpos+1 ) 
-   endif
-
-   dir = disk
-   lpos = strpos(st,':',/reverse_search)
-   good = where(lpos GT 0, Ngood)
-   if Ngood GT 0 then begin
-             stg = st[good]
-             lpos = reform( lpos[good], 1, Ngood) 
-             dir[good] = ':' + strmid( stg, 0, lpos ) + ':'
-             st[good] = strmid(stg, lpos+1 )
-    endif
-
-    name = st
-    lpos = strpos(st,'.',/reverse_search)
-    good = where(lpos GE 0, Ngood)
     
-    if Ngood GT 0 then begin
-             stg = st[good]
-             lpos = reform( lpos[good], 1, Ngood) 
- 
-             name[good] = strmid(stg,0,lpos )
-             qual[good] = strmid(stg,lpos+1 )
-     endif
 
-        
-    end
- 
- "Windows": begin
-     st = filename
+  if not keyword_set(osfamily) then osfamily = !Version.OS_Family
+       st = filename
      disk = st
      replicate_inplace,disk,''
      dir = disk
      qual = disk
-     version = disk
+
+
+ if OSFAMILY EQ "Windows" then begin 
+ 
      lpos = strpos( st, ':')                 ; DOS diskdrive (i.e. c:)
      good = where(lpos GT 0, Ngood) 
      if Ngood GT 0 then begin
@@ -138,20 +87,31 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
          st[good] = strmid(stg,lpos+1 )
      endif
 
-;  Search the path name (i.e. \dos\idl\) and locate all backslashes
+;  Search the path name (i.e. \dos\idl\) and locate last backslash
 
      lpos = strpos(st,'\',/reverse_search)
      good = where(lpos Gt 0, Ngood)
-     ;  Parse off the directory path 
-    if Ngood GT 0 then begin
-             stg = st[good]
-             lpos = reform( lpos[good],1, Ngood)
-             dir[good] = strmid( stg, 0, lpos +1 )
-             st[good] = strmid(stg, lpos+1 )
-    endif
 
  
-; get Windows name and qualifier (extension)...qual is optional
+ endif ELSE begin                 ;Unix
+
+ 
+; Unix directory name ends at last slash
+
+    lpos = strpos(st,'/',/reverse_search)
+    good = where(lpos GE 0, Ngood)
+ 
+  endelse
+    
+  if Ngood GT 0 then begin      ;Extract directory name if present
+          stg = st[good] 
+          lpos = reform( lpos[good],1, Ngood )
+ 
+             dir[good] = strmid(stg,0, lpos+1) 
+             st[good] = strmid(stg,lpos+1 )
+    endif
+  
+; get  name and qualifier (extension)...qual is optional
 
     lpos = strpos(st,'.',/reverse_search)
     good = where(lpos GE 0, Ngood)
@@ -165,58 +125,6 @@ pro fdecomp, filename, disk, dir, name, qual, version, OSfamily = osfamily
              qual[good] = strmid(stg,lpos+1 )
      endif
 
-    end
 
- 
- ELSE: begin                 ;Unix
-
-    st = filename
-    n = N_elements(st)
- 
-; get disk
-
-    disk = st 
-    replicate_inplace,disk, ''
-    version =disk
-    qual = disk
-    dir = disk
-
-; get dir
-
-    lpos = strpos(st,'/',/reverse_search)
-    good = where(lpos GE 0, Ngood)
-    if Ngood GT 0 then begin 
-          stg = st[good] 
-          lpos = reform( lpos[good],1, Ngood )
- 
-             dir[good] = strmid(stg,0, lpos+1) 
-             st[good] = strmid(stg,lpos+1 )
-    endif
-; get name and qual
-
-   name = st
-   lpos = strpos(st,'.',/reverse_search)
-    good = where(lpos GE 0, Ngood)
- 
-    if Ngood GT 0 then begin
-             stg = st[good]
-             lpos = reform( lpos[good], 1, Ngood )
-             name[good] = strmid(stg,0,lpos )
-             qual[good] = strmid(stg,lpos+1 )
-     endif
- 
-
- end 
-
-ENDCASE                         ; end OTHER version
-
-  if scalar then begin
-       name = name[0]
-       qual = qual[0]
-       disk = disk[0]
-       dir = dir[0]
-       version = version[0]
-       filename = filename[0]
-  endif
-  return
+ return
   end

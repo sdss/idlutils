@@ -1,19 +1,21 @@
-MRDFITS - A multiple format FITS reader. V2.9
-Last updated: March 2004
+MRDFITS - A multiple format FITS reader. V2.15
+Last updated: June 2009
 
 
-The MRDFITS utility is intended to be a general purpose function allowing
-users to quickly read FITS files in all standard formats.  MRDFITS
-returns an array or structure containing the data from the specified
-FITS extension.  Header information may optionally be returned as a
-string array.  MRDFITS currently supports the following FITS data types:
+The MRDFITS utility is intended to be a general purpose function allowing users
+to quickly read FITS files in all standard formats.  MRDFITS returns an array or
+structure containing the data from the specified FITS extension.  Header
+information may optionally be returned as a string array.  MRDFITS was
+originally written by Tom McGlynn (NASA/GSFC) but is now maintained by Wayne
+Landsman. 
+
+MRDFITS currently supports the following FITS data types:
 
 	Primary simple images
 	The IMAGE extension
 	Group data in both primary images and IMAGE extensions.
 	ASCII tables
-	BINARY tables including the suggested convention for
-	  variable length records.
+	BINARY tables including variable length records.
 
 MRDFITS uses the dynamic structure definition capabilities
 of IDL to generate a structure matching the characteristics of the
@@ -33,10 +35,9 @@ of the FITS data is possible:
           column (default) or into a IDL pointers (with /POINTER_VAR) for 
           maximum efficiency
 
-MRDFITS has been tested to work on IDL Version V5.0 through V6.0, although not
+MRDFITS has been tested to work on IDL Version V5.0 through V6.4, although not
 all of its capabilities are available in earlier IDL Versions.   For example,
-output of unsigned data types requires at least V5.2, and use of the
-/POINTER_VAR keyword requires at least V5.0. 
+output of unsigned data types requires at least V5.2
 
 MRDFITS is called as a function similar to the old READFITS utility, e.g.,
 
@@ -97,18 +98,14 @@ use outside of MRDFITS.)
 	FXPOSIT:	Find an extension in a FITS file.
 
 
-On Unix systems MRDFITS can handle files compressed with either
-the `standard' Unix compress utility, Gnu gzip or the Linux bzip2 utility.
-It assumes that files ending with .Z, .gz or .GZ  and .bz2 are to be
-decompressed.  Decompression is done using a sub-process and pipes
-so that no temporary file is created.     Users with IDL V5.3 or later can use
-the gzip facilty on any OS (not just Unix). 
+MRDFITS can handle files with several compression types including the `standard'
+Unix compress utility, Gnu gzip, the Linux bzip2 utility or the FPACK 
+(http://heasarc.gsfc.nasa.gov/fitsio/fpack/) utility.     It assumes that files
+ending with .Z, .gz or .GZ  and .bz2 or .fz are to be decompressed. 
+Decompression of Unix, FPACK and bzip2 files is done using a sub-process and
+pipes so that no temporary file is created.    Gzip files are read directly
+using the /COMPRESS keyword to OPENR.  Please send comments and bug reports to:
 
-Please send comments and bug reports to:
 
-	Tom McGlynn
-	High Energy Astrophysics Science Archive Research Center (HEASARC)
-        tam@lheapop.gsfc.nasa.gov
-	301-286-7743
-
-        or Wayne Landsman   landsman@mpb.gsfc.nasa.gov
+        or Wayne Landsman  
+	http://astrophysics.gsfc.nasa.gov/staff/CVs/Wayne.Landsman/

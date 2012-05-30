@@ -71,12 +71,16 @@ pro dbbuild,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, $
 ;       Make sure error message appears even if !QUIET is set W.L November 2006
 ;       Major rewrite to use SCOPE_VARFETCH, accept 50 input items
 ;                   W. Landsman    November 2006
+;      Fix warning if parameters have different # of elements W.L.  May 2010
+;      Fix warning if scalar parameter supplied W.L.  June 2010
+;      Fix for when first parameter is multi-dimensioned W.L. July 2010
+;      Check data type of first parameter W.L. Jan 2012
 ;-
   COMPILE_OPT IDL2
   On_error,2                            ;Return to caller
   npar = N_params()
   if npar LT 1 then begin
-    print,'Syntax - DBBUILD, v1, [ v2, v3, v4, v5, ... v40,' 
+    print,'Syntax - DBBUILD, v1, [ v2, v3, v4, v5, ... v50,' 
     print,'         /NOINDEX, /SILENT, STATUS =  ]'
     return
   endif
@@ -104,19 +108,20 @@ pro dbbuild,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, $
    tmp = ptrarr(nitems,/allocate_heap)
    for i=0,nitems-1 do *tmp[i] = SCOPE_VARFETCH(vv[i+1], LEVEL=0)
 
-   ndata = N_elements(v1)
+   ndata = N_elements(v1)/ numvals[1]   ;# of elements in last dimension
+
    for i = 1,npar do begin    ;Get the dimensions and type of each input vector
 
       sz = size( *tmp[i-1], /STRUCT)
-
-      if sz.N_elements NE ndata then message, $
-          'WARNING - Parameter ' + strtrim(i,2) + ' has ' +  $
-	  strtrim(sz.N_elements) + ' elements',/con
+       ndatai = sz.N_elements/numvals[i]
+      if ndatai NE ndata then message, $
+          'WARNING - Parameter ' + strtrim(i,2) + ' has dimension ' +  $
+	  strjoin(strtrim( sz.dimensions[0:sz.n_dimensions-1],2),' ') ,/con
       if sz.type_name NE dtype[idltype[i]] then begin
         message, 'Item ' + strtrim( db_item_info('NAME',i),2) + $
            ' - parameter '+strtrim(i,2) + ' - has an incorrect data type',/CON
         message, 'Required data type is ' + dtype[idltype[i]], /INF
-        message, 'Supplied data type is ' + stype, /INF
+        message, 'Supplied data type is ' + sz.type_name, /INF
 	ptr_free,tmp
         return
      endif
@@ -128,27 +133,26 @@ pro dbbuild,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18, $
   entry = make_array( DIMEN = db_info('LENGTH'),/BYTE ) ;Empty entry array
   nvalues = long( db_item_info( 'NVALUES' ) )       ;# of values per item
   nbyte = nbyte*nvalues                             ;Number of bytes per item
-  Nv =  ndata/nvalues[1]                   
-  for i = 0l, Nv - 1 do begin
+                    
+  for i = 0l, Ndata - 1 do begin
        i1 = i*nvalues
        i2 = i1 + nvalues -1
 
         dbxput,0l,entry,idltype[0],sbyte[0],nbyte[0]
-	for j = 1,nitems  do $	
+	for j = 1,nitems  do $
 	dbxput, (*tmp[j-1])[ i1[j]:i2[j] ], $
 	       entry,idltype[j], sbyte[j], nbyte[j] 
 	       
-  
       dbwrt,entry,noconvert=noconvert        ;Write the entry into the database
 
   endfor
   ptr_free,tmp
 
-  if not keyword_set( NOINDEX ) then begin
+  if ~keyword_set( NOINDEX ) then begin
 
       indexed = db_item_info( 'INDEX' )      ;Need to create an indexed file?
-      if total(indexed) GE 1 then begin
-	   if not keyword_set(silent) then	$
+      if ~array_equal(indexed,0)  then begin
+	   if ~keyword_set(silent) then	$
 	           message,'Now creating indexed files',/INF
            dbindex,items
        endif

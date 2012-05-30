@@ -137,6 +137,8 @@ function dbfind,spar,listin,SILENT=silent,fullstring = Fullstring,      $
 ;       Suppress empty database message with /SILENT, W. Landsman Jan 1999
 ;       Added COUNT keyword, deprecate !ERR        W. Landsman March 2000
 ;       Added new unsigned & 64bit datatypes       W. Landsman July 2001
+;       Fix possible floating illegand operand error W. Landsman July 2009
+;       Change arrays to LONG to support entries >32767 bytes W.L. Oct. 2010
 ;-
 ;
 ; ---------------------------------------------------------------------
@@ -313,10 +315,10 @@ endif
 ;
 ; generate starting position in big for each item
 ;
-  bpos  = intarr(N_left)        ;starting byte in bpos of each item
+  bpos  = lonarr(N_left)        ;starting byte in bpos of each item
   if N_left GT 1 then for i=1,N_left-1 do bpos[i] = bpos[i-1]+nbytes[i-1]
 
-  index = intarr(totbytes)      ;indices of bytes to extract
+  index = lonarr(totbytes)      ;indices of bytes to extract
   ipos  = 0                     ;position in index array
   for i = 0,N_left-1 do begin   ;loop on items
     for j=0,nbytes[i]-1 do index[ipos+j]=sbyte[i]+j     ;position in entry
@@ -334,32 +336,29 @@ endif
 ;
 ; now extract values for each item and search for valid ones
 ;
-  stillgood  = lindgen( N_elements(list) )
+  stillgood  = lindgen( nlist )
 
   for i = 0l,N_left-1 do begin
-        val = big[ bpos[i]:bpos[i]+nbytes[i]-1, 0:nlist-1 ]
-        case idltype[i] of
+        if i Eq 0 then val = big[ bpos[i]:bpos[i]+nbytes[i]-1, 0:nlist-1 ] else $
+        val = big[ bpos[i]:bpos[i]+nbytes[i]-1, stillgood ]
+        if bswap[i] then ieee_to_host, val, idltype=idltype[i]
+       case idltype[i] of
                 1: v = byte(val,0,nlist)        ;byte
                 2: v = fix(val,0,nlist)         ;i*2
                 3: v = long(val,0,nlist)        ;i*4
                 4: v = float(val,0,nlist)       ;r*4
                 5: v = double(val,0,nlist)      ;r*8
-                7: begin                        ;string
-                   v = strarr(nlist)
-                   if nlist EQ 1 then v[0] = string(val) else $
-                   for ii=0l,nlist-1l do v[ii]=string(val[*,ii])
-                   end
-               12: v = uint(val,0,nlist)         ;u*2
+                7: v = string(val)               ;string
+                12: v = uint(val,0,nlist)         ;u*2
                13: v = ulong(val,0,nlist)        ;u*4
                14: v = long64(val,0,nlist)       ;i*8
                15: v = ulong64(val,0,nlist)      ;u*8
          endcase
-        v=v[stillgood]
-        if bswap[i] then ieee_to_host, v, idltype=idltype[i]
         dbsearch, stype[left[i]], search_values[left[i],*], v, good, $
                 Fullstring = fullstring, count = count
         if count LT 1 then goto, FINI 
         stillgood=stillgood[good]
+	nlist = count
   endfor
   list = list[stillgood]
   count = N_elements(list) & !ERR = count

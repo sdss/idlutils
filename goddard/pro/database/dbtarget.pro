@@ -42,6 +42,10 @@ function dbtarget, target, radius, sublist,SILENT=silent, $
 ;               NOTE: The user must determine on his own whether the database
 ;               is in B1950 or J2000 coordinates.
 ;
+; RESTRICTIONS;
+;       The database must have items 'RA' (in hours) and 'DEC' (in degrees).
+;       Alternatively, the database could have items RA_OBJ and DEC_OBJ 
+;      (both in degrees)
 ; EXAMPLE:
 ;       (1) Use the HST_CATALOG database to find all  HST observations within 
 ;           5' (the default) of M33
@@ -61,6 +65,8 @@ function dbtarget, target, radius, sublist,SILENT=silent, $
 ;       QuerySimbad, DBCIRCLE()
 ; REVISION HISTORY:
 ;      Written W. Landsman     SSAI          September 2002
+;      Propagate /SILENT keyword to QuerySimbad    W. Landsman Oct 2009
+;      Make sure a database is open  W.L. Oct 2010
 ;-                   
  On_error,2
 
@@ -69,8 +75,10 @@ function dbtarget, target, radius, sublist,SILENT=silent, $
     print,'                           DIS =, /SILENT, /TO_B1950 ] )'
     if N_elements(sublist) GT 0 then return, sublist else return,lonarr(1)-1
  endif
+ 
+  if ~db_info('open') then message,'ERROR - No database open'
 
-  QuerySimbad, target, ra,dec, Found = Found
+  QuerySimbad, target, ra,dec, Found = Found,Silent=silent
   if found EQ 0 then message,'Target name ' + target + $
   	     ' could not be translated by SIMBAD'
   ra = ra/15.

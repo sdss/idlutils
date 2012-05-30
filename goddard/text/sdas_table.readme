@@ -1,15 +1,12 @@
-/SDAS_TABLE                                               September, 1995
+/SDAS_TABLE                                               December  2006
 
-The procedures in this directory are useful for accessing the binary disk
-tables used by STSDAS (Space Telescope Science Data Analysis System).   
-The LaTeX file idl_stsdas.tex in the /text directory gives a detailed 
-description of the IDL interface with STSDAS images and tables.   This file
-is actually a copy of Chapter 10 of the Goddard High Resolution Spectrograph
-(GHRS) manual available via anonymous FTP from 
+The procedures in this directory are useful for accessing the binary disk tables
+used by STSDAS (Space Telescope Science Data Analysis System,
+http://stsdas.stsci.edu/documents/SPP/SP_64.html).   The LaTeX file
+idl_stsdas.tex in the /text directory gives a detailed  description of the IDL
+interface with STSDAS images and tables. 
 
-     ftp://hrssun.gsfc.nasa.gov/pub/ghrsdaf/docs/swq-v2_1-sec10.ps
-
-Several procedures in the /FITS directory such as SXADDPAR.PRO and SXPAR.PRO 
+Several procedures in the /FITS directory such as sxaddpar.pro and sxpar.pro 
 are required by the STSDAS table IDL procedures.
 
 ----------------------------------------------------------------------------

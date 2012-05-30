@@ -47,7 +47,12 @@ FUNCTION FXMOVE, UNIT, EXTEN, SILENT = Silent, EXT_NO = ext_no, ERRMSG=errmsg
 ;      Make search for EXTNAME case-independent  W.Landsman March 2007 
 ;      Avoid round-off error for very large extensions N. Piskunov Dec 2007
 ;      Assume since V6.1 (/INTEGER keyword available to PRODUCT() ) Dec 2007
+;      Capture error message from MRD_HREAD (must be used with post-June 2009
+;        version of MRD-HREAD)   W. Landsman  July 2009
 ;-
+     On_error, 2
+     compile_opt idl2
+
          DO_NAME = SIZE( EXTEN,/TNAME) EQ 'STRING'
 	 PRINT_ERROR = NOT ARG_PRESENT(ERRMSG)
          ERRMSG = ''
@@ -80,8 +85,12 @@ FUNCTION FXMOVE, UNIT, EXTEN, SILENT = Silent, EXT_NO = ext_no, ERRMSG=errmsg
                 ; Can't use FXHREAD to read from pipe, since it uses
                 ; POINT_LUN.  So we read this in ourselves using mrd_hread
 
-                MRD_HREAD, UNIT, HEADER, STATUS, SILENT = Silent, FIRSTBLOCK=FIRSTBLOCK
-                IF STATUS LT 0 THEN RETURN, -1
+                MRD_HREAD, UNIT, HEADER, STATUS, SILENT = Silent, $
+		    FIRSTBLOCK=FIRSTBLOCK, ERRMSG = ERRMSG
+                IF STATUS LT 0 THEN BEGIN 
+		    IF PRINT_ERROR THEN MESSAGE,ERRMSG   ;Typo fix 04/10
+		    RETURN, -1
+		ENDIF    
                         
                 ; Get parameters that determine size of data
                 ; region.
@@ -119,6 +128,7 @@ FUNCTION FXMOVE, UNIT, EXTEN, SILENT = Silent, EXT_NO = ext_no, ERRMSG=errmsg
 	        
         RETURN, 0
 ALLOW_PLUN:
+        
         ERRMSG =  $
 	'Extension name cannot be specified unless POINT_LUN access is available'
 	if PRINT_ERROR then message,errmsg	

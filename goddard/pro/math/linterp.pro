@@ -76,6 +76,7 @@ pro linterp, Xtab, Ytab, Xint, Yint, MISSING = missing, NoInterp = NoInterp
 ;       Work for unsigned, 64 bit integers  W. Landsman  October 2001
 ;-
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 4 then begin
    print,'Syntax - LINTERP, Xtab, Ytab, Xint, Yint, [ MISSING = ]' 

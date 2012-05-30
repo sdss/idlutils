@@ -1,11 +1,8 @@
-/FITS directory                                                  19-Oct-2004
+/FITS directory                                                  Jan-2012
 
 FITS (Flexible Image Transport Sytem) is a standardized data format which is
 widely used in astronomy.   Information on the FITS format can be obtained 
-from the NRAO FITS archive at http://fits.cv.nrao.edu or from the FITS support
-office at http://fits.gsfc.nasa.gov/.   I  note here
-only that FITS is a binary format, and so the binary option should  be used
-when copying FITS files with FTP.
+from the FITS supportoffice at http://fits.gsfc.nasa.gov/.  
 
 The IDL Astronomy Library contains a variety of procedures for reading, 
 writing, and modifying FITS files.   Information on how to use these procedures
@@ -14,24 +11,23 @@ described here.    There are four main types of FITS I/O
 procedures available in the Library:
 
    (1) MRDFITS() will read all standard FITS data types into IDL arrays (for
-primary images and image extensions) or structures (for binary or ASCII
-tables). The procedure MWRFITS() will write an IDL structure to any type of
-FITS file, with many  options available (binary or ASCII table, default
-generation of column names). These procedures were written by Tom McGlynn
-(USRA/Goddard).   Further  information on MRDFITS is available in the
-mrdfits.txt file in this directory or at 
+primary images and image extensions) or structures (for binary or ASCII tables).
+The procedure MWRFITS() will write an IDL structure to any type of FITS file,
+with many  options available (binary or ASCII table, default generation of
+column names). These procedures were originally written by Tom  McGlynn
+(USRA/Goddard) but are now maintained by Wayne Landsman.   Further  information
+on MRDFITS is available in the mrdfits.txt file in this directory or at 
 http://idlastro.gsfc.nasa.gov/mrdfits.html.
 
 To compile MRDFITS and MWRFITS the following procedures must be included in
 the !PATH
 	FXADDPAR, FXPAR(), FXPARPOS()             (in pro/fits_bintable)
-	IEEE_TO_HOST, IS_IEEE_BIG(), MRD_SKIP     (in pro/misc)
-        GETTOK(), VALID_NUM()
-	FXPOSIT, MRD_HREAD                        (in pro/fits)
+        GETTOK(), VALID_NUM()                     (in pro/misc)
+	FXMOVE, FXPOSIT, MRD_HREAD, MRD_SKIP      (in pro/fits)
 	MRD_STRUCT()                              (in pro/structure)
 
 
-   (2) The procedure READFITS can be used to read FITS headers and arrays into
+   (2) The function READFITS can be used to read FITS headers and arrays into
 IDL variables.   Additional procedures in the pro/fits_table directory
 are then required to interpret binary and ASCII tables.   The FT* procedures in 
 the /fits_table directory are used to interpret a FITS ASCII table, and the
@@ -50,8 +46,8 @@ ASCII tables.    Further information on these procedures is available in the
 LaTeX file fits_bintable.tex in the /text directory.
 
   (4) The five procedures FITS_CLOSE, FITS_HELP, FITS_OPEN, FITS_READ, and
-FITS_WRITE were written by D. Lindler (NASA/Goddard) and are used by
-the STIS/NICMOS instrument teams on the Hubble Space Telescope (HST).     These
+FITS_WRITE were originally written by D. Lindler (NASA/Goddard) for handling
+data from the Hubble Space Telescope (HST).     These
 procedures are especially efficient for FITS files with many extensions, and
 they also recognize conventions used in HST FITS files that are not part of the
 standard FITS definition.   Like READFITS/WRITEFITS, these procedures require
@@ -60,11 +56,6 @@ further processing of binary and ASCII tables, by using procedures in the
 to provide a quick and easy extraction of FITS ASCII or Binary  tables into IDL
 vectors.
 
-Besides the four main categories above, other FITS procedures are available to 
-read/write FITS files on tape, or to convert between FITS and the STSDAS 
-format (.hhh and .hhd files) used for HST data.  (See pro/sdas/README for info
-on the STSDAS format.)  This README file should be monitored for improvements 
-in the FITS I/O package.
 
 A FITS header is a string array with 80 characters per line.    Using the IDL
 PRINT command to display the header will result in a space between every
@@ -85,8 +76,8 @@ The available FITS I/O routines can be summarized as follows:
       structure to a FITS file.   
 
       READFITS() will read a disk FITS file into IDL data and header arrays. It
-      can handle REAL*4 and REAL*8 data and extensions but not random group
-      FITS.     READFITS() also has STARTROW and NUMROW keywords to read
+      handles all legal FITS formats except random groups.
+      READFITS() also has STARTROW and NUMROW keywords to read
       selected rows from a primary image or extension.  
       READFITS() can  directly read a gzip or Unix compress file.   ASCII and 
       binary tables require further processing with the FT* and TB* procedures 

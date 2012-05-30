@@ -11,7 +11,6 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
 ;   Uses the IDL SOCKET command to provide a positional query of any catalog 
 ;   in the the Vizier (http://vizier.u-strasbg.fr/) database over the Web and
 ;   return results in an IDL structure.    
-;   Modified in May 2006 to return an anonymous rather than a named structure.
 ; 
 ;    
 ; CALLING SEQUENCE: 
@@ -24,7 +23,7 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
 ;            http://vizier.u-strasbg.fr/vizier/cats/U.htx . 
 ;
 ;            Popular VIZIER catalogs include  
-;            'II/282' - Sloan SDSS photometric catalog Release 6 (2007)
+;            'II/294' - Sloan SDSS photometric catalog Release 7 (2009)
 ;            '2MASS-PSC' - 2MASS point source catalog (2003)
 ;            'GSC2.3' - Version 2.3.2 of the HST Guide Star Catalog (2006)
 ;            'USNO-B1' - Verson B1 of the US Naval Observatory catalog (2003)
@@ -80,7 +79,7 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
 ;   
 ;          CONSTRAINT - string giving additional nonpositional numeric 
 ;            constraints on the entries to be selected.     For example, when 
-;            in the GSC2.2  catalog, to only select sources with Rmag < 16 set 
+;            in the GSC2.3  catalog, to only select sources with Rmag < 16 set 
 ;            Constraint = 'Rmag<16'.    Multiple constraints can be 
 ;            separated by commas.    Use '!=' for "not equal", '<=' for smaller
 ;            or equal, ">=" for greater than or equal.  See the complete list
@@ -88,12 +87,12 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
 ;                 http://vizier.u-strasbg.fr/doc/asu.html#AnnexQual
 ;            For this keyword only, **THE COLUMN NAME IS CASE SENSITIVE** and 
 ;            must be written exactly as displayed on the VIZIER Web page.  
-;            Thus for the GSC2.2 catalog one must use 'Rmag' and not 'rmag' or
+;            Thus for the GSC2.3 catalog one must use 'Rmag' and not 'rmag' or
 ;            'RMAG'.    In addition, *DO NOT INCLUDE ANY BLANK SPACE* unless it 
 ;            is a necessary part of the query.
 ;         
 ;           /SILENT - If set, then no message will be displayed if no sources
-;                are found.    Errror messages are still displayed.
+;                are found.    Error messages are still displayed.
 ;           /VERBOSE - If set then the query sent to the VIZIER site is
 ;               displayed, along with the returned title(s) of found catalog(s)
 ; EXAMPLES: 
@@ -103,10 +102,10 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
 ;          IDL>  info = queryvizier('2MASS-PSC','m13',10)
 ;          IDL> plothist,info.jmag,xran=[10,20]
 ;
-;          (2)  Find the brightest R magnitude GSC2.2 source within 3' of the 
+;          (2)  Find the brightest R magnitude GSC2.3 source within 3' of the 
 ;               J2000 position ra = 10:12:34, dec = -23:34:35
 ;          
-;          IDL> str = queryvizier('GSC2.2',[ten(10,12,34)*15,ten(-23,34,35)],3)
+;          IDL> str = queryvizier('GSC2.3',[ten(10,12,34)*15,ten(-23,34,35)],3)
 ;          IDL> print,min(str.rmag,/NAN)
 ;
 ;          (3) Find sources with V < 19 in the Magellanic Clouds Photometric 
@@ -124,14 +123,13 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
 ;         IDL> str = queryvizier('I/259/TYC2','NONE',constrain='BTmag=13+/-0.1')
 ;
 ; PROCEDURES USED:
-;          GETTOK(),IDL_VALIDNAME()(if prior to V6.0), REMCHAR, REPSTR(),
-;          STRCOMPRESS2(), WEBGET()
+;          GETTOK(), REMCHAR, REPSTR(), STRCOMPRESS2(), WEBGET()
 ; TO DO:
 ;       (1) Allow specification of output sorting
 ; MODIFICATION HISTORY: 
 ;         Written by W. Landsman  SSAI  October 2003
 ;         Give structure name returned by VIZIER not that given by user
-;                    W. Landsman   Feburary 2004 
+;                    W. Landsman   February 2004 
 ;         Don't assume same format for all found sources W. L. March 2004
 ;         Added CONSTRAINT keyword for non-positional constraints WL July 2004
 ;         Remove use of EXECUTE() statement WL June 2005
@@ -154,6 +152,8 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
 ;         Use STRCOMPRESS2()to remove blanks around operators in constraint
 ;              string  W.L.  August 2008
 ;         Added /SILENT keyword  W.L.  Jan 2009
+;         Avoid error if output columns but not data returned W.L. Mar 2010
+;         Ignore vector tags (e.g. SED spectra) W.L.   April 2011
 ;-
   compile_opt idl2
   if N_params() LT 2 then begin
@@ -265,18 +265,27 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
   dum = gettok(trow,' ')
   colname = gettok(trow,' ')
   fmt = gettok(trow,' ')
+
   remchar,fmt,'('
   remchar,fmt,')' 
   remchar,colname,')'
-  val = fix(strmid(fmt,1,4))
-  if !VERSION.RELEASE GE '6.4' then $
+   if !VERSION.RELEASE GE '6.4' then $
           colname = IDL_VALIDNAME(colname,/convert_all) else $
   for i=0,N_elements(colname)-1 do $
          colname[i] = IDL_VALIDNAME(colname[i],/convert_all)
 
+ 
+; Find the vector tags (Format begins with a number) and remove them 
+
+ bad = where(stregex(fmt,'^[0-9]') GE 0, Nbad)
+ if Nbad GT 0 then remove,bad,fmt,colname 
+ 
  ntag = N_elements(colname)
  fmt = strupcase(fmt)
+ val = fix(strmid(fmt,1,4))
+ 
  for i=0,Ntag-1 do begin
+
  case strmid(fmt[i],0,1) of 
  
   'A': cval = ' '
@@ -287,6 +296,7 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
    else: message,'ERROR - unrecognized format ' + fmt[i]
  
   endcase
+
 
    if i EQ 0 then   info = create_struct(colname[0], cval) else begin
 	   ; If you set the /ALLCOLUMNS flag, in some cases (2MASS) you
@@ -299,10 +309,15 @@ function Queryvizier, catalog, target, dis, VERBOSE=verbose, CANADA = canada, $
  endfor
 
   i0 = max(lcol) + 4  
+  if i0 GT (N_elements(t)-1) then begin 
+       message,'No sources found within specified radius',/INF
+       return,-1
+  endif
+  
   iend = where( t[i0:*] EQ '', Nend)
   if Nend EQ  0  then iend = N_elements(t) else iend = iend[0] + i0
   nstar = iend - i0 
-    info = replicate(info, nstar)
+  info = replicate(info, nstar)
 
 ; Find positions of tab characters 
   t = t[i0:iend-1]

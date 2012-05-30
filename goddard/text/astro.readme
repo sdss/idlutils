@@ -1,4 +1,4 @@
-                                                              July 2003
+/astro                                                              October 2009
 
 This directory includes about 80 mostly self-contained astronomy utilities.
 
@@ -6,17 +6,11 @@ The procedure UVBYBETA uses the non-standard system variable !TEXTOUT.
 The procedure ASTROLIB can be used to add this system variable to one's
 session.
 
-The procedure WCS_DEMO  demonstrates the world coordinate system (WCS) 
-transformation procedures WCSSPH2XY and WCSXY2SPH.   Information on the 
-proposed WCS standards is available from 
-http://fits.cv.nrao.edu/documents/wcs/wcs.html.    WCS_DEMO requires use of the
-SPHDIST() function in the /jhuapl directory.
-
-The routines JPLEPHREAD and JPLINTERP require a FITS file containing a JPL (Jet
-Propulsion Laboratory) ephemeris for solar system bodies.    A copy of the
+The routines JPLEPHREAD and JPLEPHINTERP require a FITS file containing a JPL
+(Jet Propulsion Laboratory) ephemeris for solar system bodies.    A copy of the
 DE405 ephemeris FITS file  JPLEPH.405 is available in
-http://idlastro.gsfc.nasa.gov/ftp/data/ but note that this file is not
-included in the IDL Astronomy Library tar files. 
+http://idlastro.gsfc.nasa.gov/ftp/data/ but note that this file is not included
+in the IDL Astronomy Library tar files. 
 
 Additional time conversion procedures such as those to convert between 
 Julian date and International Atomic Time (TAI) are located in 
@@ -72,6 +66,7 @@ GET_DATE - Get the current date in CCYY-MM-DD format (FITS standard)
 GET_JULDATE - Get the current Julian date as a double precision scalar
 GLACTC- Convert between Galactic and equatorial coordinates at any 
         equinox   
+GLACTC_PM - Convert between celestial and Galactic (or Supergalactic) proper motion
 HADEC2ALTAZ -  Converts Hour Angle and Declination to Horizon (alt-az) coordinates                                 
 HELIO - Compute (low-precision) heliocentric coordinates of the planets 
 HELIO_JD() - Convert geocentric (reduced) Julian date to heliocentric Julian date

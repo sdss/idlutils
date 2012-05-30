@@ -55,11 +55,13 @@ Pro CleanPlot, silent=silent, ShowOnly = showonly ;Reset System  Variables
 ;       Default !P.color is 16777215 for 16 bit systems 
 ;                       W. Landsman/M. Hadfield   November 2001 
 ;       Added ShowOnly keyword   W. Landsman      April 2002
+;       Use V6.0 notation W. Landsman April 2011
 ;       
 ;-
- if not keyword_set(silent) then silent=0B
+ compile_opt idl2
 
  On_error,2
+ silent =  keyword_set(silent) 
  if keyword_set(showonly) then begin
      print,'Current Plotting System Variables with non-default Values'
      clearing = ''
@@ -97,7 +99,7 @@ for i=0,n_tags(!X)-1 do $
  if !D.NAME EQ 'PS' then begin 
           P_old.background = 255
           P_old.color = 0 
- endif else if  ( (!D.NAME EQ 'X') or (!D.NAME EQ 'MAC') or $
+ endif else if  ( (!D.NAME EQ 'X') || (!D.NAME EQ 'MAC') || $
                   (!D.NAME EQ 'WIN') ) then begin
           device,get_visual_depth = depth  
           if depth GT 8 then P_old.color = 16777215 else $
@@ -109,8 +111,8 @@ for i=0,n_tags(!X)-1 do $
    for i=0, N_elements(P_var)-1 do begin
      if i NE 3 then begin 
      n = N_elements(!P.(i))
-     if ( total( (!P.(i) EQ P_old.(i))) NE n ) then Begin
-         if not silent then $
+     if ~array_equal(!P.(i), P_old.(i))  then Begin
+         if ~silent then $
             Print,clearing +  '!P.'+P_var[i]+ oldvalue +'=',!P.(i)
         if reset then !P.(i) = P_old.(i)
         EndIf
@@ -124,21 +126,20 @@ for i=0,n_tags(!X)-1 do $
  for i = 0, n_tags(!X)-1 do begin
    if total( i EQ [7,8,11,12] ) EQ 0 then begin  ;Skip S,CRANGE,WINDOW,REGION
        n = N_elements(!X.(i))
-
-       if ( total( (!X.(i) EQ X_old.(i))) NE n ) then Begin
-       if not silent then $
+       if ~array_equal(!X.(i) , X_old.(i)) then Begin
+       if ~silent then $
           Print,clearing + '!X.'+X_var[i]+ oldvalue + '=', !X.(i)
        if reset then !X.(i) = X_old.(i)
        EndIf
  
-       if (total( (!Y.(i) EQ Y_old.(i))) NE n ) then Begin
-       if not silent then $
+       if ~array_equal(!Y.(i), Y_old.(i)) then Begin
+       if ~silent then $
           Print,clearing + '!Y.'+Y_var[i]+ oldvalue + '=', !Y.(i)
        if reset then !Y.(i) = Y_old.(i)
        EndIf
 
-       if (total( (!Z.(i) EQ Z_old.(i))) NE n) then Begin
-       if not silent then $
+       if ~array_equal(!Z.(i), Z_old.(i)) then Begin
+       if ~silent then $
           Print,clearing +'!Z.'+Z_var[i]+ oldvalue + '=',!Z.(i)
        if reset then !Z.(i) = Z_old.(i)
        EndIf

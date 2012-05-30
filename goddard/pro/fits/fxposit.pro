@@ -1,7 +1,7 @@
         FUNCTION FXPOSIT, XFILE, EXT_NO, readonly=readonly, COMPRESS=COMPRESS, $
                  SILENT = Silent, EXTNUM = extnum, ERRMSG= ERRMSG, $
 		 LUNIT = lunit, UNIXPIPE= unixpipe, FPACK= fpack, $
-		 HEADERONLY = headeronly
+		 NO_FPACK = no_fpack,HEADERONLY=headeronly
 ;+
 ; NAME:
 ;     FXPOSIT
@@ -16,10 +16,14 @@
 ;     when opening a file, and **may not be compatible with earlier versions**
 ; CALLING SEQUENCE:
 ;     unit=FXPOSIT(FILE, EXT_NO_OR_NAME, /READONLY, COMPRESS=program, 
-;                       UNIXPIPE=, ERRMSG= , EXTNUM= , UNIT=, /SILENT)
+;                       UNIXPIPE=, ERRMSG= , EXTNUM= , UNIT=, /SILENT
+;                        /FPACK, /NO_FPACK
 ;
 ; INPUT PARAMETERS:
-;     FILE    = FITS file name, scalar string
+;     FILE    = FITS file name, scalar string.    If an empty string is supplied
+;              then the user will be prompted for the file name.   The user
+;              will also be prompted if a wild card is supplied, and more than 
+;              one file matches the wildcard.
 ;     EXT_NO_OR_NAME  = Either the extension to be moved to (scalar 
 ;               nonnegative integer) or the name of the extension to read 
 ;               (scalar string)
@@ -40,13 +44,14 @@
 ;               (FXPOSIT will assume that if the file name extension ends in 
 ;              .fz that it is fpack compressed.)     The FPACK software must
 ;               be installed on the system 
-;     /HEADERONLY - The unit will only be used to read the FITS header.  In
+;     /NO_FPACK - The unit will only be used to read the FITS header.  In
 ;                 that case FPACK compressed files need not be uncompressed.
 ;      LUNIT -    Integer giving the file unit number.    Use this keyword if
 ;                you want to override the default use of GET_LUN to obtain
 ;                a unit number.
 ;     /READONLY - If this keyword is set and non-zero, then OPENR rather 
-;                than OPENU will be used to open the FITS file.
+;                than OPENU will be used to open the FITS file.    Note that
+;                 compressed files are always set to /READONLY
 ;     /SILENT    If set, then suppress any messages about invalid characters
 ;                in the FITS file.
 ;
@@ -59,11 +64,11 @@
 ;                 encountered, then a null string is returned.
 ;       UNIXPIPE - If set to 1, then the FITS file was opened with a UNIX pipe
 ;                rather than with the OPENR command.    This is only required 
-;                when reading a FPACK, bzip or Unix compressed file.   Note 
-;                that automatic byteswapping cannnot be set for a Unix pipe, 
-;                since the SWAP_IF_LITTLE_ENDIAN keyword is uavailable, and it 
-;                is the responsibilty of the calling routine to perform the 
-;                byteswapping.
+;                 when reading a FPACK, bzip or Unix compressed file.   Note 
+;                 that automatic byteswapping cannnot be set for a Unix pipe, 
+;                 since the SWAP_IF_LITTLE_ENDIAN keyword is only available for the
+;                 OPEN command, and it is the responsibilty of the calling 
+;                 routine to perform the byteswapping.
 ; SIDE EFFECTS:
 ;      Opens and returns a file unit.
 ; PROCEDURE:
@@ -100,25 +105,41 @@
 ;       N. Rich        May 2009    Check if filename is an empty string
 ;       W. Landsman   May 2009     Support FPACK compressed files
 ;                                  Added /FPACK, /HEADERONLY keywords
+;       W.Landsman    July 2009    Deprecated /HEADERONLY add /NO_FPACK
+;       W.Landsman    July 2011    Check for SIMPLE in first 8 chars 
+;               Use gunzip to decompress Unix. Z file since compress utility 
+;               often not installed anymore)
 ;-
 ;
-        ON_ERROR,2
+        On_Error,2
         compile_opt idl2  
 ;
 ;  Check the number of parameters.
 ;
-        IF N_PARAMS() LT 2 THEN BEGIN 
+        IF N_Params() LT 2 THEN BEGIN 
             PRINT,'SYNTAX:  UNIT = FXPOSIT(FILE, EXT_NO, /Readonly,' + $
 	                   'ERRMSG= , /SILENT, compress=prog, LUNIT = lunit)'
             RETURN,-1
         ENDIF
-        PRINTERR = NOT ARG_PRESENT(ERRMSG)
+        PRINTERR = ~ARG_PRESENT(ERRMSG)
 	ERRMSG = ''
 	UNIXPIPE=0
+; The /headeronly keyword has been replaced with /no_fpack	
+        if ~keyword_set(no_fpack) then no_fpack = keyword_set(headeronly)
+	exten = ext_no
 
    	COUNT=0
-	IF XFILE[0] NE '' THEN $
-             FILE = FILE_SEARCH(XFILE, COUNT=COUNT)         
+	IF XFILE[0] NE '' THEN BEGIN 
+             FILE = FILE_SEARCH(XFILE, COUNT=COUNT)  
+	     IF COUNT GT 1 THEN $
+	          FILE = DIALOG_PICKFILE(FILTER=XFILE, /MUST_EXIST, $
+		         TITLE = 'Please select a FITS file')
+	ENDIF ELSE BEGIN 
+             FILE =DIALOG_PICKFILE(FILTER=['*.fit*;*.fts*;*.img*;*.FIT*'], $
+	           TITLE='Please select a FITS file',/MUST_EXIST)
+         ENDELSE
+             COUNT = N_ELEMENTS(FILE)
+	            
 
         IF COUNT EQ 0 THEN BEGIN
 	    ERRMSG = 'Specified FITS File not found ' + XFILE[0]
@@ -152,36 +173,44 @@
         
             LEN = STRLEN(FILE)
             IF LEN GT 3 THEN $
-	        TAIL = STRLOWCASE(STRMID(FILE, LEN-3, 3))  $
-	    ELSE TAIL = ' '
+	        tail = STRLOWCASE(STRMID(file, len-3, 3))  $
+	    ELSE tail = ' '
 	    
-            IF STRMID(TAIL,1,2) EQ '.z'  THEN $
-                UCMPRS = 'uncompress'   $
-	    ELSE IF TAIL EQ '.gz' or tail EQ 'ftz' THEN $
-	        UCMPRS = 'gunzip'       $
-	    ELSE IF TAIL EQ 'bz2' THEN $
+            IF STRMID(tail,1,2) EQ '.z'  THEN $
+                UCMPRS = 'gunzip'   $
+	    ELSE IF (tail EQ '.gz') || (tail EQ 'ftz') THEN $
+	        UCMPRS = 'gzip'       $
+	    ELSE IF tail EQ 'bz2' THEN $
 	        UCMPRS = 'bunzip2'     $
-	    ELSE IF NOT KEYWORD_SET(HEADERONLY) THEN $
-	          IF TAIL EQ '.fz' THEN UCMPRS = 'funpack'	
+	    ELSE IF ~KEYWORD_SET(NO_FPACK) THEN $
+	          IF tail EQ '.fz' THEN UCMPRS = 'funpack'	
 	    
 	ENDELSE
 
-;  Handle compressed files.
+;  Handle compressed files which are always opened for Read only.
 
-	IF UCMPRS EQ 'gunzip' THEN BEGIN
+	IF UCMPRS EQ 'gzip' THEN BEGIN
 	        
-                IF KEYWORD_SET(READONLY) THEN $
-                    OPENR, UNIT, FILE, /COMPRESS, GET_LUN=glun, ERROR = ERROR, $
-		           /SWAP_IF_LITTLE ELSE        $  
-                    OPENU, UNIT, FILE, /COMPRESS, GET_LUN=glun, ERROR = ERROR, $
-		           /SWAP_IF_LITTLE
-			   
-;  Spawn to open a pipe to a Unix, bzip2, or FPACK compressed file.    This
-;  capability is  available on all Unix amchines and Windows machines since 
-;  V6.3 
+                OPENR, UNIT, FILE, /COMPRESS, GET_LUN=glun, ERROR = ERROR, $
+		           /SWAP_IF_LITTLE       
+                IF ERROR NE 0 THEN BEGIN
+                        IF PRINTERR THEN PRINT,!ERROR_STATE.MSG ELSE $
+			    ERRMSG = !ERROR_STATE.MSG 
+                        RETURN,-1
+                ENDIF
+ 
 	ENDIF ELSE IF UCMPRS NE ' ' THEN BEGIN
-		        if UCMPRS EQ 'funpack' then $
-			SPAWN, [UCMPRS,'-S',FILE], UNIT=UNIT, /NOSHELL ELSE $
+; Handle FPACK compressed file.        If an extension name is supplied then
+; first recursively call FXPOSIT to get the extension number.    Then open 
+; the bidirectional pipe. 	
+		        if UCMPRS EQ 'funpack' then begin
+			if size(exten,/TNAME) EQ 'STRING' THEN BEGIN
+			unit = fxposit( file, ext_no, /no_fpack,extnum=extnum)
+			free_lun,unit
+			exten = extnum
+			endif 
+			SPAWN, [UCMPRS,'-S',FILE], UNIT=UNIT, /NOSHELL 
+			ENDIF else $
                         SPAWN, [UCMPRS,'-c',FILE], UNIT=UNIT, /NOSHELL
 			UNIXPIPE = 1
                   
@@ -205,12 +234,25 @@
         IF SIZE(EXT_NO,/TNAME) NE 'STRING' THEN $
 	      IF EXT_NO LE 0 THEN RETURN, UNIT
 
-	STAT = FXMOVE(UNIT, EXT_NO, SILENT = Silent, EXT_NO = extnum, $
-	ERRMSG=ERRMSG)
-	IF STAT LT 0 THEN BEGIN
-            IF(NOT KEYWORD_SET(LUNIT)) THEN FREE_LUN, UNIT
-	    RETURN, STAT
-	ENDIF ELSE RETURN, UNIT
+;For Uncompresed files test that the first 8 characters are 'SIMPLE'
+
+        IF ucmprs EQ ' ' THEN BEGIN
+          simple = BytArr(6)
+	  READU,unit,simple
+          if string(simple) NE 'SIMPLE' then begin 
+                IF ~KEYWORD_SET(LUNIT) THEN Free_Lun, unit
+	        ERRMSG = "ERROR - FITS File must begin with 'SIMPLE'" 
+		if printerr THEN MESSAGE,errmsg,/CON
+		return,-1
+           endif 	
+	point_lun,unit,0    	
+	endif
+	stat = FXMOVE(unit, exten, SILENT = Silent, EXT_NO = extnum, $
+	ERRMSG=errmsg)
+
+	IF stat LT 0 THEN BEGIN
+            IF ~KEYWORD_SET(LUNIT) THEN Free_Lun, unit
+	    IF PrintErr THEN MESSAGE,ErrMsg
+	    RETURN, stat
+	ENDIF ELSE RETURN, unit
 END
-
-

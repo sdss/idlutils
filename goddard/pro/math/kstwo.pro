@@ -42,9 +42,9 @@
 ; REVISION HISTORY:
 ;       Written     W. Landsman                August, 1992
 ;       FP computation of N_eff      H. Ebeling/W. Landsman  March 1996
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Fix for arrays containing equal values J. Ballet/W. Landsman Oct. 2001
 ;       Fix index when maximum difference is at array end Renbin Yan  Dec 2008
+;       Handle large number when computing N_err  D. Schnitzeler/WL  Sep 2010
 ;-
   On_error, 2
   compile_opt idl2 
@@ -93,7 +93,7 @@
 ; funtions
 
  D = max( abs( fn1[id1] - fn2[id2] ) ) 
- N_eff =  n1*n2/ float(n1 + n2)              ;Effective # of data points
+ N_eff =  long64(n1)*n2/ float(n1 + n2)           ;Effective # of data points
  PROB_KS, D, N_eff, prob                ;Compute significance of statistic
 
  return

@@ -46,8 +46,10 @@ pro PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new, FK4 = FK4
 ;       Fixed sign error in computation of SINRA     March 1992
 ;       Added /FK4 keyword                           Feb 1994
 ;       Converted to IDL V5.0   W. Landsman   September 1997
+;       Use B/Jprecess for conversion between 1950 and 2000 W.L. Aug 2009
 ;-    
   On_error,2
+  compile_opt idl2
 
   if N_params() LT 3 then begin    
       print,'Syntax: precess_cd, cd, epoch1, epoch2, crval_old, crval_new
@@ -82,7 +84,13 @@ pro PRECESS_CD, cd, epoch1, epoch2, crval_old, crval_new, FK4 = FK4
 ; Get RA of old pole in new coordinates
 
   pole_ra = 0. & pole_dec = 90.d       ;Coordinates of old pole (RA is arbitrary)
-  precess, pole_ra, pole_dec, epoch1, epoch2, FK4 = FK4    
+  if (epoch1 EQ 2000) && (epoch2 EQ 1950) then begin
+    bprecess, pole_ra, pole_dec,pra,pdec
+    pole_ra =  pra
+  endif else if (epoch1 EQ 1950) and (epoch2 EQ 2000) then begin
+     bprecess, pole_ra, pole_dec,pra,pdec
+     pole_ra =  pra    
+  endif else precess, pole_ra, pole_dec, epoch1, epoch2, FK4 = FK4    
 
   sind1 = sin( crvalold[1] ) &  sind2 = sin( crvalnew[1] )
   cosd1 = cos( crvalold[1] ) &  cosd2 = cos( crvalnew[1] )

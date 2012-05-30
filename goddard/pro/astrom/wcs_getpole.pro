@@ -22,12 +22,13 @@
 ;       theta0 - native latitude of the fiducial point
 ; OUTPUT PARAMETERS:
 ;       alpha_p, delta_p - celestial longitude and latitude of the native pole
-;               (degrees)
+;               (Radians)
 ; OPTIONAL KEYWORD INPUT PARAMETERS:
 ;       LATPOLE - native latitude of the celestial North Pole (degrees)
 ; REVISION HISTORY:
 ;       Written    W. Landsman               June, 2003
 ;       Fix calculation when theta0 is not 0 or 90     February 2004
+;       E. Hivon: alpha_p, delta_p consistenly in Radians May 2010
 ;-
 
 pro WCS_GETPOLE, crval, lonpole, theta0, alpha_p, delta_p, LATPOLE = latpole
@@ -47,6 +48,7 @@ pro WCS_GETPOLE, crval, lonpole, theta0, alpha_p, delta_p, LATPOLE = latpole
  alpha_0 = double(crval[0])/radeg
  delta_0 = double(crval[1])/radeg
 
+
   if theta0 EQ 90 then begin
      alpha_p = alpha_0
      delta_p = delta_0
@@ -56,10 +58,11 @@ pro WCS_GETPOLE, crval, lonpole, theta0, alpha_p, delta_p, LATPOLE = latpole
 ; Longpole is the longitude in the native system of the North Pole in the
 ; standard system (default = 180 degrees).
 
- phi_p = double(lonpole)/radeg
+ phi_p   = double(lonpole)/radeg
+ theta_p = double(latpole)/radeg
  sp = sin(phi_p)
  cp = cos(phi_p)
-  sd = sin(delta_0)
+ sd = sin(delta_0)
  cd = cos(delta_0)
  tand = tan(delta_0)
 
@@ -68,12 +71,11 @@ pro WCS_GETPOLE, crval, lonpole, theta0, alpha_p, delta_p, LATPOLE = latpole
 ; with theta0 = 0) to give the coordinates of the North pole (alpha_p, delta_p)
 
  if (theta0 EQ 0.0) then begin
-        if (delta_0 EQ 0) and (lonpole EQ 90.0d) then delta_p = latpole else $
+        if (delta_0 EQ 0) && (abs(lonpole) EQ 90.0d) then delta_p = theta_p else $
         delta_p = acos( sd/cp)               ;Updated May 98
-        if (latpole NE 90) then  $
-            if abs(latpole + delta_p) LT abs(latpole - delta_p) then  $
-            delta_p = -delta_p  
-        if (lonpole EQ 1.8d2) or (cd EQ 0.0) then alpha_p = alpha_0 else $
+        if (latpole NE 90 && abs(theta_p + delta_p) LT abs(theta_p - delta_p))$
+          then delta_p = -delta_p
+        if (lonpole EQ 1.8d2) || (cd EQ 0.0) then alpha_p = alpha_0 else $
                 alpha_p = alpha_0  - atan(sp/cd, -tan(delta_p)*tand )
  endif else begin                ;General case for arbitary theta0
         ctheta = cos(theta0/RADEG)

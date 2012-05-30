@@ -39,6 +39,8 @@
 ;                       Added optional output parameter VALUE to allow
 ;                       VALID_NUM to replace STRNUMBER in FITS routines.
 ;          Version 3 Wayne Landsman rewrite to use STREGEX, vectorize
+;          Version 4 W.L. (fix from C. Markwardt) Better Stregex expression, 
+;                    was missing numbers like '134.' before Jan 1 2010
 ;-            
 
 FUNCTION valid_num, string, value, INTEGER=integer
@@ -46,11 +48,11 @@ FUNCTION valid_num, string, value, INTEGER=integer
  compile_opt idl2 
  
 ; A derivation of the regular expressions below can be found on 
-; http://www.tcl.tk/man/tcl8.5/tutorial/Tcl20a.html
+; http://wiki.tcl.tk/989
 
    if keyword_set(INTEGER) then $ 
     st = '^[-+]?[0-9][0-9]*$'  else $                    ;Integer
-    st = '^[-+]?[0-9]*\.?[0-9]+([eEdD][-+]?[0-9]+)?$'    ;Floating Point
+     st = '^[-+]?([0-9]+\.?[0-9]*|\.[0-9]+)([eEdD][-+]?[0-9]+)?$' ;F.P.
    
 ;Simple return if we just need a boolean test.
     if N_params() EQ 1 then return, stregex(strtrim(string,2),st,/boolean)

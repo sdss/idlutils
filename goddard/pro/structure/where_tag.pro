@@ -52,9 +52,12 @@ function where_Tag, Struct, Nfound,	TAG_NAME=Tag_Name,	$
 ; MODIFICATION HISTORY:
 ;	written 1990 Frank Varosi STX @ NASA/GSFC
 ;	Stop printing "Tag <xxx> not found" with /NOPRINT, CD Pike 8-Jun-93
+;       Use STRJOIN for display  W.L. July 2009
 ;-
 ;First check required parameters...
 
+        On_Error,2
+	compile_opt idl2
 	Ntag = N_tags( Struct )
 
 	if (Ntag LE 1) then begin
@@ -152,9 +155,7 @@ function where_Tag, Struct, Nfound,	TAG_NAME=Tag_Name,	$
 		  endelse
 
 		if (Nfound LE 0) AND (NOT keyword_set( noprint ) ) then begin
-			strnums = strtrim( vals, 2 )
-			string = strnums[0]
-			for i=1,Nval-1 do string = string + "," + strnums[i]
+			string = strjoin( strtrim(vals,2) ,',') 
 			message," NO values of <" + Tags[Tag_num] + $
 				"> found Equaling [" + string + "]",/CONTIN
 		   endif

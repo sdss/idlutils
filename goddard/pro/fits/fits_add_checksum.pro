@@ -38,6 +38,7 @@ pro fits_add_checksum, hdr, im, no_timestamp = no_timestamp, $
 ;     Avoid conversion error when DATASUM is an empty string  W.L.  June 2008
 ;     Don't update DATASUM if not already present and no data array supplied 
 ;                       W.L. July 2008 
+;     Make sure input header array has 80 chars/line  W.L. Aug 2009
 ;-
  On_error,2
  compile_opt idl2
@@ -82,7 +83,13 @@ pro fits_add_checksum, hdr, im, no_timestamp = no_timestamp, $
  if N_CHECKSUM GT 0 then verb = 'updated ' else verb = 'created '
  sxaddpar,hdr,'CHECKSUM','0000000000000000', $
        ' HDU checksum ' + verb + tm   ;Initialize CHECKSUM keyword
- bhdr = byte(hdr)
+;Make sure each line in header is 80 characters
+ if ~array_equal(strlen(hdr),80) then begin
+     n = N_elements(hdr)
+     bhdr = replicate(32b,80,n )
+     for i=0, n-1 do bhdr[0,i] = byte(hdr[i])
+ endif else bhdr = byte(hdr)
+
  remain = N_elements(bhdr) mod 2880 
  if remain  NE 0 then $
        bhdr = [reform(bhdr,N_elements(bhdr)), replicate(32b, 2880 - remain) ]

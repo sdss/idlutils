@@ -55,10 +55,11 @@ pro db_item,items,itnum,ivalnum,idltype,sbyte,numvals,nbytes,errmsg=errmsg
 ;       Written:   D. Lindler, GSFC/HRS, October 1987
 ;       Version 2, William Thompson, GSFC, 17-Mar-1997
 ;                       Added keyword ERRMSG
-;       Converted to IDL V5.0   W. Landsman   October 1997
 ;       Use STRSPLIT instead of GETTOK to parse form 1, W. Landsman July 2002
 ;       Assume since V5.4 use FILE_EXPAND_PATH() instead of SPEC_DIR()
 ;               W. Landsman April 2006
+;       Support new DB format allowing entry lengths > 32767 bytes WL Oct 2010
+;       Ignore blank lines in .items file WL February 2011
 ;-
 ;
 ;------------------------------------------------------------------------
@@ -78,7 +79,7 @@ common db_com,QDB,QITEMS,QLINK
 ;         0-18   data base name character*19
 ;         19-79  data base title character*61
 ;         80-81  number of items (integer*2)
-;         82-83  record length of DBF file (integer*2)
+;         82-83  record length of DBF file (integer*2) old DB format
 ;         84-87  number of entries in file (integer*4)
 ;         88-89  position of first item for this file in QITEMS (I*2)
 ;         90-91  position of last item for this file (I*2)
@@ -88,6 +89,8 @@ common db_com,QDB,QITEMS,QLINK
 ;         98-99  Index number of item pointing to this file (0 for first db)
 ;         100-103 Number of entries with space allocated
 ;         104    Update flag (0 open for read only, 1 open for update)
+;         105-108  record length of DBF file (integer*4) 
+;         118    Equals 1 if database can store records larger than 32767 bytes
 ;         119    Equals 1 if external data representation (IEEE) is used
 ;
 ;  QITEMS(*,i) contains decription of item number i with following
@@ -105,9 +108,13 @@ common db_com,QDB,QITEMS,QLINK
 ;       101-119 Data base this item points to
 ;       120-125 Print format
 ;       126-170 Print headers
-;       171-172 Starting byte in record returned by DBRD
+;       171-172 Starting byte in record returned by DBRD, old DB format
 ;       173-174 Data base number in QDB
 ;       175-176 Data base number this item points to
+;       177-178 Item number within the specific data base
+;       179-182 Number of values for item (1 for scalar) (integer*4)
+;       183-186 Starting byte position in original DBF record (integer*4)
+;       187-190 Starting byte in record returned by DBRD
 ;
 ;
 ; QLINK(i) contains the entry number in the second data base
@@ -121,10 +128,12 @@ if n_elements(qdb) lt 120 then begin
         message = 'data base file not open'
         goto, handle_error
 endif
+
 ;
 ; determine type of item list -------------------------------------------
 ;
 vector=1                                        ;vector output flag
+newdb = qdb[118,0] EQ 1
 s=size(items,/str)
 ndim = s.n_dimensions
 if s.type_name eq 'STRING' then begin                     ;string(s)
@@ -143,6 +152,7 @@ if s[0] ne 2 then begin
         goto, handle_error
 endif
 qnumit=s[2]
+
 ;-----------------------------------------------------------------------------
 ;       CONVERT INPUT ITEMS TO INTEGER LIST OR STRING LIST
 ;
@@ -167,6 +177,7 @@ If form eq 4 then begin
                 goto,vector
         end
 end
+
 ;
 ; Form 3 ----------------- File name
 ;
@@ -174,21 +185,20 @@ if form eq 3 then begin
         item_names=strarr(200)          ;input buffer
         if strlen(items) gt 1 then filename=strmid(items,1,strlen(items)-1) $
                                else filename=strtrim(db_info('name',0))+'.items'
-        openr,unit,filename,error=err,/get_lun    ;open file
-        if err lt 0 then begin
-            message = 'Unable to open file ' + FILE_EXPAND_PATH(filename) +     $
+        if ~file_test(filename) then begin
+            message = 'Unable to locate file ' + FILE_EXPAND_PATH(filename) +  $
                     ' with item list'
             goto, handle_error
         endif
-        nitems=0
-        while not eof(unit) do begin            ;loop on items
-            st=''
-            readf,unit,st
-            item_names[nitems]=st
-            nitems=nitems+1
-        endwhile
-        item_names=item_names[0:nitems-1]       ;extract items
-        free_lun,unit
+ 	nlines = file_lines(filename)
+        item_names = strarr(nlines)
+        openr,unit,filename,/get_lun    ;open file
+        readf,unit,item_names
+	free_lun,unit
+	item_names = strtrim(item_names,2) 
+; Remove any blank lines 	
+	good = where(strlen(item_names) GT 0, Nitems) 
+	if Nitems LT Nlines then item_names = item_names[good]	
 end
 ;
 ; form 1 ----------------- scalar string list  'item1,item2,item3...'
@@ -278,6 +288,7 @@ end
 itnum[i] =j[0] +i1                              ;save item number
 endfor;i loop on items
 if nitems eq 1 then goto,scalar                 ;speedy method
+
 ;
 ;---------------------------------------------------------------------------
 ;  We now have
@@ -286,10 +297,13 @@ if nitems eq 1 then goto,scalar                 ;speedy method
 ;               flag(s) ivalflag if subscript supplied
 ; EXTRACT OTHER PARAMETERS
 ;
+
 vector:                                         ;---- vector processing
  idltype = fix(qitems[20:21,*],0,qnumit)
- numvals = fix(qitems[22:23,*],0,qnumit)
- sbyte = fix(qitems[171:172,*],0,qnumit)
+ numvals = newdb ? long(qitems[179:182,*],0,qnumit) : $
+                  fix(qitems[22:23,*],0,qnumit)
+ sbyte =  newdb ? long(qitems[187:190,*],0,qnumit) : $
+                  fix(qitems[171:172,*],0,qnumit)
  nbytes = fix(qitems[26:27,*],0,qnumit)
  idltype = idltype[itnum]
  numvals = numvals[itnum]
@@ -315,11 +329,13 @@ if (it lt 0) or (it ge qnumit) then begin
         goto, handle_error
 endif
 ;
-idltype=fix(qitems[20:21,it],0,1)
-numvals=fix(qitems[22:23,it],0,1)
-sbyte=fix(qitems[171:172,it],0,1)
-nbytes=fix(qitems[26:27,it],0,1)
-sbyte=sbyte+nbytes*ivalnum
+idltype = fix(qitems[20:21,it],0,1)
+numvals = newdb ? long(qitems[179:182,it],0,1) : $
+                  fix(qitems[22:23,it],0,1)
+sbyte = newdb ? long(qitems[187:190,it],0,1) : $
+             fix(qitems[171:172,it],0,1)
+nbytes = fix(qitems[26:27,it],0,1)
+sbyte = sbyte+nbytes*ivalnum
 if ivalflag[0] then numvals[0]=1
 return
 ;

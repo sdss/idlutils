@@ -4,6 +4,13 @@
 ; PURPOSE:
 ;       Create an annotation legend for a plot.
 ; EXPLANATION:
+;       NOTE: This procedure is *deprecated* because IDL 8.0 contains a LEGEND() 
+;       function written in IDL.   Both can be used provided that the one found 
+;       later in one's !PATH is  explicitly compiled in one's startup file.     
+;       However we strongly recommend the use of AL_LEGEND, which is identical
+;       in use to LEGEND.    legend.pro will eventually be removed from future 
+;       releases of the IDL Astron library.
+;
 ;       This procedure makes a legend for a plot.  The legend can contain
 ;       a mixture of symbols, linestyles, Hershey characters (vectorfont),
 ;       and filled polygons (usersym).  A test procedure, legendtest.pro,
@@ -58,7 +65,11 @@
 ;               line connects pts for ith item.  If psym[i] = 8, then the
 ;               procedure usersym is called with vertices define in the
 ;               keyword usersym.   If psym[i] = 88, then use the previously
-;               defined user symbol
+;               defined user symbol.    If 11 <= psym[i] <= 46 then David
+;               Fanning's function SYMCAT() will be used for additional symbols.
+;               (http://www.idlcoyote.com/programs/symcat.pro).   Note that
+;               PSYM=10 (histogram plot mode) is not allowed since it 
+;               cannot be used with the PLOTS command.
 ;       vectorfont = vector-drawn characters for the sym/line column, e.g.,
 ;               ['!9B!3','!9C!3','!9D!3'] produces an open square, a checkmark,
 ;               and a partial derivative, which might have accompanying items
@@ -80,6 +91,7 @@
 ;       /vertical = flag to make the legend vertical (D=vertical)
 ;       box = flag to include/omit box around the legend (D=include)
 ;		  outline_color = color of box outline (D = !P.color)
+;       bthick = thickness of the legend box (D = !P.thick)
 ;       clear = flag to clear the box area before drawing the legend
 ;       delimiter = embedded character(s) between symbol and text (D=none)
 ;       colors = array of colors for plot symbols/lines (D=!P.color)
@@ -87,6 +99,8 @@
 ;       textcolors = array of colors for text (D=!P.color)
 ;       margin = margin around text measured in characters and lines
 ;       spacing = line spacing (D=bit more than character height)
+;       linsize = Scale factor for line length (0-1), default = 1
+;                 Set to 0 to give a dot, 0.5 give half default line length   
 ;       pspacing = psym spacing (D=3 characters) (when number of symbols is
 ;             greater than 1)
 ;       charsize = just like !p.charsize for plot labels
@@ -206,6 +220,11 @@
 ;       Default spacing, pspacing should be relative to charsize. M. Perrin, July 2007
 ;       Don't modify position keyword  A. Kimball/ W. Landsman Jul 2007
 ;       Small update to Jul 2007 for /NORMAL coords.  W. Landsman Aug 2007
+;       Use SYMCAT() plotting symbols for 11<=PSYM<=46   W. Landsman  Nov 2009
+;       Make a sharper box edge T. Robishaw/W.Landsman July 2010
+;       Added BTHICK keyword W. Landsman October 2010
+;       Added LINESIZ keyword W.L./V.Gonzalez   May 2011
+;       Use CHARSIZE instead of SIZE keyword in XYOUTS  W.L./S.Erard Jul 2011
 ;-
 pro legend, items, BOTTOM_LEGEND=bottom, BOX = box, CENTER_LEGEND=center, $
     CHARTHICK=charthick, CHARSIZE = charsize, CLEAR = clear, COLORS = colorsi, $
@@ -215,7 +234,7 @@ pro legend, items, BOTTOM_LEGEND=bottom, BOX = box, CENTER_LEGEND=center, $
     POSITION=position,PSPACING=pspacing, PSYM=psymi, RIGHT_LEGEND=right, $
     SPACING=spacing, SYMSIZE=symsize, TEXTCOLORS=textcolorsi, THICK=thicki, $
     TOP_LEGEND=top, USERSYM=usersym,  VECTORFONT=vectorfonti, VERTICAL=vertical, $
-    OUTLINE_COLOR = outline_color, FONT = font
+    OUTLINE_COLOR = outline_color, FONT = font, BTHICK = bthick, linsize = linsize
 ;
 ;       =====>> HELP
 ;
@@ -286,6 +305,7 @@ endelse
 if n_elements(box) eq 0 then box = 1
 if n_elements(clear) eq 0 then clear = 0
 
+if n_elements(linsize) eq 0 then linsize = 1
 if n_elements(margin) eq 0 then margin = 0.5
 if n_elements(delimiter) eq 0 then delimiter = ''
 if n_elements(charsize) eq 0 then charsize = !p.charsize
@@ -402,28 +422,32 @@ for iclr = 0,clear do begin
   if nlpv eq 0 then goto,TEXT_ONLY              ; FLAG FOR TEXT ONLY
   if (psym[i] eq 0) and (vectorfont[i] eq '') then num = (number + 1) > 3 else num = number
   if psym[i] lt 0 then num = number > 2         ; TO SHOW CONNECTING LINE
-  if psym[i] eq 0 then expand = 1 else expand = 2
+  if psym[i] eq 0 then expand = linsize else expand = 2
   xp = x + expand*pspacing*indgen(num)*xspacing
   if (psym[i] gt 0) and (num eq 1) and vertical then xp = x + xt/2.
   yp = y + intarr(num)
   if vectorfont[i] eq '' then yp = yp + yoff
   if psym[i] eq 0 then begin
-    xp = [min(xp),max(xp)]                      ; TO EXPOSE LINESTYLES
+    xp = [min(xp),max(xp) -(max(xp)-min(xp))*(1.-linsize)]   
     yp = [min(yp),max(yp)]                      ; DITTO
     endif
   if (psym[i] eq 8) and (N_elements(usersym) GT 1) then $
                 usersym,usersym,fill=fill,color=colors[i]
 ;; extra by djseed .. psym=88 means use the already defined usersymbol
- if psym[i] eq 88 then psym[i] =8
+ if psym[i] eq 88 then p_sym =8 else $
+ if psym[i] EQ 10 then $
+         message,'PSYM=10 (histogram mode) not allowed to legend.pro' $
+ else  if psym[i] GT 8 then p_sym = symcat(psym[i]) else p_sym= psym[i]
+
   if vectorfont[i] ne '' then begin
 ;    if (num eq 1) and vertical then xp = x + xt/2      ; IF 1, CENTERED.
     xyouts,xp,yp,vectorfont[i],width=width,color=colors[i] $
-      ,size=charsize,align=xalign,charthick = charthick,/norm,font=font
+      ,charsize=charsize,align=xalign,charthick = charthick,/norm,font=font
     xt = xt > width
     xp = xp + width/2.
   endif else begin
     if symline and (linestyle[i] ge 0) then plots,xp,yp,color=colors[i] $
-      ,/normal,linestyle=linestyle[i],psym=psym[i],symsize=symsize[i], $
+      ,/normal,linestyle=linestyle[i],psym=p_sym,symsize=symsize[i], $
       thick=thick[i]
   endelse
 
@@ -432,10 +456,10 @@ for iclr = 0,clear do begin
   TEXT_ONLY:
   if vertical and (vectorfont[i] eq '') and symline and (linestyle[i] eq -99) then x=x0 + xspacing
   xyouts,x,y,delimiter,width=width,/norm,color=textcolors[i], $
-         size=charsize,align=xalign,charthick = charthick,font=font
+         charsize=charsize,align=xalign,charthick = charthick,font=font
   x = x + width*xsign
   if width ne 0 then x = x + 0.5*xspacing
-  xyouts,x,y,items[i],width=width,/norm,color=textcolors[i],size=charsize, $
+  xyouts,x,y,items[i],width=width,/norm,color=textcolors[i],charsize=charsize, $
              align=xalign,charthick=charthick,font=font
   x = x + width*xsign
   if not vertical and (i lt (n-1)) then x = x+2*xspacing; ADD INTER-ITEM SPACE
@@ -462,8 +486,8 @@ for iclr = 0,clear do begin
         if vertical then bottom = n else bottom = 1
         ywidth = - (2*margin+bottom-0.5)*yspacing
         corners = [x,y+ywidth,xend,y]
-        if box then plots,[x,xend,xend,x,x],y + [0,0,ywidth,ywidth,0],/norm, $
-        	color = outline_color
+        if box then plots,[x,xend,xend,x,x,xend],y + [0,0,ywidth,ywidth,0,0],/norm, $
+        	color = outline_color,thick = bthick
         return
  endelse
 endfor

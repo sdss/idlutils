@@ -1,5 +1,6 @@
 pro lineid_plot,wave,flux,wline,text1,text2, extend=extend, $
-	lcharthick = lcharthick,lcharsize=lcharsize, _EXTRA = extra
+	lcharthick = lcharthick,lcharsize=lcharsize,window=window, $
+	 _EXTRA = extra
 ;+
 ; NAME:
 ;	LINEID_PLOT
@@ -49,8 +50,9 @@ pro lineid_plot,wave,flux,wline,text1,text2, extend=extend, $
 ;		make stronger lines have a bolder annotation. 
 ;		(default = !p.charthick)
 ;
-;	LINEID_PLOT uses the _EXTRA facility to allow the use of any plotting
-;	keywords (e.g. LINESTYLE, CHARSIZE) to be passed to the plot
+;	LINEID_PLOT uses the _EXTRA facility to allow the use of any cgPLOT
+;	keywords (e.g. AXISCOLOR, LINESTYLE, CHARSIZE) to be passed to the 
+;       plot.
 ;
 ; SIDE EFFECTS:
 ;	Program uses SET_VIEWPORT to set the !P.POSITION parameter to allow
@@ -81,8 +83,8 @@ pro lineid_plot,wave,flux,wline,text1,text2, extend=extend, $
 ;	Apr 19, 1994 DJL corrected bug in sorting of charthick (cthick)
 ;	Sep 1996, W. Landsman,  added _EXTRA keyword, changed keyword names
 ;		CHARTHICK==>LCHARTHICK, CHARSIZE==>LCHARSIZE
-;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Work with !P.MULTI   W. Landsman   December 2003
+;       Use Coyote graphics routines  W. Landsman February 2011
 ;-
 ;----------------------------------------------------------------------------
 	On_error,2
@@ -96,12 +98,12 @@ pro lineid_plot,wave,flux,wline,text1,text2, extend=extend, $
 ; initialization
 ;
 
-	if n_elements(lcharsize) eq 0 then lcharsize=1
+	setdefaultvalue, lcharsize, 1
 	n = n_elements(wline)
-	if n_elements(text2) eq 0 then text2 = strarr(n)
+	setdefaultvalue,text2,strarr(n)
 	if n_elements(lcharsize) eq 1 then csize = replicate(lcharsize,n) $
 				     else csize = lcharsize
-	if n_elements(extend) eq 0 then extend = 0
+	setdefaultvalue, extend, 0
 	if n_elements(extend) eq 1 then ethick = replicate(extend,n) $
 				   else ethick = extend
 	if n_elements(lcharthick) eq 0 then cthick = !p.charthick $
@@ -118,8 +120,8 @@ pro lineid_plot,wave,flux,wline,text1,text2, extend=extend, $
         xsize = !X.region[1] - x0
         ysize = !Y.region[1] - y0
         pos = [x0+xsize*0.13,y0+ysize*0.1, x0+xsize*0.95, y0+ysize*0.65]
-	plot,wave,flux,_EXTRA=extra,pos = pos        
-
+	cgplot,wave,flux,_EXTRA=extra,pos = pos, Window=window       
+        if keyword_set(window) then cgcontrol,execute=0
 ;
 ; get data ranges
 ;
@@ -230,12 +232,14 @@ print_text:
 			max(strlen(strtrim(txt2,1)))*yrange/50*maxcsize
 
 	for i=0,nlines-1 do begin
-		plots,[wl[i],wl[i],wlp[i],wlp[i]], $
+		cgplots,[wl[i],wl[i],wlp[i],wlp[i]], ADDCMD=window, $
 		      [start_arrow,bend1,bend2,stop_arrow]
-		xyouts,wlp[i] + char_height[i]/2, start_text1, txt1[i], $
-			orientation = 90, size=csize[i], charthick = cthick[i]
-		xyouts,wlp[i] + char_height[i]/2, start_text2, txt2[i], $
-			orientation = 90, size=csize[i], charthick = cthick[i]
+		cgtext,wlp[i] + char_height[i]/2, start_text1, txt1[i], $
+		    orientation = 90, size=csize[i], charthick = cthick[i],$
+		    window = window
+		cgtext,wlp[i] + char_height[i]/2, start_text2, txt2[i], $
+		  orientation = 90, size=csize[i], charthick = cthick[i],$
+		  window= window
 	endfor
 ;
 ; extend selected lines down to the spectrum
@@ -248,8 +252,10 @@ print_text:
 	ymax = !y.crange[1]
 	ymin = !y.crange[0]
 	offset = (ymax-ymin)/20.0
-	for i=0,n-1 do plots,[ww[i],ww[i]],[(ff[i]+offset)<ymax>ymin,ymax], $
-				line=2,thick = ethick[i]
+	for i=0,n-1 do $
+	   cgplots,[ww[i],ww[i]],[(ff[i]+offset)<ymax>ymin,ymax], $
+				line=2,thick = ethick[i],ADDCMD=window
+	if keyword_set(window) then cgcontrol,execute=1			
 
 return
 end

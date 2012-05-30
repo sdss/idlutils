@@ -1,5 +1,6 @@
 
 function transform_coeff, coeff, alpha, beta
+;+
 ; NAME:
 ;    TRANSFORM_COEFF()
 ; PURPOSE:
@@ -40,7 +41,7 @@ function transform_coeff, coeff, alpha, beta
 ;    groups.google.com/group/comp.lang.idl-pvwave/msg/11132d96d9c0f93d?hl=en&
 ; REVISION HISTORY:
 ;   Written   W. Landsman          December 2007
-
+;-
 compile_opt idl2
 if N_Params() LT 3 then begin
     print,'Syntax - newcoeff = TRANSFORM_COEFF( coeff, alpha, beta) '

@@ -36,9 +36,12 @@ PRO AUTOHIST,V, ZX,ZY,XX,YY, NOPLOT=whatever,_EXTRA = _extra
 ;       1998 March 17 - Changed shading of histogram.  RSH, RSTX
 ;       V5.0 update, _EXTRA keywords  W. Landsman    April 2002
 ;       Added NOCLIP keyword for POLYFILL call C. Paxson/W. Landsman July 2003
+;       Use Coyote graphics   W. Landsman  Feb 2011
 ;-
 
  ON_ERROR,2
+ compile_opt idl2 
+ 
  if N_params() LT 1 then begin
     print,'Syntax - AUTOHIST, Sample, XLines, Ylines, XCenters, YCenters, [ '
     print,'                           /NOPLOT, Plotting keywords... ]'
@@ -90,12 +93,12 @@ IF KEYWORD_SET(WHATEVER) THEN RETURN
  YTOP = MAX(YY[1:NB-2])
  YY[0] = YY[0] < YTOP
  YY[NB-1] = YY[NB-1] < YTOP
- PLOT,XX,YY,XRAN=[X1-DX,X2+DX],YRAN=[0.,1.1*YTOP],PSYM=10,_EXTRA=_extra
+ cgPLOT,XX,YY,XRAN=[X1-DX,X2+DX],YRAN=[0.,1.1*YTOP],PSYM=10,_EXTRA=_extra
  FOR J=0,NB-1 DO BEGIN
   IF YY[J] GT 0 THEN BEGIN
      A=[XX[J]-DX/2.,XX[J]+DX/2.,XX[J]+DX/2.,XX[J]-DX/2.] 
      B=[0.,0.,YY[J],YY[J]]
-     POLYFILL,A,B,orientation=45,noclip=0
+     cgcolorFILL,A,B,orientation=45,noclip=0
   ENDIF
 ENDFOR
 

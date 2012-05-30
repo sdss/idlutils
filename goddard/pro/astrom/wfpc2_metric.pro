@@ -20,7 +20,7 @@
 ;     XIN, YIN - X,Y positions (0-799) on a WFPC2 chip in 
 ;               IDL convention (first pixel is 0,0), scalar or vectors
 ; OUTPUTS:
-;     XOUT, YOUT - X,Y positions in the distorted frame, same number of 
+;     XOUT, YOUT - X,Y positions in the undistorted frame, same number of 
 ;                  elements as XIN, YIN
 ;                          or if /RADEC is set
 ;     AA, DD  - Right ascension and declination (in degrees) corresponding 
@@ -87,6 +87,8 @@
 ; REVISION HISTORY:
 ;     Written     W. Landsman         March 2003
 ;-
+ On_error,2
+ compile_opt idl2
  if N_params() LT 4 then begin
      print,'Syntax - WFPC2_METRIC, xin, yin, xout, yout, chip, /GLOBAL, '
      print,'                  /RADec, HEADER =, YEAR=, FILTER = '

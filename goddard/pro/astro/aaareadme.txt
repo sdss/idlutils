@@ -1,4 +1,4 @@
-/astro                                                              July 2003
+/astro                                                              October 2009
 
 This directory includes about 80 mostly self-contained astronomy utilities.
 
@@ -66,6 +66,7 @@ GET_DATE - Get the current date in CCYY-MM-DD format (FITS standard)
 GET_JULDATE - Get the current Julian date as a double precision scalar
 GLACTC- Convert between Galactic and equatorial coordinates at any 
         equinox   
+GLACTC_PM - Convert between celestial and Galactic (or Supergalactic) proper motion
 HADEC2ALTAZ -  Converts Hour Angle and Declination to Horizon (alt-az) coordinates                                 
 HELIO - Compute (low-precision) heliocentric coordinates of the planets 
 HELIO_JD() - Convert geocentric (reduced) Julian date to heliocentric Julian date

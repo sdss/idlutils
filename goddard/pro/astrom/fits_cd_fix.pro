@@ -28,7 +28,7 @@ pro fits_cd_fix,hdr, REVERSE = reverse
 ;           replaced with those containing underscores.
 ;   
 ; OPTIONAL KEYWORD INPUT
-;      /REVERSE - this keyword does nothing, but is kept for compatiblity with
+;      /REVERSE - this keyword does nothing, but is kept for compatibility with
 ;            earlier versions.
 ; PROCEDURES USED:
 ;    SXADDPAR, SXDELPAR, SXPAR()

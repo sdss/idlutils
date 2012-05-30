@@ -44,14 +44,17 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 ;               to compute the centroid.   Set /SILENT to suppress this.
 ;       /DEBUG - If this keyword is set, then GCNTRD will display the subarray
 ;               it is using to compute the centroid.
-;       /KeepCenter  By default, GCNTRD finds the maximum pixel in a box 
-;              centered on the input X,Y coordinates, and then extracts a new
-;              box about this maximum pixel.   Set the /KeepCenter keyword  
-;              to skip the step of finding the maximum pixel, and instead use
-;              a box centered on the input X,Y coordinates.                          
+;       /KeepCenter  By default, GCNTRD first convolves a small region around 
+;              the supplied position with a lowered Gaussian filter, and then 
+;              finds the maximum pixel in a box centered on the input X,Y 
+;              coordinates, and then extracts a new box about this maximum 
+;              pixel.   Set the /KeepCenter keyword  to skip the convolution 
+;              and finding the maximum pixel, and instead use a box 
+;              centered on the input X,Y coordinates.                          
 ;  PROCEDURE: 
-;       Maximum pixel within distance from input pixel X, Y  determined 
-;       from FHWM is found and used as the center of a square, within 
+;       Unless /KEEPCENTER is set, a small area around the initial X,Y is 
+;       convolved with a Gaussian kernel, and the maximum pixel is found.
+;       This pixel is used as the  center of a square, within 
 ;       which the centroid is computed as the Gaussian least-squares fit
 ;       to the  marginal sums in the X and Y directions. 
 ;
@@ -66,6 +69,8 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 ;             in DAOPHOT2.
 ;       Modified centroid computation (as in IRAF/DAOFIND) to allow shifts of
 ;      more than 1 pixel from initial guess.    March 2008
+;      First perform Gaussian convolution prior to finding maximum pixel 
+;      to smooth out noise  W. Landsman  Jan 2009
 ;-      
  On_error,2 
  compile_opt idl2
@@ -96,12 +101,13 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
  nhalf = fix(radius) < (maxbox-1)/2   	;
  nbox = 2*nhalf +1 	;# of pixels in side of convolution box 
 
- xcen = float(x) & ycen = float(y)
+ xcen = x*0. - 1 & ycen = y*0 - 1.
  ix = round(x)          ;Central X pixel        
  iy = round(y)          ;Central Y pixel
 
 ;Create the Gaussian convolution kernel in variable "g"
- g = fltarr( nbox, nbox )      
+ mask = bytarr( nbox, nbox )   ;Mask identifies valid pixels in convolution box 
+  g = fltarr( nbox, nbox )      
  row2 = (findgen(Nbox)-nhalf)^2
  g[0,nhalf] = row2
   for i = 1, nhalf do begin
@@ -109,7 +115,9 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 	g[0,nhalf-i] = temp         
         g[0,nhalf+i] = temp
  endfor
- g = exp(-0.5*g/sigsq)	;Make c into a Gaussian kernel
+ mask = fix(g LE radsq)
+ good = where( mask, pixels)  ;Value of c are now equal to distance to center
+   g = exp(-0.5*g/sigsq)	;Make g into a Gaussian kernel
 
 ; In fitting Gaussians to the marginal sums, pixels will arbitrarily be 
 ; assigned weights ranging from unity at the corners of the box to 
@@ -133,26 +141,40 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
  y_wt = transpose(x_wt) 
  pos = strtrim(x,2) + ' ' + strtrim(y,2)
 
+if ~keyword_set(Keepcenter) then begin 
+; Precompute convolution kernel
+ c = g*mask          ;Convolution kernel now in c      
+ sumc = total(c)
+ sumcsq = total(c^2) - sumc^2/pixels
+ sumc = sumc/pixels
+ c[good] = (c[good] - sumc)/sumcsq
+endif
 
- for i = 0,npts-1 do begin        ;Loop over X,Y vector
+ for i = 0,npts-1 do begin        ;Loop over number of points to centroid
 
-
- if not keyword_set(keepcenter) then begin
- if ( (ix[i] LT nhalf) or ((ix[i] + nhalf) GT xsize-1) or $
-      (iy[i] LT nhalf) or ((iy[i] + nhalf) GT ysize-1) ) then begin
-     if not keyword_set(SILENT) then message,/INF, $
+ if ~keyword_set(keepcenter) then begin
+ if ( (ix[i] LT nhalf) || ((ix[i] + nhalf) GT xsize-1) || $
+      (iy[i] LT nhalf) || ((iy[i] + nhalf) GT ysize-1) ) then begin
+     if ~keyword_set(SILENT) then message,/INF, $
            'Position '+ pos[i] + ' too near edge of image'
-     xcen[i] = -1   & ycen[i] = -1
      goto, DONE
  endif
-
+ x1 = (ix[i]-nbox) > 0 
+ x2 = (ix[i] + nbox) < (xsize-1)
+ y1 = (iy[i]-nbox)  > 0
+ y2 = (iy[i] + nbox) < (ysize-1)  
+ h = img[x1:x2, y1:y2]
+ h = convol(float(h), c)
+ h= h[ nbox-nhalf: nbox + nhalf, nbox -nhalf: nbox + nhalf]
  d= img[ix[i]-nhalf: ix[i]+nhalf, iy[i]-nhalf:iy[i]+nhalf]
+
  if N_elements(maxgood) GT 0 then begin
      ig = where(d lt maxgood, Ng)
      mx = max(d[ig],/nan)
  endif
- mx = max( d,/nan)     ;Maximum pixel value in BIGBOX
- mx_pos = where(d EQ mx, Nmax) ;How many pixels have maximum value?
+ mx = max( h,/nan)     ;Maximum pixel value in BIGBOX
+
+ mx_pos = where(h EQ mx, Nmax) ;How many pixels have maximum value?
  idx = mx_pos mod nbox          ;X coordinate of Max pixel
  idy = mx_pos / nbox          ;Y coordinate of Max pixel
  if NMax GT 1 then begin        ;More than 1 pixel at maximum?
@@ -173,9 +195,9 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 ; check *new* center location for range
 ; added by Hogg
 
- if ( (xmax LT nhalf) or ((xmax + nhalf) GT xsize-1) or $
-      (ymax LT nhalf) or ((ymax + nhalf) GT ysize-1) ) then begin
-     if not keyword_set(SILENT) then message,/INF, $
+ if ( (xmax LT nhalf) || ((xmax + nhalf) GT xsize-1) || $
+      (ymax LT nhalf) || ((ymax + nhalf) GT ysize-1) ) then begin
+     if ~keyword_set(SILENT) then message,/INF, $
            'Position '+ pos[i] + ' moved too near edge of image'
      xcen[i] = -1   & ycen[i] = -1
      goto, DONE
@@ -194,17 +216,16 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 
  if N_elements(maxgood) GT 0 then $ 
            mask = (d lt maxgood) else $
-   if (dtype eq 4) or (dtype EQ 5) then mask = finite(d) else $ 
+   if (dtype eq 4) || (dtype EQ 5) then mask = finite(d) else $ 
            mask = replicate(1b, nbox, nbox)
   maskx = total(mask,2) GT 0
   masky = total(mask,1) GT 0
 
 ; At least 3 points are needed in the partial sum to compute the Gaussian
 
-  if (total(maskx) LT 3) or (total(masky) LT 3) then begin
-  if not keyword_set(SILENT) then message,/INF, $
+  if (total(maskx) LT 3) || (total(masky) LT 3) then begin
+  if ~keyword_set(SILENT) then message,/INF, $
 	'Position '+ pos[i] + ' has insufficient good points'
-	 xcen[i] = -1	& ycen[i] = -1
 	 goto, DONE
   endif
   
@@ -212,7 +233,7 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
   xwt = x_wt*mask
   wt1 = wt*maskx
   wt2 = wt*masky
-;
+  
 ; Centroid computation:   The centroid computation was modified in Mar 2008 and
 ; now differs from DAOPHOT which multiplies the correction dx by 1/(1+abs(dx)). 
 ; The DAOPHOT method is more robust (e.g. two different sources will not merge)
@@ -221,7 +242,7 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 ; biases in the centroid histogram.   The change here is the same made in the 
 ; IRAF DAOFIND routine (see 
 ; http://iraf.net/article.php?story=7211&query=daofind )
-  
+
  sd = total(d*ywt,2,/nan)
  sg = total(g*ywt,2)
  sumg = total(wt1*sg)
@@ -244,7 +265,7 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 ; positive then the centroid does not make sense 
 
   if (hx LE 0) then begin
-  if not keyword_set(SILENT) then message,/INF, $
+  if ~keyword_set(SILENT) then message,/INF, $
 	'Position '+ pos[i] + ' cannot be fit by a Gaussian'
 	 xcen[i] = -1	& ycen[i] = -1
 	 goto, DONE
@@ -252,10 +273,15 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
 
  skylvl = (sumd - hx*sumg)/p
  dx = (sgdgdx - (sddgdx-sdgdx*(hx*sumg + skylvl*p)))/(hx*sdgdxs/sigsq)
+  if (abs(dx) GE nhalf) then begin
+  if ~keyword_set(SILENT) then message,/INF, $
+	'Position '+ pos[i] + ' is too far from initial guess'
+	 goto, DONE
+  endif
+
+
+ 
  xcen[i] = xmax + dx    ;X centroid in original array
-
-
-
 
 
 ;Now repeat computation for Y centroid
@@ -279,16 +305,21 @@ pro gcntrd,img,x,y,xcen,ycen,fwhm, maxgood = maxgood, keepcenter=keepcenter, $
  hy = (sumgd - sumg*sumd/p) / (sumgsq - sumg^2/p)
 
   if (hy LE 0) then begin
-  if not keyword_set(SILENT) then message,/INF, $
+  if ~keyword_set(SILENT) then message,/INF, $
 	'Position '+ pos[i] + ' cannot be fit by a Gaussian'
-	 xcen[i] = -1	& ycen[i] = -1
 	 goto, DONE
   endif
 
  skylvl = (sumd - hy*sumg)/p
  dy = (sgdgdy - (sddgdy-sdgdy*(hy*sumg + skylvl*p)))/(hy*sdgdys/sigsq)
- ycen[i] = ymax +dy   ;Y centroid in original array
+  if (abs(dy) GE nhalf) then begin
+  if ~keyword_set(SILENT) then message,/INF, $
+	'Position '+ pos[i] + ' is too far from initial guess'
+	 goto, DONE
+  endif
+ ycen[i] = ymax + dy    ;Y centroid in original array
 DONE:
+
  endfor
 
 return

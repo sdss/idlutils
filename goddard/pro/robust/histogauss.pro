@@ -1,5 +1,5 @@
 PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
-               CHARSIZE=CSIZE, FONT=font, _EXTRA = _extra
+               CHARSIZE=CSIZE, FONT=font, _EXTRA = _extra,Window=window
 ;
 ;+
 ;NAME:
@@ -48,7 +48,8 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;               the height is the only free parameter.
 ;       CHARSIZE Size of the characters in the annotation. Default = 0.82.
 ;       FONT - scalar font graphics keyword (-1,0 or 1) for text
-;       _EXTRA - Any value keywords to the PLOT command (e.g. XTITLE) may also
+;       /WINDOW - set to plot to a resizeable graphics window
+;       _EXTRA - Any value keywords to the cgPLOT command (e.g. XTITLE) may also
 ;               be passed to HISTOGAUSS
 ; SUBROUTINE CALLS:
 ;       BIWEIGHT_MEAN, which determines the mean and std. dev.
@@ -57,7 +58,6 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;
 ; REVISION HISTORY:
 ;       Written, H. Freudenreich, STX, 12/89
-;       Modified for IDL Version 2, 1/91, HF
 ;       More quantities returned in A, 2/94, HF
 ;       Added NOPLOT keyword and print if Gaussian, 3/94
 ;       Stopped printing confidence limits on normality 3/31/94 HF
@@ -68,9 +68,12 @@ PRO HISTOGAUSS,SAMPLE,A,XX,YY,GX,GY,NOPLOT=noplot,NOFIT=SIMPL, $
 ;       Correct call to T_CVF for calculation of A[3], 95% confidence interval
 ;                P. Broos/W. Landsman   July 2003
 ;       Allow FONT keyword to be passed.  T. Robishaw Apr. 2006
+;       Use Coyote Graphics for plotting W.L. Mar 2011
+;       Better formatting of text output W.L. May 2012
 ;-
 
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 2 then begin
     print,'Syntax - HISTOGAUSS, Sample, A, [XX, YY, GX, GY,  '
@@ -134,7 +137,7 @@ A[4]=TOTAL((DATA-A[1])^2)/((N-1)*A[2]^2)
 
 ; Draw the histogram
  font_in = !P.FONT & !P.FONT=font
- AUTOHIST,DATA,X,Y,XX,YY,NOPLOT = noplot, _EXTRA = _extra
+ AUTOHIST,DATA,X,Y,XX,YY,NOPLOT = noplot, _EXTRA = _extra,Window=window
  !P.FONT=font_in
  
 ; Check for error in AUTOHIST:
@@ -158,7 +161,7 @@ ENDELSE
 A[0]=HYTE
 
 ; Fit a Gaussian, unless the /NOFIT qualifier is present
-IF NOT KEYWORD_SET(SIMPL) THEN BEGIN
+IF ~KEYWORD_SET(SIMPL) THEN BEGIN
    PARM=A[0:2]
    YFIT = GAUSSFIT(XX,YY,PARM,NTERMS=3)
    A[0:2]=PARM
@@ -173,11 +176,11 @@ IF KEYWORD_SET(NOPLOT) THEN RETURN
 
  Z = (GX-A[1])/A[2]
  GY = A[0]*EXP(-Z^2/2. )
- OPLOT,GX,GY
+ cgplot,/over,GX,GY,window=window
 
 ; Annotate. 
-MEANST = STRING(A[1],'(F9.4)')
-SIGST = STRING(A[2],'(F9.4)')
+MEANST = STRING(A[1],'(G12.5)')
+SIGST = STRING(A[2],'(G12.5)')
 NUM = N_ELEMENTS(DATA)
 NUMST =STRING(N,'(I6)')
 
@@ -186,7 +189,7 @@ IF KEYWORD_SET(CSIZE) THEN ANNOT=CSIZE ELSE ANNOT=.82
  LABL = LABL +numst+','+meanst+','+sigst 
 X1 = !x.crange[0] + annot*(!x.crange[1]-!x.crange[0])/20./0.82 
 y1 = !y.crange[1] - annot*(!y.crange[1]-!y.crange[0])/23./0.82 
-XYOUTS, X1, Y1, LABL, CHARSIZE=ANNOT, FONT=font
+cgtext, X1, Y1, LABL, CHARSIZE=ANNOT, FONT=font,window=window
 
 RETURN
 END

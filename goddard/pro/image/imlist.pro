@@ -80,8 +80,10 @@ pro imlist, image, xc, yc, DX=dx, DY = DY, WIDTH=width, TEXTOUT = textout, $
 ;       Recognize new integer types, added OFFSET keyword  W. Landsman Jan. 2000
 ;       Replace DATATYPE() with size(/TNAME)  W. Landsman Nov. 2001
 ;       Handle NAN values in output display W. Landsman June 2004
+;       Use V6.0 notation  W. Landsman April 2011
 ;-
  On_error,2                                   ;Return to caller
+ compile_opt idl2
 
  if N_params() LT 3 then begin
     print,'Syntax - IMLIST, Image, Xc, Yc, [TEXTOUT= ,DX=, DY=, WIDTH= ,DESC= ]'
@@ -91,12 +93,12 @@ pro imlist, image, xc, yc, DX=dx, DY = DY, WIDTH=width, TEXTOUT = textout, $
  endif
 
 
- if not keyword_set( TEXTOUT )  then textout = !TEXTOUT      ;Use default
+ if ~keyword_set( TEXTOUT )  then textout = !TEXTOUT      ;Use default
  if N_elements( OFFSET) NE 2 then offset = [0,0]
 
  if size( TEXTOUT,/TNAME ) NE 'STRING' then begin
         textout = textout > 2                  ;Don't use /MORE
-        if (textout GE 3) and (textout NE 5) then hardcopy = 1 else hardcopy = 0
+        hardcopy =  (textout GE 3) && (textout NE 5) 
  endif else hardcopy = 1
 
  defsysv,'!TEXTUNIT',exist=i
@@ -111,7 +113,7 @@ pro imlist, image, xc, yc, DX=dx, DY = DY, WIDTH=width, TEXTOUT = textout, $
 
  if hardcopy then begin   ;Direct output to a disk file
         printf,!TEXTUNIT,'IMLIST: ' + strmid(systime(),4,20)
-        if not keyword_set( DESCR ) then begin
+        if ~keyword_set( DESCR ) then begin
            descr = ''
            read,'Enter a brief description to be written to disk: ',descr
         endif
@@ -124,14 +126,14 @@ pro imlist, image, xc, yc, DX=dx, DY = DY, WIDTH=width, TEXTOUT = textout, $
 
 ; Make sure supplied center pixel is actually within image
 
- if (xc LT 0) or (xc GT xdim) then $
+ if (xc LT 0) || (xc GT xdim) then $
         message,'ERROR - X pixel center must be between 0 and '+strtrim(xdim,2)
- if (yc LT 0) or (yc GT ydim) then $
+ if (yc LT 0) || (yc GT ydim) then $
         message,'ERROR - Y pixel center must be between 0 and '+strtrim(ydim,2)
 
- xim = fix(xc + 0.5)
- yim = fix(yc + 0.5)
- if not keyword_set( WIDTH ) then width = 80
+ xim = round(xc)
+ yim = round(yc)
+ if ~keyword_set( WIDTH ) then width = 80
 
  case type of
  1: fmtsz = 4
@@ -140,8 +142,8 @@ pro imlist, image, xc, yc, DX=dx, DY = DY, WIDTH=width, TEXTOUT = textout, $
 else: fmtsz = 5
 endcase
 
- if not keyword_set(DX) then dx = fix((width - 5)/fmtsz)
- if not keyword_set(DY) then dy = dx
+ if ~keyword_set(DX) then dx = fix((width - 5)/fmtsz)
+ if ~keyword_set(DY) then dy = dx
 
 ; Don't try to print outside the image
   xmax = (xim + dx/2) < xdim
@@ -168,21 +170,21 @@ REDO:
    (type EQ 2):   fmt = '(i4,' + cdx + 'i' + sfmt + ')'        ;Integer
    (type EQ 12):  fmt = '(i4,1x,' + cdx + 'i' + sfmt + ')'     ;Unsigned Integer
 
-   (type EQ 4) or (type EQ 3) or (type EQ 5) or (type GE 13):  begin      ;Long, Real or Double
+   (type EQ 4) || (type EQ 3) || (type EQ 5) || (type GE 13):  begin      ;Long, Real or Double
 
       temp = image[ xmin:xmax,ymin:ymax ]
       minval = min( temp, MAX = maxval, /nan)
-      if (type EQ 3) or (type GE 13) then  begin
+      if (type EQ 3) || (type GE 13) then  begin
 
-                if (maxval LT 999.) and (minval GT -99.) then begin
+                if (maxval LT 999.) && (minval GT -99.) then begin
                 type = 1 & sfmt = '4'
                  goto, REDO
                 endif
-                if (maxval LT 9999.) and (minval GT -999.) then begin
+                if (maxval LT 9999.) && (minval GT -999.) then begin
                 type = 12 & sfmt = '5'
                 goto, REDO
                 endif
-                if (maxval LT 99999.) and (minval GT -9999.) then begin
+                if (maxval LT 99999.) && (minval GT -9999.) then begin
                 type = 2  & sfmt = '6'
                 goto, REDO
                 endif
@@ -212,7 +214,7 @@ REDO:
 
         row = image[i*sz[1]+xmin:i*sz[1]+xmax]      ;from supplied image array
         if type EQ 1 then row = fix(row)
-        if (type EQ 4) or (type EQ 3) or (type EQ 5) or (type GE 13) then $
+        if (type EQ 4) || (type EQ 3) || (type EQ 5) || (type GE 13) then $
                    row = row/factor
         if flt_to_int then row = round( row )
         printf, !TEXTUNIT, FORM = fmt, i + offset[1], row

@@ -15,7 +15,7 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
 ;
 ; OUTPUT:
 ;       IEFF - the effective index or indices of X in XARR
-;               real or double precision, same # of elements as X
+;              always floating point, same # of elements as X
 ;
 ; OPTIONAL KEYWORD INPUT:
 ;       /FAST - If this keyword is set, then the input vector is not checked
@@ -49,11 +49,14 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
 ;       Adapted from the IUE RDAF                     January, 1988         
 ;       More elegant code  W. Landsman                August, 1989
 ;       Mod to work on 2 element decreasing vector    August, 1992
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Updated for V5.3 to use VALUE_LOCATE()     W. Landsman January 2000
 ;       Work when both X and Xarr are integers     W. Landsman August 2001
+;       Use ARRAY_EQUAL, always internal double precision W.L.  July 2009
+;       Allow Double precision output, faster test for monotonicity.
+;                    WL, January 2012
 ;-               
  On_error,2
+ compile_opt idl2
 
  if N_params() LT 3 then begin
      print,'Syntax- TABINV, XARR, X, I, [/FAST]'
@@ -61,35 +64,31 @@ PRO TABINV, XARR, X, IEFF, FAST = fast
  endif
 
  Npoints = N_elements(xarr) & npt= npoints - 1
-
- if not keyword_set(fast) then begin
-
  if ( Npoints LE 1 ) then message, /TRACE, $
    'Search vector (first parameter) must contain at least 2 elements'
 
- ; Test for monotonicity 
+ do_double= (size(xarr,/tname) EQ 'DOUBLE') || (size(x,/TNAME) EQ 'DOUBLE')
 
- i = xarr - shift( xarr,1)
- i = i[1:*]               ;Added 15-Aug-1992 to properly interpret 2 element
- a = where( i GE 0, N)    ;decreasing vector
+ if ~keyword_set(fast) then begin
 
- if ( N NE npt) then begin 
+ ; Test for monotonicity (everywhere increasing or decreasing vector)
 
-     a = where(i LE 0, N)  ; Test for decreasing array
-     if ( N NE npt ) then  message, /TRACE, $
+  i = xarr[1:*] GE xarr
+   test = array_equal( i, 1b) || array_equal(i, 0b) 
+     if ~test then  message, $
        'ERROR - First parameter must be a monotonic vector' 
  endif
- endif
 
- 
- ieff = float(VALUE_LOCATE(xarr,x)) 
+ if do_double then ieff = double( VALUE_LOCATE(xarr,x)) else $
+                   ieff = float(  VALUE_LOCATE(xarr,x))
  g = where( (ieff LT npt) and (ieff GE 0), Ngood)
  if Ngood GT 0 then begin
       neff = ieff[g]
-     diff = x[g] - xarr[neff]
-     if size(diff,/TNAME) NE 'DOU' then diff = float(diff) 
-     ieff[g] = neff +  diff / (xarr[neff+1] - xarr[neff] ) 
+      x0 = double(xarr[neff])
+      diff =  x[g] - x0
+      ieff[g] = neff +  diff / (xarr[neff+1] - x0 ) 
  endif
+     
  ieff = ieff > 0.0
 
  return

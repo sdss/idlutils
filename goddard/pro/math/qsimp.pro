@@ -40,7 +40,7 @@ pro qsimp, func, A, B, S, EPS=eps, MAX_ITER = max_iter, _EXTRA = _EXTRA
 ;       then QSIMP will likely be more efficient at performing the integral.
 ;
 ;       (2) QSIMP can be *much* faster than the intrinsic QSIMP() function (as
-;       of IDL V5.3).   This is because the intrinsic QSIMP() function only 
+;       of IDL V7.1).   This is because the intrinsic QSIMP() function only 
 ;       requires that the user supplied function accept a *scalar* variable.
 ;       Thus on the the 16th iteration, the intrinsic QSIMP() makes 32,767
 ;       calls to the user function, whereas this procedure makes one call 
@@ -67,6 +67,7 @@ pro qsimp, func, A, B, S, EPS=eps, MAX_ITER = max_iter, _EXTRA = _EXTRA
 ;-
 
  On_error,2                                  ;Return to caller
+ compile_opt idl2
 
  if N_params() LT 4 then begin
     print,'Syntax - QSIMP, func, A, B, S, [ MAX_ITER = , EPS = ]'
@@ -79,8 +80,8 @@ pro qsimp, func, A, B, S, EPS=eps, MAX_ITER = max_iter, _EXTRA = _EXTRA
  zparcheck, 'QSIMP', A, 2, [1,2,3,4,5], 0, 'Lower limit of Integral'
  zparcheck, 'QSIMP', B, 3, [1,2,3,4,5], 0, 'Upper limit of Integral'
 
- if not keyword_set(EPS) then eps = 1.e-6              ;Set defaults
- if not keyword_set(MAX_ITER) then max_iter = 20
+ if ~keyword_set(EPS) then eps = 1.e-6              ;Set defaults
+ if ~keyword_set(MAX_ITER) then max_iter = 20
 
  ost = (oS = -1.e30)
  for i = 0,max_iter - 1 do begin

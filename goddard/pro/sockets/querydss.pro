@@ -5,17 +5,17 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;   QueryDSS
 ;
 ; PURPOSE: 
-;    Query the digital sky survey (DSS) on-line at  the ESO or STSCI servers
+;    Query the digital sky survey (DSS) on-line at  the STSCI (or ESO) server
 ;
 ; EXPLANATION: 
 ;     The script can query the DSS survey and retrieve an image and FITS 
-;     header either from the European Southern Observatory (ESO) or the 
-;     Space Telescope Science Institute (STScI) servers.
+;     header either from the the Space Telescope Science Institute (STScI) or 
+;     European Space Observatory (ESO) servers.
 ;     See http://archive.eso.org/dss/dss and/or 
 ;     http://archive.stsci.edu/dss/index.html for details.
 ;
 ; CALLING SEQUENCE: 
-;      QueryDSS, targetname_or_coords, Im, Hdr, [IMSIZE= , /ESO, /STSCI ]
+;      QueryDSS, targetname_or_coords, Im, Hdr, [IMSIZE= , /ESO, Outfile= ]
 ;
 ; INPUTS:
 ;      TARGETNAME_OR_COORDS - Either a scalar string giving a target name, 
@@ -31,16 +31,17 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;                 arcminutes.    Default is 10 arcminute.
 ;
 ;     /ESO - Use the ESO server for image retrieval.    Default is to use
-;            the STScI server if user is in the Western hemisphere, and 
-;            otherwise to use the ESO server.
+;            the STScI server 
 ;
 ;     /NED - Query the Nasa Extragalactic Database (NED) for the
 ;            target's coordinates.  The default is to use Simbad for
 ;            the target search.
 ;
-;     /STSCI - Use the STSCI server for image retrieval.  Default is to use
-;            the STScI server if user is in the Western hemisphere, and 
-;            otherwise to use the ESO server.    
+;     OUTPUT  - scalar string specifying name of output FITS file.    
+;            If set, then the output IDL variables are not used.
+; 
+;     /STSCI - obsolete keyword, now does nothing, since STSCI is the default
+;              Server.     
 ;
 ;     SURVEY - Scalar string specifying which survey to retrieve.  
 ;          Possible values are 
@@ -98,19 +99,17 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
 ;       Added OUTFILE, /NED keywords W. Landsman   April 2003
 ;       Don't abort on Simbad failure W. Landsman/J. Brauher  June 2003
 ;       Added /VERBOSE keyword W. Landsman   Jan 2009
+;       Make /STScI server the default  W. Landsman June 2010
+;      Fix OUTPUT option  W. Landsman June 2010
 ;
 ;-
+  On_error,2
   compile_opt idl2
   if N_params() LT 1 then begin
       print,'Syntax - QueryDSS, TargetName_or_coords, image, header'
       print,"           [Imsize= ,/ESO, /STScI, Survey = ['1','2b','2r','2i'] "
       print,'            /NED, OutFile = ]'
       return
-   endif
-;; Is the user in the Western Hemisphere?
-   if not keyword_set(ESO) and not keyword_set(STScI) then begin
-       timezone =  (systime(/JULIAN,/UTC)- systime(/julian))*24
-       stsci = (timezone GE 4) and (timezone LE 10)
    endif
   ;;
   if N_elements(target) EQ 2 then begin
@@ -124,14 +123,13 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
              return
        endif
   endelse  
-  if not keyword_set(ESO) then eso =  1b-keyword_Set(stsci) 
-  IF NOT Keyword_Set(ImSize) THEN ImSize = 10
+  IF ~Keyword_Set(ImSize) THEN ImSize = 10
   Equinox = 'J2000'
   ;;
   ;;
  if N_elements(survey) EQ 0 then survey = '1'
  dss = strlowcase(strtrim(strmid(survey,0,2),2))
- if ESO then begin
+ if keyword_set(ESO) then begin
   case dss of 
   '1': dss = 'DSS1'
   '2b': dss = 'DSS2-blue'
@@ -140,8 +138,7 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
   else: message,'Unrecognized Survey - should be 1, 2b, 2r or 2i'
  endcase
  endif
-
-  IF eso THEN $ 
+  IF keyword_set(eso) THEN $ 
     QueryURL=strcompress("http://archive.eso.org/dss/dss/image?ra="+$
                        string(RA)+$
                        "&dec="+$
@@ -166,13 +163,13 @@ PRO QueryDSS, target, Image,  Header, IMSIZE=ImSIze, ESO=eso, STSCI=stsci, $
                          "& format=FITS", /remove)
   ;;
 
+  if keyword_set(verbose) then message,/INF, QueryURL
   if keyword_set(OutFile) then begin
-      if not ESO then dss = 'DSS' + dss
+      if ~keyword_set(ESO) then dss = 'DSS' + dss
       message,'Writing ' + dss + ' FITS file ' + outfile,/inf
       Result = webget(QueryURL, copyfile= outfile)
       return
   endif
-  if keyword_set(verbose) then message,/INF, QueryURL
   Result = webget(QueryURL)
   Image = Result.Image
   Header = Result.ImageHeader

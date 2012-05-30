@@ -80,12 +80,6 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;       directory, then it will write the temporary file in the getenv('HOME')
 ;       directory.
 ;
-;       At present, can fail if a tag_name cannot be used as a proper
-;       structure component definition, e.g., '0.10' will not
-;       work, but a typical string like 'RA' or 'DEC' will.
-;       A partial workaround checks for characters '\' and '/'
-;       and '.' and converts them to '_'. in a tag_name.
-;
 ;       Note that 'L' now specifies a LOGICAL (byte) data type and not a
 ;       a LONG data type for consistency with FITS binary tables
 ;
@@ -96,7 +90,7 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;       recompiled).  ** No error message will be generated  ***
 ;
 ; SUBROUTINES CALLED:
-;       CONCAT_DIR(), FDECOMP, REPCHR() 
+;       REPCHR() 
 ;
 ; MODIFICATION HISTORY:
 ;       Version 1.0 RAS January 1992
@@ -119,6 +113,8 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 ;                       W. Landsman  Feb 2007
 ;       Use vector form of IDL_VALIDNAME() if V6.4 or later W.L. Dec 2007
 ;       Suppress compilation mesage of temporary file A. Conley/W.L. May 2009
+;       Remove FDECOMP, some cleaner coding  W.L. July 2009
+;       Do not limit string length to 1000 chars   P. Broos,  Feb 2011
 ;-
 ;-------------------------------------------------------------------------------
 
@@ -129,7 +125,7 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
    return
  endif
 
- if not keyword_set( chatter) then chatter = 0        ;default is 0
+ if ~keyword_set( chatter) then chatter = 0        ;default is 0
  if (N_elements(dimen) eq 0) then dimen = 1            ;default is 1
 
  if (dimen lt 1) then begin
@@ -185,7 +181,7 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
                  goto, DONE
              endif else begin
                     tagvar[i] = strmid( temptag, 0, pos )
-                    temptag = strmid( temptag, pos+1, 1000)
+                    temptag = strmid( temptag, pos+1)
               endelse
              endfor
              DONE:
@@ -210,24 +206,25 @@ pro create_struct, struct, strname, tagnames, tag_descript, DIMEN = dimen, $
 
  endelse
 
+ tagvar = strupcase(tagvar) 
+
  for i = 0, ntags-1 do begin
 
    goodpos = -1
-   try = strupcase( tagvar[i] )
    for j = 0,ngoodf-1 do begin
-         fmt_pos = strpos( try, good_fmts[j] )
+         fmt_pos = strpos( tagvar[i], good_fmts[j] )
          if ( fmt_pos GE 0 ) then begin
               goodpos = j
-              goto, FOUND_FORMAT
+              break
          endif
    endfor
 
+  if goodpos EQ -1 then begin 
       print,' Format not recognized: ' + tagvar[i]
       print,' Allowed formats are :',good_fmts
       stop,' Redefine tag format (' + string(i) + ' ) or quit now'
+  endif 
 
-
-FOUND_FORMAT:
 
     if fmt_pos GT 0 then begin
 
@@ -245,10 +242,7 @@ FOUND_FORMAT:
     tagfmts = strmid( tagvar[i], 0, 1)
     tagdim = strtrim( strmid( tagvar[i], 1, 80),2)
     if strmid(tagdim,0,1) NE '(' then tagdim = ''
-
-    if (tagdim EQ '') then fmt = fmts[goodpos] else $
-                           fmt = arrs[goodpos] + tagdim 
-
+    fmt = (tagdim EQ '') ? fmts[goodpos] : arrs[goodpos] + tagdim 
     endelse
 
   if anonymous and ( i EQ 0 ) then comma = '' else comma = " , "
@@ -274,26 +268,23 @@ FOUND_FORMAT:
 ; --- Determine if a file already exists with same name as temporary file
 
  tempfile = 'temp_' + strlowcase( strname )
- cdhome = 0
-
-TEST_EXIST:
-EXIST:  
-    list = file_search( tempfile + '.pro', COUNT = Nfile)
-     if (Nfile GT 0) then begin
-       tempfile = tempfile + 'x'
-       goto, EXIST
-     endif
+ while file_test( tempfile + '.pro' ) do tempfile = tempfile + 'x'
  
 ; ---- open temp file and create procedure
 ; ---- If problems writing into the current directory, try the HOME directory
 
+ cd,current= prodir 
+ cdhome = 0
  openw, unit, tempfile +'.pro', /get_lun, ERROR = err
- if (err LT 0) and (not cdhome) then begin
+ if (err LT 0)  then begin
+      prodir = getenv('HOME')
+      tempfile = prodir + path_sep() + tempfile
+      while file_test( tempfile + '.pro' ) do tempfile = tempfile + 'x'
+      openw, unit, tempfile +'.pro', /get_lun, ERROR = err
+      if err LT 0 then message,'Unable to create a temporary .pro file'
       cdhome = 1
-      tempfile = concat_dir(getenv('HOME'),tempfile)
-      goto, TEST_EXIST
- endif
- fdecomp,tempfile,disk,dir,name
+  endif
+ name = file_basename(tempfile)
  printf, unit, 'pro ' +  name + ', struct'
  printf,unit,'compile_opt hidden'
  for j = 0,N_elements(pro_string)-1 do $

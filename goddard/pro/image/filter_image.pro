@@ -14,7 +14,8 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
 ;       The main reason for using this function is the options to
 ;       also process the pixels at edges and corners of image, and,
 ;       to apply iterative smoothing simulating convolution with Gaussian,
-;       and/or to convolve image with a Gaussian kernel.
+;       and/or to convolve image with a Gaussian kernel.    Users might also
+;       look at the function ESTIMATOR_FILTER() introduced in IDL 7.1.
 ;
 ; CALLING SEQUENCE:
 ;       Result = filter_image( image, SMOOTH=width, MEDIAN = width, /ALL_PIXELS
@@ -35,7 +36,7 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
 ;       /ALL_PIXELS causes the edges of image to be filtered as well.   This
 ;               is accomplished by reflecting pixels adjacent to edges outward
 ;               (similar to the /EDGE_WRAP keyword in CONVOL).
-;               Note that this is a different algorithm from the /EDGE_TRUCATE 
+;               Note that this is a different algorithm from the /EDGE_TRUNCATE 
 ;               keyword to SMOOTH or CONVOL, which duplicates the nearest pixel.   
 ;
 ;       /ITERATE means apply smooth(image,3) iteratively for a count of
@@ -68,6 +69,9 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
 ; RESULT:
 ;       Function returns the smoothed, median filtered, or convolved image.
 ;       If both SMOOTH and MEDIAN are specified, median filter is applied first.
+;       If only SMOOTH is applied, then output is of same type as input.  If
+;       either MEDIAN or FWHM_GAUSSIAN is supplied than the output is at least
+;       floating (double if the input image is double). 
 ;
 ; EXAMPLES:
 ;       To apply 3x3 moving median filter and
@@ -102,12 +106,13 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
 ;       Written, 1991, Frank Varosi, NASA/GSFC.
 ;       FV, 1992, added /ITERATE option.
 ;       FV, 1993, added FWHM_GAUSSIAN= option.
-;       Converted to IDL V5.0   W. Landsman   September 1997
 ;       Use /EVEN call to median, recognize NAN values in SMOOTH 
 ;                  W. Landsman   June 2001
 ;       Added PSF keyword,   Bjorn Heijligers/WL, September 2001
+;       Keep same output data type if /ALL_PIXELS supplied A. Steffl Mar 2011
 ;-
-
+  compile_opt idl2
+  
   if N_params() LT 1 then begin
       print,'Syntax - Result = filter_image( image, SMOOTH=width, /ALL_PIXELS'
       print,'                 MEDIAN= width, ITERATE, FWHM=,  /NO_FT_CONVOL'
@@ -118,7 +123,7 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
         Lx = sim[1]-1
         Ly = sim[2]-1
 
-        if (sim[0] NE 2) OR (sim[4] LE 4) then begin
+        if (sim[0] NE 2) || (sim[4] LE 4) then begin
                 message,"input must be an image (a matrix)",/INFO
                 return,image
            endif
@@ -151,7 +156,7 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
                 Lxr = Lx+radius
                 Lyr = Ly+radius
                 rr = 2*radius
-                imf = fltarr( sim[1]+rr, sim[2]+rr )
+		imf = make_array(sim[1]+rr, sim[2]+rr, type = sim[3])
                 imf[radius,radius] = image              ; reflect edges outward
                                                         ; to make larger image.
                 imf[  0,0] = rotate( imf[radius:rr,*], 5 )      ;Left
@@ -160,7 +165,6 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
                 imf[0,Lyr] = rotate( imf[*,Ly:Lyr], 7 )         ;top
 
           endif else begin
-
                 radius=0
                 imf = image
            endelse
@@ -182,6 +186,7 @@ function filter_image, image, SMOOTH=width_smooth, ITERATE_SMOOTH=iterate, $
 
                 if N_elements(PSF) EQ 0 then $
                           psf=psf_gaussian( NP=npix,FWHM=fwhm,/NORM )
+			  
                 imf = convolve( imf,  NO_FT=no_ft, psf) 
           endif
 

@@ -47,7 +47,8 @@
 ;       F.V.1997, added WHICH and MAX_ELEM keyword options.
 ;       WBL 1997, Use UNIQ() rather than UNIQUE function
 ;       Remove call to N_STRUCT()   W. Landsman  March 2004
-;       Avoid overflow with more than 10000 elements  W. Landsamn Nov 2005
+;       Avoid overflow with more than 10000 elements  W. Landsman Nov 2005
+;       Really remove call to N_STRUCT() W. Landsman July 2009
 ;-
 
 pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
@@ -64,15 +65,17 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
         return
         end
    
-        Ntag = N_tags(a)
-        Nstruct = N_struct( structure, Ntag )
 
-        if (Ntag LE 0) then begin
+        if size(structure,/TNAME) NE 'STRUCT' then begin
                 message,"ERROR - expecting a structure",/INFO
                 return
-           endif
+         endif
+ ;Use size(/N_Elements) instead of N_elements() so it can work with assoc 
+ ;variables	 
+         Nstruct = size(structure,/N_elements)
+	 Ntag = N_tags(structure)
 
-        if N_elements(structure) EQ 1 then structure = [structure]
+        if Nstruct EQ 1 then structure = [structure]
 
         tags = [tag_names( structure )]
         Npr = N_elements( Tags_to_print )

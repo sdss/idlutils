@@ -63,13 +63,13 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
 ; MODIFICATION HISTORY:
 ;     Written,  Mar 1997    W. Landsman,  Hughes STX
 ;     Work for non-square images   W. Landsman   June 1998 Raytheon STX
-;     Converted to IDL V5.0  W. Landsman     June 1998
 ;     Fix for different plate scales, and CROTA2 defined, November 1998  
 ;     Added ERRMSG, Use double precision formatting, W. Landsman April 2000
 ;     Consistent conversion between CROTA and CD matrix W. Landsman Oct 2000
 ;     Correct update when CROTA keyword present W. Landsman  June 2003
 ;     Update CDELT for AIPS-style astrometry headers M. Perrin/WL Jul 2003
 ;     Convert GSS astrometry to WCS W. Landsman  November 2004
+;     Work even if no astrometry present, just update NAXIS* WL June 2011
 ;- 
  On_error,2
  npar = N_params()
@@ -93,7 +93,7 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
 ;                                    Check for valid 2-D image & header
  check_FITS, oldim, oldhd, dimen, /NOTYPE, ERRMSG = errmsg
   if errmsg NE '' then begin
-        if not save_err then message,'ERROR - ' + errmsg,/CON
+        if ~save_err then message,'ERROR - ' + errmsg,/CON
         return
   endif
 
@@ -114,23 +114,8 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
  if npar EQ 5 then newim = rotate(oldim, direction ) else $
                    oldim = rotate(oldim, direction )
  
- if dirpar EQ 0 then return
- label = 'HROTATE: ' + strmid(systime(),4,20)
- sxaddhist, label + ' Image = ROTATE(Image,' + strtrim(direction,2) + ')',newhd
-
-; Update astrometry info if it exists.   If GSS astrometry is present, then
-; convert it to standard WCS astrometry
-
- extast, oldhd, astr, noparams
- if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
-        gsss_stdast, newhd
-        extast, newhd, astr, noparams
- endif
- 
-
- if noparams GE 0 then begin    ;Astrometry parameters exist in header?
-   case dirpar of
-   0: rot_mat = [ [1,0], [0, 1] ]
+ case dirpar of
+   0: return
    1: rot_mat = [ [0, 1],[-1, 0] ] 
    2: rot_mat = [ [-1,0],[ 0,-1] ]
    3: rot_mat = [ [0,-1], [1, 0] ]
@@ -141,6 +126,26 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
    else: message,$
         'ERROR - Illegal value of direction parameter, must be between 0 and 7'
    endcase
+
+ if (xsize NE ysize) && (rot_mat[0,0] EQ 0) then begin
+        sxaddpar, newhd, 'NAXIS1', ysize
+        sxaddpar, newhd, 'NAXIS2', xsize
+ endif
+
+ label = 'HROTATE: ' + strmid(systime(),4,20)
+ sxaddhist, label + ' Image = ROTATE(Image,' + strtrim(direction,2) + ')',newhd
+
+; Update astrometry info if it exists.   If GSS astrometry is present, then
+; convert it to standard WCS astrometry
+
+ extast, oldhd, astr, noparams
+
+ if noparams GE 0 then begin    ;Astrometry parameters exist in header?
+
+ if strmid(astr.ctype[0],5,3) EQ 'GSS' then begin
+        gsss_stdast, newhd
+        extast, newhd, astr, noparams
+ endif
 
 ; For non-square images, check if  X and Y axes have been flipped
 
@@ -157,20 +162,18 @@ pro hrotate, oldim, oldhd, newim, newhd, direction,ERRMSG = errmsg
     newcd =  cd # transpose(rot_mat)
 
 
-    if (dirpar EQ 4) or (dirpar EQ 6) then begin
+    if (dirpar EQ 4) || (dirpar EQ 6) then begin
         ncrpix[0] = xsize - ( ncrpix[0] - 1)
         newcd[*,0] = -newcd[*,0]
     endif 
 
-    if (dirpar EQ 5) or (dirpar EQ 7) then begin
+    if (dirpar EQ 5) || (dirpar EQ 7) then begin
         ncrpix[1] = ysize - (ncrpix[1] -1 )
         newcd[*,1] = -newcd[*,1]
     endif 
 
  
-  if (xsize NE ysize) and (rot_mat[0,0] EQ 0) then begin
-        sxaddpar, newhd, 'NAXIS1', ysize
-        sxaddpar, newhd, 'NAXIS2', xsize
+  if (xsize NE ysize) && (rot_mat[0,0] EQ 0) then begin
         ncrpix[0] = ncrpix[0] - xc + yc
         ncrpix[1] = ncrpix[1] - yc + xc
  endif

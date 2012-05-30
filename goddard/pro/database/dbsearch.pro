@@ -29,9 +29,9 @@ pro dbsearch,type,svals,values,good, FULLSTRING = fullstring, COUNT = count
 ;	The obsolete system variable !ERR is set to number of good values
 ; REVISION HISTORY:
 ;	D. Lindler  July,1987
-;	Converted to IDL V5.0   W. Landsman   September 1997
 ;       Added COUNT keyword, deprecate !ERR   W. Landsman   March 2000
 ;      Some speed improvements W.L. August 2008
+;       Add compound operators, slightly faster WL November 2009
 ;-
 ;-----------------------------------------------------------
  On_error,2
@@ -41,7 +41,8 @@ pro dbsearch,type,svals,values,good, FULLSTRING = fullstring, COUNT = count
 ;
 ; determine data type of values to be searched
 ;
- s=size(values) & datatype=s[s[0]+1] & nv = N_elements(values)
+ datatype=size(values,/type) & nv = N_elements(values)
+ 
 ;
 ; convert svals to correct data type
 ;
@@ -57,7 +58,6 @@ pro dbsearch,type,svals,values,good, FULLSTRING = fullstring, COUNT = count
 ;      STRING SEARCHES (Must use STRPOS to search for substring match)
 ;
 if datatype EQ 7 then begin
-    valid = bytarr(nv)
     values = strupcase(values)
     case type of
 						
@@ -73,15 +73,16 @@ if datatype EQ 7 then begin
                 sv = strtrim(sv,2)
 		sv = sv[uniq(sv,sort(sv))]     ;Remove duplicates
 		type = N_elements(sv)
+                valid = bytarr(nv)
 
 		if keyword_set(FULLSTRING) then begin
 		values = strtrim(values,2)
-                for ii = 0l,type-1 do valid = (values EQ sv[ii]) or valid
+                for ii = 0l,type-1 do valid OR= (values EQ sv[ii]) 
 
                 endif else begin
 
                 for ii=0L,type-1 do begin               ;within set of substring
-		valid = (strpos(values,sv[ii]) GE 0) or valid
+		valid OR= (strpos(values,sv[ii]) GE 0)		
                 endfor
 
 		endelse
@@ -113,21 +114,17 @@ case type of
 	    end
 	-4: good=where(values, count)		;non-zero
 	else: begin				;set of values	
-	      count=0				;number found
-              sv = sv[uniq(sv,sort(sv))]     ;Remove duplicates
+            sv = sv[uniq(sv,sort(sv))]     ;Remove duplicates
 	      type = N_elements(sv)
-	      good = lonarr(nv)
-	      count = 0l
-	      for i=0L,type-1 do begin		;loop on possible values    
-		g = where( values EQ sv[i], Ng)
-		if Ng gt 0 then begin
-		        good[count] = g
-			count = count + Ng
-		endif
+	      valid = bytarr(nv) 
+
+	      for i=0L,type-1 do begin		;loop on possible values  
+	         valid OR= (values EQ sv[i])
 	      endfor
-              if count EQ 0 then good = intarr(1)-1  else $ ;Make sure good is defined
-	                         good = good[0:count-1]
-	      
+	      good = where(valid, count) 	    
+  
+
+              if count EQ 0 then good = intarr(1)-1   ;Make sure good is defined
 	      !err=count
 	      end
 endcase

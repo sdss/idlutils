@@ -1,12 +1,13 @@
 PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, $
                  OVERPLOT=Overplot, PSYM = psym, Peak=Peak, $
                  Fill=Fill, FCOLOR=Fcolor, FLINE=FLINE, $
-                 FSPACING=Fspacing, FPATTERN=Fpattern, $
+                 FTHICK=FThick, FSPACING=Fspacing, FPATTERN=Fpattern, $
                  FORIENTATION=Forientation, NAN = NAN, $
                  _EXTRA = _extra, Halfbin = halfbin, AUTOBin = autobin, $
                  Boxplot = boxplot, xlog = xlog, ylog = ylog, $
                  yrange = yrange, Color = color,axiscolor=axiscolor, $
-                 rotate = rotate
+                 rotate = rotate, WINDOW=window,XSTYLE=xstyle, YSTYLE = ystyle,$
+		 THICK= thick, LINESTYLE = linestyle
 ;+
 ; NAME:
 ;      PLOTHIST
@@ -29,19 +30,19 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, $
 ;      /AUTOBIN - Automatically determines bin size of the histogram as the
 ;                 square root of the number of samples. Only valid when BIN
 ;                 is not set.
-;      AXISCOLOR - Color of the plotting axes.   Default = !p.color 
+;      AXISCOLOR - Color (string or number) of the plotting axes.  
 ;      BIN -  The size of each bin of the histogram,  scalar (not necessarily
 ;             integral).  If not present (or zero), the bin size is set to 1.
 ;      /BOXPLOT - If set, then each histogram data value will be plotted
 ;             "box style" with vertical lines drawn from Y=0 at each end of 
 ;              the bin width
-;      COLOR - Color of the plotted data.  Default = !p.COLOR
+;      COLOR - Color (number or string) of the plotted data.    See CGCOLOR
+;              for a list of available color names. 
 ;      /HALFBIN - Set this keyword to a nonzero value to shift the binning by
 ;              half a bin size.     This is useful for integer data, where e.g.
 ;              the bin for values of 6 will go from 5.5 to 6.5.   The default
 ;              is to set the HALFBIN keyword for integer data, and not for
-;              non-integer data.    Note: prior to May 2002, the default was 
-;              to always shift the binning by half a bin.                
+;              non-integer data.     
 ;      /NAN - If set, then check for the occurence of IEEE not-a-number values
 ;      /NOPLOT - If set, will not plot the result.  Useful if intention is to
 ;             only get the xhist and yhist outputs.
@@ -56,20 +57,24 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, $
 ;             in each bin.      Useful for placing a histogram plot
 ;             at the side of a scatter plot, as shown at the bottom of
 ;               http://www.dur.ac.uk/j.r.mullaney/pages/software.php
+;       WINDOW - Set this keyword to plot to a resizeable graphics window
+;
 ;
 ; The following keywords take effect only if the FILL keyword is set:
-;      FCOLOR - color to use for filling the histogram
+;      FCOLOR - color (string or number) to use for filling the histogram
 ;      /FLINE - if set, will use lines rather than solid color for fill (see
-;              the LINE_FILL keyword in the POLYFILL routine)
+;              the LINE_FILL keyword in the cgcolorfill routine)
 ;      FORIENTATION - angle of lines for fill (see the ORIENTATION keyword
-;              in the POLYFILL routine)
+;              in the cgcolorfill routine)
 ;      FPATTERN - the pattern to use for the fill (see the PATTERN keyword
-;              in the POLYFILL routine)
+;              in the cgcolorfill routine)
 ;      FSPACING - the spacing of the lines to use in the fill (see the SPACING
-;              keyword in the POLYFILL routine)
+;              keyword in the cgcolorfill routine)
+;      FTHICK - the thickness of the lines to use in the fill (see the THICK
+;              keyword in the cgcolorfill routine)
 ;
-; Any input keyword that can be supplied to the PLOT procedure (e.g. XRANGE,
-;    LINESTYLE, /XLOG, /YLOG) can also be supplied to PLOTHIST.
+; Any input keyword that can be supplied to the cgPLOT procedure (e.g. XRANGE,
+;    AXISCOLOR, LINESTYLE, /XLOG, /YLOG) can also be supplied to PLOTHIST.
 ;
 ; EXAMPLE:
 ;       (1) Create a vector of random 1000 values derived from a Gaussian of 
@@ -86,7 +91,7 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, $
 ;
 ; NOTES:
 ;       David Fanning has written a similar program HISTOPLOT with more graphics
-;       options:   See http://www.dfanning.com/programs/histoplot.pro
+;       options:   See http://www.idlcoyote.com/programs/histoplot.pro
 ; MODIFICATION HISTORY:
 ;        Written     W. Landsman            January, 1991
 ;        Add inherited keywords W. Landsman        March, 1994
@@ -103,6 +108,10 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, $
 ;        Added AXISCOLOR keyword, fix color problem with overplots WL Nov 2007
 ;        Check when /NAN is used and all elements are NAN  S. Koposov Sep 2008
 ;        Added /ROTATE keyword to turn plot on its side. J. Mullaney, 2009.
+;        Added FTHICK keyword for thickness of fill lines. L. Anderson Oct. 2010
+;        Use Coyote Graphics  W. Landsman Feb 2011
+;        Explicit XSTYLE, YSTYLE keywords to avoid _EXTRA confusion WL. Aug 2011
+;        Fix PLOT keyword problem with /ROTATE  WL  Dec 2011
 ;-
 ;			Check parameters.
  On_error,2
@@ -124,7 +133,7 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, $
        'ERROR - Input array must contain distinct values'
 
  ;Determining how to calculate bin size:
- if not keyword_set(BIN) then begin
+ if ~keyword_set(BIN) then begin
     if keyword_set(AUTOBIN) then begin
        bin = (max(arr)-min(arr))/sqrt(N_elements(arr))
     endif else begin
@@ -161,7 +170,7 @@ PRO plothist, arr, xhist,yhist, BIN=bin,  NOPLOT=NoPlot, $
  ;Positions of each bin:
  xhist = lindgen( N_hist ) * bin + min(y*bin) 
  
- if not halfbin then xhist = xhist + 0.5*bin
+ if ~halfbin then xhist = xhist + 0.5*bin
 
 ;;;
 ;   If renormalizing the peak, do so.
@@ -184,10 +193,8 @@ if keyword_set(Peak) then yhist = yhist * (Peak / float(max(yhist)))
       if N_elements(xlog) EQ 0 then xlog = !X.type
  endif     
  if N_elements(PSYM) EQ 0 then psym = 10         ;Default histogram plotting
- if  N_elements(COLOR) EQ 0 then color = !p.color
- if  N_elements(AXISCOLOR) EQ 0 then axiscolor = !p.color
- if not keyword_set(XRANGE) then xrange = [ xhist[0]-bin ,xhist[N_hist-1]+bin ]
- if not keyword_set(xstyle) then xstyle=1
+ if ~keyword_set(XRANGE) then xrange = [ xhist[0]-bin ,xhist[N_hist-1]+bin ]
+ if ~keyword_set(xstyle) then xstyle=1
  
  if  keyword_set(ylog) then begin 
      ymin = min(yhist) GT 1 ? 1 : 0.1
@@ -213,23 +220,27 @@ if keyword_set(Peak) then yhist = yhist * (Peak / float(max(yhist)))
     
     ;If xrange is not set.
     ;Then the auto x- range by setting xrange to [0,0].
-    if not xra_set then xrange=[0,0]
-    if not xst_set then xstyle=0
-    if not yst_set then ystyle=1
+    if ~xra_set then xrange=[0,0]
+    if ~xst_set then xstyle=0
+    if ~yst_set then ystyle=1
     
  ENDIF
  
-  if not keyword_set(Overplot) then begin
-     plot, xdata , ydata,  $ 
-           PSYM = psym, _EXTRA = _extra,xrange=xrange,color=axiscolor, $
+ 
+  if ~keyword_set(Overplot) then begin
+
+     cgplot, xdata , ydata,  $ 
+           PSYM = psym, _EXTRA = _extra,xrange=xrange,axiscolor=axiscolor, $
            xstyle=xstyle, xlog = xlog, ylog = ylog, yrange=yrange, $
-           ystyle=ystyle, /nodata
+           ystyle=ystyle, /nodata,window=window
+	   if keyword_Set(window) then cgcontrol,execute=0
   endif
 ;JRM;;;;;;;;;;;;;
 
 ;;;
 ;   If doing a fill of the histogram, then go for it.
 ;
+  if N_elements(color) EQ 0 then color = cgcolor('opposite')
  
  if keyword_set(Fill) then begin
     ;JRM;;;;;;;;;;;
@@ -261,18 +272,19 @@ if keyword_set(Peak) then yhist = yhist * (Peak / float(max(yhist)))
     Xfill = Xfill > XCRANGE[0] < XCRANGE[1] ;Make sure within plot range
     Yfill = Yfill > YCRANGE[0] < YCRANGE[1]
     
-    if keyword_set(Fcolor) then Fc = Fcolor else Fc = !P.Color
+    if keyword_set(Fcolor) then Fc = Fcolor else Fc = 'Opposite'
     if keyword_set(Fline) then begin
-       if keyword_set(Fspacing) then Fs = Fspacing else Fs = 0
-       if keyword_set(Forientation) then Fo = Forientation else Fo = 0
-       
-       polyfill, Xfill,Yfill, color=Fc, /line_fill, spacing=Fs, orient=Fo
+       Fs =  keyword_set(Fspacing) ? Fspacing : 0
+       Fo =  keyword_set(Forientation) ? Forientation: 0
+       cgcolorfill, Xfill,Yfill, color=Fc, /line_fill, spacing=Fs, orient=Fo, $
+         thick = fthick, WINDOW=window
     
     endif else begin
+   
        if keyword_set(Fpattern) then begin
-          polyfill, Xfill,Yfill, color=Fc, pattern=Fpattern
+          cgcolorfill, Xfill,Yfill, color=Fc, pattern=Fpattern, window=window
        endif else begin
-          polyfill, Xfill,Yfill, color=Fc
+          cgcolorfill, Xfill,Yfill, color=Fc,window=window
        endelse
     endelse
  endif
@@ -282,22 +294,25 @@ if keyword_set(Peak) then yhist = yhist * (Peak / float(max(yhist)))
     ;Need to determine the positions and use plotS.
     ycrange = keyword_set(ylog)? 10^!Y.CRANGE : !Y.CRANGE
     xcrange = keyword_set(ylog)? 10^!X.CRANGE : !X.CRANGE
-    
-    plots, xdata[0]<xcrange[1], ycrange[1]<(ydata[0]-bin/2)>ycrange[0], $
-           color=color, _EXTRA=_extra
-    plots, xdata[0]<xcrange[1], ycrange[1]<(ydata[1]-bin/2)>ycrange[0], $
-           color=color, _EXTRA=_extra
+    cgplots, xdata[0]<xcrange[1], ycrange[1]<(ydata[0]-bin/2)>ycrange[0], $
+           color=color,Thick = thick, LINESTYLE = linestyle, ADDCMD=window
+    cgplots, xdata[0]<xcrange[1], ycrange[1]<(ydata[1]-bin/2)>ycrange[0], $
+           color=color,THICK = thick, LINESTYLE= linestyle, ADDCMD=window
     FOR i=1, n_elements(xdata)-2 DO BEGIN
-       plots, xdata[i]<xcrange[1], ycrange[1]<(ydata[i]-bin/2)>ycrange[0], $
-              color=color, _EXTRA=_extra, /CONTINUE
-       plots, xdata[i]<xcrange[1], ycrange[1]<(ydata[i+1]-bin/2)>ycrange[0], $
-              color=color, _EXTRA=_extra, /CONTINUE
+       cgplots, xdata[i]<xcrange[1], ycrange[1]<(ydata[i]-bin/2)>ycrange[0], $
+              color=color, THICK=thick, LINESTYLE= linestyle, $
+	      /CONTINUE,ADDCMD=window
+       cgplots, xdata[i]<xcrange[1], ycrange[1]<(ydata[i+1]-bin/2)>ycrange[0], $
+              color=color, /CONTINUE,THICK=thick, LINESTYLE=linestyle, $
+	       ADDCMD=window
     ENDFOR
-    plots, xdata[i]<xcrange[1], ycrange[1]<(ydata[i]-bin/2)>ycrange[0], $
-           color=color, _EXTRA=_extra, /CONTINUE
+    cgplots, xdata[i]<xcrange[1], ycrange[1]<(ydata[i]-bin/2)>ycrange[0], $
+           color=color, /CONTINUE, THICK=thick, LINESTYLE = linestyle, $
+	   ADDCMD=window
  ENDIF ELSE BEGIN
-    oplot, xdata, ydata,  $ 
-           PSYM = psym, _EXTRA = _extra,color=color
+    cgplot, /over, xdata, ydata, XSTYLE= xstyle, YSTYLE = ystyle, $ 
+           PSYM = psym, THICK=thick, LINESTYLE = linestyle, $
+	    _EXTRA = _extra,color=color,ADDCMD=window
     ENDELSE
  ;JRM;;;;;;;;;;;
  
@@ -307,18 +322,22 @@ if keyword_set(boxplot) then begin
    IF n_elements(rotate) EQ 0 THEN BEGIN
       ycrange = keyword_set(ylog)? 10^!Y.CRANGE : !Y.CRANGE
       FOR j =0 ,N_Elements(xhist)-1 DO BEGIN
-         PlotS, [xhist[j], xhist[j]]-bin/2, [YCRange[0], yhist[j] < Ycrange[1]], $
-                Color=Color,noclip=0, _Extra=extra
+         cgPlotS, [xhist[j], xhist[j]]-bin/2, [YCRange[0], yhist[j], Ycrange[1]], $
+                Color=Color,noclip=0, THICK=thick, LINESTYLE = linestyle, $
+		_Extra=extra,ADDCMD=window
       ENDFOR 
+      
    ENDIF ELSE BEGIN
       xcrange = keyword_set(ylog)? 10^!X.CRANGE : !X.CRANGE
       FOR j =0 ,N_Elements(xhist)-1 DO BEGIN
-         PlotS, [xcrange[0], xhist[j]<xcrange[1]], [yhist[j], yhist[j]]-bin/2, $
-                Color=Color, noclip=0, _Extra=_extra
+         cgPlotS, [xcrange[0], xhist[j]<xcrange[1]], [yhist[j], $
+	            yhist[j]]-bin/2, ADDCMD=window, THICK=thick, $
+                    LINESTYLE = linestyle, Color=Color, noclip=0
       ENDFOR 
    ENDELSE
    ;JRM;;;;;;;;;;;
 endif
 
+ if keyword_Set(window) then cgcontrol,execute=1
  return
  end
