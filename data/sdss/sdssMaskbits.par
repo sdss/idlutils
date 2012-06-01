@@ -445,8 +445,16 @@ maskbits ANCILLARY_TARGET2 6 STRIPE82BCG			"defined in alexie-bcgs.fits"
 maskbits ANCILLARY_TARGET2 7 QSO_SUPPZ			"defined in qso_suppz.descr"
 maskbits ANCILLARY_TARGET2 8 QSO_VAR_SDSS			"defined in VARQSO.descr"
 maskbits ANCILLARY_TARGET2 9 QSO_WISE_SUPP			"defined in BOSS_QSO_targets_July_WISE.descr"
-maskbits ANCILLARY_TARGET2 10 XMMSDSS			"defined in georgakakis.descr"
-maskbits ANCILLARY_TARGET2 11 QSO_WISE_FULL_SKY			"defined in none.descr"
+maskbits ANCILLARY_TARGET2 10 QSO_WISE_FULL_SKY			"defined in none"
+maskbits ANCILLARY_TARGET2 11 XMMSDSS			"defined in georgakakis.descr"
+maskbits ANCILLARY_TARGET2 12 IAMASERS			"defined in zaw.descr"
+maskbits ANCILLARY_TARGET2 13 DISKEMITTER_REPEAT			"defined in shen.descr"
+maskbits ANCILLARY_TARGET2 14 WISE_BOSS_QSO			"defined in ross_wisebossqso.descr"
+maskbits ANCILLARY_TARGET2 15 QSO_XD_KDE_PAIR			"defined in myers.descr"
+maskbits ANCILLARY_TARGET2 16 FINOGUENOV_PLACEHOLD			"defined in finoguenov_auxBOSS.descr"
+maskbits ANCILLARY_TARGET2 17 SPOKE2			"defined in dhital.descr"
+maskbits ANCILLARY_TARGET2 18 FAINT_ELG			"defined in comparat.descr"
+maskbits ANCILLARY_TARGET2 19 PTF_GAL			"defined in kasliwal.descr"
 
 
 #-------- bosstile status bits
@@ -473,6 +481,9 @@ maskbits BOSSTILE_STATUS 18 DUPLICATE_PRIMARY "has associated duplicate object t
 maskbits BOSSTILE_STATUS 19 DUPLICATE_TILED "trimmed as a duplicate object, and its primary was tiled"
 maskbits BOSSTILE_STATUS 20 TOOFAINT "trimmed because it was fainter than the ifiber2mag limit"
 maskbits BOSSTILE_STATUS 21 SUPPLEMENTARY "supplementary targets tiles after the ancillaries (subset of ancillaries)"
+maskbits BOSSTILE_STATUS 22 ANCILLARY_ROUND2 "new ancillaries added June 2012 (tiled after old ancillaries)"
+maskbits BOSSTILE_STATUS 23 MIDLEVEL_PRIORITY "targets (from ancillary list) tiled between gals and ancillaries"
+
 
 #-------- SEGUE-1 target bits
 masktype SEGUE1_TARGET 32 "SEGUE-1 primary target bits"

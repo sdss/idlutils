@@ -1,3 +1,7 @@
+2012-06-01: Tinker: adding new maskbits for the new ancillary programs
+as well as new BOSSTILE_STATUS bits.
+
+
 -------------------------------------------------------------------------------
 v5_5_5 (2012-05-30)
 Tagging new version with latest Goddard merge.
