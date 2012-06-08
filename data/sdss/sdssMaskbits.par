@@ -455,6 +455,7 @@ maskbits ANCILLARY_TARGET2 16 CLUSTER_MEMBER			"defined in finoguenov_auxBOSS.de
 maskbits ANCILLARY_TARGET2 17 SPOKE2			"defined in dhital.descr"
 maskbits ANCILLARY_TARGET2 18 FAINT_ELG			"defined in comparat.descr"
 maskbits ANCILLARY_TARGET2 19 PTF_GAL			"defined in kasliwal.descr"
+maskbits ANCILLARY_TARGET2 20 QSO_STDL			"defined in margala.descr"
 
 
 #-------- bosstile status bits
