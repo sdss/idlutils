@@ -459,7 +459,7 @@ maskbits ANCILLARY_TARGET2 20 QSO_STD			"defined in margala.descr"
 maskbits ANCILLARY_TARGET2 21 HIZ_LRG			"defined in newman.descr"
 maskbits ANCILLARY_TARGET2 22 LRG_ROUND3			"defined in newman.descr"
 maskbits ANCILLARY_TARGET2 23 WISE_COMPLETE			"defined in weiner_wise.descr"
-maskbits ANCILLARY_TARGET2 24 SPIDERS_PILOT			"defined in GreenMerloni_MD01.descr"
+maskbits ANCILLARY_TARGET2 24 TDSS_PILOT			"defined in GreenMerloni_MD01.descr"
 
 
 #-------- bosstile status bits
