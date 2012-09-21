@@ -1,3 +1,9 @@
+
+data/sdss/sdssMaskbits.par: Add the following two new maskbits:
+maskbits CALIB_STATUS  12  ASTROMBAD
+maskbits ZWARNING  8 BAD_TARGET
+pursuant to ticket #1583 (A. Bolton, Utah, 2012-Sep-21)
+
 2012-06-01: Tinker: adding new maskbits for the new ancillary programs
 as well as new BOSSTILE_STATUS bits.
 
