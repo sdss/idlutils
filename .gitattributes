@@ -3,6 +3,7 @@ goddard/text/coyote.readme -text
 pro/fits/mrdfits_rows.pro -text
 pro/mpfit/fakedata.sav -text svneol=unset#unset
 pro/sdss/sdss_astrombad.pro -text
+pro/sdss/sdss_specobjid.pro -text
 pro/wise/wise_ascii2fits.pro -text
 pro/wise/wise_match.pro -text
 src/mangle2.2/src/Makefile -text
