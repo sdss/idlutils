@@ -1,3 +1,14 @@
+-------------------------------------------------------------------------------
+v5_5_8 (2012-10-23) tag for DR10
+
+Blanton 2012-10-22: sdss_astrombad uses $PHOTOLOG_DIR/opfiles/opBadfields.par
+  instead of $BOSS_PHOTOOBJ/astromqa/astromQAFields.fits
+
+Brownstein 2012-10-16:
+  Copied sdss_objid from photoop/v1_11_0 to reduce photoop dependencies.
+  Copied sdss_specobjid from sas/v1_16 to reduce sas dependencies.
+
+Blanton 2012-10-12: sdss_astrombad tells you if a field is bad or not.
 
 data/sdss/sdssMaskbits.par: Add the following two new maskbits:
 maskbits CALIB_STATUS  12  ASTROMBAD
