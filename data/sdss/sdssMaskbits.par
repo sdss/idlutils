@@ -467,6 +467,7 @@ maskbits ANCILLARY_TARGET2 25 SPIDERS_PILOT			"defined in GreenMerloni_MD01.desc
 maskbits ANCILLARY_TARGET2 26 TDSS_SPIDERS_PILOT			"defined in GreenMerloni_MD01.descr"
 maskbits ANCILLARY_TARGET2 27 QSO_VAR_LF			"defined in palanque_str82.descr"
 maskbits ANCILLARY_TARGET2 28 TDSS_PILOT_PM			"defined in TDSS_SPIDERS_MD03.descr"
+maskbits ANCILLARY_TARGET2 29 TDSS_PILOT_SNHOST			"defined in TDSS_SPIDERS_MD03.descr"
 
 
 #-------- bosstile status bits
