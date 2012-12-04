@@ -1,4 +1,11 @@
 -------------------------------------------------------------------------------
+v5_5_9 (2012-12-03)
+
+ups/idlutils.table: Add photolog dependency (Weaver, 2012-12-03)
+
+data/sdss/sdssMaskbits.par:  added ancillary_target2 bit (Tinker, 2012-11-26)
+
+-------------------------------------------------------------------------------
 v5_5_8 (2012-10-23) tag for DR10
 
 Blanton 2012-10-22: sdss_astrombad uses $PHOTOLOG_DIR/opfiles/opBadfields.par

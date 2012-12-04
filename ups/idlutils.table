@@ -1,6 +1,7 @@
 setupOptional("idl")
 setupOptional("dust")
 setupOptional("first")
+setupOptional("photolog")
 setupOptional("rc3")
 setupOptional("rass")
 setupOptional("gsc")
