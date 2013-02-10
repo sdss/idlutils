@@ -6,7 +6,7 @@
 ;   Forced photometry of WISE Level 1b images using locations of SDSS sources
 ;
 ; CALLING SEQUENCE:
-;   retval = wise_pforce1(ra, dec, [ /ignore_missing, debug= ])
+;   retval = wise_pforce1(ra, dec, [ /ignore_missing, objs=, debug= ])
 ;
 ; INPUTS:
 ;   ra         - Right ascension(s) [deg]
@@ -22,7 +22,7 @@
 ;                         within fitting region
 ;                RUN,RERUN,CAMCOL,FIELD,ID - Identifier of SDSS object;
 ;                         zeros if no match
-;                MATCHRAD - Matching radius from requested coordinate [deg];
+;                MATCHRAD - Matching distance from requested coordinate [deg];
 ;                         zero if no match
 ;                WISE_FLUX - WISE flux [nano-maggies]
 ;                WISE_FLUX_IVAR - Inverse variance of WISE_FLUX
@@ -30,7 +30,9 @@
 ;                WISE_RCHI2 - Reduced chi^2 of 
 ;
 ; OPTIONAL OUTPUTS:
-;   debug      - Output structure containing [Npix,Npix,Nimage] cutouts from
+;   objs       - Structure containing all SDSS object parameters;
+;                not set if no matching SDSS objects for any coordinates
+;   debug      - Structure containing [Npix,Npix,Nimage] cutouts from
 ;                the WISE images in flux (IMAGE), fit image (FIT),
 ;                and the chi values (CHI); return only for the last
 ;                coordinate in the RA,DEC list
@@ -50,6 +52,9 @@
 ;   Use larger WISE PSF (with ghosts)
 ;   Normalization of each image from MAGZP in header, set same for each image
 ;   NIMAGE should really only count the number of images at the central RA,Dec?
+;   Object fluxes can be fit as negative
+;   Example of QSO that should be bright: 229.20489, 2.6974207
+;     but some bad WISE images are included in fit
 ;
 ; DATA FILES:
 ;
@@ -57,7 +62,8 @@
 ;   08-Feb-2013  Written by D. Schlegel, LBL
 ;-
 ;------------------------------------------------------------------------------
-function wise_pforce1, ra, dec, ignore_missing=ignore_missing, debug=debug
+function wise_pforce1, ra, dec, ignore_missing=ignore_missing, $
+ objs=objs, debug=debug
 
    common com_pforce, ixlist
 
@@ -153,7 +159,7 @@ print,'Working on image ',i, nnear
        '4band_p1bm_frm',subdirs])
       image1 = mrdfits(imfile, 0, hdr, /silent)
       errimg1 = mrdfits(errfile, /silent)
-      if (keyword_set(image1)*keyword_set(err1) EQ 0 $
+      if (keyword_set(image1)*keyword_set(errimg1) EQ 0 $
        AND keyword_set(ignore_missing)) then begin
          splog, 'Ignore missing file '+imfile
          image1 = fltarr(1016,1016)
@@ -173,7 +179,7 @@ print,'Working on image ',i, nnear
       sqiv1 = 1 / errimg1
       dims = size(image1, /dimens)
       sqiv1 = fltarr(dims)
-      igood = where(finite(errimg1), ngood)
+      igood = where(finite(errimg1) AND errimg1 GT 0, ngood)
       if (ngood GT 0) Then sqiv1[igood] = 1. / errimg1[igood]
 
       extast, hdr, astr
@@ -185,7 +191,7 @@ print,'Working on image ',i, nnear
       yfrac = yobj - yint
 
       r2 = (xaxis - xcen)^2 + (yaxis - ycen)^2
-      indx = where(r2 LT (rmax*3600./pixscale)^2, nthis)
+      indx = where(r2 LT (rmax*3600./pixscale)^2 AND sqiv1 GT 0, nthis)
       yarr = indx / dims[0]
       xarr = indx - yarr*dims[0]
 
@@ -230,6 +236,7 @@ print,'Working on image ',i, nnear
 ;   chi2 = computechi2(bvec[k], sqivar[k], amatrix[k,*], acoeff=acoeff, $
 ;    yfit=yfit1, var=var)
 
+; Crash condition if no good pixels, i.e. k=-1 ???
    ; Fit to non-zero rows only
    nz = where(total(amatrix[k,*] NE 0,1) NE 0)
    amatrix = amatrix[k,*]
@@ -271,20 +278,30 @@ print,'Working on image ',i, nnear
    return, retval
 end
 ;------------------------------------------------------------------------------
-function wise_pforce, ra, dec, debug=debug, _EXTRA=KeywordsForPforce
+function wise_pforce, ra, dec, objs=objs, debug=debug, _EXTRA=KeywordsForPforce
 
+   objs = 0 ; default output
    nobj = n_elements(ra)
    if (n_elements(dec) NE nobj) then $
     message, 'Number of elements in RA,DEC must agree!'
    for i=0L, nobj-1L do begin
 print, 'Working on object ',i,nobj
-      ret1 = wise_pforce1(ra[i], dec[i], debug=debug, _EXTRA=KeywordsForPforce)
+      ret1 = wise_pforce1(ra[i], dec[i], objs=obj1, debug=debug, $
+       _EXTRA=KeywordsForPforce)
       if (i EQ 0) then begin
          blankval = ret1[0]
          struct_assign, {junk:0}, blankval
          retval = replicate(blankval, nobj)
       endif
       retval[i] = ret1[0]
+      ; The OBJS structure cannot be built until there is a match to
+      ; SDSS objects
+      if (keyword_set(objs) EQ 0 AND keyword_set(obj1)) then begin
+         blankval = obj1[0]
+         struct_assign, {junk:0}, blankval
+         objs = replicate(blankval, nobj)
+      endif
+      if (keyword_set(obj1)) then objs[i] = obj1[0]
    endfor
 
    return, retval
