@@ -6,13 +6,18 @@
 ;   Forced photometry of WISE Level 1b images using locations of SDSS sources
 ;
 ; CALLING SEQUENCE:
-;   retval = wise_pforce1(ra, dec, [ /ignore_missing, objs=, debug= ])
+;   retval = wise_pforce1(ra, dec, [ rmax=, rpad=, $
+;    /ignore_missing, objs=, debug= ])
 ;
 ; INPUTS:
 ;   ra         - Right ascension(s) [deg]
 ;   dec        - Declination(s) [deg]
 ;
 ; OPTIONAL INPUTS:
+;   rmax       - Max distance in deg to fit pixels on WISE image;
+;                default to 40./3600 deg
+;   rpad =     - Padding distance in deg for SDSS objects to use in fits;
+;                default to 3./3600 deg
 ;   ignore_missing - Skip missing WISE files without crashing
 ;
 ; OUTPUTS:
@@ -62,18 +67,21 @@
 ;   08-Feb-2013  Written by D. Schlegel, LBL
 ;-
 ;------------------------------------------------------------------------------
-function wise_pforce1, ra, dec, ignore_missing=ignore_missing, $
- objs=objs, debug=debug
+function wise_pforce1, ra, dec, rmax=rmax1, rpad=rpad1, $
+ ignore_missing=ignore_missing, objs=objs, debug=debug
 
    common com_pforce, ixlist
 
 wband = 1 ; WISE band
 setenv,'WISE_IMAGE_DIR=/clusterfs/riemann/raid007/bosswork/boss/wise_level1b'
 maxrad = 0.549 ; distance from center of WISE field to corner [deg]
-rmax = 40./3600 ; max distance in deg to fit pixels on WISE image
-rpad = 3./3600 ; padding distance in deg for SDSS objects to use in fits
 rerun = 301
 minpix = 10 ; use WISE images with this minimum number of pixels 
+
+   if (keyword_set(rmax1)) then rmax = rmax1 $
+    else rmax = 40./3600
+   if (keyword_set(rpad1)) then rpad = rpad1 $
+    else rpad = 3./3600
 
    ; Read the index file for the WISE images if not already cached
    if (keyword_set(ixlist) EQ 0) then begin
