@@ -62,9 +62,9 @@ pro wisefmt1, filename, outfile, nrowchunk=nrowchunk, schemafile=schemafile
       if strmatch(ffmt[i],'char*') then begin
          thislen = long(stregex(ffmt[i],'[0-9]+',/extract))
          thisval = string('',format='(a'+strtrim(thislen,2)+')')
-       endif else if strmatch(ffmt[i], 'smallint') then thisval = 0B $
-       else if strmatch(ffmt[i], 'integer') then thisval = 0 $
-       else if strmatch(ffmt[i], 'int8') then thisval = 0L $
+       endif else if strmatch(ffmt[i], 'smallint') then thisval = 0 $
+       else if strmatch(ffmt[i], 'integer') then thisval = 0L $
+       else if strmatch(ffmt[i], 'int8') then thisval = 0LL $
        else if strmatch(ffmt[i], 'serial8') then thisval = 0LL $
        else if strmatch(ffmt[i], 'smallfloat') then thisval = 0. $
        else if strmatch(ffmt[i], 'decimal*') then thisval = 0.D $
