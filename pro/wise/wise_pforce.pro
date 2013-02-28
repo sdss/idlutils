@@ -6,7 +6,7 @@
 ;   Forced photometry of WISE Level 1b images using locations of SDSS sources
 ;
 ; CALLING SEQUENCE:
-;   retval = wise_pforce1(ra, dec, [ rmax=, rpad=, $
+;   retval = wise_pforce1(ra, dec, [ rmax=, rpad=, dexclude= $
 ;    /ignore_missing, objs=, debug= ])
 ;
 ; INPUTS:
@@ -18,6 +18,9 @@
 ;                default to 40./3600 deg
 ;   rpad =     - Padding distance in deg for SDSS objects to use in fits;
 ;                default to 3./3600 deg
+;   rexclude   - Other than the best match, exclude other SDSS sources
+;                within this distance of the requested position; set to 0
+;                (default value) to not exclude such nearby sources in the fit
 ;   ignore_missing - Skip missing WISE files without crashing
 ;
 ; OUTPUTS:
@@ -27,8 +30,12 @@
 ;                         within fitting region
 ;                RUN,RERUN,CAMCOL,FIELD,ID - Identifier of SDSS object;
 ;                         zeros if no match
-;                MATCHRAD - Matching distance from requested coordinate [deg];
+;                NOBJ      - Number of SDSS sources used in fitting
+;                NEXCLUDE  - Number of SDSS sources excluded with REXCLUDE
+;                MATCHDIST - Matching distance from requested coordinate [deg];
 ;                         zero if no match
+;                MATCHDIST - Matching distance of the next-nearest SDSS source
+;                            [deg]
 ;                WISE_FLUX - WISE flux [nano-maggies]
 ;                WISE_FLUX_IVAR - Inverse variance of WISE_FLUX
 ;                WISE_NIMAGE - Number of WISE images used in fit
@@ -67,7 +74,7 @@
 ;   08-Feb-2013  Written by D. Schlegel, LBL
 ;-
 ;------------------------------------------------------------------------------
-function wise_pforce1, ra, dec, rmax=rmax1, rpad=rpad1, $
+function wise_pforce1, ra, dec, rmax=rmax1, rpad=rpad1, rexclude=rexclude, $
  ignore_missing=ignore_missing, objs=objs, debug=debug
 
    common com_pforce, ixlist
@@ -103,7 +110,7 @@ minpix = 10 ; use WISE images with this minimum number of pixels
    nobj = n_elements(objs) > 1
 
    ; Create the output data structure
-   retval = replicate( create_struct( $
+   retval1 = create_struct( $
     'RA', 0d0, $
     'DEC', 0d0, $
     'RUN', 0L, $
@@ -111,21 +118,43 @@ minpix = 10 ; use WISE images with this minimum number of pixels
     'CAMCOL', 0L, $
     'FIELD', 0L, $
     'ID', 0L, $
-    'MATCHRAD', 0d0, $
+    'NOBJ', 0, $
+    'NEXCLUDE', 0, $
+    'MATCHDIST', 0., $
+    'MATCHDIST2', -1., $
     'WISEFLUX', 0., $
     'WISEFLUX_IVAR', 0., $
     'WISE_NIMAGE', 0, $
-    'WISE_RCHI2', 0. ), nobj)
+    'WISE_RCHI2', 0. )
    if (keyword_set(objs)) then begin
       ; Sort these in distance from the requested position,
       ; such that the first object is the closest
       adiff = djs_diff_angle(ra, dec, objs.ra, objs.dec)
-      objs = objs[sort(adiff)]
+      isort = sort(adiff)
+      objs = objs[isort]
+      adiff = adiff[isort]
+
+      if (keyword_set(rexclude)) then begin
+         qkeep = adiff GT rexclude
+         qkeep[0] = 1B ; always keep the nearest object
+         ikeep = where(qkeep, nobj)
+         nexclude = total(qkeep EQ 0)
+         objs = objs[ikeep]
+         adiff = adiff[ikeep]
+      endif else begin
+         nexclude = 0
+      endelse
+
+      retval = replicate(retval1, nobj)
+      struct_assign, objs, retval
+      retval.nexclude = nexclude
       retval.ra = objs.ra
       retval.dec = objs.dec
-      struct_assign, objs, retval
-      retval.matchrad = adiff[sort(adiff)]
+      retval.nobj = nobj
+      retval.matchdist = adiff
+      if (nobj GT 1) then retval.matchdist2 = adiff[1]
    endif else begin
+      retval = retval1
       retval.ra = ra
       retval.dec = dec
    endelse
@@ -149,7 +178,7 @@ minpix = 10 ; use WISE images with this minimum number of pixels
 
    nim = 0
    for i=0, nnear-1 do begin
-print,'Working on image ',i, nnear
+;print,'Working on image ',i, nnear
       subdirs = [ixlist[inear[i]].scangrp, $
        ixlist[inear[i]].scan_id, $
        string(ixlist[inear[i]].frame_num,format='(i3.3)')]
@@ -165,18 +194,28 @@ print,'Working on image ',i, nnear
        root_dir=getenv('WISE_IMAGE_DIR'), $
        subdir=['wise'+string(wband,format='(i1)'), $
        '4band_p1bm_frm',subdirs])
+      mskfile = filepath(string(ixlist[inear[i]].scan_id, $
+       ixlist[inear[i]].frame_num, wband, $
+       format='(a6,i3.3,"-w",i1,"-msk-1b.fits.gz")'), $
+       root_dir=getenv('WISE_IMAGE_DIR'), $
+       subdir=['wise'+string(wband,format='(i1)'), $
+       '4band_p1bm_frm',subdirs])
       image1 = mrdfits(imfile, 0, hdr, /silent)
       errimg1 = mrdfits(errfile, /silent)
-      if (keyword_set(image1)*keyword_set(errimg1) EQ 0 $
+      mskimg1 = mrdfits(mskfile, /silent)
+      if (keyword_set(image1)*keyword_set(errimg1)*keyword_set(mskimg1) EQ 0 $
        AND keyword_set(ignore_missing)) then begin
          splog, 'Ignore missing file '+imfile
          image1 = fltarr(1016,1016)
          errimg1 = fltarr(1016,1016)
+         mskimg1 = lonarr(1016,1016)
       endif
       if (keyword_set(image1) EQ 0) then $
        message, 'Missing file '+imfile
       if (keyword_set(errimg1) EQ 0) then $
        message, 'Missing file '+errfile
+      if (keyword_set(mskimg1) EQ 0) then $
+       message, 'Missing file '+mskfile
 
       ; Normalize the images to nano-maggies using MAGZP in the headers
       magzp = sxpar(hdr,'MAGZP') - 0.2520
@@ -184,7 +223,7 @@ print,'Working on image ',i, nnear
       image1 *= norm
       errimg1 *= norm
 
-      sqiv1 = 1 / errimg1
+      sqiv1 = (mskimg1 NE 0) / errimg1
       dims = size(image1, /dimens)
       sqiv1 = fltarr(dims)
       igood = where(finite(errimg1) AND errimg1 GT 0, ngood)
