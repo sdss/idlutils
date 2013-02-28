@@ -106,7 +106,14 @@ minpix = 10 ; use WISE images with this minimum number of pixels
    pixscale = 2.75 ; WISE pixel scale in arcsec/pix
 
    ; Read the SDSS objects near this coordinate
-   objs = sdss_circle(ra, dec, (rmax+rpad), rerun=rerun, /silent)
+;   objs = sdss_circle(ra, dec, (rmax+rpad), rerun=rerun, /silent)
+   objs = photoobj_circle(ra, dec, (rmax+rpad), rerun=rerun, /silent)
+   if (keyword_set(objs)) then begin
+      primary_bit = sdss_flagval('RESOLVE_STATUS','SURVEY_PRIMARY')
+      indx = where((objs.resolve_status AND primary_bit) NE 0, ct)
+      if (ct GT 0) then objs = objs[indx] $
+       else objs = 0
+   endif
    nobj = n_elements(objs) > 1
 
    ; Create the output data structure
