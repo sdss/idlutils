@@ -138,7 +138,7 @@ function computechi2, objflux, sqivar, starflux, $
             var[*] = covar[i,i]
          endif else begin
             for j=0L, nstar-1L do $
-             var[j] = total((vv[j,*])^2 * wwt, /double)
+             var[j] = total((vv[*,j])^2 * wwt, /double)
          endelse
       endif
    endelse
