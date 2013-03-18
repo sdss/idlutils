@@ -1,12 +1,12 @@
 ;+
 ; NAME:
-;   batch2d
+;   wise_pforce
 ;
 ; PURPOSE:
 ;   Forced photometry of WISE Level 1b images using locations of SDSS sources
 ;
 ; CALLING SEQUENCE:
-;   retval = wise_pforce1(ra, dec, [ rmax=, rpad=, dexclude= $
+;   retval = wise_pforce(ra, dec, [ rmax=, rpad=, dexclude= $
 ;    /ignore_missing, objs=, debug= ])
 ;
 ; INPUTS:
@@ -292,8 +292,8 @@ minpix = 10 ; use WISE images with this minimum number of pixels
 
 ; Crash condition if no good pixels, i.e. k=-1 ???
    ; Fit to non-zero rows only
-   nz = where(total(amatrix[k,*] NE 0,1) NE 0)
    amatrix = amatrix[k,*]
+   nz = where(total(amatrix NE 0,1) NE 0)
    amatrix = amatrix[*,nz]
    chi2 = computechi2(bvec[k], sqivar[k], amatrix, acoeff=acoeff1, $
     yfit=yfit1, var=var1)
