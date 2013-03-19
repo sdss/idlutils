@@ -304,9 +304,9 @@ rerun = 301 ; ???
     'FIELD', 0L, $
     'ID', 0L, $
     'NOBJ', lonarr(4), $
-    'NEXCLUDE', lonarr(4), $
-    'MATCHDIST', fltarr(4), $
-    'MATCHDIST2', fltarr(4)-1., $
+    'NEXCLUDE', 0, $
+    'MATCHDIST', 0., $
+    'MATCHDIST2', -1., $
     'WISEFLUX', fltarr(4), $
     'WISEFLUX_IVAR', fltarr(4), $
     'WISE_NIMAGE', lonarr(4), $
