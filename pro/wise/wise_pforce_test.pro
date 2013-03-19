@@ -345,7 +345,7 @@ rerun = 301 ; ???
    endelse
 
    for i=0, n_elements(wband)-1 do begin
-      wise_pforce2, retval, rmax=rmax1, rpad=rpad1, $
+      wise_pforce2, retval, rmax=rmax, $
        wband=wband[i], debug=debug, _EXTRA=KeywordsForPforce
    endfor
 
