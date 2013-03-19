@@ -279,7 +279,7 @@ function wise_pforce1, ra, dec, rmax=rmax1, rpad=rpad1, rexclude=rexclude, $
     else rpad = 3./3600
    if (keyword_set(wband1)) then wband = wband1 $
     else wband = [1,2]
-   if (min(wband) LT 1 OR max(wband) GT 4)) then $
+   if (min(wband) LT 1 OR max(wband) GT 4) then $
     message, 'Invalid WBAND'
 
    ; Read the SDSS objects near this coordinate
