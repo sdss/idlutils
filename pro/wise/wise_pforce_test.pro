@@ -272,6 +272,7 @@ function wise_pforce1, ra, dec, rmax=rmax1, rpad=rpad1, rexclude=rexclude, $
  wband=wband1, objs=objs, _EXTRA=KeywordsForPforce
 
    common com_pforce, ixlist
+rerun = 301 ; ???
 
    if (keyword_set(rmax1)) then rmax = rmax1 $
     else rmax = 40./3600
