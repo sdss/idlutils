@@ -37,9 +37,10 @@
 ;                         zero if no match
 ;                MATCHDIST - Matching distance of the next-nearest SDSS source
 ;                            [deg]
-;                WISE_FLUX[4] - WISE flux [nano-maggies]
-;                WISE_FLUX_IVAR[4] - Inverse variance of WISE_FLUX
+;                WISEFLUX[4] - WISE flux [nano-maggies]
+;                WISEFLUX_IVAR[4] - Inverse variance of WISE_FLUX
 ;                WISE_NIMAGE[4] - Number of WISE images used in fit
+;                WISE_NPIX[4]  - Number of pixels fit in all WISE images
 ;                WISE_RCHI2[4] - Reduced chi^2 of 
 ;
 ; OPTIONAL OUTPUTS:
@@ -55,8 +56,8 @@
 ; EXAMPLES:
 ;
 ; BUGS:
-;   Work either by reading SDSS object locations, or submit list
-;   Make use of WISE mask images
+;   Work either by reading SDSS object locations, or submit list of locations
+;   Make use of WISE mask images (or does the err image take care of this?)
 ;   SDSS galaxies could convolve the WISE PSF with the SDSS atlas image
 ;   Should exclude bad WISE images, such as at bad moon positions
 ;   Aaron's WISE PSFs still have some artifacts, near-zero values
@@ -74,23 +75,43 @@
 ;   08-Feb-2013  Written by D. Schlegel, LBL
 ;-
 ;------------------------------------------------------------------------------
+pro wise_pforce_images, filename
+
+   common wise_cache, c_file, c_image, 
+ncache_max = 100
+
+;------------------------------------------------------------------------------
 ; Compute WISE photometry at one coordinate in 1 band
 pro wise_pforce2, retval, rmax=rmax, $
  wband=wband, ignore_missing=ignore_missing, debug=debug
 
-   common com_pforce, ixlist
+   common com_pforce, wdir_save, ixlist
 
-setenv,'WISE_IMAGE_DIR=/clusterfs/riemann/raid007/bosswork/boss/wise_level1b'
+setenv,'WISE_IMAGE_DIR=/clusterfs/riemann/raid007/bosswork/boss/wise_level1b;/clusterfs/riemann/raid000/bosswork/boss/wise1ext'
 maxrad = 0.549 ; distance from center of WISE field to corner [deg]
 minpix = 10 ; use WISE images with this minimum number of pixels 
 
    iband = wband - 1
 
+   wdir = str_sep(getenv('WISE_IMAGE_DIR'), ';')
+
    ; Read the index file for the WISE images if not already cached
-   if (keyword_set(ixlist) EQ 0) then begin
-      ixfile = filepath('WISE-index-L1b.fits', $
-       root_dir=getenv('WISE_IMAGE_DIR'))
-      ixlist = mrdfits(ixfile, 1, /silent)
+   ; or if the env variable has changed
+   if (keyword_set(ixlist) EQ 0) then qread = 1B $ ; =1 to read
+    else qread = total(wdir NE wdir_save) GT 0 OR $
+     n_elements(wdir) NE n_elements(wdir_save)
+   if (qread) then begin
+      for i=0, n_elements(wdir)-1 do begin
+         ixfile1 = filepath('WISE-index-L1b.fits', root_dir=wdir[i])
+         ixlist1 = mrdfits(ixfile1, 1, /silent)
+         if (NOT keyword_set(ixlist1)) then $
+          message, 'Missing index file in directory '+wdir[i]
+         ixlist1 = struct_addtags(ixlist1, $
+          replicate(create_struct('IDIR', i), n_elements(ixlist1)))
+         if (i EQ 0) then ixlist = ixlist1 $
+          else ixlist = struct_append(ixlist, ixlist1, /force)
+      endfor
+      wdir_save = wdir
    endif
 
    ; Find the WISE images that might contain this object
@@ -127,19 +148,19 @@ minpix = 10 ; use WISE images with this minimum number of pixels
       imfile = filepath(string(ixlist[inear[i]].scan_id, $
        ixlist[inear[i]].frame_num, wband, $
        format='(a6,i3.3,"-w",i1,"-int-1b.fits")'), $
-       root_dir=getenv('WISE_IMAGE_DIR'), $
+       root_dir=wdir[ixlist[inear[i]]].idir, $
        subdir=['wise'+string(wband,format='(i1)'), $
        '4band_p1bm_frm',subdirs])
       errfile = filepath(string(ixlist[inear[i]].scan_id, $
        ixlist[inear[i]].frame_num, wband, $
        format='(a6,i3.3,"-w",i1,"-unc-1b.fits.gz")'), $
-       root_dir=getenv('WISE_IMAGE_DIR'), $
+       root_dir=wdir[ixlist[inear[i]]].idir, $
        subdir=['wise'+string(wband,format='(i1)'), $
        '4band_p1bm_frm',subdirs])
       mskfile = filepath(string(ixlist[inear[i]].scan_id, $
        ixlist[inear[i]].frame_num, wband, $
        format='(a6,i3.3,"-w",i1,"-msk-1b.fits.gz")'), $
-       root_dir=getenv('WISE_IMAGE_DIR'), $
+       root_dir=wdir[ixlist[inear[i]]].idir, $
        subdir=['wise'+string(wband,format='(i1)'), $
        '4band_p1bm_frm',subdirs])
       image1 = mrdfits(imfile, 0, hdr, /silent)
@@ -244,6 +265,7 @@ minpix = 10 ; use WISE images with this minimum number of pixels
    retval.wiseflux_ivar[iband] = $
     (var[0:nobj-1] GT 0) / (var[0:nobj-1] + (var[0:nobj-1] LE 0))
    retval.wise_nimage[iband] = nim
+   retval.wise_npix[iband] = n_elements(k)
    retval.wise_rchi2[iband] = chi2 / n_elements(k)
 
    if (arg_present(debug)) then begin
@@ -310,6 +332,7 @@ rerun = 301 ; ???
     'WISEFLUX', fltarr(4), $
     'WISEFLUX_IVAR', fltarr(4), $
     'WISE_NIMAGE', lonarr(4), $
+    'WISE_NPIX', lonarr(4), $
     'WISE_RCHI2', fltarr(4) )
    if (keyword_set(objs)) then begin
       ; Sort these in distance from the requested position,
