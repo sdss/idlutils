@@ -1,13 +1,13 @@
 ;+
 ; NAME:
-;   wise_pforce
+;   wise_pforce_test
 ;
 ; PURPOSE:
 ;   Forced photometry of WISE Level 1b images using locations of SDSS sources
 ;
 ; CALLING SEQUENCE:
-;   retval = wise_pforce(ra, dec, [ rmax=, rpad=, dexclude=, wband= $
-;    /ignore_missing, objs=, debug= ])
+;   retval = wise_pforce_test(ra, dec, [ rmax=, rpad=, dexclude=, wband= $
+;    /ignore_missing, objs=, debug=, /verbose ])
 ;
 ; INPUTS:
 ;   ra         - Right ascension(s) [deg]
@@ -21,8 +21,9 @@
 ;   rexclude   - Other than the best match, exclude other SDSS sources
 ;                within this distance of the requested position; set to 0
 ;                (default value) to not exclude such nearby sources in the fit
-;   wband      - WISE bands; default to [1,2]
+;   wband      - WISE bands; default to [1]
 ;   ignore_missing - Skip missing WISE files without crashing
+;   verbose    - If set, then print the fit values (fluxes + sky levels)
 ;
 ; OUTPUTS:
 ;   retval     - Output structure containing the following:
@@ -75,21 +76,30 @@
 ;   08-Feb-2013  Written by D. Schlegel, LBL
 ;-
 ;------------------------------------------------------------------------------
-pro wise_pforce_images, filename
-
-   common wise_cache, c_file, c_image, 
-ncache_max = 100
+;pro wise_pforce_images, filename
+;
+;   common wise_cache, c_file, c_image
+;ncache_max = 100
+;
+;end
 
 ;------------------------------------------------------------------------------
 ; Compute WISE photometry at one coordinate in 1 band
-pro wise_pforce2, retval, rmax=rmax, $
- wband=wband, ignore_missing=ignore_missing, debug=debug
+pro wise_pforce2, ra, dec, retval, rmax=rmax, $
+ wband=wband, ignore_missing=ignore_missing, debug=debug, verbose=verbose
 
    common com_pforce, wdir_save, ixlist
 
 setenv,'WISE_IMAGE_DIR=/clusterfs/riemann/raid007/bosswork/boss/wise_level1b;/clusterfs/riemann/raid000/bosswork/boss/wise1ext'
 maxrad = 0.549 ; distance from center of WISE field to corner [deg]
 minpix = 10 ; use WISE images with this minimum number of pixels 
+
+   ; Define the mask bits that denote pixels to be excluded.
+   ; These are all bits in the Explanatory Supplement
+   ;   http://wise2.ipac.caltech.edu/docs/release/allsky/expsup/sec4_4a.html
+   ; except for bits 23 + 25 which appear in the post-cryo data,
+   ; but are not documented.
+   maskbits = 2L^31-1 - 2L^23 - 2L^25 ; ???
 
    iband = wband - 1
 
@@ -124,6 +134,7 @@ minpix = 10 ; use WISE images with this minimum number of pixels
 
    ; Construct the empty matrices
    nper = ceil(!pi * (rmax*3600/pixscale + 1)^2) ; max usable pix per WISE image
+   nobj = n_elements(retval)
    amatrix = dblarr(nnear*nper,nobj+nnear)
    bvec = dblarr(nnear*nper)
    sqivar = dblarr(nnear*nper)
@@ -148,19 +159,20 @@ minpix = 10 ; use WISE images with this minimum number of pixels
       imfile = filepath(string(ixlist[inear[i]].scan_id, $
        ixlist[inear[i]].frame_num, wband, $
        format='(a6,i3.3,"-w",i1,"-int-1b.fits")'), $
-       root_dir=wdir[ixlist[inear[i]]].idir, $
+       root_dir=wdir[ixlist[inear[i]].idir], $
        subdir=['wise'+string(wband,format='(i1)'), $
        '4band_p1bm_frm',subdirs])
+if (i EQ 0) then imlist = imfile else imlist = [imlist,imfile]
       errfile = filepath(string(ixlist[inear[i]].scan_id, $
        ixlist[inear[i]].frame_num, wband, $
        format='(a6,i3.3,"-w",i1,"-unc-1b.fits.gz")'), $
-       root_dir=wdir[ixlist[inear[i]]].idir, $
+       root_dir=wdir[ixlist[inear[i]].idir], $
        subdir=['wise'+string(wband,format='(i1)'), $
        '4band_p1bm_frm',subdirs])
       mskfile = filepath(string(ixlist[inear[i]].scan_id, $
        ixlist[inear[i]].frame_num, wband, $
        format='(a6,i3.3,"-w",i1,"-msk-1b.fits.gz")'), $
-       root_dir=wdir[ixlist[inear[i]]].idir, $
+       root_dir=wdir[ixlist[inear[i]].idir], $
        subdir=['wise'+string(wband,format='(i1)'), $
        '4band_p1bm_frm',subdirs])
       image1 = mrdfits(imfile, 0, hdr, /silent)
@@ -186,7 +198,7 @@ minpix = 10 ; use WISE images with this minimum number of pixels
       image1 *= norm
       errimg1 *= norm
 
-      sqiv1 = (mskimg1 NE 0) / errimg1
+      sqiv1 = ((mskimg1 AND maskbits) NE 0) / errimg1
       dims = size(image1, /dimens)
       sqiv1 = fltarr(dims)
       igood = where(finite(errimg1) AND errimg1 GT 0, ngood)
@@ -261,6 +273,14 @@ minpix = 10 ; use WISE images with this minimum number of pixels
    var = dblarr(nobj+nnear)
    var[nz] = var1
 
+   if (keyword_set(verbose)) then begin
+      for i=0, nobj-1 do $
+       print, 'Flux at RA=', retval[i].ra, ' DEC=', retval[i].dec, $
+        ' = ', acoeff[i], ' +/- ', sqrt(var[i])
+      for i=0, nnear-1 do $
+       print, 'Sky in ', fileandpath(imlist[i]), ' = ', acoeff[i+nobj]
+   endif
+
    retval.wiseflux[iband] = acoeff[0:nobj-1]
    retval.wiseflux_ivar[iband] = $
     (var[0:nobj-1] GT 0) / (var[0:nobj-1] + (var[0:nobj-1] LE 0))
@@ -301,7 +321,7 @@ rerun = 301 ; ???
    if (keyword_set(rpad1)) then rpad = rpad1 $
     else rpad = 3./3600
    if (keyword_set(wband1)) then wband = wband1 $
-    else wband = [1,2]
+    else wband = [1]
    if (min(wband) LT 1 OR max(wband) GT 4) then $
     message, 'Invalid WBAND'
 
@@ -368,7 +388,7 @@ rerun = 301 ; ???
    endelse
 
    for i=0, n_elements(wband)-1 do begin
-      wise_pforce2, retval, rmax=rmax, $
+      wise_pforce2, ra, dec, retval, rmax=rmax, $
        wband=wband[i], debug=debug, _EXTRA=KeywordsForPforce
    endfor
 
