@@ -60,6 +60,10 @@ remotedir = ['http://irsa.ipac.caltech.edu/ibe/data/wise/allsky/4band_p1bm_frm/'
           + ' "'+remotedir[idir]+subdir3+'"
          splog,thiscmd,/noname
       endfor
+if (idir EQ 0) then $
+ mwrfits, ixlist[inear], 'WISE1-WISE-index-L1b.fits', /create $
+else $
+ mwrfits, ixlist[inear], 'WISE1EXT-WISE-index-L1b.fits', /create
    endfor
 
    splog, /close
