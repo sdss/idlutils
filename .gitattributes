@@ -6,6 +6,7 @@ pro/sdss/sdss_astrombad.pro -text
 pro/sdss/sdss_objid.pro -text
 pro/sdss/sdss_specobjid.pro -text
 pro/wise/wise_ascii2fits.pro -text
+pro/wise/wise_download.pro -text
 pro/wise/wise_match.pro -text
 pro/wise/wise_pforce.pro -text
 pro/wise/wise_pforce_test.pro -text
