@@ -468,7 +468,7 @@ maskbits ANCILLARY_TARGET2 26 TDSS_SPIDERS_PILOT			"defined in GreenMerloni_MD01
 maskbits ANCILLARY_TARGET2 27 QSO_VAR_LF			"defined in palanque_str82.descr"
 maskbits ANCILLARY_TARGET2 28 TDSS_PILOT_PM			"defined in TDSS_SPIDERS_MD03.descr"
 maskbits ANCILLARY_TARGET2 29 TDSS_PILOT_SNHOST			"defined in TDSS_SPIDERS_MD03.descr"
-maskbits ANCILLARY_TARGET2 30 FAINT_HI_LRG			"defined in newman_lrg_w3.descr"
+maskbits ANCILLARY_TARGET2 30 FAINT_HIZ_LRG			"defined in newman_lrg_w3.descr"
 maskbits ANCILLARY_TARGET2 31 QSO_EBOSS_W3_ADM			"defined in myers_eboss_qso_w3.descr"
 
 
