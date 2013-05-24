@@ -1,4 +1,8 @@
 
+-------------------------------------------------------------------------------
+v5_5_10 (2013-05-23)
+Tag for DR11
+
 COMPUTECHI2: Bug fix for incorrectly computing VAR when COVAR is not
     also returned.
 
