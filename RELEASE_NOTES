@@ -2,6 +2,9 @@
 COMPUTECHI2: Bug fix for incorrectly computing VAR when COVAR is not
     also returned.
 
+data/sdss/sdssMaskbits.par: Renamed an APOGEE_TARGET1 bit.
+    Added APOGEE_TARGET2 bits.  Added ANCILLARY_TARGET2 bits.
+
 -------------------------------------------------------------------------------
 v5_5_9 (2012-12-03)
 
