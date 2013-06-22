@@ -11,7 +11,6 @@
 ; INPUTS:
 ;
 ; OPTIONAL INPUTS:
-;   platenums  - Plate
 ;
 ; OUTPUTS:
 ;
