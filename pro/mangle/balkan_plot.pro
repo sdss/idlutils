@@ -57,8 +57,16 @@ write_mangle_polygons,'',poly,unit=unit
 read_binary_polygons,'',balkans,unit=unit,/allow_doubles
 free_lun,unit
 
+cmd = [ filepath('snap', root_dir=getenv('IDLUTILS_DIR'), $
+                 subdir='bin'),'-', '-']
+spawn, cmd, /noshell, unit=unit
+write_mangle_polygons,'',balkans,unit=unit
+read_mangle_polygons,'',snapped,unit=unit
+free_lun,unit
+
 ;   c. for each balkan find total weight
-xb=vmid(balkans)
+xb=vmid(snapped)
+
 bweight=fltarr(n_elements(balkans))
 for i=0L, n_elements(balkans)-1L do begin
     for j=0L, n_elements(poly)-1L do begin

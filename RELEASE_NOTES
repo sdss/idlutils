@@ -1,3 +1,5 @@
+data/sdss/sdssMaskbits.par: Added APOGEE bits (APOGEE_PIXMASK,
+   APOGEE_STARFLAG, APOGEE_ASPCAPFLAG, APOGEE_PARAMFLAG)
 
 -------------------------------------------------------------------------------
 v5_5_10 (2013-05-23)
