@@ -473,6 +473,10 @@ maskbits ANCILLARY_TARGET2 31 QSO_EBOSS_W3_ADM			"defined in myers_eboss_qso_w3.
 maskbits ANCILLARY_TARGET2 32 XMM_PRIME				"defined in georgekaksi_xmmxll.descr"
 maskbits ANCILLARY_TARGET2 33 XMM_SECOND			"defined in georgekaksi_xmmxll.descr"
 maskbits ANCILLARY_TARGET2 34 SEQUELS_ELG			"defined in sequels_elg.descr"
+maskbits ANCILLARY_TARGET2 35 GES			"defined in rockosi_ges_segue.descr"
+maskbits ANCILLARY_TARGET2 36 SEGUE1			"defined in rockosi_ges_segue.descr"
+maskbits ANCILLARY_TARGET2 37 SEGUE2			"defined in rockosi_ges_segue.descr"
+maskbits ANCILLARY_TARGET2 38 SDSSFILLER			"defined in rockosi_ges_segue.descr"
 #maskbits ANCILLARY_TARGET2 32 25ORI_WISE			"defined in [x].descr"
 #maskbits ANCILLARY_TARGET2 33 25ORI_WISE_W3			"defined in [x].descr"
 
