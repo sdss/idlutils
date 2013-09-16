@@ -483,6 +483,8 @@ maskbits ANCILLARY_TARGET2 41 25ORI_WISE_W3			"defined in knapp_25ori.descr"
 maskbits ANCILLARY_TARGET2 42 KOEKAP_STAR			"defined in knapp_kappaori.descr"
 maskbits ANCILLARY_TARGET2 43 KOE2023_STAR			"defined in knapp_ngc2023.descr"
 maskbits ANCILLARY_TARGET2 44 KOE2068_STAR			"defined in knapp_ngc2068.descr"
+maskbits ANCILLARY_TARGET2 45 KOE2023BSTAR			"defined in knapp_ngc2023.descr"
+
 
 
 #-------- bosstile status bits
