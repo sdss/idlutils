@@ -526,6 +526,7 @@ maskbits BOSSTILE_STATUS 23 MIDLEVEL_PRIORITY "targets (from ancillary list) til
 
 
 #-------- eboss target0 bitmask (for sequels)
+masktype EBOSS_TARGET0 64 "targeting bitmask for SEQUELS (eBOSS precursor)"
 maskbits EBOSS_TARGET0 0 DO_NOT_OBSERVE				"Don't put a fiber on this object"
 maskbits EBOSS_TARGET0 1 LRG_IZW				"LRG selection in i/z/W plane"
 maskbits EBOSS_TARGET0 2 LRG_RIW				"LRG selection in r/i/W plan with (i-z) cut"
