@@ -549,8 +549,8 @@ maskbits EBOSS_TARGET0 32 TDSS_FES_DWARFC			"TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET0 33 TDSS_FES_NQHISN			"TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET0 34 TDSS_FES_MGII				"TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET0 35 TDSS_FES_VARBAL			"TDSS Few epoch spectroscopy"
-maskbits EBOSS_TARGET0 35 SEQUELS_PTF_VARIABLE			"Variability objects from PTF"
-maskbits EBOSS_TARGET0 35 SEQUELS_COLLIDED			"Collided galaxies from BOSS"
+maskbits EBOSS_TARGET0 36 SEQUELS_PTF_VARIABLE			"Variability objects from PTF"
+maskbits EBOSS_TARGET0 37 SEQUELS_COLLIDED			"Collided galaxies from BOSS"
 
 
 
