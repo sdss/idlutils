@@ -1,10 +1,16 @@
 * text=auto !eol
 goddard/text/coyote.readme -text
 pro/fits/mrdfits_rows.pro -text
+pro/misc/ml_expand.pro -text
 pro/mpfit/fakedata.sav -text svneol=unset#unset
+pro/plot/fsc_resize_image.pro -text
+pro/plot/ml_tvimage.pro -text
+pro/plot/tvread.pro -text
 pro/sdss/sdss_astrombad.pro -text
 pro/sdss/sdss_objid.pro -text
 pro/sdss/sdss_specobjid.pro -text
+pro/trace/ml_trace_crude.pro -text
+pro/trace/ml_trace_fweight.pro -text
 pro/wise/wise_ascii2fits.pro -text
 pro/wise/wise_download.pro -text
 pro/wise/wise_match.pro -text
@@ -78,3 +84,5 @@ src/mangle2.2/src/wrho.s.f -text
 src/mangle2.2/src/wrmask.c -text
 src/mangle2.2/src/wrrrcoeffs.c -text
 src/mangle2.2/src/wrspher.c -text
+src/trace/ml_trace_crude.c -text
+src/trace/ml_trace_fweight.c -text

@@ -188,12 +188,12 @@ for i=0,nel-1 do  begin
     if strlen(tstrng) gt 130 then begin
         strng = strng + "}"
         res = execute(strng)
-	if  res eq 0 then return, 0
+        if  res eq 0 then return, 0
         struct = n_elements(struct) eq 0 ? a: $
 	         create_struct(temporary(struct), a)
-	strng = "a={" + names[i] + ":" + fval
-	
-    endif else strng = tstrng
+        strng = "a={" + names[i] + ":" + fval
+	  endif else strng = tstrng
+  
     comma = ","
 
 endfor

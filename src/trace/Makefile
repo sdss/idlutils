@@ -12,6 +12,8 @@
 #
 # $Id$
 #
+# Dec 2012 - B. Cherinka - added ml_trace_crude and ml_trace_fweight to Makefile
+#
 ###############################################################################
 #
 # Pass these flags to the C compiler
@@ -35,7 +37,9 @@ CCCHK = -Wall
 OBJECTS = \
 	evilmath.o \
 	trace_crude.o \
+	ml_trace_crude.o \
 	trace_fweight.o \
+	ml_trace_fweight.o \
 	trace_gweight.o
 
 #

@@ -1,12 +1,12 @@
 ;+
 ; NAME:
-;   trace_crude
+;   ml_trace_crude
 ;
 ; PURPOSE:
 ;   Create a crude trace set given one position (eg, a center) in each trace.
 ;
 ; CALLING SEQUENCE:
-;   xset = trace_crude( fimage, [ invvar, xstart=, ystart=, radius=, yset=, $
+;   xset = ml_trace_crude( fimage, [ invvar, xstart=, ystart=, radius=, yset=, $
 ;    nave=, nmed=, thresh=, maxerr=, maxshifte=, maxshift0=, xerr=, /double, nfiber= ] )
 ;
 ; INPUTS:
@@ -21,7 +21,7 @@
 ;                (1) One element of YSTART for each value of XSTART,
 ;                (2) A scalar value that is used for every XSTART, or
 ;                (3) Not set, in which case the center row is used.
-;   radius     - Radius for centroiding; default to 3.0
+;   radius     - Radius for centroiding; default to 3.0 ; can be a scalar or a vector
 ;   nmed       - Median filtering size down columns before performing trace;
 ;                default to 1
 ;   nave       - Averaging size down columns before performing trace;
@@ -36,9 +36,7 @@
 ;                default to 0.5
 ;   double     - If set, then return values are double-precision; values are
 ;                already double-precision if FIMAGE or XSTART already are
-;   nfiber     - an array of size [NBLOCK] containing the number of fibers in 
-;                each v-groove block on the CCD.  NBLOCK is the number of v-groove blocks.
-;                This is a MANGA-specific keyword!!
+;   nfiber     - an array of size [NBLOCK] containing the number of fibers in each v-groove block on the CCD
 ;
 ; OUTPUTS:
 ;   xset       - X centers for all traces
@@ -59,25 +57,27 @@
 ;   splog
 ;   ml_expand
 ;
-;   Dynamic link to trace_crude.c
+;   Dynamic link to ml_trace_crude.c
 ;
 ; REVISION HISTORY:
 ;   14-May-1999  Written by David Schlegel, Princeton.
 ;   12-Jul-1999  Added optional output YSET (DJS).
 ;   06-Aug-1999  Added optional outpust XERR (DJS).
-;   27-Dec-2012  Modified by Brian Cherinka, Toronto, for MaNGA survey.
-;                Added nfiber keyword to handle a varying # of fibers per block; also for variable width boxcar extraction across the CCD
+;   27-Dec-2012  Modified by Brian Cherinak, Toronto, for MaNGA survey, to handle a varying # of fibers per block, also for varibale width boxcar extraction across the CCD 
 ;-
 ;------------------------------------------------------------------------------
-function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
+function ml_trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
  radius=radius1, yset=yset, nave=nave1, nmed=nmed1, thresh=thresh, $
  maxerr=maxerr1, maxshifte=maxshift_in, maxshift0=maxshift0_in, xerr=xerr, $
  double=double1, idl=idl, nfiber=nfiber
 
+   on_error,0
+   compile_opt idl2
+   
    ; Need 1 parameter
    if (N_params() LT 1) then begin
-      print, 'Syntax - xset = trace_crude( fimage, [ invvar, xstart=, ystart=, $'
-      print, ' radius=, nave=, nmed=, maxerr=, maxshifte=, maxshift0=, xerr=, nfiber= ] )'
+      print, 'Syntax - xset = ml_trace_crude( fimage, [ invvar, xstart=, ystart=, $'
+      print, ' radius=, nave=, nmed=, maxerr=, maxshifte=, maxshift0=, xerr= ] )'
       return, -1
    endif
 
@@ -86,22 +86,15 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
    dims = size(fimage, /dimens)
    nx = dims[0]
    ny = dims[1]
-   if (keyword_set(ystart1)) then ystart = ystart1 $
-    else ystart = long(ny/2)
-   if (keyword_set(radius1)) then radius = radius1 $
-    else radius = 3.0
-   if (keyword_set(nmed1)) then nmed = nmed1 > 1 $
-    else nmed = 1
-   if (keyword_set(nave1)) then nave = nave1 < ny $
-    else nave = 5 < ny
-   if (keyword_set(maxerr1)) then maxerr = maxerr1 $
-    else maxerr = 0.2
-   if (keyword_set(maxshift_in)) then maxshift = maxshift_in $
-    else maxshift = 0.1
-   if (keyword_set(maxshift0_in)) then maxshift0 = maxshift0_in $
-    else maxshift0 = 0.5
-   if (size(fimage,/tname) EQ 'DOUBLE' OR size(xstart,/tname) EQ 'DOUBLE') $
-    OR keyword_set(double1) then double = 1B
+   if (keyword_set(ystart1)) then ystart = ystart1 else ystart = long(ny/2)
+   if (keyword_set(radius1)) then radius = radius1  else radius = fltarr(n_elements(nfiber))+2.0
+   if (keyword_set(nmed1)) then nmed = nmed1 > 1 else nmed = 1
+   if (keyword_set(nave1)) then nave = nave1 < ny else nave = 5 < ny
+   if (keyword_set(maxerr1)) then maxerr = maxerr1 else maxerr = 0.2
+   if (keyword_set(maxshift_in)) then maxshift = maxshift_in else maxshift = 0.1
+   if (keyword_set(maxshift0_in)) then maxshift0 = maxshift0_in  else maxshift0 = 0.5
+   if (size(fimage,/tname) EQ 'DOUBLE' OR size(xstart,/tname) EQ 'DOUBLE') OR keyword_set(double1) then double = 1B
+   if n_elements(nfiber) eq 0 then message, 'NFIBER array not specified!'
 
    ; Make a copy of the image and error map
    imgtemp = float(fimage)
@@ -112,22 +105,19 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
    endelse
 
    ; Median filter the entire image along columns by NMED rows
-   if (nmed GT 1) then $   
-    for ix=1, nx-1 do imgtemp[ix,*] = median(transpose(imgtemp[ix,*]), nmed)
+   if (nmed GT 1) then for ix=1, nx-1 do imgtemp[ix,*] = median(transpose(imgtemp[ix,*]), nmed)
 
    ; Boxcar-sum the entire image along columns by NAVE rows
    if (nave GT 1) then begin
       kernel = transpose(intarr(nave) + 1.0)
       if (nx EQ 1) then $
-       imgconv = reform(convol(reform(imgtemp*invtemp,ny), $
-        reform(kernel,nave), /edge_truncate), 1, ny) $
+       imgconv = reform(convol(reform(imgtemp*invtemp,ny), reform(kernel,nave), /edge_truncate), 1, ny) $
       else $
        imgconv = convol(imgtemp*invtemp, kernel, /edge_truncate)
 
       ; Add the variances
       if (nx EQ 1) then $
-       invtemp = reform(convol(reform(invtemp,ny), $
-        reform(kernel,nave), /edge_truncate), 1, ny) $
+       invtemp = reform(convol(reform(invtemp,ny), reform(kernel,nave), /edge_truncate), 1, ny) $
       else $
        invtemp = convol(invtemp, kernel, /edge_truncate)
 
@@ -145,16 +135,15 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
    if (keyword_set(xstart1)) then begin
       xstart = xstart1
    endif else begin
+   ;skip if xstart given --------------- shoudn't be called given we pass XPOSITION
       ; Automatically find peaks for XSTART
 
       ; Extract NSUM rows from the image at YSTART
       nsum = 1
-      imrow = $
-       imgtemp[*,long(ystart[0]-0.5*(nsum-1)):long(ystart[0]+0.5*(nsum-1))]
+      imrow = imgtemp[*,long(ystart[0]-0.5*(nsum-1)):long(ystart[0]+0.5*(nsum-1))]
       imrow = rebin(imrow, nx, 1)
 
-      if (keyword_set(thresh)) then mthresh = thresh $
-       else mthresh = median(imrow)
+      if (keyword_set(thresh)) then mthresh = thresh  else mthresh = median(imrow)
 
       ; Boxcar smooth along X
       imrow = smooth(imrow,radius/2 > 3)
@@ -177,44 +166,26 @@ function trace_crude, fimage, invvar, xstart=xstart1, ystart=ystart1, $
 
       xstart = izero + 0.5 + rderiv[izero] / (rderiv[izero] - rderiv[izero+1])
    endelse
+   ;------------
 
-   if (N_elements(ystart) EQ 1) then $
-    ypass = replicate(long(ystart), N_elements(xstart)) $
-    else ypass = long(ystart)
+   if (N_elements(ystart) EQ 1) then ypass = replicate(long(ystart), N_elements(xstart)) else ypass = long(ystart)
 
-   if (N_elements(xstart) NE N_elements(ypass)) then $
-    message, 'Wrong number of elements for YSTART'
+   if (N_elements(xstart) NE N_elements(ypass)) then message, 'Wrong number of elements for YSTART'
 
    ntrace = N_elements(xstart)
    xset = fltarr(ny, ntrace)
    xerr = fltarr(ny, ntrace)
 
-   ;MANGA specific code to handle variable fiber number per block and variable width extraction
-   if keyword_set(nfiber) then begin
-      if n_elements(radius) eq 1 then radius = fltarr(n_elements(nfiber))+2.0 ;check if input radius is an array
-      ml_expand, radius, nfiber, generic=radarray   ;expand the radius array to the size of total number of fibers, maintaining block chunking
-   endif
+  ;expand radius to handle variable width boxcar extraction, based on NFIBER array of size [NBUNDLE]
+  ml_expand, radius, nfiber, generic=radarray
 
    if keyword_set(idl) then begin
-    ;
     ;  Need xset and xerr
-    ; 
-
-     trace_crude_idl, imgtemp, invtemp, radius, xstart, ypass, xset, xerr, maxerr, maxshift, maxshift0
-
+     trace_crude_idl, imgtemp, invtemp, radarray, xstart, ypass, xset, xerr, maxerr, maxshift, maxshift0
    endif else begin
-     
      soname = filepath('libtrace.'+idlutils_so_ext(), root_dir=getenv('IDLUTILS_DIR'), subdirectory='lib')
-     
-     ;check if MANGA or BOSS
-     if ~keyword_set(nfiber) then begin
-         ;BOSS
-         result = call_external(soname, 'trace_crude', nx, ny, imgtemp, invtemp, float(radius), ntrace, float(xstart), ypass, xset, xerr, float(maxerr), float(maxshift), float(maxshift0))
-     endif else begin
-         ;MANGA
-         result = call_external(soname, 'ml_trace_crude', nx, ny, imgtemp, invtemp, float(radarray), ntrace, float(xstart), ypass, xset, xerr, float(maxerr), float(maxshift), float(maxshift0))
-     endelse                       
-                            
+
+     result = call_external(soname, 'ml_trace_crude', nx, ny, imgtemp, invtemp, float(radarray), ntrace, float(xstart), ypass, xset, xerr, float(maxerr), float(maxshift), float(maxshift0))
    endelse
 
    if (keyword_set(double)) then begin

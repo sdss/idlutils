@@ -69,7 +69,7 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
         if size(structure,/TNAME) NE 'STRUCT' then begin
                 message,"ERROR - expecting a structure",/INFO
                 return
-         endif
+        endif
  ;Use size(/N_Elements) instead of N_elements() so it can work with assoc 
  ;variables	 
          Nstruct = size(structure,/N_elements)
@@ -86,13 +86,13 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
                 tagi = ( tagi > 0 ) < (Ntag-1)
                 tagi = tagi[ uniq( sort(tagi) ) ]
 
-         endif else if N_elements( fran ) EQ 2 then begin
+        endif else if N_elements( fran ) EQ 2 then begin
 
                 fran = ( fran > 0 ) < (Ntag-1)
                 nf = abs( fran[1] - fran[0] )+1
                 tagi = indgen( nf ) + min( fran )
 
-          endif else if (Npr LE 0) then begin
+        endif else if (Npr LE 0) then begin
 
                 for i=0,Ntag-1 do begin
 
@@ -101,10 +101,10 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
 
                           if N_elements( tagi ) LE 0 then tagi = [i] $
                                                      else tagi = [ tagi, i ]
-                      endif
-                  endfor
+                    endif
+                endfor
 
-           endif else begin
+        endif else begin
 
                 ptags = [strupcase( Tags_to_print )]
 
@@ -114,17 +114,16 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
 
                     if (nf GT 0) then begin
 
-                          if N_elements( tagi ) LE 0 then tagi = [w[0]] $
-                                                else tagi = [ tagi, w[0] ]
+                          if N_elements( tagi ) LE 0 then tagi = [w[0]] else tagi = [ tagi, w[0] ]
 
-                      endif else message,"Tag <"+ptags[i]+"> not found",/INFO
-                  endfor
-            endelse
+                    endif else message,"Tag <"+ptags[i]+"> not found",/INFO
+                endfor
+        endelse
 
         if N_elements( tagi ) LE 0 then begin
                 message,"requested Tags are not in structure",/INFO
                 return
-           endif
+        endif
 
         if keyword_set( max_elements ) then begin
 
@@ -135,20 +134,19 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
                 for i=0,Ntag-1 do begin
                         Ntel[i] = N_elements( structure[0].(tagi[i]) )
                         Ntst[i] = N_tags( structure[0].(tagi[i]) )
-                  endfor
+                endfor
 
                 w = where( (Ntel LE max_elements) and (Ntst LE 0), nw )
 
                 if (nw GT 0) then  tagi = tagi[w]  else begin
                         message,"requested Tags have too many elements",/INFO
                         return
-                   endelse
-           endif
+                endelse
+        endif
 
         ndigit = ceil(alog10(Nstruct))      ;Number of digits in index
         iform = "(I" + strtrim(ndigit,2) + ")"
-        if ndigit GT 1 then $
-             title = string(replicate(32b,ndigit-1)) else title=''
+        if ndigit GT 1 then title = string(replicate(32b,ndigit-1)) else title=''
         title = title + '#'
 
         Tags_to_print = tags[tagi]
@@ -163,59 +161,56 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
                 st = size( structure[0].(tagi[i]) )
                 vtypes[i] = st[st[0]+1]
                 CASE vtypes[i] OF
-                1:      formats[i] = "I" + strtrim( ncht[i]>5, 2 ) + ")"
-                2:      formats[i] = "I" + strtrim( ncht[i]>8, 2 ) + ")"
-                3:      formats[i] = "I" + strtrim( ncht[i]>12, 2 ) + ")"
-                7: BEGIN
-                        sLens[i] = $
-                         ( max( strlen( structure.(tagi[i]) ) ) + 2 ) > ncht[i]
-                        formats[i] = "A" + strtrim( sLens[i], 2 ) + ")"
-                     END
-                else: BEGIN
-                        if N_elements( formf ) EQ 3 then begin
-                                formf = strtrim( formf, 2 )
-                                ndig = fix( formf[1] )
-                                minch[4] = ndig
-                                formats[i] = formf[0] + $
-                                        strtrim( ncht[i] > ndig, 2 ) + $
-                                        "." + formf[2] + ")"
-                         endif else $
-                           formats[i] = "G" + strtrim( ncht[i]>12, 2 ) + ".4)"
-                        END
+                  1:      formats[i] = "I" + strtrim( ncht[i]>5, 2 ) + ")"
+                  2:      formats[i] = "I" + strtrim( ncht[i]>8, 2 ) + ")"
+                  3:      formats[i] = "I" + strtrim( ncht[i]>12, 2 ) + ")"
+                  7: BEGIN
+                          sLens[i] = ( max( strlen( structure.(tagi[i]) ) ) + 2 ) > ncht[i]
+                          formats[i] = "A" + strtrim( sLens[i], 2 ) + ")"
+                       END
+                  else: BEGIN
+                          if N_elements( formf ) EQ 3 then begin
+                                  formf = strtrim( formf, 2 )
+                                  ndig = fix( formf[1] )
+                                  minch[4] = ndig
+                                  formats[i] = formf[0] + strtrim( ncht[i] > ndig, 2 ) +  "." + formf[2] + ")"
+                           endif else $
+                             formats[i] = "G" + strtrim( ncht[i]>12, 2 ) + ".4)"
+                          END
                 ENDCASE
                 nelem = st[st[0]+2]
                 formats[i] = "(" + strtrim( nelem, 2 ) + formats[i]
                 minch[7] = sLens[i]
                 nb = nelem * ( ncht[i] > minch[vtypes[i]] ) - ncht[i] + 2
                 title = title + string( replicate( 32b,nb ) ) + Tags_to_print[i]
-          endfor
+        endfor
 
         if N_elements( which ) GT 0 then begin
                 w = where( (which GE 0) AND (which LT Nstruct), nw )
                 if (nw LE 0) then begin
                         message,"keyword WHICH subscripts out of range",/INFO
                         return
-                   endif
+                endif
                 which = which[w]
                 Nprint = nw
-         endif else begin
+        endif else begin
                 which = lindgen( Nstruct )
                 Nprint = Nstruct
-          endelse
+        endelse
 
         pr_tit = keyword_set( no_tit ) EQ 0
 
         if keyword_set( strings ) then begin
                 string_matrix = strarr( Npr, Nprint )
                 title = strmid( title, 3, 999 )
-          endif else begin
+        endif else begin
                 if keyword_set( filout ) then openw, Lun, filout,/GET_LUN
                 if (pr_tit) then begin
                         if (Nstruct LE 3) then title = strmid( title, 3, 999 )
                         if N_elements( Lun ) EQ 1 then printf,Lun,title $
                                                 else print,title
-                   endif
-           endelse
+                endif
+        endelse
 
         for n=0,Nprint-1 do begin
 
@@ -223,23 +218,20 @@ pro print_struct, structure, Tags_to_print, title, string_matrix, TNUMS=tagi, $
 
             if keyword_set( strings ) then begin
 
-                for i=0,Npr-1 do string_matrix[i,n] = $
-                        string( structure[wp].(tagi[i]), FORM=formats[i] )
+                for i=0,Npr-1 do string_matrix[i,n] = string( structure[wp].(tagi[i]), FORM=formats[i] )
 
-             endif else begin
+            endif else begin
 
-                if (pr_tit) AND (Nstruct GT 3) then $
-                        text = string( wp,FORM=iform )  else text=""
+                if (pr_tit) AND (Nstruct GT 3) then text = string( wp,FORM=iform )  else text=""
 
-                for i=0,Npr-1 do text = text + $
-                        string( structure[wp].(tagi[i]), FORM=formats[i] )
+                for i=0,Npr-1 do text = text + string( structure[wp].(tagi[i]), FORM=formats[i] )
 
                 if N_elements( Lun ) EQ 1 then printf,Lun,text else print,text
-              endelse
-          endfor
+            endelse
+        endfor
 
         if keyword_set( filout ) then begin
                 free_Lun, Lun
                 message,"structure printed into file: " + filout,/INFO
-           endif
+        endif
 end
