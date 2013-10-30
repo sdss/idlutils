@@ -150,15 +150,14 @@ maskbits CALIB_STATUS   2  UNPHOT_EXTRAP_CLEAR "Extrapolate the solution from th
 maskbits CALIB_STATUS   3  UNPHOT_EXTRAP_CLOUDY "	The solution here is based on fitting the a-term to cloudy data."
 maskbits CALIB_STATUS   4  UNPHOT_DISJOINT "Data is disjoint from the rest of the survey (even though conditions may be photometric), the calibration is suspect"
 maskbits CALIB_STATUS   5  INCREMENT_CALIB "Incrementally calibrated by considering overlaps with ubercalibrated data"
-maskbits CALIB_STATUS   6  PS1_BEST "Low RMS, PCOMP, no contrail"
+maskbits CALIB_STATUS   6  PS1_UNPHOT "Comparison to PS1 reveals unphotometric conditions"
 maskbits CALIB_STATUS   7  PS1_CONTRAIL "Comparison to PS1 reveals possible contrail"
 maskbits CALIB_STATUS   8  PT_CLEAR "PT calibration for clear data"
 maskbits CALIB_STATUS   9  PT_CLOUDY "PT calibration for cloudy data"
 maskbits CALIB_STATUS  10  DEFAULT "a default calibration used"
 maskbits CALIB_STATUS  11  NO_UBERCAL  "not uber-calibrated"
 maskbits CALIB_STATUS  12  ASTROMBAD  "catastrophically bad astrometry"
-maskbits CALIB_STATUS  13  PS1_PCOMP_MODEL "Enough information for PS1-based
-principal component flat model"
+maskbits CALIB_STATUS  13  PS1_PCOMP_MODEL "Enough information for PS1-based principal component flat model"
 maskbits CALIB_STATUS  14  PS1_LOW_RMS "Low RMS in comparison with PS1"
 
 #------------------------------------------------------------------------------
