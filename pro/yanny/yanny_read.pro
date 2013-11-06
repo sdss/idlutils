@@ -88,6 +88,7 @@
 ;                and use regular-expression matching for speed, robustness,
 ;                and clarity.
 ;   08-Mar-2012  Replace numlines() with FILE_LINES().
+;   06-Nov-2013  Turn of splitting of lines by semicolons.
 ;-
 ;------------------------------------------------------------------------------
 ; All this function actually does is trim any semi-colons at the end
@@ -165,20 +166,23 @@ function yanny_nextline, ilun
    ; Now parse this line into several lines by semi-colon separation,
    ; keeping those semi-colons at the end of each.  Ignore any semi-colons
    ; inside double-quotes.
-
+   ;
+   ; This form of line splitting is deprecated and is in any case very rare.
+   ; Turned off, BAW 2013-11-06
+   ;
    lastline = ''
-   rgx = hogg_unquoted_regex(';')
-   while (strlen(sline) GT 0) do begin
-      pos = strsplit(sline, rgx, /regex, length=len)
-      ; By using len+1 below, we are adding back in the semi-colon.
-      if (NOT keyword_set(lastline)) then lastline = strmid(sline, 0, len+1) $
-       else lastline = [lastline, strmid(sline, 0, len+1)]
-      sline = strmid(sline, len+1)
-   endwhile
+   ;rgx = hogg_unquoted_regex(';')
+   ;while (strlen(sline) GT 0) do begin
+   ;   pos = strsplit(sline, rgx, /regex, length=len)
+   ;   ; By using len+1 below, we are adding back in the semi-colon.
+   ;   if (NOT keyword_set(lastline)) then lastline = strmid(sline, 0, len+1) $
+   ;    else lastline = [lastline, strmid(sline, 0, len+1)]
+   ;   sline = strmid(sline, len+1)
+   ;endwhile
 
-   sline = lastline[0]
-   if (n_elements(lastline) EQ 1) then lastline = '' $
-    else lastline = lastline[1:n_elements(lastline)-1]
+   ;sline = lastline[0]
+   ;if (n_elements(lastline) EQ 1) then lastline = '' $
+   ; else lastline = lastline[1:n_elements(lastline)-1]
 
    return, sline
 end
@@ -224,7 +228,7 @@ function yanny_getwords, sline_in
    ;----------
    ; Dispose of any commas, semi-colons, or curly-brackets
    ; that are not inside double-quotes.  Replace them with spaces.
-   ; First, split up into sections separated by double quotes. 
+   ; First, split up into sections separated by double quotes.
    ; Then, in every OTHER section remove offending characters.
    ; (Start at zeroth section if first character is not double quote,
    ; first section otherwise)
@@ -377,25 +381,37 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                   ; from the defintion, since IDL does not need a string
                   ; length.  For example, change "char foo[20]" to "char foo",
                   ; or change "char foo[10][20]" to "char foo[10]".
-                  if (i EQ 0) then begin
-                     j1 = strpos(ww[1], '[', /reverse_search)
-                     if (j1 NE -1) then ww[1] = strmid(ww[1], 0, j1)
-                  endif
+                  ; Also handle old-school '<>' brackets, but don't assume
+                  ; they will be mixed.
+                  IF (i EQ 0) THEN BEGIN
+                     j1 = STRPOS(ww[1], '[', /REVERSE_SEARCH)
+                     IF (j1 NE -1) THEN ww[1] = STRMID(ww[1], 0, j1)
+                     j2 = STRPOS(ww[1], '<', /REVERSE_SEARCH)
+                     IF (j2 NE -1) THEN ww[1] = STRMID(ww[1], 0, j2)
+                  ENDIF
 
                   ; Force an unknown type to be a "char"
-                  if (i[0] EQ -1) then i = 0
+                  ; This will handle enum types.
+                  IF (i[0] EQ -1) THEN i = 0
 
                   ; Test to see if this should be an array
                   ; (Only 1-dimensional arrays supported here.)
-                  j1 = strpos(ww[1], '[')
-                  if (j1 NE -1) then begin
-                     addname = strmid(ww[1], 0, j1)
-                     j2 = strpos(ww[1], ']')
-                     addval = tarrs[i] + strmid(ww[1], j1+1, j2-j1-1) + ')'
-                  endif else begin
-                     addname = ww[1]
-                     addval = tvals[i]
-                  endelse
+                  j1 = STRPOS(ww[1], '[')
+                  IF (j1 NE -1) THEN BEGIN
+                     addname = STRMID(ww[1], 0, j1)
+                     j2 = STRPOS(ww[1], ']')
+                     addval = tarrs[i] + STRMID(ww[1], j1+1, j2-j1-1) + ')'
+                  ENDIF ELSE BEGIN
+                     j1 = STRPOS(ww[1], '<')
+                     IF (j1 NE -1) THEN BEGIN
+                        addname = STRMID(ww[1], 0, j1)
+                        j2 = STRPOS(ww[1], '>')
+                        addval = tarrs[i] + STRMID(ww[1], j1+1, j2-j1-1) + ')'
+                     ENDIF ELSE BEGIN
+                        addname = ww[1]
+                        addval = tvals[i]
+                     ENDELSE
+                  ENDELSE
 
                   if (ntag EQ 0) then begin
                      names = addname

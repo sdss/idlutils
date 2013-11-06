@@ -29,21 +29,19 @@
 ;   15-Nov-1999  Written by David Schlegel, Princeton.
 ;-
 ;------------------------------------------------------------------------------
-pro yanny_free, pdata
+PRO yanny_free, pdata
 
-   if (N_params() LT 1) then begin
-      print, 'Syntax - yanny_free, pdata'
-      return
-   endif
+    IF (N_PARAMS() LT 1) THEN BEGIN
+        PRINT, 'Syntax - yanny_free, pdata'
+        RETURN
+    ENDIF
 
-   if (NOT keyword_set(pdata)) then return
+    IF ~KEYWORD_SET(pdata) THEN RETURN
 
-   for i=0, N_elements(pdata)-1 do begin
-      ptr_free, pdata[i]
-   endfor
+    FOR i=0, N_ELEMENTS(pdata)-1 DO PTR_FREE, pdata[i]
 
-   pdata = 0
+    pdata = 0
 
-   return
-end
+    RETURN
+END
 ;------------------------------------------------------------------------------
