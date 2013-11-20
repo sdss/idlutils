@@ -494,6 +494,8 @@ maskbits ANCILLARY_TARGET2 50 APOGEE				"defined in rocksi_ges_segue.descr"
 maskbits ANCILLARY_TARGET2 51 2MASSFILL				"defined in rocksi_ges_segue.descr"
 maskbits ANCILLARY_TARGET2 52 TAU_STAR				"defined in knapp_taurus.descr"
 maskbits ANCILLARY_TARGET2 53 SEQUELS_TARGET			"any target in SEQUELS darktime program"
+maskbits ANCILLARY_TARGET2 54 RM_TILE1			"reverberation mapping, high priority"
+maskbits ANCILLARY_TARGET2 55 RM_TILE2			"reverberation mapping, low priority"
 
 
 #-------- bosstile status bits
