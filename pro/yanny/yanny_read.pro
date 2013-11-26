@@ -286,11 +286,11 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    ;----------
    ; If the file does not exist, then return but not with an error
 
-   junk = findfile(filename[0], count=ct)
-   if (ct EQ 0) then begin
+   junk = FILE_SEARCH(filename[0], COUNT=ct)
+   IF (ct EQ 0) THEN BEGIN
       errcode = 0
       return
-   endif
+   ENDIF
 
    ;----------
    ; Count the number of lines in the file, then open the file for
