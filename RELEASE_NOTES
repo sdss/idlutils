@@ -1,3 +1,5 @@
+YANNY_READ: semicolons will no longer substitute as line breaks.
+    Replaced obsolete findfile with FILE_SEARCH.
 
 WISE_ASCII2FITS: Upgrade the size of all the integer data types to that
     described  by the Informix tables, as communicated by Scott Terek at
