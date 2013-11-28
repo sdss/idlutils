@@ -88,28 +88,23 @@
 ;                and use regular-expression matching for speed, robustness,
 ;                and clarity.
 ;   08-Mar-2012  Replace numlines() with FILE_LINES().
-;   06-Nov-2013  Turn of splitting of lines by semicolons.
+;   06-Nov-2013  Turn off splitting of lines by semicolons.
 ;-
 ;------------------------------------------------------------------------------
 ; All this function actually does is trim any semi-colons at the end
 ; of a line.  This is to prevent the semi-colon from becoming part
 ; of a structure's name.
-function yanny_strip_commas, rawline
-
-   pos = stregex(rawline+' ', '; +$', len=len)
-   if (pos[0] EQ -1) then return, rawline $
-    else return, strmid(rawline, 0, pos)
-end
+FUNCTION yanny_strip_commas, rawline
+    pos = STREGEX(rawline+' ', '; +$', len=len)
+    IF (pos[0] EQ -1) THEN RETURN, rawline $
+    ELSE RETURN, STRMID(rawline, 0, pos)
+END
 ;------------------------------------------------------------------------------
-pro yanny_add_comment, rawline, comments
-
-   if (size(comments,/tname) EQ 'INT') then $
-    comments = rawline $
-   else $
-    comments = [comments, rawline]
-
-   return
-end
+PRO yanny_add_comment, rawline, comments
+    IF (SIZE(comments,/tname) EQ 'INT') THEN comments = rawline $
+    ELSE comments = [comments, rawline]
+    RETURN
+END
 ;------------------------------------------------------------------------------
 ; Procedure to read the next line from a file into a string.
 ; This piece of code used to not use READF, since READF used to
@@ -297,8 +292,8 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
    ; reading one line at a time.
 
    shortname = fileandpath(filename[0])
-   ww = strsplit(shortname,'.',/extract)
-   nword = n_elements(ww)
+   ww = STRSPLIT(shortname,'.',/EXTRACT)
+   nword = N_ELEMENTS(ww)
    if (nword GT 1) then uncmps = ww[nword-1] $
     else uncmps = ''
    case uncmps of
