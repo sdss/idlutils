@@ -8,10 +8,14 @@
 ;   regex      - naked regular expression
 ; OPTIONAL INPUT:
 ;   quotemark  - thing to use as the quotation mark, default to '"'
+; BUGS:
+;   quotemark is not actually used.
+;   This function may not really work as advertised at all.
 ; REVISION HISTORY:
 ;   2002-10-11  written - Hogg
+;   2013-11-27  code cleanup - BAW
 ;-
-function hogg_unquoted_regex, regex,quotemark=quotemark
-if NOT keyword_set(quotemark) then quotemark='"'
-return, '('+regex+')((.*(\".*\")+.*$)|([^\"]*$))'
-end
+FUNCTION hogg_unquoted_regex, regex, quotemark=quotemark
+    IF ~KEYWORD_SET(quotemark) THEN quotemark='"'
+    RETURN, '('+regex+')((.*(\".*\")+.*$)|([^\"]*$))'
+END
