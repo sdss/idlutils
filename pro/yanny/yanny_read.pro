@@ -295,16 +295,12 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
     ; Loop over all lines in the file
     sline = ''
     WHILE ~EOF(ilun) DO BEGIN
-
-      qdone = 0
-
-      ; Read the next line
-      rawline = yanny_nextline(ilun)
-      sline = yanny_strip_commas(rawline)
-      words = yanny_getwords(sline) ; Divide into words and strings
-
-      nword = N_elements(words)
-
+        qdone = 0
+        ; Read the next line
+        rawline = yanny_nextline(ilun)
+        sline = yanny_strip_commas(rawline)
+        words = yanny_getwords(sline) ; Divide into words and strings
+        nword = N_ELEMENTS(words)
       if (nword GE 2) then begin
 
          ; LOOK FOR "typedef enum" lines and add to structs
@@ -432,8 +428,8 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                ; then we already have an empty element defined.
                ; (No longer any need to do this, since we pre-allocate
                ; a large array.)
-;               if (pnumel[idat] GT 0) then $
-;                *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
+               ; if (pnumel[idat] GT 0) then $
+               ;  *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
 
                ; Split this text line into words
                ww = yanny_getwords(sline)
@@ -474,9 +470,7 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
       endif
 
-      if (qdone EQ 0) then $
-       yanny_add_comment, rawline, hdr
-
+        IF (qdone EQ 0) THEN yanny_add_comment, rawline, hdr
     ENDWHILE
     ;----------
     ; Close the file
