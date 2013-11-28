@@ -218,17 +218,16 @@ FUNCTION yanny_getwords, sline_in
     RETURN, words
 END
 ;------------------------------------------------------------------------------
+; Main program
 PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
- anonymous=anonymous, stnames=stnames, quick=quick, errcode=errcode
-
-   common yanny_linenumber, lastlinenum ; Only for debugging
-   lastlinenum = 0
-
-   if (N_params() LT 1) then begin
-      print, 'Syntax - yanny_read, filename, [ pdata, hdr=, enums=, '
-      print, ' structs=, /anonymous, stnames=, /quick, errcode= ]'
-      return
-  endif
+    anonymous=anonymous, stnames=stnames, quick=quick, errcode=errcode
+    COMMON yanny_linenumber, lastlinenum ; Only for debugging
+    lastlinenum = 0
+    IF (N_PARAMS() LT 1) THEN BEGIN
+        PRINT, 'Syntax - yanny_read, filename, [ pdata, hdr=, enums=, '
+        PRINT, ' structs=, /anonymous, stnames=, /quick, errcode= ]'
+        RETURN
+    ENDIF
 
    tname = ['char', 'short', 'int', 'long', 'float', 'double']
    ; Read and write variables that are denoted INT in the Yanny file
@@ -307,7 +306,7 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
    sline = ''
 
-   while (NOT eof(ilun)) do begin
+   WHILE ~EOF(ilun) DO BEGIN
 
       qdone = 0
 
@@ -490,25 +489,20 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       if (qdone EQ 0) then $
        yanny_add_comment, rawline, hdr
 
-   endwhile
-
-   ;----------
-   ; Close the file
-
-   close, ilun
-   free_lun, ilun
-
-   ;----------
-   ; Trim the structures from their maximum length to only the actual
-   ; number of elements.  Be sure to free memory from the untrimmed,
-   ; unused pointers.
-
-   for icount=0, pcount-1 do begin
-      oldptr = pdata[icount]
-      pdata[icount] = ptr_new( (*oldptr)[0:(pnumel[icount]-1)>0] )
-      ptr_free, oldptr
-   endfor
-
+   ENDWHILE
+    ;----------
+    ; Close the file
+    CLOSE, ilun
+    FREE_LUN, ilun
+    ;----------
+    ; Trim the structures from their maximum length to only the actual
+    ; number of elements.  Be sure to free memory from the untrimmed,
+    ; unused pointers.
+    FOR icount=0, pcount-1 DO BEGIN
+        oldptr = pdata[icount]
+        pdata[icount] = PTR_NEW( (*oldptr)[0:(pnumel[icount]-1)>0] )
+        PTR_FREE, oldptr
+    ENDFOR
     RETURN
 END
 ;------------------------------------------------------------------------------
