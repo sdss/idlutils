@@ -228,85 +228,73 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
         PRINT, ' structs=, /anonymous, stnames=, /quick, errcode= ]'
         RETURN
     ENDIF
-
-   tname = ['char', 'short', 'int', 'long', 'float', 'double']
-   ; Read and write variables that are denoted INT in the Yanny file
-   ; as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
-   ; Yanny files assume type INT is a 4-byte integer, whereas in IDL
-   ; that type is only 2-byte.
-   tvals = ['""'  , '0'    , '0L'  , '0LL'  , '0.0'  , '0.0D'  ]
-   tarrs = ['strarr(' , $
+    tname = ['char', 'short', 'int', 'long', 'float', 'double']
+    ; Read and write variables that are denoted INT in the Yanny file
+    ; as IDL-type LONG, and LONG as IDL-type LONG64.  This is because
+    ; Yanny files assume type INT is a 4-byte integer, whereas in IDL
+    ; that type is only 2-byte.
+    tvals = ['""'  , '0'    , '0L'  , '0LL'  , '0.0'  , '0.0D'  ]
+    tarrs = ['strarr(' , $
             'intarr(' , $
             'lonarr(' , $
             'lon64arr(' , $
             'fltarr(' , $
             'dblarr(' ]
-
-   hdr = 0
-   enums = 0
-   structs = 0
-   errcode = 0
-   stnames = 0
-
-   ; List of all possible structures
-   pcount = 0       ; Count of structure types defined
-   pname = 0        ; Name of each structure
-   pdata = 0        ; Pointer to each structure
-   pnumel = 0       ; Number of elements in each structure
-
-   ;----------
-   ; If the file does not exist, then return but not with an error
-
-   junk = FILE_SEARCH(filename[0], COUNT=ct)
-   IF (ct EQ 0) THEN BEGIN
-      errcode = 0
-      return
-   ENDIF
-
-   ;----------
-   ; Count the number of lines in the file, then open the file for
-   ; reading one line at a time.
-
-   shortname = fileandpath(filename[0])
-   ww = STRSPLIT(shortname,'.',/EXTRACT)
-   nword = N_ELEMENTS(ww)
-   if (nword GT 1) then uncmps = ww[nword-1] $
-    else uncmps = ''
-   case uncmps of
-   'Z': begin
-       spawn, 'uncompress -c '+filename+'|wc -l', maxlen
-       maxlen = long(maxlen[0]) > 1
-       ; I can use /NOSHELL below only if the spawn command is
-       ; passed as an array of words.
-       spawn, ['uncompress','-c',filename], unit=ilun, /noshell
-       err = 0
-       end
-   'gz': begin
-       spawn, 'gunzip -c '+filename+'|wc -l', maxlen
-       maxlen = long(maxlen[0]) > 1
-       openr, ilun, filename, error=err, /get_lun, /compress
-       end
-   else: begin
-       maxlen = FILE_LINES(filename[0]) > 1
-       openr, ilun, filename, error=err, /get_lun
-       end
-   endcase
-
-   if (err NE 0) then begin
-      if (keyword_set(ilun)) then begin
-         close, ilun
-         free_lun, ilun
-      endif
-      errcode = -2L
-      return
-   endif
-
-   ;----------
-   ; Loop over all lines in the file
-
-   sline = ''
-
-   WHILE ~EOF(ilun) DO BEGIN
+    hdr = 0
+    enums = 0
+    structs = 0
+    errcode = 0
+    stnames = 0
+    ; List of all possible structures
+    pcount = 0       ; Count of structure types defined
+    pname = 0        ; Name of each structure
+    pdata = 0        ; Pointer to each structure
+    pnumel = 0       ; Number of elements in each structure
+    ;----------
+    ; If the file does not exist, then return but not with an error
+    junk = FILE_SEARCH(filename[0], COUNT=ct)
+    IF (ct EQ 0) THEN BEGIN
+        errcode = 0
+        RETURN
+    ENDIF
+    ;----------
+    ; Count the number of lines in the file, then open the file for
+    ; reading one line at a time.
+    shortname = fileandpath(filename[0])
+    ww = STRSPLIT(shortname,'.',/EXTRACT)
+    nword = N_ELEMENTS(ww)
+    IF (nword GT 1) THEN uncmps = ww[nword-1] ELSE uncmps = ''
+    CASE uncmps OF
+        'Z': BEGIN
+            SPAWN, 'uncompress -c '+filename+'|wc -l', maxlen
+            maxlen = LONG(maxlen[0]) > 1
+            ; I can use /NOSHELL below only if the spawn command is
+            ; passed as an array of words.
+            SPAWN, ['uncompress','-c',filename], UNIT=ilun, /NOSHELL
+            err = 0
+        END
+        'gz': BEGIN
+            SPAWN, 'gunzip -c '+filename+'|wc -l', maxlen
+            maxlen = LONG(maxlen[0]) > 1
+            OPENR, ilun, filename, ERROR=err, /GET_LUN, /COMPRESS
+        END
+        ELSE: BEGIN
+            maxlen = FILE_LINES(filename[0]) > 1
+            OPENR, ilun, filename, ERROR=err, /GET_LUN
+        END
+    ENDCASE
+    IF (err NE 0) THEN BEGIN
+        IF KEYWORD_SET(ilun) THEN BEGIN
+            CLOSE, ilun
+            FREE_LUN, ilun
+        ENDIF
+        errcode = -2L
+        RETURN
+    ENDIF
+    ;----------
+    ; Loop over all lines in the file
+    sline = ''
+    WHILE ~EOF(ilun) DO BEGIN
 
       qdone = 0
 
@@ -489,7 +477,7 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       if (qdone EQ 0) then $
        yanny_add_comment, rawline, hdr
 
-   ENDWHILE
+    ENDWHILE
     ;----------
     ; Close the file
     CLOSE, ilun
