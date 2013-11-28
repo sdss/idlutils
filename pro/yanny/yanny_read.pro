@@ -109,17 +109,13 @@ END
 ; Procedure to read the next line from a file into a string.
 ; This piece of code used to not use READF, since READF used to
 ; fail if the last non-whitespace character was a backslash.
-
-pro yanny_readstring, ilun, sline
-
-   common yanny_linenumber, lastlinenum ; Only for debugging
-
-   sline = ''
-   readf, ilun, sline
-   lastlinenum = lastlinenum + 1
-
-   return
-end
+PRO yanny_readstring, ilun, sline
+    COMMON yanny_linenumber, lastlinenum ; Only for debugging
+    sline = ''
+    READF, ilun, sline
+    lastlinenum = lastlinenum + 1
+    RETURN
+END
 ;------------------------------------------------------------------------------
 ; Read the next line from the input file, appending several lines if there
 ; are continuation characters (backslashes) at the end of lines.
