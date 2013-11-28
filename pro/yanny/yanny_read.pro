@@ -301,175 +301,145 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
         sline = yanny_strip_commas(rawline)
         words = yanny_getwords(sline) ; Divide into words and strings
         nword = N_ELEMENTS(words)
-      if (nword GE 2) then begin
+        IF (nword GE 2) THEN BEGIN
+            ; LOOK FOR "typedef enum" lines and add to structs
+            IF (words[0] EQ 'typedef' && words[1] EQ 'enum') THEN BEGIN
+                WHILE (STRMID(sline,0,1) NE '}') DO BEGIN
+                    yanny_add_comment, rawline, enums
+                    rawline = yanny_nextline(ilun)
+                    sline = yanny_strip_commas(rawline)
+                ENDWHILE
+                yanny_add_comment, rawline, enums
+                qdone = 1 ; This last line is still part of the enum string
+            ; LOOK FOR STRUCTURES TO BUILD with "typedef struct"
+            ENDIF ELSE IF (words[0] EQ 'typedef' && words[1] EQ 'struct') THEN BEGIN
+                ntag = 0
+                yanny_add_comment, rawline, structs
+                rawline = yanny_nextline(ilun)
+                sline = yanny_strip_commas(rawline)
+                WHILE (STRMID(STRTRIM(sline,2),0,1) NE '}') DO BEGIN
+                    ww = yanny_getwords(sline)
+                    IF (N_ELEMENTS(ww) GE 2) THEN BEGIN
+                        i = WHERE(ww[0] EQ tname, ct)
+                        i = i[0]
+                        ; If the type is "char", then remove the string length
+                        ; from the defintion, since IDL does not need a string
+                        ; length.  For example, change "char foo[20]" to "char foo",
+                        ; or change "char foo[10][20]" to "char foo[10]".
+                        ; Also handle old-school '<>' brackets, but don't assume
+                        ; they will be mixed.
+                        IF (i EQ 0) THEN BEGIN
+                            j1 = STRPOS(ww[1], '[', /REVERSE_SEARCH)
+                            IF (j1 NE -1) THEN ww[1] = STRMID(ww[1], 0, j1)
+                            j2 = STRPOS(ww[1], '<', /REVERSE_SEARCH)
+                            IF (j2 NE -1) THEN ww[1] = STRMID(ww[1], 0, j2)
+                        ENDIF
+                        ; Force an unknown type to be a "char"
+                        ; This will handle enum types.
+                        IF (i[0] EQ -1) THEN i = 0
+                        ; Test to see if this should be an array
+                        ; (Only 1-dimensional arrays supported here.)
+                        j1 = STRPOS(ww[1], '[')
+                        IF (j1 NE -1) THEN BEGIN
+                            addname = STRMID(ww[1], 0, j1)
+                            j2 = STRPOS(ww[1], ']')
+                            addval = tarrs[i] + STRMID(ww[1], j1+1, j2-j1-1) + ')'
+                        ENDIF ELSE BEGIN
+                            j1 = STRPOS(ww[1], '<')
+                            IF (j1 NE -1) THEN BEGIN
+                                addname = STRMID(ww[1], 0, j1)
+                                j2 = STRPOS(ww[1], '>')
+                                addval = tarrs[i] + STRMID(ww[1], j1+1, j2-j1-1) + ')'
+                            ENDIF ELSE BEGIN
+                                addname = ww[1]
+                                addval = tvals[i]
+                            ENDELSE
+                        ENDELSE
+                        IF (ntag EQ 0) THEN BEGIN
+                            names = addname
+                            values = addval
+                        ENDIF ELSE BEGIN
+                            names = [names, addname]
+                            values = [values, addval]
+                        ENDELSE
+                        ntag = ntag + 1
+                    ENDIF
+                    yanny_add_comment, rawline, structs
+                    rawline = yanny_nextline(ilun)
+                    sline = yanny_strip_commas(rawline)
+                ENDWHILE
+                yanny_add_comment, rawline, structs
+                ; Now for the structure name - get from the last line read
+                ; Force this to uppercase
+                ww = yanny_getwords(sline)
+                stname1 = STRUPCASE(ww[0])
+                IF ~KEYWORD_SET(stnames) THEN stnames = stname1 $
+                ELSE stnames = [stnames, stname1]
+                ; Create the actual structure
+                ; Pre-allocate a large array of length MAXLEN, which is
+                ; the longest it could possibly be (the number of lines
+                ; in the file).  At the end of this proc, we trim this
+                ; to only the actual number of elements.
+                IF KEYWORD_SET(anonymous) THEN structyp='' ELSE structyp=stname1
+                ptr1 = REPLICATE(mrd_struct(names, values, 1, structyp=structyp), maxlen)
+                yanny_add_pointer, stname1, $
+                    PTR_NEW(ptr1), pcount, pname, pdata, pnumel
+                qdone = 1 ; This last line is still part of the structure def'n
 
-         ; LOOK FOR "typedef enum" lines and add to structs
-         if (words[0] EQ 'typedef' AND words[1] EQ 'enum') then begin
-
-            while (strmid(sline,0,1) NE '}') do begin
-               yanny_add_comment, rawline, enums
-               rawline = yanny_nextline(ilun)
-               sline = yanny_strip_commas(rawline)
-            endwhile
-
-            yanny_add_comment, rawline, enums
-
-            qdone = 1 ; This last line is still part of the enum string
-
-         ; LOOK FOR STRUCTURES TO BUILD with "typedef struct"
-         endif else if (words[0] EQ 'typedef' AND words[1] EQ 'struct') $
-          then begin
-
-            ntag = 0
-            yanny_add_comment, rawline, structs
-            rawline = yanny_nextline(ilun)
-            sline = yanny_strip_commas(rawline)
-
-            while (strmid(strtrim(sline,2),0,1) NE '}') do begin
-               ww = yanny_getwords(sline)
-
-               if (N_elements(ww) GE 2) then begin
-                  i = where(ww[0] EQ tname, ct)
-                  i = i[0]
-
-                  ; If the type is "char", then remove the string length
-                  ; from the defintion, since IDL does not need a string
-                  ; length.  For example, change "char foo[20]" to "char foo",
-                  ; or change "char foo[10][20]" to "char foo[10]".
-                  ; Also handle old-school '<>' brackets, but don't assume
-                  ; they will be mixed.
-                  IF (i EQ 0) THEN BEGIN
-                     j1 = STRPOS(ww[1], '[', /REVERSE_SEARCH)
-                     IF (j1 NE -1) THEN ww[1] = STRMID(ww[1], 0, j1)
-                     j2 = STRPOS(ww[1], '<', /REVERSE_SEARCH)
-                     IF (j2 NE -1) THEN ww[1] = STRMID(ww[1], 0, j2)
-                  ENDIF
-
-                  ; Force an unknown type to be a "char"
-                  ; This will handle enum types.
-                  IF (i[0] EQ -1) THEN i = 0
-
-                  ; Test to see if this should be an array
-                  ; (Only 1-dimensional arrays supported here.)
-                  j1 = STRPOS(ww[1], '[')
-                  IF (j1 NE -1) THEN BEGIN
-                     addname = STRMID(ww[1], 0, j1)
-                     j2 = STRPOS(ww[1], ']')
-                     addval = tarrs[i] + STRMID(ww[1], j1+1, j2-j1-1) + ')'
-                  ENDIF ELSE BEGIN
-                     j1 = STRPOS(ww[1], '<')
-                     IF (j1 NE -1) THEN BEGIN
-                        addname = STRMID(ww[1], 0, j1)
-                        j2 = STRPOS(ww[1], '>')
-                        addval = tarrs[i] + STRMID(ww[1], j1+1, j2-j1-1) + ')'
-                     ENDIF ELSE BEGIN
-                        addname = ww[1]
-                        addval = tvals[i]
-                     ENDELSE
-                  ENDELSE
-
-                  if (ntag EQ 0) then begin
-                     names = addname
-                     values = addval
-                  endif else begin
-                     names = [names, addname]
-                     values = [values, addval]
-                  endelse
-
-                  ntag = ntag + 1
-               endif
-
-               yanny_add_comment, rawline, structs
-               rawline = yanny_nextline(ilun)
-               sline = yanny_strip_commas(rawline)
-            endwhile
-
-            yanny_add_comment, rawline, structs
-
-            ; Now for the structure name - get from the last line read
-            ; Force this to uppercase
-            ww = yanny_getwords(sline)
-            stname1 = strupcase(ww[0])
-            if (NOT keyword_set(stnames)) then stnames = stname1 $
-             else stnames = [stnames, stname1]
-
-            ; Create the actual structure
-            ; Pre-allocate a large array of length MAXLEN, which is
-            ; the longest it could possibly be (the number of lines
-            ; in the file).  At the end of this proc, we trim this
-            ; to only the actual number of elements.
-            if (keyword_set(anonymous)) then structyp='' $
-             else structyp = stname1
-            ptr1 = replicate(mrd_struct(names, values, 1, structyp=structyp), maxlen)
-            yanny_add_pointer, stname1, $
-             ptr_new(ptr1), pcount, pname, pdata, pnumel
-
-            qdone = 1 ; This last line is still part of the structure def'n
-
-         ; LOOK FOR A STRUCTURE ELEMENT
-         ; Only look if some structures already defined
-         ; Note that the structure names should be forced to uppercase
-         ; such that they are not case-sensitive.
-         endif else if (pcount GT 0) then begin
-            ; If PDATA is not to be returned, then we need to read this
-            ; file no further.
-            if (NOT arg_present(pdata)) then begin
-               close, ilun
-               free_lun, ilun
-               return
-            endif
-
-            idat = where(strupcase(words[0]) EQ pname[0:pcount-1], ct)
-            if (ct EQ 1) then begin
-               idat = idat[0]
-
-               ; Add an element to the idat-th structure
-               ; Note that if this is the first element encountered,
-               ; then we already have an empty element defined.
-               ; (No longer any need to do this, since we pre-allocate
-               ; a large array.)
-               ; if (pnumel[idat] GT 0) then $
-               ;  *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
-
-               ; Split this text line into words
-               ww = yanny_getwords(sline)
-
-               i = 1 ; Counter for which word we're currently reading
-                     ; Skip the 0-th word since it's the structure name.
-
-               ; Now fill in this structure from the line of text
-               ntag = N_tags( *pdata[idat] )
-               for itag=0, ntag-1 do begin
-                  ; This tag could be an array - see how big it is
-                  sz = N_elements( (*pdata[idat])[0].(itag) )
-
-                  ; Error-checking code below
-                  if (i+sz GT n_elements(ww)) then begin
-                     splog, 'Last line number read: ', lastlinenum
-                     splog, 'Last line read: "' + rawline + '"'
-                     splog, 'ABORT: Invalid Yanny file ' + filename $
-                      + ' at line number ' $
-                      + strtrim(string(lastlinenum),2) + ' !!'
-                     close, ilun
-                     free_lun, ilun
-                     yanny_free, pdata
-                     errcode = -3L
-                     return
-                  endif
-
-                  for j=0, sz-1 do begin
-                     (*pdata[idat])[pnumel[idat]].(itag)[j] = ww[i]
-                     i = i + 1
-                  endfor
-               endfor
-
-               pnumel[idat] = pnumel[idat] + 1
-            endif
-            qdone = 1 ; This last line was a structure element
-         endif
-
-      endif
-
+            ; LOOK FOR A STRUCTURE ELEMENT
+            ; Only look if some structures already defined
+            ; Note that the structure names should be forced to uppercase
+            ; such that they are not case-sensitive.
+            ENDIF ELSE IF (pcount GT 0) THEN BEGIN
+                ; If PDATA is not to be returned, then we need to read this
+                ; file no further.
+                IF ~ARG_PRESENT(pdata) THEN BEGIN
+                    CLOSE, ilun
+                    FREE_LUN, ilun
+                    RETURN
+                ENDIF
+                idat = WHERE(strupcase(words[0]) EQ pname[0:pcount-1], ct)
+                IF (ct EQ 1) THEN BEGIN
+                    idat = idat[0]
+                    ; Add an element to the idat-th structure
+                    ; Note that if this is the first element encountered,
+                    ; then we already have an empty element defined.
+                    ; (No longer any need to do this, since we pre-allocate
+                    ; a large array.)
+                    ; IF (pnumel[idat] GT 0) THEN $
+                    ; *pdata[idat] = [*pdata[idat], (*pdata[idat])[0]]
+                    ; Split this text line into words
+                    ww = yanny_getwords(sline)
+                    i = 1 ; Counter for which word we're currently reading
+                          ; Skip the 0-th word since it's the structure name.
+                    ; Now fill in this structure from the line of text
+                    ntag = N_TAGS( *pdata[idat] )
+                    FOR itag=0, ntag-1 DO BEGIN
+                        ; This tag could be an array - see how big it is
+                        sz = N_ELEMENTS( (*pdata[idat])[0].(itag) )
+                        ; Error-checking code below
+                        IF (i+sz GT N_ELEMENTS(ww)) THEN BEGIN
+                            splog, 'Last line number read: ', lastlinenum
+                            splog, 'Last line read: "' + rawline + '"'
+                            splog, 'ABORT: Invalid Yanny file ' + filename $
+                                + ' at line number ' $
+                                + strtrim(string(lastlinenum),2) + ' !!'
+                            CLOSE, ilun
+                            FREE_LUN, ilun
+                            yanny_free, pdata
+                            errcode = -3L
+                            RETURN
+                        ENDIF
+                        FOR j=0, sz-1 DO BEGIN
+                            (*pdata[idat])[pnumel[idat]].(itag)[j] = ww[i]
+                            i = i + 1
+                        ENDFOR
+                    ENDFOR
+                    pnumel[idat] = pnumel[idat] + 1
+                ENDIF
+                qdone = 1 ; This last line was a structure element
+            ENDIF
+        ENDIF
         IF (qdone EQ 0) THEN yanny_add_comment, rawline, hdr
     ENDWHILE
     ;----------
