@@ -95,7 +95,7 @@
 ; of a line.  This is to prevent the semi-colon from becoming part
 ; of a structure's name.
 FUNCTION yanny_strip_commas, rawline
-    pos = STREGEX(rawline+' ', '; +$', len=len)
+    pos = STREGEX(rawline+' ', '; +$', LENGTH=len)
     IF (pos[0] EQ -1) THEN RETURN, rawline $
     ELSE RETURN, STRMID(rawline, 0, pos)
 END
@@ -180,64 +180,54 @@ end
 ;------------------------------------------------------------------------------
 ; Append another pointer NEWPTR to the array of pointers PDATA.
 ; Also add its name to PNAME.
-
-pro yanny_add_pointer, stname, newptr, pcount, pname, pdata, pnumel
-
-   if (pcount EQ 0) then begin
-      pname = stname
-      pdata = newptr
-      pnumel = 0L
-   endif else begin
-      pname = [pname, stname]
-      pdata = [pdata, newptr]
-      pnumel = [pnumel, 0L]
-   endelse
-
-   pcount = pcount + 1
-
-   return
-end
+PRO yanny_add_pointer, stname, newptr, pcount, pname, pdata, pnumel
+    IF (pcount EQ 0) THEN BEGIN
+        pname = stname
+        pdata = newptr
+        pnumel = 0L
+    ENDIF ELSE BEGIN
+        pname = [pname, stname]
+        pdata = [pdata, newptr]
+        pnumel = [pnumel, 0L]
+    ENDELSE
+    pcount = pcount + 1
+    RETURN
+END
 ;-----------------------------------------------------------------------------
 ; Split SLINE into words using whitespace.  Anything inside double-quotes
 ; is protected from being split into separate words, and is returned as
 ; a single word without the quotes.
-
-function yanny_getwords, sline_in
-
-   sline = sline_in ; Make a copy of this, since we modify it below
-
-   ;----------
-   ; First, we need to replace any empty double curly-bracket,
-   ; like "{ { } }" or "{{}}" with a double-quoted empty string.
-   pos = 0
-   while (pos GE 0) do begin
-      pos = stregex(sline,'\{ *\{ *\} *\}', length=len)
-      if (pos GE 0) then $
-       sline = strmid(sline,0,pos) + ' "" ' + strmid(sline,pos+len)
-   endwhile
-
-   ;----------
-   ; Dispose of any commas, semi-colons, or curly-brackets
-   ; that are not inside double-quotes.  Replace them with spaces.
-   ; First, split up into sections separated by double quotes.
-   ; Then, in every OTHER section remove offending characters.
-   ; (Start at zeroth section if first character is not double quote,
-   ; first section otherwise)
-   sections= strsplit(sline, '"', /extr, /preserve_null)
-   for i=0L, n_elements(sections)-1L, 2L do $
-         sections[i]=strjoin(strsplit(sections[i], ',;{}',/extr),' ')
-   sline= strjoin(sections, '"')
-
-   ;----------
-   ; Split this line into words, protecting anything inside
-   ; double-quotes as a single word.
-   hogg_strsplit, sline, words
-   if (NOT keyword_set(words)) then words = ''
-
-   return, words
-end
+FUNCTION yanny_getwords, sline_in
+    sline = sline_in ; Make a copy of this, since we modify it below
+    ;----------
+    ; First, we need to replace any empty double curly-bracket,
+    ; like "{ { } }" or "{{}}" with a double-quoted empty string.
+    pos = 0
+    WHILE (pos GE 0) DO BEGIN
+        pos = STREGEX(sline,'\{ *\{ *\} *\}', LENGTH=len)
+        IF (pos GE 0) THEN $
+            sline = STRMID(sline,0,pos) + ' "" ' + STRMID(sline,pos+len)
+    ENDWHILE
+    ;----------
+    ; Dispose of any commas, semi-colons, or curly-brackets
+    ; that are not inside double-quotes.  Replace them with spaces.
+    ; First, split up into sections separated by double quotes.
+    ; Then, in every OTHER section remove offending characters.
+    ; (Start at zeroth section if first character is not double quote,
+    ; first section otherwise)
+    sections= STRSPLIT(sline, '"', /EXTRACT, /PRESERVE_NULL)
+    FOR i=0L, N_ELEMENTS(sections)-1L, 2L DO $
+         sections[i]=STRJOIN(STRSPLIT(sections[i], ',;{}',/EXTRACT),' ')
+    sline= STRJOIN(sections, '"')
+    ;----------
+    ; Split this line into words, protecting anything inside
+    ; double-quotes as a single word.
+    hogg_strsplit, sline, words
+    IF ~KEYWORD_SET(words) THEN words = ''
+    RETURN, words
+END
 ;------------------------------------------------------------------------------
-pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
+PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
  anonymous=anonymous, stnames=stnames, quick=quick, errcode=errcode
 
    common yanny_linenumber, lastlinenum ; Only for debugging
@@ -528,6 +518,6 @@ pro yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       ptr_free, oldptr
    endfor
 
-   return
-end
+    RETURN
+END
 ;------------------------------------------------------------------------------
