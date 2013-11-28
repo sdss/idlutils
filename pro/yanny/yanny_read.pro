@@ -119,64 +119,55 @@ END
 ;------------------------------------------------------------------------------
 ; Read the next line from the input file, appending several lines if there
 ; are continuation characters (backslashes) at the end of lines.
-
-function yanny_nextline, ilun
-
-   common yanny_lastline, lastline
-
-   ;----------
-   ; If we had already parsed the last line read into several lines (by
-   ; semi-colon separation), then return the next of those.
-
-   if (keyword_set(lastline)) then begin
-      sline = lastline[0]
-      nlast = n_elements(lastline)
-      if (nlast EQ 1) then lastline = '' $
-       else lastline = lastline[1:nlast-1]
-      return, sline
-   endif
-
-   ;----------
-   ; Read the next line.  If the last non-whitespace character is
-   ; a backslash, then read and append the next line.  Do that
-   ; recursively until there are no more continuation lines.
-
-   sline = ''
-   yanny_readstring, ilun, sline
-   sline = strtrim(sline) ; Remove only trailing whitespace
-   nchar = strlen(sline)
-   while (strmid(sline, nchar-1) EQ '\') do begin
-      strput, sline, ' ', nchar-1 ; Replace the '\' with a space
-      yanny_readstring, ilun, stemp
-      stemp = strtrim(stemp) ; Remove only trailing whitespace
-      sline = sline + stemp
-      nchar = strlen(sline)
-   endwhile
-
-   ;----------
-   ; Now parse this line into several lines by semi-colon separation,
-   ; keeping those semi-colons at the end of each.  Ignore any semi-colons
-   ; inside double-quotes.
-   ;
-   ; This form of line splitting is deprecated and is in any case very rare.
-   ; Turned off, BAW 2013-11-06
-   ;
-   lastline = ''
-   ;rgx = hogg_unquoted_regex(';')
-   ;while (strlen(sline) GT 0) do begin
-   ;   pos = strsplit(sline, rgx, /regex, length=len)
-   ;   ; By using len+1 below, we are adding back in the semi-colon.
-   ;   if (NOT keyword_set(lastline)) then lastline = strmid(sline, 0, len+1) $
-   ;    else lastline = [lastline, strmid(sline, 0, len+1)]
-   ;   sline = strmid(sline, len+1)
-   ;endwhile
-
-   ;sline = lastline[0]
-   ;if (n_elements(lastline) EQ 1) then lastline = '' $
-   ; else lastline = lastline[1:n_elements(lastline)-1]
-
-   return, sline
-end
+FUNCTION yanny_nextline, ilun
+    COMMON yanny_lastline, lastline
+    ;----------
+    ; If we had already parsed the last line read into several lines (by
+    ; semi-colon separation), then return the next of those.
+    IF KEYWORD_SET(lastline) THEN BEGIN
+        sline = lastline[0]
+        nlast = N_ELEMENTS(lastline)
+        IF (nlast EQ 1) THEN lastline = '' $
+        ELSE lastline = lastline[1:nlast-1]
+        RETURN, sline
+    ENDIF
+    ;----------
+    ; Read the next line.  If the last non-whitespace character is
+    ; a backslash, then read and append the next line.  Do that
+    ; recursively until there are no more continuation lines.
+    sline = ''
+    yanny_readstring, ilun, sline
+    sline = STRTRIM(sline) ; Remove only trailing whitespace
+    nchar = STRLEN(sline)
+    WHILE (STRMID(sline, nchar-1) EQ '\') DO BEGIN
+        STRPUT, sline, ' ', nchar-1 ; Replace the '\' with a space
+        yanny_readstring, ilun, stemp
+        stemp = STRTRIM(stemp) ; Remove only trailing whitespace
+        sline = sline + stemp
+        nchar = STRLEN(sline)
+    ENDWHILE
+    ;----------
+    ; Now parse this line into several lines by semi-colon separation,
+    ; keeping those semi-colons at the end of each.  Ignore any semi-colons
+    ; inside double-quotes.
+    ;
+    ; This form of line splitting is deprecated and is in any case very rare.
+    ; Turned off, BAW 2013-11-06
+    ;
+    lastline = ''
+    ;rgx = hogg_unquoted_regex(';')
+    ;WHILE (strlen(sline) GT 0) DO BEGIN
+    ;   pos = STRSPLIT(sline, rgx, /REGEX, LENGTH=len)
+    ;   ; By using len+1 below, we are adding back in the semi-colon.
+    ;   IF ~KEYWORD_SET(lastline) THEN lastline = STRMID(sline, 0, len+1) $
+    ;   ELSE lastline = [lastline, STRMID(sline, 0, len+1)]
+    ;   sline = STRMID(sline, len+1)
+    ;ENDWHILE
+    ;sline = lastline[0]
+    ;IF (N_ELEMENTS(lastline) EQ 1) THEN lastline = '' $
+    ;ELSE lastline = lastline[1:N_ELEMENTS(lastline)-1]
+    RETURN, sline
+END
 ;------------------------------------------------------------------------------
 ; Append another pointer NEWPTR to the array of pointers PDATA.
 ; Also add its name to PNAME.
