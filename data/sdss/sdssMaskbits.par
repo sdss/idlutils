@@ -496,7 +496,7 @@ maskbits ANCILLARY_TARGET2 52 TAU_STAR				"defined in knapp_taurus.descr"
 maskbits ANCILLARY_TARGET2 53 SEQUELS_TARGET			"any target in SEQUELS darktime program"
 maskbits ANCILLARY_TARGET2 54 RM_TILE1			"reverberation mapping, high priority"
 maskbits ANCILLARY_TARGET2 55 RM_TILE2			"reverberation mapping, low priority"
-maskbits ANCILLARY_TARGET2 56 DEEP_QSO			"DEEP QSO described in QSO_DEEP_LBG.descr"
+maskbits ANCILLARY_TARGET2 56 QSO_DEEP			"DEEP QSO described in QSO_DEEP_LBG.descr"
 maskbits ANCILLARY_TARGET2 57 LBG			"LBG described in QSO_DEEP_LBG.descr"
 
 
