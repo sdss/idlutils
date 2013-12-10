@@ -6,15 +6,17 @@
 ;   Download commands for only WISE data (all bands) within an RA,Dec box
 ;
 ; CALLING SEQUENCE:
-;   wise_download, rarange=, decrange=, /noclobber
+;   wise_download, [ rarange=, decrange=, bands=, /noclobber, outfile= ]
 ;
 ; INPUTS:
-;   rarange    - RA range for field centers; default to [209.65,220.08] deg
-;   decrange   - DEC range for field centers; default to [50.63,54.74] deg
 ;
 ; OPTIONAL INPUTS:
+;   rarange    - RA range for field centers; default to [-1,361] deg
+;   decrange   - DEC range for field centers; default to [-91,91] deg
+;   bands      - If set, then limit to the specified bands, i.e. [1,2]
 ;   noclobber  - If set, then test for the existence of the "int" file on
 ;                disk and only include those where this doesn't exist
+;   outfile    - Output file name; default to 'wise_download.sh'
 ;
 ; OUTPUTS:
 ;
@@ -30,33 +32,42 @@
 ;   28-Apr-2013  Written by D. Schlegel, LBL
 ;-
 ;------------------------------------------------------------------------------
-pro wise_download, rarange=rarange1, decrange=decrange1, noclobber=noclobber
+pro wise_download, rarange=rarange1, decrange=decrange1, bands=bands, $
+ noclobber=noclobber, outfile=outfile1
 
    if (keyword_set(rarange1)) then rarange = rarange1 $
-;    else rarange = [209.65,220.08]
-    else rarange = [120-0.55*2,210+0.55*2]
+    else rarange = [-1,361]
    if (keyword_set(decrange1)) then decrange = decrange1 $
-;    else decrange = [50.63,54.74]
-    else decrange = [45-0.55,60+0.55]
+    else decrange = [-91,91]
 
-   splog, file='wise_download.sh', /noname
+   if (keyword_set(outfile1)) then outfile = outfile1 $
+    else outfile = 'wise_download.sh'
+   splog, file=outfile, /noname
 
-; Directories with file lists
-;setenv,'WISE_IMAGE_DIR=/home/schlegel/wise_frames'
-setenv,'WISE_IMAGE_DIR=/Users/schlegel/wise'
-wdir = str_sep(getenv('WISE_IMAGE_DIR'), ';')
+   ; Directories with file lists
+   wdir = getenv('WISE_IMAGE_DIR')
+   if (NOT keyword_set(wdir)) then $
+    message, 'Must set directory WISE_IMAGE_DIR'
+   wdir = str_sep(getenv('WISE_IMAGE_DIR'), ';')
 
-; Directories at IPAC to get frames
-;remotedir = ['http://irsa.ipac.caltech.edu/ibe/data/wise/allsky/4band_p1bm_frm/', $
-; 'http://irsa.ipac.caltech.edu/ibe/data/wise/prelim_postcryo/p1bm_frm/']
-remotedir = 'http://irsa.ipac.caltech.edu/ibe/data/wise/merge/merge_p1bm_frm/'
+   ; Directories at IPAC to get frames
+   remotedir = 'http://irsa.ipac.caltech.edu/ibe/data/wise/merge/merge_p1bm_frm/'
 
    for idir=0L, n_elements(wdir)-1 do begin
       ixfile = filepath('WISE-index-L1b.fits', root_dir=wdir[idir])
       ixlist = mrdfits(ixfile, 1, /silent)
+      qkeep = bytarr(n_elements(ixlist))
+      if (keyword_set(bands)) then begin
+         for k=0, n_elements(bands)-1 do $
+          qkeep = qkeep OR (ixlist.band EQ fix(bands[k]))
+      endif else begin
+         qkeep += 1B
+      endelse
       inear = where(ixlist.ra GE rarange[0] AND ixlist.ra LE rarange[1] $
-       AND ixlist.dec GE decrange[0] AND ixlist.dec LE decrange[1], nnear)
+       AND ixlist.dec GE decrange[0] AND ixlist.dec LE decrange[1] AND qkeep, $
+       nnear)
       for i=0L, nnear-1 do begin
+print,i,nnear
          j = inear[i]
          subdirs = [ixlist[inear[i]].scangrp, $
           ixlist[j].scan_id, $
@@ -75,17 +86,11 @@ remotedir = 'http://irsa.ipac.caltech.edu/ibe/data/wise/merge/merge_p1bm_frm/'
 
          if (ct1 EQ 0) then begin
             thiscmd = 'wget -r -N -nH -np -nv --cut-dirs=4' $
-             + ' -A "w*'+strtrim(string(ixlist[j].band),2)+'*"' $
-;             + ' -A "*w1*" -A "*w2*"' $
+             + ' -A "*w'+strtrim(string(ixlist[j].band),2)+'*"' $
              + ' "'+remotedir[idir]+subdir3+'"
             splog,thiscmd,/noname
          endif
       endfor
-
-      if (idir EQ 0) then $
-       mwrfits, ixlist[inear], 'WISE1-WISE-index-L1b.fits', /create $
-      else $
-       mwrfits, ixlist[inear], 'WISE1EXT-WISE-index-L1b.fits', /create
    endfor
 
    splog, /close
