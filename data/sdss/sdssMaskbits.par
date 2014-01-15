@@ -1,21 +1,29 @@
-
+#
+# sdssMaskbits.par
+#
 typedef struct {
-  char flag[20];  # Flag name
-  short bit;      # Bit number, 0-indexed
-  char label[30]; # Bit label
-	char description[100]; # text description
+    char flag[20]; # Flag name
+    short bit; # Bit number, 0-indexed
+    char label[30]; # Bit label
+    char description[100]; # text description
 } maskbits;
 
 typedef struct {
-  char flag[20];  # Flag name
-  short datatype; # Data type {8, 16, 32, 64}
-	char description[100]; # text description
+    char flag[20]; # Flag name
+    short datatype; # Data type {8, 16, 32, 64}
+    char description[100]; # text description
 } masktype;
 
-#------------------------------------------------------------------------------
+typedef struct {
+    char flag[20]; # Flag (real) name
+    char alias[20]; # Alias
+    char description[100]; # text description
+} maskalias;
 
-masktype SPPIXMASK 32 "Mask bits for an SDSS spectrum. 0-15 refer to each fiber, 16-31 refer to each pixel in a spectrum."
+#
+#------------------------------------------------------------------------------
 # The following mask bits are for the fiber, set in FIBERMASK_BITS()
+masktype SPPIXMASK 32 "Mask bits for an SDSS spectrum. 0-15 refer to each fiber, 16-31 refer to each pixel in a spectrum."
 maskbits SPPIXMASK  0 NOPLUG          "Fiber not listed in plugmap file"
 maskbits SPPIXMASK  1 BADTRACE        "Bad trace from routine TRACE320CRUDE"
 maskbits SPPIXMASK  2 BADFLAT         "Low counts in fiberflat"
@@ -29,22 +37,23 @@ maskbits SPPIXMASK  9 WHOPPER         "Whopping fiber, with a very bright source
 maskbits SPPIXMASK 10 SMEARIMAGE      "Smear available for red and blue cameras"
 maskbits SPPIXMASK 11 SMEARHIGHSN     "S/N sufficient for full smear fit"
 maskbits SPPIXMASK 12 SMEARMEDSN      "S/N only sufficient for scaled median fit"
-
+#
+#------------------------------------------------------------------------------
 # The following mask bits are for a pixel, set in SPPIXMASK_BITS()
 maskbits SPPIXMASK 16 NEARBADPIXEL    "Bad pixel within 3 pixels of trace."
 maskbits SPPIXMASK 17 LOWFLAT         "Flat field less than 0.5"
 maskbits SPPIXMASK 18 FULLREJECT      "Pixel fully rejected in extraction (INVVAR=0)"
-maskbits SPPIXMASK 19 PARTIALREJECT   "Some pixels rejected in extraction" 
-maskbits SPPIXMASK 20 SCATTEREDLIGHT  "Scattered light significant" 
-maskbits SPPIXMASK 21 CROSSTALK       "Cross-talk significant" 
-maskbits SPPIXMASK 22 NOSKY           "Sky level unknown at this wavelength (INVVAR=0)" 
-maskbits SPPIXMASK 23 BRIGHTSKY       "Sky level > flux + 10*(flux_err) AND sky > 1.25 * median(sky,99 pixels)" 
-maskbits SPPIXMASK 24 NODATA          "No data available in combine B-spline (INVVAR=0)" 
-maskbits SPPIXMASK 25 COMBINEREJ      "Rejected in combine B-spline" 
-maskbits SPPIXMASK 26 BADFLUXFACTOR   "Low flux-calibration or flux-correction factor" 
-maskbits SPPIXMASK 27 BADSKYCHI       "Relative chi^2 > 3 in sky residuals at this wavelength" 
-maskbits SPPIXMASK 28 REDMONSTER      "Contiguous region of bad chi^2 in sky residuals (with threshhold of relative chi^2 > 3)." 
-
+maskbits SPPIXMASK 19 PARTIALREJECT   "Some pixels rejected in extraction"
+maskbits SPPIXMASK 20 SCATTEREDLIGHT  "Scattered light significant"
+maskbits SPPIXMASK 21 CROSSTALK       "Cross-talk significant"
+maskbits SPPIXMASK 22 NOSKY           "Sky level unknown at this wavelength (INVVAR=0)"
+maskbits SPPIXMASK 23 BRIGHTSKY       "Sky level > flux + 10*(flux_err) AND sky > 1.25 * median(sky,99 pixels)"
+maskbits SPPIXMASK 24 NODATA          "No data available in combine B-spline (INVVAR=0)"
+maskbits SPPIXMASK 25 COMBINEREJ      "Rejected in combine B-spline"
+maskbits SPPIXMASK 26 BADFLUXFACTOR   "Low flux-calibration or flux-correction factor"
+maskbits SPPIXMASK 27 BADSKYCHI       "Relative chi^2 > 3 in sky residuals at this wavelength"
+maskbits SPPIXMASK 28 REDMONSTER      "Contiguous region of bad chi^2 in sky residuals (with threshhold of relative chi^2 > 3)."
+#
 #------------------------------------------------------------------------------
 masktype TARGET 32 "Primary target mask bits in SDSS-I, -II (for LEGACY_TARGET1 or PRIMTARGET)."
 maskbits TARGET  0 QSO_HIZ    "High-redshift (griz) QSO target"
@@ -79,8 +88,11 @@ maskbits TARGET 28 STAR_PN    "central stars of planetary nebulae"
 maskbits TARGET 29 QSO_REJECT    "Object in explicitly excluded region of color space, therefore not targeted at QSO"
 maskbits TARGET 31 SOUTHERN_SURVEY    "Set in primtarget if this is a special program target"
 
+maskalias TARGET PRIMTARGET "PRIMTARGET is a synonym for TARGET."
+maskalias TARGET LEGACY_TARGET1 "LEGACY_TARGET1 is a synonym for TARGET."
+#
 #------------------------------------------------------------------------------
-masktype TTARGET 32 "Secondary target mask bits in SDSS-I, -II (for LEGACY_TARGET2, SEGUE1_TARGET2, SEGUE2_TARGET2, SPECIAL_TARGET2 or SECTARGET)."
+masktype TTARGET 32 "Secondary target mask bits in SDSS-I, -II (for LEGACY_TARGET2, SPECIAL_TARGET2 or SECTARGET)."
 maskbits TTARGET  0 LIGHT_TRAP    "hole drilled for bright star, to avoid scattered light"
 maskbits TTARGET  1 REDDEN_STD    "reddening standard star"
 maskbits TTARGET  2 TEST_TARGET    "a test target"
@@ -93,6 +105,10 @@ maskbits TTARGET  8 QUALITY_HOLE    "hole drilled for plate shop quality measure
 maskbits TTARGET  9 HOT_STD    "hot standard star"
 maskbits TTARGET 31 SOUTHERN_SURVEY    "a segue or southern survey target"
 
+maskalias TTARGET SECTARGET "SECTARGET is identical to TTARGET."
+maskalias TTARGET LEGACY_TARGET2 "LEGACY_TARGET2 is identical to TTARGET."
+maskalias TTARGET SPECIAL_TARGET2 "SPECIAL_TARGET2 is identical to TTARGET."
+#
 #------------------------------------------------------------------------------
 masktype ZWARNING 32 "Warnings for SDSS spectra."
 maskbits ZWARNING  0 SKY    "sky fiber"
@@ -104,8 +120,8 @@ maskbits ZWARNING  5 Z_FITLIMIT    "chi-squared minimum at edge of the redshift 
 maskbits ZWARNING  6 NEGATIVE_EMISSION    "a QSO line exhibits negative emission, triggered only in QSO spectra, if  C_IV, C_III, Mg_II, H_beta, or H_alpha has LINEAREA + 3 * LINEAREA_ERR < 0"
 maskbits ZWARNING  7 UNPLUGGED    "the fiber was unplugged, so no spectrum obtained"
 maskbits ZWARNING  8 BAD_TARGET    "catastrophically bad targeting data (e.g. ASTROMBAD in CALIB_STATUS)"
-
-
+#
+#------------------------------------------------------------------------------
 # (primary within its own run)
 # Bit 1: RUN_RAMP (in the overlap area, but with no neighboring field)
 # Bit 2: RUN_OVERLAPONLY (only appears in the overlap)
@@ -115,7 +131,6 @@ maskbits ZWARNING  8 BAD_TARGET    "catastrophically bad targeting data (e.g. AS
 # Bit 8: SURVEY_PRIMARY (Primary observation within the full survey, where it appears in the primary observation of this part of the sky)
 # Bit 9: SURVEY_BEST (Best observation within the full survey, but it does not appear in the primary observation of this part of the sky)
 # Bit 10: SURVEY_SECONDARY (Repeat (independent) observation of an object that has a different primary or best observation)
-#------------------------------------------------------------------------------
 masktype RESOLVE_STATUS 32 "Resolve status for an SDSS catalog entry.  Only one of bits RUN_PRIMARY, RUN_RAMP, RUN_OVERLAPONLY, RUN_IGNORE, and RUN_DUPLICATE can be set. RUN_EDGE can be set for any object. To get a unique set of objects across the whole survey, search for objects with SURVEY_PRIMARY set. To get a unique set of objects within a run, search for objects with RUN_PRIMARY set."
 maskbits RESOLVE_STATUS  0 RUN_PRIMARY    "primary within the objects own run (but not necessarily for the survey as a whole)"
 maskbits RESOLVE_STATUS  1 RUN_RAMP    "in what would be the overlap area of a field, but with no neighboring field"
@@ -128,8 +143,8 @@ maskbits RESOLVE_STATUS  9 SURVEY_BEST    "Best observation within the full surv
 maskbits RESOLVE_STATUS 10 SURVEY_SECONDARY    "Repeat (independent) observation of an object that has a different primary or best observation"
 maskbits RESOLVE_STATUS 11 SURVEY_BADFIELD    "In field with score=0"
 maskbits RESOLVE_STATUS 12 SURVEY_EDGE    "Not kept as secondary because it is RUN_RAMP or RUN_EDGE object"
-
-#------------------------------------------------------------------------------ 
+#
+#------------------------------------------------------------------------------
 masktype IMAGE_STATUS 32 "Sky and instrument conditions of SDSS image"
 maskbits IMAGE_STATUS  0 CLEAR       "Clear skies"
 maskbits IMAGE_STATUS  1 CLOUDY      "Cloudy skies (unphotometric)"
@@ -141,7 +156,7 @@ maskbits IMAGE_STATUS  6 SHUTTERS    "Shutter out of place (set score=0)"
 maskbits IMAGE_STATUS  7 FF_PETALS   "Flat-field petals out of place (unphotometric)"
 maskbits IMAGE_STATUS  8 DEAD_CCD    "CCD bad (unphotometric)"
 maskbits IMAGE_STATUS  9 NOISY_CCD   "CCD noisy (unphotometric)"
-
+#
 #------------------------------------------------------------------------------
 masktype CALIB_STATUS  32 "Calibration status for an SDSS image"
 maskbits CALIB_STATUS   0  PHOTOMETRIC "Photometric observations"
@@ -159,13 +174,13 @@ maskbits CALIB_STATUS  11  NO_UBERCAL  "not uber-calibrated"
 maskbits CALIB_STATUS  12  ASTROMBAD  "catastrophically bad astrometry"
 maskbits CALIB_STATUS  13  PS1_PCOMP_MODEL "Enough information for PS1-based principal component flat model"
 maskbits CALIB_STATUS  14  PS1_LOW_RMS "Low RMS in comparison with PS1"
-
+#
 #------------------------------------------------------------------------------
 masktype VAGC_SELECT  32 "Selection flags for Main VAGC sample"
 maskbits VAGC_SELECT  0 TILED "selected because near a tiled target"
 maskbits VAGC_SELECT  1 PLATEHOLE "selected because near a hole on an SDSS plate"
 maskbits VAGC_SELECT  2 MAIN "selected according to slightly adjusted Main sample criteria"
- ""
+#
 #------------------------------------------------------------------------------
 masktype OBJECT1 32 "Object flags from photo reductions for SDSS (first 32)"
 maskbits OBJECT1 0 CANONICAL_CENTER "The quantities (psf counts, model fits and likelihoods) that are usually determined at an object's center as determined band-by-band were in fact determined at the canonical center (suitably transformed). This is due to the object being to close to the edge to extract a profile at the local center, and OBJECT1_EDGE is also set."
@@ -200,7 +215,7 @@ maskbits OBJECT1 28 BINNED1  "The object was detected in an unbinned image."
 maskbits OBJECT1 29 BINNED2  " The object was detected in a 2x2 binned image after all unbinned detections have been replaced by the background level."
 maskbits OBJECT1 30 BINNED4  "The object was detected in a 4x4 binned image. The objects detected in the 2x2 binned image are not removed before doing this."
 maskbits OBJECT1 31 MOVED  "The object appears to have moved during the exposure. Such objects are candidates to be deblended as moving objects."
-
+#
 #------------------------------------------------------------------------------
 masktype OBJECT2 32 "Object flags from photo reductions for SDSS (second 32)"
 maskbits OBJECT2 0 DEBLENDED_AS_MOVING  "The object has the MOVED flag set, and was deblended on the assumption that it was moving."
@@ -235,7 +250,7 @@ maskbits OBJECT2 28 DEBLEND_PEEPHOLE  "The deblend was modified by the optimizer
 maskbits OBJECT2 29 SPARE3  ""
 maskbits OBJECT2 30 SPARE2  ""
 maskbits OBJECT2 31 SPARE1  ""
-
+#
 #------------------------------------------------------------------------------
 masktype Q_EYEBALL 32 "Quality eyeball flags from VAGC"
 maskbits Q_EYEBALL 0 DONE ""
@@ -267,7 +282,7 @@ maskbits Q_EYEBALL 25 BAD_PARENT_CENTER ""
 maskbits Q_EYEBALL 26 GOOD_Z ""
 maskbits Q_EYEBALL 27 USE_CHILD_IMAGE ""
 maskbits Q_EYEBALL 28 USE_CHILD_SPECTRUM ""
-
+#
 #------------------------------------------------------------------------------
 masktype T_EYEBALL 32 "Type eyeball flags from VAGC"
 maskbits T_EYEBALL 0 DONE ""
@@ -298,7 +313,7 @@ maskbits T_EYEBALL 24 DUST_ASYMMETRY ""
 maskbits T_EYEBALL 25 NEAR_NEIGHBORS ""
 maskbits T_EYEBALL 26 MERGER ""
 maskbits T_EYEBALL 27 OUTFLOW ""
-
+#
 #------------------------------------------------------------------------------
 masktype M_EYEBALL 32 "Eyeball flags for mergers in VAGC"
 maskbits M_EYEBALL 0 DONE ""
@@ -317,7 +332,8 @@ maskbits M_EYEBALL 12 REPEAT ""
 maskbits M_EYEBALL 13 BEFORE ""
 maskbits M_EYEBALL 14 DURING ""
 maskbits M_EYEBALL 15 AFTER ""
-
+#
+#------------------------------------------------------------------------------
 masktype FLUXMATCH_STATUS 16 "Flags from flux-based matching to SDSS photometry"
 maskbits FLUXMATCH_STATUS 0 ORIGINAL_FLUXMATCH "used the original positional match (which exists)"
 maskbits FLUXMATCH_STATUS 1 FIBER_FLUXMATCH "flagged due to fiberflux/aperflux issue"
@@ -325,9 +341,9 @@ maskbits FLUXMATCH_STATUS 2 NONMATCH_FLUXMATCH "flagged due to non-match"
 maskbits FLUXMATCH_STATUS 3 NOPARENT_FLUXMATCH "no overlapping parent in primary field"
 maskbits FLUXMATCH_STATUS 4 PARENT_FLUXMATCH "overlapping parent has no children, so used it"
 maskbits FLUXMATCH_STATUS 5 BRIGHTEST_FLUXMATCH "picked the brightest child"
-
+#
+#------------------------------------------------------------------------------
 #----------- boss target selection flags
-
 masktype BOSS_TARGET1 64 "BOSS survey primary target selection flags"
 # galaxies
 maskbits BOSS_TARGET1  0 GAL_LOZ             "low-z lrgs"
@@ -338,8 +354,7 @@ maskbits BOSS_TARGET1  6 SDSS_KNOWN    "Matches a known SDSS spectra"
 maskbits BOSS_TARGET1  7 GAL_CMASS_ALL       "GAL_CMASS and the entire sparsely sampled region"
 maskbits BOSS_TARGET1  8 GAL_IFIBER2_FAINT  "ifiber2 > 21.5, extinction corrected.  Used after Nov 2010"
 
-
-# galaxies deprecated
+# galaxies deprecated, yet some of these are set.
 #maskbits BOSS_TARGET1 3 GAL_GRRED          "red in g-r"
 #maskbits BOSS_TARGET1 4 GAL_TRIANGLE       "GAL_HIZ and !GAL_CMASS"
 #maskbits BOSS_TARGET1 5 GAL_LODPERP        "Same as hiz but between dperp00 and dperp0"
@@ -366,12 +381,13 @@ maskbits BOSS_TARGET1 20 STD_FSTAR          "standard f-stars"
 maskbits BOSS_TARGET1 21 STD_WD             "white dwarfs"
 maskbits BOSS_TARGET1 22 STD_QSO            "qso"
 
-# template stars 
+# template stars
 maskbits BOSS_TARGET1 32 TEMPLATE_GAL_PHOTO     "galaxy templates "
 maskbits BOSS_TARGET1 33 TEMPLATE_QSO_SDSS1     "QSO templates "
 maskbits BOSS_TARGET1 34 TEMPLATE_STAR_PHOTO    "stellar templates "
 maskbits BOSS_TARGET1 35 TEMPLATE_STAR_SPECTRO  "stellar templates (spectroscopically known)"
-
+#
+#------------------------------------------------------------------------------
 #------------ ancillary target selection flags
 masktype ANCILLARY_TARGET1 64 "BOSS survey target flags for ancillary programs"
 maskbits ANCILLARY_TARGET1  0 AMC        "defined in blake_boss_v2.descr"
@@ -426,7 +442,7 @@ maskbits ANCILLARY_TARGET1 48 RED_KG        "defined in redkg.descr"
 maskbits ANCILLARY_TARGET1 49 RVTEST        "defined in redkg.descr"
 maskbits ANCILLARY_TARGET1 50 BLAZGRFLAT				"defined in		 anderson-blazar.par"
 maskbits ANCILLARY_TARGET1 51 BLAZGRQSO				"defined in anderson-blazar.par	"
-maskbits ANCILLARY_TARGET1 52 BLAZGX						"defined in anderson-blazar.par"	
+maskbits ANCILLARY_TARGET1 52 BLAZGX						"defined in anderson-blazar.par"
 maskbits ANCILLARY_TARGET1 53 BLAZGXQSO				"defined in anderson-blazar.par"
 maskbits ANCILLARY_TARGET1 54 BLAZGXR					"defined in anderson-blazar.par"
 #maskbits ANCILLARY_TARGET1 55 BLAZXR						"defined in anderson-blazar.par"
@@ -438,7 +454,8 @@ maskbits ANCILLARY_TARGET1 60 CXORED						"defined in brandt-xray.par"
 maskbits ANCILLARY_TARGET1 61 ELG							"defined in kneib-cfht-elg.fits"
 maskbits ANCILLARY_TARGET1 62 GAL_NEAR_QSO			"defined in weiner-qso-sightline.fits"
 maskbits ANCILLARY_TARGET1 63 MTEMP						"defined in blake-transient-v3.fits"
-
+#
+#------------------------------------------------------------------------------
 masktype ANCILLARY_TARGET2 64 "additional BOSS survey target flags for ancillary programs"
 maskbits ANCILLARY_TARGET2 0 HIZQSO82					"defined in mcgreer-hizqso.fits"
 maskbits ANCILLARY_TARGET2 1 HIZQSOIR					"defined in mcgreer-hizqso.fits"
@@ -498,8 +515,8 @@ maskbits ANCILLARY_TARGET2 54 RM_TILE1			"reverberation mapping, high priority"
 maskbits ANCILLARY_TARGET2 55 RM_TILE2			"reverberation mapping, low priority"
 maskbits ANCILLARY_TARGET2 56 QSO_DEEP			"DEEP QSO described in QSO_DEEP_LBG.descr"
 maskbits ANCILLARY_TARGET2 57 LBG			"LBG described in QSO_DEEP_LBG.descr"
-
-
+#
+#------------------------------------------------------------------------------
 #-------- bosstile status bits
 masktype BOSSTILE_STATUS 32 "BOSS tiling code status bits"
 maskbits BOSSTILE_STATUS 0 TILED      "assigned a fiber"
@@ -526,8 +543,8 @@ maskbits BOSSTILE_STATUS 20 TOOFAINT "trimmed because it was fainter than the if
 maskbits BOSSTILE_STATUS 21 SUPPLEMENTARY "supplementary targets tiles after the ancillaries (subset of ancillaries)"
 maskbits BOSSTILE_STATUS 22 ANCILLARY_ROUND2 "new ancillaries added June 2012 (tiled after old ancillaries)"
 maskbits BOSSTILE_STATUS 23 MIDLEVEL_PRIORITY "targets (from ancillary list) tiled between gals and ancillaries"
-
-
+#
+#------------------------------------------------------------------------------
 #-------- eboss target0 bitmask (for sequels)
 masktype EBOSS_TARGET0 64 "targeting bitmask for SEQUELS (eBOSS precursor)"
 maskbits EBOSS_TARGET0 0 DO_NOT_OBSERVE				"Don't put a fiber on this object"
@@ -555,9 +572,8 @@ maskbits EBOSS_TARGET0 34 TDSS_FES_MGII				"TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET0 35 TDSS_FES_VARBAL			"TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET0 40 SEQUELS_PTF_VARIABLE			"Variability objects from PTF"
 maskbits EBOSS_TARGET0 41 SEQUELS_COLLIDED			"Collided galaxies from BOSS"
-
-
-
+#
+#------------------------------------------------------------------------------
 #-------- SEGUE-1 target bits
 masktype SEGUE1_TARGET 32 "SEGUE-1 primary target bits"
 maskbits SEGUE1_TARGET 9 SEGUE1_FG "F and G stars, based on g-r color (0.2<g-r<0.48 and 14<g<20.2)"
@@ -579,6 +595,9 @@ maskbits SEGUE1_TARGET 24 SEGUE1_MAN "manual selection"
 maskbits SEGUE1_TARGET 27 SEG1LOW_AGB "low latitude selection of AGB stars"
 maskbits SEGUE1_TARGET 31 SEGUE1_CHECKED "was a checked object"
 
+maskalias SEGUE1_TARGET SEGUE1_TARGET1 "SEGUE1_TARGET1 is a synonym for SEGUE1_TARGET."
+#
+#------------------------------------------------------------------------------
 #-------- SEGUE-2 target bits
 masktype SEGUE2_TARGET1 32 "SEGUE-2 primary target bits"
 maskbits SEGUE2_TARGET1 0 SEGUE2_MSTO "Main-sequence turnoff"
@@ -593,7 +612,8 @@ maskbits SEGUE2_TARGET1 8 SEGUE2_HHV "High-velocity halo star candidate"
 maskbits SEGUE2_TARGET1 9 SEGUE2_BHB "Blue horizontal branch star"
 maskbits SEGUE2_TARGET1 10 SEGUE2_CWD "Cool white dwarf"
 maskbits SEGUE2_TARGET1 31 SEGUE2_CHECKED "was a checked object"
-
+#
+#------------------------------------------------------------------------------
 #-------- SEGUE-2 target bits
 masktype SEGUE2_TARGET2 32 "SEGUE-2 secondary target bits"
 maskbits SEGUE2_TARGET2 0 LIGHT_TRAP "light trap hole"
@@ -609,7 +629,8 @@ maskbits SEGUE2_TARGET2 9 HOT_STD "hot standard"
 maskbits SEGUE2_TARGET2 10 SEGUE2_CLUSTER "SEGUE-2 stellar cluster target"
 maskbits SEGUE2_TARGET2 11 SEGUE2_STETSON "Stetson standard target"
 maskbits SEGUE2_TARGET2 31 SEGUE2_CHECKED "was a checked object"
-
+#
+#------------------------------------------------------------------------------
 #-------- Sdss special
 masktype SPECIAL_TARGET1 64 "SDSS special program target bits"
 maskbits SPECIAL_TARGET1 0 APBIAS "aperture bias target"
@@ -651,9 +672,8 @@ maskbits SPECIAL_TARGET1 35 TAURUS_STAR "star on taurus or reddening plate"
 maskbits SPECIAL_TARGET1 36 TAURUS_GALAXY "galaxy on taurus or reddening plate"
 maskbits SPECIAL_TARGET1 37 PERSEUS "galaxy in perseus-pisces"
 maskbits SPECIAL_TARGET1 38 LOWZ_LOVEDAY "low redshift galaxy selected by Loveday "
-
-# 
-
+#
+#------------------------------------------------------------------------------
 masktype APOGEE_TARGET1 32 "APOGEE primary target bits"
 maskbits APOGEE_TARGET1 0 APOGEE_FAINT "Selected in faint bin of cohort"
 maskbits APOGEE_TARGET1 1 APOGEE_MEDIUM "Selected in medium bin of cohort"
@@ -764,7 +784,7 @@ maskbits APOGEE_ASPCAPFLAG 24 CHI2_BAD	 "high chi^2 (> 5*median at ASPCAP temper
 maskbits APOGEE_ASPCAPFLAG 25 COLORTE_BAD	 "effective temperature more than 1000K from photometric temperature for dereddened color (BAD)"
 maskbits APOGEE_ASPCAPFLAG 26 ROTATION_BAD	 "Spectrum has broad lines, with possible bad effects: FWHM of cross-correlation of spectrum with best RV template relative to auto-correltion of template > 2 (BAD)"
 maskbits APOGEE_ASPCAPFLAG 27 SN_BAD	 "S/N<50 (BAD)"
-maskbits APOGEE_ASPCAPFLAG 31 NO_ASPCAP_RESULT	 "No result"	
+maskbits APOGEE_ASPCAPFLAG 31 NO_ASPCAP_RESULT	 "No result"
 
 masktype APOGEE_PARAMFLAG 32 "APOGEE parameter mask bits (set for each stellar parameter in ASPCAP fit)"
 maskbits APOGEE_PARAMFLAG 0 GRIDEDGE_BAD "Parameter within 1/8 grid spacing of grid edge"
