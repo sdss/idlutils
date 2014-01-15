@@ -596,6 +596,13 @@ maskbits SEGUE1_TARGET 27 SEG1LOW_AGB "low latitude selection of AGB stars"
 maskbits SEGUE1_TARGET 31 SEGUE1_CHECKED "was a checked object"
 
 maskalias SEGUE1_TARGET SEGUE1_TARGET1 "SEGUE1_TARGET1 is a synonym for SEGUE1_TARGET."
+
+masktype SEGUE1_TARGET2 32 "SEGUE-1 secondary target bits"
+maskbits SEGUE1_TARGET2 1  SCIENCE  "Science Target"
+maskbits SEGUE1_TARGET2 2  SEGUE1_REDDENING "Reddening standard"
+maskbits SEGUE1_TARGET2 3  SEGUE1_QA "QA Duplicate Observations"
+maskbits SEGUE1_TARGET2 4  SKY "Empty area for sky subtraction"
+maskbits SEGUE1_TARGET2 5  SEGUE1_SPECPHOTO "Spectrophotometric standard star"
 #
 #------------------------------------------------------------------------------
 #-------- SEGUE-2 target bits
