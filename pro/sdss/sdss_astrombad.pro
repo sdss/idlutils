@@ -7,7 +7,7 @@
 ;   bad= sdss_astrombad(run, camcol, field)
 ; INPUTS:
 ;   run, camcol, field - [N] field identifiers
-;   rerun - which rerun 
+;   rerun - which rerun
 ; OUTPUTS:
 ;   bad - 0 for good, 1 for bad
 ; COMMENTS:
@@ -18,41 +18,43 @@
 ; REVISION HISTORY:
 ;   10-Oct-2012  morphed by M. Blanton, NYU
 ;------------------------------------------------------------------------------
-function sdss_astrombad, run, camcol, field
-
-common com_astrombad, opbadfields
-
-if(n_elements(run) eq 0) then $
-   message, 'RUN, CAMCOL, FIELD need at least one element'
-if(n_elements(run) ne n_elements(camcol) OR $
-   n_elements(camcol) ne n_elements(field)) then $
-   message, 'RUN, CAMCOL, FIELD need the same number of elements'
-if(~keyword_set(getenv('BOSS_PHOTOOBJ'))) then $
-   message, 'Environmental variable BOSS_PHOTOOBJ must be set'
-
-if(n_tags(opbadfields) eq 0) then begin
-   opbadfieldsfile= getenv('PHOTOLOG_DIR')+'/opfiles/opBadfields.par'
-   if(~keyword_set(getenv('PHOTOLOG_DIR'))) then $
-      message, '$PHOTOLOG_DIR not set (photolog product not set up)'
-   if(~file_test(opbadfieldsfile)) then $
-      message, 'File required: '+opbadfieldsfile
-   opbadfields= yanny_readone(opbadfieldsfile)
-endif
-
-iastrom= where(opbadfields.problem eq 'astrom' or $
-               opbadfields.problem eq 'rotator', nastrom)
-
-bad= bytarr(n_elements(run))
-
-for i=0L, nastrom-1L do begin
-   irun= where(run eq opbadfields[iastrom[i]].run and $
-               field ge opbadfields[iastrom[i]].firstfield and $
-               field le opbadfields[iastrom[i]].lastfield, nrun)
-   if(nrun gt 0) then $
-      bad[irun]=1
-endfor
-
-return, bad
-
-end
-;------------------------------------------------------------------------------
+FUNCTION sdss_astrombad, run, camcol, field
+    ;
+    ; Declare a common block so that the fields are remembered between calls.
+    ;
+    COMMON com_astrombad, opbadfields
+    ;
+    ; Check inputs
+    ;
+    IF (N_ELEMENTS(run) EQ 0) THEN $
+        MESSAGE, 'RUN, CAMCOL, FIELD need at least one element'
+    IF ((N_ELEMENTS(run) NE N_ELEMENTS(camcol)) || $
+        (N_ELEMENTS(camcol) NE N_ELEMENTS(field))) THEN $
+        MESSAGE, 'RUN, CAMCOL, FIELD need the same number of elements'
+    IF ~KEYWORD_SET(GETENV('PHOTOLOG_DIR')) THEN $
+        MESSAGE, '$PHOTOLOG_DIR not set (photolog product not set up)'
+    IF ~KEYWORD_SET(GETENV('BOSS_PHOTOOBJ'))) THEN $
+        MESSAGE, 'Environmental variable BOSS_PHOTOOBJ must be set'
+    ;
+    ; Read the file
+    ;
+    IF (N_TAGS(opbadfields) EQ 0) THEN BEGIN
+        opbadfieldsfile= GETENV('PHOTOLOG_DIR')+'/opfiles/opBadfields.par'
+        IF ~FILE_TEST(opbadfieldsfile) THEN $
+            MESSAGE, 'File required: '+opbadfieldsfile
+        opbadfields= yanny_readone(opbadfieldsfile)
+    ENDIF
+    ;
+    ; Find the bad fields
+    ;
+    iastrom= WHERE((opbadfields.problem EQ 'astrom') || $
+        (opbadfields.problem EQ 'rotator'), nastrom)
+    bad= BYTARR(N_ELEMENTS(run))
+    FOR i=0L, nastrom-1L DO BEGIN
+        irun= WHERE((run EQ opbadfields[iastrom[i]].run) && $
+           (field GE opbadfields[iastrom[i]].firstfield) && $
+           (field LE opbadfields[iastrom[i]].lastfield), nrun)
+        IF (nrun GT 0) THEN bad[irun]=1B
+    ENDFOR
+    RETURN, bad
+END
