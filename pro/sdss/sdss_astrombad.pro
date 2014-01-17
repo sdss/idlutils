@@ -33,7 +33,7 @@ FUNCTION sdss_astrombad, run, camcol, field
         MESSAGE, 'RUN, CAMCOL, FIELD need the same number of elements'
     IF ~KEYWORD_SET(GETENV('PHOTOLOG_DIR')) THEN $
         MESSAGE, '$PHOTOLOG_DIR not set (photolog product not set up)'
-    IF ~KEYWORD_SET(GETENV('BOSS_PHOTOOBJ'))) THEN $
+    IF ~KEYWORD_SET(GETENV('BOSS_PHOTOOBJ')) THEN $
         MESSAGE, 'Environmental variable BOSS_PHOTOOBJ must be set'
     ;
     ; Read the file
