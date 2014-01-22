@@ -354,10 +354,11 @@ maskbits BOSS_TARGET1  6 SDSS_KNOWN    "Matches a known SDSS spectra"
 maskbits BOSS_TARGET1  7 GAL_CMASS_ALL       "GAL_CMASS and the entire sparsely sampled region"
 maskbits BOSS_TARGET1  8 GAL_IFIBER2_FAINT  "ifiber2 > 21.5, extinction corrected.  Used after Nov 2010"
 
-# galaxies deprecated, yet some of these are set.
+# galaxies deprecated
 #maskbits BOSS_TARGET1 3 GAL_GRRED          "red in g-r"
 #maskbits BOSS_TARGET1 4 GAL_TRIANGLE       "GAL_HIZ and !GAL_CMASS"
-#maskbits BOSS_TARGET1 5 GAL_LODPERP        "Same as hiz but between dperp00 and dperp0"
+# part of galaxies deprecated, but some spectra actually have this bit set.
+maskbits BOSS_TARGET1 5 GAL_LODPERP_DEPRECATED  "(DEPRECATED) Same as hiz but between dperp00 and dperp0"
 
 # qsos
 maskbits BOSS_TARGET1 10 QSO_CORE           "restrictive qso selection: commissioning only"

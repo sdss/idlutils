@@ -1,4 +1,7 @@
-SDSS_MASKBITS: Moved triplicated code to read sdssMaskbits.par into a 
+data/sdss/sdssMaskbits.par: Uncommented BOSS_TARGET1 bit 5.  It was marked
+    deprecated, but it is actually set on some spectra.
+
+SDSS_MASKBITS: Moved triplicated code to read sdssMaskbits.par into a
     single routine.
 
 data/sdss/sdssMaskbits.par: Added maskalias table.
