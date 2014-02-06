@@ -6,16 +6,16 @@
 ;   Returns whether a flag exists
 ;
 ; CALLING SEQUENCE:
-;   exist= sdss_flagexist(flagprefix, label, flagexist=)
+;   exist= sdss_flagexist(flagprefix, label, flagexist=, whichexist=)
 ;
 ; INPUTS:
-;   flagprefix - Flag name (scalar string).  The following are supported:
-;                SPPIXMASK, TARGET, TTARGET.
+;   flagprefix - Flag name (scalar string).
 ;   label      - String name(s) corresponding to each non-zero bit in FLAGVALUE.
 ;
 ; OUTPUTS:
-;   exist - 1 if label exists for this flag (0 otherwise)
+;   exist - 1 if label exists (or all labels exist) for this flag (0 otherwise)
 ;   flagexist - 1 if this flag exists (0 otherwise)
+;   whichexist - byte array showing which individual labels exist.
 ;
 ; PROCEDURES CALLED:
 ;   sdss_maskbits
@@ -27,7 +27,7 @@
 ;   2010-07-02: made by modifying sdss_flagval, MRB, NYU
 ;-
 ;------------------------------------------------------------------------------
-FUNCTION sdss_flagexist, flagprefix, inlabel, flagexist=flagexist
+FUNCTION sdss_flagexist, flagprefix, inlabel, flagexist=flagexist, whichexist=whichexist
     ;
     ; Declare a common block so that the mask names are remembered between calls.
     ;
@@ -65,10 +65,14 @@ FUNCTION sdss_flagexist, flagprefix, inlabel, flagexist=flagexist
         RETURN, 0B
     ENDELSE
     ;
-    ; Check the labels (only check the first label?)
+    ; Check the labels
     ;
-    imatch = WHERE((STRUPCASE(prefix) EQ STRUPCASE(maskbits.flag)) && $
-        (STRUPCASE(alllabel[0]) EQ STRUPCASE(maskbits.label)), ct)
-    exist = (ct EQ 1)
+    whichexist = BYTARR(nlabel)
+    FOR ilabel=0, nlabel-1 DO BEGIN
+        imatch = WHERE((STRUPCASE(prefix) EQ STRUPCASE(maskbits.flag)) $
+            AND (STRUPCASE(alllabel[ilabel]) EQ STRUPCASE(maskbits.label)), ct)
+        whichexist[ilabel] = (ct EQ 1)
+    ENDFOR
+    exist = (TOTAL(whichexist) EQ nlabel)
     RETURN, exist
 END

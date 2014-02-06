@@ -9,8 +9,7 @@
 ;   label = sdss_flagname(flagprefix, flagvalue, [ /concat, /silent ] )
 ;
 ; INPUTS:
-;   flagprefix - Flag name (scalar string).  The following are supported:
-;                SPPIXMASK, TARGET, TTARGET.
+;   flagprefix - Flag name (scalar string).
 ;   flagvalue  - Signed long with any number of its bits set.
 ;
 ; OPTIONAL KEYWORDS:
@@ -77,7 +76,7 @@ FUNCTION sdss_flagname, flagprefix, flagvalue, concat=concat, silent=silent
         retval = STRARR(nret)
         FOR iret=0, nret-1 DO BEGIN
             j = WHERE((STRUPCASE(prefix) EQ STRUPCASE(maskbits.flag)) $
-                && (indx[iret] EQ maskbits.bit))
+                AND (indx[iret] EQ maskbits.bit))
             IF (j[0] NE -1) THEN retval[iret] = maskbits[j].label $
             ELSE IF ~KEYWORD_SET(silent) THEN $
             splog, 'MESSAGE: Unknown bit ', indx[iret], $

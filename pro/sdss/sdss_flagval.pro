@@ -9,8 +9,7 @@
 ;   value = sdss_flagval(flagprefix, label)
 ;
 ; INPUTS:
-;   flagprefix - Flag name (scalar string).  The following are supported:
-;                SPPIXMASK, TARGET, TTARGET.
+;   flagprefix - Flag name (scalar string).
 ;   label      - String name(s) corresponding to each non-zero bit in FLAGVALUE.
 ;
 ; OPTIONAL KEYWORDS:
@@ -75,7 +74,7 @@ FUNCTION sdss_flagval, flagprefix, inlabel
     ;
     ; decide the data type the answer is going to be returned in
     ;
-    typematch=(WHERE(STRUPCASE(prefix) EQ (STRUPCASE(masktype.flag), ct))[0]
+    typematch=(WHERE(STRUPCASE(prefix) EQ STRUPCASE(masktype.flag), ct))[0]
     IF (ct EQ 0) THEN $
         MESSAGE, 'ABORT: Mask type not defined for '+prefix
     CASE masktype[typematch].datatype OF
@@ -97,10 +96,9 @@ FUNCTION sdss_flagval, flagprefix, inlabel
     ;
     ; Find the match for each label, and add its value to the output
     ;
-    flagvalue = 0
     FOR ilabel=0, nlabel-1 DO BEGIN
         imatch = WHERE((STRUPCASE(prefix) EQ STRUPCASE(maskbits.flag)) $
-            && (STRUPCASE(alllabel[ilabel]) EQ STRUPCASE(maskbits.label)), ct)
+            AND (STRUPCASE(alllabel[ilabel]) EQ STRUPCASE(maskbits.label)), ct)
         IF (ct NE 1) THEN $
             MESSAGE, 'ABORT: Unknown bit label ' + STRUPCASE(alllabel[ilabel]) $
             + ' for flag ' + STRUPCASE(prefix)
