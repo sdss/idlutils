@@ -165,8 +165,8 @@ PRO struct_print, struct, filename=filename, lun=lun_in, tarray=tarray, $
                 || tname EQ 'ULONG64') THEN BEGIN
                 minval = MIN( struct.(itag)[iarr] )
                 maxval = MAX( struct.(itag)[iarr] )
-                nchar = STRLEN(STRTRIM(STRING(minval),2)) $
-                    > STRLEN(STRTRIM(STRING(maxval),2))
+                nchar = STRLEN(STRTRIM(STRING(minval+0),2)) $
+                    > STRLEN(STRTRIM(STRING(maxval+0),2))
                 nchar = nchar > namelen
                 thiscode = '%' + STRTRIM(STRING(nchar),2) + 'd'
             ENDIF ELSE IF (tname EQ 'FLOAT') THEN BEGIN
