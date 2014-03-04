@@ -618,8 +618,8 @@ maskbits SEGUE2_TARGET1 5 SEGUE2_HVS "hyper velocity candidate"
 maskbits SEGUE2_TARGET1 6 SEGUE2_XDM "extreme sdM star"
 maskbits SEGUE2_TARGET1 7 SEGUE2_MII "M giant"
 maskbits SEGUE2_TARGET1 8 SEGUE2_HHV "High-velocity halo star candidate"
-maskbits SEGUE2_TARGET1 9 SEGUE2_BHB "Blue horizontal branch star"
-maskbits SEGUE2_TARGET1 10 SEGUE2_CWD "Cool white dwarf"
+maskbits SEGUE2_TARGET1 13 SEGUE2_BHB "Blue horizontal branch star"
+maskbits SEGUE2_TARGET1 17 SEGUE2_CWD "Cool white dwarf"
 maskbits SEGUE2_TARGET1 31 SEGUE2_CHECKED "was a checked object"
 #
 #------------------------------------------------------------------------------
