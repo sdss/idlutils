@@ -1,3 +1,8 @@
+HOGG_STRSPLIT: # characters inside quotes will no longer be treated
+    as comments.
+
+data/sdss/sdssMaskbits.par: Fixed a number of problems with SEGUE target bits.
+
 data/sdss/sdssMaskbits.par: Uncommented BOSS_TARGET1 bit 5.  It was marked
     deprecated, but it is actually set on some spectra.
 
