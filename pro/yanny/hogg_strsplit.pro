@@ -48,6 +48,7 @@ PRO hogg_strsplit, line, output, count, recurse=recurse, verbose=verbose, $
             ; Count the number of double quotes between the lastmark
             ; position and the end of the line.
             ;
+            nq = 0
             pos = STRPOS(STRMID(line,lastmark),'"')
             IF pos GT -1 THEN BEGIN
                 nq = 1
