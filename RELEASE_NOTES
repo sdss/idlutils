@@ -21,6 +21,12 @@ YANNY_READ: semicolons will no longer substitute as line breaks.
     Replaced obsolete findfile with FILE_SEARCH.
 
 -------------------------------------------------------------------------------
+v5_5_13 (2014-03-24)
+
+Updated struct_print.pro in pro/misc to format bytes correctly.  Will use 
+to regenerate all of the guidermonfiles.
+
+-------------------------------------------------------------------------------
 v5_5_12 (2013-10-20)
 
 Integration of manga-dev branch into trunk.
