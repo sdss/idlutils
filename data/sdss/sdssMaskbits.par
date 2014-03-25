@@ -575,6 +575,39 @@ maskbits EBOSS_TARGET0 40 SEQUELS_PTF_VARIABLE			"Variability objects from PTF"
 maskbits EBOSS_TARGET0 41 SEQUELS_COLLIDED			"Collided galaxies from BOSS"
 #
 #------------------------------------------------------------------------------
+#-------- eboss target1 bitmask (for eBOSS)
+masktype EBOSS_TARGET1 64 "targeting bitmask for eBOSS"
+maskbits EBOSS_TARGET1 0 DO_NOT_OBSERVE				"Don't put a fiber on this object"
+maskbits EBOSS_TARGET1 1 LRG_IZW				"LRG selection in i/z/W plane"
+maskbits EBOSS_TARGET1 2 LRG_RIW				"LRG selection in r/i/W plan with (i-z) cut"
+maskbits EBOSS_TARGET1 10 QSO_EBOSS_CORE			"QSOs in XDQSOz+WISE selection for clustering"
+maskbits EBOSS_TARGET1 11 QSO_PTF				"QSOs with variability in PTF imaging"
+maskbits EBOSS_TARGET1 12 QSO_REOBS				"QSOs from BOSS to be reobserved"
+maskbits EBOSS_TARGET1 13 QSO_EBOSS_KDE				"KDE-selected QSOs (sequels only)"
+maskbits EBOSS_TARGET1 14 QSO_EBOSS_FIRST			"Ojbects with FIRST radio matches"
+maskbits EBOSS_TARGET1 15 QSO_BAD_BOSS				"QSOs from BOSS with bad spectra"
+maskbits EBOSS_TARGET1 16 QSO_BOSS_TARGET			"Known TARGETS from BOSS with spectra"
+maskbits EBOSS_TARGET1 17 QSO_SDSS_TARGET			"Known TARGETS from SDSS with spectra"
+maskbits EBOSS_TARGET1 18 QSO_KNOWN				"Known QSOs from previous surveys"
+maskbits EBOSS_TARGET1 19 DR9_CALIB_TARGET			"Target found in DR9-calibrated imaging"
+maskbits EBOSS_TARGET1 20 SPIDERS_RASS_AGN			"RASS AGN sources"
+maskbits EBOSS_TARGET1 21 SPIDERS_RASS_CLUS			"RASS Cluster sources"
+maskbits EBOSS_TARGET1 22 SPIDERS_ERASS_AGN			"ERASS AGN sources"
+maskbits EBOSS_TARGET1 23 SPIDERS_ERASS_CLUS			"ERASS Cluster sources"
+maskbits EBOSS_TARGET1 30 TDSS_A				"Main PanSTARRS selection for TDSS"
+maskbits EBOSS_TARGET1 31 TDSS_FES_DE				"TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET1 32 TDSS_FES_DWARFC			"TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET1 33 TDSS_FES_NQHISN			"TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET1 34 TDSS_FES_MGII				"TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET1 35 TDSS_FES_VARBAL			"TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET1 40 SEQUELS_PTF_VARIABLE			"Variability objects from PTF"
+maskbits EBOSS_TARGET1 41 SEQUELS_COLLIDED			"Collided galaxies from BOSS"
+#
+#------------------------------------------------------------------------------
+#-------- eboss target2 bitmask (for eBOSS)
+masktype EBOSS_TARGET2 64 "targeting bitmask for eBOSS"
+#
+#------------------------------------------------------------------------------
 #-------- SEGUE-1 target bits
 masktype SEGUE1_TARGET 32 "SEGUE-1 primary target bits"
 maskbits SEGUE1_TARGET 9 SEGUE1_FG "F and G stars, based on g-r color (0.2<g-r<0.48 and 14<g<20.2)"
