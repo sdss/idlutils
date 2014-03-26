@@ -38,6 +38,7 @@ PRO hogg_strsplit, line, output, count, recurse=recurse, verbose=verbose, $
     IF ~KEYWORD_SET(recurse) THEN BEGIN
         output= 'NULL'
         count= 0
+        line = ' '+STRTRIM(line,1)
         ;line= (STRSPLIT(' '+STRCOMPRESS(line),'#',/EXTRACT))[0]
         ;
         ; Remove trailing comments, but not if # is enclosed in quotes.

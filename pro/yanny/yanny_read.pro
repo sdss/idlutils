@@ -423,7 +423,7 @@ PRO yanny_read, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
                             splog, 'Last line read: "' + rawline + '"'
                             splog, 'ABORT: Invalid Yanny file ' + filename $
                                 + ' at line number ' $
-                                + strtrim(string(lastlinenum),2) + ' !!'
+                                + STRTRIM(STRING(lastlinenum),2) + ' !!'
                             CLOSE, ilun
                             FREE_LUN, ilun
                             yanny_free, pdata
