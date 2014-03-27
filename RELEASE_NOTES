@@ -1,3 +1,6 @@
+data/sdss/sdssMaskbits.par: convert tabs to spaces so that yanny will
+    parse them correctly. [S. Bailey 2014-03-27]
+
 HOGG_STRSPLIT: # characters inside quotes will no longer be treated
     as comments.
 
