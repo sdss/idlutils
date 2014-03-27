@@ -38,7 +38,11 @@ PRO hogg_strsplit, line, output, count, recurse=recurse, verbose=verbose, $
     IF ~KEYWORD_SET(recurse) THEN BEGIN
         output= 'NULL'
         count= 0
-        line = ' '+STRTRIM(line,1)
+        ;
+        ; For some reason this function only works on single spaces between
+        ; words.  This takes care of that.
+        ;
+        line = ' '+STRCOMPRESS(line)
         ;line= (STRSPLIT(' '+STRCOMPRESS(line),'#',/EXTRACT))[0]
         ;
         ; Remove trailing comments, but not if # is enclosed in quotes.

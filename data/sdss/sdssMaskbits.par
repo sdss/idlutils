@@ -555,7 +555,7 @@ maskbits EBOSS_TARGET0 10 QSO_EBOSS_CORE            "QSOs in XDQSOz+WISE selecti
 maskbits EBOSS_TARGET0 11 QSO_PTF               "QSOs with variability in PTF imaging"
 maskbits EBOSS_TARGET0 12 QSO_REOBS             "QSOs from BOSS to be reobserved"
 maskbits EBOSS_TARGET0 13 QSO_EBOSS_KDE             "KDE-selected QSOs (sequels only)"
-maskbits EBOSS_TARGET0 14 QSO_EBOSS_FIRST           "Ojbects with FIRST radio matches"
+maskbits EBOSS_TARGET0 14 QSO_EBOSS_FIRST           "Objects with FIRST radio matches"
 maskbits EBOSS_TARGET0 15 QSO_BAD_BOSS              "QSOs from BOSS with bad spectra"
 maskbits EBOSS_TARGET0 16 QSO_BOSS_TARGET           "Known TARGETS from BOSS with spectra"
 maskbits EBOSS_TARGET0 17 QSO_SDSS_TARGET           "Known TARGETS from SDSS with spectra"
