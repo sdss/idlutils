@@ -49,8 +49,9 @@ PRO print_maskbits, flagprefix, alias=alias
                 + STRUPCASE(prefix) + '.']
         ENDIF ELSE prefix = flagprefix[0]
         w = WHERE(maskbits.flag EQ prefix,ct)
+        foo = maskbits[w]
         FOR i = 0, ct-1 DO BEGIN
-            PRINT, maskbits[w].label[i], maskbits[w].bit[i], maskbits[w].description[i]
+            PRINT, foo[i].label, foo[i].bit, foo[i].description
         ENDFOR
     ENDIF
 END
