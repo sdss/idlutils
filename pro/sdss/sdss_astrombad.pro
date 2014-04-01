@@ -47,12 +47,12 @@ FUNCTION sdss_astrombad, run, camcol, field
     ;
     ; Find the bad fields
     ;
-    iastrom= WHERE((opbadfields.problem EQ 'astrom') || $
+    iastrom= WHERE((opbadfields.problem EQ 'astrom') OR $
         (opbadfields.problem EQ 'rotator'), nastrom)
     bad= BYTARR(N_ELEMENTS(run))
     FOR i=0L, nastrom-1L DO BEGIN
-        irun= WHERE((run EQ opbadfields[iastrom[i]].run) && $
-           (field GE opbadfields[iastrom[i]].firstfield) && $
+        irun= WHERE((run EQ opbadfields[iastrom[i]].run) AND $
+           (field GE opbadfields[iastrom[i]].firstfield) AND $
            (field LE opbadfields[iastrom[i]].lastfield), nrun)
         IF (nrun GT 0) THEN bad[irun]=1B
     ENDFOR
