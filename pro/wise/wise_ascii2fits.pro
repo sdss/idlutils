@@ -29,11 +29,11 @@
 ;
 ; DATA FILES:
 ;    The input files are:
-;      $WISE_DIR/wise-allsky-cat-schema.txt
-;      $WISE_DIR/ascii/wise-allsky-cat-part??.gz
+;      $WISE_DIR/wise*-cat-schema.txt
+;      $WISE_DIR/ascii/wise*-cat-part??.gz
 ;    The output files are:
-;      $WISE_DIR/fits/wise-allsky-cat-part??.fits
-;      $WISE_DIR/fits/wise-allsky-cat-part??-radec.fits
+;      $WISE_DIR/fits/wise*-cat-part??.fits
+;      $WISE_DIR/fits/wise*-cat-part??-radec.fits
 ;    where the latter file contains the RA,Dec coordinates per object only.
 ;
 ; PROCEDURES CALLED:
@@ -171,7 +171,7 @@ pro wise_ascii2fits
 
    indir = getenv('WISE_DIR') + '/ascii'
    outdir = getenv('WISE_DIR') + '/fits'
-   schemafile = getenv('WISE_DIR') + '/wise-allsky-cat-schema.txt'
+   schemafile = getenv('WISE_DIR') + '/wise-cat-schema.txt'
 
    if keyword_set(file_search(indir, /test_directory)) EQ 0 then begin
       print, 'Input directory does not exist '+indir
@@ -188,7 +188,7 @@ pro wise_ascii2fits
       rerturn
    endif
 
-   files = file_search(indir, 'wise-allsky-cat-part??.gz', count=nfile)
+   files = file_search(indir, 'wise*-cat-part??.gz', count=nfile)
    if (nfile EQ 0) then begin
       print, 'No input files found!'
       return
