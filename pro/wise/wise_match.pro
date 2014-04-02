@@ -42,6 +42,7 @@
 ;    in memory rather than on disk.
 ;
 ; DATA FILES:
+;      $WISE_DIR/wise-cat-dec-ranges.txt
 ;      $WISE_DIR/fits/wise-allsky-cat-part??.fits
 ;      $WISE_DIR/fits/wise-allsky-cat-part??-radec.fits
 ;
@@ -68,7 +69,7 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
 
    if (NOT keyword_set(decrange1)) then begin
       ; This readfmt command is only single-precision float
-      readfmt, topdir+'/wise-allsky-cat-dec-ranges.txt', $
+      readfmt, topdir+'/wise-cat-dec-ranges.txt', $
        '6X,F10.6,14X,F10.6,6X,A22', decrange1, decrange2, wfile
       if (NOT keyword_set(decrange1)) then $
        message, 'Error reading Dec ranges'
