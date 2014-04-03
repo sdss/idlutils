@@ -26,6 +26,8 @@
 ;   _EXTRA     - Keywords for MRDFITS, such as COLUMNS=
 ;
 ; COMMENTS:
+;   One can switch between versions of the WISE catalog (such as "allsky"
+;   or "allwise") by changing the WISE_DIR environment variable and re-calling.
 ;
 ; EXAMPLES:
 ;
@@ -55,7 +57,7 @@
 pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
  _EXTRA=KeywordsForMRDFITS
 
-   common com_wise_match, decrange1, decrange2, wfile
+   common com_wise_match, decrange1, decrange2, wfile, wise_dir
 
    nobj = n_elements(ra)
    if (nobj EQ 0 OR n_elements(dec) NE nobj) then $
@@ -67,7 +69,12 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
     else tol = 3.
    dtol = tol[0] / 3600.d0
 
-   if (NOT keyword_set(decrange1)) then begin
+   ; If the WISE_DIR environment variable has changed, then re-load the
+   ; meta-data for the catalog files
+   if (keyword_set(wise_dir)) then $
+    if (topdir NE wise_dir) then wise_dir = ''
+
+   if (keyword_set(wise_dir) EQ 0 OR keyword_set(decrange1) EQ 0) then begin
       ; This readfmt command is only single-precision float
       readfmt, topdir+'/wise-cat-dec-ranges.txt', $
        '6X,F10.6,14X,F10.6,6X,A22', decrange1, decrange2, wfile
@@ -75,6 +82,7 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
        message, 'Error reading Dec ranges'
       decrange1[0] = -90.
       decrange2[n_elements(decrange2)-1] = 90.
+      wise_dir = topdir
    endif
 
    mdat1 = create_struct('ifile', -1, 'rows', 0L, 'matchdist', 999.d0)
