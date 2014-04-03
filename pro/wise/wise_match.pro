@@ -77,9 +77,10 @@ pro wise_match, ra, dec, tol=tol1, match=match, mdat=mdat, nmatch=nmatch, $
    if (keyword_set(wise_dir) EQ 0 OR keyword_set(decrange1) EQ 0) then begin
       ; This readfmt command is only single-precision float
       readfmt, topdir+'/wise-cat-dec-ranges.txt', $
-       '6X,F10.6,14X,F10.6,6X,A22', decrange1, decrange2, wfile
+       '6X,F10.6,14X,F10.6,6X,A30', decrange1, decrange2, wfile
       if (NOT keyword_set(decrange1)) then $
        message, 'Error reading Dec ranges'
+      wfile = strtrim(wfile)
       decrange1[0] = -90.
       decrange2[n_elements(decrange2)-1] = 90.
       wise_dir = topdir
