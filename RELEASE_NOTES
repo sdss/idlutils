@@ -1,5 +1,9 @@
+data/sdss/sdssMaskbits.par:
+    Added ZWARNING NODATA mask bit. [S. Bailey 2014-04-04]
+
 data/sdss/sdssMaskbits.par: convert tabs to spaces so that yanny will
     parse them correctly. [S. Bailey 2014-03-27]
+    (yanny_read was then fixed to support tabs again)
 
 HOGG_STRSPLIT: # characters inside quotes will no longer be treated
     as comments.

@@ -120,6 +120,7 @@ maskbits ZWARNING  5 Z_FITLIMIT    "chi-squared minimum at edge of the redshift 
 maskbits ZWARNING  6 NEGATIVE_EMISSION    "a QSO line exhibits negative emission, triggered only in QSO spectra, if  C_IV, C_III, Mg_II, H_beta, or H_alpha has LINEAREA + 3 * LINEAREA_ERR < 0"
 maskbits ZWARNING  7 UNPLUGGED    "the fiber was unplugged, so no spectrum obtained"
 maskbits ZWARNING  8 BAD_TARGET    "catastrophically bad targeting data (e.g. ASTROMBAD in CALIB_STATUS)"
+maskbits ZWARNING  9 NODATA    "No data for this fiber, e.g. because spectrograph was broken during this exposure (ivar=0 for all pixels)"
 #
 #------------------------------------------------------------------------------
 # (primary within its own run)
