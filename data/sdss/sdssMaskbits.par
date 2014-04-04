@@ -603,6 +603,11 @@ maskbits EBOSS_TARGET1 34 TDSS_FES_MGII             "TDSS Few epoch spectroscopy
 maskbits EBOSS_TARGET1 35 TDSS_FES_VARBAL           "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET1 40 SEQUELS_PTF_VARIABLE          "Variability objects from PTF"
 maskbits EBOSS_TARGET1 41 SEQUELS_COLLIDED          "Collided galaxies from BOSS"
+# standards
+maskbits EBOSS_TARGET1 50 STD_FSTAR				"standard f-stars"
+maskbits EBOSS_TARGET1 51 STD_WD            			"white dwarfs"
+maskbits EBOSS_TARGET1 52 STD_QSO           			"qso"
+
 #
 #------------------------------------------------------------------------------
 #-------- eboss target2 bitmask (for eBOSS)
