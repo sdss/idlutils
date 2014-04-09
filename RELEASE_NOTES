@@ -1,3 +1,7 @@
+-------------------------------------------------------------------------------
+v5_5_14 (2014-04-08)
+Tag for BOSS galaxy DR12
+
 data/sdss/sdssMaskbits.par:
     Added ZWARNING NODATA mask bit. [S. Bailey 2014-04-04]
 
