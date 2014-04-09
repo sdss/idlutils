@@ -592,27 +592,29 @@ maskbits EBOSS_TARGET1 16 QSO_BOSS_TARGET           "Known TARGETS from BOSS wit
 maskbits EBOSS_TARGET1 17 QSO_SDSS_TARGET           "Known TARGETS from SDSS with spectra"
 maskbits EBOSS_TARGET1 18 QSO_KNOWN             "Known QSOs from previous surveys"
 maskbits EBOSS_TARGET1 19 DR9_CALIB_TARGET          "Target found in DR9-calibrated imaging"
-maskbits EBOSS_TARGET1 20 SPIDERS_RASS_AGN          "RASS AGN sources"
-maskbits EBOSS_TARGET1 21 SPIDERS_RASS_CLUS         "RASS Cluster sources"
-maskbits EBOSS_TARGET1 22 SPIDERS_ERASS_AGN         "ERASS AGN sources"
-maskbits EBOSS_TARGET1 23 SPIDERS_ERASS_CLUS            "ERASS Cluster sources"
-maskbits EBOSS_TARGET1 24 SPIDERS_XMMSL_AGN         "XMM Slew survey"
-maskbits EBOSS_TARGET1 25 SPIDERS_XCLASS_CLUS       "XMM serendipitous clusters"
-maskbits EBOSS_TARGET1 30 TDSS_A                "Main PanSTARRS selection for TDSS"
-maskbits EBOSS_TARGET1 31 TDSS_FES_DE               "TDSS Few epoch spectroscopy"
-maskbits EBOSS_TARGET1 32 TDSS_FES_DWARFC           "TDSS Few epoch spectroscopy"
-maskbits EBOSS_TARGET1 33 TDSS_FES_NQHISN           "TDSS Few epoch spectroscopy"
-maskbits EBOSS_TARGET1 34 TDSS_FES_MGII             "TDSS Few epoch spectroscopy"
-maskbits EBOSS_TARGET1 35 TDSS_FES_VARBAL           "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET1 30 TDSS_TARGET          "Target for TDSS (subclass found in eboss_target2)"
+maskbits EBOSS_TARGET1 31 SPIDERS_TARGET          "Target for SPIDERS (subclass found in eboss_target2)"
 # standards
 maskbits EBOSS_TARGET1 50 STD_FSTAR				"standard f-stars"
 maskbits EBOSS_TARGET1 51 STD_WD            			"white dwarfs"
 maskbits EBOSS_TARGET1 52 STD_QSO           			"qso"
-
 #
 #------------------------------------------------------------------------------
 #-------- eboss target2 bitmask (for eBOSS)
 masktype EBOSS_TARGET2 64 "targeting bitmask for eBOSS"
+maskbits EBOSS_TARGET2 0 SPIDERS_RASS_AGN          "RASS AGN sources"
+maskbits EBOSS_TARGET2 1 SPIDERS_RASS_CLUS         "RASS Cluster sources"
+maskbits EBOSS_TARGET2 2 SPIDERS_ERASS_AGN         "ERASS AGN sources"
+maskbits EBOSS_TARGET2 3 SPIDERS_ERASS_CLUS            "ERASS Cluster sources"
+maskbits EBOSS_TARGET2 4 SPIDERS_XMMSL_AGN         "XMM Slew survey"
+maskbits EBOSS_TARGET2 5 SPIDERS_XCLASS_CLUS       "XMM serendipitous clusters"
+maskbits EBOSS_TARGET2 20 TDSS_A                "Main PanSTARRS selection for TDSS"
+maskbits EBOSS_TARGET2 21 TDSS_FES_DE               "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 22 TDSS_FES_DWARFC           "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 23 TDSS_FES_NQHISN           "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 24 TDSS_FES_MGII             "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 25 TDSS_FES_VARBAL           "TDSS Few epoch spectroscopy"
+
 #
 #------------------------------------------------------------------------------
 #-------- SEGUE-1 target bits
