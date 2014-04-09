@@ -614,6 +614,12 @@ maskbits EBOSS_TARGET2 22 TDSS_FES_DWARFC           "TDSS Few epoch spectroscopy
 maskbits EBOSS_TARGET2 23 TDSS_FES_NQHISN           "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 24 TDSS_FES_MGII             "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 25 TDSS_FES_VARBAL           "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 26 TDSS_B           "Main TDSS SES version B"
+maskbits EBOSS_TARGET2 27 TDSS_FES_HYPQSO           "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 28 TDSS_FES_HYPSTAR          "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 29 TDSS_FED_WDDM          "TDSS Few epoch spectroscopy"
+maskbits EBOSS_TARGET2 30 TDSS_FES_ACTSTAR          "TDSS Few epoch spectroscopy"
+
 
 #
 #------------------------------------------------------------------------------
