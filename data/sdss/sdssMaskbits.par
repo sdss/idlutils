@@ -619,7 +619,7 @@ maskbits EBOSS_TARGET2 27 TDSS_FES_HYPQSO           "TDSS Few epoch spectroscopy
 maskbits EBOSS_TARGET2 28 TDSS_FES_HYPSTAR          "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 29 TDSS_FES_WDDM          "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 30 TDSS_FES_ACTSTAR          "TDSS Few epoch spectroscopy"
-
+maskbits EBOSS_TARGET2 31 TDSS_CP  	"TDSS in common with CORE/PTF"
 
 #
 #------------------------------------------------------------------------------
