@@ -517,6 +517,12 @@ maskbits ANCILLARY_TARGET2 54 RM_TILE1          "reverberation mapping, high pri
 maskbits ANCILLARY_TARGET2 55 RM_TILE2          "reverberation mapping, low priority"
 maskbits ANCILLARY_TARGET2 56 QSO_DEEP          "DEEP QSO described in QSO_DEEP_LBG.descr"
 maskbits ANCILLARY_TARGET2 57 LBG           "LBG described in QSO_DEEP_LBG.descr"
+maskbits ANCILLARY_TARGET2 58 ELAIS_N1_LOFAR           "LOFAR-selected target"
+maskbits ANCILLARY_TARGET2 59 ELAIS_N1_FIRST           "LOFAR-selected target"
+maskbits ANCILLARY_TARGET2 60 ELAIS_N1_GMRT_GARN           "LOFAR-selected target"
+maskbits ANCILLARY_TARGET2 61 ELAIS_N1_GMRT_TAYLOR           "LOFAR-selected target"
+maskbits ANCILLARY_TARGET2 62 ELAIS_N1_JVLA           "LOFAR-selected target"
+
 #
 #------------------------------------------------------------------------------
 #-------- bosstile status bits
