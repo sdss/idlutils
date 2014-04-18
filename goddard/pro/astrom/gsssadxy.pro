@@ -163,7 +163,11 @@ pro GSSSadxy,gsa,ra,dec,x,y, PRINT = print
 
     endrep until (min(abs([deltx,delty])) lt tolerance) or (iters gt maxiters)
 
-    delvarx, eta, xi, deltx, delty
+;    delvarx, eta, xi, deltx, delty
+eta=0
+xi=0
+deltx=0
+delty=0
     x = (gsa.ppo3-obx*1000.0)/gsa.xsz-gsa.xll - 0.5
     y = (gsa.ppo6+oby*1000.0)/gsa.ysz-gsa.yll - 0.5
     
