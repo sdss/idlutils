@@ -1,6 +1,8 @@
 
 GSSSADXY: Remove the call to DELVARX, which can be incredibly slow
     sometimes on the riemann cluster.  Instead, just set variables to zero.
+MRDFITS: Bug fix for reading files larger than 16 Gb (found by Hennawi),
+    now in the Goddard repo.
 
 -------------------------------------------------------------------------------
 v5_5_14 (2014-04-08)
