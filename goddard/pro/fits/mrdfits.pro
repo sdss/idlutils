@@ -123,13 +123,12 @@
 ;                This was only behavior prior to V2.5 for MRDFITS and remains
 ;                the default (see /POINTER_VAR)
 ;       /FPACK - If set, then assume the FITS file uses FPACK compression 
-;                (http://heasarc.gsfc.nasa.gov/fitsio/fpack/).     MRDFITS
-;                will automatically detect FPACK compressed files, but it is
-;                more efficient to supply the /FPACK keyword.   A file with an
-;                extension of .fz is assumed to be Fpack compressed.
+;                (http://heasarc.gsfc.nasa.gov/fitsio/fpack/).     To read
+;                an FPACK compressed file, either this must be set or the 
+;                file name must end in ".fz"
 ;       /NO_FPACK - If present, then MRDFITS will not uncompress an extension
-;                compressed with FPACK, but will just read the compressed
-;                binary stream. 
+;                compressed with FPACK (i.e with a .fz extension), but will 
+;                just read the compressed binary stream. 
 ;       /FSCALE - If present and non-zero then scale data to float
 ;                numbers for arrays and columns which have either
 ;                non-zero offset or non-unity scale.
@@ -225,6 +224,9 @@
 ;       (2)     Doesn't do anything with BLANK or NULL values or
 ;               NaN's.  They are just read in.  They may be scaled
 ;               if scaling is applied.
+;       (3)     Does not automatically detect a FPACK compressed file.  Either
+;               the file name must end in .fz, or the /FPACK keyword must
+;               be set
 ; NOTES:
 ;       This multiple format FITS reader is designed to provide a
 ;       single, simple interface to reading all common types of FITS data.
@@ -379,6 +381,12 @@
 ;       V2.19c Fix bug with ROWS keyword introduced Nov 2010 WL Mar 2011
 ;       V2.20  Convert Nulls in ASCII tables, better check of duplicate keywords
 ;                                            WL May 2011
+;       V2.20a Better error checking for FPACK files  WL October 2012
+;       V2.20b Fix bug in MRD_SCALE introduced Nov 2010 (Sigh) WL Feb 2013
+;       V2.21  Create unique structure tags when FITS column names differ 
+;              only in having a different case   R. McMahon/WL   March 2013
+;       V2.22  Handle 64 bit variable length binary tables WL   April 2014
+;       V2.23  Test version for very large files   
 ;-
 PRO mrd_fxpar, hdr, xten, nfld, nrow, rsize, fnames, fforms, scales, offsets
 compile_opt idl2, hidden
@@ -386,7 +394,7 @@ compile_opt idl2, hidden
 ;  Check for valid header.  Check header for proper attributes.
 ;
   S = SIZE(HDR)
-  IF ( S[0] NE 1 ) OR ( S[2] NE 7 ) THEN $
+  IF ( S[0] NE 1 ) || ( S[2] NE 7 ) THEN $
     MESSAGE,'FITS Header (first parameter) must be a string array'
 
   xten = fxpar(hdr, 'XTENSION')
@@ -673,24 +681,30 @@ end
 
 ;  Check that this name is unique with regard to other column names.
 
-function mrd_chkfn, name, namelist, index 
- compile_opt idl2, hidden
-    ; 
-    ; 
+function mrd_chkfn, name, namelist, index, silent=silent
+  compile_opt idl2, hidden
+     ;
+     ;
 
-    maxlen = 127
+     maxlen = 127
 
-    if strlen(name) gt maxlen then name = strmid(name, 0, maxlen) 
-    if ~array_equal(namelist eq name,0b ) then begin
-    
-        ; We have found a name conflict. 
-        ; 
-            name = 'gen$name_'+strcompress(string(index+1),/remove_all) 
-    endif 
+     if strlen(name) gt maxlen then name = strmid(name, 0, maxlen)
+     ; make case insensitive since structure tags are case insensitive
+     ; (rgm 2013-03-03)
+     ;if ~array_equal(namelist eq name,0b ) then begin
+     if ~array_equal(strupcase(namelist) eq strupcase(name),0b ) then begin
 
-    return, name 
- 
-end
+         oldname=name
+         name = 'gen$name_'+strcompress(string(index+1),/remove_all)
+
+         ; report the column name conflict
+         if ~keyword_set(silent) then print, 'Column name conflict: ', $
+           index, ': ', oldname, ' -> ', name
+
+     endif
+
+     return, name
+end     
 
 ; Find the appropriate offset for a given unsigned type.
 ; The type may be given as the bitpix value or the IDL
@@ -748,7 +762,7 @@ end
 ; Return the currrent version string for MRDFITS
 function mrd_version
 compile_opt idl2, hidden
-    return, '2.20 '
+    return, '2.23 '
 end
 ;=====================================================================
 ; END OF GENERAL UTILITY FUNCTIONS ===================================
@@ -957,7 +971,7 @@ compile_opt idl2, hidden
         
         fname = strupcase( mrd_dofn(fname,i+1, use_colnum, alias=alias))
 
-        if i GT 0 then fname = mrd_chkfn(fname, fnames, i) ;Check for duplicates
+        if i GT 0 then fname = mrd_chkfn(fname, fnames, i, SILENT=silent) ;Check for duplicates
 	fnames[i] = fname
         
         mrd_atype, fform, ftype, flen
@@ -1151,7 +1165,7 @@ pro mrd_read_image, unit, range, maxd, rsize, table, rows = rows,status=status, 
     if skipB eq 2880 then skipB = 0
 
     if range[1] lt maxd-1 then $
-        skipB = skipB + (maxd-range[1]-1)*rsize
+        skipB += (maxd-range[1]-1)*rsize
  
     mrd_skip, unit, skipB
     if unixpipe then swap_endian_inplace, table,/swap_if_little
@@ -1159,7 +1173,7 @@ pro mrd_read_image, unit, range, maxd, rsize, table, rows = rows,status=status, 
     ; Fix offset for unsigned data
     type = mrd_unsignedtype(table)
     if type gt 0 then $
-	table = table - mrd_unsigned_offset(type)
+	table -= mrd_unsigned_offset(type)
     
     status=0
     done:
@@ -1542,7 +1556,7 @@ compile_opt idl2, hidden
     ; nrec:         Number of records used.
     ; structyp:     Structure name.
  
-    w = where( (scales ne 1.d0  || offsets ne 0.d0), Nw, $
+    w = where( (scales ne 1.d0)  or (offsets ne 0.d0), Nw, $ 
                 complement=ww, Ncomplement = Nww)
 		
     if Nw EQ 0 then return    ;No tags require scaling? 
@@ -2266,14 +2280,14 @@ pro mrd_table, header, structyp, use_colnum,           $
 
     table = 0
 
-    types =  ['L', 'X', 'B', 'I', 'J', 'K', 'A', 'E', 'D', 'C', 'M', 'P']
+    types =  ['L', 'X', 'B', 'I', 'J', 'K', 'A', 'E', 'D', 'C', 'M', 'P','Q']
     arrstr = ['bytarr(', 'bytarr(', 'bytarr(', 'intarr(', 'lonarr(', 'lon64arr(',      $ 
               'string(replicate(32b,', 'fltarr(', 'dblarr(', 'complexarr(',            $ 
-              'dcomplexarr(', 'lonarr(2*']
-    bitpix = [  0,   0,   0,  16,  32,  64,   0,  0,   0,   0,   0,   0]
+              'dcomplexarr(', 'lonarr(2*','lon64arr(2*']
+    bitpix = [  0,   0,   0,  16,  32,  64,   0,  0,   0,   0,   0,   0, 0]
 
     sclstr = ["'T'", '0B', '0B', '0', '0L', '0LL', '" "', '0.', '0.d0', 'complex(0.,0.)', $ 
-              'dcomplex(0.d0,0.d0)', 'lonarr(2)']
+              'dcomplex(0.d0,0.d0)', 'lonarr(2)','lon64arr(2)']
     if keyword_set(emptystring) then begin 
         sclstr[6] = '0B'
         arrstr[6] = 'bytarr(' 
@@ -2360,7 +2374,7 @@ pro mrd_table, header, structyp, use_colnum,           $
         fname = mrd_dofn(fname, i+1, use_colnum, alias=alias)
 	
         ;; check for a name conflict
-        fname = mrd_chkfn(fname, fnames2, i)
+        fname = mrd_chkfn(fname, fnames2, i, SILENT=silent)
 
         ;; copy in the valid name
         fnames[i] = fname
@@ -2395,7 +2409,8 @@ pro mrd_table, header, structyp, use_colnum,           $
         ; 
          
         ; Handle variable length columns. 
-        if ftype eq 'P' then begin 
+        
+        if (ftype eq 'P') || (ftype eq 'Q') then begin 
  
             if (dim ne 0)  && (dim ne 1) then begin 
                 print, 'MRDFITS: Invalid dimension for variable array column '+string(i+1) 
@@ -2403,7 +2418,7 @@ pro mrd_table, header, structyp, use_colnum,           $
                 return 
             endif
 	    
-            ppos = strpos(fform, 'P') 
+            ppos = ftype eq 'P' ? strpos(fform, 'P') : strpos(fform, 'Q')
             vf = strmid(fform, ppos+1, 1); 
             if strpos('LXBIJKAEDCM', vf) eq -1 then begin 
                 print, 'MRDFITS: Invalid type for variable array column '+string(i+1) 
@@ -2452,9 +2467,9 @@ pro mrd_table, header, structyp, use_colnum,           $
 
 		    line = xunsigned ?  unsarr[j] : arrstr[j]
 		    
-                    line = line + dimfld[i] + ')'
-                    if not keyword_set(emptystring) then $
-		         if ftype eq 'A' then line = line + ')' 
+                    line += dimfld[i] + ')'
+                    if ~keyword_set(emptystring) then $
+		         if ftype eq 'A' then line += ')' 
                     fvalues[i] = line
 		    
                 endelse
@@ -2554,7 +2569,7 @@ function mrdfits, file, extension, header,      $
     compile_opt idl2    
     ;   Let user know version if MRDFITS being used.
     if keyword_set(version) then $
-        print,'MRDFITS: Version '+mrd_version() + 'April 29, 2011'
+        print,'MRDFITS: Version '+mrd_version() + 'April 7, 2014'
         
       
     if N_elements(error_action) EQ 0 then error_action = 2
@@ -2610,7 +2625,7 @@ function mrdfits, file, extension, header,      $
 	arange = [-1,-1]
     endelse
 
-    arange = long(arange)
+    arange = long64(arange)
 
     ; Open the file and position to the appropriate extension then read
     ; the header.
@@ -2631,12 +2646,14 @@ function mrdfits, file, extension, header,      $
         if fxmove(unit,extension) lt 0 then return, -1
     
     endif else begin                         ;File name specified
+
         unit = fxposit(file, extension, compress=compress, unixpipe=unixpipe, $
 	               /readonly,extnum=extnum, errmsg= errmsg, fpack=fpack)
 
         if unit lt 0 then begin
             message, 'File access error',/CON
 	    if errmsg NE '' then message,errmsg,/CON
+	    if scope_level() GT 2 then help,/trace
             status = -1
             return, 0
         endif
@@ -2658,19 +2675,7 @@ function mrdfits, file, extension, header,      $
         return, 0
     endif
 
-; If the ZIMAGE keyword is present in the header, then we must re-open the
-; file using a pipe.
-
-    if ~keyword_set(no_fpack) then $
-         if (inputunit EQ 0) && (~unixpipe) then begin 
-            if sxpar(header,'ZIMAGE') then begin 
-	    free_lun,unit
-            unit = fxposit(file, extension, compress=compress, /fpack, $ 
-	           unixpipe=unixpipe,/readonly,extnum=extnum, errmsg= errmsg)
-            mrd_hread, unit, header, status, SILENT = silent, ERRMSG = errmsg
-      endif
-    endif  	    
-	     
+;	     
     ; If this is primary array then XTENSION will have value
     ; 0 which will be converted by strtrim to '0'
 
@@ -2685,7 +2690,7 @@ function mrdfits, file, extension, header,      $
         return, 0
     endelse
 
-    scaling = keyword_set(fscale) or keyword_set(dscale)
+    scaling = keyword_set(fscale) || keyword_set(dscale)
 
     if type eq 0 then begin
 
