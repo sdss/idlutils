@@ -91,8 +91,12 @@ endif
 if n_elements(totfiber) eq 0 then totfiber = total(nfiber)
 
 d=lindgen(totfiber)
-h=histogram(total(nfiber,/cumul)-1,min=0,/binsize,reverse_indices=ri)
-ind=ri[0:n_elements(h)-1]-ri[0]
+if n_elements(nfiber) ne 1 then begin
+  h=histogram(total(nfiber,/cumul)-1,min=0,/binsize,reverse_indices=ri)
+  ind=ri[0:n_elements(h)-1]-ri[0]
+endif else begin
+  ind = fltarr(nfiber)
+endelse
 
 if ~arg_present(width) and ~arg_present(generic) and size(fp,/type) ne 8 then begin
 	print, 'ERROR: INPUT IS WRONG TYPE! MUST BE A STRUCTURE'
