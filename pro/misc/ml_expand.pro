@@ -84,7 +84,7 @@ compile_opt idl2
 compile_opt idl2, hidden
 
 if n_elements(NFIBER) eq 0 then begin
- print, 'ERROR: MUST PROVIDE NFIBER array!
+ print, 'ERROR: MUST PROVIDE NFIBER array!'
  return
 endif
 
