@@ -1,3 +1,4 @@
+ML_EXPAND: updated to handle a scalar value as well as an array
 
 GSSSADXY: Remove the call to DELVARX, which can be incredibly slow
     sometimes on the riemann cluster.  Instead, just set variables to zero.
