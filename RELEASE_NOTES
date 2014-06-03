@@ -1,3 +1,7 @@
+-------------------------------------------------------------------------------
+v5_5_15 (2014-06-03)
+Tag for MaNGA DRP v1_0_0
+
 ML_EXPAND: updated to handle a scalar value as well as an array
 
 GSSSADXY: Remove the call to DELVARX, which can be incredibly slow
