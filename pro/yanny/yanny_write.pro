@@ -105,7 +105,7 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
       ; The "typedef struct" lines were not passed to this routine,
       ; so generate those lines consistent with the data structures passed.
       if (keyword_set(pdata)) then begin
-         for idat=0, N_elements(pdata)-1 do begin
+         for idat=0L, N_elements(pdata)-1L do begin
             ntag = N_tags( *pdata[idat] )
             tags = strlowcase(tag_names( *pdata[idat] ))
             if (keyword_set(stnames)) then stname1 = strupcase(stnames[idat]) $
@@ -142,7 +142,7 @@ pro yanny_write, filename, pdata, hdr=hdr, enums=enums, structs=structs, $
 
    ; Write the data in the Yanny file
    if (keyword_set(pdata)) then begin
-      for idat=0, N_elements(pdata)-1 do begin
+      for idat=0L, N_elements(pdata)-1L do begin
          printf, olun, ''
 
          ntag = n_tags( *pdata[idat] )
