@@ -1,3 +1,6 @@
+
+YANNY_WRITE: Use type long for FOR loop, for writing large data sets.
+
 -------------------------------------------------------------------------------
 v5_5_15 (2014-06-03)
 Tag for MaNGA DRP v1_0_0
