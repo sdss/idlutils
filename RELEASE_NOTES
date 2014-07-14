@@ -1,3 +1,5 @@
+Added manga maskbits to the sdssMaskbits.par file
+  [D. Law 2014-07-14]
 
 YANNY_WRITE: Use type long for FOR loop, for writing large data sets.
 

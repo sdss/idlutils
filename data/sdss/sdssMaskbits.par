@@ -881,3 +881,58 @@ maskbits APOGEE_PARAMFLAG 8 GRIDEDGE_WARN    "Parameter within 1/2 grid spacing 
 maskbits APOGEE_PARAMFLAG 9 CALRANGE_WARN    "Parameter in possibly unreliable range of calibration determination"
 maskbits APOGEE_PARAMFLAG 10 OTHER_WARN  "Other warning condition"
 maskbits APOGEE_PARAMFLAG 16 PARAM_FIXED     "Parameter set at fixed value, not fit"
+
+#
+#------------------------------------------------------------------------------
+#--------- MaNGA bitmasks ---------
+
+# DRP quality flag bitmask
+masktype MANGA_DRPQUALFLAG 64 "Mask bits for MaNGA DRP quality flags"
+# Bits set by the 2d reduction pipeline
+maskbits MANGA_DRPQUALFLAG  0 VALIDFILE "File is valid"
+maskbits MANGA_DRPQUALFLAG  1 EXTRACTBAD "Many bad values in extracted frame"
+maskbits MANGA_DRPQUALFLAG  2 EXTRACTBRIGHT  "Extracted spectra abnormally bright"
+maskbits MANGA_DRPQUALFLAG  3 LOWEXPTIME  "Exposure time less than 10 minutes"
+maskbits MANGA_DRPQUALFLAG  4 BADIFU  "One or more IFUs missing/bad in this frame"
+maskbits MANGA_DRPQUALFLAG  5 HIGHSCAT "High scattered light levels"
+maskbits MANGA_DRPQUALFLAG  6 SCATFAIL "Failure to correct high scattered light levels"
+maskbits MANGA_DRPQUALFLAG 10 SKYSUBBAD  "Bad sky subtraction"
+# Bits set by/for the 3d reduction pipeline
+maskbits MANGA_DRPQUALFLAG 20 BADDITHER "Bad dither location information"
+maskbits MANGA_DRPQUALFLAG 21 THISBADIFU  "Bad/missing data for this IFU"
+
+# DRP output pixel bitmasks
+masktype MANGA_DRPPIXFLAG 32 "Mask bits for MaNGA 3d pixel quality."
+# These mask bits are valid for both RSS and cubes
+maskbits MANGA_DRPPIXFLAG  0  DEADFIBER   "Fiber known dead in metrology file."
+maskbits MANGA_DRPPIXFLAG  1  BADDATA     "Data bad, likely due to detector artifact.  Distilled from SPPIXMASK"
+# These mask bits are only valid for cubes
+maskbits MANGA_DRPPIXFLAG  2  LOWCOV      "Low coverage depth in cube"
+maskbits MANGA_DRPPIXFLAG  3  NOCOV       "No coverage in cube"
+
+# MaNGA targeting bitmask for galaxy targets
+masktype MANGA_TARGET1     64 "Mask bits identifying galaxy samples."
+maskbits MANGA_TARGET1     0  NONE " "
+maskbits MANGA_TARGET1     1  PRIMARY_PLUS_COM " "
+maskbits MANGA_TARGET1     2  SECONDARY_COM " "
+maskbits MANGA_TARGET1     3  COLOR_ENHANCED_COM " "
+maskbits MANGA_TARGET1     4  PRIMARY_v1_0_0 " "
+maskbits MANGA_TARGET1     5  SECONDARY_v1_0_0 " "
+maskbits MANGA_TARGET1     6  COLOR_ENHANCED_v1_0_0 " "
+maskbits MANGA_TARGET1     7  PRIMARY_COM2 " "
+maskbits MANGA_TARGET1     8  SECONDARY_COM2 " "
+maskbits MANGA_TARGET1     9  COLOR_ENHANCED_COM2 " "
+
+# MaNGA targeting bitmask for non-galaxy targets
+masktype MANGA_TARGET2     64 "Mask bits identifying star samples."
+maskbits MANGA_TARGET2      0  NONE " "
+maskbits MANGA_TARGET2      1  SKY " "
+maskbits MANGA_TARGET2      2  STELLIB_SDSS_COM "Commissioning selection using SDSS photometry"
+maskbits MANGA_TARGET2      3  STELLIB_2MASS_COM "Commissioning selection using 2MASS photometry"
+maskbits MANGA_TARGET2      4  STELLIB_KNOWN_COM "Commissioning selection of known parameter stars"
+maskbits MANGA_TARGET2     20  STD_FSTAR_COM " "
+maskbits MANGA_TARGET2     21  STD_WD_COM " "
+maskbits MANGA_TARGET2     22  STD_STD_COM " "
+maskbits MANGA_TARGET2     23  STD_FSTAR " "
+maskbits MANGA_TARGET2     24  STD_WD " "
+maskbits MANGA_TARGET2     25  STD_APASS_COM "Commissioning selection of stds using APASS photometry"
