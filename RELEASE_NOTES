@@ -1,3 +1,7 @@
+SDSS_SWEEP_CIRCLE: Reverse the order of matching. This is to both follow the
+    recommended practice for SPHEREMATCH, and to avoid a bug in the underlying
+    C library.  See https://trac.sdss3.org/ticket/1782 .
+
 Added manga maskbits to the sdssMaskbits.par file
   [D. Law 2014-07-14]
 

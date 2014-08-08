@@ -60,25 +60,25 @@ if(type eq 'sky') then begin
 endif
 
 ;; find matching fields
-spherematch, ra, dec, (*index).ra, (*index).dec, radius+0.36, $
+spherematch, (*index).ra, (*index).dec, ra, dec, radius+0.36, $
   m1, m2, max=0
-if(m2[0] eq -1) then return, 0
+if(m1[0] eq -1) then return, 0
 
 ;; unless we want all objects, don't check fields without primary objs
 if(NOT keyword_set(all)) then begin
-    ikeep= where((*index)[m2].nprimary gt 0, nkeep)
+    ikeep= where((*index)[m1].nprimary gt 0, nkeep)
     if(nkeep eq 0) then return, 0
-    m2=m2[ikeep]
+    m1=m1[ikeep]
 endif
 
 ;; what is the maximum number of objects we could return?
 if(keyword_set(all)) then $
-  ntot= total(((*index)[m2].iend - (*index)[m2].istart + 1L)>0L, /int) $
+  ntot= total(((*index)[m1].iend - (*index)[m1].istart + 1L)>0L, /int) $
 else $
-  ntot= total((*index)[m2].nprimary, /int)
+  ntot= total((*index)[m1].nprimary, /int)
 
 ;; find unique runs and camcaols
-rc= (*index)[m2].run*6L+(*index)[m2].camcol-1L
+rc= (*index)[m1].run*6L+(*index)[m1].camcol-1L
 isort= sort(rc)
 iuniq= uniq(rc[isort])
 istart=0L
@@ -89,10 +89,10 @@ for i=0L, n_elements(iuniq)-1L do begin
     icurr=isort[istart:iend]
 
     ;; determine which file and range of rows
-    run= (*index)[m2[icurr[0]]].run
-    camcol= (*index)[m2[icurr[0]]].camcol
-    rerun= (*index)[m2[icurr[0]]].rerun
-    fields= (*index)[m2[icurr]]
+    run= (*index)[m1[icurr[0]]].run
+    camcol= (*index)[m1[icurr[0]]].camcol
+    rerun= (*index)[m1[icurr[0]]].rerun
+    fields= (*index)[m1[icurr]]
     ist= min(fields.istart)
     ind= max(fields.iend)
 
@@ -107,11 +107,11 @@ for i=0L, n_elements(iuniq)-1L do begin
         if(n_tags(tmp_objs) gt 0) then begin
 
             ;; keep only objects within the desired radius
-            spherematch, ra, dec, tmp_objs.ra, tmp_objs.dec, radius, $
+            spherematch, tmp_objs.ra, tmp_objs.dec, ra, dec, radius, $
               tm1, tm2, max=0
 
-            if(tm2[0] ne -1) then begin
-                tmp_objs=tmp_objs[tm2]
+            if(tm1[0] ne -1) then begin
+                tmp_objs=tmp_objs[tm1]
                 
                 ;; keep only SURVEY_PRIMARY objects by default
                 if(NOT keyword_set(all)) then begin
