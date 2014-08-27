@@ -624,6 +624,7 @@ maskbits EBOSS_TARGET1 17 QSO_SDSS_TARGET           "Known TARGETS from SDSS wit
 maskbits EBOSS_TARGET1 18 QSO_KNOWN             "Known QSOs from previous surveys"
 maskbits EBOSS_TARGET1 30 TDSS_TARGET          "Target for TDSS (subclass found in eboss_target2)"
 maskbits EBOSS_TARGET1 31 SPIDERS_TARGET          "Target for SPIDERS (subclass found in eboss_target2)"
+maskbits EBOSS_TARGET1 40 ELG_TEST1          "Test targets for ELG selection"
 # standards
 maskbits EBOSS_TARGET1 50 STD_FSTAR				"standard f-stars"
 maskbits EBOSS_TARGET1 51 STD_WD            			"white dwarfs"
@@ -650,6 +651,9 @@ maskbits EBOSS_TARGET2 28 TDSS_FES_HYPSTAR          "TDSS Few epoch spectroscopy
 maskbits EBOSS_TARGET2 29 TDSS_FES_WDDM          "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 30 TDSS_FES_ACTSTAR          "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 31 TDSS_CP  	"TDSS in common with CORE/PTF"
+maskbits EBOSS_TARGET2 40 ELG_SCUSS_TEST1  	"SCUSS selection for test1 ELG plates"
+maskbits EBOSS_TARGET2 41 ELG_DES_TEST1  	"DES selection for test1 ELG plates"
+maskbits EBOSS_TARGET2 42 ELG_DESI_TEST1  	"DESI selection for test1 ELG plates"
 
 #
 #------------------------------------------------------------------------------
