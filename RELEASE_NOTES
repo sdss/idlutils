@@ -1,3 +1,7 @@
+Change manga maskbits from drpqual to drp2qual and drp3qual.
+  Also add starting type for dapqual maskbits.
+  [D. Law 2014-09-12]
+
 SPHEREMATCH: Check for matching order, and short-circuit a degenerate case
     where both sets of coordinates have only one point.
     See https://trac.sdss3.org/ticket/1782 .

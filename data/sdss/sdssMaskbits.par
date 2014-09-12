@@ -891,22 +891,28 @@ maskbits APOGEE_PARAMFLAG 16 PARAM_FIXED     "Parameter set at fixed value, not 
 #------------------------------------------------------------------------------
 #--------- MaNGA bitmasks ---------
 
-# DRP quality flag bitmask
-masktype MANGA_DRPQUALFLAG 64 "Mask bits for MaNGA DRP quality flags"
-# Bits set by the 2d reduction pipeline
-maskbits MANGA_DRPQUALFLAG  0 VALIDFILE "File is valid"
-maskbits MANGA_DRPQUALFLAG  1 EXTRACTBAD "Many bad values in extracted frame"
-maskbits MANGA_DRPQUALFLAG  2 EXTRACTBRIGHT  "Extracted spectra abnormally bright"
-maskbits MANGA_DRPQUALFLAG  3 LOWEXPTIME  "Exposure time less than 10 minutes"
-maskbits MANGA_DRPQUALFLAG  4 BADIFU  "One or more IFUs missing/bad in this frame"
-maskbits MANGA_DRPQUALFLAG  5 HIGHSCAT "High scattered light levels"
-maskbits MANGA_DRPQUALFLAG  6 SCATFAIL "Failure to correct high scattered light levels"
-maskbits MANGA_DRPQUALFLAG 10 SKYSUBBAD  "Bad sky subtraction"
-# Bits set by/for the 3d reduction pipeline
-maskbits MANGA_DRPQUALFLAG 20 BADDITHER "Bad dither location information"
-maskbits MANGA_DRPQUALFLAG 21 THISBADIFU  "Bad/missing data for this IFU"
+# DRP-2d quality flag bitmask
+masktype MANGA_DRP2QUAL 64 "Mask bits for MaNGA DRP-2d quality flags"
+maskbits MANGA_DRP2QUAL  0 VALIDFILE "File is valid"
+maskbits MANGA_DRP2QUAL  1 EXTRACTBAD "Many bad values in extracted frame"
+maskbits MANGA_DRP2QUAL  2 EXTRACTBRIGHT  "Extracted spectra abnormally bright"
+maskbits MANGA_DRP2QUAL  3 LOWEXPTIME  "Exposure time less than 10 minutes"
+maskbits MANGA_DRP2QUAL  4 BADIFU  "One or more IFUs missing/bad in this frame"
+maskbits MANGA_DRP2QUAL  5 HIGHSCAT "High scattered light levels"
+maskbits MANGA_DRP2QUAL  6 SCATFAIL "Failure to correct high scattered light levels"
+maskbits MANGA_DRP2QUAL  7 BADDITHER "Bad dither location information"
+maskbits MANGA_DRP2QUAL 10 SKYSUBBAD  "Bad sky subtraction"
 
-# DRP output pixel bitmasks
+# DRP-3d quality flag bitmask
+masktype MANGA_DRP3QUAL 64 "Mask bits for MaNGA DRP-3d quality flags"
+maskbits MANGA_DRP3QUAL  0 VALIDFILE "File is valid"
+maskbits MANGA_DRP3QUAL  1 BADDEPTH  "IFU does not reach target depth"
+
+# DAP quality flag bitmask
+masktype MANGA_DAPQUAL 64 "Mask bits for MaNGA DAP quality flags"
+maskbits MANGA_DAPQUAL  0 VALIDFILE "File is valid"
+
+# DRP-3d output pixel bitmasks
 masktype MANGA_DRPPIXFLAG 32 "Mask bits for MaNGA 3d pixel quality."
 # These mask bits are valid for both RSS and cubes
 maskbits MANGA_DRPPIXFLAG  0  DEADFIBER   "Fiber known dead in metrology file."
