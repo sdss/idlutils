@@ -1,3 +1,7 @@
+SPHEREMATCH: Check for matching order, and short-circuit a degenerate case
+    where both sets of coordinates have only one point.
+    See https://trac.sdss3.org/ticket/1782 .
+
 -------------------------------------------------------------------------------
 v5_5_16 (2014-08-09)
 Tag including manga maskbits
@@ -58,7 +62,7 @@ YANNY_READ: semicolons will no longer substitute as line breaks.
 -------------------------------------------------------------------------------
 v5_5_13 (2014-03-24)
 
-Updated struct_print.pro in pro/misc to format bytes correctly.  Will use 
+Updated struct_print.pro in pro/misc to format bytes correctly.  Will use
 to regenerate all of the guidermonfiles.
 
 -------------------------------------------------------------------------------
@@ -1458,4 +1462,3 @@ goddard      - This library was brought up to the 2003-Mar-21 version
 -------------------------------------------------------------------------------
 v4_9_14 (Mar 25, 2003)
 Tagged for photoop v0_5.
-
