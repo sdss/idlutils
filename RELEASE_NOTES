@@ -1,3 +1,7 @@
+Added lst return option to tai2airmass so that MaNGA can use
+  this routine.
+  [D. Law 2014-09-15]
+
 Change manga maskbits from drpqual to drp2qual and drp3qual.
   Also add starting type for dapqual maskbits.
   [D. Law 2014-09-12]

@@ -7,7 +7,7 @@
 ;
 ; CALLING SEQUENCE:
 ;   airmass = tai2airmass( ra, dec, [ equinox, jd=, tai=, mjd=, $
-;    longitude=, latitude=, altitude=, ha=, ipa= ] )
+;    longitude=, latitude=, altitude=, ha=, ipa=, lstdeg= ] )
 ;
 ; INPUTS:
 ;   ra             - Right ascension [degrees]
@@ -35,6 +35,7 @@
 ; OPTIONAL OUTPUTS:
 ;   ha             - Hour angle (degrees)
 ;   ipa            - Position angle for image rotator (degrees)
+;   lstdeg         - LST (degrees)
 ;
 ; COMMENTS:
 ;   TAI, JD, or MJD must be specified.
@@ -59,6 +60,7 @@
 ;   10-May-2000  Written by D. Schlegel, Princeton, & D. Hogg, IAS
 ;   02-Jun-2000  Fixed minor bugs, Schlegel
 ;   05-Nov-2000  Added HA keyword
+;   15-Sep-2014  Added LST keyword (David Law)
 ;-
 ;------------------------------------------------------------------------------
 function tai2air_crossprod, aa, bb
@@ -89,7 +91,7 @@ end
 ;------------------------------------------------------------------------------
 function tai2airmass, ra, dec, equinox1, jd=jd, tai=tai, mjd=mjd, $
  longitude=longitude, latitude=latitude, altitude=altitude, $
- node=node, incl=incl, ha=hadeg, ipa=ipa
+ node=node, incl=incl, ha=hadeg, ipa=ipa, lstdeg=lstdeg
 
    ; Default to location of Apache Point Observatory
    if (n_elements(equinox1) NE 0) then equinox = equinox1 $
@@ -117,8 +119,8 @@ function tai2airmass, ra, dec, equinox1, jd=jd, tai=tai, mjd=mjd, $
    ; Compute the hour angle, HA, in degrees
 
    ct2lst, lst, longitude, junk, jd
-   lst = 15. * lst ; convert from hours to degrees
-   hadeg = lst - ra
+   lstdeg = 15. * lst ; convert from hours to degrees
+   hadeg = lstdeg - ra
 
    decrad = dec / DRADEG
    harad = hadeg / DRADEG
