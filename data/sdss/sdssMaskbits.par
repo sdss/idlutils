@@ -907,6 +907,10 @@ maskbits MANGA_DRP2QUAL 10 SKYSUBBAD  "Bad sky subtraction"
 masktype MANGA_DRP3QUAL 64 "Mask bits for MaNGA DRP-3d quality flags"
 maskbits MANGA_DRP3QUAL  0 VALIDFILE "File is valid"
 maskbits MANGA_DRP3QUAL  1 BADDEPTH  "IFU does not reach target depth"
+maskbits MANGA_DRP3QUAL  2 SKYSUBBAD " Bad sky subtraction in one or more frames"
+maskbits MANGA_DRP3QUAL  3 HIGHSCAT " High scattered light in one or more frames"
+maskbits MANGA_DRP3QUAL  4 BADASTROM " Bad astrometry in one or more frames"
+maskbits MANGA_DRP3QUAL 30 CRITICAL " Critical failure in one or more frames"
 
 # DAP quality flag bitmask
 masktype MANGA_DAPQUAL 64 "Mask bits for MaNGA DAP quality flags"
