@@ -901,6 +901,8 @@ maskbits MANGA_DRP2QUAL  4 BADIFU  "One or more IFUs missing/bad in this frame"
 maskbits MANGA_DRP2QUAL  5 HIGHSCAT "High scattered light levels"
 maskbits MANGA_DRP2QUAL  6 SCATFAIL "Failure to correct high scattered light levels"
 maskbits MANGA_DRP2QUAL  7 BADDITHER "Bad dither location information"
+maskbits MANGA_DRP2QUAL  8 ARCFOCUS " Bad focus on arc frames"
+maskbits MANGA_DRP2QUAL  9 RAMPAGINGBUNNY " Rampaging dust bunnies in IFU flats"
 maskbits MANGA_DRP2QUAL 10 SKYSUBBAD  "Bad sky subtraction"
 maskbits MANGA_DRP2QUAL 11 SKYSUBFAIL  "Failed sky subtraction"
 
