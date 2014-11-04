@@ -946,7 +946,7 @@ maskbits MANGA_TARGET1    11  SECONDARY_v1_2_0 " "
 maskbits MANGA_TARGET1    12  COLOR_ENHANCED_v1_2_0 " "
 
 # MaNGA targeting bitmask for non-galaxy targets
-masktype MANGA_TARGET2     64 "Mask bits identifying star samples."
+masktype MANGA_TARGET2     64 "Mask bits identifying non-galaxy samples."
 maskbits MANGA_TARGET2      0  NONE " "
 maskbits MANGA_TARGET2      1  SKY " "
 maskbits MANGA_TARGET2      2  STELLIB_SDSS_COM "Commissioning selection using SDSS photometry"
@@ -958,3 +958,7 @@ maskbits MANGA_TARGET2     22  STD_STD_COM " "
 maskbits MANGA_TARGET2     23  STD_FSTAR " "
 maskbits MANGA_TARGET2     24  STD_WD " "
 maskbits MANGA_TARGET2     25  STD_APASS_COM "Commissioning selection of stds using APASS photometry"
+
+# MaNGA targeting bitmask for ancillary program targets
+masktype MANGA_TARGET3     64 "Mask bits identifying ancillary samples."
+maskbits MANGA_TARGET3     0  NONE " "
