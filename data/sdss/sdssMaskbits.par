@@ -655,6 +655,9 @@ maskbits EBOSS_TARGET2 40 ELG_SCUSS_TEST1  	"SCUSS selection for test1 ELG plate
 maskbits EBOSS_TARGET2 41 ELG_DES_TEST1  	"DES selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 42 ELG_DESI_TEST1  	"DESI selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 43 ELG_SDSS_TEST1  	"SDSS-only selection for test1 ELG plates"
+maskbits EBOSS_TARGET2 44 ELG_UGRIZW_TEST1  	"SDSS-only selection for test1 ELG plates"
+maskbits EBOSS_TARGET2 45 ELG_UGRIZWbright_TEST1  	"SDSS-only selection for test1 ELG plates"
+maskbits EBOSS_TARGET2 46 ELG_GRIW_TEST1  	"SDSS-only selection for test1 ELG plates"
 
 #
 #------------------------------------------------------------------------------
