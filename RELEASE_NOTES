@@ -1,3 +1,8 @@
+-------------------------------------------------------------------------------
+v5_5_17 (2014-11-10)
+Added bits to EBOSS_TARGET2
+  [Jeremy Tinker 2014-11-06]
+
 Added BADOMEGA and BADSET bits to MANGA_DRP3QUAL
   [D. Law 2014-11-05]
 
