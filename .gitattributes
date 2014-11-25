@@ -1,5 +1,6 @@
 * text=auto !eol
 goddard/text/coyote.readme -text
+pro/coord/ha2airmass.pro -text
 pro/fits/mrdfits_rows.pro -text
 pro/misc/ml_expand.pro -text
 pro/mpfit/fakedata.sav -text svneol=unset#unset
