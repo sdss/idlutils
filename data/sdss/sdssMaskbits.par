@@ -824,7 +824,14 @@ maskbits APOGEE_TARGET2 16 APOGEE_KEPLER_COOLDWARF "Kepler cool dwarf/subgiant (
 maskbits APOGEE_TARGET2 17 APOGEE_MIRCLUSTER_STAR "Candidate MIR-detected cluster member (ancillary)"
 maskbits APOGEE_TARGET2 31 APOGEE_CHECKED "This target has been checked"
 
-masktype APOGEE_PIXMASK 32 "APOGEE pixel level mask bits"
+masktype APOGEE_EXTRATARG 16 "APOGEE pixel level mask bits"
+maskbits APOGEE_EXTRATARG 0 NOT_MAIN "Not main survey target"
+maskbits APOGEE_EXTRATARG 1 COMMISSIONING "Commissioning data"
+maskbits APOGEE_EXTRATARG 2 TELLURIC "Telluric target"
+maskbits APOGEE_EXTRATARG 3 APO1M "APO1M + APOGEE observation"
+maskbits APOGEE_EXTRATARG 4 DUPLICATE "Duplicate observation of star"
+
+masktype APOGEE_PIXMASK 32 "APOGEE extra targeting bits"
 maskbits APOGEE_PIXMASK 0 BADPIX "Pixel marked as BAD in bad pixel mask"
 maskbits APOGEE_PIXMASK 1 CRPIX  "Pixel marked as cosmic ray in ap3d"
 maskbits APOGEE_PIXMASK 2 SATPIX     "Pixel marked as saturated in ap3d"
