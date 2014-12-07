@@ -926,6 +926,7 @@ maskbits MANGA_DRP3QUAL  4 BADASTROM " Bad astrometry in one or more frames"
 maskbits MANGA_DRP3QUAL  5 VARIABLELSF " LSF varies signif. between component spectra"
 maskbits MANGA_DRP3QUAL  6 BADOMEGA " Omega greater than threshhold in one or more sets"
 maskbits MANGA_DRP3QUAL  7 BADSET " One or more sets are bad"
+maskbits MANGA_DRP3QUAL  8 BADFLUX " Bad flux calibration"
 maskbits MANGA_DRP3QUAL 30 CRITICAL " Critical failure in one or more frames"
 
 # DAP quality flag bitmask
