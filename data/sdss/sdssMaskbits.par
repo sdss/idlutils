@@ -899,6 +899,68 @@ maskbits APOGEE_PARAMFLAG 16 PARAM_FIXED     "Parameter set at fixed value, not 
 
 #
 #------------------------------------------------------------------------------
+#--------- APOGEE2 targeting bitmasks ---------
+#------------------------------------------------------------------------------
+masktype APOGEE2_TARGET1 32 "APOGEE2 primary target bits"
+maskbits APOGEE2_TARGET1 0 APOGEE2_ONEBIN_GT_0_5 "Selected in single (J-Ks)o > 0.5 color bin"
+maskbits APOGEE2_TARGET1 1 APOGEE2_TWOBIN_0_5_TO_0_8 "Selected in "blue" 0.5 < (J-Ks)o < 0.8 color bin"
+maskbits APOGEE2_TARGET1 2 APOGEE2_TWOBIN_GT_0_8 "Selected in "red" (J-Ks)o > 0.8 color bin"
+maskbits APOGEE2_TARGET1 3 APOGEE2_IRAC_DERED "Selected with RJCE-IRAC dereddening"
+maskbits APOGEE2_TARGET1 4 APOGEE2_WISE_DERED "Selected with RJCE-WISE dereddening"
+maskbits APOGEE2_TARGET1 5 APOGEE2_SFD_DERED "Selected with SFD_EBV dereddening"
+maskbits APOGEE2_TARGET1 6 APOGEE2_NO_DERED "Selected with no dereddening"
+maskbits APOGEE2_TARGET1 7 APOGEE2_WASH_GIANT "Selected as Wash+DDO51 photometric giant"
+maskbits APOGEE2_TARGET1 8 APOGEE2_WASH_DWARF "Selected as Wash+DDO51 photometric dwarf"
+maskbits APOGEE2_TARGET1 9 APOGEE2_SCI_CLUSTER "Science cluster candidate member"
+maskbits APOGEE2_TARGET1 11 APOGEE2_SHORT "Selected as part of a short cohort"
+maskbits APOGEE2_TARGET1 12 APOGEE2_MEDIUM "Selected as part of a medium cohort"
+maskbits APOGEE2_TARGET1 13 APOGEE2_LONG "Selected as part of a long cohort"
+maskbits APOGEE2_TARGET1 14 APOGEE2_NORMAL_SAMPLE "Selected as part of the random sample"
+maskbits APOGEE2_TARGET1 15 APOGEE2_MANGA_LED "Star on a shared MaNGA-led design"
+maskbits APOGEE2_TARGET1 16 APOGEE2_ONEBIN_GT_0_3 "Selected in single (J-Ks)o > 0.3 color bin"
+maskbits APOGEE2_TARGET1 17 APOGEE2_WASH_NOCLASS  "Selected because it has no W+D classification"
+maskbits APOGEE2_TARGET1 18 APOGEE2_STREAM_MEMBER "Selected as confirmed halo tidal stream member"
+maskbits APOGEE2_TARGET1 19 APOGEE2_STREAM_CANDIDATE "Selected as potential halo tidal stream member (based on photometry)"
+maskbits APOGEE2_TARGET1 20 APOGEE2_DSPH_MEMBER "Selected as confirmed dSph member (non Sgr)"
+maskbits APOGEE2_TARGET1 21 APOGEE2_DSPH_CANDIDATE "Selected as potential dSph member (non Sgr) (based on photometry)"
+maskbits APOGEE2_TARGET1 22 APOGEE2_MAGCLOUD_MEMBER "Selected as confirmed Mag Cloud member"
+maskbits APOGEE2_TARGET1 23 APOGEE2_MAGCLOUD_CANDIDATE "Selected as potential Mag Cloud member (based on photometry)"
+maskbits APOGEE2_TARGET1 24 APOGEE2_RRLYR "Selected as a bulge RR Lyrae star"
+maskbits APOGEE2_TARGET1 26 APOGEE2_SGR_DSPH  "Selected as confirmed Sgr core/stream member"
+maskbits APOGEE2_TARGET1 27 APOGEE2_APOKASC_GIANT "Selected as part of APOKASC giant sample"
+maskbits APOGEE2_TARGET1 28 APOGEE2_APOKASC_DWARF "Selected as part of APOKASC "dwarf" sample"
+maskbits APOGEE2_TARGET1 29 APOGEE2_FAINT_EXTRA "Faint star (fainter than cohort limit; not required to reach survey S/N requirement)"
+maskbits APOGEE2_TARGET1 30 APOGEE2_APOKASC "Selected as part of the APOKASC program (incl. seismic/gyro targets and others)"
+
+masktype APOGEE2_TARGET2 32 "APOGEE2 secondary target bits"
+maskbits APOGEE2_TARGET2 2 APOGEE2_STANDARD_STAR "Stellar parameters/abundance standard"
+maskbits APOGEE2_TARGET2 3 APOGEE2_RV_STANDARD "Stellar RV standard"
+maskbits APOGEE2_TARGET2 4 APOGEE2_SKY  "Sky fiber"
+maskbits APOGEE2_TARGET2 5 APOGEE2_EXTERNAL_CALIB "External survey calibration target (generic flag; others below dedicated to specific surveys)"
+maskbits APOGEE2_TARGET2 6 APOGEE2_INTERNAL_CALIB "Internal survey calibration target (observed in at least 2 of: APOGEE-1, -2N, -2S)"
+maskbits APOGEE2_TARGET2 9 APOGEE2_TELLURIC "Telluric calibrator target"
+maskbits APOGEE2_TARGET2 10 APOGEE2_CALIB_CLUSTER "Selected as calibration cluster member"
+maskbits APOGEE2_TARGET2 13 APOGEE2_LITERATURE_CALIB "Overlap with high-resolution literature studies"
+maskbits APOGEE2_TARGET2 14 APOGEE2_GES_OVERLAP "Overlap with Gaia-ESO"
+maskbits APOGEE2_TARGET2 15 APOGEE2_ARGOS_OVERLAP "Overlap with ARGOS"
+maskbits APOGEE2_TARGET2 16 APOGEE2_GAIA_OVERLAP "Overlap with Gaia"
+maskbits APOGEE2_TARGET2 17 APOGEE2_GALAH_OVERLAP "Overlap with GALAH"
+maskbits APOGEE2_TARGET2 18 APOGEE2_RAVE_OVERLAP "Overlap with RAVE"
+maskbits APOGEE2_TARGET2 22 APOGEE2_1M_TARGET  "Selected as a 1-m target"
+maskbits APOGEE2_TARGET2 30 APOGEE2_OBJECT "This object is an APOGEE-2 target"
+
+masktype APOGEE2_TARGET3 32 "APOGEE2 trinary target bits"
+maskbits APOGEE2_TARGET3 0 APOGEE2_KOI "Selected as part of the long cadence KOI study"
+maskbits APOGEE2_TARGET3 1 APOGEE2_EB "Selected as part of the EB program"
+maskbits APOGEE2_TARGET3 2 APOGEE2_KOI_CONTROL  "Selected as part of the long cadence KOI control sample"
+maskbits APOGEE2_TARGET3 3 APOGEE2_MDWARF "Selected as part of the M dwarf study"
+maskbits APOGEE2_TARGET3 4 APOGEE2_SUBSTELLAR_COMPANIONS "Selected as part of the substellar companion search"
+maskbits APOGEE2_TARGET3 5 APOGEE2_YOUNG_CLUSTER "Selected as part of the young cluster study (IN-SYNC)"
+maskbits APOGEE2_TARGET3 8 APOGEE2_ANCILLARY "Selected as an ancillary target"
+maskbits APOGEE2_TARGET3 9 APOGEE2_MASSIVE_STAR "Selected as part of the Massive Star program"
+
+#
+#------------------------------------------------------------------------------
 #--------- MaNGA bitmasks ---------
 
 # DRP-2d quality flag bitmask
