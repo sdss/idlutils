@@ -1,3 +1,6 @@
+
+DJS_PHOT: Bug fix to not crash if SKYRAD not set (reported by J. Moustakas)
+
 -------------------------------------------------------------------------------
 v5_5_19 (2015-01-26)
 Tagged v 5_5_19
