@@ -171,7 +171,8 @@ function djs_phot, xcen, ycen, objrad, skyrad, image, invvar, $
 
       ; Find the sky value
       ; Add 0.0 to the skyrad to convert to floating-point
-      skyval[iobj] = djs_photsky( xcen1, ycen1, skyrad+0.0, image, $
+      if keyword_set(skyrad) then skyrad += 0.0
+      skyval[iobj] = djs_photsky( xcen1, ycen1, skyrad, image, $
        salg=salg, srejalg=srejalg, smaxiter=smaxiter, $
        lorej=lorej, hirej=hirej, $
        skyrms=tmprms, skyerr=tmperr, quick=quick, exact=exact)
