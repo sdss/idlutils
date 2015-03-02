@@ -996,14 +996,60 @@ maskbits MANGA_DRP3QUAL 30 CRITICAL " Critical failure in one or more frames"
 masktype MANGA_DAPQUAL 64 "Mask bits for MaNGA DAP quality flags"
 maskbits MANGA_DAPQUAL  0 VALIDFILE "File is valid"
 
+
+
+# The following mask bits are for the 2D MANGA pipeline
+# 0-13 refer to each fiber, 15-30 refer to each pixel in a spectrum."
+# The following mask bits are for fibers
+masktype MANGA_DRP2PIXMASK 32 "Mask bits per fiber or pixel for 2d MaNGA spectra."
+maskbits MANGA_DRP2PIXMASK  0 NOPLUG          "Fiber not listed in plugmap file"
+maskbits MANGA_DRP2PIXMASK  1 BADTRACE        "Bad trace"
+maskbits MANGA_DRP2PIXMASK  2 BADFLAT         "Low counts in fiberflat"
+maskbits MANGA_DRP2PIXMASK  3 BADARC          "Bad arc solution"
+maskbits MANGA_DRP2PIXMASK  4 MANYBADCOLUMNS  "More than 10% of pixels are bad columns"
+maskbits MANGA_DRP2PIXMASK  5 MANYREJECTED    "More than 10% of pixels are rejected in extraction"
+maskbits MANGA_DRP2PIXMASK  6 LARGESHIFT      "Large spatial shift between flat and object position"
+maskbits MANGA_DRP2PIXMASK  7 BADSKYFIBER     "Sky fiber shows extreme residuals"
+maskbits MANGA_DRP2PIXMASK  8 NEARWHOPPER     "Within 2 fibers of a whopping fiber (exclusive)"
+maskbits MANGA_DRP2PIXMASK  9 WHOPPER         "Whopping fiber, with a very bright source."
+maskbits MANGA_DRP2PIXMASK 10 SMEARIMAGE      "Smear available for red and blue cameras"
+maskbits MANGA_DRP2PIXMASK 11 SMEARHIGHSN     "S/N sufficient for full smear fit"
+maskbits MANGA_DRP2PIXMASK 12 SMEARMEDSN      "S/N only sufficient for scaled median fit"
+maskbits MANGA_DRP2PIXMASK 13 DEADFIBER       "Broken fiber according to metrology files"
+# The following mask bits are for a pixel
+maskbits MANGA_DRP2PIXMASK 15 BADPIX          "Pixel flagged in badpix reference file."
+maskbits MANGA_DRP2PIXMASK 16 COSMIC          "Pixel flagged as cosmic ray."
+maskbits MANGA_DRP2PIXMASK 17 NEARBADPIXEL    "Bad pixel within 3 pixels of trace."
+maskbits MANGA_DRP2PIXMASK 18 LOWFLAT         "Flat field less than 0.5"
+maskbits MANGA_DRP2PIXMASK 19 FULLREJECT      "Pixel fully rejected in extraction model fit (INVVAR=0)"
+maskbits MANGA_DRP2PIXMASK 20 PARTIALREJECT   "Some pixels rejected in extraction model fit"
+maskbits MANGA_DRP2PIXMASK 21 SCATTEREDLIGHT  "Scattered light significant"
+maskbits MANGA_DRP2PIXMASK 22 CROSSTALK       "Cross-talk significant"
+maskbits MANGA_DRP2PIXMASK 23 NOSKY           "Sky level unknown at this wavelength (INVVAR=0)"
+maskbits MANGA_DRP2PIXMASK 24 BRIGHTSKY       "Sky level > flux + 10*(flux_err) AND sky > 1.25 * median(sky,99 pixels)"
+maskbits MANGA_DRP2PIXMASK 25 NODATA          "No data available in combine B-spline (INVVAR=0)"
+maskbits MANGA_DRP2PIXMASK 26 COMBINEREJ      "Rejected in combine B-spline"
+maskbits MANGA_DRP2PIXMASK 27 BADFLUXFACTOR   "Low flux-calibration or flux-correction factor"
+maskbits MANGA_DRP2PIXMASK 28 BADSKYCHI       "Relative chi^2 > 3 in sky residuals at this wavelength"
+maskbits MANGA_DRP2PIXMASK 29 REDMONSTER      "Contiguous region of bad chi^2 in sky residuals (with threshhold of relative chi^2 > 3)."
+maskbits MANGA_DRP2PIXMASK 30 3DREJECT        "Used in RSS file, indicates should be rejected when making 3D cube"
+
+# The following mask bits are for a cube spaxel, set in MDRP_DRP3PIXMASK_BITS()
+masktype MANGA_DRP3PIXMASK 32 "Mask bits per spaxel for a MaNGA data cube."
+maskbits MANGA_DRP3PIXMASK  0  NOCOV       "No coverage in cube"
+maskbits MANGA_DRP3PIXMASK  1  LOWCOV      "Low coverage depth in cube"
+maskbits MANGA_DRP3PIXMASK  2  DEADFIBER   "Major contributing fiber is dead"
+maskbits MANGA_DRP3PIXMASK  3  DONOTUSE    "Do not use this spaxel for science"
+
+
+
 # DRP-3d output pixel bitmasks
-masktype MANGA_DRPPIXFLAG 32 "Mask bits for MaNGA 3d pixel quality."
+#masktype MANGA_DRPPIXFLAG 32 "Mask bits for MaNGA 3d pixel quality."
 # These mask bits are valid for both RSS and cubes
-maskbits MANGA_DRPPIXFLAG  0  DEADFIBER   "Fiber known dead in metrology file."
-maskbits MANGA_DRPPIXFLAG  1  BADDATA     "Data bad, likely due to detector artifact.  Distilled from SPPIXMASK"
+#maskbits MANGA_DRPPIXFLAG  0  DEADFIBER   "Fiber known dead in metrology file."
+#maskbits MANGA_DRPPIXFLAG  1  BADDATA     "Data bad, likely due to detector artifact.  Distilled from SPPIXMASK"
 # These mask bits are only valid for cubes
-maskbits MANGA_DRPPIXFLAG  2  LOWCOV      "Low coverage depth in cube"
-maskbits MANGA_DRPPIXFLAG  3  NOCOV       "No coverage in cube"
+
 
 # MaNGA targeting bitmask for galaxy targets
 masktype MANGA_TARGET1     64 "Mask bits identifying galaxy samples."

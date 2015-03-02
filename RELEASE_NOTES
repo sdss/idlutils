@@ -1,3 +1,6 @@
+Split MaNGA maskbits from SPPIXMASK and MANGA_DRPPIXFLAG into
+MANGA_DRP2PIXMASK and MANGA_DRP3PIXMASK
+  [D. Law 2015-03-02]
 
 DJS_PHOT: Bug fix to not crash if SKYRAD not set (reported by J. Moustakas)
 
