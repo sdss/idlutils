@@ -1,3 +1,7 @@
+-------------------------------------------------------------------------------
+v5_5_20 (2015-03-05)
+Tagged v 5_5_20
+
 Split MaNGA maskbits from SPPIXMASK and MANGA_DRPPIXFLAG into
 MANGA_DRP2PIXMASK and MANGA_DRP3PIXMASK
   [D. Law 2015-03-02]
