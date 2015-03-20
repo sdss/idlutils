@@ -1084,7 +1084,7 @@ maskbits MANGA_TARGET2     25  STD_APASS_COM "Commissioning selection of stds us
 
 # MaNGA targeting bitmask for ancillary program targets
 masktype MANGA_TARGET3     64 "Mask bits identifying ancillary samples."
-maskbits MANGA_TARGET3     0   " "
+maskbits MANGA_TARGET3     0   NONE " "
 maskbits MANGA_TARGET3     1   AGN_BAT " "
 maskbits MANGA_TARGET3     2   AGN_OIII " "
 maskbits MANGA_TARGET3     3   AGN_WISE " "
