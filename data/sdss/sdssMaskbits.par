@@ -1066,6 +1066,8 @@ maskbits MANGA_TARGET1     9  COLOR_ENHANCED_COM2 " July 2014 commissioning"
 maskbits MANGA_TARGET1    10  PRIMARY_v1_2_0 " "
 maskbits MANGA_TARGET1    11  SECONDARY_v1_2_0 " "
 maskbits MANGA_TARGET1    12  COLOR_ENHANCED_v1_2_0 " "
+maskbits MANGA_TARGET1    13  FILLER " Filler targets"
+maskbits MANGA_TARGET1    14  ANCILLARY " Ancillary program targets"
 
 # MaNGA targeting bitmask for non-galaxy targets
 masktype MANGA_TARGET2     64 "Mask bits identifying non-galaxy samples."
