@@ -1041,16 +1041,6 @@ maskbits MANGA_DRP3PIXMASK  1  LOWCOV      "Low coverage depth in cube"
 maskbits MANGA_DRP3PIXMASK  2  DEADFIBER   "Major contributing fiber is dead"
 maskbits MANGA_DRP3PIXMASK 10  DONOTUSE    "Do not use this spaxel for science"
 
-
-
-# DRP-3d output pixel bitmasks
-#masktype MANGA_DRPPIXFLAG 32 "Mask bits for MaNGA 3d pixel quality."
-# These mask bits are valid for both RSS and cubes
-#maskbits MANGA_DRPPIXFLAG  0  DEADFIBER   "Fiber known dead in metrology file."
-#maskbits MANGA_DRPPIXFLAG  1  BADDATA     "Data bad, likely due to detector artifact.  Distilled from SPPIXMASK"
-# These mask bits are only valid for cubes
-
-
 # MaNGA targeting bitmask for galaxy targets
 masktype MANGA_TARGET1     64 "Mask bits identifying galaxy samples."
 maskbits MANGA_TARGET1     0  NONE " "
