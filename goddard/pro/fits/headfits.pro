@@ -122,7 +122,7 @@ function HEADFITS, filename, EXTEN = exten, Compress = compress, $
      endif
   endelse
   
-  MRD_HREAD, unit, header, status, SILENT = silent
+  MRD_HREAD, unit, header, status, SILENT = silent, errmsg=errmsg
   if ~unitsupplied then free_lun, unit
   if status LT 0 then begin
          if N_elements(errmsg) GT 0 then errmsg = !ERROR_STATE.MSG else $
