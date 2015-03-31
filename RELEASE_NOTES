@@ -1,3 +1,6 @@
+
+STRUCT_PRINT: Fixed bug that happened when setting custom format codes.
+
 -------------------------------------------------------------------------------
 v5_5_21 (2015-03-26)
 Tagged v 5_5_21

@@ -31,11 +31,12 @@
 ;                The order of the alias keyword is compatible with
 ;                use in MWRFITS,MRDFITS.
 ;   formatcodes- Explicit format codes for specific structure elements.
-;                The value should be a STRARR(2,*) value where teh first
+;                WARNING: C-style printf() codes must be used!
+;                The value should be a STRARR(2,*) value where the first
 ;                element of each pair of values corresponds to a column
 ;                name (before applying any ALIAS), and the second is the
-;                format code, such as "a10" for a 10-character string,
-;                or "f10.5" for a floating-point value with 5 places after
+;                format code, such as "%10s" for a 10-character string,
+;                or "%10.5f" for a floating-point value with 5 places after
 ;                the decimal point.  Note that this may truncate the
 ;                names in the two-line header if the format is fewer
 ;                characters than that name length.
@@ -57,7 +58,7 @@
 ;   If FORMATCODES is used, then it is possible to have numeric values
 ;   that do not fit within the specified format, which are then printed
 ;   as asterisks.  For example, printing the value 123.4 with the format
-;   code "f3.1" will result in printing "***".
+;   code "%3.1f" will result in printing "***".
 ;
 ; PROCEDURES CALLED:
 ;
@@ -67,6 +68,8 @@
 ; REVISION HISTORY:
 ;   01-Nov-2000  Written by David Schlegel, Princeton.
 ;   2009-12-04 Now emits valid XHTML 1.1 tables.
+;   2014-02-14 Fixed bug that caused BYTE-type fields to be printed incorrectly.
+;   2015-03-30 Fixed bug that was mixing up different-style format codes.
 ;-
 ;------------------------------------------------------------------------------
 ;
@@ -194,16 +197,15 @@ PRO struct_print, struct, filename=filename, lun=lun_in, tarray=tarray, $
                 IF (ct NE 0) THEN BEGIN
                     thiscode = formatcodes[1,jj]
                     nchar = STRLEN( $
-                        STRING(struct[0].(itag)[iarr], FORMAT='('+formatcodes[1,jj]+')') )
+                        STRING(struct[0].(itag)[iarr], FORMAT='(%"'+formatcodes[1,jj]+'")') )
                 ENDIF
             ENDIF
             schar = STRTRIM(STRING(nchar),2)
             IF KEYWORD_SET(html) THEN BEGIN
                 hdr1 = hdr1 + '<th>' + thisname + '</th>'
             ENDIF ELSE BEGIN
-                hdr1 = hdr1 + STRING(thisname, FORMAT='(A' + schar + ')')
-                hdr2 = hdr2 + STRING(REPLICATE('-',nchar), $
-                    FORMAT='(' + schar + 'A)')
+                hdr1 = hdr1 + STRING(thisname, FORMAT='(%"%' + schar + 's")')
+                hdr2 = hdr2 + STRJOIN(REPLICATE('-',nchar),'')
             ENDELSE
             format = format + colstart + thiscode + colend
         ENDFOR
