@@ -1039,6 +1039,7 @@ masktype MANGA_DRP3PIXMASK 32 "Mask bits per spaxel for a MaNGA data cube."
 maskbits MANGA_DRP3PIXMASK  0  NOCOV       "No coverage in cube"
 maskbits MANGA_DRP3PIXMASK  1  LOWCOV      "Low coverage depth in cube"
 maskbits MANGA_DRP3PIXMASK  2  DEADFIBER   "Major contributing fiber is dead"
+maskbits MANGA_DRP3PIXMASK  3  FORESTAR    "Foreground star"
 maskbits MANGA_DRP3PIXMASK 10  DONOTUSE    "Do not use this spaxel for science"
 
 # MaNGA targeting bitmask for galaxy targets

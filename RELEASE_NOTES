@@ -1,3 +1,5 @@
+Add FORESTAR flag to MANGA_DRP3PIXMASK
+  [D. Law 2015-03-31]
 
 STRUCT_PRINT: Fixed bug that happened when setting custom format codes.
 
