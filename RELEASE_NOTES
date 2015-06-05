@@ -1,3 +1,16 @@
+Add code for generating SDSS file names: [MRB 2015-06-04]
+ PARSE_STRING_FORMAT
+ SDSS_FILENAME
+Currently depends on $SDSS_PYTHON_MODULE/data/sdss_paths.ini
+
+Add mglib directory for reading config files: [MRB 2015-06-04]
+ MGFFOPTIONS__DEFINE
+ MG_SUBS
+ MG_READ_CONFIG
+
+Add data/test/parse_string_formats for testing new sdss_filename
+routine [MRB 2015-06-04]
+
 -------------------------------------------------------------------------------
 v5_5_22 (2015-04-06)
 Tagged v 5_5_22
