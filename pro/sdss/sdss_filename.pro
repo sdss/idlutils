@@ -10,6 +10,7 @@
 ;   keywords - named keywords with values necessary to define 
 ;              file location on disk
 ; COMMENTS:
+;   Calls construct_filename()
 ; REVISION HISTORY:
 ;   2015-06-02: written, MRB, NYU
 ;-
@@ -40,38 +41,15 @@ function sdss_filename, filetype, _EXTRA=keywords
 
 common com_sdss_filename, config
 
+function_base= 'sdss_filename_'
+
 if(n_elements(config) eq 0) then begin
     inifile= getenv('SDSS_PYTHON_MODULE_DIR')+'/data/sdss_paths.ini'
     config=mg_read_config(inifile)
 endif
 
-;; get template
-filename= config->get(filetype, section='paths')
-
-;; handle python format variables
-filename= parse_string_format(filename, _EXTRA=keywords)
-
-;; handle environmental variables
-wordchars='\$([A-Za-z0-9_]*)'
-indx= stregex(filename, wordchars, length=length)
-while(indx ne -1) do begin
-    mid=strmid(filename, indx+1, length-1)
-    value= getenv(mid)
-    filename= strmid(filename, 0, indx)+value+strmid(filename, indx+length)
-    indx= stregex(filename, wordchars, length=length)
-endwhile
-
-;; execute functions
-wordchars='\%([A-Za-z0-9_]*)'
-indx= stregex(filename, wordchars, length=length)
-while(indx ne -1) do begin
-    mid=strmid(filename, indx+1, length-1)
-    value= call_function('sdss_filename_'+mid, _EXTRA=keywords)
-    filename= strmid(filename, 0, indx)+value+strmid(filename, indx+length)
-    indx= stregex(filename, wordchars, length=length)
-endwhile
-
-return, filename
+return, construct_filename(config, filetype, function_base=function_base, $
+                           _EXTRA=keywords)
 
 end
 

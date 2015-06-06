@@ -19,6 +19,7 @@ pro/mpfit/fakedata.sav -text svneol=unset#unset
 pro/plot/fsc_resize_image.pro -text
 pro/plot/ml_tvimage.pro -text
 pro/plot/tvread.pro -text
+pro/sdss/construct_filename.pro -text
 pro/sdss/parse_string_format.pro -text
 pro/sdss/sdss_astrombad.pro -text
 pro/sdss/sdss_filename.pro -text

@@ -1,6 +1,7 @@
 Add code for generating SDSS file names: [MRB 2015-06-04]
  PARSE_STRING_FORMAT
  SDSS_FILENAME
+ CONSTRUCT_FILENAME
 Currently depends on $SDSS_PYTHON_MODULE/data/sdss_paths.ini
 
 Add mglib directory for reading config files: [MRB 2015-06-04]
