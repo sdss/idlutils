@@ -1071,12 +1071,14 @@ maskbits MANGA_TARGET2      5  STELLIB_COM_mar2015 "Commissioning selection in M
 maskbits MANGA_TARGET2      6  STELLIB_COM_jun2015  "Commissioning selection in June 2015"
 maskbits MANGA_TARGET2      7  STELLIB_PS1  "Library stars using PS1 photometry"
 maskbits MANGA_TARGET2      8  STELLIB_APASS "Library stars using APASS photometry"
+maskbits MANGA_TARGET2      9  STELLIB_PHOTO_COM "Commissioning selection using photo-derived para"
 maskbits MANGA_TARGET2     20  STD_FSTAR_COM " "
 maskbits MANGA_TARGET2     21  STD_WD_COM " "
 maskbits MANGA_TARGET2     22  STD_STD_COM " "
 maskbits MANGA_TARGET2     23  STD_FSTAR " "
 maskbits MANGA_TARGET2     24  STD_WD " "
 maskbits MANGA_TARGET2     25  STD_APASS_COM "Commissioning selection of stds using APASS photometry"
+maskbits MANGA_TARGET2     26  STD_PS1_COM "Commissioning selection of stds using PS1 photometry"
 
 # MaNGA targeting bitmask for ancillary program targets
 masktype MANGA_TARGET3     64 "Mask bits identifying ancillary samples."
