@@ -25,6 +25,7 @@ pro/sdss/sdss_astrombad.pro -text
 pro/sdss/sdss_filename.pro -text
 pro/sdss/sdss_objid.pro -text
 pro/sdss/sdss_specobjid.pro -text
+pro/trace/README.traceset.txt -text
 pro/trace/ml_trace_crude.pro -text
 pro/trace/ml_trace_fweight.pro -text
 pro/wise/wise_ascii2fits.pro -text
