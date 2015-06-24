@@ -9,7 +9,7 @@
 ;   the specified axis.
 ;
 ; CALLING SEQUENCE:
-;   result = djs_laxisnum( dimens, [ iaxis= ] )
+;   result = djs_laxisnum( dimens, [ iaxis=iaxis ] )
 ;
 ; INPUT:
 ;   dimens:     Vector of the dimensions for the result.
@@ -24,50 +24,51 @@
 ;
 ; REVISION HISTORY:
 ;   15-Jun-2001  Written by D. Schlegel, Princeton
+;   2015-06-24 Code audit, BAW.
 ;-
 ;-----------------------------------------------------------------------
-function djs_laxisnum, dimens, iaxis=iaxis
+FUNCTION djs_laxisnum, dimens, iaxis=iaxis
+    ;
+    ; Need one parameter
+    ;
+    IF N_PARAMS() LT 1 THEN BEGIN
+        PRINT, 'Syntax - result = djs_laxisnum( dimens, [iaxis= ] )'
+        RETURN, -1
+    ENDIF
 
-   ; Need one parameter
-   if N_params() LT 1 then begin
-      print, 'Syntax - result = djs_laxisnum( dimens, [iaxis= ] )'
-      return, -1
-   endif
+    IF ~KEYWORD_SET(iaxis) THEN iaxis = 0
 
-   if (NOT keyword_set(iaxis)) then iaxis = 0
+    ndimen = N_ELEMENTS(dimens)
+    naxis = LONG(dimens) ; convert to type LONG
 
-   ndimen = N_elements(dimens)
-   naxis = long(dimens) ; convert to type LONG
+    IF iaxis GE ndimen THEN BEGIN
+        PRINT, 'Invalid axis selection!'
+        RETURN, -1
+    ENDIF
 
-   result = make_array(dimension=naxis, /long)
+    result = MAKE_ARRAY(DIMENSION=naxis, /LONG)
 
-   case ndimen of
-   1 : $
-      begin
-         result[*] = 0
-      end
-   2 : $
-      begin
-         case iaxis of
-            0: for ii=0, naxis[0]-1 do result[ii,*] = ii
-            1: for ii=0, naxis[1]-1 do result[*,ii] = ii
-         endcase
-      end
-   3 : $
-      begin
-         case iaxis of
-            0: for ii=0, naxis[0]-1 do result[ii,*,*] = ii
-            1: for ii=0, naxis[1]-1 do result[*,ii,*] = ii
-            2: for ii=0, naxis[2]-1 do result[*,*,ii] = ii
-         endcase
-      end
-   else : $
-      begin
-         print, ndimen, ' dimensions not supported'
-         result = -1
-      end
-   endcase
+    CASE ndimen OF
+        1 : result[*] = 0L
+        2 : BEGIN
+            CASE iaxis OF
+                0 : FOR ii=0L, naxis[0]-1L DO result[ii,*] = ii
+                1 : FOR ii=0L, naxis[1]-1L DO result[*,ii] = ii
+            ENDCASE
+        END
+        3 : BEGIN
+            CASE iaxis OF
+                0 : FOR ii=0L, naxis[0]-1L DO result[ii,*,*] = ii
+                1 : FOR ii=0L, naxis[1]-1L DO result[*,ii,*] = ii
+                2 : FOR ii=0L, naxis[2]-1L DO result[*,*,ii] = ii
+            ENDCASE
+        END
+        ELSE : BEGIN
+            PRINT, ndimen, ' dimensions not supported!'
+            result = -1
+        END
+    ENDCASE
 
-   return, result
-end 
+    RETURN, result
+END
 ;-----------------------------------------------------------------------

@@ -20,55 +20,34 @@
 ; OUTPUTS:
 ;   result:     Output array
 ;
+; NOTES:
+;   For any number of dimensions larger than 1, this routine simply calls
+;   djs_laxisnum().
+;
 ; PROCEDURES CALLED:
+;   djs_laxisnum()
 ;
 ; REVISION HISTORY:
 ;   Written by D. Schlegel, 7 Oct 1997, Durham
 ;   Modified 12 May 1998 to pass one vector with all dimensions.
+;   Removed code that was redunant with djs_laxisnum(), 2015-06-24, BAW.
 ;-
 ;-----------------------------------------------------------------------
-function djs_laxisgen, dimens, iaxis=iaxis
+FUNCTION djs_laxisgen, dimens, iaxis=iaxis
+    ;
+    ; Need one parameter
+    ;
+    IF N_PARAMS() LT 1 THEN BEGIN
+        PRINT, 'Syntax - result = djs_laxisgen( dimens, [iaxis=iaxis] )'
+        RETURN, -1
+    ENDIF
 
-   ; Need one parameter
-   if N_params() LT 1 then begin
-      print, 'Syntax - result = djs_laxisgen( dimens, [iaxis=iaxis] )'
-      return, -1
-   endif
+    IF ~KEYWORD_SET(iaxis) THEN iaxis = 0
 
-   if (NOT keyword_set(iaxis)) then iaxis = 0
+    ndimen = N_ELEMENTS(dimens)
+    naxis = LONG(dimens) ; convert to type LONG
 
-   ndimen = N_elements(dimens)
-   naxis = long(dimens) ; convert to type LONG
-
-   case ndimen of
-   1 : $
-      begin
-         result = lindgen(naxis[0])
-      end
-   2 : $
-      begin
-         D1 = naxis[0]
-         D2 = naxis[1]
-         if (iaxis EQ 0) then result = lindgen(D1,D2) MOD D1 $
-         else result = transpose( lindgen(D2,D1) MOD D2 )
-      end
-   3 : $
-      begin
-         nnax = N_elements(naxis)
-         tax = [naxis[iaxis], naxis(where(indgen(nnax) NE iaxis))]
-         result = lindgen( tax[0],tax[1],tax[2] ) MOD naxis[iaxis]
-         if (iaxis EQ 0) then pvec = [0] $
-         else pvec = [1+indgen(iaxis), 0]
-         if (iaxis NE nnax-1) then pvec = [pvec, iaxis+1+indgen(nnax-iaxis-1)]
-         result = transpose(result,pvec)
-      end
-   else : $
-      begin
-         print, ndimen, ' dimensions not supported'
-         result = -1
-      end
-   endcase
-
-   return, result
-end 
+    IF ndimen EQ 1 THEN RETURN, LINDGEN(naxis[0]) $
+    ELSE RETURN, djs_laxisnum(dimens,iaxis=iaxis)
+END
 ;-----------------------------------------------------------------------
