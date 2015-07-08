@@ -44,7 +44,7 @@ common com_sdss_filename, config
 function_base= 'sdss_filename_'
 
 if(n_elements(config) eq 0) then begin
-    inifile= getenv('SDSS_PYTHON_MODULE_DIR')+'/data/sdss_paths.ini'
+    inifile= getenv('TREE_DIR')+'/data/sdss_paths.ini'
     config=mg_read_config(inifile)
 endif
 
