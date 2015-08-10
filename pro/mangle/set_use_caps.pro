@@ -43,8 +43,9 @@ if(NOT keyword_set(allow_doubles)) then begin
             if(is_cap_used(polygon[ipoly].use_caps,i)) then begin
                 for j=i+1L, polygon[ipoly].ncaps-1L do begin
                     if(is_cap_used(polygon[ipoly].use_caps,j)) then begin
-                        if(total((*polygon[ipoly].caps)[i].x- $
-                                 (*polygon[ipoly].caps)[j].x)^2 lt tol^2) $
+                        if(total(((*polygon[ipoly].caps)[i].x- $
+                                  (*polygon[ipoly].caps)[j].x)^2, /double) $
+                           lt tol^2) $
                           then begin 
                             if(abs((*polygon[ipoly].caps)[i].cm- $
                                    (*polygon[ipoly].caps)[j].cm) lt tol) then $
