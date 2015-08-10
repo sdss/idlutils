@@ -8,6 +8,7 @@ data/test/parse_string_format/test_parse_string_format.pro -text
 data/test/parse_string_format/test_parse_string_format.py -text
 data/test/parse_string_format/test_types.pro -text
 data/test/parse_string_format/test_types.txt -text
+etc/idlutils.module -text
 goddard/text/coyote.readme -text
 pro/coord/ha2airmass.pro -text
 pro/fits/mrdfits_rows.pro -text
