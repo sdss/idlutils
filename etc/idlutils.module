@@ -69,17 +69,18 @@ setenv [string toupper $product]_DIR $PRODUCT_DIR
 #
 # Add any non-standard Module code below this point.
 #
+#module load idl
 module load dust
-module load first
+#module load first
 module load photolog
-module load rc3
-module load rass
-module load gsc
+#module load rc3
+#module load rass
+#module load gsc
 module load twomass
-module load twomass_xsc
-module load tycho2
-module load ucac
+#module load twomass_xsc
+#module load tycho2
+#module load ucac
 module load usno
-module load ucac3
-module load ucacr14
-module load wise
+#module load ucac3
+#module load ucacr14
+#module load wise
