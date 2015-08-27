@@ -990,6 +990,7 @@ maskbits MANGA_DRP3QUAL  5 VARIABLELSF " LSF varies signif. between component sp
 maskbits MANGA_DRP3QUAL  6 BADOMEGA " Omega greater than threshhold in one or more sets"
 maskbits MANGA_DRP3QUAL  7 BADSET " One or more sets are bad"
 maskbits MANGA_DRP3QUAL  8 BADFLUX " Bad flux calibration"
+maskbits MANGA_DRP3QUAL  9 BADPSF " PSF estimate may be bad"
 maskbits MANGA_DRP3QUAL 30 CRITICAL " Critical failure in one or more frames"
 
 # DAP quality flag bitmask
@@ -1058,7 +1059,7 @@ maskbits MANGA_TARGET1    10  PRIMARY_v1_2_0 " "
 maskbits MANGA_TARGET1    11  SECONDARY_v1_2_0 " "
 maskbits MANGA_TARGET1    12  COLOR_ENHANCED_v1_2_0 " "
 maskbits MANGA_TARGET1    13  FILLER " Filler targets"
-maskbits MANGA_TARGET1    14  ANCILLARY " Ancillary program targets"
+maskbits MANGA_TARGET1    14  RETIRED " Bit retired from use"
 
 # MaNGA targeting bitmask for non-galaxy targets
 masktype MANGA_TARGET2     64 "Mask bits identifying non-galaxy samples."

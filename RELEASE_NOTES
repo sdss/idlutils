@@ -1,3 +1,7 @@
+Retire ANCILLARY bit in manga_target1.
+Add BADPSF bit to DRP3QUAL
+  [D. Law 2015-08-24]
+
 Unify the code in DJS_LAXISNUM and DJS_LAXISGEN to prevent possible future
 code rot. [BAW 2015-06-24]
 
