@@ -1,3 +1,6 @@
+Add BADFLEXURE bit to DRP2QUAL
+  [D. Law 2015-08-31]
+
 Retire ANCILLARY bit in manga_target1.
 Add BADPSF bit to DRP3QUAL
   [D. Law 2015-08-24]

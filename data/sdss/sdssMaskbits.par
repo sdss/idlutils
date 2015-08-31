@@ -978,6 +978,7 @@ maskbits MANGA_DRP2QUAL  9 RAMPAGINGBUNNY " Rampaging dust bunnies in IFU flats"
 maskbits MANGA_DRP2QUAL 10 SKYSUBBAD  "Bad sky subtraction"
 maskbits MANGA_DRP2QUAL 11 SKYSUBFAIL  "Failed sky subtraction"
 maskbits MANGA_DRP2QUAL 12 FULLCLOUD "Completely cloudy exposure"
+maskbits MANGA_DRP2QUAL 13 BADFLEXURE " Abnormally high flexure LSF correction"
 
 # DRP-3d quality flag bitmask
 masktype MANGA_DRP3QUAL 64 "Mask bits for MaNGA DRP-3d quality flags"
