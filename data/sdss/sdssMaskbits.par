@@ -658,6 +658,7 @@ maskbits EBOSS_TARGET2 43 ELG_SDSS_TEST1  	"SDSS-only selection for test1 ELG pl
 maskbits EBOSS_TARGET2 44 ELG_UGRIZW_TEST1  	"WISE selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 45 ELG_UGRIZWbright_TEST1  	"WISE selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 46 ELG_GRIW_TEST1  	"WISE selection for test1 ELG plates"
+maskbits EBOSS_TARGET2 47 ELG_DECALS_TEST1  	"DECALS ELG selection, added sept 2015"
 
 #
 #------------------------------------------------------------------------------
