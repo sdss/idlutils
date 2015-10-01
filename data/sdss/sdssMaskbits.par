@@ -581,31 +581,6 @@ maskbits EBOSS_TARGET0 35 TDSS_FES_VARBAL           "TDSS Few epoch spectroscopy
 maskbits EBOSS_TARGET0 40 SEQUELS_PTF_VARIABLE          "Variability objects from PTF"
 maskbits EBOSS_TARGET0 41 SEQUELS_COLLIDED          "Collided galaxies from BOSS"
 #
-#------------------------------------------------------------------------------
-#-------- eboss target1 bitmask (for eBOSS)
-# below commented out is the old version (which I'll get rid of soon, but just for reference...)
-#masktype EBOSS_TARGET1 64 "targeting bitmask for eBOSS"
-#maskbits EBOSS_TARGET1 0 DO_NOT_OBSERVE             "Don't put a fiber on this object"
-#maskbits EBOSS_TARGET1 1 LRG_IZW                "LRG selection in i/z/W plane"
-#maskbits EBOSS_TARGET1 2 LRG_RIW                "LRG selection in r/i/W plan with (i-z) cut"
-#maskbits EBOSS_TARGET1 3 LRG_IDROP                "LRG selection in r/i/W plan with (i-z) cut"
-#maskbits EBOSS_TARGET1 9  QSO_VAR_S82               "Variability-selected QSOs in the repeated Stripe 82 imaging"
-#maskbits EBOSS_TARGET1 10 QSO_EBOSS_CORE            "QSOs in XDQSOz+WISE selection for clustering"
-#maskbits EBOSS_TARGET1 11 QSO_PTF               "QSOs with variability in PTF imaging"
-#maskbits EBOSS_TARGET1 12 QSO_REOBS             "QSOs from BOSS to be reobserved"
-#maskbits EBOSS_TARGET1 13 QSO_EBOSS_KDE             "KDE-selected QSOs (sequels only)"
-#maskbits EBOSS_TARGET1 14 QSO_EBOSS_FIRST           "Ojbects with FIRST radio matches"
-#maskbits EBOSS_TARGET1 15 QSO_BAD_BOSS              "QSOs from BOSS with bad spectra"
-#maskbits EBOSS_TARGET1 16 QSO_BOSS_TARGET           "Known TARGETS from BOSS with spectra"
-#maskbits EBOSS_TARGET1 17 QSO_SDSS_TARGET           "Known TARGETS from SDSS with spectra"
-#maskbits EBOSS_TARGET1 18 QSO_KNOWN             "Known QSOs from previous surveys"
-#maskbits EBOSS_TARGET1 19 DR9_CALIB_TARGET          "Target found in DR9-calibrated imaging"
-#maskbits EBOSS_TARGET1 30 TDSS_TARGET          "Target for TDSS (subclass found in eboss_target2)"
-#maskbits EBOSS_TARGET1 31 SPIDERS_TARGET          "Target for SPIDERS (subclass found in eboss_target2)"
-# standards
-#maskbits EBOSS_TARGET1 50 STD_FSTAR				"standard f-stars"
-#maskbits EBOSS_TARGET1 51 STD_WD            			"white dwarfs"
-#maskbits EBOSS_TARGET1 52 STD_QSO           			"qso"
 
 masktype EBOSS_TARGET1 64 "targeting bitmask for eBOSS"
 maskbits EBOSS_TARGET1 0 DO_NOT_OBSERVE             "Don't put a fiber on this object"
@@ -624,6 +599,9 @@ maskbits EBOSS_TARGET1 17 QSO_SDSS_TARGET           "Known TARGETS from SDSS wit
 maskbits EBOSS_TARGET1 18 QSO_KNOWN             "Known QSOs from previous surveys"
 maskbits EBOSS_TARGET1 30 TDSS_TARGET          "Target for TDSS (subclass found in eboss_target2)"
 maskbits EBOSS_TARGET1 31 SPIDERS_TARGET          "Target for SPIDERS (subclass found in eboss_target2)"
+maskbits EBOSS_TARGET1 32 S82X_TILE1		  " "
+maskbits EBOSS_TARGET1 33 S82X_TILE2		  " "
+maskbits EBOSS_TARGET1 34 S82X_TILE3		  " "
 maskbits EBOSS_TARGET1 40 ELG_TEST1          "Test targets for ELG selection"
 # standards
 maskbits EBOSS_TARGET1 50 STD_FSTAR				"standard f-stars"
@@ -651,6 +629,8 @@ maskbits EBOSS_TARGET2 28 TDSS_FES_HYPSTAR          "TDSS Few epoch spectroscopy
 maskbits EBOSS_TARGET2 29 TDSS_FES_WDDM          "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 30 TDSS_FES_ACTSTAR          "TDSS Few epoch spectroscopy"
 maskbits EBOSS_TARGET2 31 TDSS_CP  	"TDSS in common with CORE/PTF"
+maskbits EBOSS_TARGET2 32 TDSS_S82X_FES_HYPQSO	 " "
+maskbits EBOSS_TARGET2 33 TDSS_S82X_SESQSO	 " "
 maskbits EBOSS_TARGET2 40 ELG_SCUSS_TEST1  	"SCUSS selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 41 ELG_DES_TEST1  	"DES selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 42 ELG_DESI_TEST1  	"DESI selection for test1 ELG plates"
@@ -659,6 +639,19 @@ maskbits EBOSS_TARGET2 44 ELG_UGRIZW_TEST1  	"WISE selection for test1 ELG plate
 maskbits EBOSS_TARGET2 45 ELG_UGRIZWbright_TEST1  	"WISE selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 46 ELG_GRIW_TEST1  	"WISE selection for test1 ELG plates"
 maskbits EBOSS_TARGET2 47 ELG_DECALS_TEST1  	"DECALS ELG selection, added sept 2015"
+maskbits EBOSS_TARGET2 50 S82X_BRIGHT_TARGET 	" "
+maskbits EBOSS_TARGET2 51 S82X_XMM_TARGET 	" "
+maskbits EBOSS_TARGET2 52 S82X_WISE_TARGET 	" "
+maskbits EBOSS_TARGET2 53 S82X_SACLAY_VAR_TARGET 	" "
+maskbits EBOSS_TARGET2 54 S82X_SACLAY_BDT_TARGET 	" "
+maskbits EBOSS_TARGET2 55 S82X_SACLAY_HIZ_TARGET 	" "
+maskbits EBOSS_TARGET2 56 S82X_RICHARDS15_PHOTOQSO_TARGET 	" "
+maskbits EBOSS_TARGET2 57 S82X_PETERS15_COLORVAR_TARGET 	" "
+maskbits EBOSS_TARGET2 58 S82X_LSSTZ4_TARGET 	" "
+maskbits EBOSS_TARGET2 59 S82X_UNWISE_TARGET 	" "
+maskbits EBOSS_TARGET2 60 S82X_GTRADMZ4_TARGET 	" "
+maskbits EBOSS_TARGET2 61 S82X_CLAGN1_TARGET 	" "
+maskbits EBOSS_TARGET2 62 S82X_CLAGN2_TARGET 	" "
 
 #
 #------------------------------------------------------------------------------
