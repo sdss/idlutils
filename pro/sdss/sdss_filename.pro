@@ -24,6 +24,16 @@ return, platedir
 
 end
 ;
+function sdss_filename_designdir, _EXTRA=keywords
+
+designid= keywords.designid
+designdir= string(designid/100, f='(i4.4)')+'XX'+'/'+ $
+  string(designid, f='(i6.6)')
+
+return, designdir
+
+end
+;
 function sdss_filename_plateid6, _EXTRA=keywords
 
 plateid= keywords.plateid
