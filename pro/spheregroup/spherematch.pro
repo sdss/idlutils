@@ -31,6 +31,9 @@
 ;                 absent or wrong, the C code is called twice,
 ;                 doubling execution time!
 ;
+; OPTIONAL KEYWORDS:
+;   /verbose    - Be verbose about warnings
+;
 ; OUTPUTS:
 ;   match1     - List of indices of matches in list 1; -1 if no matches
 ;   match2     - List of indices of matches in list 2; -1 if no matches
@@ -75,11 +78,13 @@
 ;          the code is called a second time (as before).
 ;   2014-09-09  Avoid calling C code if both sets of coordinates only contain
 ;          one object.
+;   2015-10-21  Be quiet about warnings regarding efficiency if not 
+;          explicitly told to be /verbose 
 ;-
 ;------------------------------------------------------------------------------
 PRO spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
                  distance12, maxmatch=maxmatch, chunksize=chunksize, $
-                 estnmatch=estnmatch
+                 estnmatch=estnmatch, verbose=verbose
     ;
     ; Set default return values
     ;
@@ -110,7 +115,7 @@ PRO spherematch, ra1, dec1, ra2, dec2, matchlength, match1, match2, $
         MESSAGE, 'ra2 and dec2 must have same length.'
     IF (matchlength LE 0L) THEN $
         MESSAGE, 'Need matchlength > 0'
-    IF (npoints2 GT npoints1) THEN $
+    IF (npoints2 GT npoints1 and KEYWORD_SET(verbose) ne 0) THEN $
         MESSAGE, 'spherematch works best when ra1, dec1 contain more points than ra2, dec2.', $
             /INFORMATIONAL
     ;
