@@ -1,3 +1,8 @@
+-------------------------------------------------------------------------------
+v5_5_24 (2015-10-21)
+
+SPHEREMATCH: make less verbose by default
+  [MRB 2015-10-21]
 pro/sdss/sdss_filename.pro: add designdir function
   [MRB 2015-10-09]
 
