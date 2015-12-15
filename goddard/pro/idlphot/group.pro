@@ -100,8 +100,8 @@ endfor
  if ( ngood GT 0 ) then $ 
           for i = 0, ngood-1 do ngroup[ where( ngroup EQ val[i] ) ] = i
 
- message,'Number of Groups: '+ strtrim(ngood,2), /INF 
- message,'Largest group size '+ strtrim(gmax,2) + ' stars',/INF
+; message,'Number of Groups: '+ strtrim(ngood,2), /INF 
+; message,'Largest group size '+ strtrim(gmax,2) + ' stars',/INF
 
  return
  end

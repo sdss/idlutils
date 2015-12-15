@@ -300,8 +300,8 @@ DONE:
         or (yc LT 0.5) or (yc GT nrow-1.5))
 ;
  badindex = where( badstar, Nbad)              ;Any stars outside image
- if ( Nbad GT 0 ) then message, /INF, $
-      'WARNING - ' + strn(nbad) + ' star positions outside image'
+; if ( Nbad GT 0 ) then message, /INF, $
+;      'WARNING - ' + strn(nbad) + ' star positions outside image'
       if keyword_set(flux) then begin 
           badval = !VALUES.F_NAN
 	  baderr = badval
