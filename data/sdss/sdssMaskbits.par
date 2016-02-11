@@ -597,6 +597,8 @@ maskbits EBOSS_TARGET1 15 QSO1_BAD_BOSS              "QSOs from BOSS with bad sp
 maskbits EBOSS_TARGET1 16 QSO_BOSS_TARGET           "Known TARGETS from BOSS with spectra"
 maskbits EBOSS_TARGET1 17 QSO_SDSS_TARGET           "Known TARGETS from SDSS with spectra"
 maskbits EBOSS_TARGET1 18 QSO_KNOWN             "Known QSOs from previous surveys"
+maskbits EBOSS_TARGET1 20 ELG1_EBOSS          "Standard DECALS ELG target selection"
+maskbits EBOSS_TARGET1 21 ELG1_EXTENDED          "Extended DECALS ELG target selection"
 maskbits EBOSS_TARGET1 30 TDSS_TARGET          "Target for TDSS (subclass found in eboss_target2)"
 maskbits EBOSS_TARGET1 31 SPIDERS_TARGET          "Target for SPIDERS (subclass found in eboss_target2)"
 maskbits EBOSS_TARGET1 32 S82X_TILE1		  " "
