@@ -78,7 +78,7 @@ pro wise_ascii2fits
             'wise-(allsky|allwise)-cat-part([0-9][0-9])\.gz', $
             /SUBEXPR, /EXTRACT)
         catalog = parts[1]
-        part = FIX(part[2])
+        part = FIX(parts[2])
         wise_ascii2fits_part, part=part
     ENDFOR
     RETURN
