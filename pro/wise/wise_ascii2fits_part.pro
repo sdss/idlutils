@@ -204,7 +204,7 @@ PRO wise_ascii2fits_part, part=part, nrowchunk=nrowchunk
     outfile1 = FILE_SEARCH(outdir, fitsfile, COUNT=ct1)
     outfile2 = FILE_SEARCH(outdir, radecfile, COUNT=ct2)
     IF (ct1 EQ 0) THEN BEGIN
-        wisefmt1, files[ifile], djs_filepath(fitsfile, root_dir=outdir), $
+        wisefmt1, files[0], djs_filepath(fitsfile, root_dir=outdir), $
             nrowchunk=nrowchunk, schemafile=schemafile
     ENDIF ELSE PRINT, 'Found an existing copy of catalog file: ' + outfile1[0]
     IF (ct2 EQ 0) THEN BEGIN
