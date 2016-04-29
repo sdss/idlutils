@@ -1,3 +1,6 @@
+Add NOGUIDER bit to MANGA_DRP2QUAL
+  [D. Law 2016-04-29]
+
 pro/wise/wise_ascii2fits.pro
     Actual functionality is broken off into wise_ascii2fits_part.pro.  This
     enables parallel conversion of ASCII files to FITS.
