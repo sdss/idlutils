@@ -992,12 +992,6 @@ maskbits MANGA_DRP3QUAL  8 BADFLUX " Bad flux calibration"
 maskbits MANGA_DRP3QUAL  9 BADPSF " PSF estimate may be bad"
 maskbits MANGA_DRP3QUAL 30 CRITICAL " Critical failure in one or more frames"
 
-# DAP quality flag bitmask
-masktype MANGA_DAPQUAL 64 "Mask bits for MaNGA DAP quality flags"
-maskbits MANGA_DAPQUAL  0 VALIDFILE "File is valid"
-
-
-
 # The following mask bits are for the 2D MANGA pipeline
 # 0-13 refer to each fiber, 15-30 refer to each pixel in a spectrum."
 # The following mask bits are for fibers
@@ -1041,6 +1035,44 @@ maskbits MANGA_DRP3PIXMASK  1  LOWCOV      "Low coverage depth in cube"
 maskbits MANGA_DRP3PIXMASK  2  DEADFIBER   "Major contributing fiber is dead"
 maskbits MANGA_DRP3PIXMASK  3  FORESTAR    "Foreground star"
 maskbits MANGA_DRP3PIXMASK 10  DONOTUSE    "Do not use this spaxel for science"
+
+# DAP overall quality flag bitmask
+masktype MANGA_DAPQUAL 64 "Mask bits for MaNGA DAP quality flags"
+maskbits MANGA_DAPQUAL  0 VALIDFILE "File is valid"
+maskbits MANGA_DAPQUAL  1 DAPSTAR "There is a FORESTAR region within the data cube"
+maskbits MANGA_DAPQUAL  2 BADZ "NSA redshift does not match derived redshift"
+maskbits MANGA_DAPQUAL  3 NOEMISSION "No emission lines in data cube"
+maskbits MANGA_DAPQUAL  4 PPXFFAIL "PPXF fails to fit this object"
+maskbits MANGA_DAPQUAL  5 MULTICOMP "Multi-component velocity features present"
+maskbits MANGA_DAPQUAL  28 DRPCRIT "Critical failure in DRP"
+maskbits MANGA_DAPQUAL  29 DAPCRIT "Critical failure in DAP"
+maskbits MANGA_DAPQUAL  30 CRITICAL "Critical failure in DRP or DAP"
+
+# DAP intermediate product bitmask used for spectra
+masktype MANGA_DAPSPECMASK 64 "Mask bits for MaNGA DAP intermediate spectra"
+maskbits MANGA_DAPSPECMASK  0 DIDNOTUSE "??"
+maskbits MANGA_DAPSPECMASK  1 FORESTAR "??"
+maskbits MANGA_DAPSPECMASK  2 LOWSNR "??"
+maskbits MANGA_DAPSPECMASK  3 LOWSPECCOV "??"
+maskbits MANGA_DAPSPECMASK  4 NONEINSTACK "??"
+maskbits MANGA_DAPSPECMASK  5 NOSTDDEV "??"
+maskbits MANGA_DAPSPECMASK  6 ARTIFACT "??"
+maskbits MANGA_DAPSPECMASK  7 OUTSIDERANGE "??"
+maskbits MANGA_DAPSPECMASK  8 EMLREGION "??"
+maskbits MANGA_DAPSPECMASK  9 TPLPIXELS "??"
+maskbits MANGA_DAPSPECMASK  10 TRUNCATED "??"
+
+# DAP maps product bitmask
+masktype MANGA_DAPPIXMASK 64 "Mask bits for MaNGA DAP maps"
+maskbits MANGA_DAPPIXMASK  0 NOCOV "No coverage in this spaxel"
+maskbits MANGA_DAPPIXMASK  1 LOWCOV "Low coverage in this spaxel"
+maskbits MANGA_DAPPIXMASK  2 DEADFIBER "Major contributing fiber is dead"
+maskbits MANGA_DAPPIXMASK  3 FORESTAR "Foreground star"
+maskbits MANGA_DAPPIXMASK  4 NOVALUE "Spaxel was not fit because it did not meet selection criteria"
+maskbits MANGA_DAPPIXMASK  5 BADVALUE "Value derived in this spaxel is unphysical"
+maskbits MANGA_DAPPIXMASK  6 MATHERROR "Mathematical error in computing value"
+maskbits MANGA_DAPPIXMASK  7 BADFIT "Fit producing this value is bad"
+maskbits MANGA_DAPPIXMASK  30 DONOTUSE "Do not use this spaxel for science"
 
 # MaNGA targeting bitmask for galaxy targets
 masktype MANGA_TARGET1     64 "Mask bits identifying galaxy samples."
