@@ -1038,12 +1038,10 @@ maskbits MANGA_DRP3PIXMASK 10  DONOTUSE    "Do not use this spaxel for science"
 
 # DAP overall quality flag bitmask
 masktype MANGA_DAPQUAL 64 "Mask bits for MaNGA DAP quality flags"
-maskbits MANGA_DAPQUAL  0 VALIDFILE "File is valid"
-maskbits MANGA_DAPQUAL  1 DAPSTAR "There is a FORESTAR region within the data cube"
-maskbits MANGA_DAPQUAL  2 BADZ "NSA redshift does not match derived redshift"
-maskbits MANGA_DAPQUAL  3 NOEMISSION "No emission lines in data cube"
-maskbits MANGA_DAPQUAL  4 PPXFFAIL "PPXF fails to fit this object"
-maskbits MANGA_DAPQUAL  5 MULTICOMP "Multi-component velocity features present"
+maskbits MANGA_DAPQUAL  0 FORESTAR "There is a foreground star within the data cube"
+maskbits MANGA_DAPQUAL  1 BADZ "NSA redshift does not match derived redshift"
+maskbits MANGA_DAPQUAL  2 LINELESS "No emission lines in data cube"
+maskbits MANGA_DAPQUAL  3 PPXFFAIL "PPXF fails to fit this object"
 maskbits MANGA_DAPQUAL  28 DRPCRIT "Critical failure in DRP"
 maskbits MANGA_DAPQUAL  29 DAPCRIT "Critical failure in DAP"
 maskbits MANGA_DAPQUAL  30 CRITICAL "Critical failure in DRP or DAP"
@@ -1072,6 +1070,8 @@ maskbits MANGA_DAPPIXMASK  4 NOVALUE "Spaxel was not fit because it did not meet
 maskbits MANGA_DAPPIXMASK  5 BADVALUE "Value derived in this spaxel is unphysical"
 maskbits MANGA_DAPPIXMASK  6 MATHERROR "Mathematical error in computing value"
 maskbits MANGA_DAPPIXMASK  7 BADFIT "Fit producing this value is bad"
+maskbits MANGA_DAPPIXMASK  8 RAW "Measurement not appropriately corrected"
+maskbits MANGA_DAPPIXMASK  9 MULTICOMP "Multi-component velocity features present"
 maskbits MANGA_DAPPIXMASK  30 DONOTUSE "Do not use this spaxel for science"
 
 # MaNGA targeting bitmask for galaxy targets
