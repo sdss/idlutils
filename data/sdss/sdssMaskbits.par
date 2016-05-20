@@ -961,7 +961,7 @@ maskbits APOGEE2_TARGET3 9 APOGEE2_MASSIVE_STAR "Selected as part of the Massive
 
 # DRP-2d quality flag bitmask
 masktype MANGA_DRP2QUAL 64 "Mask bits for MaNGA DRP-2d quality flags"
-maskbits MANGA_DRP2QUAL  0 VALIDFILE "File is valid"
+maskbits MANGA_DRP2QUAL  0 RETIRED "Bit retired from use"
 maskbits MANGA_DRP2QUAL  1 EXTRACTBAD "Many bad values in extracted frame"
 maskbits MANGA_DRP2QUAL  2 EXTRACTBRIGHT  "Extracted spectra abnormally bright"
 maskbits MANGA_DRP2QUAL  3 LOWEXPTIME  "Exposure time less than 10 minutes"
@@ -980,7 +980,7 @@ maskbits MANGA_DRP2QUAL 15 NOGUIDER " No guider data available"
 
 # DRP-3d quality flag bitmask
 masktype MANGA_DRP3QUAL 64 "Mask bits for MaNGA DRP-3d quality flags"
-maskbits MANGA_DRP3QUAL  0 VALIDFILE "File is valid"
+maskbits MANGA_DRP3QUAL  0 RETIRED "Bit retired from use"
 maskbits MANGA_DRP3QUAL  1 BADDEPTH  "IFU does not reach target depth"
 maskbits MANGA_DRP3QUAL  2 SKYSUBBAD " Bad sky subtraction in one or more frames"
 maskbits MANGA_DRP3QUAL  3 HIGHSCAT " High scattered light in one or more frames"
