@@ -1,3 +1,6 @@
+-------------------------------------------------------------------------------
+v5_5_25 (2016-05-24)
+
 Retired the VALIDFILE bits in MANGA_DRP2QUAL and MANGA_DRP3QUAL.
   [D. Law 2016-05-20]
 
