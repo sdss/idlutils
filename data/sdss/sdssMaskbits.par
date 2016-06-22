@@ -605,6 +605,8 @@ maskbits EBOSS_TARGET1 34 S82X_TILE3		  " "
 maskbits EBOSS_TARGET1 40 ELG_TEST1          "Test targets for ELG selection"
 maskbits EBOSS_TARGET1 41 ELG1_EBOSS          "Standard DECALS ELG target selection"
 maskbits EBOSS_TARGET1 42 ELG1_EXTENDED          "Extended DECALS ELG target selection"
+maskbits EBOSS_TARGET1 42 ELG1_SGC          "Final ELG selection, SGC data"
+maskbits EBOSS_TARGET1 42 ELG1_NGC          "Final ELG selection, NGC data"
 # standards
 maskbits EBOSS_TARGET1 50 STD_FSTAR				"standard f-stars"
 maskbits EBOSS_TARGET1 51 STD_WD            			"white dwarfs"
