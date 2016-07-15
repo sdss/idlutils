@@ -1059,8 +1059,8 @@ maskbits MANGA_DAPSPECMASK  1 FORESTAR "There is a foreground star within the da
 maskbits MANGA_DAPSPECMASK  2 FLUXINVALID "Ignored because (stacked) flux not valid"
 maskbits MANGA_DAPSPECMASK  3 IVARINVALID "Ignored because inverse variance not valid"
 maskbits MANGA_DAPSPECMASK  4 ARTIFACT "Contains a designated artifact"
-maskbits MANGA_DAPSPECMASK  5 SCIGNORED "Ignored during stellar-continuum fit"
-maskbits MANGA_DAPSPECMASK  6 SCFAILED "Stellar-continuum fit failed"
+maskbits MANGA_DAPSPECMASK  5 FITIGNORED "Ignored during fit"
+maskbits MANGA_DAPSPECMASK  6 FITFAILED "Fit failed in this region"
 maskbits MANGA_DAPSPECMASK  7 ELIGNORED "Ignored during emission-line fit"
 maskbits MANGA_DAPSPECMASK  8 ELFAILED "Emission-line fit failed"
 
