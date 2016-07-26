@@ -1,4 +1,11 @@
 -------------------------------------------------------------------------------
+v5_5_26 (2016-07-26)
+
+Finalized MANGA_DAPQUAL, MANGA_DAPSPECMASK, and MANGA_DAPPIXMASK mask
+types for MaNGA DAP MPL-5 release.
+    [K. Westfall 2016-07-26]
+
+-------------------------------------------------------------------------------
 v5_5_25 (2016-05-24)
 
 Retired the VALIDFILE bits in MANGA_DRP2QUAL and MANGA_DRP3QUAL.
