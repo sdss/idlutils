@@ -33,8 +33,8 @@
 ;------------------------------------------------------------------------------
 pro write_ecsv, filename, pdata, description=description1, unit=unit1
 
-   tname = ['string', 'int16', 'int16', 'int32', 'int64', 'float32', 'float64']
-   idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'LONG64', 'FLOAT', 'DOUBLE']
+   tname = ['string', 'int16', 'int16', 'int32', 'int64', 'float32', 'float64', 'uint16']
+   idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'LONG64', 'FLOAT', 'DOUBLE', 'UINT']
 
    extname = tag_names(pdata, /structure_name)
    if (NOT keyword_set(extname)) then extname = 'STRUCT1'
