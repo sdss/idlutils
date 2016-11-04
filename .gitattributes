@@ -18,6 +18,7 @@ pro/mglib/mg_read_config.pro -text
 pro/mglib/mg_subs.pro -text
 pro/mglib/mgffoptions__define.pro -text
 pro/misc/ml_expand.pro -text
+pro/misc/write_ecsv.pro -text
 pro/mpfit/fakedata.sav -text svneol=unset#unset
 pro/plot/fsc_resize_image.pro -text
 pro/plot/ml_tvimage.pro -text
