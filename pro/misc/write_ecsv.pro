@@ -6,7 +6,7 @@
 ;   Write ECSV file
 ;
 ; CALLING SEQUENCE:
-;   write_ecsv, filename, pdata, [ description=, unit= ]
+;   write_ecsv, filename, pdata, [ description=, unit=, extname= ]
 ;
 ; INPUTS:
 ;   filename   - Output file name
@@ -15,6 +15,7 @@
 ; OPTIONAL INPUTS:
 ;   description- String array with description of each column
 ;   unit       - String array with units of each column
+;   extname    - If set, then use this for the structure name
 ;
 ; OUTPUTS:
 ;
@@ -31,13 +32,12 @@
 ;   04-Nov-2016  Written by D. Schlegel, Berkeley Lab
 ;-
 ;------------------------------------------------------------------------------
-pro write_ecsv, filename, pdata, description=description1, unit=unit1
+pro write_ecsv, filename, pdata, description=description1, unit=unit1, $
+ extname=extname1
 
    tname = ['string', 'int16', 'int16', 'int32', 'int64', 'float32', 'float64', 'uint16']
    idlname = ['STRING', 'BYTE', 'INT', 'LONG', 'LONG64', 'FLOAT', 'DOUBLE', 'UINT']
 
-   extname = tag_names(pdata, /structure_name)
-   if (NOT keyword_set(extname)) then extname = 'STRUCT1'
    tags = tag_names(pdata)
    ntag = n_elements(tags)
    if (keyword_set(description1)) then description = description1 $
@@ -48,6 +48,9 @@ pro write_ecsv, filename, pdata, description=description1, unit=unit1
     else unit = strarr(ntag)
    if (n_elements(unit) NE ntag) then $
     message, 'Wrong number of elements in UNIT!'
+   if (keyword_set(extname1)) then extname = extname1 $
+    else extname = tag_names(pdata, /structure_name)
+   if (NOT keyword_set(extname)) then extname = 'STRUCT1'
 
    get_lun, olun
    openw, olun, filename
