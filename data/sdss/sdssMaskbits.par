@@ -1116,6 +1116,9 @@ maskbits MANGA_TARGET2      8  STELLIB_APASS "Library stars using APASS photomet
 maskbits MANGA_TARGET2      9  STELLIB_PHOTO_COM "Commissioning selection using photo-derived para"
 maskbits MANGA_TARGET2     10  STELLIB_aug2015 "Global Selection generated in Aug 2015"
 maskbits MANGA_TARGET2     11  STELLIB_SDSS "Library stars using SDSS photometry"
+maskbits MANGA_TARGET2     12  STELLIB_GAIA "Library stars using GAIA photometry, g band only"
+maskbits MANGA_TARGET2     13  STELLIB_TYCHO2 "Library stars using TYCHO2 photometry (B and V in place of u and r)"
+maskbits MANGA_TARGET2     14  STELLIB_BRIGHT "bright stars observed with short exposures"
 maskbits MANGA_TARGET2     20  STD_FSTAR_COM " "
 maskbits MANGA_TARGET2     21  STD_WD_COM " "
 maskbits MANGA_TARGET2     22  STD_STD_COM " "
@@ -1123,6 +1126,7 @@ maskbits MANGA_TARGET2     23  STD_FSTAR " "
 maskbits MANGA_TARGET2     24  STD_WD " "
 maskbits MANGA_TARGET2     25  STD_APASS_COM "Commissioning selection of stds using APASS photometry"
 maskbits MANGA_TARGET2     26  STD_PS1_COM "Commissioning selection of stds using PS1 photometry"
+maskbits MANGA_TARGET2     27  STD_BRIGHT "standards on bright star plates"
 
 # MaNGA targeting bitmask for ancillary program targets
 masktype MANGA_TARGET3     64 "Mask bits identifying ancillary samples."
