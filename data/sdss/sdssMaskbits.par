@@ -1021,6 +1021,7 @@ maskbits MANGA_DRP2PIXMASK 11 SMEARHIGHSN     "S/N sufficient for full smear fit
 maskbits MANGA_DRP2PIXMASK 12 SMEARMEDSN      "S/N only sufficient for scaled median fit"
 maskbits MANGA_DRP2PIXMASK 13 DEADFIBER       "Broken fiber according to metrology files"
 # The following mask bits are for a pixel
+maskbits MANGA_DRP2PIXMASK 14 SATURATION      "Pixel considered saturated"
 maskbits MANGA_DRP2PIXMASK 15 BADPIX          "Pixel flagged in badpix reference file."
 maskbits MANGA_DRP2PIXMASK 16 COSMIC          "Pixel flagged as cosmic ray."
 maskbits MANGA_DRP2PIXMASK 17 NEARBADPIXEL    "Bad pixel within 3 pixels of trace."
