@@ -43,6 +43,9 @@ function gaia_read, racen, deccen, rad, dr=dr
   spherematch, gaia_index.racen, gaia_index.deccen, racen, deccen, $
                rad + 1., m1, m2, d12, maxmatch=0
 
+  uu = uniq(m1,sort(m1))
+  m1 = m1[uu]
+
   if(m1[0] eq -1) then $
      message, 'GAIA data should exist everywhere.'
   
