@@ -59,11 +59,14 @@ function mrdfits_many, files, exten1, _EXTRA=EXTRA
    ; Count the total number of elements in all files
    nper = lonarr(nfile)
    for i=0L, nfile-1L do begin
+print,i,string(13b),format='(i6,a,$)'
       hdr1 = headfits(allfiles[i], exten=exten)
-      nper[i] = sxpar(hdr1, 'NAXIS2')
+      if (size(hdr1,/tname) EQ 'STRING') then $
+       nper[i] = sxpar(hdr1, 'NAXIS2')
       if (nper[i] GT 0 AND keyword_set(res1) EQ 0) then $
-       res1 = mrdfits(allfiles[i], exten, range=[0,0], _EXTRA=EXTRA)
+       res1 = mrdfits(allfiles[i], exten, range=[0,0], _EXTRA=EXTRA, /silent)
    endfor
+print
    ntot = total(nper)
 
    ; Create the blank output structure
@@ -74,13 +77,16 @@ function mrdfits_many, files, exten1, _EXTRA=EXTRA
    ; Now loop over and read the data
    ntot = 0L
    for i=0L, nfile-1L do begin
+print,i,string(13b),format='(i6,a,$)'
       if (nper[i] GT 0) then begin
-         res1 = mrdfits(allfiles[i], exten, _EXTRA=EXTRA)
+         res1 = mrdfits(allfiles[i], exten, _EXTRA=EXTRA, /silent)
          if (n_elements(res1) NE nper[i]) then $
           message, 'File length changed between access times '+allfiles[i]
          res[ntot:ntot+nper[i]-1] = res1
+         ntot += nper[i]
       endif
    endfor
+print
 
    return, res
 end 
