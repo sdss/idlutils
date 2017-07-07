@@ -22,20 +22,43 @@
 ; OPTIONAL OUTPUTS:
 ;
 ; COMMENTS:
-;   This will only work if all of the structure types are identical.
+;   This function will be fast if the structures are identical and
+;   can therefore be copied in memory.  If they are not identical, then
+;   the first non-empty file defines the structure, and matching column names
+;   from other structures are copied using COPY_STRUCT_INX.
 ;
 ; EXAMPLES:
 ;
 ; BUGS:
-;   This could be made to be robust to data structures that are not
-;   identical format.
 ;
 ; PROCEDURES CALLED:
+;   copy_struct_inx
 ;   mrdfits()
 ;
 ; REVISION HISTORY:
 ;   14-Jun-2017  Written by David Schlegel, Berkeley Lab
 ;-
+;------------------------------------------------------------------------------
+; Return 1 if the two structures are the same and can therefore be appended
+; Each should be a scalar structure
+function mrdfits_many_same, res1, res2
+
+   ntag1 = n_tags(res1)
+   ntag2 = n_tags(res2)
+   if (ntag1 NE ntag2) then return, 0B
+
+   tag1 = tag_names(res1)
+   tag2 = tag_names(res2)
+   if (total(tag1 NE tag2) GT 0) then return, 0B
+
+   for i=0, ntag1-1 do $
+    if (size(res1.(i),/type) NE size(res2.(i),/type)) then return, 0B
+
+   for i=0, ntag1-1 do $
+    if (n_elements(res1.(i)) NE n_elements(res2.(i))) then return, 0B
+
+   return, 1B
+end
 ;------------------------------------------------------------------------------
 function mrdfits_many, files, exten1, _EXTRA=EXTRA
 
@@ -66,7 +89,6 @@ print,i,string(13b),format='(i6,a,$)'
       if (nper[i] GT 0 AND keyword_set(res1) EQ 0) then $
        res1 = mrdfits(allfiles[i], exten, range=[0,0], _EXTRA=EXTRA, /silent)
    endfor
-print
    ntot = total(nper)
 
    ; Create the blank output structure
@@ -82,7 +104,13 @@ print,i,string(13b),format='(i6,a,$)'
          res1 = mrdfits(allfiles[i], exten, _EXTRA=EXTRA, /silent)
          if (n_elements(res1) NE nper[i]) then $
           message, 'File length changed between access times '+allfiles[i]
-         res[ntot:ntot+nper[i]-1] = res1
+         ; Directly copy in the structure contents if identical, otherwise
+         ; do the slower copy of only matching elements
+         if (mrdfits_many_same(res[0],res1[0])) then $
+          res[ntot:ntot+nper[i]-1] = res1 $
+         else $
+          copy_struct_inx, res1, res, index_from=lindgen(nper[i]), $
+           index_to=ntot+lindgen(nper[i])
          ntot += nper[i]
       endif
    endfor
