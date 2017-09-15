@@ -1002,6 +1002,7 @@ maskbits MANGA_DRP3QUAL  7 BADSET " One or more sets are bad"
 maskbits MANGA_DRP3QUAL  8 BADFLUX " Bad flux calibration"
 maskbits MANGA_DRP3QUAL  9 BADPSF " PSF estimate may be bad"
 maskbits MANGA_DRP3QUAL 10 MANYDEAD " Many dead fibers"
+maskbits MANGA_DRP3QUAL 11 BADHELIORV " MASTAR: High variance between stellar RVs"
 maskbits MANGA_DRP3QUAL 30 CRITICAL " Critical failure in one or more frames"
 
 # The following mask bits are for the 2D MANGA pipeline
