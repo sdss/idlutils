@@ -1090,7 +1090,7 @@ maskbits MANGA_DAPPIXMASK 10 MULTICOMP "Multi-component velocity features presen
 maskbits MANGA_DAPPIXMASK 30 DONOTUSE "Do not use this spaxel for science"
 
 # MaStar quality flag bitmask
-maskbits MASTAR_QUAL 64 "Mask bits for MaStar spectra"
+masktype MASTAR_QUAL 64 "Mask bits for MaStar spectra"
 maskbits MASTAR_QUAL  0 NODATA "No Data"
 maskbits MASTAR_QUAL  1 POORCAL "Poor flux calibration"
 maskbits MASTAR_QUAL  2 LOWCOV "PSF-covering fraction by fiber is too small (<10%)"
