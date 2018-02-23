@@ -1018,6 +1018,7 @@ maskbits MASTAR_QUAL  4 LOWCOV " PSF-covering fraction by fiber is too small (<1
 maskbits MASTAR_QUAL  5 POORCAL " Poor throughput"
 maskbits MASTAR_QUAL  6 BADHELIORV " High variance between stellar RVs"
 maskbits MASTAR_QUAL  7 MANUAL " Flagged as problematic by visual inspection"
+maskbits MASTAR_QUAL  8 EMLINE " Spectrum contain emission lines"
 maskbits MASTAR_QUAL 30 CRITICAL " Critical failure in one or more frames"
 
 # The following mask bits are for the 2D MANGA pipeline
