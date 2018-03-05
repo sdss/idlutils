@@ -1,4 +1,10 @@
 -------------------------------------------------------------------------------
+v5_5_31 (2018-03-05)
+
+Includes new MaSTAR maskbits, retired MANGA_DRP3QUAL bit 11 (BADHELIORV; moved
+to MASTAR_QUAL maskbit)
+
+-------------------------------------------------------------------------------
 v5_5_30 (2017-10-06)
 
 Includes new MASTAR quality bits, MANGA DAP quality bits, and MANGA ancillary
