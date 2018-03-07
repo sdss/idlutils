@@ -1,4 +1,9 @@
 -------------------------------------------------------------------------------
+v5_5_32 (2018-03-07)
+
+Include LOWSN maskbit for MASTAR_QUAL.
+
+-------------------------------------------------------------------------------
 v5_5_31 (2018-03-05)
 
 Includes new MaSTAR maskbits, retired MANGA_DRP3QUAL bit 11 (BADHELIORV; moved
