@@ -1090,6 +1090,7 @@ maskbits MANGA_DAPSPECMASK  5 FITIGNORED "Ignored during fit"
 maskbits MANGA_DAPSPECMASK  6 FITFAILED "Fit failed in this region"
 maskbits MANGA_DAPSPECMASK  7 ELIGNORED "Ignored during emission-line fit"
 maskbits MANGA_DAPSPECMASK  8 ELFAILED "Emission-line fit failed"
+maskbits MANGA_DAPSPECMASK  8 NOMODEL "Identifies pixels outside of the fitted spectral range"
 
 # DAP maps product bitmask
 masktype MANGA_DAPPIXMASK 64 "Mask bits for MaNGA DAP maps"
