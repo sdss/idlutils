@@ -1,4 +1,9 @@
 * text=auto !eol
+data/filters/ps1_g.txt -text
+data/filters/ps1_i.txt -text
+data/filters/ps1_r.txt -text
+data/filters/ps1_y.txt -text
+data/filters/ps1_z.txt -text
 data/test/parse_string_format/README -text
 data/test/parse_string_format/test-idl.txt -text
 data/test/parse_string_format/test-python.txt -text
