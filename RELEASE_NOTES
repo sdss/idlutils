@@ -1,7 +1,9 @@
 -------------------------------------------------------------------------------
-v5_5_33 (2018-03-07)
+v5_5_33 (2018-09-14)
 
-Include NOMODEL maskbit for MANGA_DAPSPECMASK.
+Include PanSTARRS1 filters
+Add NOMODEL bit to MANGA_DAPSPECMASK
+Add GAIADR2 bit to MANGA_TARGET2
 
 -------------------------------------------------------------------------------
 v5_5_32 (2018-03-07)
