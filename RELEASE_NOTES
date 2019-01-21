@@ -1,3 +1,6 @@
+Added PSF bit to MANGA_TARGET2 for use with plate 7444
+  [D. Law 2019-01-21]
+
 -------------------------------------------------------------------------------
 v5_5_33 (2018-09-14)
 
@@ -22,7 +25,7 @@ v5_5_30 (2017-10-06)
 Includes new MASTAR quality bits, MANGA DAP quality bits, and MANGA ancillary
 target bits.
 
-Added NOSPEC1 and NOSPEC2 bit2 to MANGA_DRP2QUAL
+Added NOSPEC1 and NOSPEC2 bits to MANGA_DRP2QUAL
   [D. Law 2017-08-06]
 
 -------------------------------------------------------------------------------
