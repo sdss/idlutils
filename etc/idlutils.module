@@ -85,3 +85,4 @@ module load usno
 #module load ucac3
 #module load ucacr14
 #module load wise
+module load goddard
