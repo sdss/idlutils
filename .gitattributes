@@ -15,7 +15,6 @@ data/test/parse_string_format/test_types.pro -text
 data/test/parse_string_format/test_types.txt -text
 etc/config.ini -text
 etc/idlutils.module -text
-goddard/text/coyote.readme -text
 pro/astrom/gaia_read.pro -text
 pro/coord/ha2airmass.pro -text
 pro/fits/mrdfits_many.pro -text
