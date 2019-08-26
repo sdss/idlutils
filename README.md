@@ -4,7 +4,9 @@ A collection of IDL functions and routines used by a variety of SDSS software.
 
 ## Versioning
 
-As of 6.0.0 we are using [bumpversion](https://github.com/peritus/bumpversion) to set the current version of idlutils. This replaces the previous system that used SVN variable substitution, which was deprecated with the migration to GitHub.
+Version 6.0.0 is the first one using `X.Y.Z.` instead of the previous `vX_Y_Z` syntax. If your product does idlutils version parsing you may need to update your code to handle both types of version string.
+
+We use [bumpversion](https://github.com/peritus/bumpversion) to set the current version of idlutils. This replaces the previous system that used SVN variable substitution, which was deprecated with the migration to GitHub.
 
 To install `bumpversion` run
 
