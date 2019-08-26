@@ -1,3 +1,12 @@
+-------------------------------------------------------------------------------
+6.0.0 (2019-08-26)
+
+Removed internal Coyote and Goddard libraries
+Migrated the product to GitHub.
+Using bumpversion to deal with versioning since Git does not allow the kind of
+variable substitution that idlutils_version used.
+  [J. Sánchez-Gallego 2019-08-26]
+
 Added PSF bit to MANGA_TARGET2 for use with plate 7444
   [D. Law 2019-01-21]
 
