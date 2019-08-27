@@ -2,6 +2,16 @@
 
 A collection of IDL functions and routines used by a variety of SDSS software.
 
+## Should I be using the SVN version instead?
+
+Until the end of SDSS-IV `idlutils` is maintained as a [SVN repository](https://trac.sdss.org/browser/repo/sdss/idlutils) and a GitHub repo (this one). SVN development happens as `v5_x`, while Git development uses the `6.x` series. The SVN `trunk` and the GitHub `master` branches will **not** synced until the end of SDSS-IV. `v5` tags are synced from SVN to GitHub every now and then. The `6.0.0` tag introduces breaking changes (see below).
+
+So, what version should you be using? If you're developing SDSS-IV software (e.g., `mangadrp`, or the `apogee` pipeline), you probably want to keep using the `v5` branch and do your changes in SVN. If you're developing for SDSS-V you *should* be using the `6.x` tags and develop against the GitHub repository.
+
+## External libraries
+
+Version 6.x does not ship with the [Goddard](https://github.com/wlandsman/IDLAstro) and [Coyote](https://github.com/idl-coyote/coyote) libraries but `idlutils` still depends on them. You need to make sure that they are available in your `IDL_PATH`. Alternatively, you can use [sdss_install](https://github.com/sdss/sdss_install) to checkout a copy of `idlutils` while also installing Coyote and the Goddard libraries as modules.
+
 ## Versioning
 
 Version 6.0.0 is the first one using `X.Y.Z.` instead of the previous `vX_Y_Z` syntax. If your product does idlutils version parsing you may need to update your code to handle both types of version string.
