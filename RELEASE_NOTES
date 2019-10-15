@@ -1,3 +1,10 @@
+Added BLOWTORCH and BLOWTORCHFAIL bits to MANGA_DRP2QUAL, MANGA_DRP3QUAL,
+MASTAR_QUAL
+  [D. Law 2019-10-15]
+
+-------------------------------------------------------------------------------
+v5_5_34 (2019-09-27)
+
 Added MULTIFIBER bit to MASTAR_QUAL for when central fiber saturates.
   [D. Law 2019-08-16]
 
