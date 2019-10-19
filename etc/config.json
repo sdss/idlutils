@@ -1,0 +1,20 @@
+{
+    "coyote": {
+        "install_product": {
+            "url": "https://github.com/idl-coyote/coyote",
+            "version": "master"
+        },
+        "paths": {
+            "idl": [""]
+        }
+    },
+    "goddard": {
+        "install_product": {
+            "url": "https://github.com/wlandsman/IDLAstro",
+            "version": "1.0.1"
+        },
+        "paths": {
+            "idl": ["pro"]
+        }
+    }
+}
