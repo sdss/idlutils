@@ -1,4 +1,8 @@
 * text=auto !eol
+data/filters/GaiaDR2_RevisedPassbands.dat -text
+data/filters/gaia_BP.dat -text
+data/filters/gaia_G.dat -text
+data/filters/gaia_RP.dat -text
 data/filters/ps1_g.txt -text
 data/filters/ps1_i.txt -text
 data/filters/ps1_r.txt -text
