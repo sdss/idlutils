@@ -1,3 +1,15 @@
+-------------------------------------------------------------------------------
+v5_5_35 (2020-04-28)
+
+Add filters for Gaia DR2 bandpasses
+  [R. Yan 2020-03-13]
+
+Fix mrdfits_many.pro for large numbers of objects
+  [D. Schlegel 2020-01-04]
+
+Added new eBOSS eFEDS maskbits
+  [J. Sanchez Gallego 2019-11-07]
+
 Added BLOWTORCH and BLOWTORCHFAIL bits to MANGA_DRP2QUAL, MANGA_DRP3QUAL,
 MASTAR_QUAL
   [D. Law 2019-10-15]
