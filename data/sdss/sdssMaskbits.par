@@ -1047,6 +1047,7 @@ maskbits MASTAR_QUAL  8 EMLINE " Spectrum contain emission lines"
 maskbits MASTAR_QUAL  9 LOWSN  " Per-MJD Spectrum has median S/N <= 15"
 maskbits MASTAR_QUAL 10 MULTIFIBER " Composite spectrum combined from multiple fibers"
 maskbits MASTAR_QUAL 11 BLOWTORCH " Blowtorch artifact in one or more frames"
+maskbits MASTAR_QUAL 12 SEVEREBT " Severe blowtorch artifact"
 maskbits MASTAR_QUAL 30 CRITICAL " Critical failure in one or more frames"
 
 # The following mask bits are for the 2D MANGA pipeline
