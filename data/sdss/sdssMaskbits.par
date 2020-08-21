@@ -1031,6 +1031,7 @@ maskbits MANGA_DRP3QUAL 10 MANYDEAD " Many dead fibers"
 maskbits MANGA_DRP3QUAL 11 RETIRED2 " Bit retired, moved into MASTAR_QUAL instead"
 maskbits MANGA_DRP3QUAL 12 BLOWTORCH " Blowtorch artifact in one or more frames"
 maskbits MANGA_DRP3QUAL 13 SEVEREBT " Severe blowtorch artifact"
+maskbits MANGA_DRP3QUAL 14 UNUSUAL " Cube slightly unusual in some way but good for most science"
 maskbits MANGA_DRP3QUAL 30 CRITICAL " Critical failure in one or more frames"
 
 # MaStar quality flag bitmask
