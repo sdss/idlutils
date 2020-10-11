@@ -129,11 +129,11 @@ function djs_maskinterp, yval, mask, xval, iaxis=iaxis, _EXTRA=extra
       2 : begin
          if (keyword_set(xval)) then begin
             if (iaxis EQ 0) then begin
-               for i=0, dims[1] do $
+               for i=0, dims[1] - 1 do $
                 ynew[*,i] = djs_maskinterp1(yval[*,i], mask[*,i], $
                  xval[*,i], _EXTRA=extra)
             endif else if (iaxis EQ 1) then begin
-               for i=0, dims[0] do $
+               for i=0, dims[0] - 1 do $
                 ynew[i,*] = djs_maskinterp1(yval[i,*], mask[i,*], $
                  xval[i,*], _EXTRA=extra)
             endif
