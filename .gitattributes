@@ -23,6 +23,9 @@ etc/idlutils.module -text
 goddard/text/coyote.readme -text
 pro/astrom/gaia_read.pro -text
 pro/coord/ha2airmass.pro -text
+pro/desi/desi_flagname.pro -text
+pro/desi/desi_flagval.pro -text
+pro/desi/desi_maskbits.pro -text
 pro/fits/mrdfits_many.pro -text
 pro/fits/mrdfits_rows.pro -text
 pro/mglib/mg_read_config.pro -text
