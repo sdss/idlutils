@@ -1,4 +1,5 @@
 * text=auto !eol
+data/desi/desiMaskbits.par -text
 data/filters/GaiaDR2_RevisedPassbands.dat -text
 data/filters/gaia_BP.dat -text
 data/filters/gaia_G.dat -text
