@@ -89,7 +89,9 @@ print,i,string(13b),format='(i6,a,$)'
       if (nper[i] GT 0 AND keyword_set(res1) EQ 0) then $
        res1 = mrdfits(allfiles[i], exten, range=[0,0], _EXTRA=EXTRA, /silent)
    endfor
-   ntot = total(nper)
+;   ntot = total(nper) ; This does not work for large numbers due to rounding
+   ntot = 0L
+   for i=0L, nfile-1L do ntot += nper[i]
 
    ; Create the blank output structure
    if (keyword_set(res1) EQ 0) then return, 0

@@ -129,20 +129,20 @@ function djs_maskinterp, yval, mask, xval, iaxis=iaxis, _EXTRA=extra
       2 : begin
          if (keyword_set(xval)) then begin
             if (iaxis EQ 0) then begin
-               for i=0, dims[1] do $
+               for i=0L, dims[1] - 1 do $
                 ynew[*,i] = djs_maskinterp1(yval[*,i], mask[*,i], $
                  xval[*,i], _EXTRA=extra)
             endif else if (iaxis EQ 1) then begin
-               for i=0, dims[0] do $
+               for i=0L, dims[0] - 1 do $
                 ynew[i,*] = djs_maskinterp1(yval[i,*], mask[i,*], $
                  xval[i,*], _EXTRA=extra)
             endif
          endif else begin
             if (iaxis EQ 0) then begin
-               for i=0, dims[1] - 1 do $
+               for i=0L, dims[1] - 1 do $
                 ynew[*,i] = djs_maskinterp1(yval[*,i], mask[*,i], _EXTRA=extra)
             endif else if (iaxis EQ 1) then begin
-               for i=0, dims[0] - 1 do $
+               for i=0L, dims[0] - 1 do $
                 ynew[i,*] = djs_maskinterp1(yval[i,*], mask[i,*], _EXTRA=extra)
             endif
          endelse
@@ -150,35 +150,35 @@ function djs_maskinterp, yval, mask, xval, iaxis=iaxis, _EXTRA=extra
       3: begin
          if (keyword_set(xval)) then begin
             if (iaxis EQ 0) then begin
-               for i=0, dims[1] - 1 do $
-                for j=0, dims[2] - 1 do $
+               for i=0L, dims[1] - 1 do $
+                for j=0L, dims[2] - 1 do $
                  ynew[*,i,j] = djs_maskinterp1(yval[*,i,j], mask[*,i,j], $
                   xval[*,i,j], _EXTRA=extra)
             endif else if (iaxis EQ 1) then begin
-               for i=0, dims[0] - 1 do $
-                for j=0, dims[2] - 1 do $
+               for i=0L, dims[0] - 1 do $
+                for j=0L, dims[2] - 1 do $
                  ynew[i,*,j] = djs_maskinterp1(yval[i,*,j], mask[i,*,j], $
                   xval[i,*,j], _EXTRA=extra)
             endif else if (iaxis EQ 2) then begin
-               for i=0, dims[0] - 1 do $
-                for j=0, dims[1] - 1 do $
+               for i=0L, dims[0] - 1 do $
+                for j=0L, dims[1] - 1 do $
                  ynew[i,j,*] = djs_maskinterp1(yval[i,j,*], mask[i,j,*], $
                   xval[i,j,*], _EXTRA=extra)
             endif
          endif else begin
             if (iaxis EQ 0) then begin
-               for i=0, dims[1] - 1 do $
-                for j=0, dims[2] - 1 do $
+               for i=0L, dims[1] - 1 do $
+                for j=0L, dims[2] - 1 do $
                  ynew[*,i,j] = djs_maskinterp1(yval[*,i,j], mask[*,i,j], $
                   _EXTRA=extra)
             endif else if (iaxis EQ 1) then begin
-               for i=0, dims[0] - 1 do $
-                for j=0, dims[2] - 1 do $
+               for i=0L, dims[0] - 1 do $
+                for j=0L, dims[2] - 1 do $
                  ynew[i,*,j] = djs_maskinterp1(yval[i,*,j], mask[i,*,j], $
                   _EXTRA=extra)
             endif else if (iaxis EQ 2) then begin
-               for i=0, dims[0] - 1 do $
-                for j=0, dims[1] - 1 do $
+               for i=0L, dims[0] - 1 do $
+                for j=0L, dims[1] - 1 do $
                  ynew[i,j,*] = djs_maskinterp1(yval[i,j,*], mask[i,j,*], $
                   _EXTRA=extra)
             endif
