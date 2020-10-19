@@ -1,0 +1,134 @@
+#
+# desiMaskbits.par
+#
+typedef struct {
+    char flag[20]; # Flag name
+    short bit; # Bit number 0-indexed
+    char label[30]; # Bit label
+    char description[100]; # text description
+} maskbits;
+
+typedef struct {
+    char flag[20]; # Flag name
+    short datatype; # Data type {8 16 32 64}
+    char description[100]; # text description
+} masktype;
+
+typedef struct {
+    char flag[20]; # Flag (real) name
+    char alias[20]; # Alias
+    char description[100]; # text description
+} maskalias;
+
+masktype DESI_MASK 64 "Mask bits for DESI main targets"
+maskbits DESI_MASK  0 LRG                "LRG"
+maskbits DESI_MASK  1 ELG                "ELG"
+maskbits DESI_MASK  2 QSO                "QSO"
+maskbits DESI_MASK  4 QSO_HIZ            "QSO selected using high-redshift Random Forest (informational bit)"
+maskbits DESI_MASK  8 LRG_NORTH          "LRG cuts tuned for Bok/Mosaic data"
+maskbits DESI_MASK  9 ELG_NORTH          "ELG cuts tuned for Bok/Mosaic data"
+maskbits DESI_MASK 10 QSO_NORTH          "QSO cuts tuned for Bok/Mosaic data"
+maskbits DESI_MASK 16 LRG_SOUTH          "LRG cuts tuned for DECam data"
+maskbits DESI_MASK 17 ELG_SOUTH          "ELG cuts tuned for DECam data"
+maskbits DESI_MASK 18 QSO_SOUTH          "QSO cuts tuned for DECam data"
+maskbits DESI_MASK 32 SKY                "Blank sky locations"
+maskbits DESI_MASK 33 STD_FAINT          "Standard stars for dark/gray conditions"
+maskbits DESI_MASK 34 STD_WD             "White Dwarf stars"
+maskbits DESI_MASK 35 STD_BRIGHT         "Standard stars for BRIGHT conditions"
+maskbits DESI_MASK 36 BAD_SKY            "Blank sky locations that are imperfect but still useable"
+maskbits DESI_MASK 37 SUPP_SKY           "SKY is based on Gaia-avoidance (SKY will be set too)"
+maskbits DESI_MASK 49 NO_TARGET          "No known target at this location"
+maskbits DESI_MASK 50 BRIGHT_OBJECT      "Known bright object to avoid"
+maskbits DESI_MASK 51 IN_BRIGHT_OBJECT   "Too near a bright object; DO NOT OBSERVE"
+maskbits DESI_MASK 52 NEAR_BRIGHT_OBJECT "Near a bright object but ok to observe"
+maskbits DESI_MASK 60 BGS_ANY            "Any BGS bit is set"
+maskbits DESI_MASK 61 MWS_ANY            "Any MWS bit is set"
+maskbits DESI_MASK 62 SCND_ANY           "Any secondary bit is set"
+
+masktype BGS_MASK 64 "Mask bits for DESI BGS targets"
+maskbits BGS_MASK  0 BGS_FAINT           "BGS faint targets"
+maskbits BGS_MASK  1 BGS_BRIGHT          "BGS bright targets"
+maskbits BGS_MASK  2 BGS_WISE            "BGS wise targets"
+maskbits BGS_MASK  3 BGS_FAINT_HIP       "BGS faint targets at bright priorty"
+maskbits BGS_MASK  8 BGS_FAINT_NORTH     "BGS faint cuts tuned for Bok/Mosaic"
+maskbits BGS_MASK  9 BGS_BRIGHT_NORTH    "BGS bright cuts tuned for Bok/Mosaic"
+maskbits BGS_MASK 10 BGS_WISE_NORTH      "BGS WISE cuts tuned for Bok/Mosaic"
+maskbits BGS_MASK 16 BGS_FAINT_SOUTH     "BGS faint cuts tuned for DECam"
+maskbits BGS_MASK 17 BGS_BRIGHT_SOUTH    "BGS bright cuts tuned for DECam"
+maskbits BGS_MASK 18 BGS_WISE_SOUTH      "BGS WISE cuts tuned for DECam"
+
+masktype MWS_MASK 64 "Mask bits for DESI MWS targets"
+maskbits MWS_MASK  0 MWS_BROAD           "Milky Way Survey magnitude limited bulk sample"
+maskbits MWS_MASK  1 MWS_WD              "Milky Way Survey White Dwarf"
+maskbits MWS_MASK  2 MWS_NEARBY          "Milky Way Survey volume-complete ~100pc sample"
+maskbits MWS_MASK  4 MWS_BROAD_NORTH     "Milky Way Survey cuts tuned for Bok/Mosaic"
+maskbits MWS_MASK  5 MWS_BROAD_SOUTH     "Milky Way Survey cuts tuned for DECam"
+maskbits MWS_MASK  5 MWS_MAIN_BLUE       "Milky Way Survey magnitude limited blue sample"
+maskbits MWS_MASK  9 MWS_MAIN_BLUE_NORTH "MWS magnitude limited blue sample tuned for Bok/Mosaic"
+maskbits MWS_MASK 10 MWS_MAIN_BLUE_SOUTH "MWS magnitude limited blue sample tuned for DECam"
+maskbits MWS_MASK 11 MWS_MAIN_RED        "Milky Way Survey magnitude limited red sample"
+maskbits MWS_MASK 12 MWS_MAIN_RED_NORTH  "MWS magnitude limited red sample tuned for Bok/Mosaic"
+maskbits MWS_MASK 13 MWS_MAIN_RED_SOUTH  "MWS magnitude limited red sample tuned for DECam"
+maskbits MWS_MASK 60 BACKUP_BRIGHT       "Bright backup Gaia targets"
+maskbits MWS_MASK 61 BACKUP_FAINT        "Fainter backup Gaia targets"
+maskbits MWS_MASK 62 BACKUP_VERY_FAINT   "Even fainter backup Gaia targets"
+
+masktype SCND_MASK 64 "Mask bits for DESI secondary targets"
+maskbits SCND_MASK  0 VETO               "Never observe even if a primary target bit is set"
+maskbits SCND_MASK  1 DR16Q              "Known quasars from the SDSS DR16Q catalog"
+
+
+
+masktype CMX_MASK 64 "Mask bits for DESI commissioning targets"
+maskbits CMX_MASK 0    STD_GAIA          "Gaia stars used for dithering (and other) tests"
+maskbits CMX_MASK 1    SV0_STD_FAINT     "SV-like STD_FAINT class is set (very early SV selection)"
+maskbits CMX_MASK 2    SV0_STD_BRIGHT    "SV-like STD_BRIGHT class is set (very early SV selection)"
+maskbits CMX_MASK 3    STD_TEST          "Very bright stars for early tests"
+maskbits CMX_MASK 4    STD_CALSPEC       "Matches to CALSPEC stars"
+maskbits CMX_MASK 5    STD_DITHER        "Gaia stars specifically for dithering tests"
+maskbits CMX_MASK 6    SV0_MWS_CLUSTER   "SV-like Open and Globular clusters for the MWS"
+maskbits CMX_MASK 7    SV0_MWS_CLUSTER_VERYBRIGHT "Bright SV-like Open and Globular clusters for the MWS"
+maskbits CMX_MASK 8    SV0_BGS           "SV-like BGS bit is set (very early SV selection)"
+maskbits CMX_MASK 9    SV0_MWS           "SV-like MWS bit is set (very early SV selection)"
+maskbits CMX_MASK 10    SV0_LRG          "SV-like LRG bit is set (very early SV selection)"
+maskbits CMX_MASK 11    SV0_ELG          "SV-like ELG bit is set (very early SV selection)"
+maskbits CMX_MASK 12    SV0_QSO          "SV-like QSO bit is set (very early SV/RF selection)"
+maskbits CMX_MASK 13    SV0_WD           "SV-like WD bit is set (very early MWS_WD selection)"
+maskbits CMX_MASK 14    SV0_QSO_Z5       "SV-like QSO bit is set (specifically for the QSO_Z5 selection from SV"
+maskbits CMX_MASK 16    BACKUP_BRIGHT    "Bright Gaia targets for poor conditions"
+maskbits CMX_MASK 17    BACKUP_FAINT     "Fainter Gaia targets for poor conditions"
+maskbits CMX_MASK 18    M31_STD_BRIGHT   "M31 first light program"
+maskbits CMX_MASK 19    M31_H2PN         "M31 first light program"
+maskbits CMX_MASK 20    M31_GC           "M31 first light program"
+maskbits CMX_MASK 21    M31_QSO          "M31 first light program"
+maskbits CMX_MASK 22    M31_VAR          "M31 first light program"
+maskbits CMX_MASK 23    M31_BSPL         "M31 first light program"
+maskbits CMX_MASK 24    M31_M31cen       "M31 first light program"
+maskbits CMX_MASK 25    M31_M31out       "M31 first light program"
+maskbits CMX_MASK 26    ORI_STD_BRIGHT   "Orion first light program"
+maskbits CMX_MASK 27    ORI_QSO          "Orion first light program"
+maskbits CMX_MASK 28    ORI_ORI          "Orion first light program"
+maskbits CMX_MASK 29    ORI_HA           "Orion first light program"
+maskbits CMX_MASK 30    ROS_STD_BRIGHT   "Rosette first light program"
+maskbits CMX_MASK 31    ROS_QSO          "Rosette first light program"
+maskbits CMX_MASK 32    SKY              "Blank sky locations"
+maskbits CMX_MASK 33    STD_FAINT        "SV-like standard stars for dark/gray conditions"
+maskbits CMX_MASK 35    STD_BRIGHT       "SV-like standard stars for BRIGHT conditions"
+maskbits CMX_MASK 36    BAD_SKY          "Blank sky locations that are imperfect but still useable"
+maskbits CMX_MASK 37    SUPP_SKY         "SKY is based on Gaia-avoidance (SKY will be set too)"
+maskbits CMX_MASK 38    ROS_ROSM17       "Rosette first light program"
+maskbits CMX_MASK 39    ROS_ROS1         "Rosette first light program"
+maskbits CMX_MASK 40    ROS_HA           "Rosette first light program"
+maskbits CMX_MASK 41    ROS_ROS2         "Rosette first light program"
+maskbits CMX_MASK 42    M33_STD_BRIGHT   "M33 first light program"
+maskbits CMX_MASK 43    M33_H2PN         "M33 first light program"
+maskbits CMX_MASK 44    M33_GC           "M33 first light program"
+maskbits CMX_MASK 45    M33_QSO          "M33 first light program"
+maskbits CMX_MASK 46    M33_M33cen       "M33 first light program"
+maskbits CMX_MASK 47    M33_M33out       "M33 first light program"
+maskbits CMX_MASK 53    MINI_SV_LRG      "LRGs for Mini SV tests (NORTH+SOUTH with noresolve)"
+maskbits CMX_MASK 54    MINI_SV_ELG      "ELGs for Mini SV tests (NORTH+SOUTH with noresolve)"
+maskbits CMX_MASK 55    MINI_SV_QSO      "QSOs (RF) for Mini SV tests (NORTH+SOUTH with noresolve)"
+maskbits CMX_MASK 56    MINI_SV_BGS_BRIGHT "BGS (bright) for Mini SV tests (NORTH+SOUTH with noresolve)"
+maskbits CMX_MASK 57    SV0_MWS_FAINT    "Faint stars for Mini SV tests"
+

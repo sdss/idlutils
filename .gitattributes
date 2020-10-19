@@ -1,4 +1,9 @@
 * text=auto !eol
+data/desi/desiMaskbits.par -text
+data/filters/GaiaDR2_RevisedPassbands.dat -text
+data/filters/gaia_BP.dat -text
+data/filters/gaia_G.dat -text
+data/filters/gaia_RP.dat -text
 data/filters/ps1_g.txt -text
 data/filters/ps1_i.txt -text
 data/filters/ps1_r.txt -text
@@ -537,6 +542,9 @@ goddard/text/structure.readme -text
 goddard/text/tv.readme -text
 pro/astrom/gaia_read.pro -text
 pro/coord/ha2airmass.pro -text
+pro/desi/desi_flagname.pro -text
+pro/desi/desi_flagval.pro -text
+pro/desi/desi_maskbits.pro -text
 pro/fits/mrdfits_many.pro -text
 pro/fits/mrdfits_rows.pro -text
 pro/mglib/mg_read_config.pro -text
