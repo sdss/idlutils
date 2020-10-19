@@ -14,6 +14,49 @@
 ; REVISION HISTORY:
 ;   2015-06-02: written, MRB, NYU
 ;-
+
+function sdss_filename_healpixgrp, _EXTRA=keywords
+
+if tag_exist(keywords,'healpix') then begin
+  healpix = long(keywords.healpix)
+  subdir = strtrim(healpix/1000,2)
+endif else begin
+  message,'healpix not found'
+endelse
+
+return, subdir
+
+end
+;
+
+function sdss_filename_apgprefix, _EXTRA=keywords
+
+if tag_exist(keywords,'telescope') then begin
+  telescope = keywords.telescope
+  if telescope eq 'apo25m' or telescope eq 'apo1m' then begin
+    prefix = 'ap'
+  endif else if telescope eq 'lco25m' then begin
+    prefix = 'as'
+  endif else begin
+    message,'telescope = '+telescope+' not supported'
+  endelse
+endif
+
+if tag_exist(keywords,'instrument') then begin
+  instrument = keywords.instrument
+  if instrument eq 'apogee-n' then begin
+    prefix = 'ap'
+  endif else if instrument eq 'apogee-s' then begin
+    prefix = 'as'
+  endif else begin
+    message,'instrument = '+instrument+' not supported'
+  endelse
+endif
+
+return, prefix
+
+end
+;
 function sdss_filename_platedir, _EXTRA=keywords
 
 plateid= keywords.plateid
