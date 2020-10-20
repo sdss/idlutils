@@ -10,7 +10,7 @@
 ;   filetype - name of file type
 ; OPTIONAL INPUTS:
 ;   function_base - base for function calls (default '')
-;   keywords - named keywords with values necessary to define 
+;   keywords - named keywords with values necessary to define
 ;              file location on disk
 ; COMMENTS:
 ;   Usually called by a wrapper (e.g. sdss_filename)
@@ -39,10 +39,15 @@ while(indx ne -1) do begin
 endwhile
 
 ;; execute functions
-wordchars='\%([A-Za-z0-9_]*)'
+wordchars='\%([A-Za-z0-9_]*\|?)'
 indx= stregex(filename, wordchars, length=length)
 while(indx ne -1) do begin
+    ;; extract the special function name
     mid=strmid(filename, indx+1, length-1)
+    ;; check if if ends in a | and re-extract the name
+    if (strmid(mid, 0, 1,/reverse_offset) eq '|') then $
+      mid=strmid(filename, indx+1, length-2)
+    ;; call the matching special function name
     value= call_function(function_base+mid, _EXTRA=keywords)
     filename= strmid(filename, 0, indx)+value+strmid(filename, indx+length)
     indx= stregex(filename, wordchars, length=length)
