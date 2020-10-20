@@ -29,7 +29,7 @@ filename= config->get(filetype, section='paths')
 filename= parse_string_format(filename, _EXTRA=keywords)
 
 ;; handle environmental variables
-wordchars='\$([A-Za-z0-9_]*)[|]'
+wordchars='\$([A-Za-z0-9_]*)'
 indx= stregex(filename, wordchars, length=length)
 while(indx ne -1) do begin
     mid=strmid(filename, indx+1, length-1)
