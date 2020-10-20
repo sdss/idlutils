@@ -86,7 +86,6 @@ module load usno
 #module load ucacr14
 #module load wise
 
-module load goddard
+module load goddard/1.0.1b
 prereq goddard
-module load coyote
 prereq coyote
