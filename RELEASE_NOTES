@@ -1,4 +1,12 @@
 -------------------------------------------------------------------------------
+6.1.0 (2020-10-20)
+
+Added new functions in sdss_filename.pro for healpixgrp, agprefix, definitiondir, plategrp, spectrodir
+Updated sdss_filename.pro so accessing the config struct is case-insensitive
+Updated regex in construct_filename.pro to handle new special function syntax of "%[name]|"
+  [B. Cherinka, D. Nidever 2020-10-20]
+
+-------------------------------------------------------------------------------
 6.0.0 (2019-08-26)
 
 Removed internal Coyote and Goddard libraries
