@@ -85,10 +85,10 @@ function ha2airmass, dec, equinox1, ha=hadeg, site=site,$
        sites = yanny_readone(sitefile)
        match = where(sites.OBS eq site, ct)
        if ct ne 0 then begin
-           site = sites[match]
-	   longitude = site.longitude
-	   latitude = site.latitude
-	   altitude = site.altitude
+           obs = sites[match]
+	   longitude = obs.longitude
+	   latitude = obs.latitude
+	   altitude = obs.altitude
        endif
    endif
    ; Default to location of Apache Point Observatory

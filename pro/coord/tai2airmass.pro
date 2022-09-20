@@ -105,10 +105,10 @@ function tai2airmass, ra, dec, equinox1, jd=jd, tai=tai, mjd=mjd, $
        sites = yanny_readone(sitefile)
        match = where(sites.OBS eq site, ct)
        if ct ne 0 then begin
-           site = sites[match]
-	   longitude = site.longitude
-	   latitude = site.latitude
-	   altitude = site.altitude
+           obs = sites[match]
+	   longitude = obs.longitude
+	   latitude = obs.latitude
+	   altitude = obs.altitude
        endif
    endif
    if (NOT keyword_set(longitude)) then longitude = 360. - 105.820417d0
