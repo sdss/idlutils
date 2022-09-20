@@ -2,10 +2,10 @@
 type enum {
     APO, 
     LCO
-} OBS;
+} OBSERVATORY;
 
 typedef struct {
-  OBS observatory;    #observatory name
+  OBSERVATORY  obs;    #observatory name
   double longitude;    #observatory longitude
   double latitude;     #observatory latitude
   double altitude;     #observatory altitude

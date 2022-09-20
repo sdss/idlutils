@@ -63,7 +63,6 @@
 ;   05-Nov-2000  Added HA keyword
 ;   15-Sep-2014  Added LST keyword (David Law)
 ;   13-Sep-2022  Added site keyword (Sean Morrison)
--
 ;------------------------------------------------------------------------------
 function tai2air_crossprod, aa, bb
 
@@ -102,8 +101,8 @@ function tai2airmass, ra, dec, equinox1, jd=jd, tai=tai, mjd=mjd, $
 
    if keyword_set(site) then begin
        sitefile = filepath('site.par', root_dir=getenv('IDLUTILS_DIR'), $
-	                   subdirectory='opfiles')
-       sites = yanny_readone(yanny_read)
+	                   subdirectory=['data','sdss'])
+       sites = yanny_readone(sitefile)
        match = where(sites.OBS eq site, ct)
        if ct ne 0 then begin
            site = sites[match]

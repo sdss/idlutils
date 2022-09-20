@@ -57,8 +57,8 @@ function heliocentric, ra, dec, epoch, jd=jd, tai=tai, $
 
    if keyword_set(site) then begin
        sitefile = filepath('site.par', root_dir=getenv('IDLUTILS_DIR'), $
- 	                   subdirectory='opfiles')
-       sites = yanny_readone(yanny_read)
+ 	                   subdirectory=['data','sdss'])
+       sites = yanny_readone(sitefile)
        match = where(sites.OBS eq site, ct)
        if ct ne 0 then begin
            site = sites[match]
