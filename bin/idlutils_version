@@ -39,7 +39,7 @@ eval "myDir=\$${myEnv}"
 #
 # This version is set by bumpversion. DO NOT MODIFY IT MANUALLY.
 # Refer to the README for details
-version="6.3.0"
+version="6.4.0dev"
 #
 # Output the version
 echo ${version}
