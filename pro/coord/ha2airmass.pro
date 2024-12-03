@@ -18,6 +18,7 @@
 ;                    default to (360-105.820417) deg for APO
 ;   latitute       - Latitude of observatory; default to 32.780361 deg for APO
 ;   altitude       - Altitude of observatory; default to 2788 m for APO
+;   site           - Observatory; overrides lat, long, alt and loads from data/sdss/site.par; valid:{APO, LCO}
 ;
 ; OUTPUTS:
 ;   airmass        - Airmass; 1.0 for zenith
@@ -44,6 +45,8 @@
 ;   10-May-2000  Written by D. Schlegel, Princeton, & D. Hogg, IAS
 ;   02-Jun-2000  Fixed minor bugs, Schlegel
 ;   05-Nov-2000  Added HA keyword
+;   13-Sep-2022  Added site keyword (Sean Morrison)
+;   
 ;-
 ;------------------------------------------------------------------------------
 function tai2air_crossprod, aa, bb
@@ -72,9 +75,22 @@ function tai2air_ang, a, b
   return, theta
 end
 ;------------------------------------------------------------------------------
-function ha2airmass, dec, equinox1, ha=hadeg, $
+function ha2airmass, dec, equinox1, ha=hadeg, site=site,$
  longitude=longitude, latitude=latitude, altitude=altitude
 
+
+   if keyword_set(site) then begin
+       sitefile = filepath('site.par', root_dir=getenv('IDLUTILS_DIR'), $
+                           subdirectory=['data','sdss'])
+       sites = yanny_readone(sitefile)
+       match = where(sites.OBS eq site, ct)
+       if ct ne 0 then begin
+           obs = sites[match]
+	   longitude = obs.longitude
+	   latitude = obs.latitude
+	   altitude = obs.altitude
+       endif
+   endif
    ; Default to location of Apache Point Observatory
    if (NOT keyword_set(longitude)) then longitude = 360. - 105.820417d0
    if (NOT keyword_set(latitude)) then latitude = 32.780361d0

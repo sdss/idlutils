@@ -25,6 +25,7 @@
 ;   latitute       - Latitude of observatory; default to 32.780361 deg for APO
 ;   altitude       - Altitude of observatory in meters;
 ;                    default to 2788 m for APO
+;   site           - Observatory; overrides lat, long, alt and loads from data/sdss/site.par; valid:{APO, LCO}
 ;
 ; OUTPUTS:
 ;   vcorr          - Velocity correction term, in km/s, to add to measured
@@ -44,13 +45,28 @@
 ;
 ; REVISION HISTORY:
 ;   09-May-2000  Written by S. Burles & D. Schlegel
+;   13-Sep-2022  Added site keyword (Sean Morrison)
 ;-
 ;------------------------------------------------------------------------------
 
 function heliocentric, ra, dec, epoch, jd=jd, tai=tai, $
- longitude=longitude, latitude=latitude, altitude=altitude 
+ longitude=longitude, latitude=latitude, altitude=altitude, $
+ site=site
 
    if (NOT keyword_set(epoch)) then epoch = 2000.0
+
+   if keyword_set(site) then begin
+       sitefile = filepath('site.par', root_dir=getenv('IDLUTILS_DIR'), $
+ 	                   subdirectory=['data','sdss'])
+       sites = yanny_readone(sitefile)
+       match = where(sites.OBS eq site, ct)
+       if ct ne 0 then begin
+           obs = sites[match]
+	   longitude = obs.longitude
+	   latitude = obs.latitude
+	   altitude = obs.altitude
+       endif
+   endif
 
    ; Default to location of Apache Point Observatory
    if (NOT keyword_set(longitude)) then longitude = 360. - 105.820417

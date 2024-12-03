@@ -1,0 +1,17 @@
+
+type enum {
+    APO, 
+    LCO
+} OBSERVATORY;
+
+typedef struct {
+  OBSERVATORY  obs;    #observatory name
+  double longitude;    #observatory longitude
+  double latitude;     #observatory latitude
+  double altitude;     #observatory altitude
+  } SITE;
+
+
+SITE APO 254.179532 32.780361 2788
+SITE LCO 289.307920 -29.01597 2380
+

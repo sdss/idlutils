@@ -28,6 +28,7 @@
 ;                    if returning IPA.
 ;   incl           - Inclination of great circle on the sky (degrees); required
 ;                    if returning IPA.
+;   site           - Observatory; overrides lat, long, alt and loads from data/sdss/site.par; valid:{APO, LCO}
 ;
 ; OUTPUTS:
 ;   airmass        - Airmass; 1.0 for zenith
@@ -61,7 +62,7 @@
 ;   02-Jun-2000  Fixed minor bugs, Schlegel
 ;   05-Nov-2000  Added HA keyword
 ;   15-Sep-2014  Added LST keyword (David Law)
-;-
+;   13-Sep-2022  Added site keyword (Sean Morrison)
 ;------------------------------------------------------------------------------
 function tai2air_crossprod, aa, bb
 
@@ -91,14 +92,30 @@ end
 ;------------------------------------------------------------------------------
 function tai2airmass, ra, dec, equinox1, jd=jd, tai=tai, mjd=mjd, $
  longitude=longitude, latitude=latitude, altitude=altitude, $
- node=node, incl=incl, ha=hadeg, ipa=ipa, lstdeg=lstdeg
+ node=node, incl=incl, ha=hadeg, ipa=ipa, lstdeg=lstdeg, site=site
+
 
    ; Default to location of Apache Point Observatory
    if (n_elements(equinox1) NE 0) then equinox = equinox1 $
     else equinox = 2000.d0
+
+   if keyword_set(site) then begin
+       sitefile = filepath('site.par', root_dir=getenv('IDLUTILS_DIR'), $
+	                   subdirectory=['data','sdss'])
+       sites = yanny_readone(sitefile)
+       match = where(sites.OBS eq site, ct)
+       if ct ne 0 then begin
+           obs = sites[match]
+	   longitude = obs.longitude
+	   latitude = obs.latitude
+	   altitude = obs.altitude
+       endif
+   endif
    if (NOT keyword_set(longitude)) then longitude = 360. - 105.820417d0
    if (NOT keyword_set(latitude)) then latitude = 32.780361d0
    if (NOT keyword_set(altitude)) then altitude = 2788.
+
+
 
    if (NOT keyword_set(jd)) then begin
       if (keyword_set(tai)) then begin
