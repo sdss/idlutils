@@ -4,13 +4,45 @@ A collection of IDL functions and routines used by a variety of SDSS software.
 
 ## Should I be using the SVN version instead?
 
-Until the end of SDSS-IV `idlutils` is maintained as a [SVN repository](https://trac.sdss.org/browser/repo/sdss/idlutils) and a GitHub repo (this one). SVN development happens as `v5_x`, while Git development uses the `6.x` series. The SVN `trunk` and the GitHub `master` branches will **not** synced until the end of SDSS-IV. `v5` tags are synced from SVN to GitHub every now and then. The `6.0.0` tag introduces breaking changes (see below).
+Until the end of SDSS-IV `idlutils` was maintained as a [SVN repository](https://svn.sdss.org/public/repo/sdss/idlutils/) and a GitHub repo (this one). SVN development happened as `v5_x`, while Git development uses the `6.x` series. The SVN `trunk` and the GitHub `master` branches was **not** synced after the end of SDSS-IV. `v5` tags were synced from SVN to GitHub in early SDSS-V development, but have since been abandoned. The `6.0.0` tag introduces breaking changes (see below).
 
-So, what version should you be using? If you're developing SDSS-IV software (e.g., `mangadrp`, or the `apogee` pipeline), you probably want to keep using the `v5` branch and do your changes in SVN. If you're developing for SDSS-V you *should* be using the `6.x` tags and develop against the GitHub repository.
+So, what version should you be using? If you're using SDSS-IV software (e.g., `mangadrp`, or the `apogee` pipeline), you probably want to keep using the `v5` branch. If you're developing for SDSS-V (or later), or reducing the associated data, you *should* be using the `6.x` tags and develop against the GitHub repository.
 
 ## External libraries
 
 Version 6.x does not ship with the [Goddard](https://github.com/wlandsman/IDLAstro) and [Coyote](https://github.com/idl-coyote/coyote) libraries but `idlutils` still depends on them. You need to make sure that they are available in your `IDL_PATH`. Alternatively, you can use [sdss_install](https://github.com/sdss/sdss_install) to checkout a copy of `idlutils` while also installing Coyote and the Goddard libraries as modules.
+
+## Installing IDLutils
+
+### Prerequisites
+You do not need to install IDL, buy a license, etc. to install idlutils. However, you do need a copy of IDL’s export.h file. If you already have IDL installed, set the environment variable IDL_DIR to the directory containing the external directory. The external directory should contain the export.h file. If you do not have IDL installed, but do have an export.h file, then you can place that file in a directory called external then place that directory in any directory you want and set IDL_DIR to the directory containing external.
+You need both a C compiler and a Fortran compiler.
+If you want to build the documentation, you must have IDL installed, and the executable idl must live somewhere in your PATH. Note that some IDL installations define the executable idl as a shell alias, and thus it will not be in your PATH.
+
+### Compilation
+
+After exporting or checking out the code, set the environmental variable IDLUTILS_DIR to the location of your idlutils directory. Then set the variables:
+
+```
+export PATH=$IDLUTILS_DIR/bin:$PATH
+export IDL_PATH=+$IDLUTILS_DIR/goddard/pro:+$IDLUTILS_DIR/pro:$IDL_PATH
+```
+
+Of course, you should put those commands into your .bash_profile or (suitably modified) into your .tcshrc file where appropriate.
+
+To build the code, execute:
+
+```
+cd $IDLUTILS_DIR; evilmake all
+```
+
+This will build all of the C libraries.
+
+To build the documentation (see the Prerequisites above), execute:
+
+```
+cd $IDLUTILS_DIR/doc; evilmake all
+```
 
 ## Versioning
 
