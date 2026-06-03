@@ -4,7 +4,7 @@ A collection of IDL functions and routines used by a variety of SDSS software.
 
 ## Should I be using the SVN version instead?
 
-Until the end of SDSS-IV `idlutils` was maintained as a [SVN repository](https://svn.sdss.org/public/repo/sdss/idlutils/) and a GitHub repo (this one). SVN development happened as `v5_x`, while Git development uses the `6.x` series. The SVN `trunk` and the GitHub `master` branches was **not** synced after the end of SDSS-IV. `v5` tags were synced from SVN to GitHub in early SDSS-V development, but have since been abandoned. The `6.0.0` tag introduces breaking changes (see below).
+Until the end of SDSS-IV `idlutils` was maintained as a [SVN repository](https://svn.sdss.org/public/repo/sdss/idlutils/) and a GitHub repo (this one). SVN development happened as `v5_x`, while Git development uses the `6.x` series. The SVN `trunk` and the GitHub `master` branches were **not** synced after the end of SDSS-IV. `v5` tags were synced from SVN to GitHub in early SDSS-V development, but have since been abandoned. The `6.0.0` tag introduces breaking changes (see below).
 
 So, what version should you be using? If you're using SDSS-IV software (e.g., `mangadrp`, or the `apogee` pipeline), you probably want to keep using the `v5` branch. If you're developing for SDSS-V (or later), or reducing the associated data, you *should* be using the `6.x` tags and develop against the GitHub repository.
 
